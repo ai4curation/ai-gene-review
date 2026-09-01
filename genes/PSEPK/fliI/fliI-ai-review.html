@@ -1,0 +1,2560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>fliI - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>fliI</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88ET7" target="_blank" class="term-link">
+                        Q88ET7
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida KT2440</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "fliI";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88ET7" data-a="DESCRIPTION: FliI is the cytoplasmic ATPase of the flagellar ty..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>FliI is the cytoplasmic ATPase of the flagellar type III export apparatus. It hydrolyzes ATP to support docking, unfolding, and delivery of flagellar substrates to the membrane export gate during flagellum assembly; it is not an ATP synthase.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ET7" data-a="GO:0005524" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FliI is a P-loop ATPase and binds ATP as its catalytic substrate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but less informative than the catalytic activity annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ET7" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FliI is a peripheral cytoplasmic ATPase recruited to the export apparatus.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct localization for the soluble catalytic component.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008564" target="_blank" class="term-link">
+                                    GO:0008564
+                                </a>
+                            </span>
+                            <span class="term-label">protein-exporting ATPase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000003
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ET7" data-a="GO:0008564" data-r="GO_REF:0000003" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FliI couples ATP hydrolysis to handling of proteins exported by the flagellar apparatus.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the most specific supported molecular function for FliI.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015986" target="_blank" class="term-link">
+                                    GO:0015986
+                                </a>
+                            </span>
+                            <span class="term-label">proton motive force-driven ATP synthesis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000108
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ET7" data-a="GO:0015986" data-r="GO_REF:0000108" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FliI consumes ATP during flagellar export and does not synthesize ATP from proton motive force.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This erroneous inference confuses homology to rotary ATPases with FliI&#39;s export ATPase role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fliI/fliI-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">it consumes ATP to do work, rather than synthesizing it.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                                    GO:0016887
+                                </a>
+                            </span>
+                            <span class="term-label">ATP hydrolysis activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ET7" data-a="GO:0016887" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ATP hydrolysis is the catalytic reaction performed by FliI.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct catalytic activity, retained alongside the more contextual protein-exporting ATPase term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fliI/fliI-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">The core catalytic activity is ATP hydrolysis (ATP + H₂O → ADP + Pᵢ).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030254" target="_blank" class="term-link">
+                                    GO:0030254
+                                </a>
+                            </span>
+                            <span class="term-label">protein secretion by the type III secretion system</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ET7" data-a="GO:0030254" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FliI powers substrate handling in the flagellar type III export system.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct process assignment for the flagellar export ATPase.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030257" target="_blank" class="term-link">
+                                    GO:0030257
+                                </a>
+                            </span>
+                            <span class="term-label">type III protein secretion system complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ET7" data-a="GO:0030257" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FliI associates with the cytoplasmic face of the flagellar type III export apparatus.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct complex-level localization without assigning the whole apparatus activity to other subunits.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044780" target="_blank" class="term-link">
+                                    GO:0044780
+                                </a>
+                            </span>
+                            <span class="term-label">bacterial-type flagellum assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ET7" data-a="GO:0044780" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FliI-dependent export supports ordered flagellar assembly.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Core biological process for this dedicated export ATPase.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046933" target="_blank" class="term-link">
+                                    GO:0046933
+                                </a>
+                            </span>
+                            <span class="term-label">proton-transporting ATP synthase activity, rotational mechanism</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ET7" data-a="GO:0046933" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FliI hydrolyzes ATP for protein export and is not a proton-transporting ATP synthase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Phylogenetic transfer across homologous ATPase families produced a contradicted molecular-function assignment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/fliI/fliI-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">it consumes ATP to do work, rather than synthesizing it.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071973" target="_blank" class="term-link">
+                                    GO:0071973
+                                </a>
+                            </span>
+                            <span class="term-label">bacterial-type flagellum-dependent cell motility</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88ET7" data-a="GO:0071973" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Functional flagellar export is required upstream for construction of a motile flagellum.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct downstream phenotype, but assembly/export is the more direct process.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP-dependent substrate-handling component of the flagellar type III export apparatus.</h3>
+                <span class="vote-buttons" data-g="Q88ET7" data-a="FUNCTION: ATP-dependent substrate-handling component of the ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008564" target="_blank" class="term-link">
+                            protein-exporting ATPase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044780" target="_blank" class="term-link">
+                                bacterial-type flagellum assembly
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030257" target="_blank" class="term-link">
+                            type III protein secretion system complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/fliI/fliI-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist functional report for PSEPK FliI</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Supports FliI ATP hydrolysis, FliH/FliJ complex function, basal-body recruitment, and activation of the PMF-driven flagellar export gate.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(fliI-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88ET7" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: FliI (Q88ET7 / PP_4366) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">13 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-31T18:02:26.038259</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="fliI-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="fliI-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-flii-q88et7-pp_4366-in-pseudomonas-putida-kt2440">Functional Annotation Report: FliI (Q88ET7 / PP_4366) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>FliI (UniProt Q88ET7, locus PP_4366) is the flagellum-specific ATPase of <em>Pseudomonas putida</em> KT2440 — an F₁-ATPase β-subunit homolog that hydrolyzes ATP to energize the flagellar type III protein-export system (fT3SS).</strong> The protein catalyzes the reaction ATP + H₂O → ADP + Pᵢ (EC 7.1.2.2) and, through this chemical energy, drives assembly of the bacterial flagellum. It belongs to the ATPase alpha/beta chains family and carries the diagnostic FliI/YscN T3SS ATPase signature (InterPro IPR005714), placing it unambiguously within the family of secretion-system export ATPases rather than the membrane-bound respiratory F₁F₀ synthases.</p>
+<p>Mechanistically, FliI does not act alone. It assembles a homohexameric ring closely resembling the α₃β₃γ catalytic core of F₁-ATPase, and works as part of a soluble cytoplasmic complex with the regulator/anti-activator FliH and the central-stalk-like protein FliJ. This FliH–FliI–FliJ module localizes to the cytoplasmic face of the flagellar basal body (the C-ring), where it delivers chaperone–substrate complexes to the membrane-embedded export gate and — critically — uses ATP hydrolysis to <em>activate</em> that gate so that the transmembrane proton-motive force (PMF) can drive the actual translocation of flagellar axial subunits. Thus FliI is best understood as an energy-coupling and substrate-loading engine rather than the obligate translocation motor: in bypass mutants the flagellum can still assemble using PMF alone, but with far lower efficiency and robustness.</p>
+<p>In <em>P. putida</em> specifically, <em>fliI</em> is embedded in a large (~59-gene) flagellar regulon controlled by a three-tier transcriptional cascade (FleQ → σ^N/RpoN → FliA/σ²⁸), and it is required for building the polar flagellar tuft. Direct experimental evidence in <em>P. putida</em> strain S12 shows that transposon disruption of <em>fliI</em> abolishes flagellum formation and renders cells non-motile. The protein therefore functions at the interface of the cytoplasm and inner membrane, at the base of the flagellum, as an indispensable-for-efficiency component of the motility apparatus. This report was assembled from UniProt/InterPro annotation combined with mechanistic literature on functionally characterized FliI orthologs (primarily <em>Salmonella</em>) and <em>P. putida</em>-specific genetic and regulatory studies.</p>
+<hr />
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<p>Before presenting findings, the identity of the target was confirmed against the UniProt record:</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+<th>Consistency check</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UniProt accession</td>
+<td>Q88ET7</td>
+<td>✓ target</td>
+</tr>
+<tr>
+<td>Gene symbol</td>
+<td><em>fliI</em></td>
+<td>✓ matches flagellar ATPase nomenclature</td>
+</tr>
+<tr>
+<td>Locus tag</td>
+<td>PP_4366</td>
+<td>✓ <em>P. putida</em> KT2440</td>
+</tr>
+<tr>
+<td>Protein</td>
+<td>Flagellum-specific ATP synthase, EC 7.1.2.2</td>
+<td>✓ consistent with FliI function</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> KT2440 (ATCC 47054 / DSM 6125)</td>
+<td>✓ correct strain</td>
+</tr>
+<tr>
+<td>Family</td>
+<td>ATPase alpha/beta chains family</td>
+<td>✓ F₁-type fold</td>
+</tr>
+<tr>
+<td>Key domain</td>
+<td>ATPase_T3SS_FliI/YscN (IPR005714)</td>
+<td>✓ diagnostic for export ATPases</td>
+</tr>
+</tbody>
+</table>
+<p>The gene symbol <em>fliI</em>, the EC number, the protein family, and the InterPro domain signatures are all mutually consistent and point to a single, well-defined molecular function: the flagellar export ATPase. There is no ambiguity in this assignment. Because dedicated biochemical/structural studies of the <em>P. putida</em> KT2440 ortholog itself are sparse, functional detail below is drawn from the highly conserved and extensively characterized orthologs (chiefly <em>Salmonella enterica</em>), supplemented by <em>P. putida</em>-specific genetics and regulation. The FliI protein family is strongly conserved across flagellated bacteria, so this cross-species inference is well justified.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-flii-is-the-flagellar-specific-atpase-that-hydrolyzes-atp-to-power-flagellar-protein-export">Finding 1 — FliI is the flagellar-specific ATPase that hydrolyzes ATP to power flagellar protein export</h3>
+<p>UniProt annotates Q88ET7 (<em>fliI</em>/PP_4366) as a <strong>flagellum-specific ATP synthase, EC 7.1.2.2</strong>, in the ATPase alpha/beta chains family, and it carries the FliI/YscN T3SS ATPase InterPro signature (IPR005714). This places the protein in the class of ATPases that energize type III secretion systems. In functionally characterized orthologs, FliI is the ATP-hydrolyzing engine of the flagellar type III secretion system (fT3SS): it forms a complex with FliH and FliJ and "escorts export substrates from the cytoplasm to the export gate complex, which is made up of six membrane proteins" (<a href="https://pubmed.ncbi.nlm.nih.gov/21934659/">PMID: 21934659</a>).</p>
+<p>The core catalytic activity is ATP hydrolysis (ATP + H₂O → ADP + Pᵢ). Despite the historical "ATP synthase" name (reflecting the family relationship to F₁F₀-ATP synthase), FliI operates physiologically as an <strong>ATPase</strong> — it consumes ATP to do work, rather than synthesizing it. Its substrate is ATP; its output is chemical energy used to prepare export substrates and to activate the export gate. This is the primary function requested in the annotation task: FliI is an enzyme whose catalyzed reaction is ATP hydrolysis, with strict specificity for ATP as the nucleotide substrate.</p>
+<h3 id="finding-2-flii-is-an-f1-atpase-homolog-that-forms-an-atp-driven-homohexamer-a-catalytic-glutamate-is-required-for-hydrolysis">Finding 2 — FliI is an F₁-ATPase homolog that forms an ATP-driven homohexamer; a catalytic glutamate is required for hydrolysis</h3>
+<p>FliI belongs to the F₁-type ATPase alpha/beta family, and structural studies show that its assembled ring closely mirrors the catalytic core of F₁-ATP synthase. The FliI₆–FliJ complex "is structurally similar to the α₃β₃γ complex of F₁-ATPase" (<a href="https://pubmed.ncbi.nlm.nih.gov/26984495/">PMID: 26984495</a>), meaning six FliI subunits form a ring analogous to the alternating α₃β₃ hexamer, with FliJ occupying the position of the γ central stalk. This deep homology reveals the evolutionary origin of the flagellar export ATPase from the rotary ATP synthase lineage and explains its nucleotide-binding chemistry.</p>
+<p>ATP binding drives oligomerization: "FliI ATPase forms a homo-hexamer to fully exert its ATPase activity, facilitating bacterial flagellar protein export" (<a href="https://pubmed.ncbi.nlm.nih.gov/19665005/">PMID: 19665005</a>). The monomer has low activity; hexamerization creates the composite active sites at subunit interfaces (as in F₁-ATPase), so ring assembly and catalysis are coupled. The catalytic residue was pinpointed by mutagenesis: the mutant <strong>FliI(E221Q)</strong>, "which retained the affinity for ATP but has lost ATPase activity, efficiently formed the hexamer even in the presence of ATP" (<a href="https://pubmed.ncbi.nlm.nih.gov/19665005/">PMID: 19665005</a>). This experiment elegantly separates two events — nucleotide binding/hexamerization versus hydrolysis — and identifies <strong>Glu221</strong> (the catalytic-carboxylate equivalent) as essential for the hydrolysis step itself. The E→Q substitution neutralizes the catalytic base while preserving ATP binding, trapping the enzyme in an assembled but catalytically dead state.</p>
+<h3 id="finding-3-flii-localizes-to-the-cytoplasmic-c-ringbasal-body-and-shuttles-substrates-to-the-export-gate">Finding 3 — FliI localizes to the cytoplasmic C-ring/basal body and shuttles substrates to the export gate</h3>
+<p>FliI functions at the cytoplasmic face of the flagellar basal body. It "forms the FliH₂–FliI complex in the cytoplasm and localizes to the flagellar basal body (FBB) through the interaction of FliH with a C ring protein, FliN" (<a href="https://pubmed.ncbi.nlm.nih.gov/25284201/">PMID: 25284201</a>). This defines both the subcellular location (cytoplasm, docked at the inner-membrane basal body) and the recruitment mechanism: FliH bridges the ATPase to the C-ring switch protein FliN, and also anchors it to the export-gate protein FlhA.</p>
+<p>Single-molecule imaging further showed that FliI exists in two functional forms with distinct roles: "the FliH₂–FliI complex and FliI₆ ring function as a dynamic substrate carrier and a static substrate loader, respectively" (<a href="https://pubmed.ncbi.nlm.nih.gov/25284201/">PMID: 25284201</a>). The mobile FliH₂–FliI species picks up chaperone–substrate cargo in the cytoplasm and delivers it to the basal body, where the static FliI₆ ring loads it onto the export gate. Notably, the molecules exchange between the FBB-bound and freely diffusing pools several times per minute, and this assembly/disassembly cycle is <em>not</em> driven by ATP hydrolysis — indicating that FliI's localization dynamics and its catalytic activity are mechanistically separable. This answers the "where" question: FliI works at the cytoplasm–inner membrane interface, at the base of the flagellum, on the C-ring/basal body platform.</p>
+<p>An important nuance from the literature is that the soluble export components are <em>not</em> required to deliver every substrate. FliI, FliH, and FliJ "do not deliver flagellin, the major filament protein, from the cytosol to the export gate" (<a href="https://pubmed.ncbi.nlm.nih.gov/25068520/">PMID: 25068520</a>); their substrate-chaperone escort role is most important for the minor late substrates (FlgK, FlgL, FliD), while abundant flagellin (FliC) reaches the gate without their assistance. This refines the substrate-delivery model and emphasizes that FliI's energetic/gate-activation role, rather than a universal carrier role, is its core contribution.</p>
+<h3 id="finding-4-flii-atp-hydrolysis-activates-the-pmf-driven-export-gate-and-ensures-efficient-energy-coupling-it-is-important-but-not-strictly-essential">Finding 4 — FliI ATP hydrolysis activates the PMF-driven export gate and ensures efficient energy coupling; it is important but not strictly essential</h3>
+<p>A key mechanistic insight is that the membrane export gate itself is fundamentally a <strong>proton/protein antiporter that uses the proton-motive force</strong> — not ATP — as the direct source of translocation energy. FliI's job is to <em>switch the gate on</em>. "ATP hydrolysis by the FliI ATPase activates the export gate complex to become an active protein transporter utilizing Δψ to drive proton-coupled protein export" (<a href="https://pubmed.ncbi.nlm.nih.gov/34035173/">PMID: 34035173</a>). In other words, the chemical energy of ATP is spent on a regulatory/activation step, after which the electrochemical gradient (specifically the membrane voltage, Δψ) powers the actual export.</p>
+<p>The molecular basis of this activation is a FliJ–FlhA interaction promoted by the ATPase complex: "a specific binding of FliJ with an export gate membrane protein, FlhA, is brought about by the FliH–FliI complex, which turns the export gate into a highly efficient, Δψ-driven protein export apparatus" (<a href="https://pubmed.ncbi.nlm.nih.gov/21934659/">PMID: 21934659</a>). FliI and FliH position FliJ so it can engage FlhA, converting the gate from an inefficient to a highly efficient transporter. Cross-complementation studies conclude that "FliH and FliI ensure robust and efficient energy coupling of protein export during flagellar assembly" (<a href="https://pubmed.ncbi.nlm.nih.gov/26916245/">PMID: 26916245</a>).</p>
+<p>Crucially, FliI is <strong>not strictly essential</strong> for export in all genetic backgrounds. Bypass mutations in the gate protein FlhB (e.g., <em>flhB(P28T)</em>) permit flagellar assembly in the absence of FliH and FliI, demonstrating that PMF alone can drive export when the gate is constitutively activated. This establishes the division of labor: PMF is the direct motor; FliI/FliH/FliJ raise the efficiency and robustness of energy coupling by orders of magnitude and are physiologically required for normal flagellation, even if formally dispensable under bypass conditions. Recent work has further uncoupled substrate delivery from gate activation, confirming these are two distinct functions of the ATPase complex (<a href="https://pubmed.ncbi.nlm.nih.gov/42254510/">PMID: 42254510</a>). The FliJ surface engaging FlhA has been mapped genetically to a conserved patch of residues (<a href="https://pubmed.ncbi.nlm.nih.gov/23161028/">PMID: 23161028</a>), providing molecular detail for how the ATPase complex activates the gate.</p>
+<h3 id="finding-5-in-p-putida-flii-lies-within-the-fleqrponflia-regulated-flagellar-cluster-and-is-required-for-flagellum-assembly-and-motility">Finding 5 — In <em>P. putida</em>, <em>fliI</em> lies within the FleQ/RpoN/FliA-regulated flagellar cluster and is required for flagellum assembly and motility</h3>
+<p>Turning to the organism of interest: <em>P. putida</em> flagellar genes are organized in a single large cluster of ~59 genes (11 operons, 22 promoters) controlled by a three-tier regulatory cascade. "Synthesis of the flagellar apparatus and core chemotaxis machinery is regulated by a three-tier cascade in which <em>fleQ</em> is a Class I gene, standing at the top of the transcriptional hierarchy" (<a href="https://pubmed.ncbi.nlm.nih.gov/34859548/">PMID: 34859548</a>). FleQ is the master regulator (Class I), σ^N (RpoN) drives Class II genes, and the flagellar sigma factor FliA (σ²⁸) drives Class III genes. <em>fliI</em> sits within this regulon, so its expression is tied to the master motility program and is modulated by second-messenger (c-di-GMP) signaling through FleQ/FleN.</p>
+<p>Direct functional evidence in <em>P. putida</em> comes from the solvent-tolerant strain S12: transposon insertions in flagellar genes including <em>fliI</em> (alongside <em>flgK</em>, <em>flaG</em>, <em>fliC</em>, and <em>fliH</em>) produced non-motile cells. The study identified "the flagellar structural proteins FlgK, FlaG, FliI, FliC, and FliH" among disrupted genes and reported that "the transposon mutants … were nonmotile as determined by a swarm assay and the formation of the flagellum was totally impaired" (<a href="https://pubmed.ncbi.nlm.nih.gov/11430400/">PMID: 11430400</a>). This is the most direct organism-specific evidence: loss of <em>fliI</em> function in <em>P. putida</em> abolishes flagellum biogenesis and motility, exactly as predicted from its role as the export ATPase.</p>
+<p>Finally, the FliI-dependent export apparatus feeds into the polar-flagellum assembly system characteristic of <em>Pseudomonas</em>. Polar flagellar placement, timing, and number in <em>P. putida</em> are governed by FlhF, FleN, and FimV (<a href="https://pubmed.ncbi.nlm.nih.gov/39709681/">PMID: 39709681</a>), and the <em>flhA-flhF-fleN-fliA</em> operon links the export gate to these regulators (<a href="https://pubmed.ncbi.nlm.nih.gov/30889223/">PMID: 30889223</a>). FliI therefore operates within a spatially controlled program that builds a polar tuft of flagella once per cell cycle.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>The findings converge on a coherent, well-supported model of FliI as the <strong>energy-transducing hub of the flagellar export apparatus</strong>. The following schematic summarizes the architecture and energy flow:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">CYTOPLASM</span>
+<span class="w">   </span><span class="p">(</span><span class="n">chaperone</span><span class="err">–</span><span class="n">substrate</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="o">.</span><span class="n">g</span><span class="o">.</span><span class="w"> </span><span class="n">FlgN</span><span class="p">:</span><span class="n">FlgK</span><span class="p">,</span><span class="w"> </span><span class="n">FliT</span><span class="p">:</span><span class="n">FliD</span><span class="p">)</span>
+<span class="w"> </span><span class="err">│</span>
+<span class="w"> </span><span class="err">▼</span>
+<span class="w">      </span><span class="err">┌───────────────────────┐</span>
+<span class="w">      </span><span class="err">│</span><span class="w">  </span><span class="n">FliH₂</span><span class="err">–</span><span class="n">FliI</span><span class="w">  </span><span class="p">(</span><span class="n">mobile</span><span class="p">)</span><span class="w">  </span><span class="err">│</span><span class="w">  </span><span class="err">←</span><span class="w"> </span><span class="s2">&quot;dynamic substrate carrier&quot;</span>
+<span class="w">      </span><span class="err">│</span><span class="w">  </span><span class="n">picks</span><span class="w"> </span><span class="n">up</span><span class="w"> </span><span class="n">cargo</span><span class="w">        </span><span class="err">│</span>
+<span class="w">      </span><span class="err">└───────────┬───────────┘</span>
+<span class="w">  </span><span class="err">│</span><span class="w">  </span><span class="n">docks</span><span class="w"> </span><span class="n">via</span><span class="w"> </span><span class="n">FliH</span><span class="err">–</span><span class="n">FliN</span><span class="w"> </span><span class="p">(</span><span class="n">C</span><span class="o">-</span><span class="n">ring</span><span class="p">)</span>
+<span class="w">  </span><span class="err">▼</span>
+<span class="w">   </span><span class="err">══════════════════════════════════</span><span class="w">  </span><span class="n">INNER</span><span class="w"> </span><span class="n">MEMBRANE</span>
+<span class="w">   </span><span class="n">C</span><span class="o">-</span><span class="n">RING</span><span class="w"> </span><span class="p">(</span><span class="n">FliG</span><span class="o">/</span><span class="n">FliM</span><span class="o">/</span><span class="n">FliN</span><span class="p">)</span><span class="w">  </span><span class="err">│</span><span class="w">  </span><span class="n">EXPORT</span><span class="w"> </span><span class="n">GATE</span>
+<span class="n">FliI₆</span><span class="w"> </span><span class="n">ring</span><span class="w"> </span><span class="err">───</span><span class="w"> </span><span class="n">FliJ</span><span class="w"> </span><span class="err">───</span><span class="w"> </span><span class="n">FlhA</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">FlhB</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">FliPQR</span>
+<span class="w">     </span><span class="s2">&quot;static loader&quot;</span><span class="w">    </span><span class="p">(</span><span class="err">γ</span><span class="o">-</span><span class="n">like</span><span class="p">)</span><span class="w">     </span><span class="p">(</span><span class="mi">6</span><span class="w"> </span><span class="n">membrane</span><span class="w"> </span><span class="n">proteins</span><span class="p">)</span>
+<span class="w">  </span><span class="err">│</span>
+<span class="n">ATP</span><span class="w"> </span><span class="err">──►</span><span class="w"> </span><span class="n">ADP</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">Pi</span><span class="w">   </span><span class="p">(</span><span class="n">Glu221</span><span class="w"> </span><span class="n">catalytic</span><span class="p">)</span>
+<span class="w">  </span><span class="err">│</span>
+<span class="w">  </span><span class="err">▼</span>
+<span class="w">      </span><span class="n">Activates</span><span class="w"> </span><span class="n">gate</span><span class="w"> </span><span class="err">⇒</span><span class="w"> </span><span class="err">Δψ</span><span class="w"> </span><span class="p">(</span><span class="n">membrane</span><span class="w"> </span><span class="n">voltage</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">PMF</span><span class="p">)</span>
+<span class="w">       </span><span class="n">drives</span><span class="w"> </span><span class="n">proton</span><span class="o">-</span><span class="n">coupled</span><span class="w"> </span><span class="k">export</span>
+<span class="w">  </span><span class="err">│</span>
+<span class="w">  </span><span class="err">▼</span>
+<span class="w">     </span><span class="n">Axial</span><span class="w"> </span><span class="n">subunits</span><span class="w"> </span><span class="n">threaded</span><span class="w"> </span><span class="n">through</span><span class="w"> </span><span class="n">central</span><span class="w"> </span><span class="n">channel</span>
+<span class="w">  </span><span class="err">│</span>
+<span class="w">  </span><span class="err">▼</span>
+<span class="n">EXPORT</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">FLAGELLUM</span><span class="w"> </span><span class="n">ASSEMBLY</span><span class="w"> </span><span class="p">(</span><span class="n">extracellular</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>Energy logic.</strong> The single most important conceptual point is that FliI does <em>not</em> directly push proteins across the membrane. Instead, ATP hydrolysis by the FliI₆ ring (catalytic Glu221) is spent on <strong>activating</strong> the membrane export gate — chiefly by enabling the FliJ–FlhA interaction — after which the <strong>proton-motive force (specifically Δψ)</strong> provides the direct translocation energy (<a href="https://pubmed.ncbi.nlm.nih.gov/34035173/">PMID: 34035173</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/21934659/">PMID: 21934659</a>). This explains the otherwise puzzling observation that <em>fliH fliI</em> deletions can be bypassed by gate mutations (e.g., <em>flhB(P28T)</em>): if the gate is locked "on," PMF suffices, but at greatly reduced efficiency and robustness.</p>
+<p><strong>Two-role model.</strong> FliI performs two mechanistically separable jobs: (1) <strong>substrate loading/delivery</strong> as the mobile FliH₂–FliI carrier and static FliI₆ loader, and (2) <strong>gate activation/energy coupling</strong> via ATP hydrolysis and FliJ–FlhA engagement. Recent cross-complementation work explicitly uncoupled these roles (<a href="https://pubmed.ncbi.nlm.nih.gov/42254510/">PMID: 42254510</a>), and the flagellin data (<a href="https://pubmed.ncbi.nlm.nih.gov/25068520/">PMID: 25068520</a>) show that the delivery role is substrate-selective (important for minor late substrates FlgK/FlgL/FliD, dispensable for bulk flagellin).</p>
+<p><strong>Structural evolution.</strong> The FliI₆–FliJ assembly is a structural echo of the α₃β₃γ core of F₁-ATP synthase (<a href="https://pubmed.ncbi.nlm.nih.gov/26984495/">PMID: 26984495</a>), revealing that the flagellar/T3SS export ATPase and the respiratory ATP synthase share a common ancestor. FliI thus repurposes an ancient nucleotide-hydrolysis machine for protein secretion rather than chemiosmotic energy conservation.</p>
+<p><strong>Organism context.</strong> In <em>P. putida</em> KT2440, this machine is deployed under a FleQ→RpoN→FliA cascade (<a href="https://pubmed.ncbi.nlm.nih.gov/34859548/">PMID: 34859548</a>) to build a polar flagellar tuft whose position and number are set by FlhF/FleN/FimV (<a href="https://pubmed.ncbi.nlm.nih.gov/39709681/">PMID: 39709681</a>). Disrupting <em>fliI</em> collapses the whole program: no flagellum, no motility (<a href="https://pubmed.ncbi.nlm.nih.gov/11430400/">PMID: 11430400</a>).</p>
+<h3 id="summary-table-of-flii-properties">Summary table of FliI properties</h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Assignment</th>
+<th>Evidence type</th>
+<th>Key PMID</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Catalyzed reaction</td>
+<td>ATP + H₂O → ADP + Pᵢ (EC 7.1.2.2)</td>
+<td>Annotation + ortholog biochem</td>
+<td>UniProt; 19665005</td>
+</tr>
+<tr>
+<td>Substrate specificity</td>
+<td>ATP (nucleotide)</td>
+<td>Biochemistry</td>
+<td>19665005</td>
+</tr>
+<tr>
+<td>Oligomeric state</td>
+<td>ATP-driven homohexamer (FliI₆)</td>
+<td>Biochem/structure</td>
+<td>19665005; 26984495</td>
+</tr>
+<tr>
+<td>Catalytic residue</td>
+<td>Glu221 (hydrolysis)</td>
+<td>Site-directed mutagenesis</td>
+<td>19665005</td>
+</tr>
+<tr>
+<td>Structural fold</td>
+<td>F₁-ATPase α/β homolog; FliI₆–FliJ ≈ α₃β₃γ</td>
+<td>Crystal structure</td>
+<td>26984495</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Cytoplasm, docked at C-ring/basal body via FliH–FliN</td>
+<td>Single-molecule imaging</td>
+<td>25284201</td>
+</tr>
+<tr>
+<td>Partners</td>
+<td>FliH (regulator/anchor), FliJ (γ-like), FlhA/FliN (docking)</td>
+<td>Genetics/biochem</td>
+<td>25284201; 21934659</td>
+</tr>
+<tr>
+<td>Primary mechanistic role</td>
+<td>Activate PMF-driven export gate; couple energy</td>
+<td>Genetics/physiology</td>
+<td>34035173; 21934659</td>
+</tr>
+<tr>
+<td>Substrate delivery role</td>
+<td>Minor late substrates (FlgK/FlgL/FliD), not bulk flagellin</td>
+<td>Biophysics (QCM/ATPase)</td>
+<td>25068520</td>
+</tr>
+<tr>
+<td>Essentiality</td>
+<td>Important, not strictly essential (bypassable)</td>
+<td>Genetics</td>
+<td>26916245</td>
+</tr>
+<tr>
+<td><em>P. putida</em> phenotype</td>
+<td>Loss → no flagellum, non-motile</td>
+<td>Transposon mutagenesis</td>
+<td>11430400</td>
+</tr>
+<tr>
+<td><em>P. putida</em> regulation</td>
+<td>FleQ (Class I) → RpoN → FliA cascade</td>
+<td>Transcriptomics</td>
+<td>34859548</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<p>The report integrates 14 papers. Because dedicated Q88ET7-specific biochemistry is limited, the mechanistic backbone comes from <em>Salmonella</em> orthologs (justified by strong sequence/structure conservation), while organism-specificity is supplied by <em>P. putida</em> genetics and regulation.</p>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>Organism</th>
+<th>How it supports the report</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21934659/">21934659</a></td>
+<td><em>An energy transduction mechanism used in bacterial flagellar type III protein export</em></td>
+<td><em>Salmonella</em></td>
+<td>Establishes FliI–FliH–FliJ substrate escort and the FliJ–FlhA gate-activation mechanism (F1, F4)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19665005/">19665005</a></td>
+<td><em>ATP-induced FliI hexamerization facilitates flagellar protein export</em></td>
+<td><em>Salmonella</em></td>
+<td>Hexamerization requirement and catalytic Glu221 via E221Q mutant (F2)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26984495/">26984495</a></td>
+<td><em>Complex structure of the type III ATPase and its regulator</em></td>
+<td><em>Salmonella</em></td>
+<td>FliI₆–FliJ ≈ α₃β₃γ of F₁-ATPase; structural homology (F2)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25284201/">25284201</a></td>
+<td><em>Assembly dynamics and the roles of FliI ATPase</em></td>
+<td><em>Salmonella</em></td>
+<td>Cytoplasmic FliH₂–FliI, docking via FliH–FliN, dynamic carrier vs static loader (F3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/34035173/">34035173</a></td>
+<td><em>Membrane voltage-dependent activation of the flagellar export apparatus</em></td>
+<td><em>Salmonella</em></td>
+<td>ATP hydrolysis activates Δψ-driven gate (F4)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26916245/">26916245</a></td>
+<td><em>FliH and FliI ensure efficient energy coupling</em></td>
+<td><em>Salmonella</em></td>
+<td>Robust/efficient energy coupling; non-essential-but-important status (F4)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/42254510/">42254510</a></td>
+<td><em>Uncoupling substrate delivery from export gate activation</em></td>
+<td><em>Salmonella</em>/Na⁺-driven</td>
+<td>Confirms two distinct ATPase-complex functions (model)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25068520/">25068520</a></td>
+<td><em>Soluble components do not deliver flagellin</em></td>
+<td><em>Salmonella</em></td>
+<td>Refines substrate scope: FliI escort matters for minor late substrates, not bulk FliC (F3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23161028/">23161028</a></td>
+<td><em>Interaction between FliJ and FlhA</em></td>
+<td><em>Salmonella</em></td>
+<td>Maps the conserved FliJ surface engaging FlhA (mechanism of gate activation)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25201947/">25201947</a></td>
+<td><em>Assembling flagella without FliO</em></td>
+<td><em>Salmonella</em></td>
+<td>Context on the six-protein transmembrane export gate FliI acts upon</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11430400/">11430400</a></td>
+<td><em>Transposon mutations in flagella biosynthesis of P. putida S12</em></td>
+<td><em>P. putida</em></td>
+<td>Direct: <em>fliI</em> disruption abolishes flagellum and motility (F5)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/34859548/">34859548</a></td>
+<td><em>Transcriptional organization of the P. putida flagellar system</em></td>
+<td><em>P. putida</em></td>
+<td>FleQ/RpoN/FliA three-tier cascade; regulon context (F5)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30889223/">30889223</a></td>
+<td><em>Regulation of flhF and fleN in P. putida</em></td>
+<td><em>P. putida</em></td>
+<td>Export-gate operon and its regulation; links to biofilm/c-di-GMP</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/39709681/">39709681</a></td>
+<td><em>Regulation of polar flagella assembly in P. putida</em></td>
+<td><em>P. putida</em></td>
+<td>FlhF/FleN/FimV set position/timing/number of polar flagella (F5)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Consistency of evidence.</strong> All mechanistic papers agree on the core model (ATPase complex activates a PMF-driven gate), differing mainly in emphasis. The one important refinement — that FliI is not the direct translocation motor and is bypassable — comes from bypass-mutant genetics and the PMF/Δψ work (<a href="https://pubmed.ncbi.nlm.nih.gov/34035173/">PMID: 34035173</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/26916245/">PMID: 26916245</a>), and is fully compatible with the <em>P. putida</em> loss-of-function phenotype (bypass mutations are rare/engineered; wild-type cells still need FliI for normal flagellation).</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct biochemistry on Q88ET7 itself.</strong> The ATP-hydrolysis kinetics, hexamerization, and gate-activation properties are inferred from <em>Salmonella</em> orthologs. While conservation is high (identical family, domain signature, EC number), the specific catalytic residue numbering (e.g., "Glu221") and kinetic parameters have not been experimentally confirmed for the <em>P. putida</em> protein. Sequence alignment to confirm the catalytic Walker-B glutamate in Q88ET7 would close this gap.</p>
+</li>
+<li>
+<p><strong>Polar (fT3SS) vs. peritrichous system differences.</strong> Most mechanistic data derive from peritrichously flagellated <em>Salmonella</em>. <em>P. putida</em> builds a <em>polar</em> flagellar tuft with additional spatial regulators (FlhF/FleN/FimV). Whether FliI's docking dynamics or regulation differ in the polar context is untested.</p>
+</li>
+<li>
+<p><strong>Substrate-delivery scope in <em>P. putida</em>.</strong> The finding that soluble components do not carry flagellin (<a href="https://pubmed.ncbi.nlm.nih.gov/25068520/">PMID: 25068520</a>) was established in <em>Salmonella</em>; the corresponding substrate hierarchy in <em>P. putida</em> is assumed, not demonstrated.</p>
+</li>
+<li>
+<p><strong>Quantitative essentiality.</strong> The transposon study (<a href="https://pubmed.ncbi.nlm.nih.gov/11430400/">PMID: 11430400</a>) shows loss of flagellum/motility but did not test bypass suppressors, so the degree to which <em>P. putida fliI</em> is bypassable (as in <em>Salmonella</em>) is unknown.</p>
+</li>
+<li>
+<p><strong>Possible regulatory links to lifestyle switching.</strong> In <em>P. putida</em>, flagellar regulators (FleQ/FleN, c-di-GMP) also control biofilm genes (<a href="https://pubmed.ncbi.nlm.nih.gov/30889223/">PMID: 30889223</a>); whether the export ATPase intersects motility–biofilm switching beyond building the flagellum is not addressed here (and is largely outside the requested "precise primary function" scope).</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Confirm the catalytic residue in Q88ET7.</strong> Perform a sequence alignment of Q88ET7 against <em>Salmonella</em> FliI (P26465) to identify the residue corresponding to catalytic Glu221 and the Walker-A/B motifs. This low-cost bioinformatic step would directly transfer the mutagenesis conclusion to <em>P. putida</em>.</p>
+</li>
+<li>
+<p><strong>Biochemical validation.</strong> Express and purify recombinant <em>P. putida</em> FliI; measure ATPase activity (e.g., malachite-green Pᵢ release), test ATP-dependent hexamerization by size-exclusion/native gels, and construct the E→Q catalytic mutant to confirm hydrolysis-dead-but-binding behavior.</p>
+</li>
+<li>
+<p><strong>Clean genetic test in KT2440.</strong> Build a markerless in-frame <em>fliI</em> deletion in <em>P. putida</em> KT2440 (as opposed to transposon insertion in strain S12), quantify swimming motility and flagellation by electron microscopy, and test for bypass suppressors (screen for gate mutations analogous to <em>flhB(P28T)</em>) to determine essentiality/bypassability in the polar system.</p>
+</li>
+<li>
+<p><strong>Localization imaging.</strong> Use a fluorescent FliI fusion in <em>P. putida</em> to test whether it docks at the single/few polar basal bodies and whether the dynamic-carrier/static-loader behavior seen in <em>Salmonella</em> holds in a polar flagellate.</p>
+</li>
+<li>
+<p><strong>Structure prediction/validation.</strong> Generate an AlphaFold model of Q88ET7 and the FliI₆–FliJ assembly, compare to the <em>Salmonella</em> structure (<a href="https://pubmed.ncbi.nlm.nih.gov/26984495/">PMID: 26984495</a>), and verify the F₁-like fold and nucleotide-binding pocket.</p>
+</li>
+<li>
+<p><strong>PMF dependence.</strong> Test flagellar export in <em>P. putida</em> under PMF-collapsing conditions (protonophores) with and without functional FliI to confirm the ATP-activates-gate / PMF-drives-export division of labor in this organism.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>FliI (Q88ET7, PP_4366) is unambiguously the <strong>flagellum-specific export ATPase</strong> of <em>P. putida</em> KT2440. Its primary function is to hydrolyze ATP (ATP + H₂O → ADP + Pᵢ; EC 7.1.2.2) as an F₁-ATPase-homologous homohexamer, using that energy to load chaperone–substrate complexes onto, and to activate, the membrane-embedded flagellar type III export gate — enabling the proton-motive force to drive translocation of flagellar axial subunits during flagellum assembly. It operates at the cytoplasmic face of the flagellar basal body (C-ring), partners with FliH and FliJ, and is required for flagellum biogenesis and motility in <em>P. putida</em>. It is a critical efficiency/coupling factor rather than the obligate translocation motor, and it functions within the FleQ/RpoN/FliA-regulated flagellar program that builds the polar flagellar tuft.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="fliI-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="fliI-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:21934659</li>
+<li>PMID:26984495</li>
+<li>PMID:19665005</li>
+<li>PMID:25284201</li>
+<li>PMID:25068520</li>
+<li>PMID:34035173</li>
+<li>PMID:26916245</li>
+<li>PMID:42254510</li>
+<li>PMID:23161028</li>
+<li>PMID:34859548</li>
+<li>PMID:11430400</li>
+<li>PMID:39709681</li>
+<li>PMID:30889223</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88ET7
+gene_symbol: fliI
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida KT2440
+description: &gt;-
+  FliI is the cytoplasmic ATPase of the flagellar type III export apparatus. It
+  hydrolyzes ATP to support docking, unfolding, and delivery of flagellar substrates
+  to the membrane export gate during flagellum assembly; it is not an ATP synthase.
+existing_annotations:
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: FliI is a P-loop ATPase and binds ATP as its catalytic substrate.
+    action: KEEP_AS_NON_CORE
+    reason: Correct but less informative than the catalytic activity annotation.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: FliI is a peripheral cytoplasmic ATPase recruited to the export apparatus.
+    action: ACCEPT
+    reason: Correct localization for the soluble catalytic component.
+- term:
+    id: GO:0008564
+    label: protein-exporting ATPase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  qualifier: enables
+  review:
+    summary: FliI couples ATP hydrolysis to handling of proteins exported by the flagellar apparatus.
+    action: ACCEPT
+    reason: This is the most specific supported molecular function for FliI.
+- term:
+    id: GO:0015986
+    label: proton motive force-driven ATP synthesis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  qualifier: involved_in
+  review:
+    summary: FliI consumes ATP during flagellar export and does not synthesize ATP from proton motive force.
+    action: REMOVE
+    reason: This erroneous inference confuses homology to rotary ATPases with FliI&#39;s export ATPase role.
+    supported_by:
+    - reference_id: file:PSEPK/fliI/fliI-deep-research-openscientist.md
+      supporting_text: it consumes ATP to do work, rather than synthesizing it.
+- term:
+    id: GO:0016887
+    label: ATP hydrolysis activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: ATP hydrolysis is the catalytic reaction performed by FliI.
+    action: ACCEPT
+    reason: Correct catalytic activity, retained alongside the more contextual protein-exporting ATPase term.
+    supported_by:
+    - reference_id: file:PSEPK/fliI/fliI-deep-research-openscientist.md
+      supporting_text: The core catalytic activity is ATP hydrolysis (ATP + H₂O → ADP + Pᵢ).
+- term:
+    id: GO:0030254
+    label: protein secretion by the type III secretion system
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: FliI powers substrate handling in the flagellar type III export system.
+    action: ACCEPT
+    reason: Correct process assignment for the flagellar export ATPase.
+- term:
+    id: GO:0030257
+    label: type III protein secretion system complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: part_of
+  review:
+    summary: FliI associates with the cytoplasmic face of the flagellar type III export apparatus.
+    action: ACCEPT
+    reason: Correct complex-level localization without assigning the whole apparatus activity to other subunits.
+- term:
+    id: GO:0044780
+    label: bacterial-type flagellum assembly
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: FliI-dependent export supports ordered flagellar assembly.
+    action: ACCEPT
+    reason: Core biological process for this dedicated export ATPase.
+- term:
+    id: GO:0046933
+    label: proton-transporting ATP synthase activity, rotational mechanism
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: FliI hydrolyzes ATP for protein export and is not a proton-transporting ATP synthase.
+    action: REMOVE
+    reason: Phylogenetic transfer across homologous ATPase families produced a contradicted molecular-function assignment.
+    supported_by:
+    - reference_id: file:PSEPK/fliI/fliI-deep-research-openscientist.md
+      supporting_text: it consumes ATP to do work, rather than synthesizing it.
+- term:
+    id: GO:0071973
+    label: bacterial-type flagellum-dependent cell motility
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Functional flagellar export is required upstream for construction of a motile flagellum.
+    action: KEEP_AS_NON_CORE
+    reason: Correct downstream phenotype, but assembly/export is the more direct process.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Enzyme Commission mapping
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology links
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/fliI/fliI-deep-research-openscientist.md
+  title: OpenScientist functional report for PSEPK FliI
+  findings:
+  - statement: &gt;-
+      Supports FliI ATP hydrolysis, FliH/FliJ complex function, basal-body
+      recruitment, and activation of the PMF-driven flagellar export gate.
+  reference_review:
+    relevance: HIGH
+    correctness: MISCITED
+    review_notes: &gt;-
+      The report correctly states that FliI consumes ATP and is not an ATP
+      synthase. It also repeats EC 7.1.2.2 and calls the historical
+      &#34;flagellum-specific ATP synthase&#34; name consistent, an internal
+      contradiction. Only the explicit ATPase/refutation statement is used.
+core_functions:
+- description: ATP-dependent substrate-handling component of the flagellar type III export apparatus.
+  molecular_function:
+    id: GO:0008564
+    label: protein-exporting ATPase activity
+  directly_involved_in:
+  - id: GO:0044780
+    label: bacterial-type flagellum assembly
+  locations:
+  - id: GO:0005737
+    label: cytoplasm
+  in_complex:
+    id: GO:0030257
+    label: type III protein secretion system complex
+proposed_new_terms: []
+suggested_questions: []
+suggested_experiments: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
