@@ -10,6 +10,14 @@
 
 - The KT2440 structural paper treats PcaF as a degradative thiolase model and shows features expected for degradative rather than biosynthetic thiolases [PMID:32647822 Structural basis for differentiation between two classes of thiolase: Degradative vs biosynthetic thiolase, "we exploit, a tetrameric degradative thiolase from Pseudomonas putida KT2440 annotated as PcaF, as a model system"; "Degradative thiolases have different active site architecture when compared to biosynthetic thiolases"].
 
+- The same structural study reports a tunnel capable of accommodating acyl-CoA
+  chains longer than C8 [PMID:32647822 "PcaF can bind to the substrates longer
+  than C8 acyl CoA."]. These ligand-trapping experiments used active-site
+  mutants and crystallographic soaking, so they demonstrate in vitro substrate
+  accommodation rather than a physiological role in lipid metabolism. The
+  paper separately states that beta-ketoadipyl-CoA is the natural substrate
+  [PMID:32647822 "β-Ketoadipyl CoA is the natural substrate of PcaF"].
+
 - Current GOA for `Q88N39` is entirely automated and contains six annotations. The most specific molecular function term is `GO:0033812 3-oxoadipyl-CoA thiolase activity`; the two generic acyltransferase terms are redundant umbrella labels, and `GO:0006629 lipid metabolic process` looks like a family-level over-annotation rather than a pathway-specific assignment for this aromatic catabolic enzyme [file:PSEPK/pcaF/pcaF-goa.tsv "GO:0033812"; "GO:0016746"; "GO:0016747"; "GO:0006629"; "GO:0019619"].
 
 - This curation adds `GO:0042952 beta-ketoadipate pathway` as a proposed NEW
