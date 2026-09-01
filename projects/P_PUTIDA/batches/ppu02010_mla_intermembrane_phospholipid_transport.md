@@ -31,7 +31,7 @@ net transport direction open.
 | [x] | mlaF | PP_0958 | Q88P94 | MlaFEDB ATPase |
 | [x] | mlaE | PP_0959 | Q88P93 | MlaFEDB inner-membrane permease |
 | [x] | mlaD | PP_0960 | Q88P92 | MlaFEDB MCE-domain lipid-binding interface |
-| [x] | ttg2D | PP_0961 | Q88P91 | MlaC-family periplasmic phospholipid carrier |
+| [x] | ttg2D | PP_0961 | Q88P91 | MlaC-family periplasmic phospholipid carrier; OpenScientist integrated |
 | [x] | ttg2E | PP_0962 | Q88P90 | MlaB-like STAS accessory subunit |
 | [x] | vacJ | PP_2163 | Q88KX6 | MlaA-family outer-membrane interface; OpenScientist integrated |
 
