@@ -57,9 +57,53 @@ drug-efflux/MDR genes (bfr1/hba2, pmd1, caf5, obr1). At high H2O2 the Sty1/Atf1 
 - Core MF: DNA-binding transcription activator activity RNA pol II-specific (GO:0001228) — ACCEPT (IDA/IMP/EXP, many refs).
 - Core BP: positive regulation of transcription by RNA pol II (GO:0045944) and cellular response to oxidative stress (GO:0034599) — ACCEPT.
 - Sequence-specific RNA pol II cis-reg DNA binding (GO:0000978), cis-reg region binding (GO:0000976) — ACCEPT.
-- CC nucleus/cytoplasm/cytosol/chromatin — ACCEPT (well supported; reflect shuttling).
+- CC nucleus/cytoplasm/chromatin — ACCEPT (well supported; reflect shuttling); the
+  high-throughput cytosol `is_active_in` row is KEEP_AS_NON_CORE because Pap1's
+  transcriptional activity occurs in the nucleus.
 - DNA binding, bending (GO:0008301) — ACCEPT (IDA, FRET).
 - nucleosome binding (GO:0031491) — KEEP_AS_NON_CORE (EXP atlas; peripheral to TF core function).
 - RNA pol II transcription regulator complex (GO:0090575) — ACCEPT/KEEP (Prr1 heterodimer, Oxs1 complex).
 - protein binding (GO:0005515) — bare term; MARK as uninformative; note real partners (Prr1, Oxs1, Crm1, Tpx1).
 - Generic IEA terms (GO:0003700, GO:0006355, GO:0000981, GO:0005634/0005737 IEA) — ACCEPT but non-core/redundant where a more specific experimental term exists.
+
+## 2026-09-01 refresh and focused audit
+
+- Refetched UniProt and QuickGO inputs with `just fetch-gene SCHPO pap1 --force`.
+  The 95-row GOA set is unchanged apart from eight electronic-annotation dates; UniProt
+  advanced from entry version 197 to 198, changed its PaxDb cross-reference, added an
+  experimentally observed helix at residues 77-79, removed two redundant GO display
+  lines, and added the keyword-derived GO:0006351 cross-reference. The review continues
+  to adjudicate the QuickGO-derived `pap1-goa.tsv`, so the UniProt-only display change
+  does not create a new `existing_annotations` row.
+- Rechecked the three IBA rows against cached PAINT data. All descend from fungal node
+  PTN008082960, and pap1's own direct experimental annotations are among the descendant
+  evidence used by PAINT. That self-source is expected IBD provenance, not circularity;
+  all three transfers remain ACCEPT.
+- Corrected the linked PTHR40621 family review. The official PANTHER family label is
+  `TRANSCRIPTION FACTOR KAPC-RELATED`; the InterPro API's `bZIP YAP Transcription
+  Factors` description is LLM-generated and unchecked. The cached reviewed-entry CSV is
+  a representative slice rather than a complete membership census, so its 16 SF6 rows
+  must not be reported as the full subfamily size. Family-wide claims are now separated
+  from conclusions supported specifically for fungal node PTN008082960.
+- Reclassified all four GO:0005515 `protein binding` annotations as
+  MARK_AS_OVER_ANNOTATED. The underlying Oxs1, Prr1, importin-alpha, and Pap1
+  self-interactions remain biologically informative in their evidence summaries, but the
+  generic term does not describe the transcription-regulator, transport, or bZIP-dimer
+  mechanisms.
+- Added explicit GO-CAM-like core-function fields for GO:0001228, GO:0045944,
+  GO:0034599, and nuclear activity; these term ids are all already present in the current
+  GOA and pass strict branch validation.
+- Ran OpenScientist through the gene-hypothesis wrapper on direct nucleosome binding.
+  The report found the atlas signal was reportedly selective under high-stringency IP-MS,
+  but emphasized that co-purification cannot distinguish direct Pap1-histone contact from
+  a DNA/chromatin-bridged association and that the decisive full-text methods were not
+  programmatically accessible. [file:SCHPO/pap1/pap1-hypotheses/direct-nucleosome-binding/openscientist.md
+  "The evidence is co-immunoprecipitation/IP-MS, which cannot distinguish direct
+  core-histone contact from a stable indirect/bridged association"] GO:0031491 therefore
+  remains KEEP_AS_NON_CORE; no pioneer/remodeling activity or replacement GO term is
+  asserted.
+- Generated `pap1-deep-research-falcon.md` through the project wrapper. It independently
+  recapitulates Pap1's redox-regulated nuclear accumulation, Tpx1 dependence, and graded
+  Pap1-versus-Sty1/Atf1 response. Because parts of its mechanistic synthesis cite reviews
+  and dissertation material, it is used as corroborating context only; the cached primary
+  publications remain the evidence source for annotation decisions.
