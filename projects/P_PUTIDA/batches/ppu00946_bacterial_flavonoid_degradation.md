@@ -14,7 +14,7 @@ autolink_gene_symbols: false
   contiguous locus and the FdeD/FdeE reaction assignment
 - Primary bucket genes: 6
 - Existing review files: 8
-- Curated review files: 4
+- Curated review files: 6
 - Existing completed OpenScientist research files: 4
 
 ## Required Workflow
@@ -34,10 +34,10 @@ autolink_gene_symbols: false
 
 | Done | Gene | Locus | UniProt | Primary bucket | Existing review | Curation | OpenScientist research | Protein |
 |---|---|---|---|---|---|---|---|---|
-| [ ] | `bglX` | PP_1403 | Q88N13 | kegg:ppu00999 | PRESENT | INITIALIZED | RUNNING | Periplasmic beta-glucosidase (EC 3.2.1.21) (Beta-D-glucoside glucohydrolase) (Cellobiase) (Gentiobiase) |
+| [x] | `bglX` | PP_1403 | Q88N13 | kegg:ppu00999 | PRESENT | DRAFT | FAILED (DNS) | Periplasmic GH3 beta-glucosidase; no evidence for membership in the naringenin core |
 | [x] | `PP_3195` | PP_3195 | Q88I07 | kegg:ppu00946 | PRESENT | DRAFT | PRESENT | Predicted FdeB/R13077 carboxylic ester hydrolase; peptidase transfer removed |
 | [x] | `PP_3197` | PP_3197 | Q88I05 | kegg:ppu00946 | PRESENT | CURATED | PRESENT | Predicted FdeC-like flavonoid A-ring dioxygenase |
-| [ ] | `PP_3198` | PP_3198 | Q88I04 | kegg:ppu00946 | PRESENT | INITIALIZED | RUNNING | Ferredoxin, 2Fe-2S |
+| [x] | `PP_3198` | PP_3198 | Q88I04 | kegg:ppu00946 | PRESENT | DRAFT | FAILED (DNS) | Predicted FdeD Rieske [2Fe-2S] partner; electron-transfer partner remains unknown |
 | [x] | `PP_3199` | PP_3199 | Q88I03 | recovered from locus/KO reaction | PRESENT | DRAFT | PRESENT | Predicted FdeE-like FAD-dependent flavonoid monooxygenase; 40.4% identity to characterized Hsero_1007 |
 | [ ] | `PP_3204` | PP_3204 | Q88HZ8 | kegg:ppu00946 | PRESENT | INITIALIZED | RUNNING | Cupin type-2 domain-containing protein |
 | [ ] | `PP_3205` | PP_3205 | Q88HZ7 | kegg:ppu00946 | PRESENT | INITIALIZED | RUNNING | Fumarylacetoacetate hydrolase family protein |
@@ -54,3 +54,7 @@ autolink_gene_symbols: false
 - bglX is a possible glycoside-entry enzyme, not part of the five-reaction
   naringenin-aglycone core. It will remain outside the core module unless the
   species-aware report establishes a connected entry branch.
+- The bglX, PP_3198, and module/pathway OpenScientist calls ended with DNS
+  connection failures after their full runs and produced no research artifacts.
+  Their curation uses fetched database records, primary literature, and
+  committed reproducible analyses; provider output was not fabricated.
