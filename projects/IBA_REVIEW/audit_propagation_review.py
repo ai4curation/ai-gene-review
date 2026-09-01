@@ -390,19 +390,65 @@ for _s, _must_contain in (
 # The " #" must be on the SAME LINE as the scalar's text. A comment on its own line
 # after a value is ordinary YAML and discards nothing; an earlier version that searched
 # whitespace-normalised text conflated the two and reported 814 hits instead of 13.
-_TRUNCATION_MIN_LEN = 20
+# The floor exists because the match is a TAIL SEARCH: a very short value gives a very
+# short pattern, which both scans slowly and coincides with unrelated text. 12 is where
+# that stops being a real risk; the corpus result is identical at 12 and at 20, so this
+# is coverage bought for nothing rather than a threshold tuned to a number. Values
+# shorter than this are simply not judged -- worth knowing, since a `label:` cut to 8
+# characters has lost proportionally far more than EMC1's 357-character statement did.
+_TRUNCATION_MIN_LEN = 12
+# A non-space, non-"#" character, then horizontal space, then "#": the shape of an
+# inline comment. A "#" at the start of a line (a standalone comment) never matches.
+_INLINE_HASH = re.compile(r'[^\s#][ \t]+#')
 
 def _yaml_comment_truncations(raw, doc):
-    """Yield (path, lost_text) for plain scalars the parser cut at an inline '#'."""
-    for _path, _value, _key in _walk_all_scalars(doc, ''):
+    """Yield (path, lost_text) for plain scalars the parser cut at an inline '#'.
+
+    Note it cannot distinguish "the parser ate the author's text" from "the author
+    wrote a trailing comment" -- in YAML those are the same construct. That is not a
+    real gap: a trailing comment inside a curation record is itself content the schema
+    will never see, so reporting it is right either way. (Swept for it: no
+    `value  # note` form exists anywhere in the corpus today, so this is latent.)
+    """
+    # File-level pre-check. The per-value work below is a finditer over the whole raw
+    # text, which is far too slow to run for every scalar in every file; almost no file
+    # contains an inline "#" at all, so one cheap scan skips the vast majority outright.
+    if not _INLINE_HASH.search(raw):
+        return
+    for _path, _value in _walk_all_scalars(doc, ''):
         if len(_value) < _TRUNCATION_MIN_LEN:
             continue
         # Match the value's tail in the raw text, allowing YAML line-folding inside it,
         # then require a "#" after horizontal space only -- never across a newline.
-        _pat = re.escape(_value[-25:]).replace(r'\ ', r'\s+') + r'[ \t]+#'
-        _m = re.search(_pat, raw)
-        if _m:
-            yield _path, raw[_m.end() - 1:].split('\n', 1)[0]
+        # Requiring same-line is what structurally excludes block scalars (where "#" is
+        # literal and nothing is lost) and standalone comment lines after a value.
+        _tail = re.escape(_value[-25:]).replace(r'\ ', r'\s+')
+        _all = list(re.finditer(_tail, raw))
+        _cut = [_m for _m in _all if re.match(r'[ \t]+#', raw[_m.end():])]
+        if not _cut:
+            continue
+        # The search is over the whole file, not anchored to this value's own offset, so
+        # an identical tail occurring more than once needs care. Two separate questions:
+        #
+        #   IS this value cut?  Certain only when EVERY occurrence of the tail is cut.
+        #     If some occurrence is not, this value might be the intact one and the
+        #     finding would be a false positive borrowed from its twin -- so skip. That
+        #     trades a false negative for a false positive, the right direction for a
+        #     rule whose output sends a maintainer looking.
+        #
+        #   WHAT did it lose?  Answerable only when every occurrence lost the same text.
+        #     ATG14 is the live case and it is genuinely mixed: eight `reason` values
+        #     share the tail "e-review against GO issue", all eight are cut, but the
+        #     lost text has TWO variants ("...Same defect as..." and "...The cited
+        #     evidence describes..."). The defect is certain; the attribution is not.
+        #     Suppressing the finding on that basis would lose eight real truncations to
+        #     protect a payload, so report the finding and say the payload is ambiguous.
+        _lost = {raw[_m.end():].split('\n', 1)[0] for _m in _cut}
+        if len(_cut) != len(_all):
+            continue
+        yield _path, (_lost.pop() if len(_lost) == 1 else
+                      f"<{len(_lost)} variants at {len(_all)} identical tails, "
+                      f"e.g. {sorted(_lost)[0][:40]!r}>")
 
 def _walk_all_scalars(o, path, key=None):
     """Every string scalar, machine-sourced included: the parser cuts them all."""
@@ -413,7 +459,7 @@ def _walk_all_scalars(o, path, key=None):
         for i, v in enumerate(o):
             yield from _walk_all_scalars(v, f"{path}[{i}]", key)
     elif isinstance(o, str):
-        yield path, o, key
+        yield path, o
 
 # Self-test on real YAML, because the whole point is what the PARSER does -- asserting
 # against hand-written expectations would just re-encode my belief about YAML.
@@ -430,6 +476,30 @@ if [k for k in _tt_hits if k != '.description']:
     _selftest_failures.append(
         f"YAML_COMMENT_TRUNCATION fires on undamaged values {sorted(_tt_hits)} - "
         "a standalone comment line or a quoted '#' is not a truncation")
+
+# The duplicate-tail arms, each on real YAML. These decide whether a finding appears at
+# all, so a silent regression here is a false positive or eight lost real defects.
+# (a) Two identical tails, one cut and one intact: the intact value must NOT be reported
+#     on its twin's evidence, and the cut one is given up along with it.
+_tt_amb = ("a: the same trailing words appear twice here\n"
+           "b: the same trailing words appear twice here # lost text\n")
+if dict(_yaml_comment_truncations(_tt_amb, yaml.safe_load(_tt_amb))):
+    _selftest_failures.append(
+        "YAML_COMMENT_TRUNCATION reports a duplicated tail where one occurrence is "
+        "intact - it cannot tell which value is cut, so this is a false positive")
+# (b) Two identical tails, both cut, differing lost text: the finding must still appear
+#     (the truncation is certain) with the payload marked ambiguous (which text is not).
+_tt_two = ("a: the same trailing words appear twice here # lost ONE\n"
+           "b: the same trailing words appear twice here # lost TWO\n")
+_tt_two_hits = dict(_yaml_comment_truncations(_tt_two, yaml.safe_load(_tt_two)))
+if sorted(_tt_two_hits) != ['.a', '.b']:
+    _selftest_failures.append(
+        f"YAML_COMMENT_TRUNCATION lost a certain truncation to an ambiguous payload "
+        f"(reported {sorted(_tt_two_hits)}, expected both) - this is the ATG14 case")
+elif not all('variants' in _v for _v in _tt_two_hits.values()):
+    _selftest_failures.append(
+        f"YAML_COMMENT_TRUNCATION quotes one variant as if it were the value's own "
+        f"lost text ({_tt_two_hits}) - the payload must say it is ambiguous")
 
 if _selftest_failures:
     print("SELF-TEST FAILED - a detection rule cannot fire:")
@@ -503,13 +573,15 @@ for f in files:
     _parts=os.path.dirname(f).split(os.sep)
     org, g = _parts[-2], _parts[-1]
     own_ids = own.get((org,g), set())
-    d=yaml.safe_load(open(f))
+    with open(f) as _fh:
+        _raw = _fh.read()
+    d=yaml.safe_load(_raw)
     # Whole-document, not per-propagation_review-block: the substitution that motivated
     # this also rewrote `reason`, and a review with no propagation_review at all is just
     # as capable of carrying the damage.
     _ann_terms = {_j: ((_a.get('term') or {}).get('id'))
                   for _j, _a in enumerate(d.get('existing_annotations') or [])}
-    for _tpath, _lost in _yaml_comment_truncations(open(f).read(), d):
+    for _tpath, _lost in _yaml_comment_truncations(_raw, d):
         _ti = re.match(r'\.existing_annotations\[(\d+)\]', _tpath)
         _tloc = (f"{org}/{g}[{_ti.group(1)}] {_ann_terms.get(int(_ti.group(1))) or '?'}"
                  if _ti else f"{org}/{g}")
