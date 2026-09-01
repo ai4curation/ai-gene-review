@@ -122,3 +122,28 @@ since the ZNF445-clade IRD proves it is not family-wide. Representative members
 A0A8J0SCI2 and P18752 are not yet in `panther-members.tsv` (index refresh left
 to the orchestrator), so `validate-families` reports two acceptable UNRESOLVED
 membership lines.
+
+### Addendum (2026-08-31): SF440 membership withdrawn after member-index refresh
+
+After the orchestrator ran `just refresh-panther-members`, the refreshed
+`interpro/panther/panther-members.tsv` (resolved live against the current PANTHER
+release) reclassifies both proteins this pass had placed in PTHR24381:SF440:
+**A0A8J0SCI2 -> PTHR24377:SF929** and X. laevis XlCOF7.2 **P18752 ->
+PTHR23226:SF391**. The cached `A0A8J0SCI2-uniprot.txt` still carries
+`PTHR24381:SF440`; this is release drift between the cached/annotation release
+and current PANTHER, not a curation error on either side.
+
+Consequences applied to `interpro/panther/PTHR24381/PTHR24381-review.yaml`:
+the SF440 subfamily entry (with both representative members) was removed rather
+than re-pointed ("assert no id you cannot be sure of"; re-assigning the proteins
+to PTHR24377/PTHR23226 would be an evolutionary-placement judgment not made
+here), and the GO:0000978 term assessment was rescoped from SUBFAMILY_ONLY
+[SF440] to **UNRESOLVED**, with the drift and the still-valid facts (not
+family-wide because of the ZNF445-clade IRD; sound at PTN001225435) recorded in
+its scope_reason.
+
+The four IBA rows and their propagation_review blocks here are unaffected: the
+GOA WITH/FROM cites PANTHER:PTN001225435, a node in PTHR24381's cached PAINT
+slice, so the annotations under review descend from PTHR24381's tree as of the
+annotation release, and the node assessments stand. This gene review's text
+never claimed SF440 membership, so no gene-review wording needed softening.
