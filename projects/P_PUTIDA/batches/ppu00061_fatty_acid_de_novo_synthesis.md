@@ -22,6 +22,8 @@ existing type-I, mammalian `fatty_acid_de_novo_synthesis` module.
   `type_ii_fatty_acid_synthesis` module.
 - [x] Run full OpenScientist module research.
 - [x] Run full OpenScientist module + `ppu00061` + PSEPK research.
+- [x] Re-audit family grounding after the PANTHER precision validator was added.
+- [x] Narrow role-specific FabA, FabB, and FabF selectors and add reviewed E. coli exemplars.
 - [x] Render the module and project page.
 - [x] Open one non-draft PR and clear review and CI.
 
@@ -70,3 +72,23 @@ The complete 19-gene KEGG source snapshot remains in
 `ppu00061_fatty_acid_de_novo_synthesis.tsv`; the two evidence-driven initiation
 genes added above are documented separately from that immutable source
 snapshot.
+
+## 2026-09-01 Family-Grounding Repair
+
+The FabA isomerase selector is now grounded on `PTHR30272:SF8` with reviewed
+E. coli P0A6Q3. The shared-cycle FabA dehydratase selector uses the same
+subfamily and the dehydratase-specific PAINT node PTN008624492; that node is
+not applied to the distinct isomerase activity. Role-specific FabB selectors
+use `PTHR11712:SF306` with P0A953,
+and the FabF elongation selector uses `PTHR11712:SF336` with P0AAI5. The
+official SF336 name contains "mitochondrial" even though the subfamily also
+contains bacterial FabF proteins; it is retained verbatim as a PANTHER label
+and is not interpreted as a localization assertion.
+
+The MadB-dependent initiation variant intentionally retains parent
+`PTHR11712`: its descriptor spans both FabB and FabF representatives, which
+occupy different subfamilies, and the exact leaf function constrains the
+required chemistry. The broad PAINT node `PTN000918584` supports generic KAS
+activity across the parent family but does not resolve FabB/FabF substrate
+specialization, so reviewed exemplars are used instead of adding an ancestral
+node to those role-specific selectors.
