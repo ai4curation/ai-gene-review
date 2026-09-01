@@ -219,6 +219,16 @@ corroborates that the family contains such a gene; it does not establish that th
 `FB:`/`SGD:` id in the `WITH/FROM` **is** that entry. Say "corroborated", not
 "resolved", when that is what happened.
 
+In this corpus **"corroborated through the UniProt cross-reference for this MOD id
+(ACC)"** is the standard phrasing for that situation: the family index confirms `ACC`
+is the named protein, while the MOD-id-to-accession step is an inference rather than a
+lookup. Reserve "resolved" for a step some file in the repository actually performs.
+
+Universal quantifiers over a seed set need the same care as a definite singular:
+"seeded entirely by X" or "every seed is an X" claims something about donors the block
+may not have identified. Scope it — "every seed this review identified" — or name the
+unidentified ones and say no claim is made about them.
+
 ### What an IBA actually asserts, and two ways to misread the WITH/FROM
 
 An IBA is not a similarity transfer from one gene to another. Behind every IBA is a
