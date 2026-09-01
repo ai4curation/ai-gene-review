@@ -123,7 +123,7 @@ advisory warnings remain non-blocking and are unrelated to this batch.
   support the corresponding leaf functions. The IlvH catalytic PAINT
   assertion and the broad IlvD lyase node were inspected but deliberately not
   promoted.
-- Replaced the affected NCBIfam selectors with exact PANTHER family or
+- Replaced affected legacy family selectors with exact PANTHER family or
   subfamily identifiers, retaining official labels verbatim and documenting
   misleading mitochondrial wording where applicable.
 - Changed the IlvA-to-IlvIH relationship to `PROVIDES_INPUT_FOR`: IlvA supplies
