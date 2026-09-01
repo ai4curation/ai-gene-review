@@ -112,3 +112,16 @@ and GO:0006750 remain core for canonical GshA and GshB; generic catalytic,
 binding, and localization terms remain over-annotated or non-core. PP_3253's
 specific ligase and process terms remain undecided, its broad C-N ligase class
 is non-core, and no core function is asserted.
+
+## 2026-09-01 Family-evidence repair
+
+The bifunctional *Pasteurella multocida* GshAB/GshF exemplar Q9CM00 is assigned
+to PANTHER:PTHR38761:SF1 on the basis of its N-terminal glutamate--cysteine
+ligase region, even though the same polypeptide also performs the second
+glutathione-synthetase reaction. The second module leaf now includes that exact
+whole-protein family assignment so its representative-member declaration is
+internally valid. This does not treat the misleadingly narrow PANTHER label as
+evidence for the second activity: InterPro:IPR040657 identifies the C-terminal
+ATP-grasp-like domain and PMID:16339152 directly establishes both activities in
+the recombinant fusion. The two reaction leaves and the canonical monofunctional
+GshA and GshB families remain unchanged.
