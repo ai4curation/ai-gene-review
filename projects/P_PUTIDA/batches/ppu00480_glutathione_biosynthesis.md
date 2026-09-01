@@ -115,6 +115,8 @@ is non-core, and no core function is asserted.
 
 ## 2026-09-01 Family-evidence repair
 
+Repair PR: [#2862](https://github.com/ai4curation/ai-gene-review/pull/2862).
+
 The bifunctional *Pasteurella multocida* GshAB/GshF exemplar Q9CM00 is assigned
 to PANTHER:PTHR38761:SF1 on the basis of its N-terminal glutamate--cysteine
 ligase region, even though the same polypeptide also performs the second
