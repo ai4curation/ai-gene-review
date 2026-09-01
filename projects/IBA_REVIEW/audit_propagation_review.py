@@ -13,7 +13,7 @@ Usage:  python3 projects/IBA_REVIEW/audit_propagation_review.py [glob ...]
 Defaults to genes/mouse/*/*-ai-review.yaml; pass globs to audit other organisms,
 e.g. the ISO backlog:  ... audit_propagation_review.py 'genes/human/*/*-ai-review.yaml'
 """
-import yaml, glob, os, re, csv, sys
+import yaml, glob, os, re, csv
 
 VALID_RC={'NO_FAILURE_CORE','NO_FAILURE_NON_CORE','SOURCE_BAD','SOURCE_STALE_OR_MISSING',
  'SOURCE_WEAK_OR_INFERRED','EVIDENCE_CIRCULAR_OR_REDUNDANT','PROPAGATION_BAD',
@@ -28,25 +28,34 @@ VALID_SS={'SUPPORTS_TRANSFER','SUPPORTS_SOURCE_BUT_NOT_TARGET','SOURCE_BAD','SOU
 # self-seed map: gene -> set of own ids
 import sys
 PATTERNS = sys.argv[1:] or ['genes/mouse/*/*-ai-review.yaml']
-# gene -> its own MGI id, read from each gene's UniProt record
-mgi={}
-for _d in glob.glob('genes/*/*/'):
-    _g=os.path.basename(_d.rstrip('/'))
-    _f=f'{_d}{_g}-uniprot.txt'
-    if os.path.exists(_f):
-        _m=re.search(r'^DR   MGI; (MGI:\d+);', open(_f).read(), re.M)
-        if _m: mgi[_g]=_m.group(1)
+
+# Model-organism database cross-references that appear as self-seed ids in WITH/FROM.
+# The DR line name and the id prefix used in GOA differ for several of these.
+MOD_XREFS = {
+    'MGI': 'MGI', 'RGD': 'RGD', 'SGD': 'SGD', 'FlyBase': 'FB',
+    'WormBase': 'WB', 'ZFIN': 'ZFIN', 'TAIR': 'TAIR', 'dictyBase': 'dictyBase',
+    'PomBase': 'PomBase', 'CGD': 'CGD',
+}
+# (organism, gene) -> the set of identifiers that denote the review target itself.
+# Keyed by organism as well as gene because directory basenames collide across species
+# (mouse and rat share Akt1, Casp3, Egfr, Ghr, Hspa8, Mapk1, Slc5a1, ...).
 own={}
 for d in sorted(glob.glob('genes/*/*/')):
-    g=os.path.basename(d.rstrip('/')); s=set()
-    if mgi.get(g): s.add('MGI:'+mgi[g])
+    parts=d.rstrip('/').split(os.sep)
+    org, g = parts[-2], parts[-1]
+    ids=set()
     f=f'{d}{g}-uniprot.txt'
     if os.path.exists(f):
-        m=re.search(r'^AC   (.+)$', open(f).read(), re.M)
+        txt=open(f).read()
+        for dr_name, id_prefix in MOD_XREFS.items():
+            for m in re.finditer(rf'^DR   {re.escape(dr_name)}; ([^;]+);', txt, re.M):
+                val=m.group(1).strip()
+                ids.add(val if val.startswith(id_prefix+':') else f'{id_prefix}:{val}')
+        m=re.search(r'^AC   (.+)$', txt, re.M)
         if m:
             for a in m.group(1).split(';'):
-                if a.strip(): s.add('UniProtKB:'+a.strip())
-    own[g]=s
+                if a.strip(): ids.add('UniProtKB:'+a.strip())
+    own[(org,g)]=ids
 
 # valid PANTHER family labels
 fam_label={}
@@ -61,7 +70,9 @@ except Exception: pass
 issues=[]; n=0
 files=[f for pat in PATTERNS for f in sorted(glob.glob(pat))]
 for f in files:
-    g=os.path.basename(os.path.dirname(f))
+    _parts=os.path.dirname(f).split(os.sep)
+    org, g = _parts[-2], _parts[-1]
+    own_ids = own.get((org,g), set())
     d=yaml.safe_load(open(f))
     for i,a in enumerate(d.get('existing_annotations') or []):
         r=a.get('review') or {}
@@ -83,22 +94,65 @@ for f in files:
             # but not legal enum members.
             if ss is not None and ss not in VALID_SS:
                 issues.append((loc,'BAD_SOURCE_STATUS',ss))
-            if sid in own.get(g,set()) and ss=='CIRCULAR_OR_REDUNDANT':
+            if sid in own_ids and ss=='CIRCULAR_OR_REDUNDANT':
                 issues.append((loc,'SELF_SEED_MARKED_CIRCULAR',sid))
             lab=se.get('source_label') or ''
-            m=re.match(r'^PANTHER:(PTHR\d+)$', sid)
+            m=re.match(r'^PANTHER:(PTHR\d+(?::SF\d+)?)$', sid)
             if m and lab and m.group(1) in fam_label and lab.strip().upper()!=fam_label[m.group(1)].upper():
                 issues.append((loc,'PANTHER_LABEL_MISMATCH',f"{sid} label={lab!r} official={fam_label[m.group(1)]!r}"))
         # prose inversion check
         txt=((r.get('reason') or '')+' '+(r.get('summary') or '')+' '+
              ' '.join((se.get('comment') or '') for se in (pr.get('source_entities') or [])))
         for se in (pr.get('source_entities') or []):
-            if (se.get('source_id') or '') in own.get(g,set()):
+            if (se.get('source_id') or '') in own_ids:
                 c=(se.get('comment') or '').lower()
                 bad_circular = ('circular' in c and not any(k in c for k in
                     ('not circular','rather than circular','is not circular','never circular')))
                 if 'no independent' in c or 'self-supporting' in c or bad_circular:
                     issues.append((loc,'SELF_SEED_INVERTED_PROSE',se.get('source_id')))
+# ---------------------------------------------------------------------------
+# Cross-gene consistency: the same (term, evidence_type, reference) reviewed with
+# different actions in two files is usually an artifact of the two reviews being
+# written independently, not a biological judgement. Run with --pair A,B to compare
+# a specific paralog pair, e.g. --pair Mapk1,Mapk3. This is opt-in: it is only a
+# defect signal for true paralogs, where the same term/evidence/reference ought to
+# get the same call. Two agents reviewing sister genes independently is exactly how
+# such divergences arise, and no other rule here catches them.
+def action_map(path):
+    d = yaml.safe_load(open(path))
+    m = {}
+    for a in (d.get('existing_annotations') or []):
+        k = ((a.get('term') or {}).get('id'), a.get('evidence_type'), a.get('original_reference_id'))
+        m.setdefault(k, set()).add((a.get('review') or {}).get('action'))
+    return m
+
+pair_arg = None
+for _i, _a in enumerate(sys.argv):
+    if _a == '--pair' and _i + 1 < len(sys.argv):
+        pair_arg = sys.argv[_i + 1]
+if pair_arg:
+    _names = pair_arg.split(',')
+    _paths = [f for f in files if os.path.basename(os.path.dirname(f)) in _names]
+    _combos = [(_paths[i], _paths[j]) for i in range(len(_paths)) for j in range(i + 1, len(_paths))]
+else:
+    # No automatic pairing. Two unrelated genes sharing a term legitimately get
+    # different actions (Src vs Syk, Myc vs Stat1 ...), so an unguided sweep emits
+    # noise rather than defects. The check only means something for genuine
+    # paralogs, which the caller has to name.
+    _combos = []
+
+cross = []
+for fa, fb in _combos:
+    ma, mb = action_map(fa), action_map(fb)
+    ga = os.path.basename(os.path.dirname(fa)); gb = os.path.basename(os.path.dirname(fb))
+    for k in sorted(set(ma) & set(mb)):
+        if ma[k] != mb[k]:
+            cross.append((f"{ga} vs {gb}", k[0], k[1], sorted(ma[k]), sorted(mb[k])))
+if cross:
+    print(f"\nCROSS-GENE ACTION DIVERGENCES ({len(cross)}):")
+    for c in cross:
+        print(f"   {c[0]}  {c[1]} {c[2]}: {c[3]} vs {c[4]}")
+
 print(f"audited {n} propagation_review blocks across {len(files)} files")
 if issues:
     print(f"ISSUES ({len(issues)}):")
