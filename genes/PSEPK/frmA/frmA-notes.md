@@ -13,10 +13,12 @@ proof that every member has the FrmA reaction specificity. [UniProtKB:P25437]
 The target's cytosol annotation is a TreeGrafter IEA supported by
 `PANTHER:PTN002466975`. It is biologically plausible but is retained as
 non-core because no direct KT2440 localization evidence was found. The PAINT
-cache contains a broader ancestral node, `PANTHER:PTN000191653`, supported by
-experimentally characterized FrmA proteins, but the target's descent from that
-specific node was not established from the local data. The module therefore
-does not assert an ancestral node.
+cache contains the activity-specific ancestral node
+`PANTHER:PTN000191653`, seeded in part by experimentally characterized E. coli
+FrmA P25437. Q88MF5 and P25437 share `PTHR43880:SF12`; the only descendant IRD
+loss under PTN000191662 is restricted to Tetrapoda and does not bear on the
+bacterial member. The module therefore records PTN000191653 as the conserved
+FrmA-function node while keeping exact KT2440 kinetics unasserted.
 
 As with FrmC, direct biochemical and isotope-resolved genetic evidence is
 still needed to establish the proposed consecutive FrmA-FrmC route in KT2440.
