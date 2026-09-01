@@ -212,6 +212,8 @@ specificity assay.
 
 ## 2026-09-01 NadD exemplar repair
 
+Repair PR: [#2864](https://github.com/ai4curation/ai-gene-review/pull/2864).
+
 The bacterial NadD leaf now uses reviewed *Bacillus subtilis* P54455 as its
 cross-species exemplar alongside PSEPK Q88DL5. P54455 was biochemically
 characterized and crystallized, and the committed PANTHER family export places
