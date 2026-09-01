@@ -21,8 +21,8 @@ glycan polymerization, and peptide crosslinking.
 - [x] Curate every GOA row for both genes.
 - [x] Create a species-neutral, multi-part module with exact UniProt exemplars.
 - [x] Complete module and module + pathway + taxon research (taxon review completed; generic module research reached the 7200-second limit without a report).
-- [ ] Validate and render the reviews, module, and project page.
-- [ ] Open one non-draft PR and clear review and CI.
+- [x] Validate and render the reviews, module, and project page.
+- [x] Open one non-draft PR: [#2853](https://github.com/ai4curation/ai-gene-review/pull/2853). Review and CI are pending.
 
 ## Selected Genes
 
