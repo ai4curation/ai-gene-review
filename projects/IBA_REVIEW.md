@@ -358,14 +358,15 @@ cannot be what is wrong with `GO:0043209 myelin sheath`, a curated `located_in` 
 PMID:7953633; and *"too indirect"* cannot be what is wrong with `GO:0015267 channel activity`,
 an `enables` MF claim. Each row probably has one fitting disjunct and the reader is never told
 which. That is the argument **for** the follow-up, recorded here so the deferral is not
-mistaken for a judgement that the group is fine.
+mistaken for a judgement that the group is fine. The Bcl2 group is measured and recorded,
+**not repaired**: doing it properly is per-term work across its 19 terms, and this
+paragraph's own history is a warning against opportunistic rewrites (see the Ang2 note
+below).
 
 The largest group, 202 rows on *"This overstates the direct role of the gene product; the
-curated model…"*, is a cross-file class rationale — a different question, and mostly though
-not wholly outside this review: Edn1 114, Ednra 32, Tnfrsf1a 31, Agtr1a 25, so 88 of the 202
-sit in files edited here. Measured and recorded here; not repaired, because doing it
-properly is per-term work across 19 terms and this paragraph's own history is a warning
-against opportunistic rewrites (see the Ang2 note below).
+curated model…"*, is a separate case — a cross-file class rationale spanning far more terms,
+and mostly though not wholly outside this review: Edn1 114, Ednra 32, Tnfrsf1a 31, Agtr1a 25,
+so 88 of the 202 sit in files edited here.
 
 **That script exists because these figures had been wrong twice before it did**, the second
 time in a way no reader could have caught. The published pair — 160 groups, and 7 over 63
