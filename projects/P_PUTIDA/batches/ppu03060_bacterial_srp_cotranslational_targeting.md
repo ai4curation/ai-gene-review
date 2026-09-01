@@ -32,7 +32,8 @@ ribosome assembly, and membrane-protein folding are outside this targeting modul
 - [x] Complete the module-curation audit.
 - [x] Validate and render all artifacts.
 - [x] Merge the original curation in PR [#2530](https://github.com/ai4curation/ai-gene-review/pull/2530).
-- [ ] Open the wave132 repair PR and request review.
+- [x] Open repair PR [#2909](https://github.com/ai4curation/ai-gene-review/pull/2909)
+      and request review.
 
 ### 2026-09-01 repair audit
 
