@@ -78,30 +78,47 @@ def collect(paths, action=None):
 MOD_PREFIXES = ('MGI:', 'RGD:', 'SGD:', 'FB:', 'WB:', 'ZFIN:', 'TAIR:', 'PomBase:',
                 'dictyBase:', 'CGD:', 'Xenbase:')
 SELF_MARKER = re.compile(r'this gene|the review target itself', re.I)
-NEGATION = re.compile(r'\bnot\s+(mouse|the target)', re.I)
-OTHER_SPECIES = re.compile(
-    r'\b(rat|human|Drosophila|zebrafish|budding-yeast|fission-yeast|fly|worm|chicken|'
-    r'bovine|Xenopus|Arabidopsis|yeast)\b', re.I)
+NEGATION = re.compile(r'\bnot\s+(?:the\s+target|[a-z-]+\s+\S)', re.I)
+# Species words a label may carry. The TARGET organism is removed from this set per
+# call, so "rat Casp3" is third-party in genes/mouse and a self-label in genes/rat.
+SPECIES_WORDS = ('mouse', 'rat', 'human', 'Drosophila', 'zebrafish', 'budding-yeast',
+                 'fission-yeast', 'fly', 'worm', 'chicken', 'bovine', 'Xenopus',
+                 'Arabidopsis', 'yeast')
+# genes/<organism>/<GENE>/... -- the organism directory, mapped to the word a label uses.
+ORGANISM_WORD = {'mouse': 'mouse', 'rat': 'rat', 'human': 'human', 'worm': 'worm',
+                 'yeast': 'yeast', 'SCHPO': 'fission-yeast'}
 PROVENANCE_VERBS = re.compile(
     r'\bresolv|\bcorroborat|asserted from external knowledge', re.I)
 
 
-def is_self_label(label, gene_symbol):
+def is_self_label(label, gene_symbol, organism='mouse'):
     """True when the label names the review target itself, so nothing needs establishing.
 
     Deliberately NOT "the symbol appears in the label". That looser test admitted
     "rat Casp3" in Casp3, "Drosophila Nf1" in Nf1, and an Fbxo2 label whose whole
     content is "not mouse Fbxo2" -- every one a claim about a DIFFERENT gene, and
     exactly the class the provenance rule exists for. A self-label carries an explicit
-    marker, or IS the symbol (optionally "mouse "-prefixed, optionally with a trailing
-    parenthetical), with no other-species qualifier and no negation.
+    marker, or IS the symbol (optionally prefixed with the TARGET organism's own word,
+    optionally with a trailing parenthetical), with no foreign-species qualifier and no
+    negation.
+
+    The two guards are load-bearing only against a label that ALSO carries a self-marker
+    -- "rat Casp3 (this gene)" and "not mouse Bcl2 (this gene)" -- because the equality
+    test rejects every other negative case on its own. The self-test pins them there,
+    since a guard no arm requires is one refactor from vanishing silently.
+
+    organism is the genes/<organism>/ directory, so this works outside genes/mouse: on a
+    rat review "rat Casp3" is the self-label and "mouse Casp3" is the foreign one.
     """
-    if NEGATION.search(label) or OTHER_SPECIES.search(label):
+    own = ORGANISM_WORD.get(organism, organism).lower()
+    foreign = re.compile(r'\b(' + '|'.join(w for w in SPECIES_WORDS if w.lower() != own)
+                         + r')\b', re.I)
+    if NEGATION.search(label) or foreign.search(label):
         return False
     if SELF_MARKER.search(label):
         return True
     bare = re.sub(r'\s*\(.*\)\s*$', '', label.strip()).lower()
-    return bare in (gene_symbol.lower(), f"mouse {gene_symbol}".lower())
+    return bare in (gene_symbol.lower(), f"{own} {gene_symbol}".lower())
 
 
 def classify_labels(paths):
@@ -111,6 +128,8 @@ def classify_labels(paths):
         with open(path) as handle:
             doc = yaml.safe_load(handle) or {}
         gene = doc.get("gene_symbol") or path.split("/")[-2]
+        parts = path.split("/")
+        organism = parts[parts.index("genes") + 1] if "genes" in parts else "mouse"
         for ann in doc.get("existing_annotations") or []:
             block = (ann.get("review") or {}).get("propagation_review") or {}
             for src in block.get("source_entities") or []:
@@ -118,7 +137,7 @@ def classify_labels(paths):
                 if not label or not sid.startswith(MOD_PREFIXES):
                     continue
                 row = (gene, sid, label)
-                if is_self_label(label, gene):
+                if is_self_label(label, gene, organism):
                     selfs.append(row)
                 elif PROVENANCE_VERBS.search(src.get("comment") or ""):
                     prov.append(row)
@@ -202,6 +221,17 @@ def _self_test():
         return "a bare FOREIGN symbol must NOT count as a self-label"
     if is_self_label("zebrafish ednraa", "Ednra"):
         return "a substring-like foreign symbol must NOT count as a self-label"
+    # These two arms are the only ones the guards are load-bearing for: each label also
+    # carries a self-marker, so without its guard SELF_MARKER would win.
+    if is_self_label("rat Casp3 (this gene)", "Casp3"):
+        return "a foreign-species qualifier must beat a self-marker (OTHER_SPECIES guard)"
+    if is_self_label("not mouse Bcl2 (this gene)", "Bcl2"):
+        return "a negation must beat a self-marker (NEGATION guard)"
+    # And the predicate must follow the organism, since the section targets the ISO backlog.
+    if not is_self_label("rat Casp3", "Casp3", "rat"):
+        return "on a rat review, 'rat Casp3' IS the self-label"
+    if is_self_label("mouse Casp3", "Casp3", "rat"):
+        return "on a rat review, 'mouse Casp3' is the foreign one"
 
     seen, known = {"REMOVE"}, {"REMOVE", "ACCEPT"}
     if action_error("REMOVE", seen, known) is not None:
