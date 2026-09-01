@@ -30,7 +30,7 @@ net transport direction open.
 |---|---|---|---|---|
 | [x] | mlaF | PP_0958 | Q88P94 | MlaFEDB ATPase |
 | [x] | mlaE | PP_0959 | Q88P93 | MlaFEDB inner-membrane permease |
-| [x] | mlaD | PP_0960 | Q88P92 | MlaFEDB MCE-domain lipid-binding interface |
+| [x] | mlaD | PP_0960 | Q88P92 | MlaFEDB MCE-domain lipid-binding interface; OpenScientist integrated |
 | [x] | ttg2D | PP_0961 | Q88P91 | MlaC-family periplasmic phospholipid carrier; OpenScientist integrated |
 | [x] | ttg2E | PP_0962 | Q88P90 | MlaB-like STAS accessory subunit |
 | [x] | vacJ | PP_2163 | Q88KX6 | MlaA-family outer-membrane interface; OpenScientist integrated |
@@ -67,3 +67,9 @@ net transport direction open.
   architecture. It also confirms that MlaB is an accessory regulatory/stability
   subunit, MlaA signal-peptide classes vary, and a named OmpC/OmpF partner
   should not be required across all diderm lineages.
+- The MlaD report supports Q88P92's single membrane anchor, MCE domain,
+  phospholipid binding, and periplasm-facing MlaFEDB interface. Its categorical
+  retrograde-direction language and proposed direct link to solvent tolerance
+  are not promoted: direction remains an explicit module gap, and the local
+  solvent phenotype is indirect pathway context rather than MlaD-specific
+  evidence.

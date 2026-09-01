@@ -1,0 +1,2130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mlaD - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>mlaD</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88P92" target="_blank" class="term-link">
+                        Q88P92
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "mlaD";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88P92" data-a="DESCRIPTION: Single-pass inner-membrane MCE-domain subunit of t..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Single-pass inner-membrane MCE-domain subunit of the MlaFEDB phospholipid transporter. MlaD binds glycerophospholipids and oligomerizes into a periplasm-facing interface that exchanges lipid with the soluble MlaC-family carrier and the MlaE permease.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005543" target="_blank" class="term-link">
+                                    GO:0005543
+                                </a>
+                            </span>
+                            <span class="term-label">phospholipid binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P92" data-a="GO:0005543" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct core molecular function for the lipid-binding MCE-domain subunit.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Q88P92 contains the diagnostic MlaD/MCE domain and a single N-terminal membrane anchor; structural work on orthologs places phospholipid binding at the periplasm-facing MlaD ring.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015914" target="_blank" class="term-link">
+                                    GO:0015914
+                                </a>
+                            </span>
+                            <span class="term-label">phospholipid transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P92" data-a="GO:0015914" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct process annotation for the MlaFEDB lipid-transfer interface.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> MlaD is the lipid-binding interface of the MlaFEDB complex and exchanges glycerophospholipid with the periplasmic MlaC-family carrier. The annotation does not require committing to a single net transport direction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISM</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/mlaD/mlaD-deep-research-openscientist.md
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P92" data-a="GO:0005886" data-r="file:PSEPK/mlaD/mlaD-deep-research-openscientist.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Q88P92 is anchored in the inner/plasma membrane by one N-terminal transmembrane helix.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Target-sequence hydropathy identifies one strong N-terminal membrane anchor followed by the periplasm-facing MlaD/MCE domain.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120010" target="_blank" class="term-link">
+                                    GO:0120010
+                                </a>
+                            </span>
+                            <span class="term-label">intermembrane phospholipid transfer</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/mlaD/mlaD-deep-research-openscientist.md
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P92" data-a="GO:0120010" data-r="file:PSEPK/mlaD/mlaD-deep-research-openscientist.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MlaD participates in phospholipid exchange between the inner-membrane MlaFEDB complex and the periplasmic carrier.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The diagnostic MlaD family/domain assignment and mlaFED operon context support the conserved intermembrane transfer process without asserting a fixed net direction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Phospholipid binding and transfer at the periplasm-facing MlaFEDB interface.</h3>
+                <span class="vote-buttons" data-g="Q88P92" data-a="FUNCTION: Phospholipid binding and transfer at the periplasm..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005543" target="_blank" class="term-link">
+                            phospholipid binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120010" target="_blank" class="term-link">
+                                intermembrane phospholipid transfer
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/mlaD/mlaD-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">InterPro; IPR030970; ABC_MlaD.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/mlaD/mlaD-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">Q88P92 has one Mce/MlaD domain (Pfam **PF02470**, residues **39–116**) — the short, single-ring MlaD type</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/mlaD/mlaD-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt record for Pseudomonas putida KT2440 MlaD (Q88P92)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt and InterPro identify Q88P92 as an MlaD-family MCE-domain protein.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/mlaD/mlaD-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist functional research for PSEPK MlaD/Q88P92</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Q88P92 has a single N-terminal transmembrane anchor followed by one MlaD/MCE domain, matching an inner-membrane-anchored, periplasm-facing MlaD subunit.</div>
+
+                        <div class="finding-text">"Q88P92 has one Mce/MlaD domain (Pfam **PF02470**, residues **39–116**) — the short, single-ring MlaD type"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report supports phospholipid binding and a MlaC-facing role but notes that transport direction and the precise role of ATP remain debated.</div>
+
+                        <div class="finding-text">"The precise **directionality** (retrograde vs. bidirectional) and the exact **role of ATP hydrolysis** remain debated even in model organisms"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How does KT2440 MlaD exchange phospholipids with Ttg2D/MlaC, and is net transport condition-dependent?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88P92" data-a="Q: How does KT2440 MlaD exchange phospholipids with T..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute MlaFEDB and measure lipid exchange with purified Ttg2D using species-resolved phospholipids.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: protein-to-protein phospholipid-transfer assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88P92" data-a="EXPERIMENT: Reconstitute MlaFEDB and measure lipid exchange wi..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The physiologically dominant net direction of the KT2440 Mla system has not been established directly.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+
+            </p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> MlaD&#39;s binding/interface role is direction-neutral, so the review does not project a universal retrograde model onto the PSEPK system.</p>
+
+
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> PP_0960 has not been tested directly by biochemical or loss-of-function experiments in KT2440.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+
+            </p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> The first-pass assignment rests on diagnostic sequence architecture, operon context, and orthologous MlaD structural and transport studies.</p>
+
+
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(mlaD-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88P92" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of MlaD (Q88P92 / PP_0960) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">4 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-01T03:33:43.728659</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="mlaD-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="mlaD-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="mlaD-deep-research-openscientist_artifacts/provenance_mlaD_hydropathy.json" class="term-link">OpenScientist mlaD hydropathy</a>
+                        <span>(application/json)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="mlaD-deep-research-openscientist_artifacts/provenance_mlaD_hydropathy.png" class="term-link">OpenScientist mlaD hydropathy</a>
+                        <span>(image/png)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-mlad-q88p92-pp_0960-in-pseudomonas-putida-kt2440">Functional Annotation of MlaD (Q88P92 / PP_0960) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (Answer to the Research Question)</h2>
+<p><strong>MlaD</strong> (UniProt <strong>Q88P92</strong>, ordered locus <strong>PP_0960</strong>) of <em>Pseudomonas putida</em> KT2440 is the <strong>inner-membrane, phospholipid-binding subunit of the Mla ("Maintenance of Lipid Asymmetry") ABC transporter system</strong>. It is <strong>not an enzyme</strong>: rather, it is a <strong>substrate-binding / substrate-shuttling adapter</strong> that binds <strong>glycerophospholipids</strong> and forms a <strong>homohexameric ring (an MCE — Mammalian Cell Entry — domain ring)</strong> anchored to the cytoplasmic (inner) membrane by a single N-terminal transmembrane helix, with the functional ring projecting into the <strong>periplasm</strong>. As the "D" component of the inner-membrane <strong>MlaFEDB</strong> ABC transporter complex, MlaD accepts and delivers phospholipids to/from the periplasmic shuttle protein <strong>MlaC</strong> and channels them, in an <strong>ATP-dependent</strong> manner, toward the MlaE permease. The physiological role of the complete OmpC/F–Mla pathway is the <strong>retrograde (outer-membrane → inner-membrane) transport of mislocalized phospholipids</strong>, which preserves the lipid asymmetry and permeability-barrier function of the Gram-negative outer membrane.</p>
+<p>In <em>P. putida</em> specifically, <em>mlaD</em> (PP_0960) is co-transcribed with <em>mlaF</em> (ATPase, PP_0958) and <em>mlaE</em> (permease, PP_0959) in a contiguous operon and sits immediately upstream of the <strong><em>ttg2</em></strong> toluene-tolerance genes; this ties MlaD to <em>P. putida</em>'s hallmark <strong>organic-solvent (toluene) tolerance</strong> and outer-membrane barrier maintenance [PMID 9658016].</p>
+<blockquote>
+<p><strong>Identity confirmation.</strong> The target's gene symbol (<em>mlaD</em>), locus (PP_0960), and domain architecture are fully self-consistent: InterPro/Pfam annotations <strong>PF02470 (MlaD)</strong>, <strong>IPR030970 (ABC_MlaD)</strong>, <strong>IPR003399 (Mce/MlaD)</strong>, and <strong>IPR052336 (MlaD phospholipid transporter)</strong> unambiguously place Q88P92 in the MlaD/MCE family. The Mla system is conserved in <strong>all Gram-negative bacteria</strong>, so functional inference from the intensively studied <em>E. coli</em> orthologue is well justified. No gene-symbol ambiguity was encountered.</p>
+</blockquote>
+<hr />
+<h2 id="2-background-the-mla-pathway">2. Background: The Mla Pathway</h2>
+<p>The outer membrane (OM) of Gram-negative bacteria is a uniquely <strong>asymmetric bilayer</strong> — lipopolysaccharide (LPS) in the outer leaflet and glycerophospholipids (GPLs) in the inner leaflet — and this asymmetry is what makes the OM an effective barrier against detergents, bile salts, and antibiotics. When phospholipids aberrantly accumulate in the <em>outer</em> leaflet of the OM, the barrier is compromised. The <strong>Mla system</strong> counteracts this by removing those mislocalized phospholipids and returning them to the inner membrane (IM) [PMID 34753108; 34873038].</p>
+<p>The pathway comprises <strong>three physically separated assemblies</strong> bridged across the cell envelope [PMID 39080293]:</p>
+<table>
+<thead>
+<tr>
+<th>Location</th>
+<th>Component(s)</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Outer membrane</td>
+<td><strong>MlaA–OmpC/OmpF</strong></td>
+<td>Extracts GPLs from the OM outer leaflet</td>
+</tr>
+<tr>
+<td>Periplasm</td>
+<td><strong>MlaC</strong></td>
+<td>Soluble lipid-binding shuttle protein</td>
+</tr>
+<tr>
+<td>Inner membrane</td>
+<td><strong>MlaFEDB</strong> ABC transporter (MlaF = ATPase; MlaE = permease; <strong>MlaD</strong> = substrate-binding ring; MlaB = STAS regulatory subunit)</td>
+<td>Receives lipids at the IM; ATP-driven</td>
+</tr>
+</tbody>
+</table>
+<p>MlaD is the <strong>D subunit of the inner-membrane MlaFEDB complex</strong>, which has been proposed to be the founding member of a <strong>structurally distinct ABC transporter superfamily</strong> [PMID 39080293; 35981415].</p>
+<hr />
+<h2 id="3-primary-function-of-mlad">3. Primary Function of MlaD</h2>
+<h3 id="31-molecular-function-phospholipid-binding-adapter-not-a-catalyst">3.1 Molecular function — phospholipid-binding adapter (not a catalyst)</h3>
+<p>MlaD is described as a <strong>membrane-associated solute-binding protein (SBP)</strong> that "help[s] the transport of phospholipids (PLs) between the outer and inner membranes of Gram-negative bacteria" [PMID 38347327]. It is the <strong>"unique IM-associated periplasmic solute-binding protein"</strong> of the Mla system [PMID 34196044]. Unlike a classical enzyme, MlaD does not catalyze a chemical reaction; its function is to <strong>bind glycerophospholipids and hand them off</strong> between transport components. Its substrate is therefore <strong>glycerophospholipid</strong> (common bacterial species such as phosphatidylethanolamine and phosphatidylglycerol); the related shuttle MlaC is polyspecific and can bind two phospholipids in its pocket [PMID 36084896].</p>
+<h3 id="32-substrate-specificity">3.2 Substrate specificity</h3>
+<p>The transported cargo is <strong>glycerophospholipid</strong>, i.e., the diacyl-glycerophospholipids of the bacterial membrane. The system is thought to be <strong>polyspecific</strong> for the abundant membrane GPLs rather than selective for a single headgroup [PMID 36084896]. MlaD itself provides a hydrophobic conduit for the acyl chains (see §4).</p>
+<h3 id="33-role-in-the-transport-reaction-directionality">3.3 Role in the transport reaction / directionality</h3>
+<ul>
+<li><strong>MlaD couples periplasmic lipid delivery to ATP-driven translocation.</strong> The MlaFEDB complex "functions via an unknown mechanism," and structures in apo, phospholipid-bound, ADP-bound and AMP-PNP-bound states identify residues that "recognize and transport phospholipids" [PMID 33199922].</li>
+<li><strong>Direction is retrograde (OM → IM).</strong> In vitro point-to-point transfer assays show the OmpC-Mla system removes aberrantly localized PLs from the OM and transports them to the IM, and that <strong>ATP binding/hydrolysis "disrupts lipid-binding equilibrium to drive retrograde transport"</strong> [PMID 34873038]. (Some studies discuss possible bidirectionality, but the consensus physiological role is retrograde.)</li>
+<li><strong>MlaD is the acceptor node for the MlaC shuttle.</strong> "Mla uses a shuttle-like mechanism to move lipids between the MlaFEDB inner membrane complex and the MlaA-OmpF/C OM complex, via a periplasmic lipid-binding protein, MlaC. <strong>MlaC binds to MlaD</strong>" [PMID 37100290]. Structures of the MlaC–MlaD complex show <strong>≥2 MlaC molecules can dock on one MlaD hexamer</strong>, and identify the <strong>MlaD β6–β7 loop as essential</strong> for MlaC–MlaD function; phospholipids pass <strong>between the C-terminal helices of the MlaD hexamer to reach the central pore</strong> [PMID 39080293].</li>
+</ul>
+<hr />
+<h2 id="4-structure-and-structural-role">4. Structure and Structural Role</h2>
+<p>MlaD is the structural centerpiece linking the periplasmic and inner-membrane steps:</p>
+<ul>
+<li><strong>Protomer fold.</strong> Each MlaD protomer has an <strong>N-terminal seven-stranded β-barrel (the MCE/"MlaD domain")</strong> plus a <strong>C-terminal α-helical domain (HD)</strong> [PMID 38347327]. An N-terminal single transmembrane helix (not part of the crystallized periplasmic region) anchors the protein in the inner membrane.</li>
+<li><strong>Hexameric ring.</strong> Six protomers oligomerize into a <strong>homohexameric ring with a continuous, largely hydrophobic central channel of variable diameter</strong> [PMID 38347327]. Notably, the <strong>C-terminal helical domain — not the β-barrel MCE domain itself — drives oligomerization</strong> [PMID 38347327].</li>
+<li><strong>Functional pore loop.</strong> A <strong>conserved C-terminal "pore loop"</strong> lining the central channel is functionally crucial for trafficking hydrophobic molecules; the MlaD domain is enriched in glycine and hydrophobic residues and lacks cysteines [PMID 34196044].</li>
+<li><strong>Lipid conduit.</strong> The hydrophobic central pore, fed by lipids passing between the C-terminal helices, forms the pathway by which acyl chains are shielded from the aqueous periplasm en route to/from the MlaE permease [PMID 39080293].</li>
+</ul>
+<p>This hexameric-MCE-ring architecture is the defining hallmark of the <strong>MCE protein family</strong>, which also includes the multi-ring PqiB and LetB/YebT transporters; YebT (an MlaD homologue) forms an elongated stack of MCE rings spanning between IM and OM [PMID 31870848]. In the diderm Firmicute <em>Veillonella parvula</em>, an <strong>elongated MlaD even forms a complete transenvelope bridge</strong> with its own OM β-barrel, and phylogenomics indicates <strong>MlaEFD constitute the ancestral functional core</strong> of the Mla system [PMID 37993432].</p>
+<hr />
+<h2 id="5-subcellular-localization">5. Subcellular Localization</h2>
+<ul>
+<li><strong>Inner (cytoplasmic) membrane, periplasmic-facing.</strong> MlaD is an <strong>IM-associated protein</strong>; it is tethered to the inner membrane by an N-terminal transmembrane segment, with the <strong>hexameric MCE ring projecting into the periplasm</strong> atop the MlaF (ATPase) / MlaE (permease) / MlaB core [PMID 34196044; 35981415].</li>
+<li><strong>Site of function.</strong> MlaD carries out its lipid hand-off at the <strong>periplasmic face of the inner membrane</strong>, receiving/delivering lipids from the soluble periplasmic shuttle MlaC and passing them to the transmembrane MlaE permease [PMID 37100290; 39080293].</li>
+</ul>
+<hr />
+<h2 id="6-pathway-context-and-physiological-consequences">6. Pathway Context and Physiological Consequences</h2>
+<ul>
+<li><strong>Pathway.</strong> MlaD operates within the <strong>OmpC/F–Mla retrograde phospholipid-trafficking pathway</strong>, functionally connecting the OM (MlaA-OmpC/F) → periplasm (MlaC) → IM (MlaFEDB). The energy source is <strong>ATP hydrolysis by MlaF</strong> at the IM [PMID 34873038; 35981415].</li>
+<li><strong>Opposing/partner systems.</strong> Genetic evidence across lineages shows the Mla system has <strong>opposite trafficking function to the TamB/AsmA-family (anterograde) systems</strong>, consistent with Mla being retrograde [PMID 37993432].</li>
+<li><strong>Consequences of loss.</strong> Disruption of the Mla pathway produces phenotypes of <strong>compromised OM lipid asymmetry</strong>: increased outer-membrane permeability, sensitivity to detergents/antibiotics, and <strong>outer-membrane vesicle blebbing</strong>; in pathogens the pathway contributes to <strong>virulence</strong> [PMID 39080293; 37993432]. These effects trace specifically to the failure to clear surface-exposed phospholipids, rather than to broad pleiotropy.</li>
+</ul>
+<hr />
+<h2 id="7-p-putida-mlad-q88p92-organism-specific-sequence-evidence">7. <em>P. putida</em> MlaD (Q88P92): Organism-Specific Sequence Evidence</h2>
+<p>Direct analysis of the actual Q88P92 sequence (retrieved from UniProt; locus PP_0960; RefSeq WP_010952152.1) provides organism-specific confirmation of the annotation, beyond pure orthology:</p>
+<ul>
+<li><strong>161 aa, 16.95 kDa — a canonical single-MCE-domain MlaD.</strong> Q88P92 has one Mce/MlaD domain (Pfam <strong>PF02470</strong>, residues <strong>39–116</strong>) — the short, single-ring MlaD type (like <em>E. coli</em> MlaD ~183 aa), <strong>not</strong> the elongated multi-ring/transenvelope MlaD (YebT/<em>V. parvula</em> type). This is consistent with assembly into the standard inner-membrane MlaFEDB complex.</li>
+<li><strong>Single N-terminal transmembrane anchor.</strong> Kyte–Doolittle hydropathy (window 19) shows one strong hydrophobic segment (peak score <strong>2.86</strong>, residues <strong>~9–31</strong>; <code>GVGLFLLAGILALLLLALRVSGL</code>), the predicted inner-membrane anchor helix, with the MCE domain following in the periplasm — exactly the topology required for MlaFEDB.</li>
+<li><strong>Diagnostic composition.</strong> The protein is <strong>cysteine-free (0 Cys)</strong> and <strong>glycine-rich (9.9%)</strong>, matching the reported MlaD-domain signature ("abundance of glycine and hydrophobic residues and the lack of cysteine residues") [PMID 34196044].</li>
+<li><strong>Database annotations converge on the same function.</strong> UniProt cross-references assign <strong>GO:0005543 (phospholipid binding)</strong> and <strong>GO:0005548 (phospholipid transporter activity)</strong>, TIGRFAM <strong>TIGR04430 "OM_asym_MlaD"</strong>, eggNOG <strong>COG1463</strong>, and PANTHER <strong>"Intermembrane phospholipid transport system binding protein MlaD" (PTHR33371:SF4)</strong>.<br />
+{{figure:mlaD_hydropathy.png|caption=Kyte-Doolittle hydropathy profile and domain map of P. putida MlaD (Q88P92). A single strong N-terminal hydrophobic segment (peak ~2.86, residues ~9-31) corresponds to the lone inner-membrane transmembrane anchor helix; a single Mce/MlaD domain (PF02470, residues ~39-116) follows in the periplasm, with a C-terminal region (~117-161). This canonical single-anchor, single-MCE-domain topology matches the E. coli MlaD architecture and rules out the elongated transenvelope MlaD type.}}</li>
+</ul>
+<h3 id="evidence-base-for-the-functional-assignment">Evidence base for the functional assignment</h3>
+<ul>
+<li><strong>Directly experimental (E. coli / general Mla):</strong> cryo-EM and crystal structures of MlaFEDB and MlaD (apo and lipid/nucleotide-bound), reconstituted proteoliposome transport assays, in vivo complementation and permeability assays, deep mutational scanning of MlaC, and MD simulations [PMID 33199922; 34873038; 39080293; 37100290; 38347327].</li>
+<li><strong>Bioinformatic / evolutionary:</strong> MlaD-domain profiling, pore-loop conservation, phylogenetics, and the identification of MlaEFD as the ancestral core [PMID 34196044; 37993432]; plus the Q88P92-specific sequence analysis above.</li>
+<li><strong>Pathway conservation in non-model Gram-negatives:</strong> the Mla pathway is essential for the intrinsic antimicrobial resistance and OM barrier of <em>Burkholderia cepacia</em> complex species, demonstrating the pathway's physiological importance beyond <em>E. coli</em> [PMID 29986943].</li>
+<li><strong>Caveat:</strong> No <em>P. putida</em>-specific biochemical/genetic study of PP_0960 itself was found. The functional assignment rests on (i) the exact diagnostic domain set, (ii) organism-specific sequence features (single TM + single MCE domain, Cys-free/Gly-rich), and (iii) strong orthology to experimentally characterized MlaD. Direct measurement in <em>P. putida</em> remains a gap (see §9).</li>
+</ul>
+<hr />
+<h2 id="7a-genomic-context-in-p-putida-the-mlafed-operon-and-link-to-solvent-tolerance">7a. Genomic Context in <em>P. putida</em>: the <em>mlaFED</em> Operon and Link to Solvent Tolerance</h2>
+<p>Inspection of the loci flanking PP_0960 in the KT2440 genome shows that MlaD is encoded within a <strong>contiguous <em>mla</em> operon</strong> and embedded in a region devoted to outer-membrane/LPS homeostasis:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Gene</th>
+<th>Product (UniProt)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_0955</td>
+<td><em>lptC</em></td>
+<td>LPS export system protein LptC</td>
+</tr>
+<tr>
+<td>PP_0956</td>
+<td><em>kdsC</em></td>
+<td>Kdo-8-phosphate phosphatase (LPS biosynthesis)</td>
+</tr>
+<tr>
+<td>PP_0957</td>
+<td><em>kdsD</em></td>
+<td>Arabinose-5-phosphate isomerase (LPS biosynthesis)</td>
+</tr>
+<tr>
+<td><strong>PP_0958</strong></td>
+<td><strong><em>mlaF</em></strong></td>
+<td>Intermembrane phospholipid transport <strong>ATP-binding protein</strong></td>
+</tr>
+<tr>
+<td><strong>PP_0959</strong></td>
+<td><strong><em>mlaE</em></strong></td>
+<td>Intermembrane phospholipid transport <strong>permease</strong></td>
+</tr>
+<tr>
+<td><strong>PP_0960</strong></td>
+<td><strong><em>mlaD</em></strong></td>
+<td><strong>Phospholipid-binding protein (this study, Q88P92)</strong></td>
+</tr>
+<tr>
+<td>PP_0961</td>
+<td><em>ttg2D</em></td>
+<td>Toluene-tolerance protein</td>
+</tr>
+<tr>
+<td>PP_0962</td>
+<td><em>ttg2E</em></td>
+<td>Toluene-tolerance protein</td>
+</tr>
+<tr>
+<td>PP_0963</td>
+<td><em>ttg2F</em></td>
+<td>BolA-family protein</td>
+</tr>
+</tbody>
+</table>
+<p>Two organism-specific conclusions follow:</p>
+<ol>
+<li>
+<p><strong>Genome-level validation of the transporter.</strong> <em>mlaF</em> (ATPase) – <em>mlaE</em> (permease) – <em>mlaD</em> (binding subunit) are <strong>adjacent and co-oriented</strong>, confirming that <em>P. putida</em> MlaD assembles with MlaF and MlaE into the inner-membrane <strong>MlaFED(B)</strong> ABC transporter — validation by operon structure, not orthology alone. The neighboring LPS-biogenesis genes (<em>lptC</em>, <em>kdsC</em>, <em>kdsD</em>) reinforce a functional theme of <strong>outer-membrane barrier construction and maintenance</strong>.</p>
+</li>
+<li>
+<p><strong>Direct link to <em>P. putida<em>'s hallmark solvent tolerance.</em>* The adjacent </em></strong>ttg2<strong><em> genes are the </em>*toluene-tolerance</strong> locus of <em>P. putida</em>. In <em>P. putida</em> GM73, the Ttg1/Ttg2 ABC transporters were identified as <strong>required for organic-solvent (toluene) resistance</strong>, with loss reducing toluene survival by more than six orders of magnitude; the authors concluded that "active efflux mechanism and efficient repair of damaged membranes were important in toluene resistance" [PMID 9658016]. Consistently, the <strong>eggNOG orthologous group for Q88P92 (COG1463)</strong> is annotated as an ABC-type transport system involved in <strong>resistance to organic solvents</strong>. Thus, in <em>P. putida</em> the Mla/Ttg2 machinery contributes to the organism's celebrated <strong>solvent (toluene) tolerance</strong>, most plausibly by maintaining OM lipid asymmetry and repairing solvent-induced membrane damage — an organism-specific physiological role that goes beyond the generic OM-asymmetry function.</p>
+</li>
+</ol>
+<h2 id="8-supported-and-refuted-hypotheses">8. Supported and Refuted Hypotheses</h2>
+<p><strong>Supported</strong><br />
+1. MlaD is the substrate-binding subunit (adapter, not enzyme) of the inner-membrane MlaFEDB ABC transporter. ✔ [PMID 34196044; 33199922]<br />
+2. MlaD binds glycerophospholipids and forms a homohexameric MCE ring with a hydrophobic central pore. ✔ [PMID 38347327; 39080293]<br />
+3. MlaD localizes to the inner membrane with its ring in the periplasm and directly interacts with the periplasmic shuttle MlaC. ✔ [PMID 37100290; 39080293]<br />
+4. The pathway drives ATP-dependent retrograde (OM→IM) phospholipid transport to maintain OM lipid asymmetry. ✔ [PMID 34873038]<br />
+5. In <em>P. putida</em>, <em>mlaD</em> is co-encoded with <em>mlaF</em>/<em>mlaE</em> in an operon linked to solvent (toluene) tolerance and OM/LPS homeostasis. ✔ [genomic context; PMID 9658016]</p>
+<p><strong>Refuted / not supported</strong><br />
+- MlaD as an <em>enzyme</em> catalyzing a chemical reaction — <strong>not supported</strong>; it is a binding/transport adapter.<br />
+- MlaD as the ATPase or membrane permease of the complex — <strong>not supported</strong>; those roles belong to MlaF and MlaE, respectively.</p>
+<hr />
+<h2 id="9-limitations-and-future-directions">9. Limitations and Future Directions</h2>
+<ul>
+<li>No <em>P. putida</em>-specific functional/structural study of PP_0960 was identified; the annotation rests on orthology to <em>E. coli</em> and related bacteria.</li>
+<li>The precise <strong>directionality</strong> (retrograde vs. bidirectional) and the exact <strong>role of ATP hydrolysis</strong> remain debated even in model organisms [PMID 39080293].</li>
+<li><strong>Future work:</strong> solve a <em>P. putida</em> MlaFEDB/MlaD structure; characterize its native phospholipid cargo; and test <em>mlaD</em> deletion phenotypes (OM permeability, vesiculation, solvent/antibiotic tolerance) in KT2440 — relevant given <em>P. putida</em>'s notable solvent tolerance and envelope robustness.</li>
+</ul>
+<hr />
+<h3 id="key-references-pmid">Key References (PMID)</h3>
+<ul>
+<li>39080293 — Structure of the MlaC–MlaD complex (2024)</li>
+<li>38347327 — Structural features of MlaD; hexameric MCE ring (2024)</li>
+<li>34196044 — Conserved features of the MlaD domain (2021)</li>
+<li>33199922 — Cryo-EM structures of MlaFEDB (2021)</li>
+<li>34873038 — ATP drives retrograde transport (2021)</li>
+<li>37100290 — MlaC–MlaD/MlaA interfaces; shuttle mechanism (2023)</li>
+<li>35981415 — Structure/mechanism review of MlaFEDB (2022)</li>
+<li>34753108 — Review: intermembrane lipid trafficking (2021)</li>
+<li>37993432 — Ancestral Mla / transenvelope MlaD in <em>V. parvula</em> (2023)</li>
+<li>36084896 — MlaC non-canonical SBP, polyspecific PL binding (2022)</li>
+<li>31870848 — Cryo-EM of YebT (MlaD homologue) (2020)</li>
+<li>29986943 — Mla pathway essential for intrinsic resistance in <em>Burkholderia cepacia</em> complex (2018)</li>
+<li>9658016 — Toluene-sensitive (<em>ttg</em>) mutants of <em>P. putida</em>; Ttg2 ABC transporter required for solvent tolerance (1998)</li>
+</ul>
+<p><em>Sequence source:</em> UniProt Q88P92 (PP_0960; RefSeq WP_010952152.1); genome references Nelson et al. 2002 (PMID 12534463) and Belda et al. 2016 (PMID 26913973).</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="mlaD-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="mlaD-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+<li><a href="mlaD-deep-research-openscientist_artifacts/provenance_mlaD_hydropathy.json">OpenScientist mlaD hydropathy</a><br />
+<img alt="OpenScientist mlaD hydropathy" src="mlaD-deep-research-openscientist_artifacts/provenance_mlaD_hydropathy.png" /></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(mlaD-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88P92" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="mlad-curation-notes">mlaD curation notes</h1>
+<h2 id="2026-09-01-openscientist-integration">2026-09-01 OpenScientist integration</h2>
+<p>The report correctly identifies Q88P92/PP_0960 and supports a single<br />
+N-terminal membrane anchor, one MlaD/MCE domain, phospholipid binding, and a<br />
+periplasm-facing interface within MlaFEDB<br />
+[file:PSEPK/mlaD/mlaD-deep-research-openscientist.md, "Q88P92 has one Mce/MlaD<br />
+domain (Pfam <strong>PF02470</strong>, residues <strong>39–116</strong>) — the short, single-ring MlaD<br />
+type"]. These findings were integrated into the review.</p>
+<p>Two claims were not promoted. First, the report presents retrograde transport<br />
+as the settled physiological direction, but later acknowledges that direction<br />
+and ATP coupling remain debated<br />
+[file:PSEPK/mlaD/mlaD-deep-research-openscientist.md, "The precise<br />
+<strong>directionality</strong> (retrograde vs. bidirectional) and the exact <strong>role of ATP<br />
+hydrolysis</strong> remain debated even in model organisms"]. The gene review and<br />
+module therefore use direction-neutral phospholipid transfer. Second, the<br />
+adjacent ttg2 solvent-tolerance context does not establish a direct<br />
+MlaD-specific toluene-tolerance function, so it remains pathway context rather<br />
+than a core annotation.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88P92
+gene_symbol: mlaD
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  Single-pass inner-membrane MCE-domain subunit of the MlaFEDB phospholipid
+  transporter. MlaD binds glycerophospholipids and oligomerizes into a
+  periplasm-facing interface that exchanges lipid with the soluble MlaC-family
+  carrier and the MlaE permease.
+existing_annotations:
+  - term:
+      id: GO:0005543
+      label: phospholipid binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000118
+    qualifier: enables
+    review:
+      summary: Correct core molecular function for the lipid-binding MCE-domain subunit.
+      action: ACCEPT
+      reason: &gt;-
+        Q88P92 contains the diagnostic MlaD/MCE domain and a single N-terminal
+        membrane anchor; structural work on orthologs places phospholipid
+        binding at the periplasm-facing MlaD ring.
+  - term:
+      id: GO:0015914
+      label: phospholipid transport
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review:
+      summary: Correct process annotation for the MlaFEDB lipid-transfer interface.
+      action: ACCEPT
+      reason: &gt;-
+        MlaD is the lipid-binding interface of the MlaFEDB complex and exchanges
+        glycerophospholipid with the periplasmic MlaC-family carrier. The
+        annotation does not require committing to a single net transport
+        direction.
+  - term:
+      id: GO:0005886
+      label: plasma membrane
+    evidence_type: ISM
+    original_reference_id: file:PSEPK/mlaD/mlaD-deep-research-openscientist.md
+    qualifier: located_in
+    review:
+      summary: Q88P92 is anchored in the inner/plasma membrane by one N-terminal transmembrane helix.
+      action: NEW
+      reason: &gt;-
+        Target-sequence hydropathy identifies one strong N-terminal membrane
+        anchor followed by the periplasm-facing MlaD/MCE domain.
+  - term:
+      id: GO:0120010
+      label: intermembrane phospholipid transfer
+    evidence_type: ISS
+    original_reference_id: file:PSEPK/mlaD/mlaD-deep-research-openscientist.md
+    qualifier: involved_in
+    review:
+      summary: MlaD participates in phospholipid exchange between the inner-membrane MlaFEDB complex and the periplasmic carrier.
+      action: NEW
+      reason: &gt;-
+        The diagnostic MlaD family/domain assignment and mlaFED operon context
+        support the conserved intermembrane transfer process without asserting
+        a fixed net direction.
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+    findings: []
+  - id: GO_REF:0000118
+    title: TreeGrafter-generated GO annotations
+    findings: []
+  - id: file:PSEPK/mlaD/mlaD-uniprot.txt
+    title: UniProt record for Pseudomonas putida KT2440 MlaD (Q88P92)
+    findings:
+      - statement: UniProt and InterPro identify Q88P92 as an MlaD-family MCE-domain protein.
+  - id: file:PSEPK/mlaD/mlaD-deep-research-openscientist.md
+    title: OpenScientist functional research for PSEPK MlaD/Q88P92
+    findings:
+      - statement: &gt;-
+          Q88P92 has a single N-terminal transmembrane anchor followed by one
+          MlaD/MCE domain, matching an inner-membrane-anchored,
+          periplasm-facing MlaD subunit.
+        supporting_text: Q88P92 has one Mce/MlaD domain (Pfam **PF02470**, residues **39–116**) — the short, single-ring MlaD type
+      - statement: &gt;-
+          The report supports phospholipid binding and a MlaC-facing role but
+          notes that transport direction and the precise role of ATP remain
+          debated.
+        supporting_text: The precise **directionality** (retrograde vs. bidirectional) and the exact **role of ATP hydrolysis** remain debated even in model organisms
+core_functions:
+  - description: Phospholipid binding and transfer at the periplasm-facing MlaFEDB interface.
+    molecular_function:
+      id: GO:0005543
+      label: phospholipid binding
+    contributes_to_molecular_function:
+      id: GO:0120014
+      label: phospholipid transfer activity
+    directly_involved_in:
+      - id: GO:0120010
+        label: intermembrane phospholipid transfer
+    locations:
+      - id: GO:0005886
+        label: plasma membrane
+    supported_by:
+      - reference_id: file:PSEPK/mlaD/mlaD-uniprot.txt
+        supporting_text: InterPro; IPR030970; ABC_MlaD.
+      - reference_id: file:PSEPK/mlaD/mlaD-deep-research-openscientist.md
+        supporting_text: Q88P92 has one Mce/MlaD domain (Pfam **PF02470**, residues **39–116**) — the short, single-ring MlaD type
+knowledge_gaps:
+  - gap_statement: The physiologically dominant net direction of the KT2440 Mla system has not been established directly.
+    status: OPEN
+    gap_kind: [BIOLOGY]
+    significance: &gt;-
+      MlaD&#39;s binding/interface role is direction-neutral, so the review does
+      not project a universal retrograde model onto the PSEPK system.
+  - gap_statement: PP_0960 has not been tested directly by biochemical or loss-of-function experiments in KT2440.
+    status: OPEN
+    gap_kind: [BIOLOGY]
+    significance: &gt;-
+      The first-pass assignment rests on diagnostic sequence architecture,
+      operon context, and orthologous MlaD structural and transport studies.
+suggested_questions:
+  - question: How does KT2440 MlaD exchange phospholipids with Ttg2D/MlaC, and is net transport condition-dependent?
+suggested_experiments:
+  - description: Reconstitute MlaFEDB and measure lipid exchange with purified Ttg2D using species-resolved phospholipids.
+    experiment_type: protein-to-protein phospholipid-transfer assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
