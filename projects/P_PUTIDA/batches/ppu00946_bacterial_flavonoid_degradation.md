@@ -14,8 +14,8 @@ autolink_gene_symbols: false
   contiguous locus and the FdeD/FdeE reaction assignment
 - Primary bucket genes: 6
 - Existing review files: 8
-- Curated review files: 1
-- Existing completed OpenScientist research files: 1
+- Curated review files: 2
+- Existing completed OpenScientist research files: 2
 
 ## Required Workflow
 
@@ -38,7 +38,7 @@ autolink_gene_symbols: false
 | [ ] | `PP_3195` | PP_3195 | Q88I07 | kegg:ppu00946 | MISSING | MISSING | MISSING | Peptidase S9 prolyl oligopeptidase catalytic domain-containing protein |
 | [x] | `PP_3197` | PP_3197 | Q88I05 | kegg:ppu00946 | PRESENT | CURATED | PRESENT | Predicted FdeC-like flavonoid A-ring dioxygenase |
 | [ ] | `PP_3198` | PP_3198 | Q88I04 | kegg:ppu00946 | MISSING | MISSING | MISSING | Ferredoxin, 2Fe-2S |
-| [ ] | `PP_3199` | PP_3199 | Q88I03 | recovered from locus/KO reaction | PRESENT | INITIALIZED | RUNNING | Monooxygenase; candidate FdeE partner for PP_3198 |
+| [x] | `PP_3199` | PP_3199 | Q88I03 | recovered from locus/KO reaction | PRESENT | DRAFT | PRESENT | Predicted FdeE-like FAD-dependent flavonoid monooxygenase; 40.4% identity to characterized Hsero_1007 |
 | [ ] | `PP_3204` | PP_3204 | Q88HZ8 | kegg:ppu00946 | MISSING | MISSING | MISSING | Cupin type-2 domain-containing protein |
 | [ ] | `PP_3205` | PP_3205 | Q88HZ7 | kegg:ppu00946 | MISSING | MISSING | MISSING | Fumarylacetoacetate hydrolase family protein |
 | [ ] | `PP_3206` | PP_3206 | Q88HZ6 | kegg:ppu00946 | MISSING | MISSING | MISSING | NAD-dependent epimerase/dehydratase domain-containing protein |
