@@ -96,8 +96,6 @@ to generic module claims.
 - No native IDI is present in the current KT2440 proteome, but this is not a
   pathway hole because IspH directly forms both IPP and DMAPP. The `idi` used
   in PMID:31500633 was cloned from *E. coli*, as stated in the paper's Methods.
-  KEGG M00096 includes a separate K01823 IDI step, so this curated module is
-  intentionally not treated as a literal M00096 transcription.
 - The report's proposed PP_0142/PP_0959 "reannotation" was not propagated:
   local metadata already assigns these proteins to the ABC-transporter bucket,
   outside the ppu00900 candidate set.
