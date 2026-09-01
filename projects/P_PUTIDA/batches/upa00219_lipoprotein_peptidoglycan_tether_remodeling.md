@@ -42,8 +42,10 @@ release of that tether. It is separated from glycan polymerization, canonical
   covalent lipoprotein-peptidoglycan tether.
 - `dacB` and `pbpG` cleave 4-3 peptidoglycan crosslinks through low-molecular-
   mass PBP chemistry and belong in a separate remodeling module.
-- No molecular-function identifier is asserted for tether hydrolysis because
-  GO does not currently provide a term for that reaction.
+- No molecular-function identifier is asserted on the module leaf for the
+  tether-specific hydrolysis reaction because GO does not currently provide an
+  exact term. The PP_1451 gene review separately retains broad PAINT-supported
+  GO:0004175 endopeptidase and non-core GO:0004180 carboxypeptidase activities.
 - The generic module report is useful for the conserved write/erase architecture
   but is strongly centered on enterobacterial Lpp. Its Lpp-specific
   C-terminal-lysine chemistry is not projected onto the Pseudomonas OprI
@@ -72,7 +74,11 @@ release of that tether. It is separated from glycan polymerization, canonical
 - Resolved the PA14 experimental proteins by locus: PA14_27180/LdtPae2 is
   A0A0H2ZCT9 and PA14_15840/LdtPae3 is A0A0H2ZF55. Added the independently
   validated PAO1 PA2854/Q9HZZ0 anchoring exemplar.
-- Revised PP_1451 from carboxypeptidase activity to PAINT-supported
-  GO:0004175 endopeptidase activity, removed the contradicted peptidoglycan
+- Added PAINT-supported GO:0004175 endopeptidase activity as PP_1451's broad
+  core MF, removed the contradicted peptidoglycan
   biosynthesis annotation, and changed signal-peptide localization evidence
-  from ISS to ISM.
+  from ISS to ISM. Follow-up review retained GO:0004180 as a plausible non-core
+  activity because both direct LdtF evidence and PAINT support it.
+- Fetched PMID:42100858, which directly demonstrates PA2854-mediated OprI
+  anchoring in vivo and with purified components in vitro, and added it as the
+  primary experimental anchor for the PP_2320 orthology transfer.
