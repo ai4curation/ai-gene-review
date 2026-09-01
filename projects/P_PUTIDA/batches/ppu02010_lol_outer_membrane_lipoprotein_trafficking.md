@@ -15,7 +15,7 @@ periplasm, and into the outer membrane.
 ## Workflow
 
 - [x] Fetch all five PSEPK Lol gene records.
-- [ ] Complete OpenScientist gene research (lolB complete; four jobs running).
+- [ ] Complete OpenScientist gene research (lolB and lolC complete; three jobs running).
 - [x] Curate every GOA row for all five genes.
 - [x] Create a species-neutral, multi-part module.
 - [ ] Complete generic module research.
@@ -43,8 +43,10 @@ periplasm, and into the outer membrane.
   fourth enzymatic step.
 - LolD directly enables ATP hydrolysis. It does not itself enable transmembrane
   transporter activity; that activity belongs to the assembled LolCDE complex.
-- LolC and LolE are modeled as contributors to the complex transport function,
-  rather than each being assigned a complete transporter activity.
+- LolC and LolE are modeled as integral components of the complex extraction
+  machinery, without GO:0022857. LolCDE uses MacB-like mechanotransmission to
+  extract cargo from the outer leaflet rather than conducting it through a
+  membrane pore.
 - GO currently lacks precise molecular-function terms for LolCDE-mediated
   lipoprotein extraction, LolA carriage, and LolB delivery. These roles remain
   explicit free-text preferred terms without invented GO identifiers.
