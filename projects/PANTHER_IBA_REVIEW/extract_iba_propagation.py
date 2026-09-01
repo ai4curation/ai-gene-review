@@ -209,7 +209,7 @@ def main() -> None:
                 "node_evidence": node_evidence,
                 "node_loss": "true" if node_loss else "false",
                 "our_action": actions.get(go_id, "?"),
-                "flags": ";".join(flags),
+                "flags": ";".join(flags) or "NONE",
             })
 
     if not rows:
@@ -218,7 +218,7 @@ def main() -> None:
     out = REPO / "projects" / "PANTHER_IBA_REVIEW" / "iba_propagation.tsv"
     cols = list(rows[0].keys())
     with out.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=cols, delimiter="\t")
+        w = csv.DictWriter(fh, fieldnames=cols, delimiter="\t", lineterminator="\n")
         w.writeheader()
         w.writerows(rows)
 

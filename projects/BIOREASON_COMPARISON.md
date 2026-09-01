@@ -113,7 +113,7 @@ Correctness is scored only on claims the model makes; missing biology lowers com
 
 ARGO139 names the **collected cohort** (139 exports), not an unconditional model-performance denominator. The current policy excludes `worm/csr-1` from model scoring because the export was generated from nhr-47/Q17370 rather than CSR-1. Seven otherwise retained exports are exact 2,000-residue prefixes of longer UniProt sequences (`Dscam1`, `BRCA2`, `HTT`, `LRRK2`, human and mouse `NOTCH1`, and `TOR1`) and are stratified as `TRUNCATED_AT_MODEL_LIMIT`.
 
-The local AIGR references are also not represented as independently expert-signed ground truth: as of the current refresh, 77 are `COMPLETE`, 46 `DRAFT`, 12 `IN_PROGRESS`, and 4 `INITIALIZED`. `benchmark-quality.csv` records this status plus export/accession, sequence lengths, GOA dates, raw-export checksums, and separate counts/checksums for the InterPro and upstream GO-GPT sections. All 139 exports contain the GO-GPT section; three lack an InterPro section (`Shu1`, `atg16`, and `pgl-1`). Publication-facing analyses must disclose the reference-status and input-quality strata.
+The local AIGR references are also not represented as independently expert-signed ground truth: as of the current refresh, 78 are `COMPLETE`, 46 `DRAFT`, 11 `IN_PROGRESS`, and 4 `INITIALIZED`. `benchmark-quality.csv` records this status plus export/accession, sequence lengths, GOA dates, raw-export checksums, and separate counts/checksums for the InterPro and upstream GO-GPT sections. All 139 exports contain the GO-GPT section; three lack an InterPro section (`Shu1`, `atg16`, and `pgl-1`). Publication-facing analyses must disclose the reference-status and input-quality strata.
 
 The rescored axes remain associated (Pearson 0.688; Spearman 0.617), so they should not be interpreted as statistically independent merely because the rubric defines different concepts. A [blinded second rater](BIOREASON_COMPARISON/second-review-protocol.md) scored a deterministic 20-gene subset balanced across first-rater correctness strata. Correctness agreement was 80% exact and 100% within one point (quadratic-weighted kappa 0.950); completeness agreement was 55% exact and 95% within one point (kappa 0.744). Raw ratings and [generated agreement metrics](BIOREASON_COMPARISON/second-review-agreement.json) are committed.
 
@@ -123,7 +123,7 @@ The ontology authority for this audit is the official archived 2026-03-25 `go-ba
 
 The [external-authority verification](BIOREASON_COMPARISON/verify_ontology_authority.py) independently downloads the official archive and queries both QuickGO and OLS. On 2026-07-12, the remote archive matched the pinned SHA-256, and both services returned all five disputed sentinels as obsolete; OLS additionally states that `GO:0005615` duplicates `GO:0005576`. Ontology status is reported separately from the seven biological assessment categories: obsoletion alone does not turn a correct non-novel prediction into `LSP`. `LSP` remains reserved for a supplied ID whose canonical concept is more generic than the supported annotation. This distinction restores status-only cases such as `DROME/LysB` and `BACSU/aprE` `GO:0005615` to `CNN` while retaining the obsolete-ID warning.
 
-The ARGO139 GO-GPT files were rebuilt from raw web exports with ontology-aware leaf pruning. The cleaned set contains 5,923 terms: 1,900 exact positive AIGR matches (`CNN`), 127 exact rejected/over-annotated matches (`NPI`), and 3,896 unresolved terms (`UNC`). Because unresolved entries still require manual assessment, 138/139 documents are `DRAFT`; only the fully resolved `BACSU/ftsZ` document is `COMPLETE`. This is a transparent pending review, not a completed GO-GPT performance result.
+The ARGO139 GO-GPT files were rebuilt from raw web exports with ontology-aware leaf pruning. The cleaned set contains 5,923 terms: 1,896 exact positive AIGR matches (`CNN`), 125 exact rejected/over-annotated matches (`NPI`), and 3,902 unresolved terms (`UNC`). Because unresolved entries still require manual assessment, 138/139 documents are `DRAFT`; only the fully resolved `BACSU/ftsZ` document is `COMPLETE`. This is a transparent pending review, not a completed GO-GPT performance result.
 
 ## Results (138-gene performance set; 139 collected exports)
 
@@ -180,7 +180,7 @@ The ARGO139 GO-GPT files were rebuilt from raw web exports with ontology-aware l
 | atg16 | SCHPO | 1 | No InterPro domains available; confabulated carbohydrate metabolism |
 | Epe1 | SCHPO | 1 | Degenerate JmjC pseudoenzyme described as an active histone demethylase |
 | pmp20 | SCHPO | 2 | Neo-functionalized peroxiredoxin -> chaperone; model assumes ancestral function |
-| pol5 | SCHPO | 1 | Predicted cytokinesis scaffold; actual function is rDNA transcription |
+| pol5 | SCHPO | 1 | Predicted cytokinesis scaffold; actual function is pre-rRNA processing and ribosome biogenesis |
 | Shu1 | SCHPO | 1 | Predicted HECT ubiquitin ligase; actually a GPI-anchored heme receptor |
 | tam10 | SCHPO | 1 | Unsupported essential-growth scaffold narrative invents molecular and pathway roles for a protein of unknown function |
 | pgl-1 | worm | 1 | Described as nuclear TF scaffold; actually cytoplasmic P granule component |
@@ -269,7 +269,7 @@ BioReason's domain-to-function reasoning cannot capture biology that is specific
 - **C. elegans**: daf-16 described as generic forkhead TF (misses IIS pathway, longevity, dauer biology). daf-2 described as generic RTK (misses insulin/IGF-1 receptor identity and aging). atfs-1 described as generic bZIP TF (misses UPRmt master regulator role). hlh-30 described as generic bHLH (misses TFEB ortholog identity and autophagy/lysosome biology).
 - **B. subtilis**: Sporulation compartment specificity is never captured. aprE's role in quorum sensing/Phr peptide processing is missed. comK described via protein binding instead of competence regulation.
 - **S. cerevisiae**: HSP104 misses prion propagation and thermotolerance. RAS2 fundamentally wrong (vesicle trafficking instead of cAMP/PKA signaling). TOR1 is the exception where FRB domain enables pathway identification.
-- **S. pombe**: ura7 misses cytoophidium biology. pol5 completely wrong (cytokinesis scaffold instead of rDNA transcription).
+- **S. pombe**: ura7 misses cytoophidium biology. pol5 completely wrong (cytokinesis scaffold instead of pre-rRNA processing/ribosome biogenesis).
 
 ### 5. Neo-functionalization and moonlighting
 
