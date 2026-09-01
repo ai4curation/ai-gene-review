@@ -1,0 +1,2047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ttg2D - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ttg2D</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88P91" target="_blank" class="term-link">
+                        Q88P91
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ttg2D";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88P91" data-a="DESCRIPTION: Periplasmic MlaC-family phospholipid carrier in th..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Periplasmic MlaC-family phospholipid carrier in the Ttg2/Mla system. Ttg2D binds membrane phospholipids in a hydrophobic pocket and shuttles them between the outer-membrane VacJ/MlaA interface and inner-membrane MlaFEDB.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005543" target="_blank" class="term-link">
+                                    GO:0005543
+                                </a>
+                            </span>
+                            <span class="term-label">phospholipid binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/ttg2D/ttg2D-deep-research-openscientist.md
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P91" data-a="GO:0005543" data-r="file:PSEPK/ttg2D/ttg2D-deep-research-openscientist.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Q88P91 is an MlaC-family carrier with target-specific apo and lipid-bound structures.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The solved hydrophobic-pocket architecture directly supports phospholipid binding, while exact loading stoichiometry remains uncertain for KT2440.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                    GO:0030288
+                                </a>
+                            </span>
+                            <span class="term-label">outer membrane-bounded periplasmic space</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/ttg2D/ttg2D-deep-research-openscientist.md
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P91" data-a="GO:0030288" data-r="file:PSEPK/ttg2D/ttg2D-deep-research-openscientist.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ttg2D is the soluble periplasmic carrier between the two membrane interfaces.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> MlaC-family identity and its carrier role in the diderm envelope support periplasmic localization.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120010" target="_blank" class="term-link">
+                                    GO:0120010
+                                </a>
+                            </span>
+                            <span class="term-label">intermembrane phospholipid transfer</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/ttg2D/ttg2D-deep-research-openscientist.md
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88P91" data-a="GO:0120010" data-r="file:PSEPK/ttg2D/ttg2D-deep-research-openscientist.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ttg2D shuttles phospholipid between the outer- and inner-membrane Mla interfaces.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The MlaC-family assignment and complete local Mla/Ttg2 system support intermembrane transfer without fixing net direction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Periplasmic phospholipid binding and shuttling between the two bacterial envelope membranes.</h3>
+                <span class="vote-buttons" data-g="Q88P91" data-a="FUNCTION: Periplasmic phospholipid binding and shuttling bet..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005543" target="_blank" class="term-link">
+                            phospholipid binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0120010" target="_blank" class="term-link">
+                                intermembrane phospholipid transfer
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                outer membrane-bounded periplasmic space
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/ttg2D/ttg2D-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">INTERMEMBRANE PHOSPHOLIPID TRANSPORT SYSTEM BINDING PROTEIN MLAC</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/ttg2D/ttg2D-deep-research-openscientist.md
+
+                        </span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ttg2D/ttg2D-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt record for Pseudomonas putida KT2440 Ttg2D (Q88P91)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Q88P91 has a solved structure and belongs to the MlaC phospholipid-carrier family.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ttg2D/ttg2D-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist functional research for PSEPK ttg2D</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Apo and lipid-bound crystal structures exist for Q88P91 itself, directly supporting a cavity-bearing lipid-carrier architecture.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Quantitative two-diacyl-phospholipid or one-cardiolipin loading and broad lipid promiscuity were measured for the P. aeruginosa ortholog, not directly for KT2440 Q88P91.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report identifies no KT2440-specific experiment resolving net transfer direction or the outer-membrane docking partner.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which phospholipid classes and acyl-chain compositions are preferred by KT2440 Ttg2D?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88P91" data-a="Q: Which phospholipid classes and acyl-chain composit..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the net physiological transfer direction of the KT2440 Ttg2/Mla system, and which outer-membrane protein receives or donates lipid to Ttg2D?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88P91" data-a="Q: What is the net physiological transfer direction o..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure loading and unloading of purified Ttg2D against VacJ/MlaA and MlaFEDB proteoliposomes with defined lipid mixtures.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: phospholipid-transfer and lipidomics assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88P91" data-a="EXPERIMENT: Measure loading and unloading of purified Ttg2D ag..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ttg2D-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88P91" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *ttg2D* (PP_0961 / Q88P91) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">9 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-01T02:52:53.999727</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="ttg2D-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="ttg2D-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-ttg2d-pp_0961-q88p91-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>ttg2D</em> (PP_0961 / Q88P91) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>ttg2D</strong> (ordered locus name <strong>PP_0961</strong>; UniProt <strong>Q88P91</strong>) of <em>Pseudomonas putida</em> strain KT2440 encodes the <strong>soluble periplasmic phospholipid-binding protein of the Ttg2 ABC transport system</strong> — the <em>Pseudomonas</em> ortholog of <strong>MlaC</strong> in the <strong>Mla (Maintenance of Lipid Asymmetry) pathway</strong>. Despite its historical "toluene-tolerance protein" name (which derives from a solvent-tolerance genetic screen, not from any role in toluene metabolism), its molecular function is not enzymatic. Rather, Ttg2D is a <strong>glycerophospholipid carrier/shuttle</strong> that binds diacyl phospholipids inside a hydrophobic internal cavity and ferries them across the aqueous periplasm between the inner and outer membranes.</p>
+<p>The functional assignment is exceptionally well supported. The direct ortholog in <em>Pseudomonas aeruginosa</em> (also named Ttg2D) has been experimentally characterized by X-ray crystallography and native mass spectrometry as "the soluble periplasmic phospholipid-binding component of an ABC transport system," carrying two diacyl glycerophospholipids or one cardiolipin per molecule, with notably promiscuous binding across molecular species [PMID: 33837253]. The <em>P. putida</em> KT2440 protein itself has been crystallized in a <strong>lipid-bound state (PDB 5UWB)</strong>, providing direct structural evidence for the target protein rather than mere inference from an ortholog. The two proteins are 65% identical over their full length, well above the threshold for confident functional transfer.</p>
+<p>Ttg2D operates in the periplasm as the mobile intermediary of the Mla pathway, which spans the entire Gram-negative cell envelope: the outer-membrane MlaA–OmpC/F complex, the periplasmic shuttle MlaC/Ttg2D, and the inner-membrane ABC transporter MlaFEDB (encoded in <em>P. putida</em> by the adjacent PP_0958–PP_0960 + PP_0962 genes, i.e. the Ttg2ABC system). By transporting mislocalized phospholipids from the outer membrane back to the inner membrane (retrograde transport), the system maintains the lipid asymmetry of the outer membrane that constitutes the primary permeability barrier of the cell. This barrier function underlies the observed physiological roles of the <em>ttg2</em> locus in <em>P. putida</em> organic-solvent (toluene) tolerance and in low-level intrinsic resistance to lipophilic antibiotics.</p>
+<hr />
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<p>Before presenting findings, the mandatory identity checks required by the research brief were completed and <strong>all passed</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Verification step</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene symbol "ttg2D" matches protein description</td>
+<td>✅ "Toluene tolerance protein"; ttg2D nomenclature originates from the <em>toluene tolerance gene 2</em> locus [PMID: 9658016]</td>
+</tr>
+<tr>
+<td>Organism correct</td>
+<td>✅ <em>Pseudomonas putida</em> KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950); KEGG entry ppu:PP_0961</td>
+</tr>
+<tr>
+<td>Protein family/domains align with literature</td>
+<td>✅ Pfam PF05494 (MlaC), InterPro IPR008869 (MlaC/ttg2D) and IPR042245 (Tgt2/MlaC_sf) — all correspond to the MlaC periplasmic phospholipid shuttle family</td>
+</tr>
+<tr>
+<td>Literature is for the same gene, not a homonym</td>
+<td>✅ The experimentally-characterized <em>P. aeruginosa</em> Ttg2D (PA4453) is a direct 65%-identical ortholog in the same genus</td>
+</tr>
+</tbody>
+</table>
+<p>There was <strong>no gene-symbol ambiguity problem</strong>: the literature retrieved describes the same protein family in the same and closely related organisms. Functional transfer is therefore direct, not analogical. Importantly, the "toluene tolerance" name should not be confused with the <em>TtgABC</em>/<em>TtgGHI</em> RND-family efflux pumps of <em>P. putida</em>, which are distinct multidrug/solvent efflux systems; Ttg2D is not itself an efflux transporter.</p>
+<h3 id="molecular-identity-card">Molecular identity card</h3>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UniProt accession</td>
+<td>Q88P91 (Q88P91_PSEPK)</td>
+</tr>
+<tr>
+<td>Gene / locus</td>
+<td><em>ttg2D</em> / PP_0961</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> KT2440</td>
+</tr>
+<tr>
+<td>Length</td>
+<td>215 aa</td>
+</tr>
+<tr>
+<td>Signal peptide</td>
+<td>Sec-type, residues 1–22 (cleaved) → mature soluble chain 23–215</td>
+</tr>
+<tr>
+<td>Domain / family</td>
+<td>Pfam <strong>PF05494 (MlaC)</strong>; InterPro <strong>IPR008869 (MlaC/ttg2D)</strong>, <strong>IPR042245 (Tgt2/MlaC_sf)</strong>; Gene3D 3.10.450.710</td>
+</tr>
+<tr>
+<td>Structures</td>
+<td><strong>PDB 4FCZ</strong> (apo), <strong>PDB 5UWB</strong> (lipid-bound) — both of the <em>P. putida</em> protein</td>
+</tr>
+<tr>
+<td>KEGG</td>
+<td>ppu:PP_0961</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-identity-ttg2d-is-the-mlac-family-periplasmic-component-of-the-ttg2mla-abc-system">Finding 1 — Identity: Ttg2D is the MlaC-family periplasmic component of the Ttg2/Mla ABC system</h3>
+<p>Ttg2D (PP_0961 / Q88P91) is a 215-amino-acid protein bearing an N-terminal Sec-dependent signal peptide (residues 1–22) that is cleaved to yield the mature soluble chain (residues 23–215). It is assigned to Pfam <strong>PF05494 (MlaC)</strong> and InterPro families <strong>IPR008869 (MlaC/ttg2D)</strong> and <strong>IPR042245 (Tgt2/MlaC_sf)</strong>, with the Gene3D superfamily fold 3.10.450.710. The KEGG identifier is ppu:PP_0961, and two crystal structures exist (PDB <strong>4FCZ</strong> and <strong>5UWB</strong>).</p>
+<p>The definitive functional anchor is the experimentally-characterized <em>P. aeruginosa</em> ortholog, also named Ttg2D, which is described as <em>"the soluble periplasmic phospholipid-binding component of an ABC transport system thought to be involved in maintaining the asymmetry of the outer membrane"</em> [PMID: 33837253]. The <em>ttg2</em> nomenclature itself traces to a <em>P. putida</em> solvent-tolerance study that identified Ttg1 and Ttg2 as ATP-binding-cassette (ABC) transporter homologs [PMID: 9658016]. Together these place Ttg2D unambiguously as the periplasmic phospholipid-binding subunit of a Ttg2/Mla ABC transporter.</p>
+<h3 id="finding-2-primary-function-a-promiscuous-glycerophospholipid-carrier">Finding 2 — Primary function: a promiscuous glycerophospholipid carrier</h3>
+<p>Ttg2D's primary molecular function is <strong>non-enzymatic phospholipid binding and transport</strong>. It does not catalyze a chemical reaction; it captures glycerophospholipid molecules in a hydrophobic internal cavity and carries them.</p>
+<p>The strongest biochemical evidence comes from the <em>P. aeruginosa</em> ortholog. Its 2.5 Å crystal structure shows a cavity accommodating <strong>four acyl chains</strong>, and native/denaturing mass spectrometry of protein produced both heterologously and isolated directly from the periplasm confirmed that <em>"Ttg2D … can carry two diacyl glycerophospholipids as well as one cardiolipin"</em> [PMID: 33837253]. Crucially, <em>"binding is notably promiscuous, allowing the transport of various molecular species"</em> [PMID: 33837253] — establishing broad substrate specificity spanning phosphatidylethanolamine, phosphatidylglycerol and cardiolipin rather than a single lipid species.</p>
+<p>At the mechanistic level, the homologous <em>E. coli</em> MlaC structure reveals a <strong>pivoting β-sheet mechanism</strong> that opens and closes the phospholipid-binding pocket, enabling capture and release of cargo: the authors <em>"solve the crystal structure of MlaC in its phospholipid-free closed apo conformation, revealing a pivoting β-sheet mechanism that functions to open and close the phospholipid-binding pocket"</em> [PMID: 31235958]. In the assembled pathway, <em>"Mla uses a shuttle-like mechanism to move lipids between the MlaFEDB inner membrane complex and the MlaA-OmpF/C OM complex, via a periplasmic lipid-binding protein, MlaC"</em> [PMID: 37100290]. Ttg2D is therefore the mobile lipid-carrier module of this shuttle.</p>
+<h3 id="finding-3-localization-and-pathway-soluble-periplasmic-shuttle-in-retrograde-mla-transport">Finding 3 — Localization and pathway: soluble periplasmic shuttle in retrograde Mla transport</h3>
+<p>Consistent with its cleaved Sec signal peptide and the <strong>absence of a lipobox</strong> (i.e., it is not lipid-anchored to a membrane), Ttg2D is a <strong>soluble protein resident in the periplasmic space</strong>. The Mla system has <em>"elements in all compartments of the cell envelope: the lipoprotein MlaA in complex with the trimeric porins OmpC/F in the OM, MlaC in the periplasmic space and an ABC transporter in the inner membrane called MlaFEDB"</em> [PMID: 36459067]. Ttg2D corresponds to the periplasmic MlaC.</p>
+<p>The pathway operates predominantly in the <strong>retrograde (outer-membrane → inner-membrane) direction</strong>. In the first hand-off step, <em>"the OmpC-MlaA complex transfers PLs to the periplasmic chaperone MlaC"</em> [PMID: 38092770], which then delivers them to the inner-membrane MlaFEDB transporter. Recent biochemical work <em>"strongly support[s] retrograde transport"</em> as the physiological direction [PMID: 36459067]. Directionality is powered by ATP: ATP hydrolysis at MlaFEDB disrupts the lipid-binding equilibrium to drive directional retrograde movement critical for outer-membrane asymmetry [PMID: 34873038]. Thus Ttg2D performs its function <strong>in the periplasm</strong>, cycling between docking at the outer-membrane and inner-membrane complexes.</p>
+<h3 id="finding-4-physiological-consequences-solvent-tolerance-and-intrinsic-antibiotic-resistance-via-barrier-integrity">Finding 4 — Physiological consequences: solvent tolerance and intrinsic antibiotic resistance via barrier integrity</h3>
+<p>The downstream physiological roles of the Ttg2 system flow from its maintenance of outer-membrane barrier integrity. In the original <em>P. putida</em> genetics, the <em>ttg2</em> locus was recovered by transposon mutagenesis as an ABC-transporter locus whose disruption sensitizes cells to toluene; the study concluded that <em>"active efflux mechanism and efficient repair of damaged membranes were important in toluene resistance"</em> [PMID: 9658016]. In <em>P. aeruginosa</em>, <em>"gene knockout experiments in … multidrug-resistant strains reveal that the Ttg2 system is involved in low-level intrinsic resistance against certain antibiotics that use a lipid-mediated pathway to permeate through membranes"</em> [PMID: 33837253]. These are the precise, mechanism-linked phenotypes (barrier maintenance) rather than broad pleiotropy — they are downstream consequences of the single molecular role of Ttg2D, not separate activities.</p>
+<h3 id="finding-5-genomic-context-a-complete-ttg2mla-operon-at-pp_0958pp_0962">Finding 5 — Genomic context: a complete ttg2/Mla operon at PP_0958–PP_0962</h3>
+<p>Ttg2D sits within a canonical Mla gene cluster. KEGG annotation of PP_0958–PP_0962 in KT2440 assigns:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Annotation</th>
+<th>Mla / Ttg2 equivalent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_0958</td>
+<td>Phospholipid ABC transporter ATP-binding subunit</td>
+<td>MlaF / Ttg2A (ATPase)</td>
+</tr>
+<tr>
+<td>PP_0959</td>
+<td>Phospholipid ABC transporter permease</td>
+<td>MlaE / Ttg2B</td>
+</tr>
+<tr>
+<td>PP_0960</td>
+<td>Phospholipid ABC transporter binding protein (MCE domain)</td>
+<td>MlaD / Ttg2C</td>
+</tr>
+<tr>
+<td><strong>PP_0961</strong></td>
+<td><strong>ttg2D — toluene-tolerance protein</strong></td>
+<td><strong>MlaC (periplasmic shuttle) — this target</strong></td>
+</tr>
+<tr>
+<td>PP_0962</td>
+<td>Second toluene-tolerance protein</td>
+<td>candidate MlaB (regulatory)</td>
+</tr>
+</tbody>
+</table>
+<p>This recapitulates the canonical MlaFEDB(+MlaC) architecture — <em>"the lipoprotein MlaA in complex with the trimeric porins OmpC/F in the OM, MlaC in the periplasmic space and an ABC transporter in the inner membrane called MlaFEDB"</em> [PMID: 36459067] — providing genomic-context ("guilt-by-association") support for the functional assignment of PP_0961 as the periplasmic MlaC/Ttg2D subunit.</p>
+<h3 id="finding-6-strong-orthology-justifies-functional-transfer">Finding 6 — Strong orthology justifies functional transfer</h3>
+<p>A global pairwise alignment (Needleman–Wunsch) of <em>P. putida</em> Ttg2D (Q88P91, 215 aa) against the experimentally-characterized <em>P. aeruginosa</em> Ttg2D (PA4453 / Q9HVW4, 215 aa) yields <strong>143/220 = 65.0% identity</strong>, with an essentially identical N-terminal Sec signal peptide (MISILRRGLLVLLAAFPLLALA vs MLTLLRRGLLVFLAAFPLLSMAA). Against <em>E. coli</em> MlaC (P0ADV7, 211 aa) identity is ~34% over the aligned region — sufficient to confirm shared family and fold. Structural analysis shows that <em>"the available structures of Ttg2D orthologs … conform a new substrate-binding-protein structural cluster"</em> [PMID: 33837253], meaning the <em>P. putida</em> protein belongs to the same conserved lipid-binding structural family. At 65% identity within the same genus, functional transfer from the <em>P. aeruginosa</em> biochemistry to the <em>P. putida</em> protein is robust.</p>
+<h3 id="finding-7-direct-structural-evidence-for-the-target-protein-pdb-5uwb">Finding 7 — Direct structural evidence for the target protein (PDB 5UWB)</h3>
+<p>Unusually for a less-characterized protein, direct structural data exist for the exact target. PDB <strong>4FCZ</strong> is the <em>"Crystal Structure of Toluene-tolerance protein from Pseudomonas putida (strain KT2440)"</em> (Northeast Structural Genomics Consortium target PpR99; X-ray, 2.6 Å), and PDB <strong>5UWB</strong> is a re-refinement of 4FCZ as the <strong>lipid-bound crystal structure</strong> of the same toluene-tolerance protein. These structures are of Q88P91 / PP_0961 itself, not merely an ortholog, and they fall within the Ttg2D substrate-binding-protein structural cluster [PMID: 33837253]. The lipid-bound state directly demonstrates that the <em>P. putida</em> protein binds lipid in its cavity, closing the loop between sequence-based inference and species-specific experimental fact.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>The findings integrate into a single coherent mechanistic picture of Ttg2D as the periplasmic ferry of the Mla lipid-asymmetry pathway:</p>
+<div class="codehilite"><pre><span></span><code><span class="nt">OUTER</span><span class="w"> </span><span class="nt">MEMBRANE</span><span class="w"> </span><span class="o">(</span><span class="nt">OM</span><span class="o">)</span>
+<span class="w">   </span><span class="nt">outer</span><span class="w"> </span><span class="nt">leaflet</span><span class="o">:</span><span class="w"> </span><span class="nt">LPS</span><span class="w">  </span><span class="err">┌──────────────┐</span><span class="w">   </span><span class="nt">mislocalized</span>
+<span class="w">       </span><span class="err">│</span><span class="w"> </span><span class="nt">MlaA</span><span class="err">–</span><span class="nt">OmpC</span><span class="o">/</span><span class="nt">F</span><span class="w">  </span><span class="err">│◄──</span><span class="w"> </span><span class="nt">phospholipid</span><span class="w"> </span><span class="nt">in</span>
+<span class="w">       </span><span class="err">└──────┬───────┘</span><span class="w">    </span><span class="nt">OM</span><span class="w"> </span><span class="nt">outer</span><span class="w"> </span><span class="nt">leaflet</span>
+<span class="w">              </span><span class="err">│</span><span class="w"> </span><span class="o">(</span><span class="nt">1</span><span class="o">)</span><span class="w"> </span><span class="nt">PL</span><span class="w"> </span><span class="nt">hand-off</span>
+<span class="w">              </span><span class="err">▼</span>
+<span class="nt">PERIPLASM</span><span class="w">      </span><span class="err">●</span><span class="w"> </span><span class="nt">Ttg2D</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nt">MlaC</span><span class="w"> </span><span class="err">●</span><span class="w">      </span><span class="err">←</span><span class="w"> </span><span class="nt">soluble</span><span class="w"> </span><span class="nt">shuttle</span>
+<span class="w">       </span><span class="o">(</span><span class="nt">PP_0961</span><span class="o">,</span><span class="w"> </span><span class="nt">Q88P91</span><span class="o">)</span><span class="w">       </span><span class="nt">binds</span><span class="w"> </span><span class="nt">2</span><span class="w"> </span><span class="nt">diacyl</span><span class="w"> </span><span class="nt">PLs</span>
+<span class="w">              </span><span class="err">│</span><span class="w">                 </span><span class="nt">or</span><span class="w"> </span><span class="nt">1</span><span class="w"> </span><span class="nt">cardiolipin</span><span class="o">;</span>
+<span class="w">              </span><span class="err">│</span><span class="w"> </span><span class="o">(</span><span class="nt">2</span><span class="o">)</span><span class="w"> </span><span class="nt">shuttles</span><span class="w">     </span><span class="nt">promiscuous</span>
+<span class="w">              </span><span class="err">▼</span>
+<span class="w">       </span><span class="err">┌──────────────┐</span>
+<span class="nt">INNER</span><span class="w">          </span><span class="err">│</span><span class="w">  </span><span class="nt">MlaFEDB</span><span class="w">     </span><span class="err">│</span><span class="w">   </span><span class="o">(</span><span class="nt">3</span><span class="o">)</span><span class="w"> </span><span class="nt">ATP</span><span class="w"> </span><span class="nt">hydrolysis</span>
+<span class="nt">MEMBRANE</span><span class="w"> </span><span class="o">(</span><span class="nt">IM</span><span class="o">)</span><span class="w">  </span><span class="err">│</span><span class="w"> </span><span class="o">(</span><span class="nt">Ttg2</span><span class="w"> </span><span class="nt">A</span><span class="o">/</span><span class="nt">B</span><span class="o">/</span><span class="nt">C</span><span class="o">)</span><span class="w"> </span><span class="err">│</span><span class="w">       </span><span class="nt">drives</span><span class="w"> </span><span class="nt">directionality</span>
+<span class="w">       </span><span class="err">└──────────────┘</span>
+<span class="w">    </span><span class="nt">PP_0958</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nt">PP_0959</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nt">PP_0960</span><span class="w"> </span><span class="o">(+</span><span class="nt">PP_0962</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nt">MlaB</span><span class="o">?)</span>
+</code></pre></div>
+
+<p><strong>Step 1 — Capture at the OM.</strong> The outer-membrane MlaA–OmpC/F complex extracts phospholipids that have aberrantly accumulated in the outer leaflet of the outer membrane and transfers them to Ttg2D [PMID: 38092770].</p>
+<p><strong>Step 2 — Periplasmic transit.</strong> Ttg2D, a soluble MlaC-family protein, sequesters up to two diacyl glycerophospholipids (or one cardiolipin) in its hydrophobic cavity [PMID: 33837253]. A pivoting β-sheet closes over the pocket to shield the acyl chains from the aqueous periplasm during transit [PMID: 31235958]. Loaded Ttg2D diffuses across the periplasm to the inner membrane.</p>
+<p><strong>Step 3 — Delivery to the IM and reset.</strong> Ttg2D docks on the MlaFEDB ABC transporter (via the MlaD/Ttg2C MCE-domain hexamer) and releases its cargo. ATP hydrolysis by the MlaF/Ttg2A ATPase disrupts the lipid-binding equilibrium, imposing net retrograde directionality (OM→IM) and recycling Ttg2D for another round [PMID: 34873038; PMID: 37100290]. Cryo-EM of the MlaC–MlaD complex reveals the docking geometry and that phospholipids pass between the C-terminal helices of the MlaD hexamer to reach its central pore [PMID: 39080293].</p>
+<p>The <strong>net physiological output</strong> is preservation of outer-membrane lipid asymmetry (LPS-rich outer leaflet, phospholipid inner leaflet). This asymmetry is what makes the Gram-negative OM an effective barrier to lipophilic toxins. When the <em>ttg2</em> system is lost, the barrier degrades, and the cell becomes sensitive to organic solvents such as toluene [PMID: 9658016] and to lipid-permeant antibiotics [PMID: 33837253]. This explains why a phospholipid-transport protein was originally discovered — and named — in a <em>toluene-tolerance</em> screen: the connection is indirect, through membrane-barrier integrity, not through any role in toluene metabolism.</p>
+<p><strong>On directionality.</strong> The literature notes that the transport direction of the Mla system was historically debated (anterograde IM→OM vs retrograde OM→IM), and the field's own reviews frame this explicitly ("Forward or backward, that is the question") [PMID: 36459067]. The current weight of biochemical evidence supports the retrograde model [PMID: 36459067; PMID: 38092770], and directional ATP-driven transport has been reconstituted in proteoliposomes [PMID: 34873038; PMID: 33199922]. Ttg2D's role as the periplasmic carrier is invariant regardless of the finally-settled net direction.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>Contribution to this report</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/33837253/">PMID: 33837253</a></td>
+<td><em>The Pseudomonas aeruginosa substrate-binding protein Ttg2D functions as a general glycerophospholipid transporter across the periplasm</em></td>
+<td><strong>Cornerstone.</strong> Direct biochemistry on the 65%-identical <em>P. aeruginosa</em> Ttg2D ortholog: periplasmic phospholipid-binding component; carries 2 diacyl PLs or 1 cardiolipin; promiscuous binding; knockout → loss of intrinsic antibiotic resistance; orthologs form a distinct SBP structural cluster</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9658016/">PMID: 9658016</a></td>
+<td><em>Isolation and characterization of toluene-sensitive mutants from the toluene-resistant bacterium Pseudomonas putida GM73</em></td>
+<td>Origin of <em>ttg2</em> nomenclature; identifies Ttg2 as an ABC-transporter homolog required for toluene tolerance/membrane integrity</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/37100290/">PMID: 37100290</a></td>
+<td><em>Protein–protein interactions in the Mla lipid transport system probed by computational structure prediction and deep mutational scanning</em></td>
+<td>Establishes the shuttle-like mechanism: MlaC moves lipids between MlaFEDB and MlaA-OmpF/C</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/34873038/">PMID: 34873038</a></td>
+<td><em>ATP disrupts lipid-binding equilibrium to drive retrograde transport critical for bacterial outer membrane asymmetry</em></td>
+<td>Energetics/directionality: ATP hydrolysis drives directional retrograde transport for OM asymmetry</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/36459067/">PMID: 36459067</a></td>
+<td><em>Forward or backward, that is the question: phospholipid trafficking by the Mla system</em></td>
+<td>Defines the three-compartment architecture; MlaC in periplasm; supports retrograde direction</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/38092770/">PMID: 38092770</a></td>
+<td><em>Molecular mechanism of phospholipid transport at the bacterial outer membrane interface</em></td>
+<td>Defines the first hand-off step: OmpC-MlaA transfers PLs to periplasmic MlaC</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31235958/">PMID: 31235958</a></td>
+<td><em>Evidence for phospholipid export from the bacterial inner membrane by the Mla ABC transport system</em></td>
+<td>Structural mechanism: pivoting β-sheet opens/closes the MlaC lipid pocket</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/33199922/">PMID: 33199922</a></td>
+<td><em>Structural insights into outer membrane asymmetry maintenance in Gram-negative bacteria by MlaFEDB</em></td>
+<td>Cryo-EM of the inner-membrane partner complex; reconstituted transport with MlaC and MlaA-OmpF</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/39080293/">PMID: 39080293</a></td>
+<td><em>Structure of the MlaC-MlaD complex reveals molecular basis of periplasmic phospholipid transport</em></td>
+<td>Molecular basis of the periplasmic-shuttle → inner-membrane hand-off (MlaC docking on MlaD hexamer)</td>
+</tr>
+</tbody>
+</table>
+<p>Structural databases (RCSB PDB <strong>4FCZ</strong>, <strong>5UWB</strong>), UniProt (<strong>Q88P91</strong>), Pfam (<strong>PF05494</strong>), InterPro (<strong>IPR008869</strong>, <strong>IPR042245</strong>), and KEGG (<strong>ppu:PP_0961</strong> and the PP_0958–PP_0962 operon) provided the sequence, domain, signal-peptide and genomic-context annotations, cross-validated against the primary literature above.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct biochemistry on the KT2440 protein itself.</strong> The quantitative binding data (stoichiometry, cardiolipin binding, promiscuity) derive from the <em>P. aeruginosa</em> ortholog [PMID: 33837253]. Although the <em>P. putida</em> protein is 65% identical and has a lipid-bound crystal structure (5UWB), its specific binding constants and lipid-species preferences have not been independently measured.</p>
+</li>
+<li>
+<p><strong>Transport directionality not settled organism-specifically.</strong> The retrograde (OM→IM) model is well supported in <em>E. coli</em>/<em>P. aeruginosa</em> systems, but the physiological direction (and whether it can be bidirectional/anterograde under some conditions) remains an active debate in the field [PMID: 36459067]. This has not been resolved specifically for <em>P. putida</em>.</p>
+</li>
+<li>
+<p><strong>Regulatory subunit identity is inferred.</strong> PP_0962 is annotated as a "second toluene-tolerance protein" and assigned as a candidate MlaB regulatory subunit by architectural analogy; this has not been experimentally confirmed in KT2440.</p>
+</li>
+<li>
+<p><strong>Outer-membrane partner not enumerated here.</strong> The identity of the <em>P. putida</em> MlaA–OmpC/F equivalent (the outer-membrane docking partner for Ttg2D) was not explicitly resolved in this investigation, though homologs are expected to be present.</p>
+</li>
+<li>
+<p><strong>No knockout phenotype in KT2440 specifically.</strong> The solvent-tolerance phenotype was demonstrated in <em>P. putida</em> GM73 [PMID: 9658016] and the antibiotic-resistance phenotype in <em>P. aeruginosa</em> [PMID: 33837253]; a clean KT2440 <em>ttg2D</em>-specific knockout characterization was not part of the reviewed evidence.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Native/denaturing MS on KT2440 Ttg2D.</strong> Reproduce the <em>P. aeruginosa</em> experiment [PMID: 33837253] on periplasm-isolated PP_0961 to confirm identical stoichiometry (2 diacyl PLs / 1 cardiolipin) and promiscuity in the exact target.</p>
+</li>
+<li>
+<p><strong>Directionality reconstitution in a <em>P. putida</em> system.</strong> Build a proteoliposome assay (as in [PMID: 33199922]) with KT2440 MlaFEDB (PP_0958–0960/0962), Ttg2D, and the OM partner to measure net transport direction and ATP-dependence in this organism.</p>
+</li>
+<li>
+<p><strong>Clean <em>ttg2D</em> (PP_0961) deletion in KT2440.</strong> Quantify toluene/solvent MIC and lipophilic-antibiotic susceptibility, and assay OM permeability (e.g., NPN uptake), to directly link Ttg2D loss to barrier degradation in the target strain.</p>
+</li>
+<li>
+<p><strong>Confirm PP_0962 as MlaB.</strong> Test physical interaction with the MlaF/Ttg2A ATPase (PP_0958) and its effect on ATPase activity to validate the regulatory-subunit assignment.</p>
+</li>
+<li>
+<p><strong>Structure–function of the lipid pocket.</strong> Use the 5UWB lipid-bound structure and the 4FCZ apo structure to guide cavity-lining mutants; test binding and complementation to map determinants of promiscuous glycerophospholipid recognition and to confirm the pivoting-β-sheet gating.</p>
+</li>
+<li>
+<p><strong>Map the hand-off interfaces.</strong> Apply deep mutational scanning / computational structure prediction ([PMID: 37100290]) and the MlaC–MlaD structural framework ([PMID: 39080293]) to the <em>P. putida</em> proteins to identify the Ttg2D docking residues on Ttg2C/MlaD.</p>
+</li>
+</ol>
+<hr />
+<h2 id="supported-and-refuted-hypotheses">Supported and Refuted Hypotheses</h2>
+<p><strong>Supported</strong><br />
+- <strong>Identity:</strong> ttg2D = MlaC-family periplasmic phospholipid-binding protein (domain + ortholog evidence).<br />
+- <strong>Function:</strong> substrate is glycerophospholipid; role is promiscuous carrier/shuttle (structure + native MS).<br />
+- <strong>Localization:</strong> soluble, periplasmic (cleaved Sec signal peptide; system architecture).<br />
+- <strong>Pathway:</strong> component of Mla retrograde transport maintaining OM lipid asymmetry.</p>
+<p><strong>Refuted / excluded</strong><br />
+- <strong>Not an enzyme</strong> — no catalytic reaction; ATPase/permease activity belongs to MlaFEDB/Ttg2ABC, not to Ttg2D.<br />
+- <strong>Not itself a toluene/drug efflux pump</strong> — the "toluene tolerance" phenotype is an indirect consequence of OM-barrier maintenance, distinct from the <em>P. putida</em> TtgABC/TtgGHI RND efflux systems.</p>
+<hr />
+<h3 id="conclusion">Conclusion</h3>
+<p><em>ttg2D</em> (PP_0961 / Q88P91) encodes the <strong>soluble periplasmic phospholipid-shuttle protein (MlaC ortholog) of the Ttg2/Mla ABC transport system</strong> in <em>Pseudomonas putida</em> KT2440. Its primary, non-enzymatic function is to bind glycerophospholipids promiscuously in a hydrophobic cavity and carry them across the periplasm between the inner-membrane MlaFEDB (Ttg2ABC) transporter and the outer-membrane MlaA–OmpC/F complex, driving retrograde phospholipid transport that maintains outer-membrane lipid asymmetry — the barrier function that underlies <em>P. putida</em>'s toluene tolerance and low-level intrinsic resistance to lipophilic antibiotics.</p>
+<hr />
+<p><em>Key references:</em> Yero et al. 2021 (PMID 33837253); Kim et al. 1998 (PMID 9658016); Hughes et al. 2019 (PMID 31235958); Tang et al. 2021 (PMID 33199922); Abellón-Ruiz 2023 review (PMID 36459067); MacRae et al. 2023 (PMID 37100290); Yeow et al. 2023 (PMID 38092770); Wotherspoon et al. 2024 (PMID 39080293); Low et al. 2021 (PMID 34873038).</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="ttg2D-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="ttg2D-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:33837253</li>
+<li>PMID:9658016</li>
+<li>PMID:31235958</li>
+<li>PMID:37100290</li>
+<li>PMID:36459067</li>
+<li>PMID:38092770</li>
+<li>PMID:34873038</li>
+<li>PMID:39080293</li>
+<li>PMID:33199922</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ttg2D-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88P91" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ttg2d-curation-notes">ttg2D curation notes</h1>
+<ul>
+<li>Q88P91 is structurally characterized and belongs to the exact MlaC PANTHER subfamily [file:PSEPK/ttg2D/ttg2D-uniprot.txt "PANTHER; PTHR36573:SF1; INTERMEMBRANE PHOSPHOLIPID TRANSPORT SYSTEM BINDING PROTEIN MLAC"].</li>
+<li>The local Ttg2D name is retained while the module records its MlaC-family periplasmic carrier role.</li>
+<li>There are no existing GOA rows; phospholipid binding, intermembrane transfer, and periplasmic localization are synthesized core assertions.</li>
+<li>OpenScientist identifies PDB 4FCZ and lipid-bound PDB 5UWB as structures of<br />
+  Q88P91 itself, providing direct target-level support for a lipid-binding<br />
+  cavity [file:PSEPK/ttg2D/ttg2D-deep-research-openscientist.md<br />
+  "Direct structural evidence for the target protein (PDB 5UWB)"].</li>
+<li>The quantitative lipid stoichiometry and promiscuity derive from the<br />
+  P. aeruginosa ortholog, and the report states that direction is unresolved<br />
+  specifically in P. putida. These are not promoted to target-specific core<br />
+  claims [file:PSEPK/ttg2D/ttg2D-deep-research-openscientist.md<br />
+  "Transport directionality not settled organism-specifically"].</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88P91
+gene_symbol: ttg2D
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  Periplasmic MlaC-family phospholipid carrier in the Ttg2/Mla system. Ttg2D
+  binds membrane phospholipids in a hydrophobic pocket and shuttles them
+  between the outer-membrane VacJ/MlaA interface and inner-membrane MlaFEDB.
+existing_annotations:
+  - term:
+      id: GO:0005543
+      label: phospholipid binding
+    evidence_type: ISS
+    original_reference_id: file:PSEPK/ttg2D/ttg2D-deep-research-openscientist.md
+    qualifier: enables
+    review:
+      summary: Q88P91 is an MlaC-family carrier with target-specific apo and lipid-bound structures.
+      action: NEW
+      reason: The solved hydrophobic-pocket architecture directly supports phospholipid binding, while exact loading stoichiometry remains uncertain for KT2440.
+  - term:
+      id: GO:0030288
+      label: outer membrane-bounded periplasmic space
+    evidence_type: ISS
+    original_reference_id: file:PSEPK/ttg2D/ttg2D-deep-research-openscientist.md
+    qualifier: located_in
+    review:
+      summary: Ttg2D is the soluble periplasmic carrier between the two membrane interfaces.
+      action: NEW
+      reason: MlaC-family identity and its carrier role in the diderm envelope support periplasmic localization.
+  - term:
+      id: GO:0120010
+      label: intermembrane phospholipid transfer
+    evidence_type: ISS
+    original_reference_id: file:PSEPK/ttg2D/ttg2D-deep-research-openscientist.md
+    qualifier: involved_in
+    review:
+      summary: Ttg2D shuttles phospholipid between the outer- and inner-membrane Mla interfaces.
+      action: NEW
+      reason: The MlaC-family assignment and complete local Mla/Ttg2 system support intermembrane transfer without fixing net direction.
+references:
+  - id: file:PSEPK/ttg2D/ttg2D-uniprot.txt
+    title: UniProt record for Pseudomonas putida KT2440 Ttg2D (Q88P91)
+    findings:
+      - statement: Q88P91 has a solved structure and belongs to the MlaC phospholipid-carrier family.
+  - id: file:PSEPK/ttg2D/ttg2D-deep-research-openscientist.md
+    title: OpenScientist functional research for PSEPK ttg2D
+    findings:
+      - statement: &gt;-
+          Apo and lipid-bound crystal structures exist for Q88P91 itself,
+          directly supporting a cavity-bearing lipid-carrier architecture.
+      - statement: &gt;-
+          Quantitative two-diacyl-phospholipid or one-cardiolipin loading and
+          broad lipid promiscuity were measured for the P. aeruginosa ortholog,
+          not directly for KT2440 Q88P91.
+      - statement: &gt;-
+          The report identifies no KT2440-specific experiment resolving net
+          transfer direction or the outer-membrane docking partner.
+core_functions:
+  - description: Periplasmic phospholipid binding and shuttling between the two bacterial envelope membranes.
+    molecular_function:
+      id: GO:0005543
+      label: phospholipid binding
+    directly_involved_in:
+      - id: GO:0120010
+        label: intermembrane phospholipid transfer
+    locations:
+      - id: GO:0030288
+        label: outer membrane-bounded periplasmic space
+    supported_by:
+      - reference_id: file:PSEPK/ttg2D/ttg2D-uniprot.txt
+        supporting_text: INTERMEMBRANE PHOSPHOLIPID TRANSPORT SYSTEM BINDING PROTEIN MLAC
+      - reference_id: file:PSEPK/ttg2D/ttg2D-deep-research-openscientist.md
+suggested_questions:
+  - question: Which phospholipid classes and acyl-chain compositions are preferred by KT2440 Ttg2D?
+  - question: What is the net physiological transfer direction of the KT2440 Ttg2/Mla system, and which outer-membrane protein receives or donates lipid to Ttg2D?
+suggested_experiments:
+  - description: Measure loading and unloading of purified Ttg2D against VacJ/MlaA and MlaFEDB proteoliposomes with defined lipid mixtures.
+    experiment_type: phospholipid-transfer and lipidomics assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

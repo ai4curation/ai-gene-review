@@ -16,12 +16,12 @@ net transport direction open.
 ## Workflow
 
 - [x] Fetch all six PSEPK gene records.
-- [ ] Complete OpenScientist gene research.
+- [x] Complete OpenScientist gene research.
 - [x] Curate every GOA row for all six genes.
 - [x] Create a species-neutral, multi-part module.
 - [x] Complete generic module research.
 - [x] Complete module + pathway + taxon research.
-- [ ] Validate and render the reviews, module, and project page.
+- [x] Validate and render the reviews, module, and project page.
 - [ ] Open one non-draft PR and clear review and CI.
 
 ## Selected Genes
