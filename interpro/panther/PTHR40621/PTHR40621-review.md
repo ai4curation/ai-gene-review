@@ -8,7 +8,7 @@
 | **Official PANTHER Name** | TRANSCRIPTION FACTOR KAPC-RELATED |
 | **InterPro Entry** | IPR050936 |
 | **Cached InterPro counters** | 11,010 protein matches; 3,258 taxon records |
-| **Subfamilies** | 6 |
+| **Cached InterPro subfamily counter** | 6 |
 | **Representative Structure** | 1gd2 (Crystal structure of bZIP transcription factor Pap1 bound to DNA) |
 
 ## Executive Summary
@@ -88,7 +88,13 @@ descendant evidence is represented by PomBase/SGD/CGD identifiers (including pap
 not that the PAINT judgment lacks experimental grounding. The target's appearance among the
 IBD descendants is expected and is not circular.
 
-**Paralog caveat (curatorial note)**: The general dbTF / cis-regulatory-binding terms transfer well across the family because all members are AP-1-type transcription factors. What does **not** transfer cleanly are *paralog-specific biological processes* and *specific target/stress programs* — e.g. iron regulation (Yap5/Yap7), arsenic resistance (Arr1/Yap8), or pap1's particular oxidative-stress and multidrug-resistance regulons. IBA propagation of such process-specific or stress-specific terms across SF6 should be scrutinized, but the molecular-function and generic transcription terms reviewed above are correct for pap1.
+**Paralog caveat (curatorial note)**: Within the reviewed fungal SF6 slice, general dbTF /
+cis-regulatory-binding terms are shared, but *paralog-specific biological processes* and
+specific target/stress programs do not transfer cleanly — e.g. iron regulation (Yap5/Yap7),
+arsenic resistance (Arr1/Yap8), or pap1's particular oxidative-stress and
+multidrug-resistance regulons. IBA propagation of such process-specific terms beyond the
+actual PTN008082960 node should be scrutinized; no corresponding claim is made for all of
+PTHR40621.
 
 ## Review Status
 
