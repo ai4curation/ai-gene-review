@@ -15,7 +15,7 @@ periplasm, and into the outer membrane.
 ## Workflow
 
 - [x] Fetch all five PSEPK Lol gene records.
-- [ ] Complete OpenScientist gene research.
+- [ ] Complete OpenScientist gene research (lolB complete; four jobs running).
 - [x] Curate every GOA row for all five genes.
 - [x] Create a species-neutral, multi-part module.
 - [ ] Complete generic module research.
@@ -51,4 +51,6 @@ periplasm, and into the outer membrane.
 - KEGG assigns lolCDE to the broad ABC transporters pathway (ppu02010) and
   assigns lolA/lolB only to a functional transport bucket. The curated module
   restores their shared biological pathway boundary.
-
+- LolB research supports the terminal receptor/insertion role but found no
+  direct KT2440 structure, biochemistry, or essentiality experiment; detailed
+  mechanism remains transferred from E. coli and Pseudomonas aeruginosa.
