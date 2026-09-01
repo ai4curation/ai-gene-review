@@ -209,3 +209,14 @@ specificity assay.
 - [x] Validate all selected reviews and the module.
 - [x] Render all touched gene, module, and project pages.
 - [x] Open the batch pull request.
+
+## 2026-09-01 NadD exemplar repair
+
+The bacterial NadD leaf now uses reviewed *Bacillus subtilis* P54455 as its
+cross-species exemplar alongside PSEPK Q88DL5. P54455 was biochemically
+characterized and crystallized, and the committed PANTHER family export places
+it in PTHR39321:SF3. This replaces E. coli P0A752, whose classification differs
+between the repository's pinned member index and newer UniProt/PANTHER records.
+The repair avoids representing a release-transition artifact as a biological
+family alternative; the NaMN-to-deamido-NAD reaction and route logic are
+unchanged.

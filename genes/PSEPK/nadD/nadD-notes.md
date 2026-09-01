@@ -10,9 +10,11 @@
   [RHEA:22860, NaMN adenylylation].
 - Family grounding: the target has a broad PTHR39321
   nicotinate-nucleotide-adenylyltransferase-related family cross-reference, and
-  E. coli NadD P0A752 is retained as a representative exemplar; no ancestral
-  PTN is asserted [UniProtKB:Q88DL5, "PANTHER; PTHR39321;
-  NICOTINATE-NUCLEOTIDE ADENYLYLTRANSFERASE-RELATED; 1."].
+  reviewed *Bacillus subtilis* NadD P54455 is retained as the experimentally
+  characterized representative exemplar; no ancestral PTN is asserted
+  [UniProtKB:Q88DL5, "PANTHER; PTHR39321;
+  NICOTINATE-NUCLEOTIDE ADENYLYLTRANSFERASE-RELATED; 1."]
+  [UniProtKB:P54455, "Belongs to the NadD family."].
 - Curation: GO:0004515 and NAD+ biosynthesis are core. Generic catalytic,
   nucleotidyltransferase, adenylyltransferase, and nucleotide-biosynthesis terms
   were modified to the specific leaf activity or pathway term.
