@@ -11,7 +11,7 @@ autolink_gene_symbols: false
 
 - Module: `aps_dependent_assimilatory_sulfate_reduction`
 - Pathway context: KEGG `ppu00920` (sulfur metabolism)
-- Pull request: [#2254](https://github.com/ai4curation/ai-gene-review/pull/2254)
+- Initial curation pull request: [#2254](https://github.com/ai4curation/ai-gene-review/pull/2254)
 - Focused genes: 6
 - Broad membership-table candidates: 54
 
@@ -45,13 +45,13 @@ the CysN ATP-sulfurylase role and KT2440 CysH is an APS reductase.
 - [x] Attempt OpenScientist gene-level research; `cysH`, `cysI`, and `PP_0860`
   returned reports, while the corrected `cysD`, `cysNC`, and `fpr-I` requests
   each exhausted the 7,200-second provider timeout without a report.
-- [x] Attempt generic module OpenScientist research; the corrected request
-  exhausted its 7,200-second provider timeout without returning a report.
+- [x] Complete fresh generic module OpenScientist research with the full
+  7,200-second provider allowance and retain its generated artifacts.
 - [x] Complete module + `ppu00920` + PSEPK OpenScientist research.
 - [x] Resolve the CysNC APS-kinase-domain and PP_0860 questions after research.
 - [x] Integrate useful research findings without treating provider output as authority.
 - [x] Validate and render the module, gene reviews, and batch page.
-- [x] Open one PR for this module; automated review and CI are in progress.
+- [x] Merge initial module PR #2254 after automated review and CI.
 
 ## Focused Genes
 
@@ -71,11 +71,14 @@ sulfurylase structure and biochemistry in PMID:16387658. The FprA requirement
 and evidence for a non-CysJ Pseudomonas sulfite-reduction system come from
 PMID:23794620.
 
-The generic OpenScientist request was allowed to run for the full configured
-7,200 seconds with three iterations but timed out in the provider queue. No
-generic report is cited or represented as evidence. The completed
-module-plus-`ppu00920`-plus-PSEPK report was retained as retrieval context and
-was checked against the primary evidence above.
+The earlier generic OpenScientist request exhausted its 7,200-second provider
+timeout. The wave120 retry completed in 845 seconds with three iterations and
+is retained as
+[`aps_dependent_assimilatory_sulfate_reduction-deep-research-openscientist.md`](../../../modules/aps_dependent_assimilatory_sulfate_reduction-deep-research-openscientist.md).
+It supports the three-step boundary and cross-lineage enzyme variation, but its
+organism-mixed mechanistic synthesis and immediate-ferredoxin wording were not
+treated as authority. The taxon-aware report and both primary papers remain the
+basis for the PSEPK realization and its explicit donor uncertainty.
 
 The gene-level `cysI` report correctly recovered the sulfite-reductase
 hemoprotein role but overgeneralized the classical *E. coli* CysJ architecture
@@ -113,3 +116,22 @@ exemplars P38038 and P17846 with PTHR19384:SF128 and PTHR11493:SF47.
 
 The 54-gene KEGG candidate inventory is retained in
 [`ppu00920_assimilatory_sulfate_reduction.tsv`](ppu00920_assimilatory_sulfate_reduction.tsv).
+
+## 2026-09-01 repair checkpoint
+
+The wave120 annotation-reviewer pass rechecked all 27 imported GOA rows across
+the six focused genes, together with the four explicit `NEW` proposals. No
+row-level action changed: the CysNC qualifier correction, family-grounded CysI
+proposal, DSM 3601-to-KT2440 Fpr-I orthology transfer, and conservative
+PP_0860 decisions remain supported by the exact records and primary evidence.
+
+The reusable module now grounds the CysD activity with the exact local PAINT
+node `PTN001249481`, whose `PTHR43196` IBD record carries `GO:0004781` and is
+seeded by E. coli P21156. The terminal variant axis is described as an
+electron-supply architecture rather than an experimentally resolved immediate
+donor: Pseudomonas physiology supports an Fpr-linked CysI system, while reduced
+ferredoxin versus direct Fpr-to-CysI transfer remains an explicit knowledge
+gap. The direct APS route, three-step boundary, and exclusion of PP_0860 are
+unchanged. Fresh generic OpenScientist research completed in 845 seconds; its
+useful boundary synthesis was integrated, while overgeneralized claims were
+left in the generated report rather than promoted into curated structure.
