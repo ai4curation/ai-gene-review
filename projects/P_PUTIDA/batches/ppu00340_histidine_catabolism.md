@@ -19,19 +19,20 @@ autolink_gene_symbols: false
 
 ## Curated Boundary
 
-- Required bacterial route: `hutH`, `hutU`, `hutI`, `hutF`, and `hutG`.
-- The first three reactions produce formiminoglutamate; the bacterial
-  `hutF`-`hutG` branch then releases formate and glutamate.
-- The alternative vertebrate FTCD route is represented as a taxonomic variant
-  in the species-neutral module, not as a KT2440 gene requirement.
+- Required PSEPK realization: `hutH`, `hutU`, `hutI`, `hutF`, and `hutG`.
+- The first three reactions produce formiminoglutamate; the PSEPK two-step
+  `hutF`-`hutG` route then releases formate and glutamate.
+- The one-step formamide and folate-coupled terminal chemistries are reusable
+  route variants, not PSEPK gene requirements. Their exemplars do not restrict
+  the module's taxonomic scope.
 - Histidine biosynthesis, histidyl-tRNA charging, and unrelated histidine
   modification genes in the KEGG map are outside the boundary.
 
 ## Required Workflow
 
 - [x] Curate or update the species-neutral module.
-- [ ] Run module-level OpenScientist deep research.
-- [ ] Run module + pathway + PSEPK OpenScientist deep research.
+- [x] Run module-level OpenScientist deep research.
+- [x] Run module + pathway + PSEPK OpenScientist deep research.
 - [x] Fetch all selected genes with `just fetch-gene PSEPK <gene>`.
 - [x] Run bounded OpenScientist deep research for high-priority selected genes
   and record incomplete runs.
@@ -45,6 +46,20 @@ PSEPK report; no report file was produced.
 
 2026-07-26: The generic module-level OpenScientist run also timed out after
 7200s without producing a report.
+
+2026-09-01 repair checkpoint: Both OpenScientist reruns completed within the
+7200s allowance. The module is now explicitly chemistry-defined rather than
+taxon-defined, and terminal-route selection is `ONE_OR_MORE` so parallel
+chemistries are permitted. The one-step formimidoylglutamase exemplar P42068
+is represented by the exact verified `PTHR11358:SF35` subfamily; uncertain
+HutF/HutG PANTHER or PTN assertions remain omitted. Annotation-reviewer audit
+confirmed the five selected catalytic reviews require no conservative changes,
+and `hutT` remains outside the chemistry module. The generic report's claim of
+mutually exclusive terminal routes was treated as an overstatement and was not
+adopted. Module schema and semantic validation pass; the semantic check retains
+only the expected advisory that InterPro labels are not ontology-validated.
+The `hutH`, `hutU`, `hutI`, `hutF`, `hutG`, and boundary `hutT` reviews also
+validate, and the changed module and batch outputs were rendered.
 
 2026-07-26: The `hutH` gene-level run timed out after 7200s with no report.
 The `hutU` run persisted a complete report and artifacts; its direct
@@ -81,7 +96,7 @@ evidence.
 
 ## Notes
 
-Checked rows are the five Hut proteins required by the bacterial route.
+Checked rows are the five Hut proteins required by the PSEPK two-step route.
 Histidine-biosynthesis enzymes remain visible as excluded candidates from the
 broader KEGG map.
 
