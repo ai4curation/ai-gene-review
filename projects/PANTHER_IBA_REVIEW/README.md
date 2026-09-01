@@ -78,6 +78,6 @@ be materialised under `interpro/panther/<FAM>/<FAM>-paint.tsv` with:
 just fetch-panther-paint PTHR10177
 ```
 
-Scope: the 157 IBAs in the 41 reviewed genes (39 PANTHER families, all cached
+Scope: the 160 IBAs in the 41 reviewed genes (39 PANTHER families, all cached
 locally). Note the cross-subfamily flag is deliberately sensitive and
 over-fires on broadly conserved functions — it is triage, not a verdict.

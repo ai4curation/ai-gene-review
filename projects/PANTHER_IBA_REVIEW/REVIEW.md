@@ -28,8 +28,8 @@ data only (nothing hardcoded):
 Output: `iba_propagation.tsv` (one row per IBA, with our curation action joined).
 
 ```
-IBA annotations analyzed: 157
-  with UniProt seeds mappable to subfamilies: 87
+IBA annotations analyzed: 160
+  with UniProt seeds mappable to subfamilies: 90
   CROSS_SUBFAMILY (seeds only from other subfamilies): 36
 ```
 
@@ -116,7 +116,7 @@ UniProt mapping, not a lack of experimental grounding in the PAINT source set.
 
 ## Bottom line
 
-- 157 IBAs reviewed at the family level. Two clean over-propagations (**pom1**
+- 160 IBAs reviewed at the family level. Two clean over-propagations (**pom1**
   cytoskeleton, **rqh1** cytoplasm — localization terms crossing subfamilies) and
   one **sub-functionalization** case (**mid1** septin ring, where the ancestral
   anillin function partitioned to mid2 in pombe). All three were already caught
