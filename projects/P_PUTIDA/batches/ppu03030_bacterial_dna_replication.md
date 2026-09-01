@@ -42,9 +42,11 @@ activities outside this focused replisome realization.
 Molecular functions are attached only to leaf annotons, including DnaA origin
 binding, SSB single-stranded DNA binding, DnaN processivity-factor activity,
 and DnaX contribution to the multisubunit clamp-loader activity. DnaB and DnaE
-use the specific activities selected by their gene reviews. The obsolete DNA
-primase term is not authored; DnaG uses current RNA-polymerase and
-primer-synthesis terms.
+use the specific activities selected by their gene reviews. QuickGO was checked
+on 2026-09-01: `GO:0003896` is explicitly named `obsolete DNA primase activity`,
+has `isObsolete: true`, and carries the ontology comment that it is equivalent
+to DNA-directed 5'-3' RNA polymerase activity. It is therefore not authored;
+DnaG uses the current RNA-polymerase and primer-synthesis terms.
 
 The annotation-reviewer workflow was applied to every current GOA row for dnaA,
 dnaB, dnaEA, dnaG, dnaN, dnaQ, dnaX, ligA, and ssb; each gene's notes record the
