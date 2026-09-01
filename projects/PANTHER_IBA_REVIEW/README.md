@@ -18,7 +18,7 @@ propagation — rather than re-judging gene by gene.
   node, vs. the few `n_seeds` echoed into the leaf), `node_evidence`
   (IBD/IRD/IKR), and `node_loss`. New flags: `SINGLE_NODE_SEED` (≤1 canonical
   seed — weak support), `NODE_LOSS` (an IRD/IKR loss at the source node), and
-  `NODE_NOT_IN_IBD`.
+  `NODE_NOT_IN_IBD`; `NONE` denotes a row with no propagation flags.
 - `extract_node_annotations.py` — pulls the **PTN node-level (PAINT) annotations**
   themselves from PANTHER's `IBD.gaf` (the IBD/IRD/IKR — plus a few IBA-on-node —
   layer that is the *source* of every IBA). For each ancestral node our genes
@@ -55,7 +55,7 @@ propagation — rather than re-judging gene by gene.
   Note: `loss_clade`/`retaining_clade` are resolved from the *reviewed* member
   tables + leaf GAF, so a finding with `n_members_affected=0` yields an empty
   `loss_clade` (the loss is in an unsampled subfamily); seeds are still provided.
-  Of the 296 IKR findings, 49 have ≥1 attributed reviewed member and are
+  Of the 403 IKR findings, 63 have ≥1 attributed reviewed member and are
   immediately actionable.
 - `REVIEW.md` — the written review and findings.
 
