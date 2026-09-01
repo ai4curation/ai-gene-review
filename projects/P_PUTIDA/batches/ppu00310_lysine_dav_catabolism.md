@@ -86,6 +86,8 @@ below documents the two identifiers that were omitted.
 
 ## 2026-09-01 Family-evidence repair
 
+Repair PR: [#2863](https://github.com/ai4curation/ai-gene-review/pull/2863).
+
 The DavB and DavT leaves now rely on exact, experimentally characterized
 UniProt exemplars without asserting a PANTHER family identifier. DavB's only
 available PANTHER subfamily carries the official label "lysine-specific histone
