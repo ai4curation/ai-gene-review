@@ -1,0 +1,39 @@
+# pmp20 review notes
+
+## 2026-09-01 — source refresh and annotation review
+
+- Refreshed the UniProt and GOA inputs with `just fetch-gene SCHPO pmp20 --force`.
+  Current GOA has 18 rows. Seven stale review rows were removed because their exact
+  source/evidence combinations are no longer present; seven newly seeded rows were
+  reviewed.
+- The decisive target-specific evidence is the recombinant-protein study. It reports
+  that “peroxidase activity was not observed for PMP20” and that Pmp20 inhibited
+  thermal aggregation of citrate synthase, although more weakly than Tpx
+  [PMID:20356456, “However, peroxidase activity was not observed for PMP20
+  (peroxisomal membrane protein 20).”; “TPx, PMP20, and GPx inhibited thermal
+  aggregation of citrate synthase at 43(o)C, but BCP failed to inhibit the
+  aggregation. The chaperone activities of PMP20 and GPx were weaker than that of
+  TPx.”]. The cached record is abstract-only, but these statements directly describe
+  both assays.
+- The existing reproducible analysis independently supports catalytic divergence:
+  Pmp20 contains C43 but no candidate resolving cysteine, and the resolving C31 of
+  active Prx5 O43099 aligns to Pmp20 V22
+  [file:SCHPO/pmp20/pmp20-bioinformatics/RESULTS.md, “Active-control resolving
+  positions do **not** map to cysteine in `pmp20`”; “vs `prx5_o43099` resolving C31
+  -> `V22`”]. This supports the structured residue claim but is not substituted for
+  the direct negative assay.
+- PAINT nodes were assessed as ancestral assertions rather than pairwise donor lists.
+  PTN001625584 is defensible for cytoplasm and a broad oxidative-stress response, but
+  its peroxidase, hydrogen-peroxide-catabolism, and redox-homeostasis transfers fail
+  for this target because of the direct negative assay and catalytic-site divergence.
+  PTN000046537 peroxisomal and mitochondrial localizations are retained as non-core
+  phylogenetic inferences because there is no target-specific contradiction, while
+  direct Pmp20 evidence for either organelle was not found.
+- The existing OpenScientist focused review was applicable to the catalytic question
+  and reached the same evidence-based conclusion: reject thioredoxin-peroxidase
+  activity and retain holdase activity
+  [file:SCHPO/pmp20/pmp20-hypotheses/function-hypothesis-go-0008379/openscientist.md].
+- The core function is limited to GO:0140309, unfolded protein holdase activity. The
+  citrate-synthase assay measured prevention of aggregation, not active refolding.
+  Cytosol and nucleus are retained as experimentally observed locations; inferred
+  peroxisome and mitochondrion are not promoted to core locations.
