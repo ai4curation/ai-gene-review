@@ -36,6 +36,7 @@ broad KEGG bucket are outside this module.
 - [x] Revise the reusable module from human hepatic framing to cross-species biochemistry.
 - [x] Add exact PSEPK exemplars to every reaction leaf.
 - [x] Remove module-level cytosol and disease/drug-specific role descriptions.
+- [x] Complete generic module-level OpenScientist research.
 - [ ] Complete module + `ppu00350` + PSEPK OpenScientist research.
 - [x] Validate and render the revised module.
 - [x] Revalidate and render the five focused gene reviews.
