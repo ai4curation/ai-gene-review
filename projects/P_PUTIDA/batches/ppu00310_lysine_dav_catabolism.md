@@ -77,9 +77,24 @@ represented as evidence; the completed species-aware module/pathway/taxon
 report was retained as retrieval context and checked against the primary
 evidence above.
 
-The available PANTHER subfamily calls are not tighter reaction selectors:
+The available PANTHER subfamily calls are not reliable reaction selectors:
 DavB maps to a histone-demethylase-labeled subfamily, DavA to
 beta-ureidopropionase, DavT to leucine/methionine racemase, and DavD to a
-mixed succinate-semialdehyde-dehydrogenase family. The module therefore uses
-honest fold-level families constrained by exact exemplars and leaf molecular
-functions.
+mixed succinate-semialdehyde-dehydrogenase family. Broad fold-level containers
+are retained only where they remain honest descriptors; the focused repair
+below documents the two identifiers that were omitted.
+
+## 2026-09-01 Family-evidence repair
+
+The DavB and DavT leaves now rely on exact, experimentally characterized
+UniProt exemplars without asserting a PANTHER family identifier. DavB's only
+available PANTHER subfamily carries the official label "lysine-specific histone
+demethylase 2," which does not delimit the bacterial monooxygenase reaction.
+The DavT exemplars also encounter discordant family assignments despite both
+reviewed records supporting the same RHEA:10212 reaction. Encoding either
+classifier artifact as a reaction-specific family would be less accurate than
+leaving the optional identifier absent. The leaf GO functions, direct primary
+evidence, pathway order, and four-part reusable boundary are unchanged.
+The same audit moved DavD's electronic cytosol annotation to non-core and
+removed it from the synthesized core function because no direct localization
+evidence is available.
