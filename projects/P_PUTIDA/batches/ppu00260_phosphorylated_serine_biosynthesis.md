@@ -40,11 +40,32 @@ and phospholipid synthesis.
 | 2 | `serC` | PP_1768 | Q88M07 | phosphoserine aminotransferase | PR #2174 |
 | 3 | `serB` | PP_4909 | Q88DB8 | phosphoserine phosphatase | this batch |
 
+## Wave108 Repair
+
+- The module remains a reusable, species-neutral three-reaction pathway with
+  molecular functions confined to its leaf annotons.
+- Each reaction selector now uses the exact PANTHER subfamily shared by its
+  PSEPK target and reviewed cross-species exemplar: `PTHR43761:SF1` for SerA,
+  `PTHR43247:SF1` for SerC, and `PTHR43344:SF2` for SerB.
+- No PTN is asserted. The local PAINT exports identify family-level IBD nodes
+  but do not establish that the PSEPK targets descend from those nodes.
+- The `serA` secondary R-2-hydroxyglutarate activity is now `UNDECIDED`
+  because its target-specific support is automated rather than biochemical.
+- The `serC` non-core cytoplasm and PLP-binding decisions now cite exact
+  UniProt text. The `serB` cytoplasm annotation is retained as non-core
+  phylogenetic context and removed from its core function.
+- Two independent annotation-reviewer passes covered all three gene reviews.
+  The first identified the unsupported PTN and SerA confidence issues; the
+  second found no blocking findings after repair.
+- The wave108 module/pathway/PSEPK OpenScientist request was left running for
+  the full configured 7,200 seconds. It reached the client timeout without
+  returning a report, so no partial or nonexistent provider output is cited.
+
 ## Boundary Notes
 
-- `serA` also carries an inferred (R)-2-hydroxyglutarate dehydrogenase
-  activity; that secondary reaction is retained as non-core in its gene
-  review but is outside this pathway.
+- `serA` also carries an automated annotation to (R)-2-hydroxyglutarate
+  dehydrogenase activity. Its gene-level decision is `UNDECIDED`, and the
+  secondary reaction is outside this pathway boundary.
 - `serC` also supplies phosphohydroxythreonine aminotransferase chemistry to
   DXP-dependent vitamin B6 synthesis; that is captured by the separate
   vitamin B6 module and does not make this a one-enzyme module.
