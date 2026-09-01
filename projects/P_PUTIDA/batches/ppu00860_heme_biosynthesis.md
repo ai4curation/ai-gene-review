@@ -187,6 +187,13 @@ was imported from a timed-out run.
 - Semantic module validation passes. Its 30 warnings are advisory: unavailable
   CHEBI lookups, the unconfigured InterPro prefix, and four locally verified
   PAINT nodes beneath broader InterPro-grounded descriptors.
+- Those four InterPro-grounded PAINT assertions are `PTN000343737` for ALAS,
+  `PTN002866208` and `PTN000273375` for the two UroS lineages, and
+  `PTN000079415` for HemF. Each node remains explicitly taxon-scoped and is
+  used as evolutionary evidence beneath a broader InterPro descriptor, not as
+  a claim that every descriptor member descends from that node. The analogous
+  eukaryote-scoped `PTN000077911` under the verified HemY subfamily is likewise
+  kept distinct from its bacterial exemplar.
 - `just validate PSEPK <gene>` passes for all 11 selected anchors; no gene
   review changed.
 - `tests/test_module_logic.py` passes all 34 tests. Direct enumeration asserts
@@ -195,3 +202,5 @@ was imported from a timed-out run.
 - The module, batch page, and all 11 selected gene reviews render successfully.
 - `git diff --check` passes; generated GO cache and unrelated PANTHER member
   noise are excluded.
+
+Generated UTC: 2026-07-20
