@@ -11,3 +11,10 @@
 - The KT2440 structural paper treats PcaF as a degradative thiolase model and shows features expected for degradative rather than biosynthetic thiolases [PMID:32647822 Structural basis for differentiation between two classes of thiolase: Degradative vs biosynthetic thiolase, "we exploit, a tetrameric degradative thiolase from Pseudomonas putida KT2440 annotated as PcaF, as a model system"; "Degradative thiolases have different active site architecture when compared to biosynthetic thiolases"].
 
 - Current GOA for `Q88N39` is entirely automated and contains six annotations. The most specific molecular function term is `GO:0033812 3-oxoadipyl-CoA thiolase activity`; the two generic acyltransferase terms are redundant umbrella labels, and `GO:0006629 lipid metabolic process` looks like a family-level over-annotation rather than a pathway-specific assignment for this aromatic catabolic enzyme [file:PSEPK/pcaF/pcaF-goa.tsv "GO:0033812"; "GO:0016746"; "GO:0016747"; "GO:0006629"; "GO:0019619"].
+
+- This curation adds `GO:0042952 beta-ketoadipate pathway` as a proposed NEW
+  annotation because UniProt places PcaF-I at step 2 of 2 in the shared lower
+  pathway [file:PSEPK/pcaF/pcaF-uniprot.txt "beta-ketoadipate pathway;
+  acetyl-CoA and succinyl-CoA from 3-oxoadipate: step 2/2."]. The term is not
+  placed in `proposed_new_terms`, which is reserved for ontology terms that do
+  not yet exist.

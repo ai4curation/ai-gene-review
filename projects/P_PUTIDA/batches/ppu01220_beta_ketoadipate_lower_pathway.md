@@ -35,6 +35,16 @@ autolink_gene_symbols: false
 
 ## Boundary And Curation Notes
 
+2026-09-01 review follow-up:
+
+- Replaced DOI-only pcaI paraphrases with machine-checkable PMID:1624453 and
+  PMID:12534466 evidence from cached abstracts.
+- Added the missing branch-neutral GO:0042952 annotation proposal and core
+  process for PcaF-I, while preserving `proposed_new_terms` for ontology terms
+  that do not exist.
+- Added experimental PcaF support and recorded the PcaI/PcaJ
+  `contributes_to` qualifier decision in gene notes.
+
 2026-08-11:
 
 - The module starts at 3-oxoadipate, after catechol- and
@@ -44,8 +54,14 @@ autolink_gene_symbols: false
   subunit contributes to the complex molecular function; neither is modeled as
   independently enabling the complete activity.
 - PcaF-I catalyzes the second, thiolytic-cleavage reaction.
+- Gene-level curation now proposes the missing branch-neutral GO:0042952
+  annotation for PcaF-I; `proposed_new_terms` remains empty because GO:0042952
+  already exists and that field is reserved for ontology-development requests.
 - Exact PSEPK exemplars and UniProt-recorded NCBIfam assignments are used.
   No broader family identifier is asserted without record-level support.
 - OpenScientist module, module/pathway/taxon, and three gene-level retrieval
   jobs were launched after local curation; their long-running completion is not
   required for this first-pass module boundary and annotation review.
+- Upstream branch modules are `catechol_ortho_cleavage` and
+  `protocatechuate_ortho_cleavage`; both terminate before this module begins at
+  3-oxoadipate.
