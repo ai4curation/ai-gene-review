@@ -228,6 +228,20 @@ and the accession appears nowhere, so **nothing corroborates it either**. Say th
 explicitly — "asserted from external knowledge, not corroborable here" — rather than
 reaching for the weaker verb, which still implies a check that did not happen.
 
+The mechanical test for which of the three verbs applies is **whether the family has a
+directory under `interpro/panther/`** — check that before choosing the wording, not after.
+That is what separates `Gulo` (index present, `P9WIT3` resolves to *M. tuberculosis*
+Rv1771) from `Bcl2` (`PTHR11256`) and `Ednra` (`PTHR46099`), where no index exists at all
+and so no amount of grepping can corroborate the MOD-id-to-accession step. A bare `grep`
+for the accession is not a substitute: a hit may be an unnamed `ECO:0000250` or `WITH/FROM`
+reference, or a substring collision with an EMBL id (`AAP97287.1` matches `P97287`), and a
+miss tells you only that the repository is silent. Check the route, not the grep.
+
+Finally, do not assert the lookup in the same breath as disclaiming it. "The UniProt
+cross-reference for this MOD id **points to** `ACC`" states the mapping as fact — which is
+the step the sentence exists to say is uncheckable. Write "the accession `ACC` **is asserted
+from** external knowledge" instead.
+
 Universal quantifiers over a seed set need the same care as a definite singular:
 "seeded entirely by X" or "every seed is an X" claims something about donors the block
 may not have identified. Scope it — "every seed this review identified" — or name the
