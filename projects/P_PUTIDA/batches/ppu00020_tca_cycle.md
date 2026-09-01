@@ -24,7 +24,7 @@ autolink_gene_symbols: false
 - [x] Run OpenScientist deep research for selected genes.
 - [x] Curate each selected gene review.
 - [x] Validate module and gene reviews.
-- [ ] Open one PR for this module/pathway.
+- [x] Open one PR for this module/pathway: [PR #2121](https://github.com/ai4curation/ai-gene-review/pull/2121).
 - [ ] Shepherd PR through review, CI, and merge readiness.
 
 ## Candidate Genes
@@ -65,6 +65,13 @@ autolink_gene_symbols: false
 ## Notes
 
 Generated UTC: 2026-09-01T06:53:58.399357+00:00
+
+Completed pass:
+
+- Added the species-neutral `modules/tca_cycle.yaml` module review and
+  OpenScientist module/pathway reports.
+- Generated OpenScientist gene-level reports for all 30 batch genes.
+- Curated and validated all 30 selected PSEPK gene review files.
 
 ## Follow-up module repair
 
