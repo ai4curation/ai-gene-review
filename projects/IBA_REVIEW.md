@@ -296,6 +296,18 @@ groups across `genes/mouse`, up to 177 rows on one string, nearly all `KEEP_AS_N
 justify a per-annotation verdict — it collapses to 8 groups over 71 rows. The action is the
 discriminator, not the count.
 
+**A self-seed marks node membership always; it marks independent grounding only when the
+target's own same-term annotation is itself retained.** `CLAUDE.md` glosses a self-seed as
+"a marker that experimental grounding exists on the target itself", and that is the usual
+case — but it presumes this review still stands behind that annotation. Where the target's
+only same-term experimental row is one this review removes, the self-seed still shows the
+target is inside the clade and `SUPPORTS_TRANSFER` is still right (`CIRCULAR_OR_REDUNDANT`
+is forbidden for a self-seed), yet citing it as grounding leans on evidence the same file
+rejects. Say node membership and say explicitly that grounding is not claimed. One block in
+`genes/mouse` needed this (`Agtr1a GO:0006954`, whose own IGI at the term is `REMOVE`d on
+full text that *is* available); the other twelve self-seed claims cite annotations the file
+retains, so the canonical gloss holds for them.
+
 **Finally, keep the row's own evidence pointing the same way as its verdict.** When an action
 is withdrawn, the `summary` and the `supported_by` have to move with it; otherwise the block
 asserts a conclusion its action has given up. Both have been missed here — 42 summaries that
