@@ -171,6 +171,20 @@ core_functions: minimal — at most a single, low-confidence entry, or empty, be
 is established. Lean toward NOT asserting a molecular_function id we cannot support; the
 honest position is that MF is unknown (captured by the ND annotation and knowledge_gaps).
 
+## 8. 2026-09-01 refresh provenance
+
+- Refetched UniProt and GOA with `just fetch-gene SCHPO nce101 --force`. UniProt was
+  unchanged and GOA retained the same six annotations; only the dates of five rows advanced.
+- Ran the OpenScientist hypothesis wrapper to test whether *S. pombe* nce101 has direct
+  evidence for non-classical export. The report correctly confirmed that all organism-specific
+  functional assignments are transferred and that PomBase treats the gene as conserved
+  unknown. Its `REFUTED / OVER-ANNOTATED` headline overstates the evidence: no direct export
+  role is established, but absence of evidence does not refute involvement. The existing
+  `KEEP_AS_NON_CORE` decisions for protein secretion therefore remain appropriate.
+- The report's discussion of NCE102 and NCE103 is a nomenclature warning, not comparative
+  evidence within the NCE101 family: those screen-derived names belong to unrelated protein
+  families and cannot establish evolutionary divergence of NCE101.
+
 knowledge_gaps (REQUIRED, primary deliverable): unknown MF, unknown BP role in S. pombe,
 unproven localization/topology, machinery-vs-substrate ambiguity, no LOF phenotype
 isolating a pathway.
