@@ -36,9 +36,9 @@ bacterial GlnA-GltB/GltD implementation without making it PSEPK-specific.
 
 The first leaf assigns GO:0004356 to the GlnA family. The second assigns
 GO:0004355 to the complete GO:0009342 GltB/GltD complex, while the nested active
-units carry their direct subunit functions: GltB enables GO:0004359 glutaminase
-activity and GltD enables GO:0016651, while both contribute to the donor-general
-GO:0015930 and the complete NADPH-dependent GO:0004355 reaction. The GOGAT
+units carry their direct subunit functions: GltB enables donor-generic
+GO:0015930 and carries the glutaminase subactivity, while GltD enables
+GO:0016651. Both contribute to the complete NADPH-dependent GO:0004355 reaction. The GOGAT
 product list now records L-glutamate once
 with stoichiometric coefficient two, avoiding duplicate entity entries. The
 reverse cycle connection explicitly states that one glutamate replenishes the
@@ -49,11 +49,11 @@ PTHR43407:SF2, GltB uses PTHR11938:SF148, and GltD uses PTHR42783:SF3 with its
 exact official `SMALL CHAIN-RELATED` label retained and explained. Reviewed
 E. coli K-12 exemplars P0A9C5, P09831, and P09832 were verified in UniProtKB and
 all fall in the declared subfamilies. PTN000464923 is retained for GlnA
-GO:0004356. PTN000234342 does support GO:0015930 in the broader GltB family, but
-its seeds include fused proteins that independently perform the complete
-reaction; it is not asserted for the standalone bacterial GltB subunit. No GltD
-or holoenzyme PTN is asserted because the local PAINT data lack a suitably
-specific IBD node.
+GO:0004356. PTN000234342 supports GO:0015930 in the broader GltB family and is
+seeded in part by the standalone E. coli GltB large chain P09831. PTN000234476
+supports broad GO:0016491 oxidoreductase activity in the bacterial GltD family
+and is seeded by P09832; it does not establish the more specific GO:0016651 or
+the GO:0004355 holoenzyme reaction.
 
 The required annotation-reviewer consult examined every annotation and the
 core-function synthesis for `glnA`, `gltB`, and `gltD`. The first pass confirmed
@@ -62,9 +62,10 @@ target-specific wording, correction of the displayed GltB physiological
 reaction direction, addition of `part_of GO:0009342` proposals for both
 subunits, and documentation that the Asta reports returned no relevant
 target-specific literature. A final-state pass identified and resolved the
-remaining blocker by changing GO:0015930 from a direct GltB function to a
-complex contribution; it also removed a redundant, mismatched GltD
-electron-transfer proposal.
+remaining concern around complex-versus-subunit relations. The subsequent
+PAINT audit restored donor-generic GO:0015930 as a direct GltB function while
+retaining NADPH-specific GO:0004355 as a complex contribution; it also removed
+a redundant, mismatched GltD electron-transfer proposal.
 
 For PSEPK, Q88CY3, Q88CV4, and Q88CV5 satisfy the complete cycle by curated
 family, reaction, domain, and gene-neighborhood evidence. Direct biochemical
