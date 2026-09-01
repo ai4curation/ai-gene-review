@@ -1,0 +1,2409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_3197 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_3197</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88I05" target="_blank" class="term-link">
+                        Q88I05
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_3197";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88I05" data-a="DESCRIPTION: PP_3197 encodes a predicted VOC-superfamily dioxyg..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PP_3197 encodes a predicted VOC-superfamily dioxygenase in the KT2440 flavonoid-degradation locus. Orthology and conserved locus organization identify it as an FdeC-like enzyme predicted to cleave the A-ring of the trihydroxyflavanone produced during naringenin catabolism. The target protein has not been characterized directly, so its exact substrate, product, and catalytic metal remain unverified in P. putida.</p>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>naringenin-intermediate A-ring extradiol dioxygenase activity</h3>
+                <span class="vote-buttons" data-g="Q88I05" data-a="naringenin-intermediate A-ring extradiol dioxygenase activity" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+
+            <p><strong>Definition:</strong> Catalysis of the incorporation of both atoms of molecular oxygen during extradiol cleavage of the A-ring of 5,7,8-trihydroxy-2-(4-hydroxyphenyl)-2,3-dihydro-4H-chromen-4-one.</p>
+
+
+
+            <p><strong>Justification:</strong> KEGG reaction R13075 and the FdeC mutant study define this substrate-specific cleavage, whereas GO:0016702 captures only the general two-oxygen-atom incorporation mechanism.</p>
+
+
+
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016702" target="_blank" class="term-link">
+                    oxidoreductase activity, acting on single donors with incorporation of molecular oxygen, incorporation of two atoms of oxygen
+                </a>
+            </p>
+
+
+
+
+
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+
+                <li>
+
+                    <a href="https://pubmed.ncbi.nlm.nih.gov/27059806" target="_blank" class="term-link">
+                        PMID:27059806
+                    </a>
+
+
+                    : that is subsequently dioxygenated and cleaved at the A-ring by the FdeC
+
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016702" target="_blank" class="term-link">
+                                    GO:0016702
+                                </a>
+                            </span>
+                            <span class="term-label">oxidoreductase activity, acting on single donors with incorporation of molecular oxygen, incorporation of two atoms of oxygen</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/PP_3197/PP_3197-deep-research-openscientist.md
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88I05" data-a="GO:0016702" data-r="file:PSEPK/PP_3197/PP_3197-deep-research-openscientist.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PP_3197 is predicted to be an FdeC-like flavonoid ring-cleavage dioxygenase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> KEGG assigns PP_3197 to FdeC orthology group K26181, and the report finds strong whole-protein similarity to the experimentally characterized Herbaspirillum FdeC. GO lacks a term for the exact naringenin-intermediate A-ring cleavage, so the most specific supported extradiol-dioxygenase parent is used.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_3197/PP_3197-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">KEGG orthology places PP_3197 in ortholog group **K26181 (fdeC)** and assigns it reaction **R13075** within pathway **ppu00946 / map00946 (&#34;Degradation of flavonoids&#34;)**.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27059806" target="_blank" class="term-link">
+                                        PMID:27059806
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">that is subsequently dioxygenated and cleaved at the A-ring by the FdeC</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009812" target="_blank" class="term-link">
+                                    GO:0009812
+                                </a>
+                            </span>
+                            <span class="term-label">flavonoid metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/PP_3197/PP_3197-deep-research-openscientist.md
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88I05" data-a="GO:0009812" data-r="file:PSEPK/PP_3197/PP_3197-deep-research-openscientist.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PP_3197 is predicted to perform an A-ring cleavage step in naringenin degradation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> K26181/R13075 pathway placement and orthology to experimentally tested Hsero_1005 support flavonoid catabolism. GO:0009812 is used because no flavonoid- or naringenin-catabolic child is present in the local ontology.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_3197/PP_3197-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">KEGG orthology places PP_3197 in ortholog group **K26181 (fdeC)** and assigns it reaction **R13075** within pathway **ppu00946 / map00946 (&#34;Degradation of flavonoids&#34;)**.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27059806" target="_blank" class="term-link">
+                                        PMID:27059806
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">that is subsequently dioxygenated and cleaved at the A-ring by the FdeC</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Predicted oxygenolytic A-ring cleavage of the FdeE-generated trihydroxyflavanone intermediate during bacterial naringenin degradation.</h3>
+                <span class="vote-buttons" data-g="Q88I05" data-a="FUNCTION: Predicted oxygenolytic A-ring cleavage of the FdeE..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016702" target="_blank" class="term-link">
+                            oxidoreductase activity, acting on single donors with incorporation of molecular oxygen, incorporation of two atoms of oxygen
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009812" target="_blank" class="term-link">
+                                flavonoid metabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_3197/PP_3197-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">KEGG orthology places PP_3197 in ortholog group **K26181 (fdeC)** and assigns it reaction **R13075** within pathway **ppu00946 / map00946 (&#34;Degradation of flavonoids&#34;)**.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27059806" target="_blank" class="term-link">
+                                PMID:27059806
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">that is subsequently dioxygenated and cleaved at the A-ring by the FdeC</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_3197/PP_3197-bioinformatics/RESULTS.md
+
+                        </span>
+
+                        <div class="finding-text">Pairwise identity over aligned residue pairs: 69.5%</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_3197/PP_3197-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88I05 for Pseudomonas putida KT2440 PP_3197</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The unreviewed target record establishes a 313-residue glyoxalase/VOC-superfamily protein but supplies no catalytic or pathway annotation.</div>
+
+                        <div class="finding-text">"SubName: Full=Glyoxalase family protein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27059806" target="_blank" class="term-link">
+                            PMID:27059806
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Genetic and functional characterization of a novel meta-pathway for degradation of naringenin in Herbaspirillum seropedicae SmR1.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">An fdeC mutant of Herbaspirillum seropedicae accumulated the trihydroxyflavanone intermediate, supporting FdeC-mediated A-ring dioxygenation and cleavage in that organism.</div>
+
+                        <div class="finding-text">"that is subsequently dioxygenated and cleaved at the A-ring by the FdeC"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_3197/PP_3197-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research report on PP_3197 (Q88I05)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report identifies PP_3197 as K26181/FdeC and documents that no direct biochemical or genetic characterization of the target exists.</div>
+
+                        <div class="finding-text">"No direct experimental characterization of PP_3197 itself."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_3197/PP_3197-bioinformatics/RESULTS.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Reproducible PP_3197 and Hsero_1005 FdeC sequence comparison</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Q88I05 and D8J0W7 share 69.5% identity over 305 aligned residue pairs and retain the same reported C-terminal motif.</div>
+
+                        <div class="finding-text">"Pairwise identity over aligned residue pairs: 69.5%"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does PP_3197 catalyze KEGG reaction R13075 on the FdeE-generated trihydroxyflavanone in KT2440, and which divalent metal supports turnover?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88I05" data-a="Q: Does PP_3197 catalyze KEGG reaction R13075 on the ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify PP_3197 and assay the FdeE-generated trihydroxyflavanone with oxygen and a divalent-metal panel, identifying the ring-cleavage product by LC-MS/MS.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: biochemical reconstitution and product analysis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88I05" data-a="EXPERIMENT: Purify PP_3197 and assay the FdeE-generated trihyd..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare wild type, a PP_3197 deletion, and a complemented strain during growth on naringenin, measuring substrate use and accumulation of the trihydroxyflavanone intermediate.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: genetics and targeted metabolomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88I05" data-a="EXPERIMENT: Compare wild type, a PP_3197 deletion, and a compl..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> PP_3197&#39;s exact physiological substrate, ring-cleavage product, and catalytic metal have not been measured in KT2440.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">CURATION</span>
+
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Orthology, locus context, and sequence conservation support an FdeC-like extradiol dioxygenase, but all substrate-specific chemistry is transferred from Hsero_1005 and KEGG R13075.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Direct evidence is required before assigning a future substrate-specific GO molecular-function term to PP_3197 experimentally.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Reconstitute PP_3197 with its proposed substrate and identify product and metal dependence, then test a native deletion for intermediate accumulation.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"No direct experimental characterization of PP_3197 itself."</em> — file:PSEPK/PP_3197/PP_3197-deep-research-openscientist.md</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The electron-transfer relationship between PP_3198/FdeD and the upstream monooxygenase candidate PP_3199/FdeE remains untested in KT2440.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> The paired FdeD/FdeE assignment belongs to the preceding hydroxylation reaction and must not be treated as evidence that PP_3198 is a redox partner for PP_3197.</p>
+
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Reconstitute PP_3198 and PP_3199 together and test naringenin hydroxylation independently of the downstream PP_3197 reaction.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"The role of the adjacent FdeD ferredoxin (PP_3198) as a redox partner is plausible but untested for the *P. putida* cluster."</em> — file:PSEPK/PP_3197/PP_3197-deep-research-openscientist.md</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_3197-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88I05" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of PP_3197 (Q88I05) in *Pseudomonas putida* KT2440: FdeC, a Flavonoid A-Ring Ring-Cleavage Dioxygenase</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">3 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-31T21:18:20.372069</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_3197-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_3197-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-pp_3197-q88i05-in-pseudomonas-putida-kt2440-fdec-a-flavonoid-a-ring-ring-cleavage-dioxygenase">Functional Annotation of PP_3197 (Q88I05) in <em>Pseudomonas putida</em> KT2440: FdeC, a Flavonoid A-Ring Ring-Cleavage Dioxygenase</h1>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>PP_3197</strong> of <em>Pseudomonas putida</em> strain KT2440 (UniProt <strong>Q88I05</strong>) is annotated in UniProt only generically as a "Glyoxalase family protein," a label that reflects the protein's structural fold rather than its true biochemical activity. Integrating orthology, genomic synteny, sequence analysis, and structural prediction, this investigation concludes that PP_3197 is <strong>FdeC, a metal-dependent aromatic ring-cleavage (extradiol-type) dioxygenase</strong> that participates in the bacterial catabolism of the plant flavonoid <strong>naringenin</strong>. Its primary function is to catalyze the oxygenolytic <em>meta</em>-cleavage of the aromatic A-ring of a trihydroxyflavanone intermediate, opening the ring and channeling the resulting carbon skeleton toward central metabolism (ultimately oxaloacetate and the TCA cycle).</p>
+<p>This assignment rests on several converging lines of evidence. KEGG orthology places PP_3197 in ortholog group <strong>K26181 (fdeC)</strong> and assigns it reaction <strong>R13075</strong> within pathway <strong>ppu00946 / map00946 ("Degradation of flavonoids")</strong>. The gene sits within a <strong>syntenic <em>fde</em> gene cluster</strong> in the <em>P. putida</em> genome that mirrors the experimentally validated naringenin <em>meta</em>-cleavage pathway of <em>Herbaspirillum seropedicae</em> SmR1. Critically, PP_3197 shares <strong>71% amino-acid identity</strong> with the <em>H. seropedicae</em> FdeC (Hsero_1005) that was directly shown by site-directed mutagenesis and LC-MS/MS to be the A-ring-cleaving dioxygenase, including a strictly conserved C-terminal metal-binding active-site motif. Finally, the AlphaFold model of Q88I05 is of very high confidence (mean pLDDT 95.7) and displays the expected two-domain (bicupin) VOC fold typical of type I extradiol dioxygenases.</p>
+<p>The protein is predicted to be a <strong>soluble cytoplasmic enzyme</strong> (no signal peptide, no transmembrane segments), consistent with an intracellular catabolic role. Importantly, the "glyoxalase" naming shared by PP_3197 and its validated ortholog is a <strong>fold-based, not activity-based</strong> descriptor: the vicinal oxygen chelate (VOC)/glyoxalase superfamily encompasses both glyoxalase-I lyases and numerous ring-cleavage dioxygenases that share the same βαβββ metalloenzyme module. PP_3197 belongs to the dioxygenase branch of this superfamily. No dedicated experimental study of PP_3197 itself exists (UniProt evidence level PE=4, "Predicted"), so the functional assignment is an orthology-based inference of high confidence rather than a direct biochemical demonstration.</p>
+<hr />
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<p>Before presenting findings, the mandatory identity checks are addressed:</p>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene symbol / locus</td>
+<td>PP_3197 (OrderedLocusName), UniProt Q88I05 — matches target</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> strain ATCC 47054 / KT2440 (PSEPK), NCBI taxid 160488 — confirmed</td>
+</tr>
+<tr>
+<td>Cross-references</td>
+<td>RefSeq WP_010954082.1, EMBL AAN68805.1, KEGG ppu:PP_3197, STRING 160488.PP_3197 — all point to the same 313-aa protein</td>
+</tr>
+<tr>
+<td>UniProt description</td>
+<td>"Glyoxalase family protein" — a fold-based annotation, <strong>not</strong> the true catalytic activity</td>
+</tr>
+<tr>
+<td>Domains/family</td>
+<td>PF00903 (Glyoxalase), VOC core (IPR037523), IPR004360, IPR029068 — all consistent with the VOC/glyoxalase superfamily</td>
+</tr>
+<tr>
+<td>Literature match</td>
+<td>No paper studies PP_3197 directly; function inferred from a <strong>71%-identity, experimentally validated ortholog</strong> (FdeC of <em>H. seropedicae</em>, PMID 27059806) in a syntenic gene cluster</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Conclusion of verification:</strong> The generic "glyoxalase family protein" annotation is correct at the level of protein <em>fold</em> but does not capture the protein's specific <em>function</em>. All evidence points to PP_3197 being a <strong>flavonoid A-ring-cleaving dioxygenase (FdeC)</strong>, not a glyoxalase-I methylglyoxal detoxification enzyme. This is a case where the database annotation is technically accurate but functionally misleading — exactly the scenario the identification guidance was designed to catch. <strong>This report concerns the correct protein.</strong></p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-pp_3197-is-fdec-the-ring-cleavage-dioxygenase-of-the-naringeninflavonoid-catabolic-pathway">Finding 1 — PP_3197 is FdeC, the ring-cleavage dioxygenase of the naringenin/flavonoid catabolic pathway</h3>
+<p>The central finding of this investigation is that PP_3197 is functionally <strong>FdeC</strong>, the dioxygenase that cleaves the A-ring of a flavanone intermediate during naringenin degradation. KEGG orthology assigns PP_3197 to ortholog group <strong>K26181 (fdeC, "naringenin degradation protein FdeC")</strong> and places it in pathway <strong>ppu00946 / map00946 ("Degradation of flavonoids")</strong>, catalyzing reaction <strong>R13075</strong>:</p>
+<div class="codehilite"><pre><span></span><code><span class="mf">5</span><span class="p">,</span><span class="mf">7</span><span class="p">,</span><span class="mf">8</span><span class="o">-</span><span class="n">trihydroxy</span><span class="o">-</span><span class="mf">2</span><span class="o">-</span><span class="p">(</span><span class="mf">4</span><span class="o">-</span><span class="n">hydroxyphenyl</span><span class="p">)</span><span class="o">-</span><span class="mf">2</span><span class="p">,</span><span class="mf">3</span><span class="o">-</span><span class="n">dihydro</span><span class="o">-</span><span class="mf">4</span><span class="n">H</span><span class="o">-</span><span class="n">chromen</span><span class="o">-</span><span class="mf">4</span><span class="o">-</span><span class="kr">on</span><span class="n">e</span><span class="w">   </span><span class="p">(</span><span class="mf">8</span><span class="o">-</span><span class="n">hydroxynaringenin</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="n">trihydroxyflavanone</span><span class="p">)</span>
+<span class="err">│</span>
+<span class="err">│</span><span class="w">  </span><span class="n">FdeC</span><span class="w"> </span><span class="p">(</span><span class="n">PP_3197</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">O2</span><span class="w">   </span><span class="err">—</span><span class="w"> </span><span class="n">A</span><span class="o">-</span><span class="n">ring</span><span class="w"> </span><span class="n">meta</span><span class="o">-</span><span class="n">cleavage</span><span class="w"> </span><span class="p">(</span><span class="n">dioxygenation</span><span class="p">)</span>
+<span class="err">▼</span>
+<span class="p">(</span><span class="mf">2</span><span class="n">E</span><span class="p">,</span><span class="mf">4</span><span class="n">E</span><span class="p">)</span><span class="o">-</span><span class="mf">2</span><span class="p">,</span><span class="mf">4</span><span class="o">-</span><span class="n">dihydroxy</span><span class="o">-</span><span class="mf">4</span><span class="o">-</span><span class="err">[</span><span class="mf">6</span><span class="o">-</span><span class="p">(</span><span class="mf">4</span><span class="o">-</span><span class="n">hydroxyphenyl</span><span class="p">)</span><span class="o">-</span><span class="mf">2</span><span class="p">,</span><span class="mf">4</span><span class="o">-</span><span class="n">dioxodihydro</span><span class="o">-</span><span class="mf">2</span><span class="n">H</span><span class="o">-</span><span class="n">pyran</span><span class="o">-</span><span class="mf">3</span><span class="p">(</span><span class="mf">4</span><span class="n">H</span><span class="p">)</span><span class="o">-</span><span class="n">ylidene</span><span class="err">]</span><span class="n">but</span><span class="o">-</span><span class="mf">2</span><span class="o">-</span><span class="n">enoate</span>
+<span class="err">│</span>
+<span class="err">│</span><span class="w">  </span><span class="n">downstream</span><span class="w"> </span><span class="n">fde</span><span class="w"> </span><span class="n">enzymes</span>
+<span class="err">▼</span>
+<span class="n">oxaloacetic</span><span class="w"> </span><span class="n">acid</span><span class="w">  </span><span class="err">──►</span><span class="w">  </span><span class="n">TCA</span><span class="w"> </span><span class="n">cycle</span>
+</code></pre></div>
+
+<p>The functional anchor for this assignment is the experimental characterization of the orthologous FdeC in <em>Herbaspirillum seropedicae</em> SmR1. In that organism, the pathway was genetically and functionally dissected using a random Tn5 mutant unable to grow on naringenin plus targeted mutants: naringenin is first mono-oxygenated by FdeE to produce the trihydroxyflavanone, which is then dioxygenated and cleaved at the A-ring by FdeC. The evidence was direct — an <em>fdeC</em> mutant strain accumulated the trihydroxyflavanone substrate, demonstrating that FdeC acts precisely at that step: <em>"naringenin is first mono-oxygenated by the FdeE protein, to produce 5,7,8-trihydroxy-2-(4-hydroxyphenyl)-2,3-dihydro-4H-chromen-4-one, that is subsequently dioxygenated and cleaved at the A-ring by the FdeC dioxygenase, since the latter compound accumulated in the fdeC strain"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/27059806/">PMID: 27059806</a>). PP_3197 is one-to-one orthologous to this validated FdeC (KEGG GENES lists PPU:PP_3197 under K26181) and sits within the syntenic <em>P. putida fde</em> cluster (see Finding 3).</p>
+<p>The pathway's metabolic endpoint is also established: <em>"After meta-cleavage of the A-ring, the subsequent metabolic steps generate oxaloacetic acid that is metabolized via the tricarboxylic acid cycle"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/27059806/">PMID: 27059806</a>). Thus FdeC/PP_3197 performs the committed ring-opening step that converts a stable aromatic flavonoid into a metabolizable, ring-opened intermediate, allowing <em>P. putida</em> to use naringenin as a carbon and energy source.</p>
+<p><strong>Substrate specificity.</strong> The physiological substrate is the FdeE product <strong>5,7,8-trihydroxy-2-(4-hydroxyphenyl)-2,3-dihydro-4H-chromen-4-one</strong> (a trihydroxyflavanone), not free catechol or methylglyoxal, and not naringenin itself. The extra hydroxyl introduced by FdeE onto the flavonoid A-ring creates the catechol-like <em>vicinal-diol</em> motif that extradiol/VOC dioxygenases require for ring cleavage. No formal EC number has been assigned; KEGG classes the transformation as "dioxygenation."</p>
+<h3 id="finding-2-vocglyoxalase-superfamily-membership-and-a-tandem-two-module-architecture-consistent-with-a-type-i-extradiol-dioxygenase">Finding 2 — VOC/glyoxalase superfamily membership and a tandem two-module architecture consistent with a type I extradiol dioxygenase</h3>
+<p>PP_3197 is a <strong>313-amino-acid</strong> protein whose domain architecture places it firmly in the VOC/glyoxalase structural superfamily, but in its <strong>dioxygenase branch</strong>. UniProt/InterPro annotations include <strong>Pfam PF00903</strong> (Glyoxalase/Bleomycin resistance/Dioxygenase), <strong>PROSITE PS51819</strong> (VOC domain, residues 155–272), and InterPro entries <strong>IPR004360</strong>, <strong>IPR029068</strong>, and <strong>IPR037523</strong> (VOC core). Structural-classification databases add <strong>SUPFAM SSF54593</strong>, <strong>Gene3D G3DSA:3.10.180.10</strong> (explicitly named "2,3-Dihydroxybiphenyl 1,2-Dioxygenase, domain 1" — a canonical extradiol dioxygenase), and <strong>eggNOG COG0346</strong> ("lactoylglutathione lyase and related lyases"). Members of this superfamily coordinate substrate through vicinal (adjacent) oxygen atoms chelated to an active-site divalent metal, and include glyoxalase-I lyases, fosfomycin-resistance thiol transferases, methylmalonyl-CoA epimerase, and extradiol ring-cleavage dioxygenases.</p>
+<p>The 313-residue length is approximately <strong>twice</strong> that of a single ~130-residue VOC (βαβββ) module, indicating a <strong>bicupin / two-domain fold</strong> — the architecture characteristic of <strong>type I extradiol ring-cleavage dioxygenases</strong> such as BphC (2,3-dihydroxybiphenyl 1,2-dioxygenase) and XylE (catechol 2,3-dioxygenase). The C-terminal module houses the catalytic metal site (PROSITE VOC domain, residues 155–272) and carries a cluster of candidate metal-coordinating residues (His200, His201, His211, His217, His221, Glu216, Glu227) arranged to form the type of His/Glu triad that binds the catalytic divalent metal ion in these enzymes.</p>
+<p>Biophysical prediction supports a <strong>soluble, cytoplasmic</strong> localization. A Kyte-Doolittle hydropathy analysis gives a maximum window-19 hydropathy of 1.12, well below the ~1.6 threshold for transmembrane segments, and no N-terminal Sec/Tat signal peptide is present (N-terminal 30-residue mean hydropathy 0.61). This is fully consistent with an intracellular catabolic enzyme acting on an intracellular substrate. UniProt lists the protein at evidence level <strong>PE=4 (Predicted)</strong>, underscoring that no dedicated experimental study of PP_3197 exists and that the annotation rests on inference.</p>
+<h3 id="finding-3-pp_3197-resides-in-a-syntenic-p-putida-fde-flavonoid-degradation-gene-cluster">Finding 3 — PP_3197 resides in a syntenic <em>P. putida fde</em> flavonoid-degradation gene cluster</h3>
+<p>Functional context strongly reinforces the FdeC assignment. KEGG pathway ppu00946 maps a cluster of adjacent <em>P. putida</em> genes to <em>fde</em> orthologs, reconstructing a complete <em>meta</em>-cleavage flavonoid degradation pathway. STRING functional-association analysis gives high co-association scores for PP_3197 with its neighbors:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th><em>fde</em> / KO</th>
+<th>Annotation</th>
+<th>STRING score with PP_3197</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_3195</td>
+<td>FdeB (K26184)</td>
+<td>S9 prolyl-oligopeptidase / α/β-hydrolase</td>
+<td>0.87</td>
+</tr>
+<tr>
+<td><strong>PP_3197</strong></td>
+<td><strong>FdeC (K26181)</strong></td>
+<td><strong>VOC/glyoxalase-fold ring-cleavage dioxygenase (target)</strong></td>
+<td>—</td>
+</tr>
+<tr>
+<td>PP_3198</td>
+<td>FdeD (K26179)</td>
+<td>2Fe-2S ferredoxin</td>
+<td>0.91</td>
+</tr>
+<tr>
+<td>PP_3199</td>
+<td>(FdeE-type)</td>
+<td>Monooxygenase, 374 aa (initial hydroxylase)</td>
+<td>0.89</td>
+</tr>
+<tr>
+<td>PP_3204</td>
+<td>FdeH (K26182)</td>
+<td>Cupin type-2 (co-listed with FdeC for R13075)</td>
+<td>0.84</td>
+</tr>
+<tr>
+<td>PP_3205</td>
+<td>FdeI (K26185)</td>
+<td>Fumarylacetoacetate hydrolase (FAH) family</td>
+<td>0.80</td>
+</tr>
+<tr>
+<td>PP_3206</td>
+<td>FdeJ (K26183)</td>
+<td>NAD-dependent epimerase/dehydratase</td>
+<td>0.72</td>
+</tr>
+<tr>
+<td>PP_1403</td>
+<td><em>bglX</em> (K05349)</td>
+<td>β-glucosidase (deglycosylation of flavonoid glycosides)</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>The presence of a <strong>monooxygenase + ferredoxin</strong> module (aromatic-ring hydroxylation, PP_3199 + PP_3198), a <strong>VOC dioxygenase</strong> (ring cleavage, PP_3197), and an <strong>FAH-family hydrolase</strong> (processing of the ring-fission product toward oxaloacetate, PP_3205) recapitulates a canonical aromatic <em>meta</em>-cleavage catabolic operon — exactly the arrangement functionally validated in <em>H. seropedicae</em>, where the orthologous cluster (Hsero_1005 <em>fdeC</em>, Hsero_1007 <em>fdeE</em>, Hsero_1009 <em>fdeG</em>) is a validated naringenin <em>meta</em>-cleavage pathway (<a href="https://pubmed.ncbi.nlm.nih.gov/27059806/">PMID: 27059806</a>). The conservation of both gene content and gene order between the two organisms is powerful circumstantial evidence that the <em>P. putida</em> cluster performs the same chemistry. This is ecologically coherent: <em>P. putida</em> is a metabolically versatile soil/rhizosphere bacterium in intimate contact with plant-derived aromatics, and flavonoid catabolism provides a carbon/energy source.</p>
+<h3 id="finding-4-pp_3197-is-a-true-ortholog-71-identity-of-the-experimentally-validated-fdec-with-a-conserved-active-site-motif">Finding 4 — PP_3197 is a true ortholog (71% identity) of the experimentally validated FdeC, with a conserved active-site motif</h3>
+<p>A quantitative sequence comparison converts the orthology inference into a high-confidence assignment. A Needleman-Wunsch global alignment of PP_3197 (Q88I05, 313 aa) against the experimentally characterized FdeC from <em>H. seropedicae</em> SmR1 (Hsero_1005 = UniProt <strong>D8J0W7</strong>, 308 aa) yields <strong>216 identical residues over 303 ungapped columns = 71.3% identity</strong> (69% over the full PP_3197 length). This level of identity is far above the ~30–40% threshold typically taken to imply conserved enzymatic function, and it spans the entire two-domain length rather than being confined to a single motif.</p>
+<p>Both proteins carry a strictly conserved C-terminal active-site motif:</p>
+<div class="codehilite"><pre><span></span><code>PP_3197 (residues ~206–222):  ...I Q T P P H M Q G C E H F T F H M G...
+FdeC    (H. seropedicae):      ...I Q T P P F M K G C E H F T F H M G...
+                        <span class="k">*</span>           <span class="gs">* *</span> *   <span class="gs">* *</span> *
+</code></pre></div>
+
+<p>The invariant <strong>GC-E-H-F-T-F-H-M-G</strong> block supplies the His/Glu residues that coordinate the catalytic divalent metal of VOC-superfamily dioxygenases, and its perfect conservation between PP_3197 and the validated FdeC indicates a shared catalytic machinery.</p>
+<p>A crucial cautionary note emerges from this comparison: the validated <em>H. seropedicae</em> FdeC (D8J0W7) is itself <strong>mis-annotated in UniProt as "Glyoxalase II protein (EC 3.1.2.6)"</strong>, yet it is unambiguously the gene shown by mutagenesis to be the naringenin A-ring dioxygenase (<a href="https://pubmed.ncbi.nlm.nih.gov/27059806/">PMID: 27059806</a>). This directly demonstrates that the "glyoxalase" naming shared across this ortholog group is <strong>fold-based, not activity-based</strong>, and it explains — and effectively neutralizes — the misleading "Glyoxalase family protein" label on PP_3197.</p>
+<h3 id="finding-5-alphafold-model-of-pp_3197-is-very-high-confidence-mean-plddt-957">Finding 5 — AlphaFold model of PP_3197 is very high confidence (mean pLDDT 95.7)</h3>
+<p>The AlphaFold Protein Structure Database entry <strong>AF-Q88I05-F1</strong> (version 6) covers all 313 residues of Q88I05 with a <strong>global mean pLDDT of 95.69</strong>. pLDDT values above 90 indicate residues modeled with very high per-atom confidence, so a global mean approaching 96 across the entire chain indicates a confidently predicted, well-ordered structure spanning both VOC modules. This corroborates that PP_3197 folds as a <strong>stable two-domain (bicupin) enzyme</strong> consistent with a type I extradiol dioxygenase, rather than being a disordered, truncated, or non-functional gene product. The structural prediction is therefore independent computational support for the domain-architecture argument in Finding 2 and for the enzyme's competence to bind metal and substrate in a defined active-site pocket.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>Synthesizing the five findings, PP_3197/FdeC is best understood as the <strong>ring-opening catalyst of the <em>P. putida</em> naringenin <em>meta</em>-cleavage catabolon</strong>. The proposed pathway, by analogy to the validated <em>H. seropedicae</em> system, is:</p>
+<div class="codehilite"><pre><span></span><code><span class="w">      </span><span class="nx">Plant</span><span class="w"> </span><span class="nx">flavonoid</span><span class="w"> </span><span class="p">(</span><span class="nx">dietary</span><span class="o">/</span><span class="nx">soil</span><span class="o">/</span><span class="nx">rhizosphere</span><span class="w"> </span><span class="nx">source</span><span class="p">)</span>
+<span class="w">                    </span><span class="err">│</span>
+<span class="w">   </span><span class="nx">naringenin</span><span class="w">  </span><span class="p">(</span><span class="nx">a</span><span class="w"> </span><span class="nx">flavanone</span><span class="p">:</span><span class="w"> </span><span class="nx">A</span><span class="o">-</span><span class="nx">ring</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">C</span><span class="o">-</span><span class="nx">ring</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">B</span><span class="o">-</span><span class="nx">ring</span><span class="p">)</span>
+<span class="w">                    </span><span class="err">│</span>
+<span class="w">   </span><span class="err">┌────────────────┘</span>
+<span class="w">   </span><span class="err">│</span><span class="w">  </span><span class="nx">FdeE</span><span class="o">-</span><span class="k">type</span><span class="w"> </span><span class="nx">monooxygenase</span><span class="w"> </span><span class="p">(</span><span class="nx">PP_3199</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">O2</span><span class="w">  </span><span class="p">[</span><span class="o">+</span><span class="w"> </span><span class="nx">FdeD</span><span class="w"> </span><span class="nx">ferredoxin</span><span class="p">,</span><span class="w"> </span><span class="nx">PP_3198</span><span class="p">]</span>
+<span class="w">   </span><span class="err">│</span><span class="w">  </span><span class="err">→</span><span class="w"> </span><span class="nx">installs</span><span class="w"> </span><span class="nx">an</span><span class="w"> </span><span class="nx">extra</span><span class="w"> </span><span class="nx">A</span><span class="o">-</span><span class="nx">ring</span><span class="w"> </span><span class="nx">hydroxyl</span><span class="w"> </span><span class="p">(</span><span class="nx">creates</span><span class="w"> </span><span class="nx">catechol</span><span class="o">-</span><span class="k">like</span><span class="w"> </span><span class="nx">vicinal</span><span class="w"> </span><span class="nx">diol</span><span class="p">)</span>
+<span class="w">   </span><span class="err">▼</span>
+<span class="w">   </span><span class="mi">5</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">8</span><span class="o">-</span><span class="nx">trihydroxy</span><span class="o">-</span><span class="mi">2</span><span class="o">-</span><span class="p">(</span><span class="mi">4</span><span class="o">-</span><span class="nx">hydroxyphenyl</span><span class="p">)</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="o">-</span><span class="nx">dihydro</span><span class="o">-</span><span class="mi">4</span><span class="nx">H</span><span class="o">-</span><span class="nx">chromen</span><span class="o">-</span><span class="mi">4</span><span class="o">-</span><span class="nx">one</span>
+<span class="w">   </span><span class="err">│</span>
+<span class="w">   </span><span class="err">│</span><span class="w">  </span><span class="err">★</span><span class="w"> </span><span class="nx">FdeC</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="nx">PP_3197</span><span class="w"> </span><span class="p">(</span><span class="nx">VOC</span><span class="o">/</span><span class="nx">extradiol</span><span class="w"> </span><span class="nx">dioxygenase</span><span class="p">)</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">O2</span>
+<span class="w">   </span><span class="err">│</span><span class="w">  </span><span class="err">→</span><span class="w"> </span><span class="nx">META</span><span class="o">-</span><span class="nx">CLEAVAGE</span><span class="w"> </span><span class="nx">of</span><span class="w"> </span><span class="nx">the</span><span class="w"> </span><span class="nx">aromatic</span><span class="w"> </span><span class="nx">A</span><span class="o">-</span><span class="nx">ring</span>
+<span class="w">   </span><span class="err">▼</span>
+<span class="w">   </span><span class="nx">ring</span><span class="o">-</span><span class="nx">opened</span><span class="w"> </span><span class="nx">dioxo</span><span class="o">/</span><span class="nx">pyranylidene</span><span class="o">-</span><span class="nx">butenoate</span><span class="w"> </span><span class="nx">intermediate</span>
+<span class="w">   </span><span class="err">│</span>
+<span class="w">   </span><span class="err">│</span><span class="w">  </span><span class="nx">FdeH</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">FdeI</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">FdeJ</span><span class="w"> </span><span class="p">(</span><span class="nx">cupin</span><span class="p">,</span><span class="w"> </span><span class="nx">FAH</span><span class="o">-</span><span class="nx">family</span><span class="w"> </span><span class="nx">hydrolase</span><span class="p">,</span><span class="w"> </span><span class="nx">epimerase</span><span class="o">/</span><span class="nx">dehydratase</span><span class="p">)</span>
+<span class="w">   </span><span class="err">▼</span>
+<span class="w">      </span><span class="nx">oxaloacetic</span><span class="w"> </span><span class="nx">acid</span><span class="w">  </span><span class="err">──►</span><span class="w">  </span><span class="nx">TCA</span><span class="w"> </span><span class="nx">cycle</span><span class="w">  </span><span class="err">──►</span><span class="w">  </span><span class="nx">biomass</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">energy</span>
+</code></pre></div>
+
+<p><strong>Why the "glyoxalase" label is misleading but the fold is real.</strong> The VOC/glyoxalase superfamily is defined by a characteristic βαβββ module and a "vicinal oxygen chelate" mechanism in which two adjacent oxygen atoms of the substrate coordinate a divalent metal center. This same scaffold has been evolutionarily repurposed for chemistries as diverse as glyoxalase-I isomerization, fosfomycin resistance thiol transfer, bleomycin resistance, methylmalonyl-CoA epimerization, and — most relevant here — <strong>extradiol aromatic ring cleavage</strong>. Membership in the superfamily therefore constrains the <em>fold and mechanism class</em> but not the <em>specific reaction</em>. For PP_3197, three features push the assignment firmly toward the dioxygenase branch: (1) the <strong>two-domain length</strong> (313 aa ≈ 2× a single VOC module), diagnostic of type I extradiol dioxygenases rather than the single-domain glyoxalase-I; (2) the <strong>Gene3D/SUPFAM classification</strong> that explicitly maps it onto 2,3-dihydroxybiphenyl 1,2-dioxygenase; and (3) the <strong>71% identity plus conserved metal-binding motif</strong> to a gene experimentally proven to be a flavonoid ring dioxygenase.</p>
+<p><strong>Localization.</strong> All evidence indicates an <strong>intracellular, cytoplasmic</strong> site of action: no signal peptide, no transmembrane helices (max hydropathy 1.12), a soluble globular AlphaFold fold, and a catabolic role acting on a metabolite that is generated intracellularly (after import and initial hydroxylation). There is no evidence for periplasmic or membrane localization.</p>
+<p><strong>Pathway role, not pleiotropy.</strong> The precise role is narrow and committed: FdeC performs the single dioxygenolytic ring-cleavage step that converts a chemically stable aromatic flavonoid into a ring-opened, TCA-feeding intermediate. This is a catabolic carbon-acquisition function that allows <em>P. putida</em> to exploit flavonoids as growth substrates — not a broad, pleiotropic activity.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>Relevance to PP_3197</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27059806/">27059806</a></td>
+<td><em>Genetic and functional characterization of a novel meta-pathway for degradation of naringenin in Herbaspirillum seropedicae SmR1</em></td>
+<td><strong>Primary anchor.</strong> Directly demonstrates by mutagenesis + LC-MS/MS that FdeC is the A-ring-cleaving dioxygenase; PP_3197 is its 71%-identity ortholog.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/40014075/">40014075</a></td>
+<td><em>Flavonoid-converting capabilities of Clostridium butyricum</em></td>
+<td>Context: bacterial flavonoid (naringenin/eriodictyol) ring cleavage; supports flavonoids as microbial catabolic substrates (via a different, anaerobic mechanism).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31375488/">31375488</a></td>
+<td><em>An NADH-Dependent Reductase from Eubacterium ramulus Catalyzes... Cleavage of Flavanones</em></td>
+<td>Context: microbial flavanone heteroring cleavage, illustrating alternative flavonoid-degradation strategies.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17047689/">17047689</a></td>
+<td><em>Pharmacokinetics of the citrus flavanone aglycones hesperetin and naringenin...</em></td>
+<td>Context: naringenin is a physiologically abundant flavonoid subject to bacterial ring cleavage — establishes environmental/dietary relevance of the substrate.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31710815/">31710815</a></td>
+<td><em>A New Way of Belonging: Active-Site Investigation of L-DOPA Dioxygenase, a VOC Family Enzyme</em></td>
+<td>Supports the concept that VOC-family enzymes act as extradiol dioxygenases; clarifies VOC domain-architecture/function relationships.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31180203/">31180203</a></td>
+<td><em>Crystal Structures of L-DOPA Dioxygenase...</em></td>
+<td>Structural precedent for VOC-superfamily extradiol dioxygenases, supporting the fold-to-function argument for PP_3197.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/32951427/">32951427</a></td>
+<td><em>Mechanistic Insights into... the Unprecedented Dioxygenase ChaP (VOC superfamily)</em></td>
+<td>Demonstrates that VOC-superfamily members carry out diverse dioxygenase chemistries.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/35415958/">35415958</a></td>
+<td><em>Alteration of the Catalytic Reaction Trajectory of a Vicinal Oxygen Chelate Enzyme by Directed Evolution</em></td>
+<td>Reinforces mechanistic breadth of the VOC superfamily (extradiol vs. intradiol trajectories).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24004181/">24004181</a></td>
+<td><em>Structural and chemical aspects of resistance to fosfomycin conferred by FosB from Bacillus cereus</em></td>
+<td>Illustrates fold-based (not activity-based) naming and metal chemistry across the VOC superfamily — parallels the "glyoxalase" mislabeling of PP_3197.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22070249/">22070249</a></td>
+<td><em>clusterMaker: a multi-algorithm clustering plugin for Cytoscape</em></td>
+<td>Methodological reference for VOC superfamily annotation/clustering; cautions that superfamily membership ≠ specific function.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>How the evidence coheres.</strong> The single most decisive paper is <a href="https://pubmed.ncbi.nlm.nih.gov/27059806/">PMID: 27059806</a>, which supplies the experimental proof that FdeC is a flavonoid A-ring dioxygenase in a closely related β-proteobacterium. The VOC-superfamily structural/mechanistic papers (31710815, 31180203, 32951427, 35415958, 24004181) collectively establish that the glyoxalase fold routinely hosts dioxygenase and other non-glyoxalase activities, resolving the apparent conflict between the "glyoxalase family protein" label and the assigned dioxygenase function. The flavonoid-catabolism papers (40014075, 31375488, 17047689) establish that naringenin is a real, abundant substrate that bacteria degrade. None of the numerous methylglyoxal/glyoxalase-I disease-biology papers surfaced during literature searches apply to PP_3197, because — as the ortholog comparison shows — the shared name is a fold artifact.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct experimental characterization of PP_3197 itself.</strong> The functional assignment is entirely inferential (UniProt PE=4, "Predicted"). There is no purified-enzyme assay, crystal structure, or <em>P. putida</em> knockout demonstrating flavonoid degradation attributable specifically to PP_3197. The confidence derives from orthology (71% identity) to a validated enzyme, not from primary data on the <em>P. putida</em> protein.</p>
+</li>
+<li>
+<p><strong>Metal identity and cofactor requirements are unverified.</strong> Type I extradiol dioxygenases typically use Fe(II), but VOC-superfamily members employ a range of divalent metals (Mn, Ni, Co, Zn). The catalytic metal of PP_3197 is inferred from conserved His/Glu residues, not measured. The role of the adjacent FdeD ferredoxin (PP_3198) as a redox partner is plausible but untested for the <em>P. putida</em> cluster.</p>
+</li>
+<li>
+<p><strong>Exact substrate regiochemistry and product structure rest on KEGG/analogy.</strong> Reaction R13075 and the trihydroxyflavanone substrate are derived from KEGG and the <em>H. seropedicae</em> study; the precise cleavage position on the A-ring and the identity of the ring-opened product in <em>P. putida</em> have not been chemically confirmed in this organism. No formal EC number is assigned.</p>
+</li>
+<li>
+<p><strong>The initial monooxygenase step is assigned by position, not proof.</strong> PP_3199 is annotated as the FdeE-type hydroxylase largely on the basis of gene neighborhood and general annotation; its role as the enzyme that generates PP_3197's substrate is inferred.</p>
+</li>
+<li>
+<p><strong>Regulation and physiological induction are unknown.</strong> Whether the <em>fde</em> cluster is induced by naringenin, which regulator controls it, and under what growth conditions <em>P. putida</em> KT2440 actually utilizes flavonoids have not been examined here.</p>
+</li>
+<li>
+<p><strong>Superfamily promiscuity caveat.</strong> Although the two-domain architecture and conserved motif strongly favor a dioxygenase, VOC enzymes are known to be catalytically promiscuous and evolutionarily plastic (PMIDs 35415958, 32951427). A minor or alternative activity for PP_3197 cannot be formally excluded without biochemistry.</p>
+</li>
+</ol>
+<hr />
+<h2 id="supported-and-refuted-hypotheses">Supported and Refuted Hypotheses</h2>
+<ul>
+<li><strong>Supported:</strong> PP_3197 is FdeC, a cytoplasmic VOC-superfamily ring-cleavage dioxygenase that <em>meta</em>-cleaves the A-ring of a trihydroxyflavanone in naringenin/flavonoid degradation, channeling carbon to oxaloacetate and the TCA cycle.</li>
+<li><strong>Refuted / disfavored:</strong> That PP_3197 is a <em>bona fide</em> glyoxalase I (lactoylglutathione lyase / methylglyoxal detoxification enzyme). Although the UniProt name and Pfam "Glyoxalase" reflect the shared VOC fold, the two-domain architecture, extradiol-dioxygenase Gene3D class, the <em>fde</em> operon context, and 71% identity to a validated flavonoid A-ring dioxygenase all point to a <strong>ring-cleavage dioxygenase</strong>, not a dicarbonyl-detoxifying lyase.</li>
+</ul>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Heterologous expression and in vitro assay.</strong> Clone PP_3197, express and purify the protein, and assay ring-cleavage activity against the FdeE product (5,7,8-trihydroxyflavanone) with O2, monitoring by UV-Vis (appearance of a <em>meta</em>-cleavage chromophore) and LC-MS/MS product identification. Include metal-reconstitution experiments (Fe²⁺, Mn²⁺, Ni²⁺, Co²⁺) to determine the catalytic metal.</p>
+</li>
+<li>
+<p><strong>Targeted gene knockout in <em>P. putida</em> KT2440.</strong> Test growth of KT2440 on naringenin as sole carbon source, then delete PP_3197 (ΔfdeC) and test for a growth defect plus accumulation of the trihydroxyflavanone intermediate (by LC-MS). This would directly replicate the <em>H. seropedicae fdeC</em> phenotype and confirm the assignment in the native organism.</p>
+</li>
+<li>
+<p><strong>Active-site mutagenesis.</strong> Individually mutate the predicted metal-coordinating residues (His200/His201/His211/His217/His221, Glu216/Glu227) to Ala and confirm loss of activity, validating the catalytic-metal model.</p>
+</li>
+<li>
+<p><strong>Substrate-specificity panel.</strong> Test related flavonoids/flavanones (eriodictyol, taxifolin, hydroxylated derivatives) and simple catechols to map the substrate scope and determine whether PP_3197 is dedicated to the flavonoid A-ring or has broader extradiol activity.</p>
+</li>
+<li>
+<p><strong>Structural determination.</strong> Solve an experimental crystal or cryo-EM structure (ideally with bound metal and substrate/analog) to confirm the two-domain VOC fold predicted by AlphaFold (pLDDT 95.7) and to define the active-site geometry.</p>
+</li>
+<li>
+<p><strong>Transcriptional/regulatory analysis.</strong> Use RT-qPCR or RNA-seq to test induction of the <em>fde</em> cluster (PP_3195–PP_3206) by naringenin, and identify the cluster's regulator, clarifying when the pathway operates physiologically.</p>
+</li>
+<li>
+<p><strong>Database re-annotation.</strong> On the strength of the orthology and (pending) experimental data, submit an annotation update reclassifying PP_3197 (and the mis-annotated <em>H. seropedicae</em> D8J0W7) from generic "glyoxalase family protein" to "FdeC, flavonoid A-ring-cleaving dioxygenase," to prevent propagation of the misleading name.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>PP_3197 (Q88I05) of <em>Pseudomonas putida</em> KT2440 is <strong>FdeC, a cytoplasmic, metal-dependent aromatic ring-cleavage dioxygenase of the VOC/glyoxalase structural superfamily</strong>. Its primary function is the oxygenolytic <em>meta</em>-cleavage of the A-ring of the trihydroxyflavanone intermediate generated during naringenin catabolism, feeding the ring-fission carbon toward oxaloacetate and the TCA cycle. This assignment — supported by KEGG orthology (K26181, reaction R13075, pathway ppu00946), a syntenic <em>fde</em> gene cluster, 71% identity to the experimentally validated <em>H. seropedicae</em> FdeC with a conserved metal-binding motif, and a high-confidence AlphaFold model (mean pLDDT 95.7) — supersedes the generic "glyoxalase family protein" label, which reflects only the protein's fold and not its true dioxygenase activity. The assignment is a high-confidence inference; direct biochemical and genetic validation in <em>P. putida</em> remains the key outstanding step.</p>
+<hr />
+<h3 id="key-references">Key References</h3>
+<ul>
+<li>Marín A.M., de la Torre J., Oliveira A.R.M., et al. <strong>Genetic and functional characterization of a novel meta-pathway for degradation of naringenin in <em>Herbaspirillum seropedicae</em> SmR1.</strong> <em>Environ. Microbiol.</em> 18:4653–4661 (2016). <a href="https://pubmed.ncbi.nlm.nih.gov/27059806/">PMID: 27059806</a>.</li>
+<li>Thompson M.K., et al. <strong>Structural and chemical aspects of resistance to the antibiotic fosfomycin conferred by FosB from <em>Bacillus cereus</em>.</strong> <em>Biochemistry</em> (2013). <a href="https://pubmed.ncbi.nlm.nih.gov/24004181/">PMID: 24004181</a>.</li>
+<li>Morris J.H., et al. <strong>clusterMaker: a multi-algorithm clustering plugin for Cytoscape</strong> (cluster analysis of the VOC enzyme superfamily). <em>BMC Bioinformatics</em> (2011). <a href="https://pubmed.ncbi.nlm.nih.gov/22070249/">PMID: 22070249</a>.</li>
+<li>Database sources: UniProt Q88I05; KEGG K26181 / R13075 / ppu00946; InterPro/Pfam PF00903, PROSITE PS51819; Gene3D G3DSA:3.10.180.10; STRING 160488.PP_3197; AlphaFold DB AF-Q88I05-F1.</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="PP_3197-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="PP_3197-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:27059806</li>
+<li>PMID:24004181</li>
+<li>PMID:22070249</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_3197-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88I05" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pp_3197-curation-notes">PP_3197 curation notes</h1>
+<ul>
+<li>UniProt Q88I05 is an unreviewed 313-aa protein described only as a<br />
+  glyoxalase-family protein; this establishes the broad VOC fold, not a<br />
+  glyoxalase reaction [file:PSEPK/PP_3197/PP_3197-uniprot.txt<br />
+  "SubName: Full=Glyoxalase family protein"].</li>
+<li>OpenScientist assigns PP_3197 to KEGG K26181/FdeC and R13075, but explicitly<br />
+  reports no direct target characterization<br />
+  [file:PSEPK/PP_3197/PP_3197-deep-research-openscientist.md "No direct<br />
+  experimental characterization of PP_3197 itself."].</li>
+<li>The experimental anchor is the Herbaspirillum seropedicae ortholog: an fdeC<br />
+  mutant accumulated the hydroxylated flavanone intermediate, supporting FdeC<br />
+  A-ring cleavage in that organism <a href="https://pubmed.ncbi.nlm.nih.gov/27059806" title="that is subsequently   dioxygenated and cleaved at the A-ring by the FdeC">PMID:27059806</a>. This is ISS support for<br />
+  PP_3197, not direct experimental evidence on KT2440.</li>
+<li>The exact reaction has no cached GO term. GO:0016702 is the most specific<br />
+  available two-oxygen-atom-incorporating MF; GO:0009812 is the available broad<br />
+  flavonoid BP because no catabolic child is present in the local ontology.</li>
+<li>A committed pairwise alignment reproduces 69.5% identity over 305 aligned<br />
+  residue pairs and exact conservation of the reported GCEHFTFHMG motif<br />
+  [file:PSEPK/PP_3197/PP_3197-bioinformatics/RESULTS.md "Pairwise identity over<br />
+  aligned residue pairs: 69.5%"]. This replaces the report's unreproduced 71.3%<br />
+  figure as the quantitative ISS support.</li>
+<li>No cellular-component assertion is made: the soluble/cytoplasmic assignment<br />
+  is prediction-only and is not needed to capture the core chemistry.</li>
+</ul>
+            </div>
+        </details>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioinformatics Results</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RESULTS.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88I05" data-a="DOC: Bioinformatics Results" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pp_3197-fdec-ortholog-analysis">PP_3197 FdeC ortholog analysis</h1>
+<h2 id="method">Method</h2>
+<p>UniProt FASTA records for Q88I05 (P. putida KT2440 PP_3197) and D8J0W7<br />
+(Herbaspirillum seropedicae Hsero_1005/FdeC) were fetched on demand and aligned<br />
+globally with Biopython PairwiseAligner, BLOSUM62, gap-open -10, and gap-extension<br />
+-0.5. Identity is calculated over columns containing a residue from both<br />
+proteins.</p>
+<h2 id="results">Results</h2>
+<ul>
+<li>Q88I05 length: 313 aa</li>
+<li>D8J0W7 length: 308 aa</li>
+<li>Aligned residue pairs: 305</li>
+<li>Identical aligned residues: 212</li>
+<li>Pairwise identity over aligned residue pairs: 69.5%</li>
+<li>Reported C-terminal motif <code>GCEHFTFHMG</code>: present at Q88I05 residues 214-223 and D8J0W7 residues 207-216</li>
+</ul>
+<p>The high whole-protein identity and identical motif support an ISS relationship<br />
+between PP_3197 and the experimentally characterized Hsero_1005 FdeC. They do<br />
+not constitute direct evidence that PP_3197 uses the same substrate, metal, or<br />
+reaction conditions in KT2440.</p>
+<h2 id="reproduction">Reproduction</h2>
+<div class="codehilite"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>genes/PSEPK/PP_3197/PP_3197-bioinformatics/analyze_fdec_ortholog.py
+</code></pre></div>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88I05
+gene_symbol: PP_3197
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  PP_3197 encodes a predicted VOC-superfamily dioxygenase in the KT2440
+  flavonoid-degradation locus. Orthology and conserved locus organization
+  identify it as an FdeC-like enzyme predicted to cleave the A-ring of the
+  trihydroxyflavanone produced during naringenin catabolism. The target protein
+  has not been characterized directly, so its exact substrate, product, and
+  catalytic metal remain unverified in P. putida.
+existing_annotations:
+- term:
+    id: GO:0016702
+    label: oxidoreductase activity, acting on single donors with incorporation of molecular oxygen, incorporation of two atoms of oxygen
+  evidence_type: ISS
+  original_reference_id: file:PSEPK/PP_3197/PP_3197-deep-research-openscientist.md
+  supporting_entities:
+  - UniProtKB:D8J0W7
+  qualifier: enables
+  review:
+    summary: PP_3197 is predicted to be an FdeC-like flavonoid ring-cleavage dioxygenase.
+    action: NEW
+    reason: &gt;-
+      KEGG assigns PP_3197 to FdeC orthology group K26181, and the report finds
+      strong whole-protein similarity to the experimentally characterized
+      Herbaspirillum FdeC. GO lacks a term for the exact naringenin-intermediate
+      A-ring cleavage, so the most specific supported extradiol-dioxygenase
+      parent is used.
+    supported_by:
+    - reference_id: file:PSEPK/PP_3197/PP_3197-deep-research-openscientist.md
+      supporting_text: &gt;-
+        KEGG orthology places PP_3197 in ortholog group **K26181 (fdeC)** and
+        assigns it reaction **R13075** within pathway **ppu00946 / map00946
+        (&#34;Degradation of flavonoids&#34;)**.
+    - reference_id: PMID:27059806
+      supporting_text: that is subsequently dioxygenated and cleaved at the A-ring by the FdeC
+- term:
+    id: GO:0009812
+    label: flavonoid metabolic process
+  evidence_type: ISS
+  original_reference_id: file:PSEPK/PP_3197/PP_3197-deep-research-openscientist.md
+  supporting_entities:
+  - UniProtKB:D8J0W7
+  qualifier: involved_in
+  review:
+    summary: PP_3197 is predicted to perform an A-ring cleavage step in naringenin degradation.
+    action: NEW
+    reason: &gt;-
+      K26181/R13075 pathway placement and orthology to experimentally tested
+      Hsero_1005 support flavonoid catabolism. GO:0009812 is used because no
+      flavonoid- or naringenin-catabolic child is present in the local ontology.
+    supported_by:
+    - reference_id: file:PSEPK/PP_3197/PP_3197-deep-research-openscientist.md
+      supporting_text: &gt;-
+        KEGG orthology places PP_3197 in ortholog group **K26181 (fdeC)** and
+        assigns it reaction **R13075** within pathway **ppu00946 / map00946
+        (&#34;Degradation of flavonoids&#34;)**.
+    - reference_id: PMID:27059806
+      supporting_text: that is subsequently dioxygenated and cleaved at the A-ring by the FdeC
+references:
+- id: file:PSEPK/PP_3197/PP_3197-uniprot.txt
+  title: UniProtKB entry Q88I05 for Pseudomonas putida KT2440 PP_3197
+  findings:
+  - statement: &gt;-
+      The unreviewed target record establishes a 313-residue
+      glyoxalase/VOC-superfamily protein but supplies no catalytic or pathway
+      annotation.
+    supporting_text: &#39;SubName: Full=Glyoxalase family protein&#39;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Exact target accession. The generic name is a fold-level assignment and
+      does not establish glyoxalase activity.
+- id: PMID:27059806
+  title: Genetic and functional characterization of a novel meta-pathway for degradation of naringenin in Herbaspirillum seropedicae SmR1.
+  full_text_unavailable: true
+  findings:
+  - statement: &gt;-
+      An fdeC mutant of Herbaspirillum seropedicae accumulated the
+      trihydroxyflavanone intermediate, supporting FdeC-mediated A-ring
+      dioxygenation and cleavage in that organism.
+    supporting_text: that is subsequently dioxygenated and cleaved at the A-ring by the FdeC
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed abstract verified. This paper directly tests Hsero_1005 in
+      Herbaspirillum seropedicae, not PP_3197 in P. putida; it supports the
+      ortholog-function inference only.
+- id: file:PSEPK/PP_3197/PP_3197-deep-research-openscientist.md
+  title: OpenScientist deep research report on PP_3197 (Q88I05)
+  publication_type: DEEP_RESEARCH
+  findings:
+  - statement: &gt;-
+      The report identifies PP_3197 as K26181/FdeC and documents that no direct
+      biochemical or genetic characterization of the target exists.
+    supporting_text: No direct experimental characterization of PP_3197 itself.
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      The KEGG assignment and target identity were checked. The report&#39;s 71.3%
+      identity value differs from the reproducible 69.5% global-alignment
+      result, plausibly because of method choice rather than report quality.
+      Exact catalytic metal, localization, and product claims remain unchecked
+      predictions and were not promoted to GO assertions.
+- id: file:PSEPK/PP_3197/PP_3197-bioinformatics/RESULTS.md
+  title: Reproducible PP_3197 and Hsero_1005 FdeC sequence comparison
+  findings:
+  - statement: &gt;-
+      Q88I05 and D8J0W7 share 69.5% identity over 305 aligned residue pairs and
+      retain the same reported C-terminal motif.
+    supporting_text: &#39;Pairwise identity over aligned residue pairs: 69.5%&#39;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Generated locally from UniProt FASTA records by the committed Biopython
+      alignment script.
+core_functions:
+- description: &gt;-
+    Predicted oxygenolytic A-ring cleavage of the FdeE-generated
+    trihydroxyflavanone intermediate during bacterial naringenin degradation.
+  molecular_function:
+    id: GO:0016702
+    label: oxidoreductase activity, acting on single donors with incorporation of molecular oxygen, incorporation of two atoms of oxygen
+  directly_involved_in:
+  - id: GO:0009812
+    label: flavonoid metabolic process
+  supported_by:
+  - reference_id: file:PSEPK/PP_3197/PP_3197-deep-research-openscientist.md
+    supporting_text: &gt;-
+      KEGG orthology places PP_3197 in ortholog group **K26181 (fdeC)** and
+      assigns it reaction **R13075** within pathway **ppu00946 / map00946
+      (&#34;Degradation of flavonoids&#34;)**.
+  - reference_id: PMID:27059806
+    supporting_text: that is subsequently dioxygenated and cleaved at the A-ring by the FdeC
+  - reference_id: file:PSEPK/PP_3197/PP_3197-bioinformatics/RESULTS.md
+    supporting_text: &#39;Pairwise identity over aligned residue pairs: 69.5%&#39;
+proposed_new_terms:
+- proposed_name: naringenin-intermediate A-ring extradiol dioxygenase activity
+  proposed_definition: &gt;-
+    Catalysis of the incorporation of both atoms of molecular oxygen during
+    extradiol cleavage of the A-ring of
+    5,7,8-trihydroxy-2-(4-hydroxyphenyl)-2,3-dihydro-4H-chromen-4-one.
+  justification: &gt;-
+    KEGG reaction R13075 and the FdeC mutant study define this substrate-specific
+    cleavage, whereas GO:0016702 captures only the general two-oxygen-atom
+    incorporation mechanism.
+  proposed_parent:
+    id: GO:0016702
+    label: oxidoreductase activity, acting on single donors with incorporation of molecular oxygen, incorporation of two atoms of oxygen
+  supported_by:
+  - reference_id: PMID:27059806
+    supporting_text: that is subsequently dioxygenated and cleaved at the A-ring by the FdeC
+knowledge_gaps:
+- gap_statement: &gt;-
+    PP_3197&#39;s exact physiological substrate, ring-cleavage product, and
+    catalytic metal have not been measured in KT2440.
+  boundary: &gt;-
+    Orthology, locus context, and sequence conservation support an FdeC-like
+    extradiol dioxygenase, but all substrate-specific chemistry is transferred
+    from Hsero_1005 and KEGG R13075.
+  gap_kind:
+  - BIOLOGY
+  - CURATION
+  status: OPEN
+  significance: &gt;-
+    Direct evidence is required before assigning a future substrate-specific GO
+    molecular-function term to PP_3197 experimentally.
+  resolution: &gt;-
+    Reconstitute PP_3197 with its proposed substrate and identify product and
+    metal dependence, then test a native deletion for intermediate accumulation.
+  provenance:
+  - reference_id: file:PSEPK/PP_3197/PP_3197-deep-research-openscientist.md
+    supporting_text: No direct experimental characterization of PP_3197 itself.
+- gap_statement: &gt;-
+    The electron-transfer relationship between PP_3198/FdeD and the upstream
+    monooxygenase candidate PP_3199/FdeE remains untested in KT2440.
+  boundary: &gt;-
+    The paired FdeD/FdeE assignment belongs to the preceding hydroxylation
+    reaction and must not be treated as evidence that PP_3198 is a redox partner
+    for PP_3197.
+  gap_kind:
+  - BIOLOGY
+  status: OPEN
+  resolution: &gt;-
+    Reconstitute PP_3198 and PP_3199 together and test naringenin hydroxylation
+    independently of the downstream PP_3197 reaction.
+  provenance:
+  - reference_id: file:PSEPK/PP_3197/PP_3197-deep-research-openscientist.md
+    supporting_text: The role of the adjacent FdeD ferredoxin (PP_3198) as a redox partner is plausible but untested for the *P. putida* cluster.
+suggested_questions:
+- question: &gt;-
+    Does PP_3197 catalyze KEGG reaction R13075 on the FdeE-generated
+    trihydroxyflavanone in KT2440, and which divalent metal supports turnover?
+suggested_experiments:
+- description: &gt;-
+    Purify PP_3197 and assay the FdeE-generated trihydroxyflavanone with oxygen
+    and a divalent-metal panel, identifying the ring-cleavage product by
+    LC-MS/MS.
+  experiment_type: biochemical reconstitution and product analysis
+- description: &gt;-
+    Compare wild type, a PP_3197 deletion, and a complemented strain during
+    growth on naringenin, measuring substrate use and accumulation of the
+    trihydroxyflavanone intermediate.
+  experiment_type: genetics and targeted metabolomics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
