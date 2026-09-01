@@ -64,9 +64,10 @@ membership to the structural subunits, and a machine-usable negative-regulation
 term for TagF1. Family/domain-supported NEW annotations now use ISS, while the
 directly mapped TagP1 and TagB1 accessory assignments retain TAS. Figure 2a,
 not Table S4, is cited for the locus map; Table S4 is limited to intergenic
-distances. The TssM selector uses the family-level IPR053156 entry with an
-explicit full-length-architecture caveat because the truncated TagP1-like
-protein also matches that broad family.
+distances. The TssM selector uses the discriminating IPR048677 TssM1
+helical-region entry with an explicit full-length multi-pass-architecture
+caveat because the TagP1-like accessory also matches the broader IPR053156
+family.
 
 ## Wave130 Annotation-Reviewer Pass
 
@@ -87,7 +88,7 @@ clarifying evidence provenance where noted below.
 | `PP_3092` (TssL1) | Retain NEW GO:0033103; DotU/TssL family evidence supports membrane-complex membership. |
 | `PP_3093` (TssK1) | Retain NEW GO:0033103; family evidence supports the baseplate-connector role. |
 | `PP_3094` (TssJ1) | Retain NEW GO:0033103; lipoprotein and TssJ family evidence support the outer-membrane anchor role. |
-| `clpV` (ClpV1/TssH1) | Retain ATP hydrolysis ACCEPT, cytoplasm non-core, broad ATP binding over-annotation, heat-response REMOVE, and NEW GO:0033103; explicitly treat ClpV as a transient sheath remodeler rather than a stable complex member. |
+| `clpV` (ClpV1/TssH1) | Retain ATP hydrolysis ACCEPT, cytoplasm non-core, broad ATP binding over-annotation, heat-response REMOVE, and NEW GO:0033103; represent ClpV as the sheath-recycling ATPase rather than a structural sheath subunit. |
 | `PP_3096` (TssG1) | Retain NEW GO:0033103; IPR010732 supports the baseplate role. |
 | `PP_3097` (TssF1) | Retain NEW GO:0033103; family evidence supports the baseplate role. |
 | `PP_3098` (TssE1) | Retain NEW GO:0033103; gp25-like/TssE family evidence supports the baseplate role. |
