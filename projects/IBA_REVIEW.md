@@ -307,16 +307,22 @@ signal: a reason string whose rows span ≥3 distinct terms occurs in **201 grou
 | `REMOVE` | 10 | **93** | 23 |
 | `UNDECIDED` | 3 | 21 | 9 |
 
-(The scoped rows do not sum to 5432: qualification is per-scope, so a group can clear ≥3
-terms overall and not within one action, or the reverse.)
+(Neither column sums to the unscoped total — 200 groups against 201, and 5409 rows against
+5432. Qualification is per-scope: a group can clear ≥3 terms overall and not within one
+action, or the reverse. The clearest case is `Secondary or downstream function`, 243 rows
+that split 228 `KEEP_AS_NON_CORE` + 15 `ACCEPT`, qualifying in one scope and not the other.)
 
 Reproduce every figure here, as of the commit that ships the script
 (`git log --oneline -1 -- projects/IBA_REVIEW/shared_reason_groups.py`):
 
 ```
-python3 projects/IBA_REVIEW/shared_reason_groups.py
-python3 projects/IBA_REVIEW/shared_reason_groups.py --action REMOVE --list
-python3 projects/IBA_REVIEW/shared_reason_groups.py --action MARK_AS_OVER_ANNOTATED --list
+S=projects/IBA_REVIEW/shared_reason_groups.py
+python3 $S
+for a in ACCEPT KEEP_AS_NON_CORE MARK_AS_OVER_ANNOTATED MODIFY REMOVE UNDECIDED; do
+    python3 $S --action "$a"
+done
+python3 $S --action REMOVE --list
+python3 $S --action MARK_AS_OVER_ANNOTATED --list
 ```
 
 **`REMOVE` is not the whole of "corrective", and scoping to it hid the larger half.** An
@@ -339,12 +345,25 @@ not equally exposed to the objection. `REMOVE` withdraws an annotation, so its r
 carry a per-annotation verdict; `MARK_AS_OVER_ANNOTATED` withdraws nothing and records a
 scoping judgement, where one class rationale across many terms is more often the honest
 description. So the 587 is not 587 defects. But it is 587 rows the rule as stated reaches and
-the measurement did not — and the second-largest group, `Bcl2`'s 35 rows over 19 terms on
-*"this term is too indirect, broad, or mechanistically ambiguous"*, is a three-way disjunction
-that never says which disjunct applies, which is exactly the shape dismantled under `REMOVE`
-in that same file. (The largest, 202 rows, spans four genes on *"This overstates the direct
-role of the gene product; the curated model…"* — a cross-file class rationale, and a different
-question.) Measured and recorded here; not repaired, because doing it
+the measurement did not — and the second-largest group is a clear instance: `Bcl2`'s 35 rows
+over 19 terms on *"this term is too indirect, broad, or mechanistically ambiguous"*, a
+three-way disjunction that never says which disjunct applies, which is the shape dismantled
+under `REMOVE` in that same file.
+
+Apply this section's own qualifier-and-aspect test and the disjunction visibly breaks. Those
+19 terms span **all three aspects and five qualifiers** in `Bcl2-goa.tsv`: 3 `enables` MF, 21
+`involved_in` and 8 `acts_upstream_of_or_within` BP, 2 `located_in` and 2 `part_of` CC (36
+GOA rows for 35 review rows — one term carries a duplicate). So *"mechanistically ambiguous"*
+cannot be what is wrong with `GO:0043209 myelin sheath`, a curated `located_in` IDA on
+PMID:7953633; and *"too indirect"* cannot be what is wrong with `GO:0015267 channel activity`,
+an `enables` MF claim. Each row probably has one fitting disjunct and the reader is never told
+which. That is the argument **for** the follow-up, recorded here so the deferral is not
+mistaken for a judgement that the group is fine.
+
+The largest group, 202 rows on *"This overstates the direct role of the gene product; the
+curated model…"*, is a cross-file class rationale — a different question, and mostly though
+not wholly outside this review: Edn1 114, Ednra 32, Tnfrsf1a 31, Agtr1a 25, so 88 of the 202
+sit in files edited here. Measured and recorded here; not repaired, because doing it
 properly is per-term work across 19 terms and this paragraph's own history is a warning
 against opportunistic rewrites (see the Ang2 note below).
 

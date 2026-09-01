@@ -138,7 +138,49 @@ def _self_test():
         return "a valid action with no rows must be rejected, not reported as zero"
     if action_error("ACCEPT", seen, set()) is None:
         return "an unreadable schema must still reject an action with no rows"
+
+    if parse_argv(["--action", "REMOVE", "--list", "g/*.yaml"]) != (["g/*.yaml"], "REMOVE", True):
+        return "parse_argv must return patterns, action and --list as given"
+    if parse_argv([]) != ([], None, False):
+        return "an empty argv must parse to no patterns and no action"
+    if not isinstance(parse_argv(["--action"]), str):
+        return "a trailing --action must be an error, not a whole-corpus run"
+    if not isinstance(parse_argv(["--action", "  "]), str):
+        return "a blank --action value must be an error, not a whole-corpus run"
+    if not isinstance(parse_argv(["--action="]), str):
+        return "an empty --action= must be an error, not a whole-corpus run"
+    if not isinstance(parse_argv(["--nope"]), str):
+        return "an unrecognized flag must be an error"
     return None
+
+
+def parse_argv(argv):
+    """Return (patterns, action, show) or a str explaining why argv is unusable.
+
+    A pure function for the same reason action_error() is one: an inline guard has
+    nothing to anchor it, so a refactor can drop it while the self-test stays green.
+    The two guards that matter here both turn a mistyped flag into a silent
+    whole-corpus run: "--action" as the last token, and an empty value.
+    """
+    action, show, patterns = None, False, []
+    rest = list(argv)
+    while rest:
+        arg = rest.pop(0)
+        if arg == "--list":
+            show = True
+        elif arg == "--action":
+            if not rest:
+                return "--action needs a value, e.g. --action REMOVE"
+            action = rest.pop(0)
+        elif arg.startswith("--action="):
+            action = arg.split("=", 1)[1]
+        elif arg.startswith("--"):
+            return f"unrecognized flag: {arg}"
+        else:
+            patterns.append(arg)
+    if action is not None and not action.strip():
+        return "--action: empty value. Give an action, e.g. --action REMOVE"
+    return patterns, action, show
 
 
 def main(argv):
@@ -147,29 +189,11 @@ def main(argv):
         print(f"self-test failed: {failure}")
         return 2
 
-    action = None
-    show = False
-    patterns = []
-    rest = list(argv)
-    while rest:
-        arg = rest.pop(0)
-        if arg == "--list":
-            show = True
-        elif arg == "--action":
-            if not rest:
-                print("--action needs a value, e.g. --action REMOVE")
-                return 2
-            action = rest.pop(0)
-        elif arg.startswith("--action="):
-            action = arg.split("=", 1)[1]
-        elif arg.startswith("--"):
-            print(f"unrecognized flag: {arg}")
-            return 2
-        else:
-            patterns.append(arg)
-    if action is not None and not action.strip():
-        print("--action: empty value. Give an action, e.g. --action REMOVE")
+    parsed = parse_argv(argv)
+    if isinstance(parsed, str):
+        print(parsed)
         return 2
+    patterns, action, show = parsed
 
     paths = sorted({p for pattern in (patterns or [DEFAULT_GLOB]) for p in glob.glob(pattern)})
     if not paths:
