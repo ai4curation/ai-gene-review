@@ -19,8 +19,8 @@ autolink_gene_symbols: false
 - [x] Define a reusable module with more than one substantive part.
 - [x] Fetch all selected PSEPK genes.
 - [ ] Complete ten OpenScientist gene runs.
-- [ ] Complete generic module OpenScientist research.
-- [ ] Complete module + ppu00550 + PSEPK OpenScientist research.
+- [x] Complete generic module OpenScientist research.
+- [x] Complete module + ppu00550 + PSEPK OpenScientist research.
 - [ ] Review every GOA row and remove all PENDING actions.
 - [ ] Reconcile provider output with UniProt, GOA, primary evidence, and module logic.
 - [ ] Validate and render all changed artifacts.
@@ -31,9 +31,9 @@ autolink_gene_symbols: false
 | Gene | Locus | UniProt | Module role | Initial state |
 |---|---|---|---|---|
 | `ftsW` | PP_1336 | Q88N77 | septal SEDS glycan polymerase | fetched; research running |
-| `ftsI` | PP_1331 | Q88N82 | septal bPBP D,D-transpeptidase | fetched; research running |
+| `ftsI` | PP_1331 | Q88N82 | septal bPBP D,D-transpeptidase | curated; research complete |
 | `mrdB` | PP_4806 | Q88DL9 | lateral-wall SEDS glycan polymerase | fetched; research running |
-| `mrdA-I` | PP_3741 | Q88GI2 | PBP2/MrdA paralog | fetched; research running |
+| `mrdA-I` | PP_3741 | Q88GI2 | PBP2/MrdA paralog | curated; research complete |
 | `mrdA-II` | PP_4807 | Q88DL8 | PBP2/MrdA paralog | fetched; research running |
 | `mrcA` | PP_5084 | Q88CU6 | class-A PBP1A | existing COMPLETE review; research running |
 | `mrcB` | PP_4683 | Q88DY5 | class-A PBP1B | fetched; research running |
@@ -53,6 +53,9 @@ autolink_gene_symbols: false
 - MtgA supplies a distinct monofunctional polymerization role.
 - DacA-mediated pentapeptide trimming is downstream maturation, not generic
   proteolysis.
+- PBP4/DacB endopeptidation and YkuD-family L,D-transpeptidation are adjacent
+  crosslink-remodeling systems. They will be curated as a separate reusable
+  module rather than appended as isolated steps here.
 
 ## Initial Annotation Risks
 
