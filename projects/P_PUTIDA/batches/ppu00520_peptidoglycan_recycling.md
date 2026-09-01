@@ -100,8 +100,9 @@ and local PANTHER/PAINT data.
 All eight gene reviews pass `just validate`. The module passes LinkML
 `ModuleReview` validation and the dedicated semantic validator. The AnmK family
 is grounded by its exact PANTHER family, UniProt exemplars, and Rhea chemistry;
-PTN000770071 was removed because its PAINT IBD rows support only generic kinase
-activity and do not support the AnmK reaction or peptidoglycan turnover. The
+PTN000770071 was removed from the AnmK step because placing its generic
+kinase-activity evidence under that leaf caused the module validator to treat it
+as support for the leaf's more specific reaction and pathway assertions. The
 remaining semantic messages are non-blocking namespace checks for
 InterPro/Pfam. The module, five newly fetched gene reviews, and project page
 render successfully.
