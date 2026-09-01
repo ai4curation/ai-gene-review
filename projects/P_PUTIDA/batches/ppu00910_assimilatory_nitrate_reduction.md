@@ -90,8 +90,9 @@ Species-specific PP_1703 uncertainty has been removed from generic role and
 module-note prose and remains documented in this PSEPK batch and gene review.
 The single-subunit NarB-like branch uses reviewed P39458 as an architecture
 exemplar but does not retain the unsupported ferredoxin-specific GO assertion;
-its current UniProt catalytic reaction is quinol-linked, so donor specificity is
-left protein-dependent. Exact PANTHER subfamilies were added for NrtABCD
+the family-level selector uses donor-generic GO:0008940 because one exemplar
+does not establish a universal electron donor for every NarB-like
+implementation. Exact PANTHER subfamilies were added for NrtABCD
 components and NasC only where official labels and member containment match the
 role. PTN009073875 grounds nitrate transport and PTN008082957 grounds the NirD
 complex contribution; misleading or unresolved molybdopterin-reductase
