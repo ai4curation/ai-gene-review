@@ -20,6 +20,8 @@ Master mitotic regulator. Ser/Thr kinase activity is biochemically demonstrated.
 - [PMID:21965528 "Ark1 phosphorylation of polo kinase Plo1 within the linker region between the kinase domain and polo boxes drives Plo1 onto the spindle poles where it promotes mitosis."] — Aurora drives Plo1 to SPB promoting G2-M; mitotic SPB localization.
 - [PMID:23333317 "promoting recruitment of Polo to Cut12 and the SPB and elevating global Polo kinase activity throughout the cell"] — Plo1-Cut12 binding (SPBC649.05 = cut12).
 - [PMID:10436027 "Plo1 associates with the mitotic but not interphase spindle pole body (SPB). SPB association of Plo1 is the earliest fission yeast mitotic event recorded to date."] — mitotic SPB localization.
+- [PMID:34133218 "Although the Polo kinase Plo1 is not necessary for Sad1 redistribution, it localizes to the SPB region connected to the centromere, and its activity is vital for redistribution of other SPB ring proteins and for complete NEBD at the SPB to allow for SPB insertion."] — direct SIM and chemical-genetic support for Plo1 at the nuclear-facing SPB and for its role in localized NE breakdown/SPB insertion. The authors explicitly state that direct phosphorylation of Sad1 has not been detected, so the substrate remains unresolved.
+- [PMID:21131906 "Sid4 ubiquitination delays recruitment of the Polo-like kinase and SIN activator, Plo1, to spindle pole bodies (SPBs)"] — Dma1-dependent Sid4 ubiquitination controls the timing of Plo1 recruitment during checkpoint arrest; this paper supports regulated SPB recruitment, while Plo1 kinase activity is established more directly by the assays cited above.
 
 ### Spindle / spindle organization
 - [PMID:7744248 "Loss of plo1+ function leads to a mitotic arrest in which condensed chromosomes are associated with a monopolar spindle"] — required for bipolar spindle formation.
@@ -58,3 +60,10 @@ Master mitotic regulator. Ser/Thr kinase activity is biochemically demonstrated.
 - nucleolar peripheral inclusion body (PMID:33176152): real IDA localization but it is a stress-induced aggregation site, not a site of normal function — keep as non-core.
 - IEA terms (protein kinase activity, ATP binding, Ser kinase activity, nucleus, SPB) are supported by experimental data; generally ACCEPT (ATP binding, Ser kinase) or note redundancy.
 - Defer to PomBase curators on all IDA/IMP/IPI/IGI experimental annotations per project rules.
+- The 2026 GOA refresh added PMID:34133218 annotations to the half bridge, inner plaque, and mitotic SPB insertion. Accept all three: the full text directly places the bulk Plo1 signal at the INM/nuclear face and shows that acute Plo1 inhibition disrupts ring remodeling and insertion. Do not infer a direct Sad1 substrate relationship; the paper says this has not been detected.
+
+## 2026-09-01 research refresh
+
+- The project wrapper refreshed 76 GOA rows and added four new annotations: an IDA kinase annotation from PMID:21131906 and three PMID:34133218 annotations covering the half bridge, inner plaque, and mitotic SPB insertion. All were manually reviewed; no PENDING actions remain.
+- OpenScientist tested the focused hypothesis that Plo1 directly phosphorylates an SPB-ring component. It judged the process claim supported but the direct-substrate clause unresolved, agreeing with the full-text statement that direct Sad1 phosphorylation has not been detected. This constrained the core-function wording and generated a substrate-identification experiment rather than a new MF assertion.
+- Falcon's broader synthesis corroborated the existing core modules and highlighted the unusually direct meiotic Rec8/Psm3 substrate evidence. It is retained as research provenance, while annotation decisions cite the cached primary literature.
