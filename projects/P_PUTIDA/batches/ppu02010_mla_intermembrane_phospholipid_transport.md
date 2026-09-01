@@ -28,7 +28,7 @@ net transport direction open.
 
 | Done | Gene | Locus | UniProt | Pathway role |
 |---|---|---|---|---|
-| [x] | mlaF | PP_0958 | Q88P94 | MlaFEDB ATPase |
+| [x] | mlaF | PP_0958 | Q88P94 | MlaFEDB ATPase; OpenScientist integrated |
 | [x] | mlaE | PP_0959 | Q88P93 | MlaFEDB inner-membrane permease |
 | [x] | mlaD | PP_0960 | Q88P92 | MlaFEDB MCE-domain lipid-binding interface; OpenScientist integrated |
 | [x] | ttg2D | PP_0961 | Q88P91 | MlaC-family periplasmic phospholipid carrier; OpenScientist integrated |
@@ -73,3 +73,7 @@ net transport direction open.
   are not promoted: direction remains an explicit module gap, and the local
   solvent phenotype is indirect pathway context rather than MlaD-specific
   evidence.
+- The MlaF report supports Q88P94's intact ABC ATPase motif set, cytoplasmic
+  membrane-face localization, and energy-coupling role. Its categorical
+  retrograde framing is not promoted; ATP hydrolysis is assigned directly to
+  MlaF, while transport direction remains a system-level gap.
