@@ -38,9 +38,10 @@ broad KEGG bucket are outside this module.
 - [x] Remove module-level cytosol and disease/drug-specific role descriptions.
 - [ ] Complete module + `ppu00350` + PSEPK OpenScientist research.
 - [x] Validate and render the revised module.
-- [ ] Revalidate and render the five focused gene reviews.
-- [ ] Render the batch page and refresh its inventory.
-- [ ] Open one PR for this module and shepherd review and CI.
+- [x] Revalidate and render the five focused gene reviews.
+- [x] Render the batch page and refresh its inventory.
+- [x] Open one PR for this module.
+- [ ] Shepherd the revised PR through review and CI.
 
 ## Focused Genes
 
