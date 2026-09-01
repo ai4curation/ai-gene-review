@@ -18,9 +18,10 @@ release of that tether. It is separated from glycan polymerization, canonical
 
 - [x] Fetch both PSEPK gene records.
 - [ ] Complete OpenScientist gene research.
-- [ ] Curate every GOA row for both genes.
+- [x] Curate every GOA row for both genes.
 - [x] Create a species-neutral, multi-part module with experimental exemplars.
-- [ ] Complete module and module + pathway + taxon research.
+- [x] Complete module research.
+- [ ] Complete module + pathway + taxon research.
 - [ ] Validate and render the reviews, module, and project page.
 - [ ] Open one non-draft PR and clear review and CI.
 
@@ -42,3 +43,7 @@ release of that tether. It is separated from glycan polymerization, canonical
   mass PBP chemistry and belong in a separate remodeling module.
 - No molecular-function identifier is asserted for tether hydrolysis because
   GO does not currently provide a term for that reaction.
+- The generic module report is useful for the conserved write/erase architecture
+  but is strongly centered on enterobacterial Lpp. Its Lpp-specific
+  C-terminal-lysine chemistry is not projected onto the Pseudomonas OprI
+  system.
