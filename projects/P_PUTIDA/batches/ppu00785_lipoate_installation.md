@@ -100,6 +100,10 @@ The machine-generated 19-gene source table is retained at
   UniProt exemplars carry the physiological specificity. Current QuickGO has
   GO:7770091 for the LIPT1 reaction, but that term is not yet available in the
   repository's configured ontology and therefore is not asserted here.
+- The P39648 and Q9Y234 UniProt flat-file records are cached in-repo. They
+  independently confirm the current exemplar names and the RHEA:20213 and
+  RHEA:16413 catalytic-reaction assignments; PMID:23960015 and PMID:28757203
+  are cached as literature support for the two relay steps.
 - LipB is the physiological octanoyl-ACP:protein transferase in this route.
   The generic `acyltransferase activity` parent adds no information beside
   `lipoyl(octanoyl) transferase activity`.
@@ -156,8 +160,10 @@ cited work generally presents lineage-associated alternatives; neither strict
 route exclusivity nor coexistence in one genome is asserted without
 organism-specific evidence.
 
-All eight variant leaves now carry reviewed, experimentally characterized
-UniProt exemplars with current names. PANTHER and InterPro identifiers are kept
+All eight variant leaves now carry reviewed UniProt exemplars with current
+names. The PSEPK LipB and LipA reviews currently carry only electronic GO
+evidence, so they are not described as experimentally characterized. PANTHER
+and InterPro identifiers are kept
 only where labels and member containment were verified. PTN000107427 is used
 for bacterial LipB activity and PTN000101947 for eukaryotic lipoyl synthase
 activity because the local PAINT tables directly establish those IBD claims;
