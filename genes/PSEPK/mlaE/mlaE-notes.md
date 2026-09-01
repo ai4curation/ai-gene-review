@@ -1,8 +1,17 @@
 # mlaE curation notes
 
-- Q88P93 is the multi-pass inner-membrane permease subunit of MlaFEDB [file:PSEPK/mlaE/mlaE-uniprot.txt "Part of the ABC transporter complex MlaFEDB"].
-- Phospholipid transporter activity is modeled as a contribution to the assembled complex.
-- GO:0005548 is obsolete and is not reused in authored assertions; the valid
-  phospholipid transfer activity GO:0120014 is used for the complex-level
-  contribution.
-- No universal retrograde direction is encoded in the core function.
+## 2026-09-01 OpenScientist integration
+
+The report supports Q88P93 as a five-pass MlaE-family inner-membrane permease
+[file:PSEPK/mlaE/mlaE-deep-research-openscientist.md, "a **266-residue
+protein** with **five predicted helical transmembrane segments**"] and assigns
+the phospholipid binding/transmembrane conduit to MlaE
+[file:PSEPK/mlaE/mlaE-deep-research-openscientist.md, "MlaE thus provides both
+the binding pocket and the transmembrane conduit."].
+
+The report's categorical retrograde framing was not promoted. Its own useful
+boundary statement is retained: "Under either interpretation, MlaE remains the
+inner-membrane permease that moves phospholipid across the IM; the debate
+concerns net physiological directionality, not MlaE's molecular role." The
+gene review and module therefore assign direction-neutral phospholipid
+transfer.

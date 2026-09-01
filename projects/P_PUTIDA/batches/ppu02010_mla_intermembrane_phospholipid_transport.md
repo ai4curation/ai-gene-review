@@ -29,10 +29,10 @@ net transport direction open.
 | Done | Gene | Locus | UniProt | Pathway role |
 |---|---|---|---|---|
 | [x] | mlaF | PP_0958 | Q88P94 | MlaFEDB ATPase; OpenScientist integrated |
-| [x] | mlaE | PP_0959 | Q88P93 | MlaFEDB inner-membrane permease |
+| [x] | mlaE | PP_0959 | Q88P93 | MlaFEDB inner-membrane permease; OpenScientist integrated |
 | [x] | mlaD | PP_0960 | Q88P92 | MlaFEDB MCE-domain lipid-binding interface; OpenScientist integrated |
 | [x] | ttg2D | PP_0961 | Q88P91 | MlaC-family periplasmic phospholipid carrier; OpenScientist integrated |
-| [x] | ttg2E | PP_0962 | Q88P90 | MlaB-like STAS accessory subunit |
+| [x] | ttg2E | PP_0962 | Q88P90 | MlaB-like STAS accessory subunit; OpenScientist integrated |
 | [x] | vacJ | PP_2163 | Q88KX6 | MlaA-family outer-membrane interface; OpenScientist integrated |
 
 ## Boundary Decisions
@@ -77,3 +77,10 @@ net transport direction open.
   membrane-face localization, and energy-coupling role. Its categorical
   retrograde framing is not promoted; ATP hydrolysis is assigned directly to
   MlaF, while transport direction remains a system-level gap.
+- The MlaE report supports Q88P93's five-pass inner-membrane topology and
+  permease contribution to the phospholipid-conducting pathway. Its permease
+  assignment is retained independently of competing net-direction models.
+- The Ttg2E report strengthens the MlaB-equivalent call through its single
+  STAS domain and F-E-D-C-B operon position. Assembly/activity support from
+  orthologs is retained, but no target-specific regulatory mechanism,
+  catalytic MF, or direct toluene-tolerance role is asserted.

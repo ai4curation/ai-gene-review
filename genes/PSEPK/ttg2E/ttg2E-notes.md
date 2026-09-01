@@ -1,9 +1,16 @@
 # ttg2E curation notes
 
-- Q88P90 is a 100-residue STAS-domain protein encoded immediately after the MlaF-E-D and Ttg2D/MlaC genes [file:PSEPK/ttg2E/ttg2E-uniprot.txt "InterPro; IPR002645; STAS_dom"].
-- It is modeled as the MlaB-like accessory subunit, with no molecular-function identifier.
-- Species-aware research adds single-copy K07122 assignment and contiguous
-  mlaF-mlaE-mlaD-ttg2D operon context, strongly resolving the identity while
-  leaving the exact regulatory mechanism untested
-  [file:projects/P_PUTIDA/deep-research/PSEPK__bacterial_mla_intermembrane_phospholipid_transport__ppu02010-deep-research-openscientist.md
-  "PP_0962→K07122 (mlaB)"].
+## 2026-09-01 OpenScientist integration
+
+Q88P90 is a 100-residue single-STAS-domain protein in the
+mlaF-mlaE-mlaD-ttg2D-ttg2E locus. The report correctly recognizes this as the
+diagnostic architecture and operon position of an MlaB-equivalent accessory
+subunit [file:PSEPK/ttg2E/ttg2E-deep-research-openscientist.md, "This gene
+order (F‑E‑D‑C‑B) is identical to the canonical *E. coli* `mlaFEDCB` operon,
+unambiguously assigning **ttg2E = MlaB**."].
+
+Ortholog studies support roles in transporter assembly and activity, but the
+precise effect on KT2440 MlaF is untested. The review therefore assigns no
+catalytic molecular function and retains the mechanism as a knowledge gap.
+The report's retrograde-direction and direct toluene-tolerance language is not
+promoted to a Ttg2E-specific annotation.
