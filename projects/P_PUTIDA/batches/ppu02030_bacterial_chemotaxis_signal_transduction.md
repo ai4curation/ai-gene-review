@@ -3,7 +3,7 @@ title: "PSEPK bacterial chemotaxis signal transduction"
 maturity: DRAFT
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [PSEPK]
-genes: [pcaY, mcpS, cheR2, cheB1, PP_4332, cheA, cheY, cheZ, fliM, fliN, fliG, motA, motB]
+genes: [pcaY, mcpS, cheR2, cheB1, PP_4332, cheA, cheY, cheZ, fliM, fliN, fliG, motA, motB, PP_4335, PP_4336]
 autolink_gene_symbols: false
 ---
 
@@ -11,7 +11,7 @@ autolink_gene_symbols: false
 
 - Module: `bacterial_chemotaxis_signal_transduction`
 - Source bucket: KEGG `ppu02030` (bacterial chemotaxis)
-- Focused genes: twelve named proteins plus three locus-tagged coupling/stator proteins spanning seven mechanistic parts
+- Focused genes: twelve named proteins plus three locus-tagged coupling/stator proteins spanning eight mechanistic parts
 - Satisfiability: complete
 - OpenScientist module/pathway/taxon research: complete
 
