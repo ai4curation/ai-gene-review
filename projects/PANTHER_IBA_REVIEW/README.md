@@ -4,7 +4,7 @@ title: "PANTHER IBA family review"
 
 # PANTHER IBA family review
 
-Family-level (PANTHER/PAINT) review of the IBA annotations on the 40 reviewed
+Family-level (PANTHER/PAINT) review of the IBA annotations on the 41 reviewed
 S. pombe genes. Reviews the *source* of the IBAs — the phylogenetic
 propagation — rather than re-judging gene by gene.
 
@@ -78,6 +78,6 @@ be materialised under `interpro/panther/<FAM>/<FAM>-paint.tsv` with:
 just fetch-panther-paint PTHR10177
 ```
 
-Scope: the 151 IBAs in the 40 reviewed genes (38 PANTHER families, all cached
+Scope: the 158 IBAs in the 41 reviewed genes (39 PANTHER families, all cached
 locally). Note the cross-subfamily flag is deliberately sensitive and
 over-fires on broadly conserved functions — it is triage, not a verdict.
