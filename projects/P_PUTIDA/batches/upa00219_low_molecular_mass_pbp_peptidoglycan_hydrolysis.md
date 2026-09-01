@@ -22,7 +22,8 @@ lipoprotein-peptidoglycan tether remodeling.
 - [x] Create a species-neutral, multi-part module with experimental exemplars.
 - [x] Attempt module and module + pathway + taxon research; both OpenScientist jobs reached the 7200-second limit without reports.
 - [x] Validate and render the reviews, module, and project page.
-- [ ] Open one non-draft PR and clear review and CI.
+- [x] Open one non-draft PR: [#2850](https://github.com/ai4curation/ai-gene-review/pull/2850).
+- [ ] Clear review and CI.
 
 ## Selected Genes
 
