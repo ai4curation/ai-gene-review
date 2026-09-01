@@ -24,7 +24,7 @@ autolink_gene_symbols: false
 - [x] Integrate the OpenScientist report and direct KT2440 publications.
 - [x] Validate module and gene reviews.
 - [x] Render module, gene, and project pages.
-- [ ] Open one PR for this module/pathway.
+- [x] Open one PR for this module/pathway: [#2856](https://github.com/ai4curation/ai-gene-review/pull/2856).
 - [ ] Shepherd the PR through review and CI.
 
 ## Satisfiability
