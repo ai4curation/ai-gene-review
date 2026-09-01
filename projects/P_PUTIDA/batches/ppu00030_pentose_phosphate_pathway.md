@@ -27,7 +27,7 @@ autolink_gene_symbols: false
 - [x] Curate each selected first-pass gene review.
 - [x] Validate module and selected gene reviews.
 - [x] Render module and project pages.
-- [ ] Open one PR for this module/pathway.
+- [x] Open one PR for this module/pathway: [PR #2848](https://github.com/ai4curation/ai-gene-review/pull/2848).
 - [ ] Shepherd PR through review, CI, and merge readiness.
 
 ## Curated Scope
@@ -98,5 +98,6 @@ Generated UTC: 2026-07-15T14:52:59.970771+00:00
 ## 2026-09-01 structural repair
 
 - Removed the generic cytosol assertion from module context. The reusable
-  pathway is defined by ordered chemistry; localization need not be repeated
-  at module level for every represented soluble bacterial exemplar.
+  pathway is defined by conserved chemistry across taxa, whereas the deleted
+  location was justified only by the soluble PSEPK exemplars and would not
+  hold for compartmentalized instances such as plastidial PPP chemistry.
