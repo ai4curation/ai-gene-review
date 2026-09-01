@@ -24,10 +24,11 @@ rows: 8 for `infA`, 6 for `infB`, and 7 for `infC`.
 3. IF2 promotes fMet-tRNA binding and hydrolyzes GTP during 70S-complex
    formation.
 
-Initiator-tRNA charging/formylation, ribosomal proteins, elongation, and
-termination are outside the module. RRF/EF-G-driven recycling remains outside,
-while IF3 stabilization of newly split 30S subunits is retained as the
-recycling-to-initiation interface.
+Initiator-tRNA charging/formylation, ribosomal proteins, elongation,
+termination, and RRF/EF-G-driven recycling are outside the module. IF3 binding
+to an already-free 30S subunit defines the initiation boundary; its contextual
+role in stabilizing recycled subunits remains in the gene review rather than
+the module annoton.
 
 ## Status
 
@@ -48,9 +49,9 @@ recycling-to-initiation interface.
 
 | Gene | Locus | UniProt | GOA rows | Core role | Audit result |
 |---|---|---|---:|---|---|
-| `infA` | PP_4007 | P65117 | 8 | IF1 stabilization of the 30S preinitiation complex | Exact initiation-factor and process terms accepted; broad binding/location parents treated as non-core, modified, or over-annotated |
-| `infB` | PP_4712 | Q88DV7 | 6 | IF2 initiator-tRNA recruitment and subunit joining | Initiation-factor and GTPase activities accepted; GTP binding retained as non-core and broad cytoplasm marked over-annotated |
-| `infC` | PP_2466 | Q88K26 | 7 | IF3 free-30S maintenance and initiation-site discrimination | Spurious membrane removed; disassembly retained as non-core interface context; generic ribosome binding modified to small-subunit binding |
+| `infA` | PP_4007 | P65117 | 8 | IF1 stabilization of the 30S preinitiation complex | Exact initiation-factor and process terms accepted; broad binding/location parents retained as non-core or modified to a more precise term |
+| `infB` | PP_4712 | Q88DV7 | 6 | IF2 initiator-tRNA recruitment and subunit joining | Initiation-factor and GTPase activities accepted; GTP binding and broad cytoplasm retained as non-core |
+| `infC` | PP_2466 | Q88K26 | 7 | IF3 free-30S maintenance and initiation-site discrimination | Spurious membrane removed; disassembly retained only as non-core gene context; generic ribosome binding modified to small-subunit binding |
 
 The machine-readable focused set is recorded in
 [`ppu03010_bacterial_translation_initiation.tsv`](ppu03010_bacterial_translation_initiation.tsv).
