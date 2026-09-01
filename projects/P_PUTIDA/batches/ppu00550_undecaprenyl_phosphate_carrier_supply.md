@@ -40,10 +40,10 @@ glycan polymerization, and peptide crosslinking.
   and export in the existing peptidoglycan-precursor module.
 - SEDS proteins and PBPs own downstream peptidoglycan polymerization and
   crosslinking.
-- The UppS PANTHER subfamily identifier is omitted from the module because its
-  official label describes eukaryotic dehydrodolichyl diphosphate synthase 2,
-  despite containing the exact bacterial UppS exemplars. Exact UniProt
-  exemplars are retained instead of relabeling or guessing a family ID.
+- The UppS family uses established PANTHER:PTHR10291:SF0 with its exact official
+  label, even though that label describes eukaryotic dehydrodolichyl
+  diphosphate synthase 2. Both bacterial UppS exemplars resolve to the declared
+  subfamily, and `preferred_term` states the intended bacterial role.
 - Species-aware research confirms both canonical steps are present but finds
   probable asymmetry in redundancy: UppS appears single-copy, whereas
   PP_0251, PP_0900, and PP_4813 are PAP2-family candidates that may overlap

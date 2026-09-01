@@ -9,6 +9,7 @@
 - UppS supplies a shared envelope-glycan carrier precursor; peptidoglycan
   biosynthesis is downstream use rather than the sole core process
   [file:PSEPK/uppS/uppS-uniprot.txt "UPP is the precursor of glycosyl carrier lipid in"].
-- PANTHER places Q88MH6 and E. coli UppS in PTHR10291:SF0, but the official
-  subfamily label is "DEHYDRODOLICHYL DIPHOSPHATE SYNTHASE 2". Do not use that
-  misleading identifier as the module's family descriptor.
+- PANTHER places Q88MH6 and E. coli UppS in PTHR10291:SF0. The module asserts
+  that established identifier with the exact official label
+  "DEHYDRODOLICHYL DIPHOSPHATE SYNTHASE 2" and uses `preferred_term` to state
+  the bacterial UppS role clearly.
