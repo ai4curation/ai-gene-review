@@ -142,9 +142,17 @@ every step where exact family membership can be established. The ArgC type 1
 and type 2 alternatives deliberately retain `TIGR01850` and `TIGR01851`:
 PANTHER places both in `PTHR32338:SF10` and cannot represent that distinction.
 For ArgF, `PTHR45753:SF3` is used because Q88NX4 and reviewed P9WIT9 are exact
-anabolic members, while catabolic ArcB Q88P53 is in SF2. Existing PAINT claims
-were rechecked against their local IBD rows and seeds; no unverified PTN was
-added.
+anabolic members, while catabolic ArcB Q88P53 is in SF2. SF3 is described as
+anabolic-type rather than biosynthesis-only because it also includes ureagenic
+eukaryotic OTC proteins. Existing PAINT claims were rechecked against their
+local IBD rows and seeds; no unverified PTN was added.
+
+The step-4 PSEPK instance uses aruC/PP_0372 (Q88QW2) as the preferred anabolic
+SF79 candidate. AstC-like argD/PP_4481 retains plausible non-core ACOAT activity
+but remains outside the reusable module's required implementation because its
+catabolic-operon role and direct genetics do not establish it as the anabolic
+step. This instance-specific adjudication is recorded here rather than in the
+species-neutral module node.
 
 The existing module/pathway/taxon OpenScientist report was reused, and the
 missing reusable-module report was generated with the full configured
@@ -164,8 +172,8 @@ family, member, and PSEPK claims continue to come from local curated data.
 | `argD` | No gene-review change; clarified that ACOAT is retained non-core, not as the preferred module exemplar |
 | `argE` | No change needed; ArgE hydrolysis remains a valid linear-route alternative |
 | `argF` | No gene-review change; module selector narrowed from shared InterPro space to anabolic SF3 |
-| `argG` | Added the missing ATP-binding rationale and local evidence for removing the bacterial urea-cycle call |
-| `argH` | Retained specific cytosol as non-core, marked parent cytoplasm redundant, and stated auxotrophy support |
+| `argG` | Added the missing ATP-binding rationale; removal of the urea-cycle call now rests on absent KT2440 arginase rather than PAINT seed-list breadth |
+| `argH` | Retained both HAMAP-backed cytoplasm and the more specific cytosol as compatible non-core locations, and stated auxotrophy support |
 | `argJ` | No change needed; initiation and recycling activities remain separate core functions |
 | `PP_3571` | Corrected the PAINT family finding; physiological substrate remains unresolved and no core function is asserted |
 
@@ -174,6 +182,14 @@ confirmed the stated KT2440 auxotrophy/prototrophy results. The repository's
 generated publication cache remains abstract-only, so the affected reviews
 continue to disclose `full_text_unavailable`; this repair does not hand-edit
 that derived cache or invent locally checkable quotations.
+
+The PR review also identified that GO:0000050, GO:0004055, and GO:0006526 are
+co-asserted at the same untaxon-restricted PAINT node, PTN000172504. The argG
+review now states that topology directly and does not compare donor lists as a
+proxy for node breadth. A whole-proteome exact search of
+`projects/P_PUTIDA/data/psepk_uniprot_metadata.tsv` finds no `Arginase` product
+and no EC `3.5.3.1`; without that terminal arginine-to-ornithine-and-urea step,
+KT2440 cannot close a ureagenic urea cycle.
 
 ### Wave110 validation
 
