@@ -61,3 +61,64 @@ and content is faithful.
   adjudication was applicable (nothing to verify against cached publications).
 
 Validation (`just validate XENTR A0A8J0SCI2`) passes after edits.
+
+## Family/PTN curation pass (2026-08-31)
+
+Second IBA-curation pass using the FamilyReview framework. Created
+`interpro/panther/PTHR24381/PTHR24381-review.yaml` (family "ZINC FINGER PROTEIN",
+verbatim from panther.obo; preferred name "Krueppel C2H2-type zinc-finger family")
+and added structured `review.propagation_review` blocks to all four IBA rows here.
+
+### What was inspected
+
+All four IBA rows (GO:0005634 is_active_in, GO:0006357, GO:0000981, GO:0000978)
+are backed by the single PAINT node **PANTHER:PTN001225435** (taxon:6072,
+Eumetazoa, in `PTHR24381-paint.tsv`); the GOA WITH/FROM seed lists match the
+paint.tsv IBD rows exactly. All four node assertions were assessed **SOUND** in
+the family review:
+
+- GO:0005634 (snapshot 20260529): 39 experimentally annotated eumetazoan seeds;
+  spot-checked mouse Zfp932 (MGI:1916754 = UniProtKB:E9QAG8) IDA nucleus
+  (PMID:21177534) in QuickGO.
+- GO:0000978 (snapshot 20200709): single-seed IBD from Zfp932 — not weak support
+  per the project's phylogenetic reading; the seed has IDA GO:0000978 from two
+  papers (PMID:21177534, PMID:22391310). The family's one documented loss of
+  cis-regulatory-region binding (ZNF445 clade, IRD negating GO:0000976 at
+  PTN008615686) was pruned by PAINT at its own node and does not implicate this
+  one.
+- GO:0000981 (snapshot 20250904): seeds span both regulatory directions (ZNF300
+  IDA GO:0001228; ZNF140 IDA GO:0001227), so the direction-agnostic parent at the
+  node is the correct generalization — consistent with this review's NPI verdict
+  on ProtNLM2's GO:0001228 prediction for this effector-less protein.
+- GO:0006357 (snapshot 20260529): 13 seeds, again both directions (ZNF300 IDA
+  GO:0045944; ZNF140 and Zfp932 IDA GO:0000122).
+
+Seed identities verified against live UniProt REST / Alliance / mygene.info;
+seed experimental annotations checked in QuickGO; no identity or label was
+written from memory. All existing actions (ACCEPT ×3, KEEP_AS_NON_CORE for
+GO:0000978) were **kept unchanged** — the family-level inspection confirms them.
+Root causes: NO_FAILURE_CORE ×3, NO_FAILURE_NON_CORE for GO:0000978 (non-core
+because the binding term is the mechanistic component of GO:0000981, not because
+the propagation is doubted). No failure_modes. The target does not appear in any
+WITH/FROM (it has no experimental annotations), so no self-source handling was
+needed.
+
+### Residue claims
+
+`residue_claims_not_applicable` set on all four rows: every argument rests on the
+intact repeated architecture of 8 tandem C2H2 fingers (residues 37-260), not on
+any single anchorable position, and the family review deliberately defines no
+`residue_sites` (a point-residue site for a modular zinc-finger array would
+fabricate precision the biology does not have).
+
+### Family review scope notes
+
+Family review is deliberately scoped: only PTN001225435 assessed (of 16
+PAINT-annotated nodes), only subfamily SF440 ("OOCYTE ZINC FINGER PROTEIN
+XLCOF7.1-LIKE", the target's subfamily per its UniProt PANTHER xref) described.
+Term assessments: GO:0005634/GO:0000981/GO:0006357 FAMILY_WIDE; GO:0000978
+SUBFAMILY_ONLY with an explicitly non-exhaustive applicable list ([SF440]),
+since the ZNF445-clade IRD proves it is not family-wide. Representative members
+A0A8J0SCI2 and P18752 are not yet in `panther-members.tsv` (index refresh left
+to the orchestrator), so `validate-families` reports two acceptable UNRESOLVED
+membership lines.
