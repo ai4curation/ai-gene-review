@@ -28,16 +28,16 @@ data only (nothing hardcoded):
 Output: `iba_propagation.tsv` (one row per IBA, with our curation action joined).
 
 ```
-IBA annotations analyzed: 158
+IBA annotations analyzed: 157
   with UniProt seeds mappable to subfamilies: 88
-  CROSS_SUBFAMILY (seeds only from other subfamilies): 37
+  CROSS_SUBFAMILY (seeds only from other subfamilies): 36
 ```
 
 ## The big caveat: `CROSS_SUBFAMILY` is triage, not a verdict
 
 PANTHER subfamilies are very fine-grained, and true orthologs in different
 species routinely land in different SFs. So the flag has a **high false-positive
-rate** for broadly conserved functions. Among the 37 cross-subfamily hits, most
+rate** for broadly conserved functions. Among the 36 cross-subfamily hits, most
 are unambiguously correct and were (correctly) ACCEPTed:
 
 | Gene | IBA term | Why the flag is a false positive |
@@ -116,7 +116,7 @@ UniProt mapping, not a lack of experimental grounding in the PAINT source set.
 
 ## Bottom line
 
-- 158 IBAs reviewed at the family level. Two clean over-propagations (**pom1**
+- 157 IBAs reviewed at the family level. Two clean over-propagations (**pom1**
   cytoskeleton, **rqh1** cytoplasm — localization terms crossing subfamilies) and
   one **sub-functionalization** case (**mid1** septin ring, where the ancestral
   anillin function partitioned to mid2 in pombe). All three were already caught

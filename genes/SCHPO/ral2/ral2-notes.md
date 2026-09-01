@@ -71,7 +71,11 @@ ral2 deletion does NOT affect vegetative growth - only mating and cell morpholog
 - Refreshed Ral2 through `just fetch-gene SCHPO ral2 --force`. Current GOA contains
   five unique review tuples. Removed four stale redox/peroxiredoxin-derived annotations
   that are no longer present in GOA, consistent with the PAINT IRD loss edges at the
-  Ral2/Mds3 node.
+  Ral2/Mds3 node. The refresh also removed the experimental GO:0032005 IGI from
+  PMID:2586528 (with PomBase:SPAC17H9.09c) while adding the GO:2000784 IMP on
+  2026-01-18, consistent with a PomBase re-curation of the paper. GO:0032005 is
+  retained in `core_functions` because activated ras1Val-17 rescue still supports
+  the more specific positive conjugation signal-transduction synthesis.
 - Accepted the new GO:0031137 IBA because the node is grounded by Ral2's direct mating
   phenotype; Ral2 appearing in its own source set is expected experimental grounding,
   not circularity. [PMID:2586528 "The disruptants showed the same phenotype as the

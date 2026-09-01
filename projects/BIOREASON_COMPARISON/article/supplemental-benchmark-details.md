@@ -34,7 +34,7 @@ The key availability issue is simple: the HuggingFace `wanglab/protein_catalogue
 
 | Benchmark | Genes | Terms | CNN | NPI | PLI | COR | LSP | REP | UNC |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| ARGO95 (HF catalogue) | 95 | 955 | 681 (71.3%) | 115 (12.0%) | 5 (0.5%) | 24 (2.5%) | 43 (4.5%) | 29 (3.0%) | 58 (6.1%) |
+| ARGO95 (HF catalogue) | 95 | 955 | 680 (71.2%) | 115 (12.0%) | 5 (0.5%) | 23 (2.4%) | 43 (4.5%) | 29 (3.0%) | 60 (6.3%) |
 
 For comparison, the mixed-source ARGO139 view is retained as a source-diagnostic table, not as a primary SFT benchmark.
 
@@ -42,9 +42,9 @@ For comparison, the mixed-source ARGO139 view is retained as a source-diagnostic
 
 | Source | Genes | Terms | CNN | NPI | PLI | COR | LSP | REP | UNC |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| HF catalogue / ARGO95 | 95 | 955 | 681 (71.3%) | 115 (12.0%) | 5 (0.5%) | 24 (2.5%) | 43 (4.5%) | 29 (3.0%) | 58 (6.1%) |
+| HF catalogue / ARGO95 | 95 | 955 | 680 (71.2%) | 115 (12.0%) | 5 (0.5%) | 23 (2.4%) | 43 (4.5%) | 29 (3.0%) | 60 (6.3%) |
 | Web export | 44 | 9,742 | 2,321 (23.8%) | 42 (0.4%) | 0 (0.0%) | 7 (0.1%) | 388 (4.0%) | 1 (0.0%) | 6,983 (71.7%) |
-| Mixed-source ARGO139 total | 139 | 10,697 | 3,002 (28.1%) | 157 (1.5%) | 5 (0.0%) | 31 (0.3%) | 431 (4.0%) | 30 (0.3%) | 7,041 (65.8%) |
+| Mixed-source ARGO139 total | 139 | 10,697 | 3,001 (28.1%) | 157 (1.5%) | 5 (0.0%) | 30 (0.3%) | 431 (4.0%) | 30 (0.3%) | 7,043 (65.8%) |
 
 The DnaK comprehensive review moved zinc ion binding (`GO:0008270`) from
 `NPI` to `CNN`: PMID:11985624 directly identifies DnaK in a radioactive
@@ -66,11 +66,11 @@ The all-HF view is still useful as the broadest single-source HF view, but it is
 
 | Assessment | Count | % |
 |---|---:|---:|
-| CNN | 920 | 67.7 |
+| CNN | 919 | 67.7 |
 | NPI | 169 | 12.4 |
-| UNC | 144 | 10.6 |
+| UNC | 146 | 10.8 |
 | LSP | 56 | 4.1 |
-| COR | 31 | 2.3 |
+| COR | 30 | 2.2 |
 | REP | 33 | 2.4 |
 | PLI | 5 | 0.4 |
 
@@ -80,11 +80,11 @@ The all-source union is the broadest source-availability view, but it combines A
 
 | Assessment | Count | % |
 |---|---:|---:|
-| UNC | 7,127 | 64.2 |
-| CNN | 3,241 | 29.2 |
+| UNC | 7,129 | 64.2 |
+| CNN | 3,240 | 29.2 |
 | LSP | 444 | 4.0 |
 | NPI | 211 | 1.9 |
-| COR | 38 | 0.3 |
+| COR | 37 | 0.3 |
 | REP | 34 | 0.3 |
 | PLI | 5 | 0.0 |
 
@@ -116,7 +116,7 @@ A second rater scored 20 RL Functional Summaries without access to the first-rat
 
 ## S6. GO-GPT reviews
 
-The ARGO139 web-export leaf review is explicitly pending rather than a completed benchmark. Ontology-aware rebuilding retained 5,923 terms: 1,900 exact positive AIGR matches (`CNN`), 127 exact rejected/over-annotated matches (`NPI`), and 3,896 unresolved terms (`UNC`). Accordingly, 138 documents are `DRAFT` and only the fully deterministic `BACSU/ftsZ` file is `COMPLETE`.
+The ARGO139 web-export leaf review is explicitly pending rather than a completed benchmark. Ontology-aware rebuilding retained 5,923 terms: 1,895 `CNN`, 125 `NPI`, 3 `LSP`, and 3,900 `UNC`. Accordingly, 137 documents are `DRAFT`; the fully resolved `BACSU/ftsZ` and manually reviewed `SCHPO/ral2` files are `COMPLETE`.
 
 A distinct supplemental analysis, `supplement_gogpt_overlap_300`, contains 8,871 GO-GPT predictions across 299 canonical genes. The historical cohort identifier is retained for continuity; the count fell from 300 after the duplicate `ARATH/Q9XIR4` alias for `ARATH/APO1` was removed. It is not the pending 5,923-term ARGO139 leaf set above and is not a paired ARGO139 BioReason-Pro result. This separate overlap analysis remains useful for showing how much apparent agreement changes when the reference set moves from raw GOA to AIGR core biology.
 
