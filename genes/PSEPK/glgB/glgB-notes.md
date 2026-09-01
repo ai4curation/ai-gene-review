@@ -7,7 +7,7 @@
 - PAINT places GO:0003844 at PTHR43651 ancestral node PTN000040010 using experimentally annotated branching enzymes, including the same-subfamily Mycobacterium exemplar P9WN45. [file:interpro/panther/PTHR43651/PTHR43651-paint.tsv, "PTN000040010"]
 - Mycobacterium experiments identify GlgB as the fourth member of the TreS-Mak-GlgE-GlgB pathway but do not directly assay Q88FN1. [PMID:20305657 "We describe a new pathway from trehalose to alpha-glucan in Mycobacterium tuberculosis comprising four enzymatic steps mediated by TreS, Pep2, GlgE (which has been identified as a maltosyltransferase that uses maltose 1-phosphate) and GlgB."]
 - In KT2440, glucose-starvation transcriptomics directly reports upregulation of glgB with glycogen-biosynthesis genes, supporting its physiological carbon-storage context without independently determining the enzyme reaction. [PMID:32267616 "In addition, upregulation was found for genes belonging to glycogen biosynthesis (glgA, glgB) and its degradation (glgX, glgP, malQ)."]
-- GO:0043169 cation binding remains UNDECIDED: the InterPro mapping specifies neither ion nor site, and the reviewed UniProt record contains no cofactor or cation-binding feature.
+- GO:0043169 cation binding is marked over-annotated: the InterPro mapping specifies neither ion nor site, and the reviewed UniProt record contains no cofactor or cation-binding feature.
 
 ## OpenScientist reconciliation
 

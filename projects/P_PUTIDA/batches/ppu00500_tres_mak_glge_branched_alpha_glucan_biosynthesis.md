@@ -50,7 +50,8 @@ gene against the current GOA, UniProt record, literature, and family evidence:
 - `glgE`: all 5 seeded GOA rows reviewed; the GH13 hydrolase over-propagation
   remains `REMOVE`; no `PENDING` actions.
 - `glgB`: all 9 seeded GOA rows reviewed; the GH13 hydrolase over-propagation
-  remains `REMOVE` and unsupported cation binding remains `UNDECIDED`; no
+  remains `REMOVE` and unsupported cation binding is
+  `MARK_AS_OVER_ANNOTATED`; no
   `PENDING` actions.
 
 2026-09-01: The module + pathway + PSEPK OpenScientist run completed in
