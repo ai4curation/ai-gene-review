@@ -17,20 +17,20 @@ release of that tether. It is separated from glycan polymerization, canonical
 ## Workflow
 
 - [x] Fetch both PSEPK gene records.
-- [ ] Complete OpenScientist gene research.
+- [x] Complete OpenScientist gene research or record terminal provider outcome.
 - [x] Curate every GOA row for both genes.
 - [x] Create a species-neutral, multi-part module with experimental exemplars.
 - [x] Complete module research.
 - [x] Complete module + pathway + taxon research.
-- [ ] Validate and render the reviews, module, and project page.
+- [x] Validate and render the reviews, module, and project page.
 - [ ] Open one non-draft PR and clear review and CI.
 
 ## Selected Genes
 
 | Done | Gene | Locus | UniProt | Pathway role |
 |---|---|---|---|---|
-| [ ] | `PP_2320` | PP_2320 | Q88KH0 | ErfK-family OprI anchoring L,D-transpeptidase |
-| [ ] | `PP_1451` | PP_1451 | Q88MW7 | YafK/LdtF-family OprI-tether hydrolase |
+| [x] | `PP_2320` | PP_2320 | Q88KH0 | ErfK-family OprI anchoring L,D-transpeptidase |
+| [x] | `PP_1451` | PP_1451 | Q88MW7 | YafK/LdtF-family OprI-tether hydrolase; OpenScientist timed out after 7200 seconds |
 
 ## Boundary Decisions
 
@@ -56,3 +56,7 @@ release of that tether. It is separated from glycan polymerization, canonical
   the discrepancy: the activity is a defensible prediction from the matched
   LdtPae3/YafK subfamily, but the Pseudomonas experiment itself described the
   hydrolysis assignment as tentative rather than directly demonstrating it.
+- The gene-level OpenScientist request for `PP_1451` reached the configured
+  7200-second provider limit and returned no report. The review therefore
+  remains grounded in UniProt, exact PANTHER-subfamily correspondence, and
+  PMID:37255442; no provider file was synthesized manually.
