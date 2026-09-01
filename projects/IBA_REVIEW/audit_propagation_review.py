@@ -263,23 +263,51 @@ for _s, _want in (
 # ordinary prose, and is only detectable as duplication. This rule does not catch that,
 # and no attempt at a duplication heuristic survived contact with prose that names an
 # accession twice for good reason.
-_PROSE_FIELDS = {'comment', 'reason', 'summary', 'review_notes'}
+# Scope is every author-written prose field, NOT just the ones the original damage
+# landed in. Restricting to {comment, reason, summary, review_notes} would have been
+# the same mistake as the sweep that was scoped to `comment:` and missed `reason:` --
+# it describes where a defect happened to occur, not where it could. `description`
+# (top level, core_functions[], proposed_new_terms[]) and `findings[].statement` are
+# equally reviewer-authored, and adding them immediately surfaced two real truncations
+# in genes/human that the narrower set could not see: IL36RN core_functions[0], which
+# ends mid-word on "(PR", and EMC1 references[17].findings[0], which ends on "(OMIM".
+# Both left unfixed here -- out of scope for a mouse PR, reported instead.
+_PROSE_FIELDS = {'comment', 'reason', 'summary', 'review_notes',
+                 'description', 'statement'}
 # A delimiter immediately before ")" is the signature of a consumed slot ("name, )"),
 # as is a wholly empty "()" -- both balance, so the depth scan alone misses them.
 _EMPTY_SLOT = re.compile(r'\(\s*[,;]?\s*\)|[,;]\s*\)')
 
 def _mangled_prose(s):
-    """True if s shows punctuation damage: unbalanced or empty round brackets."""
+    """Return the offending index if s shows punctuation damage, else None.
+
+    A position rather than a bool, so the finding can quote the damage. Reporting the
+    tail instead (the first version did) shows clean prose for the EMPTY-SLOT shape,
+    whose damage sits mid-string -- and that is the very shape the depth scan alone
+    also misses, so the one case where the payload is uninformative was the one case
+    that most needed it.
+    """
     depth = 0
-    for ch in s:
+    for i, ch in enumerate(s):
         if ch == '(':
             depth += 1
         elif ch == ')':
             depth -= 1
             # Order matters, not just the count: "a) (b" balances but is still wrong.
             if depth < 0:
-                return True
-    return depth != 0 or bool(_EMPTY_SLOT.search(s))
+                return i
+    m = _EMPTY_SLOT.search(s)
+    if m:
+        return m.start()
+    if depth != 0:
+        # Unclosed: point at the last "(" that never closed rather than at the end.
+        return s.rfind('(')
+    return None
+
+def _damage_window(s, pos, span=35):
+    """The text around pos, so a MANGLED_PROSE finding carries its own evidence."""
+    lo, hi = max(0, pos - span), min(len(s), pos + span)
+    return ('...' if lo else '') + s[lo:hi] + ('...' if hi < len(s) else '')
 
 def _walk_prose(o, path, key=None):
     """Yield (path, value) for every author-written prose scalar in a review doc."""
@@ -308,10 +336,26 @@ for _s, _want in (
         ("nested (a (b) c) d", False),
         ("no brackets at all", False),
         ("SF4 PROTEIN SLIT, but also worm glp-1 (P13508) and zebrafish notch1a (P46530)", False)):
-    if _mangled_prose(_s) != _want:
+    if (_mangled_prose(_s) is not None) != _want:
         _selftest_failures.append(
             f"mangled-prose predicate is wrong for {_s!r} "
             f"(expected flagged={_want}) - MANGLED_PROSE will misreport")
+
+# The window must actually contain the damage. Without this the payload can regress to
+# showing clean prose while every case above still passes -- the exact defect that was
+# reported against the first version, and one a boolean self-test cannot see.
+for _s, _must_contain in (
+        # Mid-string empty slot with a long clean tail: the shape the tail payload lost.
+        ("Anti-apoptotic donor (asserted from external knowledge, ). "
+         "It is flagged NOT_RELEVANT because it contributes no support for the "
+         "positive-regulation term, and is named only as node-composition evidence.", ", )"),
+        ("appears in no cached record under a name).", "name)"),
+        ("the empty pair () is a hole too", "()")):
+    _pos = _mangled_prose(_s)
+    if _pos is None or _must_contain not in _damage_window(_s, _pos):
+        _selftest_failures.append(
+            f"mangled-prose window does not show the damage {_must_contain!r} "
+            f"for {_s[:60]!r} - MANGLED_PROSE findings would carry no evidence")
 
 if _selftest_failures:
     print("SELF-TEST FAILED - a detection rule cannot fire:")
@@ -389,9 +433,21 @@ for f in files:
     # Whole-document, not per-propagation_review-block: the substitution that motivated
     # this also rewrote `reason`, and a review with no propagation_review at all is just
     # as capable of carrying the damage.
+    _ann_terms = {_j: ((_a.get('term') or {}).get('id'))
+                  for _j, _a in enumerate(d.get('existing_annotations') or [])}
     for _path, _txt in _walk_prose(d, ''):
-        if _mangled_prose(_txt):
-            issues.append((f"{org}/{g}{_path}", 'MANGLED_PROSE', _txt[-70:]))
+        _pos = _mangled_prose(_txt)
+        if _pos is not None:
+            # Key the same way every other rule does -- "org/gene[i] TERM" -- so the
+            # "across N rows" denominator keeps meaning annotation rows. Keying on the
+            # dotted path would let one annotation contribute two rows to the headline
+            # when it also trips another rule. The path is more useful for LOCATING the
+            # damage, so it moves into the payload rather than being dropped.
+            _i = re.match(r'\.existing_annotations\[(\d+)\]', _path)
+            _loc = (f"{org}/{g}[{_i.group(1)}] {_ann_terms.get(int(_i.group(1)), '?')}"
+                    if _i else f"{org}/{g}")
+            issues.append((_loc, 'MANGLED_PROSE',
+                           f"{_path}: {_damage_window(_txt, _pos)}"))
     for i,a in enumerate(d.get('existing_annotations') or []):
         r=a.get('review') or {}
         pr=r.get('propagation_review')
