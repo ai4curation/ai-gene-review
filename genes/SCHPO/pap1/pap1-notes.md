@@ -107,3 +107,21 @@ drug-efflux/MDR genes (bfr1/hba2, pmd1, caf5, obr1). At high H2O2 the Sty1/Atf1 
   Pap1-versus-Sty1/Atf1 response. Because parts of its mechanistic synthesis cite reviews
   and dissertation material, it is used as corroborating context only; the cached primary
   publications remain the evidence source for annotation decisions.
+
+## 2026-09-01 post-merge review follow-up
+
+- Added GO:0001228 and nuclear-location structure to the remaining core-function activity
+  units so the redox and MDR descriptions are represented consistently with the primary
+  transcription-activator activity.
+- Verified current ontology records before replacing generic binding terms: GO:0042803 is
+  `protein homodimerization activity`, GO:0140297 is `DNA-binding transcription factor
+  binding`, and GO:0001221 is `transcription coregulator binding`. The Pap1 self-interaction
+  row is therefore MODIFY to GO:0042803 and is explicitly supported by the self-IPI GOA row;
+  the Prr1 interaction is MODIFY to GO:0140297, while the interaction with the HMG
+  coregulator Oxs1 is MODIFY to GO:0001221. The Imp1/Cut15 importin interaction remains
+  MARK_AS_OVER_ANNOTATED because no equally informative MF term was established.
+- Removed the unsupported claim that the abstract-only Pap1-DNA crystallography record
+  independently demonstrates homodimerization. The self-referential IPI WITH/FROM is retained
+  as the experimental self-association evidence, with curator deference.
+- Tightened the PTHR40621 paralog caveat to the reviewed fungal SF6 slice and labeled the
+  six-subfamily value as a cached InterPro counter, avoiding another family-wide census claim.
