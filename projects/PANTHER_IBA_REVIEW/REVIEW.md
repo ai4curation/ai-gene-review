@@ -5,8 +5,8 @@ title: "PANTHER IBA family review — reviewed S. pombe genes"
 # PANTHER IBA family review — reviewed S. pombe genes
 
 Family-level review of the **Inferred from Biological Ancestor** (IBA;
-ECO:0000318, `GO_REF:0000033`) annotations on the 40 S. pombe genes curated in
-the two pombe batches. IBAs are produced by GO Consortium **PAINT** curators
+ECO:0000318, `GO_REF:0000033`) annotations on the 41 S. pombe genes curated in
+the pombe review batches. IBAs are produced by GO Consortium **PAINT** curators
 propagating experimental annotations across **PANTHER** family trees, so the
 right place to judge them is the family/subfamily, not the individual gene.
 
@@ -28,16 +28,16 @@ data only (nothing hardcoded):
 Output: `iba_propagation.tsv` (one row per IBA, with our curation action joined).
 
 ```
-IBA annotations analyzed: 151
-  with UniProt seeds mappable to subfamilies: 83
-  CROSS_SUBFAMILY (seeds only from other subfamilies): 33
+IBA annotations analyzed: 157
+  with UniProt seeds mappable to subfamilies: 87
+  CROSS_SUBFAMILY (seeds only from other subfamilies): 36
 ```
 
 ## The big caveat: `CROSS_SUBFAMILY` is triage, not a verdict
 
 PANTHER subfamilies are very fine-grained, and true orthologs in different
 species routinely land in different SFs. So the flag has a **high false-positive
-rate** for broadly conserved functions. Among the 33 cross-subfamily hits, most
+rate** for broadly conserved functions. Among the 36 cross-subfamily hits, most
 are unambiguously correct and were (correctly) ACCEPTed:
 
 | Gene | IBA term | Why the flag is a false positive |
@@ -102,9 +102,21 @@ actions — the family review shows both are correct:
   is a GTPase-regulated kinase relay, *not* a MAPK cascade. The term is
   over-propagated from STE-family relatives.
 
+## Ral2: loss annotations protect a heterogeneous family boundary
+
+Ral2 belongs to **PTHR43503:SF2** (Mds3-related fungal Kelch proteins), while
+the broad PTHR43503 family also contains peroxiredoxin-6 subfamilies. PAINT
+places explicit IRD loss annotations for peroxidase activity, cytosol, and cell
+redox homeostasis on the Ral2/Mds3 node `PTN005166285`; those ancestral functions
+do not propagate into Ral2's current GOA. The one surviving IBA, regulation of
+conjugation with cellular fusion, is gained on that same node and is grounded by
+Ral2's own experimental mating phenotype. **ACCEPT** is therefore appropriate.
+The `NO_UNIPROT_SEEDS;SINGLE_NODE_SEED` flags describe the extractor's canonical-
+UniProt mapping, not a lack of experimental grounding in the PAINT source set.
+
 ## Bottom line
 
-- 151 IBAs reviewed at the family level. Two clean over-propagations (**pom1**
+- 157 IBAs reviewed at the family level. Two clean over-propagations (**pom1**
   cytoskeleton, **rqh1** cytoplasm — localization terms crossing subfamilies) and
   one **sub-functionalization** case (**mid1** septin ring, where the ancestral
   anillin function partitioned to mid2 in pombe). All three were already caught

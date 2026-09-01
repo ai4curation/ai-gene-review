@@ -397,7 +397,7 @@ def test_publication_headlines_match_generated_metrics() -> None:
     ) in supplement
     assert "**71.3% CNN**" in slides
     assert "**15.6% NPI/PLI/REP**" in slides
-    assert "**2.5% COR**" in slides
+    assert "**2.4% COR**" in slides
 
     with (PROJECT_DIR / "cafa-style" / "argo139_prediction_goa_overlap.csv").open() as handle:
         incorrect_hf = [
