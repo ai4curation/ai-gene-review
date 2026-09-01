@@ -59,7 +59,8 @@ mutually exclusive terminal routes was treated as an overstatement and was not
 adopted. Module schema and semantic validation pass; the semantic check retains
 only the expected advisory that InterPro labels are not ontology-validated.
 The `hutH`, `hutU`, `hutI`, `hutF`, `hutG`, and boundary `hutT` reviews also
-validate, and the changed module and batch outputs were rendered.
+validate, and the changed module and batch outputs were rendered. Repair PR:
+[#2881](https://github.com/ai4curation/ai-gene-review/pull/2881).
 
 2026-07-26: The `hutH` gene-level run timed out after 7200s with no report.
 The `hutU` run persisted a complete report and artifacts; its direct
