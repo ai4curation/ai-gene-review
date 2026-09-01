@@ -52,8 +52,8 @@ is recorded as a knowledge gap rather than silently treated as direct.
   repair is removed because direct target-specific work establishes the
   MurNAc-6-phosphate reaction.
 - Broad kinase, phosphotransferase, hydrolase, transport, and carbohydrate
-  process rows are retained as non-core or marked over-annotated when exact
-  substrate chemistry is available.
+  process rows are retained as non-core or modified to exact replacement terms
+  when substrate chemistry is available.
 - `ampG` receives a proposed new peptidoglycan-turnover annotation and uses the
   existing GO:0015647 peptidoglycan transmembrane transporter activity term.
   Live GO does not restrict this term to lipid-linked precursor export, and
@@ -98,8 +98,10 @@ and local PANTHER/PAINT data.
 ## Validation
 
 All eight gene reviews pass `just validate`. The module passes LinkML
-`ModuleReview` validation and the dedicated semantic validator. Remaining
-semantic messages are non-blocking namespace checks for InterPro/Pfam and an
-advisory AnmK PAINT-node specificity note: the node supports generic kinase
-activity while exact EC/Rhea chemistry is supplied separately. The
-module, five newly fetched gene reviews, and project page render successfully.
+`ModuleReview` validation and the dedicated semantic validator. The AnmK family
+is grounded by its exact PANTHER family, UniProt exemplars, and Rhea chemistry;
+PTN000770071 was removed because its PAINT IBD rows support only generic kinase
+activity and do not support the AnmK reaction or peptidoglycan turnover. The
+remaining semantic messages are non-blocking namespace checks for
+InterPro/Pfam. The module, five newly fetched gene reviews, and project page
+render successfully.
