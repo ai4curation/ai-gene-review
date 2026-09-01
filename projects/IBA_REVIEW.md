@@ -295,18 +295,62 @@ catalysis; two were `located_in` cellular-component calls, which assert neither.
 qualifier and the aspect before accepting that a biological argument bites.**
 
 **A shared reason is suspicious only under a corrective action.** Reuse alone is not a
-signal: a reason string repeated across ≥3 annotations with ≥3 distinct terms occurs in **160
-groups** across `genes/mouse`, up to 177 rows on one string, nearly all `KEEP_AS_NON_CORE` or
-`ACCEPT` where one class rationale is defensible. Scoped to `REMOVE` — where the reason must
-justify a per-annotation verdict — it collapses to **7 groups over 63 rows** (Casp3 23, Uox
-12, Hsp90aa1 8, Cyp1a1 7, Agtr1a 5, Ednra 5, Ang2 3). The action is the discriminator, not the
+signal: a reason string whose rows span ≥3 distinct terms occurs in **201 groups** across
+`genes/mouse`, up to 243 rows on one string, nearly all `KEEP_AS_NON_CORE` or `ACCEPT` where
+one class rationale is defensible. Scoped to `REMOVE` — where the reason must justify a
+corrective verdict — it collapses to **10 groups over 93 rows** (Casp3 23; Ang2 18, 8, 4 and
+3; Uox 12; Hsp90aa1 8; Cyp1a1 7; Agtr1a 5; Ednra 5). The action is the discriminator, not the
 count.
 
-Both figures are as of the commit that corrected them, and both moved while this section was
-being written: the earlier draft said 161 and 8/71, measured before six Bcl2 rows were given
-per-row reasons — which dropped that group below the threshold in both counts. Re-derive
-rather than quote: `grep`-able counts of a folded scalar need a parser, and a figure a reader
-cannot reproduce goes wrong quietly.
+Reproduce both, as of the commit that ships the script
+(`git log --oneline -1 -- projects/IBA_REVIEW/shared_reason_groups.py`):
+
+```
+python3 projects/IBA_REVIEW/shared_reason_groups.py
+python3 projects/IBA_REVIEW/shared_reason_groups.py --action REMOVE --list
+```
+
+**That script exists because these figures had been wrong twice before it did**, the second
+time in a way no reader could have caught. The published pair — 160 groups, and 7 over 63
+under `REMOVE` — turned out to come from three mutually inconsistent predicates in a single
+sentence: the `REMOVE` breakdown reproduces only with a ≥40-character minimum on the reason
+string, the "177 rows" figure only with rows deduplicated by (file, term), and 160 reproduces
+under neither. `grep`-able counts of a folded scalar need a parser, and a figure a reader
+cannot reproduce does not go wrong quietly — it goes wrong invisibly. State the predicate,
+ship the command, and quote no number you cannot re-run.
+
+The length cutoff was not a harmless tuning choice either. It hid Ang2's three largest
+`REMOVE` groups — 20, 8 and 4 rows on "No direct mouse evidence.", "Stale ISO transfer." and
+"Do not stack inference on inference." — the most boilerplate-looking rows in the corpus and
+exactly the ones the paragraph wants counted. So no minimum length is applied here, and
+counting those 32 rows is what turned up the finding below.
+
+### What the count is for: a pointer, not a verdict
+
+All 32 are `ISO` or `IEA` — no experimental row among them — and inspection split them in two.
+The question that separates them is **what the reason is about**:
+
+- **12 rows** (8 + 4) shared one string in `reason` *and* one in `summary`, and are
+  **legitimately** shared: "the current human source no longer carries this term", "the
+  current human source is itself inferred-only (IBA)". Those are claims about the
+  **transfer**, and one `GO_REF:0000119` transfer from one human source fails the same way
+  for every term it carried. Restating it eight times would be duplication, not diligence.
+- **20 rows** were the real defect, and not the one a shared string suggests. Their `reason`
+  said only "No direct mouse evidence." — which is not an argument against an `ISO` at all,
+  since transferred-without-mouse-data is precisely what `ISO` asserts. The row-specific
+  material sat in `summary` ("Transferred heparin binding from human ANG, not shown for mouse
+  Ang2"), which restates the same absence. So 20 corrective verdicts rested on a
+  **tautology**, while the file's neighbouring rows carried the real argument — that Angrp is
+  a divergent paralog which PMID:8633065 shows lacks Ang's angiogenic activity, making blanket
+  transfer of human ANG biology unsafe. Those 20 now carry that argument (18 `ISO`
+  rows share the transfer-level wording; the 2 `IEA` rows name the automated import
+  instead). **No action changed**; what changed is that the reason now says something that
+  could be wrong.
+
+Note what the two groups have in common after the fix: the repaired reason is *also* one
+shared string across 18 rows, and belongs there. Sharing was never the defect. A claim about
+the term must be per-term; a claim about the source or the transfer covers every term that
+transfer moved; and a claim that merely restates the evidence code is not a claim.
 
 **`source_label` is perspectival, and the three-verb standard does not reach it.** The verbs
 (*resolved* / *corroborated* / *asserted from external knowledge*) govern provenance claims in
@@ -350,7 +394,7 @@ still argued for removal, and six `supported_by` entries citing the very argumen
 reason withdrew. A `propagation_review` self-seed comment is the same hazard in another
 place: do not cite, as the target's experimental grounding, an annotation this review
 elsewhere removes. Of 13 such grounding claims in `genes/mouse`, one (`Agtr1a GO:0006954`)
-did exactly that.
+did exactly that, until `9ce63aa88` rewrote it to the node-membership form above.
 
 ### What an IBA actually asserts, and two ways to misread the WITH/FROM
 
