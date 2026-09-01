@@ -86,16 +86,19 @@ pathway holes.
 - The module contains seven ordered reaction parts; it is not a one-enzyme
   wrapper around LysA.
 - DapA, DapB, DapF, and LysA use exact PANTHER parent families with reviewed
-  E. coli reaction exemplars. The PSEPK paralog sets remain part of this
-  concrete satisfiability record rather than the reusable family definitions.
+  E. coli reaction exemplars. DapA additionally carries the function-specific
+  InterPro IPR005263 grounding because PTHR12128 is a broad aldolase parent.
+  The PSEPK paralog sets remain part of this concrete satisfiability record
+  rather than the reusable family definitions.
 - DapD, DapC, and DapE explicitly model the succinylated route rather than
   collapsing all taxonomic DAP-pathway variants into one ambiguous step.
 - DapA PTN000252718, DapB PTN000464618, DapE PTN000110566, DapF
   PTN000784348, and LysA PTN000159906 are asserted from explicit
-  `GO_REF:0000033` IBD rows in the local PAINT exports. DapD and DapC retain no
-  family or PTN identifiers because no clear function-specific assertion was
-  established. DapE retains its exact activity PTN but no broad parent-family
-  identifier.
+  `GO_REF:0000033` IBD rows in the local PAINT exports. No uncertain PANTHER or
+  PTN identifier is asserted for DapD or DapC, but their exact local equivalog
+  groundings are retained: DapD NCBIfam TIGR03536 and dedicated DapC NCBIfam
+  TIGR03538 plus InterPro IPR019878. DapE retains both NCBIfam TIGR01246 and its
+  exact activity PTN.
 - Molecular functions occur only on leaf annotons, and no module-level
   cytoplasm/cytosol pair is asserted.
 - GO:0009089 is not used as the justification for a new core term. Local
@@ -119,6 +122,9 @@ pathway holes.
   canonical paired-cysteine Q88CF3 DapF-CC copy (Cys75/Cys219). PMID:40774471
   establishes the DapF-SS class, but neither KT2440 paralog has a direct assay;
   activity partitioning and gene-specific essentiality remain open.
+- PTHR31689's official parent label is chloroplast-biased, but its verified
+  member set and PAINT evidence include bacterial DapF; the official label is
+  therefore retained with an explicit caveat rather than rewritten.
 - Eight gene-level OpenScientist reports completed in the first pass. The
   previously timed-out DapA-II (`dapA__Q88JL0`) and DapB reports completed in
   this repair with a 7200-second provider allowance and without cancellation.
