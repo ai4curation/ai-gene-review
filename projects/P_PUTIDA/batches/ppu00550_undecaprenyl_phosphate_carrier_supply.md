@@ -17,10 +17,10 @@ glycan polymerization, and peptide crosslinking.
 ## Workflow
 
 - [x] Fetch both PSEPK gene records.
-- [ ] Complete OpenScientist gene research (uppP complete; uppS running).
+- [x] Complete OpenScientist gene research (uppP completed; uppS reached the 7200-second limit without a report).
 - [x] Curate every GOA row for both genes.
 - [x] Create a species-neutral, multi-part module with exact UniProt exemplars.
-- [ ] Complete module and module + pathway + taxon research (taxon review complete; generic module research running).
+- [x] Complete module and module + pathway + taxon research (taxon review completed; generic module research reached the 7200-second limit without a report).
 - [ ] Validate and render the reviews, module, and project page.
 - [ ] Open one non-draft PR and clear review and CI.
 
@@ -54,3 +54,11 @@ glycan polymerization, and peptide crosslinking.
 - No direct KT2440 biochemical or genetic evidence was found for either
   canonical protein. Ortholog-derived periplasm-facing UppP catalysis and a
   proposed flippase role are not promoted to core-function assertions.
+
+## Provider Outcome
+
+The UppS gene request and generic module request were each allowed to run for
+the full configured 7200 seconds on 2026-09-01. Both timed out without reports.
+No provider-named files were synthesized manually. The module remains grounded
+in the completed UppP report, the species-aware pathway review, exact UniProt
+records, GO terms, and verified family exemplars.
