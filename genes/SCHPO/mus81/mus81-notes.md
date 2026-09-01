@@ -32,10 +32,13 @@ Mus81 is the catalytic subunit of the Mus81-Eme1 structure-specific DNA endonucl
 
 ### Checkpoint and cell-cycle regulation
 - [PMID:11073977 "the forkhead-associated-1 (FHA1) protein-docking domain of Cds1 interacts with Mus81, an evolutionarily conserved damage tolerance protein."] Mus81 physically interacts with the Cds1 checkpoint kinase.
-- [PMID:23584455 "This new regulation requires both Cdc2(CDK1)- and Rad3(ATR)-dependent phosphorylation of Eme1."] DNA damage stimulates Mus81-Eme1 through phosphorylation of Eme1. The full text distinguishes this activating pathway from Cds1: Eme1 hyperphosphorylation still occurs without Cds1, whereas UniProt and PMID:15805465 describe Cds1-dependent Mus81 phosphorylation and chromatin dissociation during HU stress.
+- [PMID:15805465 "Moreover, Mus81 undergoes extensive Cds1-dependent phosphorylation and dissociates from chromatin in hydroxyurea-arrested cells, thereby preventing it from cleaving stalled replication forks that could lead to fork breakage and chromosomal rearrangement."] Cds1-dependent Mus81 phosphorylation restrains fork cleavage during acute HU arrest.
+- [PMID:23584455 "This new regulation requires both Cdc2(CDK1)- and Rad3(ATR)-dependent phosphorylation of Eme1."] DNA damage stimulates Mus81-Eme1 through phosphorylation of Eme1. The full text distinguishes this activating pathway from Cds1: Eme1 hyperphosphorylation still occurs without Cds1.
 
 ## Curation considerations
 - "protein binding" (GO:0005515, IPI with eme1 SPAPB1E7.06c, PMID:11719193) is uninformative; the informative call is the Mus81-Eme1 complex (GO:0048476) and endonuclease MF. Mark over-annotated; complex membership captures the meaningful interaction.
+- GO:0033314 (mitotic DNA replication checkpoint signaling, IMP): keep as non-core. mus81 loss triggers a checkpoint-dependent delay, showing that the checkpoint responds to accumulated lesions; a direct signaling role rests on the authors' proposed recruitment of Cds1 to aberrant DNA structures [PMID:11073977 "We propose that Mus81 is involved in the recruitment of Cds1 to aberrant DNA structures where Cds1 modulates the activity of damage tolerance enzymes."].
+- GO:0006301 (DNA damage tolerance, TAS): keep as non-core because it is a broad PRR context rather than Mus81's direct catalytic role.
 - GO:0006308 (DNA catabolic process, IEA/InterPro) is an over-general parent; the specific endonuclease/resolution terms are better.
 - GO:0005739 (mitochondrion, HDA): UNDECIDED because the gene-specific image/full text is unavailable; focused nuclear evidence and Ydc2 biology cannot overrule an experimental curator from incomplete evidence.
 - GO:0032042 (mitochondrial DNA metabolic process, IC): weak; rests on the HDA mitochondrial localization plus nuclease activity with no direct Mus81 mtDNA data. Mark as over-annotated / non-core.
