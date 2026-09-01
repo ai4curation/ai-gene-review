@@ -34,13 +34,13 @@ autolink_gene_symbols: false
 
 | Done | Gene | Locus | UniProt | Primary bucket | Existing review | Curation | OpenScientist research | Protein |
 |---|---|---|---|---|---|---|---|---|
-| [ ] | `bglX` | PP_1403 | Q88N13 | kegg:ppu00999 | MISSING | MISSING | MISSING | Periplasmic beta-glucosidase (EC 3.2.1.21) (Beta-D-glucoside glucohydrolase) (Cellobiase) (Gentiobiase) |
-| [ ] | `PP_3195` | PP_3195 | Q88I07 | kegg:ppu00946 | MISSING | MISSING | MISSING | Peptidase S9 prolyl oligopeptidase catalytic domain-containing protein |
+| [ ] | `bglX` | PP_1403 | Q88N13 | kegg:ppu00999 | PRESENT | INITIALIZED | RUNNING | Periplasmic beta-glucosidase (EC 3.2.1.21) (Beta-D-glucoside glucohydrolase) (Cellobiase) (Gentiobiase) |
+| [ ] | `PP_3195` | PP_3195 | Q88I07 | kegg:ppu00946 | PRESENT | INITIALIZED | RUNNING | Peptidase S9 prolyl oligopeptidase catalytic domain-containing protein |
 | [x] | `PP_3197` | PP_3197 | Q88I05 | kegg:ppu00946 | PRESENT | CURATED | PRESENT | Predicted FdeC-like flavonoid A-ring dioxygenase |
-| [ ] | `PP_3198` | PP_3198 | Q88I04 | kegg:ppu00946 | MISSING | MISSING | MISSING | Ferredoxin, 2Fe-2S |
+| [ ] | `PP_3198` | PP_3198 | Q88I04 | kegg:ppu00946 | PRESENT | INITIALIZED | RUNNING | Ferredoxin, 2Fe-2S |
 | [x] | `PP_3199` | PP_3199 | Q88I03 | recovered from locus/KO reaction | PRESENT | DRAFT | PRESENT | Predicted FdeE-like FAD-dependent flavonoid monooxygenase; 40.4% identity to characterized Hsero_1007 |
-| [ ] | `PP_3204` | PP_3204 | Q88HZ8 | kegg:ppu00946 | MISSING | MISSING | MISSING | Cupin type-2 domain-containing protein |
-| [ ] | `PP_3205` | PP_3205 | Q88HZ7 | kegg:ppu00946 | MISSING | MISSING | MISSING | Fumarylacetoacetate hydrolase family protein |
+| [ ] | `PP_3204` | PP_3204 | Q88HZ8 | kegg:ppu00946 | PRESENT | INITIALIZED | RUNNING | Cupin type-2 domain-containing protein |
+| [ ] | `PP_3205` | PP_3205 | Q88HZ7 | kegg:ppu00946 | PRESENT | INITIALIZED | RUNNING | Fumarylacetoacetate hydrolase family protein |
 | [x] | `PP_3206` | PP_3206 | Q88HZ6 | kegg:ppu00946 | PRESENT | DRAFT | PRESENT | Predicted FdeJ/R13076 carbon-carbon hydrolase; exact reaction untested |
 
 ## Notes
