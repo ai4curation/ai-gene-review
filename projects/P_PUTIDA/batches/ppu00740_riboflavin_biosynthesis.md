@@ -76,3 +76,6 @@ member of the bacterial RibF family; its GO:0003919 activity is grounded by
 `PTN000591373`. The bacterial variant is instead grounded by its Q88Q93 and
 P0AG40 exemplar records because local PTHR22749 PAINT covers only the kinase
 half of bifunctional RibF.
+
+Repair pull request: [#2861](https://github.com/ai4curation/ai-gene-review/pull/2861)
+(`codex/putida-riboflavin-repair-wave90`).
