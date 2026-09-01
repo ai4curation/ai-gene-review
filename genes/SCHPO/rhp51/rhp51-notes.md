@@ -113,8 +113,10 @@ MCM interaction at forks:
 - Rechecked the Hus5 interaction citation. The abstract explicitly says that human
   HsUbc9 interacts with human Rad51 and discusses mouse spermatocytes
   [PMID:8610150 "HsUbc9 protein interacts with human recombination protein Rad51"].
-  It does not directly assay the S. pombe Rad51-Hus5 pair, so this GOA IPI is now
-  UNDECIDED rather than treated as verified non-core binding; it is not removed.
+  It also names S. pombe Hus5 as the HsUbc9 homolog, but the abstract-only cache does
+  not reveal the full rationale for the PomBase-curated S. pombe pair. This GOA IPI
+  is therefore UNDECIDED/UNVERIFIED rather than treated as verified non-core binding;
+  it is not removed or called miscited.
 - Project/module check: the existing PANTHER IBA and InterPro project rows already
   capture this review's conserved-function and over-annotation decisions. The
   `YEAST_DNA_REPAIR_CHROMATIN` project is explicitly scoped to S. cerevisiae, so
