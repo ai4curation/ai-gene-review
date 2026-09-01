@@ -21,7 +21,7 @@ periplasm, and into the outer membrane.
 - [x] Complete generic module research.
 - [x] Complete module + pathway + taxon research.
 - [x] Validate and render the reviews, module, and project page.
-- [ ] Open one non-draft PR and clear review and CI.
+- [x] Open one non-draft PR: [#2854](https://github.com/ai4curation/ai-gene-review/pull/2854). Review and CI are pending.
 
 ## Selected Genes
 
