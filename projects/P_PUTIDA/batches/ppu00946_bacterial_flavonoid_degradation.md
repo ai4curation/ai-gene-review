@@ -14,8 +14,8 @@ autolink_gene_symbols: false
   contiguous locus and the FdeD/FdeE reaction assignment
 - Primary bucket genes: 6
 - Existing review files: 8
-- Curated review files: 2
-- Existing completed OpenScientist research files: 2
+- Curated review files: 3
+- Existing completed OpenScientist research files: 3
 
 ## Required Workflow
 
@@ -41,7 +41,7 @@ autolink_gene_symbols: false
 | [x] | `PP_3199` | PP_3199 | Q88I03 | recovered from locus/KO reaction | PRESENT | DRAFT | PRESENT | Predicted FdeE-like FAD-dependent flavonoid monooxygenase; 40.4% identity to characterized Hsero_1007 |
 | [ ] | `PP_3204` | PP_3204 | Q88HZ8 | kegg:ppu00946 | MISSING | MISSING | MISSING | Cupin type-2 domain-containing protein |
 | [ ] | `PP_3205` | PP_3205 | Q88HZ7 | kegg:ppu00946 | MISSING | MISSING | MISSING | Fumarylacetoacetate hydrolase family protein |
-| [ ] | `PP_3206` | PP_3206 | Q88HZ6 | kegg:ppu00946 | MISSING | MISSING | MISSING | NAD-dependent epimerase/dehydratase domain-containing protein |
+| [x] | `PP_3206` | PP_3206 | Q88HZ6 | kegg:ppu00946 | PRESENT | DRAFT | PRESENT | Predicted FdeJ/R13076 carbon-carbon hydrolase; exact reaction untested |
 
 ## Notes
 
