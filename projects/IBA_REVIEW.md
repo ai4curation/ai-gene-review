@@ -167,8 +167,9 @@ These are the schema values for `propagation_review.source_entities[].source_sta
 `source_entities` is a **curated subset, not an exhaustive mirror** of the row's
 `WITH/FROM`. Enumerate the sources the review's argument actually rests on; where a
 column carries dozens of donors, characterise the span in prose and name the ones that
-matter. Some rows in this corpus have 47 or 53 donors — listing all of them is noise,
-not rigour, and it buries the two or three that carry the reasoning.
+matter. In mouse alone, `Mapk1 GO:0035556` has 53 donors, `Ccnb1 GO:0005634` has 45 and
+`Egfr GO:0005886` has 67 — listing all of them is noise, not rigour, and it buries the
+two or three that carry the reasoning.
 
 The rule that does bind: **no sentence may claim more than the enumeration shows.**
 A block that names one seed and calls it *"the* IBD seed" asserts a sole-donor fact the
@@ -185,9 +186,30 @@ Two traps when counting donors:
 - The same entity can appear twice under different identifiers — `RGD:2275` and
   `UniProtKB:P55213` are both rat caspase-3. Two entries, one donor.
 
-Mouse blocks corrected under this rule: `Grpel2 GO:0051082` (1 of 3 listed, "the IBD
-seed" with a human GRPEL1 co-donor) and `Gulo GO:0016491` (2 of 8, seven gene donors
-spanning fungi, plants and bacteria).
+Two mouse blocks were corrected under this rule, both by rewording the claim and adding
+the co-donors: `Grpel2 GO:0051082` said "the IBD seed" while the row carries a human
+GRPEL1 co-donor, and `Gulo GO:0016491` said the same while carrying seven gene donors
+spanning fungi, plants and bacteria. Both now enumerate their full `WITH/FROM`.
+
+### Resolving a donor before calling it unresolvable
+
+`interpro/panther/<FAMILY>/<FAMILY>-entries.csv` is keyed on **UniProt accession** and
+covers the whole family, not just `representative_members`. It gives the protein name,
+gene symbol and source organism, so it resolves donors that a `grep` over `genes/` will
+not:
+
+```
+$ grep '^P9WIT3,' interpro/panther/PTHR43762/PTHR43762-entries.csv
+P9WIT3,"L-gulono-1,4-lactone dehydrogenase",protein,83332,
+       Mycobacterium tuberculosis (strain ATCC 25618 / H37Rv),…,Rv1771,…
+```
+
+Check it before writing "the local index does not resolve this". The `CLAUDE.md`
+restraint is *assert nothing you cannot establish* — not *assert nothing about UniProt
+ids*, and a resolved donor usually strengthens the block's argument rather than being
+mere bookkeeping. Note the limits: it is accession-keyed, so `FB:`/`SGD:`/`RGD:`/`MGI:`
+identifiers are **not** lookups in it, and a family whose directory is absent from
+`interpro/panther/` resolves nothing.
 
 ### What an IBA actually asserts, and two ways to misread the WITH/FROM
 
