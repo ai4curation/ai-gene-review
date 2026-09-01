@@ -58,12 +58,27 @@ supernumerary NDUF subunits are not expected in the bacterial 14-subunit core.
 ## Curation Findings
 
 Individual subunits should not be represented as independently enabling the
-complete NADH:quinone oxidoreductase reaction. Those IEA annotations were marked
-as complex-level over-annotations while each core function records contribution
-to the assembled activity. The explicitly non-electrogenic NADH dehydrogenase
-term was removed from Nuo subunits because it contradicts the proton-pumping
-NDH-1 system. Direct FMN, NAD(H), and iron-sulfur roles were retained on the
-appropriate peripheral-arm proteins.
+complete NADH:quinone oxidoreductase reaction; noncatalytic subunits contribute
+to the assembled activity. NuoF is treated separately as the direct
+FMN-dependent NADH-oxidation subunit, with GO:0003954 proposed as its direct
+activity and the complex-level term retained with a qualifier correction. The
+explicitly non-electrogenic NADH dehydrogenase term was removed from Nuo
+subunits because it contradicts the proton-pumping NDH-1 system. Direct FMN,
+NAD(H), and iron-sulfur roles were retained on the appropriate peripheral-arm
+proteins.
+
+## Review Follow-up
+
+2026-09-01:
+
+- Corrected malformed taxon identifiers for NuoG, NuoH, and NuoI.
+- Repaired the batch TSV column shift so all 13 reviews are reported PRESENT.
+- Added exact GOA provenance to every annotation decision and UniProt evidence
+  to each core function.
+- Replaced templated descriptions and summaries with subunit-specific prose.
+- Corrected broad iron-binding decisions for NuoB and NuoI, and preserved the
+  only localization rows for NuoG and NuoM through MODIFY to plasma membrane.
+- Integrated the NuoF OpenScientist report into its catalytic/cofactor review.
 
 ## Evidence
 
