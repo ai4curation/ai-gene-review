@@ -159,3 +159,6 @@ nodes `PTN000002429` and `PTN002878475`. The shared cyclohydrolase activity
 remains grounded at `PTN000002250`. The SF5 FolD implementation is explicitly
 restricted to bacteria, matching the taxonomic scope of `PTN000002429`, and
 the two KT2440 FolD reviews now cite the corrected PAINT row.
+
+Repair pull request: [#2860](https://github.com/ai4curation/ai-gene-review/pull/2860)
+(`codex/putida-folate-repair-wave89`).
