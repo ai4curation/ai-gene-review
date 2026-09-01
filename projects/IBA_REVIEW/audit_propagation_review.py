@@ -17,7 +17,9 @@ e.g. the ISO backlog:  ... audit_propagation_review.py 'genes/human/*/*-ai-revie
 (term, evidence_type, reference). It is opt-in because unrelated genes legitimately
 differ. It may be used with or without a glob; without one the mouse default applies:
     ... audit_propagation_review.py --pair Mapk1,Mapk3
-Exits 2 if the self-test fails (self-seed detection not working).
+--strict makes findings exit 1 (default: findings exit 0, this is a report tool).
+Exits 2 for failures of the RUN itself: the self-test failing, no input files
+matching, or a --pair that cannot be compared.
 """
 import yaml, glob, os, re
 
@@ -42,14 +44,16 @@ def _parse_argv(argv):
     'Mapk1,Mapk3' to nothing -- so the run audits zero files and reports clean. A
     vacuous pass, which is the failure mode this script exists to prevent.
     """
-    globs, pair, i = [], None, 0
+    globs, pair, strict, i = [], None, False, 0
     while i < len(argv):
         if argv[i] == '--pair' and i + 1 < len(argv):
             pair = argv[i + 1]; i += 2; continue
+        if argv[i] == '--strict':
+            strict = True; i += 1; continue
         globs.append(argv[i]); i += 1
-    return globs, pair
+    return globs, pair, strict
 
-_GLOBS, PAIR_ARG = _parse_argv(sys.argv[1:])
+_GLOBS, PAIR_ARG, STRICT = _parse_argv(sys.argv[1:])
 PATTERNS = _GLOBS or ['genes/mouse/*/*-ai-review.yaml']
 
 # Model-organism database cross-references that appear as self-seed ids in WITH/FROM.
@@ -133,7 +137,13 @@ try:
 except Exception: pass
 
 issues=[]; n=0
-files=[f for pat in PATTERNS for f in sorted(glob.glob(pat))]
+# Dedupe across patterns: overlapping globs would otherwise audit a file twice and
+# inflate the "across N files" headline.
+files=sorted({f for pat in PATTERNS for f in glob.glob(pat)})
+
+def _org_gene(path):
+    _p = os.path.dirname(path).split(os.sep)
+    return (_p[-2], _p[-1])
 
 # ZERO INPUTS IS AN ERROR, NOT A PASS. Every entry point that can silently audit
 # nothing has produced a false "clean" in this tool's history: a mistyped glob, a
@@ -145,6 +155,36 @@ if not files:
     print("  patterns:", PATTERNS)
     print("  (a mistyped glob, or --pair given without a value, lands here)")
     raise SystemExit(2)
+
+# Validate --pair BEFORE the audit runs. Checking it afterwards means a typo in an
+# unrelated flag throws away a completed, perfectly valid report.
+PAIR_PATHS = None
+if PAIR_ARG:
+    # Accept either "Gene" or "organism/Gene". The bare form is ambiguous across
+    # organisms -- genes/mouse and genes/rat share Akt1, Casp3, Egfr, Ghr, Hspa8,
+    # Mapk1, Slc5a1 -- and pairing mouse Casp3 against rat Casp3 compares ORTHOLOGS
+    # ACROSS SPECIES, which is exactly the noise --pair being opt-in exists to avoid.
+    _names = [nm.strip() for nm in PAIR_ARG.split(',') if nm.strip()]
+    def _matches(path, name):
+        org, gene = _org_gene(path)
+        return f'{org}/{gene}' == name if '/' in name else gene == name
+    PAIR_PATHS = [f for f in files if any(_matches(f, nm) for nm in _names)]
+    _missing = [nm for nm in _names if not any(_matches(f, nm) for f in files)]
+    if _missing:
+        print(f"--pair: no file matched {_missing} in the audited set - nothing compared.")
+        print("  audited patterns:", PATTERNS)
+        raise SystemExit(2)
+    _orgs = {_org_gene(f) for f in PAIR_PATHS}
+    if len(_orgs) < 2:
+        # One distinct gene (--pair X, or --pair X,X) compares nothing.
+        print(f"--pair: {PAIR_ARG!r} resolves to fewer than two distinct genes "
+              f"({sorted(_orgs)}) - nothing to compare.")
+        raise SystemExit(2)
+    if len({g for _, g in _orgs}) == 1 and len({o for o, _ in _orgs}) > 1:
+        print(f"--pair: {PAIR_ARG!r} matched the same gene in several organisms "
+              f"({sorted(_orgs)}). That compares orthologs across species, not paralogs.")
+        print("  Disambiguate with the organism/Gene form, e.g. --pair mouse/Mapk1,mouse/Mapk3")
+        raise SystemExit(2)
 
 for f in files:
     _parts=os.path.dirname(f).split(os.sep)
@@ -235,17 +275,11 @@ def action_map(path):
 
 pair_arg = PAIR_ARG
 if pair_arg:
-    _names = pair_arg.split(',')
-    _paths = [f for f in files if os.path.basename(os.path.dirname(f)) in _names]
-    _found = {os.path.basename(os.path.dirname(f)) for f in _paths}
-    _missing = [nm for nm in _names if nm not in _found]
-    if _missing:
-        # Otherwise _combos is empty, the cross-gene section never prints, and the run
-        # reports clean without having compared anything.
-        print(f"--pair: no file matched {_missing} in the audited set - nothing compared.")
-        print("  audited patterns:", PATTERNS)
-        raise SystemExit(2)
+    _paths = PAIR_PATHS  # already validated above, before the audit ran
     _combos = [(_paths[i], _paths[j]) for i in range(len(_paths)) for j in range(i + 1, len(_paths))]
+    if not _combos:
+        print(f"--pair: {pair_arg!r} produced no comparable pair - nothing compared.")
+        raise SystemExit(2)
 else:
     # No automatic pairing. Two unrelated genes sharing a term legitimately get
     # different actions (Src vs Syk, Myc vs Stat1 ...), so an unguided sweep emits
@@ -286,3 +320,12 @@ if issues:
     for x in issues: print("  ", x)
 else:
     print("no issues found")
+
+# Exit code semantics. By default this is a report tool and findings exit 0. Under
+# --strict, findings (and cross-gene divergences) exit 1, so a CI job's green means
+# "clean" rather than merely "ran" -- reading the exit code is otherwise the natural
+# mistake once this is wired into the ISO backlog run. Note 2 is already taken by the
+# self-test and the zero-input/bad---pair guards, which are failures of the RUN, not
+# findings about the corpus.
+if STRICT and (issues or cross):
+    raise SystemExit(1)
