@@ -7,6 +7,10 @@
   reaction; each subunit contributes to GO:0047569 rather than independently
   enabling it.
 
+- The source `enables` annotation for GO:0047569 is therefore reviewed as
+  `MODIFY`, retaining the term while replacing its relation with
+  `contributes_to`.
+
 - UniProt places PcaI at step 1 of 2 in the shared lower beta-ketoadipate
   pathway [file:PSEPK/pcaI/pcaI-uniprot.txt "beta-ketoadipate pathway;
   acetyl-CoA and succinyl-CoA from 3-oxoadipate: step 1/2."].

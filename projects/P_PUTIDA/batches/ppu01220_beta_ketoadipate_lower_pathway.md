@@ -44,6 +44,8 @@ autolink_gene_symbols: false
   that do not exist.
 - Added experimental PcaF support and recorded the PcaI/PcaJ
   `contributes_to` qualifier decision in gene notes.
+- Corrected the two-reaction net stoichiometry: PcaIJ consumes succinyl-CoA,
+  PcaF regenerates it, and the net products are acetyl-CoA and succinate.
 
 2026-08-11:
 

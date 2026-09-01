@@ -7,5 +7,9 @@
   the gene product contributes to the complex activity rather than independently
   enabling it.
 
+- The source `enables` annotation for GO:0047569 is therefore reviewed as
+  `MODIFY`, retaining the term while replacing its relation with
+  `contributes_to`.
+
 - The lower-pathway module starts at 3-oxoadipate and treats PcaIJ CoA transfer
   as the first reaction, followed by PcaF thiolysis.
