@@ -258,6 +258,53 @@ Universal quantifiers over a seed set need the same care as a definite singular:
 may not have identified. Scope it — "every seed this review identified" — or name the
 unidentified ones and say no claim is made about them.
 
+### When a REMOVE overrules a curator, and when it does not
+
+`CLAUDE.md` forbids using `REMOVE` on an experimental annotation (IDA/IMP/IPI/IGI/IEP/EXP)
+just because the cached title or abstract is about a different gene — the full text the
+curator read is usually not in `publications/`. Applying that across `genes/mouse` needed a
+test sharper than "is the reason biological?", and the two ways of getting it wrong are both
+on the record here.
+
+**The condition, not the phrasing.** A first pass selected rows by matching phrases in the
+reason and missed a row whose immediate neighbour it caught — same gene, same PMID, same
+evidence code, same argument, differing only in that one said "The paper concerns" and the
+other "This physiology belongs to". Key on the condition instead: an experimental evidence
+code, a cited PMID whose cache is `full_text_available: false`, and a reason that turns on
+**what the paper contains or which gene it studies**. Re-derived that way the class was 42
+rows, not the 25 the phrase list found.
+
+**Then ask whether the cited biology contradicts *this* annotation, given its qualifier and
+aspect.** This is the step that separates a sound `REMOVE` from one that only sounds sound:
+
+| Keep the `REMOVE` | Convert to `UNDECIDED` |
+|---|---|
+| `GO:0005515` protein binding — policy against the term, independent of any text | the reason asserts what the paper is about |
+| the biology is stated **in the cached abstract itself** — Uox's abstract gives the enzyme's real reaction, which is what makes the deoxynucleoside-catabolism terms wrong | the reason turns on unread full text |
+| the argument is about the gene's molecular identity — a protease that cleaves a CDK inhibitor is not one, so `GO:0004861` goes | the argument answers a claim the annotation does not make |
+
+The last row is the trap. Six Bcl2 rows carried "…or describes an enzymatic/molecular
+activity not enabled by Bcl2" — true of Bcl2, and irrelevant to every row it was applied to.
+Four were qualified `acts_upstream_of_or_within`, which asserts **regulation**, not
+catalysis; two were `located_in` cellular-component calls, which assert neither. **Read the
+qualifier and the aspect before accepting that a biological argument bites.**
+
+**A shared reason is suspicious only under a corrective action.** Reuse alone is not a
+signal: a reason string repeated across ≥3 annotations with ≥3 distinct terms occurs in 161
+groups across `genes/mouse`, up to 177 rows on one string, nearly all `KEEP_AS_NON_CORE` or
+`ACCEPT` where one class rationale is defensible. Scoped to `REMOVE` — where the reason must
+justify a per-annotation verdict — it collapses to 8 groups over 71 rows. The action is the
+discriminator, not the count.
+
+**Finally, keep the row's own evidence pointing the same way as its verdict.** When an action
+is withdrawn, the `summary` and the `supported_by` have to move with it; otherwise the block
+asserts a conclusion its action has given up. Both have been missed here — 42 summaries that
+still argued for removal, and six `supported_by` entries citing the very argument the new
+reason withdrew. A `propagation_review` self-seed comment is the same hazard in another
+place: do not cite, as the target's experimental grounding, an annotation this review
+elsewhere removes. Of 13 such grounding claims in `genes/mouse`, one (`Agtr1a GO:0006954`)
+did exactly that.
+
 ### What an IBA actually asserts, and two ways to misread the WITH/FROM
 
 An IBA is not a similarity transfer from one gene to another. Behind every IBA is a
