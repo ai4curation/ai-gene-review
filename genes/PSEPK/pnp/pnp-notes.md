@@ -17,3 +17,9 @@ not treat presence as proof of obligate complex membership.
 
 The nested localization annotations are normalized by accepting the more
 specific cytosol term and retaining cytoplasm as non-core.
+
+The direct KT2440 study does not establish the catalytic mechanism, but it does
+show that a `pnp` deletion is viable without the E. coli-like cold-sensitive
+phenotype and that cold-shock transcription differs between the species
+[PMID:12923102 "We identified the PNPase-encoding gene (pnp) of Pseudomonas
+putida and constructed deletion mutants that did not exhibit cold sensitivity."].

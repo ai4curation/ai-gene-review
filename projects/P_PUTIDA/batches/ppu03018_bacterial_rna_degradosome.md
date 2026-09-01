@@ -30,7 +30,7 @@ allows lineage-variable helicase and exonuclease partners.
 |---|---|---|
 | Core scaffold | RNase E Q88LM4 | Covered |
 | Endonucleolytic initiation | RNase E Q88LM4 | Covered |
-| RNA unwinding | RhlB Q88NB7; RhlE-family alternatives Q88D48/Q88DQ7 | Candidate uncertain |
+| RNA unwinding | RhlB Q88NB7; RhlE-family alternative Q88D48 | Candidate uncertain |
 | 3'-to-5' exonucleolysis | PNPase Q88DW0; RNase R Q88DE6 alternative | Candidate uncertain |
 
 ## Curation Findings
@@ -38,8 +38,8 @@ allows lineage-variable helicase and exonuclease partners.
 Enolase Q88MF9 remains in the KEGG source bucket but is not used to satisfy the
 module: its existing KT2440 review states that degradosome membership has not
 been demonstrated, and pathway membership alone is not complex-membership
-evidence. Molecular functions are attached only to the RNase E, RhlB, and
-PNPase activity leaves. The broad KEGG RNA-degradation bucket is retained only
+evidence. Molecular functions are attached only to activity leaves, including
+the RhlB/RhlE and PNPase/RNase R alternatives. The broad KEGG RNA-degradation bucket is retained only
 as discovery context.
 
 The completed OpenScientist module report found direct KT2440 evidence for
