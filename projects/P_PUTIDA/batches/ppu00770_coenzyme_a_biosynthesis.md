@@ -91,6 +91,8 @@ The machine-generated source table is retained at
 
 Pull request: [#2180](https://github.com/ai4curation/ai-gene-review/pull/2180)
 (`codex/putida-pantothenate-coa-biosynthesis`).
+Evolutionary-evidence repair: [#2859](https://github.com/ai4curation/ai-gene-review/pull/2859)
+(`codex/putida-coa-repair-wave88`).
 
 ## Curation Decisions
 
