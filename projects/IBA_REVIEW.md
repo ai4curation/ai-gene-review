@@ -308,6 +308,28 @@ per-row reasons — which dropped that group below the threshold in both counts.
 rather than quote: `grep`-able counts of a folded scalar need a parser, and a figure a reader
 cannot reproduce goes wrong quietly.
 
+**`source_label` is perspectival, and the three-verb standard does not reach it.** The verbs
+(*resolved* / *corroborated* / *asserted from external knowledge*) govern provenance claims in
+prose, where the `comment` says how an identity was established. `source_label` is a readable
+handle for the source *as it stands to this target* — the same role `preferred_term` plays
+beside a PANTHER `term.label`, which `CLAUDE.md` already separates from the checked field.
+
+That makes a cross-file consistency check on it actively wrong. Of 66 distinct MOD ids
+carrying a label in `genes/mouse`, three are labelled differently in different files, and all
+three are correct:
+
+| id | in one file | in the other |
+|---|---|---|
+| `MGI:MGI:1346858` | `mouse Mapk1 (the review target itself)` | `mouse Mapk1 (ERK2, the target's closest paralog)` |
+| `MGI:MGI:1346859` | `mouse Mapk3 (ERK1, the target's closest paralog)` | `mouse Mapk3 (the review target itself)` |
+| `MGI:MGI:88316` | `mouse Ccne1 (cyclin E1)` | `mouse Ccne1 (this gene)` |
+
+The **identity half agrees in all three**; only the relationship clause differs, because the
+relationship differs. So check the symbol against the identity claim in the `comment` — that
+is where a provenance verb is owed — and leave the parenthetical alone. A label whose symbol
+you cannot establish is a reason to write no label, not to invent one; the `SGD:S000004812`
+seed in `Ccnb1 GO:0005737` is cited by bare identifier for exactly that reason.
+
 **A self-seed marks node membership always; it marks independent grounding only when the
 target's own same-term annotation is itself retained.** `CLAUDE.md` glosses a self-seed as
 "a marker that experimental grounding exists on the target itself", and that is the usual
