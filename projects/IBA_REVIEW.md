@@ -455,10 +455,11 @@ different files, and all three are correct:
 The **identity half agrees in all three**; only the relationship clause differs, because the
 relationship differs. So check the symbol, leave the parenthetical alone.
 
-Where to check it needs saying, because the obvious answer does not reach most rows. Only
-**26 of those 89** labelled sources have a `comment` carrying a provenance verb; on the other
-63 the comment is biological commentary ("A mammalian D-type cyclin seed at the same node")
-and the symbol is asserted in the label alone, with nothing to check it against. So the rule
+Where to check it needs saying, because the obvious answer does not reach most rows. When
+this was first measured only **26 of the 89** labelled sources had a `comment` carrying a
+provenance verb (**32** at the time of writing, after the repairs below); on the rest the
+comment is biological commentary ("A mammalian D-type cyclin seed at the same node") and the
+symbol is asserted in the label alone, with nothing to check it against. So the rule
 is not *check the label against the comment* — it is that **the symbol is an identity claim
 wherever it is written**, and is owed the same standard there: establish it from the local
 index (PAINT seeds, `*-entries.csv`, the GOA `WITH/FROM`) or write no label. A label whose
@@ -466,10 +467,26 @@ symbol you cannot establish is a reason to write no label, not to invent one; th
 `SGD:S000004812` seed in `Ccnb1 GO:0005737` is cited by bare identifier for exactly that
 reason, three lines below a labelled row whose comment makes no identity claim at all.
 
+**A self-label is not an identity claim, and does not need establishing.** Of the 89, **32**
+name the review target itself — "mouse Ccnb1 (this gene)", "the review target itself" — where
+the symbol is the file's own `gene_symbol` and there is nothing to look up. The rule reaches
+the other 57: labels naming a *different* gene, where the symbol asserts something a reader
+could not otherwise check. **28 of those carry a provenance clause; 29 do not**, across nine
+files (Sox2 6, Mapk1 5, Mapk3 4, Ifi204 4, Drd1 3, Frmpd2 3, Nf1 2, Agtr1a 1, Ccne1 1). That is
+a bounded, named residual rather than an open question: each is a one-line establish against
+`*-entries.csv` or a cached gene record, and none is a wrong label so far as any round has
+found. Recorded rather than repaired, for the reason the Bcl2 paragraph gives.
+
+The reason the split matters is that it stops the count from being read as a defect count.
+Fifty-seven unprovenanced labels would be alarming; 29 third-party labels in eight files is a
+chore. Measuring the wrong denominator turns a chore into an alarm, or the reverse.
+
 Every figure above comes from a parse of `propagation_review.source_entities`, not a `grep`:
-159 of the 234 sources in `genes/mouse` carry a label, of which 89 are MOD-prefixed, and 26
-of those 89 have a `comment` matching one of the three provenance verbs (*resolved* /
-*corroborated* / *asserted from external knowledge*). An
+159 of the 234 sources in `genes/mouse` carry a label, of which 89 are MOD-prefixed, split
+32 self / 57 third-party, and 32 of the 89 carry a `comment` matching one of the three
+provenance verbs (*resolved* / *corroborated* / *asserted from external knowledge*) — the
+same regex that returned 26 before the repairs. Where a count here moves between revisions,
+it is the corpus that moved. An
 earlier revision of this paragraph said 66 ids over 91 sources, which is the same sweep run
 as *not-`UniProtKB`, not-`PANTHER`* — a filter that also admits the two `InterPro:` sources in
 `Serpinh1`. Same finding either way; different set.
