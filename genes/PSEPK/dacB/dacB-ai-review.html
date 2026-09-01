@@ -1,0 +1,2278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dacB - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>dacB</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88L37" target="_blank" class="term-link">
+                        Q88L37
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "dacB";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88L37" data-a="DESCRIPTION: DacB is a periplasmic low-molecular-mass penicilli..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DacB is a periplasmic low-molecular-mass penicillin-binding protein 4 of the peptidase S13 family. It hydrolyzes peptidoglycan stem-peptide bonds through both D,D-endopeptidase and D,D-carboxypeptidase reactions, with the Pseudomonas ortholog showing predominant cleavage of 4-3 crosslinks and a secondary role in removing terminal D-alanine from pentapeptide stems. The KT2440 assignment is supported by close orthology and conserved catalytic architecture rather than direct enzymology of Q88L37.</p>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>peptidoglycan D,D-endopeptidase activity</h3>
+                <span class="vote-buttons" data-g="Q88L37" data-a="peptidoglycan D,D-endopeptidase activity" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+
+            <p><strong>Definition:</strong> Catalysis of hydrolysis of a D-alanyl-meso-diaminopimelate 4-3 peptide crosslink between stem peptides in peptidoglycan.</p>
+
+
+
+            <p><strong>Justification:</strong> GO has terms for D,D-carboxypeptidase and L,D-transpeptidase chemistry but no molecular-function term for hydrolytic cleavage of the canonical 4-3 peptidoglycan crosslink.</p>
+
+
+
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                    hydrolase activity
+                </a>
+            </p>
+
+
+
+
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000270" target="_blank" class="term-link">
+                                    GO:0000270
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88L37" data-a="GO:0000270" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DacB directly hydrolyzes peptide bonds in peptidoglycan stems and crosslinks.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Both established PBP4 reactions remodel the peptide component of the sacculus.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27716106" target="_blank" class="term-link">
+                                        PMID:27716106
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">LMM-PBP4 of Pseudomonas aeruginosa is a bifunctional enzyme presenting both D,D-carboxypeptidase and D,D-endopeptidase activities; the D,D-endopeptidase function is predominant.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004185" target="_blank" class="term-link">
+                                    GO:0004185
+                                </a>
+                            </span>
+                            <span class="term-label">serine-type carboxypeptidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88L37" data-a="GO:0004185" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PBP4 removes terminal D-alanine from pentapeptide muropeptide stems through a serine-acyl enzyme mechanism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is a directly demonstrated secondary activity of the close Pseudomonas aeruginosa DacB ortholog.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27716106" target="_blank" class="term-link">
+                                        PMID:27716106
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">LMM-PBP4 of Pseudomonas aeruginosa is a bifunctional enzyme presenting both D,D-carboxypeptidase and D,D-endopeptidase activities; the D,D-endopeptidase function is predominant.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006508" target="_blank" class="term-link">
+                                    GO:0006508
+                                </a>
+                            </span>
+                            <span class="term-label">proteolysis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88L37" data-a="GO:0006508" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DacB hydrolyzes muropeptide stem bonds rather than peptide bonds in proteins.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Peptidoglycan remodeling is not proteolysis despite the shared serine-peptidase fold.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                    GO:0030288
+                                </a>
+                            </span>
+                            <span class="term-label">outer membrane-bounded periplasmic space</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/dacB/dacB-deep-research-openscientist.md
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88L37" data-a="GO:0030288" data-r="file:PSEPK/dacB/dacB-deep-research-openscientist.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DacB acts in the periplasm where its peptidoglycan substrate resides.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Ortholog localization, substrate accessibility, and the N-terminal export region support this compartment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/dacB/dacB-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">The enzyme operates in the **periplasm**, where its substrate — the peptidoglycan (murein) sacculus — resides.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071555" target="_blank" class="term-link">
+                                    GO:0071555
+                                </a>
+                            </span>
+                            <span class="term-label">cell wall organization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27716106" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:27716106
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    In vivo functional and molecular characterization of the Pen...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88L37" data-a="GO:0071555" data-r="PMID:27716106" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DacB changes peptidoglycan stem length and crosslinking during sacculus maturation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Its two hydrolytic reactions directly remodel cell-wall architecture.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27716106" target="_blank" class="term-link">
+                                        PMID:27716106
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">LMM-PBP4 of Pseudomonas aeruginosa is a bifunctional enzyme presenting both D,D-carboxypeptidase and D,D-endopeptidase activities; the D,D-endopeptidase function is predominant.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Periplasmic PBP4 that cleaves D-Ala-mDAP 4-3 peptidoglycan crosslinks and secondarily removes terminal D-alanine from pentapeptide stems.</h3>
+                <span class="vote-buttons" data-g="Q88L37" data-a="FUNCTION: Periplasmic PBP4 that cleaves D-Ala-mDAP 4-3 pepti..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004185" target="_blank" class="term-link">
+                            serine-type carboxypeptidase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000270" target="_blank" class="term-link">
+                                peptidoglycan metabolic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071555" target="_blank" class="term-link">
+                                cell wall organization
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                outer membrane-bounded periplasmic space
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27716106" target="_blank" class="term-link">
+                                PMID:27716106
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">LMM-PBP4 of Pseudomonas aeruginosa is a bifunctional enzyme presenting both D,D-carboxypeptidase and D,D-endopeptidase activities; the D,D-endopeptidase function is predominant.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27716106" target="_blank" class="term-link">
+                            PMID:27716106
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">In vivo functional and molecular characterization of the Penicillin-Binding Protein 4 (DacB) of Pseudomonas aeruginosa.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Pseudomonas aeruginosa PBP4 has both D,D-carboxypeptidase and D,D-endopeptidase activity, with the latter predominant.</div>
+
+                        <div class="finding-text">"LMM-PBP4 of Pseudomonas aeruginosa is a bifunctional enzyme presenting both D,D-carboxypeptidase and D,D-endopeptidase activities; the D,D-endopeptidase function is predominant."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/dacB/dacB-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research report on PSEPK dacB (Q88L37)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Q88L37 is a close DacB/PBP4 ortholog with dual peptidoglycan hydrolase activity and periplasmic localization.</div>
+
+                        <div class="finding-text">"The gene **dacB** (ordered locus **PP_2098**; UniProt **Q88L37**) of *Pseudomonas putida* strain KT2440 encodes **Penicillin-Binding Protein 4 (PBP4)**, a **low-molecular-mass (LMM), periplasmic serine hydrolase** of the **peptidase S13 family**"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The relative D,D-endopeptidase and D,D-carboxypeptidase activities of Q88L37 have not been measured directly.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">CURATION</span>
+
+            </p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> The dual-function assignment is transferred from a close Pseudomonas ortholog.</p>
+
+
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(dacB-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88L37" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of *dacB* (PP_2098, UniProt Q88L37) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">13 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-01T00:58:53.808267</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="dacB-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="dacB-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-dacb-pp_2098-uniprot-q88l37-in-pseudomonas-putida-kt2440">Functional Annotation of <em>dacB</em> (PP_2098, UniProt Q88L37) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>dacB</strong> (ordered locus <strong>PP_2098</strong>; UniProt <strong>Q88L37</strong>) of <em>Pseudomonas putida</em> strain KT2440 encodes <strong>Penicillin-Binding Protein 4 (PBP4)</strong>, a <strong>low-molecular-mass (LMM), periplasmic serine hydrolase</strong> of the <strong>peptidase S13 family</strong> (Pfam PF02113; InterPro IPR000667; the β-lactamase/transpeptidase-like superfamily). Its primary, direct function is that of a <strong>bifunctional peptidoglycan DD-carboxypeptidase / DD-endopeptidase</strong>: it hydrolytically trims the terminal D-alanine from pentapeptide muropeptide stems (DD-carboxypeptidase activity) and cleaves the D-Ala–<em>meso</em>-diaminopimelate (D-Ala–mDAP) cross-links between adjacent glycan strands (DD-endopeptidase activity). Critically, it does <strong>not</strong> perform transpeptidation (cross-link formation). These conclusions rest on direct biochemistry of the two best-characterized orthologs — <em>Pseudomonas aeruginosa</em> DacB (70% identical to the <em>P. putida</em> protein) and <em>Escherichia coli</em> PBP4/DacB — together with high-confidence structural and sequence evidence for the <em>P. putida</em> protein itself.</p>
+<p>The enzyme operates in the <strong>periplasm</strong>, where its substrate — the peptidoglycan (murein) sacculus — resides. It is recovered as a soluble/loosely associated species rather than an integral membrane protein, and it carries an N-terminal Sec-type signal region for export across the inner membrane. Catalysis proceeds through a <strong>covalent acyl-enzyme mechanism</strong> at an active-site serine, using the two canonical penicillin-recognizing motifs — <strong>SxxK</strong> (catalytic Ser59) and <strong>KTG</strong> (Lys410). An AlphaFold model of Q88L37 (mean pLDDT 93.9) confirms a confidently folded S13 fold with these two motifs converging into a single catalytic cleft (Ser59 Oγ 2.89 Å from Lys62 Nζ), structurally validating the protein as a catalytically competent DD-peptidase.</p>
+<p>Beyond its housekeeping role in <strong>periplasmic peptidoglycan maturation and remodeling</strong>, DacB/PBP4 is a recognized <strong>regulatory node coupling cell-wall turnover to β-lactamase induction</strong>. In the closely related <em>P. aeruginosa</em>, loss of dacB triggers overproduction of the chromosomal <strong>AmpC β-lactamase</strong> through activation of the <strong>CreBC (BlrAB) two-component system</strong>, conferring clinically important β-lactam resistance, and the protein acts as a slowly-deacylating "trap" for β-lactams. Because <em>P. putida</em> DacB is 70% identical to <em>P. aeruginosa</em> DacB and possesses an intact active site, this signaling role is expected to be conserved, though it has not been directly demonstrated in <em>P. putida</em> itself. This report presents a robust, multi-evidence functional annotation grounded in orthologous experimental data, structural bioinformatics, and authoritative reviews of bacterial cell-wall biology.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-pp_2098dacb-is-a-peptidase-s13-lmm-pbp4-a-close-ortholog-of-the-characterized-p-aeruginosa-dacb">Finding 1 — PP_2098/dacB is a peptidase S13 LMM-PBP4, a close ortholog of the characterized <em>P. aeruginosa</em> DacB</h3>
+<p>Sequence analysis places Q88L37 firmly within the well-characterized DacB/PBP4 group. A global Needleman–Wunsch alignment of the 470-residue <em>P. putida</em> protein against <em>P. aeruginosa</em> PAO1 DacB/PBP4 (Q9HZG1, PA3047, 476 aa) yields <strong>343/491 = 69.9% identity</strong> — an exceptionally high level of conservation that supports direct functional transfer from the <em>P. aeruginosa</em> ortholog. Against the more distant <em>E. coli</em> K-12 PBP4/DacB (P24228, dacB/b3182), identity is ~32.3% (178/551), still clearly within the same family.</p>
+<p>Database annotations are internally consistent and converge on the same assignment: UniProt/InterPro place the protein in <strong>peptidase family S13</strong> (IPR000667; Pfam <strong>PF02113</strong> Peptidase_S13; Gene3D 3.50.80.20 "D-Ala-D-Ala carboxypeptidase C, peptidase S13"; SUPFAM SSF56601 β-lactamase/transpeptidase-like; PANTHER PTHR30023:SF0 penicillin-sensitive carboxypeptidase A). Both hallmark serine penicillin-recognizing active-site motifs are present in the correct spatial order: the <strong>SxxK</strong> nucleophile motif (S-T-M-K, catalytic Ser59) and the <strong>KTG</strong> triad motif (Lys410). This active-site architecture matches that of <em>E. coli</em> PBP4, confirming that Q88L37 is not a degenerate pseudo-enzyme but a bona fide member of the penicillin-recognizing serine hydrolase clan.</p>
+<p><strong>Why this matters:</strong> the 70% identity to an experimentally characterized ortholog is the single strongest justification for transferring the DD-carboxypeptidase/DD-endopeptidase functional annotation to the <em>P. putida</em> protein.</p>
+<h3 id="finding-2-dacbpbp4-is-a-bifunctional-dd-carboxypeptidase-dd-endopeptidase-acting-on-peptidoglycan">Finding 2 — DacB/PBP4 is a bifunctional DD-carboxypeptidase / DD-endopeptidase acting on peptidoglycan</h3>
+<p>The catalytic activity is established by direct biochemistry on the two closest characterized orthologs. In <em>P. aeruginosa</em>, in vivo digestion of <em>E. coli</em> and <em>P. aeruginosa</em> sacculi by LMM-PBP4/DacB reduced dimeric, trimeric, and anhydrous muropeptides plus monomeric pentapeptide (M5), and kinetics on the natural muropeptides M5 and D45 confirmed activity, <em>"validating the occurrence of D,D-carboxypeptidase and D,D-endopeptidase activities"</em> with <em>"better behaviour as a D,D-endopeptidase"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/27716106/">PMID: 27716106</a>). This is the decisive experiment for the <em>Pseudomonas</em> ortholog, and notably it indicates the enzyme is a <strong>more efficient endopeptidase (cross-link cleaver) than carboxypeptidase</strong>.</p>
+<p>In <em>E. coli</em>, analysis of murein from cells overexpressing purified PBP4 showed that it <em>"exclusively catalyses a DD-carboxypeptidase and DD-endopeptidase reaction"</em> and <em>"is not involved in transpeptidation"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/2046551/">PMID: 2046551</a>). This establishes both the dual hydrolytic activity and the crucial negative result that PBP4 does <strong>not</strong> build cross-links.</p>
+<p>Genetic dissection in <em>P. aeruginosa</em> PAO1 places PBP4 within the LMM-PBP set: <em>"PBP4 and PBP7 play a significant role as dd-carboxypeptidase only if PBP5 is absent, and their dd-endopeptidase activity is also inferred"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/25896695/">PMID: 25896695</a>). This shows that the DD-carboxypeptidase activity of PBP4 is partly redundant with the dedicated major DD-carboxypeptidase PBP5/DacC, but becomes physiologically significant when PBP5 is absent.</p>
+<p>Consistent GO annotations for Q88L37 are serine-type carboxypeptidase activity (GO:0004185) and peptidoglycan metabolic process (GO:0000270).</p>
+<p>The two reactions catalyzed can be summarized as follows:</p>
+<table>
+<thead>
+<tr>
+<th>Activity</th>
+<th>Bond cleaved</th>
+<th>Substrate</th>
+<th>Product</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>DD-carboxypeptidase</strong></td>
+<td>D-Ala⁴–D-Ala⁵ peptide bond</td>
+<td>Pentapeptide stem (…-L-Lys/mDAP-D-Ala-D-Ala)</td>
+<td>Tetrapeptide + free D-Ala</td>
+</tr>
+<tr>
+<td><strong>DD-endopeptidase</strong></td>
+<td>D-Ala⁴–mDAP cross-link</td>
+<td>Cross-linked (dimeric/oligomeric) muropeptides</td>
+<td>Separated glycan strands</td>
+</tr>
+<tr>
+<td><strong>Transpeptidation</strong></td>
+<td>—</td>
+<td>—</td>
+<td><strong>Not catalyzed</strong> (excluded, PMID 2046551)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="finding-3-dacbpbp4-localizes-to-the-periplasm-as-a-low-molecular-mass-pbp">Finding 3 — DacB/PBP4 localizes to the periplasm as a low-molecular-mass PBP</h3>
+<p>Multiple lines of evidence place the enzyme in the periplasm. Biochemically, <em>E. coli</em> PBP4/DacB is recovered as a soluble species: after sonication, <em>"the majority (80%) of the overproduced PBP4 was detected in the 100,000 X g supernatant"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/2046551/">PMID: 2046551</a>) — a hallmark of a periplasmic/loosely membrane-associated LMM-PBP rather than an integral membrane protein.</p>
+<p>Structurally, the <em>E. coli</em> PBP4 crystal structure contains <em>"a penicillin binding domain similar to known structures, but includes a large insertion which folds into domains with unique folds"</em>, and covalent acyl-enzyme complexes with five antibiotics locate the reaction at a serine active site (<a href="https://pubmed.ncbi.nlm.nih.gov/16411754/">PMID: 16411754</a>). The nature of the substrate (the murein sacculus, which resides in the periplasm), the family classification (peptidase S13, penicillin-sensitive carboxypeptidase A), and covalent β-lactam binding all place catalysis in the periplasm. The Q88L37 sequence begins with a Sec-type N-terminal signal/anchor region (MPLALPSHAA…) consistent with export across the inner membrane to reach its periplasmic substrate.</p>
+<h3 id="finding-4-in-pseudomonas-dacbpbp4-loss-triggers-ampc-lactamase-overexpression-via-crebc-linking-pg-turnover-to-a-signaling-pathway">Finding 4 — In <em>Pseudomonas</em>, dacB/PBP4 loss triggers AmpC β-lactamase overexpression via CreBC, linking PG turnover to a signaling pathway</h3>
+<p>A distinguishing and clinically important feature of <em>Pseudomonas</em> DacB is its role as a regulatory node. In <em>P. aeruginosa</em>, high-level clinical β-lactam resistance <em>"is driven by the inactivation of the dacB-encoded nonessential PBP4, which behaves as a trap target for beta-lactams"</em>, triggering <em>"overproduction of the chromosomal beta-lactamase AmpC and the specific activation of the CreBC (BlrAB) two-component regulator"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/19325877/">PMID: 19325877</a>). This establishes dacB/PBP4 as the causal node whose loss activates a defined two-component signaling pathway.</p>
+<p>The magnitude of this effect has been quantified. dacB mutants show constitutively elevated AmpC expression and are classified as high-level AmpC resistant mutants (HARMs) (<a href="https://pubmed.ncbi.nlm.nih.gov/23612194/">PMID: 23612194</a>). Quantitatively, <em>"the inactivation of PBP4 led to a significant increase in ampC expression (around 50-fold)"</em>, rising to ~1,000-fold when all three LMM-PBPs (PBP4/DacB, PBP5/DacC, PBP7/PbpG) are removed, correlating with peptidoglycan pentapeptide levels (<a href="https://pubmed.ncbi.nlm.nih.gov/25896695/">PMID: 25896695</a>). The mechanistic link runs through the muropeptide-recycling pathway: this resistance is reverted by inactivating <strong>nagZ</strong> or <strong>ampG</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/21357303/">PMID: 21357303</a>), confirming that the accumulation of specific muropeptide signals produced when PBP4 is absent is what drives the response.</p>
+<p>It is worth noting that this regulatory circuit is <strong>not universal</strong>: in <em>Enterobacter cloacae</em> complex, DacB inactivation is <em>not</em> responsible for constitutive ampC overexpression, and AmpD amino-acid changes are the dominant in vivo determinant (<a href="https://pubmed.ncbi.nlm.nih.gov/26438498/">PMID: 26438498</a>). This contrast strengthens the specificity of the <em>Pseudomonas</em> dacB→CreBC→AmpC circuit and underscores that the <em>P. putida</em> prediction is best transferred from <em>P. aeruginosa</em> (70% identity) rather than from more distant enterics.</p>
+<h3 id="finding-5-dacbpbp4-is-a-penicillin-sensitive-serine-hydrolase-whose-slow-deacylation-makes-it-an-efficient-lactam-trap">Finding 5 — DacB/PBP4 is a penicillin-sensitive serine hydrolase whose slow deacylation makes it an efficient β-lactam "trap"</h3>
+<p>The mechanistic basis for the trap behavior is structural. The <em>E. coli</em> PBP4 crystal structure was solved both native and <em>"covalently linked to various antibiotics"</em>; five acyl-enzyme complexes show β-lactams bound covalently at the active-site serine, and <em>"the altered geometry of conserved active site residues compared with those of other PBPs suggests a possible cause for the slow deacylation rate of PBP4"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/16411754/">PMID: 16411754</a>). Slow deacylation means the enzyme, once acylated by a β-lactam, remains trapped in the covalent complex — the physical basis for its behavior as a β-lactam "trap target." Physiologically, PBP4/DacB is a nonessential protein that <em>"behaves as a trap target for beta-lactams"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/19325877/">PMID: 19325877</a>).</p>
+<p>Consistent with a serine-hydrolase mechanism, the Q88L37 sequence conserves the S-x-x-K nucleophile motif (STMK, Ser59) and the K-T-G motif (Lys410) that define the penicillin-recognizing active site.</p>
+<h3 id="finding-6-alphafold-model-of-q88l37-confirms-a-confidently-folded-s13-dd-peptidase-with-an-intact-sxxkktg-active-site">Finding 6 — AlphaFold model of Q88L37 confirms a confidently folded S13 DD-peptidase with an intact SxxK…KTG active site</h3>
+<p>Structural bioinformatics on the <em>P. putida</em> protein itself corroborates the annotation. The AlphaFold DB model AF-Q88L37-F1 (v6) is high-confidence: <strong>mean pLDDT = 93.9</strong>, with 96% of residues at pLDDT &gt; 70 and 88% &gt; 90 (a well-modeled fold). The two canonical serine-PBP catalytic motifs are present and spatially converged into a single active site: motif 1 <strong>S-x-x-K = Ser59-Thr60-Met61-Lys62</strong> (all pLDDT 98–99), and motif 3 <strong>K-T-G = Lys410-Thr411-Gly412</strong>.</p>
+<p>In the model, <strong>Ser59 Oγ lies 2.89 Å from Lys62 Nζ</strong> (hydrogen-bonding distance — the nucleophile/general-base pair) and <strong>4.67 Å from Lys410 Nζ</strong> (the KTG lysine lining the substrate cleft). This SxxK…K(T/S)G spatial arrangement is diagnostic of the β-lactamase/transpeptidase (penicilloyl-serine) superfamily active site, and its intactness in the <em>P. putida</em> model indicates the protein is a catalytically competent enzyme rather than a degenerate relic.</p>
+<h3 id="finding-7-dacbpbp4-acts-within-periplasmic-peptidoglycan-maturation-a-recognized-regulatory-layer-of-cell-wall-growth">Finding 7 — DacB/PBP4 acts within periplasmic peptidoglycan maturation, a recognized regulatory layer of cell-wall growth</h3>
+<p>Authoritative reviews of bacterial cell-wall biology place DD-peptidases like PBP4 in the periplasmic PG-maturation/remodeling machinery. In Gram-negative bacteria, <em>"the peptidoglycan sacculus resides in the periplasm"</em>, where robust growth is achieved by dynamic multi-protein complexes assembled from <em>"freely diffusing sets of peptidoglycan synthases, hydrolases and their regulators"</em>, whose composition depends on cell-cycle state (elongation vs division) (<a href="https://pubmed.ncbi.nlm.nih.gov/28214390/">PMID: 28214390</a>). PG synthesis is regulated <em>"by PG maturation through the action of PG hydrolytic enzymes"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/27862967/">PMID: 27862967</a>) — the very activity class to which DacB belongs.</p>
+<p>Genomic context in <em>P. putida</em> KT2440 reinforces an accessory rather than core-synthetic role: PP_2098/dacB is <strong>not</strong> embedded in a dedicated PG-biosynthesis operon. Its flanking genes encode a diguanylate cyclase (PP_2097), a DUF469 protein (PP_2099), and a two-component histidine kinase/response-regulator pair (PP_2100/PP_2101) — a genomic neighborhood consistent with an autonomously expressed "accessory" remodeling enzyme rather than an operon-linked core synthase.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>Bringing the findings together yields a coherent model of DacB/PBP4 as a periplasmic peptidoglycan-editing enzyme with a secondary regulatory function.</p>
+<p><strong>Enzymatic role (housekeeping):</strong> DacB is exported to the periplasm, where it edits the maturing peptidoglycan sacculus. It removes terminal D-Ala residues from pentapeptide stems (DD-carboxypeptidase) and, more efficiently, cleaves existing D-Ala–mDAP cross-links (DD-endopeptidase). By controlling the density of pentapeptide donor stems and cross-links, DacB helps regulate the degree of cross-linking and creates space for new glycan-strand insertion during elongation and division. This activity is partially redundant with the major DD-carboxypeptidase PBP5/DacC, which explains why dacB is individually non-essential.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">INNER</span><span class="w"> </span><span class="n">MEMBRANE</span><span class="w">                 </span><span class="n">PERIPLASM</span><span class="w"> </span><span class="p">(</span><span class="n">site</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">action</span><span class="p">)</span>
+<span class="w">   </span><span class="err">┌──────────────────────┐</span><span class="w">   </span><span class="n">Sec</span><span class="w">    </span><span class="err">┌─────────────────────────────────────┐</span>
+<span class="w">   </span><span class="err">│</span><span class="w">  </span><span class="n">cytoplasm</span><span class="w">           </span><span class="err">│</span><span class="w">  </span><span class="k">export</span><span class="w">  </span><span class="err">│</span><span class="w">  </span><span class="n">Peptidoglycan</span><span class="w"> </span><span class="p">(</span><span class="n">murein</span><span class="p">)</span><span class="w"> </span><span class="n">sacculus</span><span class="w">     </span><span class="err">│</span>
+<span class="w">   </span><span class="err">│</span><span class="w">  </span><span class="p">(</span><span class="n">dacB</span><span class="w"> </span><span class="n">translated</span><span class="p">)</span><span class="w">   </span><span class="err">│</span><span class="w"> </span><span class="err">───────►</span><span class="w"> </span><span class="err">│</span><span class="w">                                     </span><span class="err">│</span>
+<span class="w">   </span><span class="err">└──────────────────────┘</span><span class="w">          </span><span class="err">│</span><span class="w">   </span><span class="n">GlcNAc</span><span class="o">-</span><span class="n">MurNAc</span><span class="w"> </span><span class="n">glycan</span><span class="w"> </span><span class="n">strands</span><span class="w">       </span><span class="err">│</span>
+<span class="w">                      </span><span class="err">│</span><span class="w">        </span><span class="err">│</span><span class="w">                            </span><span class="err">│</span>
+<span class="w">                      </span><span class="err">│</span><span class="w">   </span><span class="n">stem</span><span class="p">:</span><span class="w"> </span><span class="n">L</span><span class="o">-</span><span class="n">Ala</span><span class="err">–</span><span class="n">D</span><span class="o">-</span><span class="n">Glu</span><span class="err">–</span><span class="n">mDAP</span><span class="err">–</span><span class="n">D</span><span class="o">-</span><span class="n">Ala</span><span class="err">–</span><span class="n">D</span><span class="o">-</span><span class="n">Ala</span><span class="w"> </span><span class="err">│</span>
+<span class="w">                      </span><span class="err">│</span><span class="w">                        </span><span class="err">▲</span><span class="w">    </span><span class="err">▲</span><span class="w">        </span><span class="err">│</span>
+<span class="w">                      </span><span class="err">│</span><span class="w">      </span><span class="n">DacB</span><span class="o">/</span><span class="n">PBP4</span><span class="w"> </span><span class="p">(</span><span class="n">Ser59</span><span class="p">)</span><span class="w">  </span><span class="err">│</span><span class="w">    </span><span class="err">│</span><span class="w">        </span><span class="err">│</span>
+<span class="w">                      </span><span class="err">│</span><span class="w">   </span><span class="n">DD</span><span class="o">-</span><span class="n">CPase</span><span class="w"> </span><span class="err">────────────┘</span><span class="w">    </span><span class="err">│</span><span class="w">        </span><span class="err">│</span>
+<span class="w">                      </span><span class="err">│</span><span class="w">   </span><span class="p">(</span><span class="n">removes</span><span class="w"> </span><span class="n">D</span><span class="o">-</span><span class="n">Ala5</span><span class="p">)</span><span class="w">          </span><span class="err">│</span><span class="w">        </span><span class="err">│</span>
+<span class="w">                      </span><span class="err">│</span><span class="w">   </span><span class="n">DD</span><span class="o">-</span><span class="n">EPase</span><span class="w"> </span><span class="err">─────────────────┘</span><span class="w">        </span><span class="err">│</span>
+<span class="w">                      </span><span class="err">│</span><span class="w">   </span><span class="p">(</span><span class="n">cleaves</span><span class="w"> </span><span class="n">D</span><span class="o">-</span><span class="n">Ala4</span><span class="err">–</span><span class="n">mDAP</span><span class="w"> </span><span class="n">cross</span><span class="o">-</span><span class="n">link</span><span class="p">)</span><span class="w">   </span><span class="err">│</span>
+<span class="w">                      </span><span class="err">└─────────────────────────────────────┘</span>
+</code></pre></div>
+
+<p><strong>Catalytic mechanism:</strong> Catalysis uses a classic penicilloyl-serine mechanism. Ser59 (SxxK motif) is the nucleophile, activated by the adjacent Lys62; Lys410 (KTG motif) lines the substrate cleft. The acyl-enzyme intermediate on the D-Ala carbonyl is normally hydrolyzed to regenerate free enzyme. β-Lactam antibiotics mimic the D-Ala–D-Ala terminus, acylate Ser59, and — because PBP4 deacylates slowly — trap the enzyme in a stable covalent complex.</p>
+<p><strong>Regulatory role (signaling, demonstrated in <em>P. aeruginosa</em>):</strong> When DacB is inactivated (genetically, or functionally by β-lactam trapping), the periplasmic muropeptide pool shifts — pentapeptide-containing fragments accumulate. Recycled via AmpG (permease) and NagZ (glucosaminidase), these fragments act as signaling molecules that, in <em>Pseudomonas</em>, activate the CreBC (BlrAB) two-component system and derepress AmpC β-lactamase, producing high-level β-lactam resistance.</p>
+<div class="codehilite"><pre><span></span><code>   <span class="n">dacB</span><span class="o">/</span><span class="n">PBP4</span> <span class="n">inactivation</span> <span class="err">──►</span> <span class="n">altered</span> <span class="n">muropeptide</span> <span class="n">pool</span> <span class="p">(</span><span class="err">↑</span> <span class="n">pentapeptides</span><span class="p">)</span>
+                      <span class="err">│</span>
+          <span class="n">AmpG</span> <span class="kn">import</span><span class="w"> </span><span class="o">+</span> <span class="n">NagZ</span> <span class="n">processing</span>
+                      <span class="err">│</span>
+                      <span class="err">▼</span>
+        <span class="n">CreBC</span> <span class="p">(</span><span class="n">BlrAB</span><span class="p">)</span> <span class="mi">2</span><span class="o">-</span><span class="n">component</span> <span class="n">activation</span>
+                      <span class="err">│</span>
+                      <span class="err">▼</span>
+     <span class="n">AmpC</span> <span class="n">β</span><span class="o">-</span><span class="n">lactamase</span> <span class="n">overexpression</span> <span class="p">(</span><span class="o">~</span><span class="mi">50</span><span class="err">×</span><span class="p">)</span>
+                      <span class="err">│</span>
+                      <span class="err">▼</span>
+        <span class="n">high</span><span class="o">-</span><span class="n">level</span> <span class="n">β</span><span class="o">-</span><span class="n">lactam</span> <span class="n">resistance</span>
+</code></pre></div>
+
+<p><strong>Confidence of transfer to <em>P. putida</em>:</strong> The enzymatic annotation (DD-CPase/DD-EPase, periplasmic, serine mechanism) is transferred with <strong>high confidence</strong> — it rests on 70% sequence identity to a directly characterized ortholog, an intact modeled active site, and consistent family/domain assignments. The regulatory (AmpC/CreBC) annotation is transferred with <strong>moderate confidence</strong> as a strong prediction: the circuit is well established in <em>P. aeruginosa</em> and <em>P. putida</em> possesses the orthologous machinery, but it has not been directly demonstrated in <em>P. putida</em>, and the enterobacterial counter-example (PMID 26438498) shows the circuit's wiring is species-dependent.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>Organism</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27716106/">27716106</a></td>
+<td>In vivo functional/molecular characterization of PBP4 (DacB) of <em>P. aeruginosa</em></td>
+<td><em>P. aeruginosa</em></td>
+<td><strong>Decisive ortholog biochemistry</strong>: validates DD-carboxypeptidase AND DD-endopeptidase activity; enzyme behaves better as endopeptidase</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/2046551/">2046551</a></td>
+<td>Cloning/overexpression of <em>E. coli</em> dacB; murein composition</td>
+<td><em>E. coli</em></td>
+<td>PBP4 exclusively catalyzes DD-CPase and DD-EPase, <strong>not</strong> transpeptidation; 80% soluble → periplasmic</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16411754/">16411754</a></td>
+<td>Crystal structure of <em>E. coli</em> PBP4, native + antibiotic complexes</td>
+<td><em>E. coli</em></td>
+<td>Penicillin-binding serine domain; covalent acyl-enzymes; altered active-site geometry → slow deacylation (trap)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25896695/">25896695</a></td>
+<td>Role of <em>P. aeruginosa</em> LMM-PBPs in AmpC, resistance, PG structure</td>
+<td><em>P. aeruginosa</em></td>
+<td>Places PBP4 in LMM-PBP set; quantifies ampC induction (~50× single, ~1000× triple mutant); redundancy with PBP5</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19325877/">19325877</a></td>
+<td>β-lactam resistance response from inactivation of nonessential PBP</td>
+<td><em>P. aeruginosa</em></td>
+<td>dacB/PBP4 loss = causal node; AmpC overproduction + CreBC(BlrAB) activation; "trap target for β-lactams"</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23612194/">23612194</a></td>
+<td>PG-remodeling enzyme repertoire and β-lactam resistance</td>
+<td><em>P. aeruginosa</em></td>
+<td>dacB mutants = HARMs with constitutively elevated AmpC; two pathways to AmpC expression</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21357303/">21357303</a></td>
+<td>AmpG inactivation restores susceptibility</td>
+<td><em>P. aeruginosa</em></td>
+<td>dacB-driven resistance reverted by nagZ/ampG → confirms muropeptide-recycling link</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26438498/">26438498</a></td>
+<td>AmpC regulation in <em>Enterobacter cloacae</em> complex</td>
+<td><em>E. cloacae</em></td>
+<td><strong>Counter-example</strong>: DacB loss does NOT cause constitutive ampC overexpression in ECC → circuit is species-specific</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/28214390/">28214390</a></td>
+<td>Robust PG growth by dynamic multi-protein complexes</td>
+<td>Review</td>
+<td>Sacculus is periplasmic; hydrolases like PBP4 operate in dynamic PG-growth complexes</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27862967/">27862967</a></td>
+<td>Regulation of bacterial cell wall growth</td>
+<td>Review</td>
+<td>PG synthesis regulated by maturation via hydrolytic enzymes (DacB's activity class)</td>
+</tr>
+</tbody>
+</table>
+<p>Supporting context on LMM-PBP redundancy and DD-carboxypeptidase physiology is provided by studies of <em>E. coli</em> DacC/DacA under stress (<a href="https://pubmed.ncbi.nlm.nih.gov/37098975/">PMID: 37098975</a>) and broader reviews of PBP activities and cell division (<a href="https://pubmed.ncbi.nlm.nih.gov/26370943/">PMID: 26370943</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/23215820/">PMID: 23215820</a>).</p>
+<p><strong>Concordance of evidence:</strong> Both direct biochemical studies of DacB/PBP4 orthologs (2/2: PMID 27716106 in <em>Pseudomonas</em>, PMID 2046551 in <em>E. coli</em>) agree that the enzyme is a bifunctional DD-carboxypeptidase/DD-endopeptidase that does not transpeptidate. All three <em>P. aeruginosa</em> genetic studies (3/3: PMID 19325877, 23612194, 25896695) agree that dacB loss elevates AmpC. The only discordant note (PMID 26438498) concerns a distant enterobacterial species and does not undermine the transfer from <em>P. aeruginosa</em> to <em>P. putida</em>.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct experimental characterization of the <em>P. putida</em> KT2440 protein.</strong> Every enzymatic and regulatory claim is transferred by orthology from <em>P. aeruginosa</em> (70% identity) and <em>E. coli</em> (~32% identity). No purified-enzyme kinetics, no muropeptide-profiling of a <em>P. putida</em> dacB mutant, and no localization assay have been performed on Q88L37 itself. The AlphaFold model, while high-confidence, is a prediction, not an experimental structure.</p>
+</li>
+<li>
+<p><strong>The AmpC/CreBC signaling role is inferred, not demonstrated, in <em>P. putida</em>.</strong> <em>P. putida</em> is a non-pathogenic soil/rhizosphere bacterium and its β-lactamase induction wiring may differ from clinical <em>P. aeruginosa</em>. The enterobacterial counter-example (PMID 26438498) shows the dacB→AmpC link is not universal. Whether <em>P. putida</em> KT2440 even mounts a comparable CreBC-dependent AmpC response upon dacB loss is unverified.</p>
+</li>
+<li>
+<p><strong>Substrate-specificity fine detail is unresolved for the <em>P. putida</em> enzyme.</strong> The relative DD-carboxypeptidase vs DD-endopeptidase preference (the <em>P. aeruginosa</em> ortholog favors endopeptidase activity) has not been measured for Q88L37, nor has its muropeptide substrate preference (e.g., monomeric M5 vs cross-linked D45) been quantified.</p>
+</li>
+<li>
+<p><strong>Physiological/morphological consequences in <em>P. putida</em> are unknown.</strong> Because LMM-PBPs are redundant (PBP4 activity is significant mainly when PBP5/DacC is absent), the phenotype of a <em>P. putida</em> dacB single mutant under standard and stress conditions (osmotic, pH) has not been documented.</p>
+</li>
+<li>
+<p><strong>Genomic-context interpretation is provisional.</strong> The inference that flanking genes (diguanylate cyclase PP_2097; TCS PP_2100/PP_2101) indicate an "accessory, autonomously expressed" enzyme is bioinformatic and does not establish co-regulation or functional interaction.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Purify recombinant <em>P. putida</em> DacB (Q88L37) and assay muropeptide kinetics.</strong> Measure DD-carboxypeptidase (release of D-Ala from pentapeptide M5) and DD-endopeptidase (cleavage of dimeric D45) activities directly, to confirm the transferred annotation and determine the endo/carboxy preference for this specific ortholog. <em>(High priority; directly resolves gaps 1 &amp; 3.)</em></p>
+</li>
+<li>
+<p><strong>Construct a <em>P. putida</em> KT2440 ΔdacB mutant and profile its sacculus by HPLC/MS muropeptide analysis.</strong> Compare pentapeptide, cross-link, and anhydro-muropeptide levels vs wild type to verify in vivo remodeling function. Pair with a ΔdacB ΔdacC double mutant to test redundancy with PBP5.</p>
+</li>
+<li>
+<p><strong>Test the AmpC/CreBC circuit in <em>P. putida</em>.</strong> Quantify chromosomal β-lactamase expression and β-lactam MICs in the ΔdacB mutant, and probe whether a CreBC (BlrAB) ortholog is required, to determine whether the <em>P. aeruginosa</em> regulatory role is conserved. <em>(Directly resolves gap 2.)</em></p>
+</li>
+<li>
+<p><strong>Solve or confirm the structure and active-site geometry experimentally.</strong> Crystallize or cryo-EM the <em>P. putida</em> enzyme, ideally as a β-lactam acyl-enzyme complex, to validate the AlphaFold-predicted SxxK…KTG cleft and characterize deacylation kinetics (trap behavior).</p>
+</li>
+<li>
+<p><strong>Verify periplasmic localization and signal-peptide processing</strong> via cell-fractionation and N-terminal sequencing of the mature protein, confirming Sec-dependent export.</p>
+</li>
+<li>
+<p><strong>Phenotypic characterization under stress.</strong> Given that homologous DD-carboxypeptidases (DacC/DacA) have distinct roles under alkaline vs salt stress (<a href="https://pubmed.ncbi.nlm.nih.gov/37098975/">PMID: 37098975</a>), test <em>P. putida</em> ΔdacB for growth and cell-shape defects across pH and osmotic conditions.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><em>P. putida</em> KT2440 <strong>dacB</strong> (PP_2098, Q88L37) encodes <strong>PBP4</strong>, a periplasmic, low-molecular-mass, peptidase S13-family serine hydrolase that functions as a <strong>bifunctional peptidoglycan DD-carboxypeptidase / DD-endopeptidase</strong> in the maturation and remodeling of the murein sacculus — trimming terminal D-Ala from pentapeptide stems and cleaving D-Ala–mDAP cross-links, without performing transpeptidation. This annotation is supported by 70% identity to the experimentally characterized <em>P. aeruginosa</em> ortholog, direct biochemistry of <em>E. coli</em> and <em>P. aeruginosa</em> PBP4, and a high-confidence AlphaFold model with an intact SxxK(Ser59)…KTG(Lys410) active site. As a secondary, inferred role, DacB is expected to serve as a control node coupling peptidoglycan turnover to β-lactamase (AmpC) induction via the CreBC two-component system, as directly demonstrated in <em>P. aeruginosa</em>, though this regulatory function awaits verification in <em>P. putida</em> itself.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="dacB-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="dacB-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:27716106</li>
+<li>PMID:2046551</li>
+<li>PMID:25896695</li>
+<li>PMID:16411754</li>
+<li>PMID:19325877</li>
+<li>PMID:23612194</li>
+<li>PMID:21357303</li>
+<li>PMID:26438498</li>
+<li>PMID:28214390</li>
+<li>PMID:27862967</li>
+<li>PMID:37098975</li>
+<li>PMID:26370943</li>
+<li>PMID:23215820</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88L37
+gene_symbol: dacB
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  DacB is a periplasmic low-molecular-mass penicillin-binding protein 4 of the
+  peptidase S13 family. It hydrolyzes peptidoglycan stem-peptide bonds through
+  both D,D-endopeptidase and D,D-carboxypeptidase reactions, with the
+  Pseudomonas ortholog showing predominant cleavage of 4-3 crosslinks and a
+  secondary role in removing terminal D-alanine from pentapeptide stems. The
+  KT2440 assignment is supported by close orthology and conserved catalytic
+  architecture rather than direct enzymology of Q88L37.
+existing_annotations:
+- term:
+    id: GO:0000270
+    label: peptidoglycan metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: DacB directly hydrolyzes peptide bonds in peptidoglycan stems and crosslinks.
+    action: ACCEPT
+    reason: Both established PBP4 reactions remodel the peptide component of the sacculus.
+    supported_by:
+    - reference_id: PMID:27716106
+      supporting_text: &gt;-
+        LMM-PBP4 of Pseudomonas aeruginosa is a bifunctional enzyme presenting
+        both D,D-carboxypeptidase and D,D-endopeptidase activities; the
+        D,D-endopeptidase function is predominant.
+- term:
+    id: GO:0004185
+    label: serine-type carboxypeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: PBP4 removes terminal D-alanine from pentapeptide muropeptide stems through a serine-acyl enzyme mechanism.
+    action: ACCEPT
+    reason: This is a directly demonstrated secondary activity of the close Pseudomonas aeruginosa DacB ortholog.
+    supported_by:
+    - reference_id: PMID:27716106
+      supporting_text: &gt;-
+        LMM-PBP4 of Pseudomonas aeruginosa is a bifunctional enzyme presenting
+        both D,D-carboxypeptidase and D,D-endopeptidase activities; the
+        D,D-endopeptidase function is predominant.
+- term:
+    id: GO:0006508
+    label: proteolysis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: DacB hydrolyzes muropeptide stem bonds rather than peptide bonds in proteins.
+    action: REMOVE
+    reason: Peptidoglycan remodeling is not proteolysis despite the shared serine-peptidase fold.
+- term:
+    id: GO:0030288
+    label: outer membrane-bounded periplasmic space
+  evidence_type: ISS
+  original_reference_id: file:PSEPK/dacB/dacB-deep-research-openscientist.md
+  qualifier: located_in
+  review:
+    summary: DacB acts in the periplasm where its peptidoglycan substrate resides.
+    action: NEW
+    reason: Ortholog localization, substrate accessibility, and the N-terminal export region support this compartment.
+    supported_by:
+    - reference_id: file:PSEPK/dacB/dacB-deep-research-openscientist.md
+      supporting_text: &gt;-
+        The enzyme operates in the **periplasm**, where its substrate — the
+        peptidoglycan (murein) sacculus — resides.
+- term:
+    id: GO:0071555
+    label: cell wall organization
+  evidence_type: ISS
+  original_reference_id: PMID:27716106
+  qualifier: involved_in
+  review:
+    summary: DacB changes peptidoglycan stem length and crosslinking during sacculus maturation.
+    action: NEW
+    reason: Its two hydrolytic reactions directly remodel cell-wall architecture.
+    supported_by:
+    - reference_id: PMID:27716106
+      supporting_text: &gt;-
+        LMM-PBP4 of Pseudomonas aeruginosa is a bifunctional enzyme presenting
+        both D,D-carboxypeptidase and D,D-endopeptidase activities; the
+        D,D-endopeptidase function is predominant.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:27716106
+  title: In vivo functional and molecular characterization of the Penicillin-Binding Protein 4 (DacB) of Pseudomonas aeruginosa.
+  findings:
+  - statement: Pseudomonas aeruginosa PBP4 has both D,D-carboxypeptidase and D,D-endopeptidase activity, with the latter predominant.
+    supporting_text: &gt;-
+      LMM-PBP4 of Pseudomonas aeruginosa is a bifunctional enzyme presenting
+      both D,D-carboxypeptidase and D,D-endopeptidase activities; the
+      D,D-endopeptidase function is predominant.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Full text and PubMed record verified; the experiment is on the close Pseudomonas aeruginosa ortholog.
+- id: file:PSEPK/dacB/dacB-deep-research-openscientist.md
+  title: OpenScientist deep research report on PSEPK dacB (Q88L37)
+  publication_type: DEEP_RESEARCH
+  findings:
+  - statement: Q88L37 is a close DacB/PBP4 ortholog with dual peptidoglycan hydrolase activity and periplasmic localization.
+    supporting_text: &gt;-
+      The gene **dacB** (ordered locus **PP_2098**; UniProt **Q88L37**) of
+      *Pseudomonas putida* strain KT2440 encodes **Penicillin-Binding Protein 4
+      (PBP4)**, a **low-molecular-mass (LMM), periplasmic serine hydrolase** of
+      the **peptidase S13 family**
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: Used for target-specific orthology, family, motif, structure, and localization synthesis.
+core_functions:
+- description: &gt;-
+    Periplasmic PBP4 that cleaves D-Ala-mDAP 4-3 peptidoglycan crosslinks and
+    secondarily removes terminal D-alanine from pentapeptide stems.
+  molecular_function:
+    id: GO:0004185
+    label: serine-type carboxypeptidase activity
+  directly_involved_in:
+  - id: GO:0000270
+    label: peptidoglycan metabolic process
+  - id: GO:0071555
+    label: cell wall organization
+  locations:
+  - id: GO:0030288
+    label: outer membrane-bounded periplasmic space
+  supported_by:
+  - reference_id: PMID:27716106
+    supporting_text: &gt;-
+      LMM-PBP4 of Pseudomonas aeruginosa is a bifunctional enzyme presenting
+      both D,D-carboxypeptidase and D,D-endopeptidase activities; the
+      D,D-endopeptidase function is predominant.
+proposed_new_terms:
+- proposed_name: peptidoglycan D,D-endopeptidase activity
+  proposed_definition: &gt;-
+    Catalysis of hydrolysis of a D-alanyl-meso-diaminopimelate 4-3 peptide
+    crosslink between stem peptides in peptidoglycan.
+  justification: &gt;-
+    GO has terms for D,D-carboxypeptidase and L,D-transpeptidase chemistry but
+    no molecular-function term for hydrolytic cleavage of the canonical 4-3
+    peptidoglycan crosslink.
+  proposed_parent:
+    id: GO:0016787
+    label: hydrolase activity
+knowledge_gaps:
+- gap_statement: The relative D,D-endopeptidase and D,D-carboxypeptidase activities of Q88L37 have not been measured directly.
+  status: OPEN
+  gap_kind: [BIOLOGY, CURATION]
+  significance: The dual-function assignment is transferred from a close Pseudomonas ortholog.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
