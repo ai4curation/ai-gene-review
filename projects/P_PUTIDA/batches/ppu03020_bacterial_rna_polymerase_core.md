@@ -54,6 +54,12 @@ gene reports for `rpoA` and `rpoC` were reused. Historical `rpoB` and `rpoZ`
 gene-level timeouts remain documented rather than being replaced with manual
 provider-named files.
 
+The follow-up review standardized GO:0003899 and GO:0034062 as accepted under
+the repository's current RNA-polymerase-subunit convention for all four core
+subunits, while each synthesized core function retains contribution semantics.
+RpoZ now carries GO:0065003 to represent its directly stated polymerase-assembly
+role, and the module records the non-metabolic meaning of its assembly connection.
+
 The Wave127 taxon report completed successfully in 877.65 seconds with six
 citations and two provider artifacts. It found the module completely
 satisfiable with the four selected single-copy genes, identified no missing
