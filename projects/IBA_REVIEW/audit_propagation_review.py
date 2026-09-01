@@ -9,9 +9,15 @@ Checks each block for:
     projects/IBA_REVIEW/propagation-review-audit.md
   * PANTHER family labels that disagree with interpro/panther/panther.obo
 
-Usage:  python3 projects/IBA_REVIEW/audit_propagation_review.py [glob ...]
+Usage:  python3 projects/IBA_REVIEW/audit_propagation_review.py [glob ...] [--pair A,B]
 Defaults to genes/mouse/*/*-ai-review.yaml; pass globs to audit other organisms,
 e.g. the ISO backlog:  ... audit_propagation_review.py 'genes/human/*/*-ai-review.yaml'
+
+--pair compares two PARALOGS for rows adjudicated differently on the same
+(term, evidence_type, reference). It is opt-in because unrelated genes legitimately
+differ. It may be used with or without a glob; without one the mouse default applies:
+    ... audit_propagation_review.py --pair Mapk1,Mapk3
+Exits 2 if the self-test fails (self-seed detection not working).
 """
 import yaml, glob, os, re
 
@@ -27,7 +33,24 @@ VALID_SS={'SUPPORTS_TRANSFER','SUPPORTS_SOURCE_BUT_NOT_TARGET','SOURCE_BAD','SOU
 
 # self-seed map: gene -> set of own ids
 import sys
-PATTERNS = sys.argv[1:] or ['genes/mouse/*/*-ai-review.yaml']
+
+def _parse_argv(argv):
+    """Split argv into (file globs, --pair value).
+
+    --pair and its value must be removed BEFORE the glob default is chosen: leaving
+    them in makes argv truthy, suppresses the default glob, and globs '--pair' and
+    'Mapk1,Mapk3' to nothing -- so the run audits zero files and reports clean. A
+    vacuous pass, which is the failure mode this script exists to prevent.
+    """
+    globs, pair, i = [], None, 0
+    while i < len(argv):
+        if argv[i] == '--pair' and i + 1 < len(argv):
+            pair = argv[i + 1]; i += 2; continue
+        globs.append(argv[i]); i += 1
+    return globs, pair
+
+_GLOBS, PAIR_ARG = _parse_argv(sys.argv[1:])
+PATTERNS = _GLOBS or ['genes/mouse/*/*-ai-review.yaml']
 
 # Model-organism database cross-references that appear as self-seed ids in WITH/FROM.
 # Each entry is (GOA id prefix, which ';'-separated DR field holds the id GOA cites).
@@ -198,10 +221,7 @@ def action_map(path):
         m.setdefault(k, set()).add((a.get('review') or {}).get('action'))
     return m
 
-pair_arg = None
-for _i, _a in enumerate(sys.argv):
-    if _a == '--pair' and _i + 1 < len(sys.argv):
-        pair_arg = sys.argv[_i + 1]
+pair_arg = PAIR_ARG
 if pair_arg:
     _names = pair_arg.split(',')
     _paths = [f for f in files if os.path.basename(os.path.dirname(f)) in _names]
