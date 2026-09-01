@@ -47,21 +47,6 @@ PSEPK report; no report file was produced.
 2026-07-26: The generic module-level OpenScientist run also timed out after
 7200s without producing a report.
 
-2026-09-01 repair checkpoint: Both OpenScientist reruns completed within the
-7200s allowance. The module is now explicitly chemistry-defined rather than
-taxon-defined, and terminal-route selection is `ONE_OR_MORE` so parallel
-chemistries are permitted. The one-step formimidoylglutamase exemplar P42068
-is represented by the exact verified `PTHR11358:SF35` subfamily; uncertain
-HutF/HutG PANTHER or PTN assertions remain omitted. Annotation-reviewer audit
-confirmed the five selected catalytic reviews require no conservative changes,
-and `hutT` remains outside the chemistry module. The generic report's claim of
-mutually exclusive terminal routes was treated as an overstatement and was not
-adopted. Module schema and semantic validation pass; the semantic check retains
-only the expected advisory that InterPro labels are not ontology-validated.
-The `hutH`, `hutU`, `hutI`, `hutF`, `hutG`, and boundary `hutT` reviews also
-validate, and the changed module and batch outputs were rendered. Repair PR:
-[#2881](https://github.com/ai4curation/ai-gene-review/pull/2881).
-
 2026-07-26: The `hutH` gene-level run timed out after 7200s with no report.
 The `hutU` run persisted a complete report and artifacts; its direct
 same-species urocanase claims were reconciled against four cached primary
@@ -69,6 +54,23 @@ publication abstracts. The remaining three selected genes have no provider
 report in this bounded first pass; HutF and HutG additionally use the cached
 same-species hut-locus paper, while HutI retains UniProt and family-level
 evidence.
+
+2026-09-01 repair checkpoint: Both OpenScientist reruns completed within the
+7200s allowance. The module is now explicitly chemistry-defined rather than
+taxon-defined. Terminal-route selection is `ONE_OR_MORE` as a conservative
+relaxation: the generic report generally expects one route but leaves
+coexistence unresolved, so the module asserts neither exclusivity nor parallel
+route occurrence. The one-step formimidoylglutamase exemplar P42068 is
+represented by the exact verified `PTHR11358:SF35` subfamily, while
+function-specific `InterPro:IPR005923` is retained as complementary evidence;
+uncertain HutF/HutG PANTHER or PTN assertions remain omitted.
+Annotation-reviewer audit confirmed the five selected catalytic reviews require
+no conservative changes, and `hutT` remains outside the chemistry module.
+Module schema and semantic validation pass; the semantic check retains only the
+expected advisory that InterPro labels are not ontology-validated. The `hutH`,
+`hutU`, `hutI`, `hutF`, `hutG`, and boundary `hutT` reviews also validate, and
+the changed module and batch outputs were rendered. Repair PR:
+[#2881](https://github.com/ai4curation/ai-gene-review/pull/2881).
 
 ## Candidate Genes
 
