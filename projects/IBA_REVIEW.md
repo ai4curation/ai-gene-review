@@ -481,6 +481,20 @@ The reason the split matters is that it stops the count from being read as a def
 Fifty-seven unprovenanced labels would be alarming; 29 third-party labels in eight files is a
 chore. Measuring the wrong denominator turns a chore into an alarm, or the reverse.
 
+**A `propagation_review` block is not owed symmetrically across paralogs; the *action* is.**
+`Mapk1` carries **18** blocks against `Mapk3`'s **2**, and 11 of Mapk1's ISO-row blocks sit
+on a (term, evidence) pair whose `Mapk3` twin row has none — the ciliary trio
+(`GO:0005929`, `GO:0036064`, `GO:0097542`) is the clean case: same term, same ISO evidence,
+same `GO_REF:0000119`, same `MARK_AS_OVER_ANNOTATED` in both files, diagnosis recorded on one.
+
+That asymmetry is not a divergence and `--pair` is right to report clean. A block is optional
+on an ISO row by construction — 528 such rows corpus-wide carry none, because ISO is pairwise
+ortholog transfer with no PANTHER node behind it — so its *presence* tracks which rows a
+reviewer happened to work, while the *verdict* is what must agree. Mirroring a subset would
+make things worse rather than better: filling the three ciliary blocks leaves eight twins
+still bare, and a reader who saw the file made symmetric on three would reasonably infer it
+was symmetric on all. Either do all 11 or state the convention. This states it.
+
 Every figure above comes from a parse of `propagation_review.source_entities`, not a `grep`:
 159 of the 234 sources in `genes/mouse` carry a label, of which 89 are MOD-prefixed, split
 32 self / 57 third-party, and 32 of the 89 carry a `comment` matching one of the three

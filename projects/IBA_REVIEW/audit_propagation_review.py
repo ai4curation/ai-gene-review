@@ -374,6 +374,15 @@ for _s, _must_contain in (
 # the full sentence. Only the parsed value is short, which is what every consumer sees:
 # the validator, the renderer, the auditor, and any downstream tool.
 #
+# The plain scalar has a second, opposite failure with the same shape: ": " inside one is
+# a PARSE ERROR, not a truncation. Writing "...does not weaken this one: the IEA and ISO
+# rows..." into a plain multi-line `reason` raised
+#     yaml.scanner.ScannerError: mapping values are not allowed here
+# So the same field punishes " #" silently and ": " loudly, and only the loud half is
+# self-reporting. A folded ">-" block is immune to both; a plain scalar is the risk.
+# This rule detects only the silent half -- the loud half needs no detector, since
+# nothing that fails to parse gets committed past validation.
+#
 # This is why the two genes/human values MANGLED_PROSE reports look intact when checked
 # with grep. Both are real -- EMC1 references[17].findings[0].statement parses to 122
 # characters from a 357-character line, losing 235 -- but the mechanism is the parser,
