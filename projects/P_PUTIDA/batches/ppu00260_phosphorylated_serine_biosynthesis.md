@@ -44,12 +44,14 @@ and phospholipid synthesis.
 
 - The module remains a reusable, species-neutral three-reaction pathway with
   molecular functions confined to its leaf annotons.
-- Each reaction selector now uses the exact PANTHER subfamily shared by its
-  PSEPK target and reviewed cross-species exemplar: `PTHR43761:SF1` for SerA,
-  `PTHR43247:SF1` for SerC, and `PTHR43344:SF2` for SerB.
+- Each reaction selector uses the exact PANTHER subfamily shared by its PSEPK
+  target and reviewed cross-species exemplar. SerC (`PTHR43247:SF1`) and SerB
+  (`PTHR43344:SF2`) are genuine refinements over multi-subfamily parents. SerA
+  uses `PTHR43761:SF1`, but that is the sole subfamily of `PTHR43761`; its
+  specificity comes from the required GO:0004617 function, not family narrowing.
 - No PTN is asserted. The local PAINT exports identify family-level IBD nodes
   but do not establish that the PSEPK targets descend from those nodes.
-- The `serA` secondary R-2-hydroxyglutarate activity is now `UNDECIDED`
+- The `serA` secondary R-2-hydroxyglutarate activity is marked over-annotated
   because its target-specific support is automated rather than biochemical.
 - The `serC` non-core cytoplasm and PLP-binding decisions now cite exact
   UniProt text. The `serB` cytoplasm annotation is retained as non-core
@@ -64,7 +66,7 @@ and phospholipid synthesis.
 ## Boundary Notes
 
 - `serA` also carries an automated annotation to (R)-2-hydroxyglutarate
-  dehydrogenase activity. Its gene-level decision is `UNDECIDED`, and the
+  dehydrogenase activity. Its gene-level decision is `MARK_AS_OVER_ANNOTATED`, and the
   secondary reaction is outside this pathway boundary.
 - `serC` also supplies phosphohydroxythreonine aminotransferase chemistry to
   DXP-dependent vitamin B6 synthesis; that is captured by the separate
