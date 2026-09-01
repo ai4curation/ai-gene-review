@@ -57,8 +57,9 @@ provider-named files.
 The follow-up review standardized GO:0003899 and GO:0034062 as accepted under
 the repository's current RNA-polymerase-subunit convention for all four core
 subunits, while each synthesized core function retains contribution semantics.
-RpoZ now carries GO:0065003 to represent its directly stated polymerase-assembly
-role, and the module records the non-metabolic meaning of its assembly connection.
+RpoA and RpoZ now carry GO:0065003 to represent their directly stated
+polymerase-assembly roles, and the module records the non-metabolic meaning of
+the omega assembly connection.
 
 The Wave127 taxon report completed successfully in 877.65 seconds with six
 citations and two provider artifacts. It found the module completely
