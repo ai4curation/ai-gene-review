@@ -180,7 +180,7 @@ The ARGO139 GO-GPT files were rebuilt from raw web exports with ontology-aware l
 | atg16 | SCHPO | 1 | No InterPro domains available; confabulated carbohydrate metabolism |
 | Epe1 | SCHPO | 1 | Degenerate JmjC pseudoenzyme described as an active histone demethylase |
 | pmp20 | SCHPO | 2 | Neo-functionalized peroxiredoxin -> chaperone; model assumes ancestral function |
-| pol5 | SCHPO | 1 | Predicted cytokinesis scaffold; actual function is rDNA transcription |
+| pol5 | SCHPO | 1 | Predicted cytokinesis scaffold; actual function is pre-rRNA processing and ribosome biogenesis |
 | Shu1 | SCHPO | 1 | Predicted HECT ubiquitin ligase; actually a GPI-anchored heme receptor |
 | tam10 | SCHPO | 1 | Unsupported essential-growth scaffold narrative invents molecular and pathway roles for a protein of unknown function |
 | pgl-1 | worm | 1 | Described as nuclear TF scaffold; actually cytoplasmic P granule component |
@@ -269,7 +269,7 @@ BioReason's domain-to-function reasoning cannot capture biology that is specific
 - **C. elegans**: daf-16 described as generic forkhead TF (misses IIS pathway, longevity, dauer biology). daf-2 described as generic RTK (misses insulin/IGF-1 receptor identity and aging). atfs-1 described as generic bZIP TF (misses UPRmt master regulator role). hlh-30 described as generic bHLH (misses TFEB ortholog identity and autophagy/lysosome biology).
 - **B. subtilis**: Sporulation compartment specificity is never captured. aprE's role in quorum sensing/Phr peptide processing is missed. comK described via protein binding instead of competence regulation.
 - **S. cerevisiae**: HSP104 misses prion propagation and thermotolerance. RAS2 fundamentally wrong (vesicle trafficking instead of cAMP/PKA signaling). TOR1 is the exception where FRB domain enables pathway identification.
-- **S. pombe**: ura7 misses cytoophidium biology. pol5 completely wrong (cytokinesis scaffold instead of rDNA transcription).
+- **S. pombe**: ura7 misses cytoophidium biology. pol5 completely wrong (cytokinesis scaffold instead of pre-rRNA processing/ribosome biogenesis).
 
 ### 5. Neo-functionalization and moonlighting
 
