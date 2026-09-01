@@ -214,11 +214,13 @@ specificity assay.
 
 Repair PR: [#2864](https://github.com/ai4curation/ai-gene-review/pull/2864).
 
-The bacterial NadD leaf now uses reviewed *Bacillus subtilis* P54455 as its
-cross-species exemplar alongside PSEPK Q88DL5. P54455 was biochemically
-characterized and crystallized, and the committed PANTHER family export places
-it in PTHR39321:SF3. This replaces E. coli P0A752, whose classification differs
-between the repository's pinned member index and newer UniProt/PANTHER records.
-The repair avoids representing a release-transition artifact as a biological
-family alternative; the NaMN-to-deamido-NAD reaction and route logic are
-unchanged.
+The bacterial NadD leaf now retains exact reviewed *Escherichia coli* NadD
+P0A752 and adds experimentally characterized *Bacillus subtilis* P54455
+alongside PSEPK Q88DL5. P54455 was biochemically characterized and structurally
+determined in apo and product-bound forms (PMID:11704676). The pinned member
+index places P0A752 in PTHR12039:SF0 while P54455 and Q88DL5 are classified in
+PTHR39321; this discrepancy is retained as an intentional validator advisory,
+not interpreted as a distinct biological reaction. PTHR39321 is a broad,
+lumped nucleotidyltransferase grouping, so the exact NaMN-to-deamido-NAD
+reaction and direct exemplars constrain the leaf more precisely than the
+family or subfamily labels alone. Route logic is unchanged.
