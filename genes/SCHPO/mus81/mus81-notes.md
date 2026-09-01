@@ -1,7 +1,7 @@
 # mus81 (SPCC4G3.05c, P87231) — S. pombe — review notes
 
 ## Summary
-Mus81 is the catalytic subunit of the Mus81-Eme1 structure-specific DNA endonuclease (XPF/ERCC4 nuclease family). With its obligate partner Eme1 it cleaves branched DNA substrates — nicked Holliday junctions, 3'-flaps, D-loops, model replication forks — using an ERCC4 nuclease domain and a Mg2+ cofactor. Two catalytic aspartates (D395/D396) are essential. In fission yeast it is the principal/essential resolvase for meiotic crossover formation (no MSH4-MSH5 backup pathway) and processes stalled/collapsed replication forks in mitosis. Activity is restrained by the Cds1 (Chk2) replication checkpoint kinase.
+Mus81 is the catalytic subunit of the Mus81-Eme1 structure-specific DNA endonuclease (XPF/ERCC4 nuclease family). With its obligate partner Eme1 it cleaves branched DNA substrates — nicked Holliday junctions, 3'-flaps, D-loops, model replication forks — using an ERCC4 nuclease domain and a Mg2+ cofactor. Two catalytic aspartates (D395/D396) are essential. In fission yeast it is the principal/essential resolvase for meiotic crossover formation (no MSH4-MSH5 backup pathway) and processes stalled/collapsed replication forks in mitosis. Cds1-dependent phosphorylation of Mus81 promotes its dissociation from chromatin during replication stress, whereas Cdc2- and Rad3-dependent phosphorylation of Eme1 activates the complex after DNA damage.
 
 ## Key evidence
 
@@ -25,11 +25,22 @@ Mus81 is the catalytic subunit of the Mus81-Eme1 structure-specific DNA endonucl
 
 ### Localization / complex
 - UniProt SUBCELLULAR LOCATION: Nucleus {ECO:0000269|PubMed:11719193}.
-- [PMID:16823372] Genome-wide YFP localization; PomBase derives both nucleus (HDA) and mitochondrion (HDA). Mitochondrial signal is from a high-throughput screen; not corroborated by any functional data — likely background/contaminant for a HJ resolvase. The IC "mitochondrial DNA metabolic process" (GO:0032042) is curator-inferred solely from that mitochondrial HDA + endonuclease activity, with no direct mtDNA evidence.
+- [PMID:16823372 "we determined the localization of 4,431 proteins, corresponding to approximately 90% of the fission yeast proteome, by tagging each ORF with the yellow fluorescent protein."] PomBase derives both nucleus (HDA) and mitochondrion (HDA) from this genome-wide localization study. The cache is abstract-only and does not expose the Mus81 image or gene-specific assay details, so the experimental mitochondrial call must remain UNDECIDED rather than being rejected from incomplete evidence. The IC "mitochondrial DNA metabolic process" (GO:0032042) remains over-annotated because no direct Mus81 mtDNA phenotype or activity is known.
+- [PMID:10954073 "we show by fluorescence microscopy that a SpCCE1-GFP fusion localises exclusively to the mitochondria of S. pombe."] The distinct resolvase SpCCE1/Ydc2 is directly localized to mitochondria; its loss causes aggregated mtDNA.
+- [PMID:12823554 "Cells that lacked Ydc2 showed a significant depletion of mtDNA content."] Catalytically active, full-length Ydc2 rescues the mtDNA phenotype, establishing a dedicated mitochondrial resolvase. This is competing context but does not by itself exclude a minor mitochondrial Mus81 pool.
 - ComplexPortal CPX-26589: MUS81-EME1 structure-specific endonuclease complex. PMID:17363897 supports complex + nuclear replication fork localization.
+
+### Checkpoint and cell-cycle regulation
+- [PMID:11073977 "the forkhead-associated-1 (FHA1) protein-docking domain of Cds1 interacts with Mus81, an evolutionarily conserved damage tolerance protein."] Mus81 physically interacts with the Cds1 checkpoint kinase.
+- [PMID:23584455 "This new regulation requires both Cdc2(CDK1)- and Rad3(ATR)-dependent phosphorylation of Eme1."] DNA damage stimulates Mus81-Eme1 through phosphorylation of Eme1. The full text distinguishes this activating pathway from Cds1: Eme1 hyperphosphorylation still occurs without Cds1, whereas UniProt and PMID:15805465 describe Cds1-dependent Mus81 phosphorylation and chromatin dissociation during HU stress.
 
 ## Curation considerations
 - "protein binding" (GO:0005515, IPI with eme1 SPAPB1E7.06c, PMID:11719193) is uninformative; the informative call is the Mus81-Eme1 complex (GO:0048476) and endonuclease MF. Mark over-annotated; complex membership captures the meaningful interaction.
 - GO:0006308 (DNA catabolic process, IEA/InterPro) is an over-general parent; the specific endonuclease/resolution terms are better.
-- GO:0032042 (mitochondrial DNA metabolic process, IC): weak; rests on a HT mitochondrial localization with no functional mtDNA data. Mark as over-annotated / non-core.
+- GO:0005739 (mitochondrion, HDA): UNDECIDED because the gene-specific image/full text is unavailable; focused nuclear evidence and Ydc2 biology cannot overrule an experimental curator from incomplete evidence.
+- GO:0032042 (mitochondrial DNA metabolic process, IC): weak; rests on the HDA mitochondrial localization plus nuclease activity with no direct Mus81 mtDNA data. Mark as over-annotated / non-core.
 - Core: structure-specific (crossover junction / HJ) endonuclease; Mus81-Eme1 complex; nucleus; meiotic crossover/resolution of recombination intermediates; replication fork processing & DSB repair.
+
+## 2026-09-01 refresh provenance
+- Refetched UniProt and GOA with `just fetch-gene SCHPO mus81 --force`; the new PAINT nucleus IBA is accepted because it agrees with direct S. pombe evidence [PMID:11719193 "These findings constitute strong evidence that Mus81 and Eme1 are subunits of a nuclear Holliday junction resolvase."].
+- Ran the OpenScientist hypothesis wrapper for mitochondrial localization. The report usefully surfaced Ydc2/SpCCE1 and the lack of focused Mus81 mtDNA evidence, but its "refuted" verdict exceeded the accessible evidence. The review therefore applies curator deference to the HDA call and records the functional IC inference separately.
