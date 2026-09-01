@@ -222,7 +222,11 @@ corroborates that the family contains such a gene; it does not establish that th
 In this corpus **"corroborated through the UniProt cross-reference for this MOD id
 (ACC)"** is the standard phrasing for that situation: the family index confirms `ACC`
 is the named protein, while the MOD-id-to-accession step is an inference rather than a
-lookup. Reserve "resolved" for a step some file in the repository actually performs.
+lookup. Reserve "resolved" for a step some file in the repository actually performs. And there
+is a third state the substitution above can fall through: the family has no local directory
+and the accession appears nowhere, so **nothing corroborates it either**. Say that
+explicitly — "asserted from external knowledge, not corroborable here" — rather than
+reaching for the weaker verb, which still implies a check that did not happen.
 
 Universal quantifiers over a seed set need the same care as a definite singular:
 "seeded entirely by X" or "every seed is an X" claims something about donors the block
