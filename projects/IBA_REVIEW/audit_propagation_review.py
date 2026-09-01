@@ -74,6 +74,12 @@ def _parse_argv(argv):
         # passed; with one, '--pairs A,B <glob>' or '--strct <glob>' audits every file
         # and exits 0 having done neither thing the caller asked for -- and a mistyped
         # --strict silently turns a CI gate back into a report while still going green.
+        if tok == '--pair':
+            # Recognized, but last in argv so the two-token branch above declined it.
+            # Saying "unrecognized" would send the reader off checking their spelling.
+            print("--pair requires a value, e.g. --pair Mapk1,Mapk3 "
+                  "(or --pair mouse/Mapk1,mouse/Mapk3).")
+            raise SystemExit(2)
         if tok.startswith('-'):
             print(f"unrecognized flag {tok!r}. Accepted: --pair A,B (or --pair=A,B), --strict.")
             print("  Everything else is treated as a file glob; flags are not.")
@@ -148,13 +154,9 @@ if ('mouse', 'Mapk1') in own and 'MGI:MGI:1346858' not in own[('mouse', 'Mapk1')
 if ('worm', 'aak-2') in own and 'WB:WBGene00020142' not in own[('worm', 'aak-2')]:
     _selftest_failures.append(
         "WormBase self-seed ids must be the WBGene id, not the transcript id")
-if _selftest_failures:
-    print("SELF-TEST FAILED - self-seed detection is not working:")
-    for _f in _selftest_failures:
-        print("   ", _f)
-    raise SystemExit(2)
-
-# valid PANTHER family labels
+# valid PANTHER family labels. Loaded BEFORE the self-test so the anchor below can
+# prove it actually loaded: a bare `except: pass` here previously meant a missing or
+# renamed panther.obo left fam_label empty and PANTHER_LABEL_MISMATCH passing vacuously.
 fam_label={}
 try:
     cur=None
@@ -162,7 +164,24 @@ try:
         line=line.rstrip('\n')
         if line.startswith('id: PANTHER:'): cur=line.split('id: ')[1]
         elif line.startswith('name: ') and cur: fam_label[cur]=line[6:]; cur=None
-except Exception: pass
+except Exception as _e:
+    _selftest_failures.append(f"could not read interpro/panther/panther.obo: {_e!r}")
+
+# PANTHER anchor. fam_label is keyed WITH the 'PANTHER:' prefix, and the lookup used
+# the bare id for eight rounds -- so the rule never fired once and reported clean the
+# whole time. This asserts the file loaded AND the key shape still matches, which are
+# the two ways this check can go silent.
+if 'PANTHER:PTHR46861' not in fam_label:
+    _selftest_failures.append(
+        "PANTHER family labels must be keyed with the 'PANTHER:' prefix as panther.obo "
+        "writes them (PANTHER:PTHR46861 not found) - PANTHER_LABEL_MISMATCH cannot fire")
+
+if _selftest_failures:
+    print("SELF-TEST FAILED - self-seed detection is not working:")
+    for _f in _selftest_failures:
+        print("   ", _f)
+    raise SystemExit(2)
+
 
 issues=[]; n=0
 # Dedupe across patterns: overlapping globs would otherwise audit a file twice and
@@ -288,12 +307,16 @@ for f in files:
             if sid in own_ids and ss=='CIRCULAR_OR_REDUNDANT':
                 issues.append((loc,'SELF_SEED_MARKED_CIRCULAR',sid))
             lab=se.get('source_label') or ''
+            # Look up with group(0), NOT group(1): panther.obo writes
+            # "id: PANTHER:PTHR10000", so fam_label is keyed WITH the prefix while
+            # group(1) drops it. Keying on the bare id made the membership test
+            # always False, the and-chain short-circuit silently, and this rule
+            # never fire once since the script was checked in.
             m=re.match(r'^PANTHER:(PTHR\d+(?::SF\d+)?)$', sid)
-            if m and lab and m.group(1) in fam_label and lab.strip().upper()!=fam_label[m.group(1)].upper():
-                issues.append((loc,'PANTHER_LABEL_MISMATCH',f"{sid} label={lab!r} official={fam_label[m.group(1)]!r}"))
-        # prose inversion check
-        txt=((r.get('reason') or '')+' '+(r.get('summary') or '')+' '+
-             ' '.join((se.get('comment') or '') for se in (pr.get('source_entities') or [])))
+            if m and lab and m.group(0) in fam_label and lab.strip().upper()!=fam_label[m.group(0)].upper():
+                issues.append((loc,'PANTHER_LABEL_MISMATCH',f"{sid} label={lab!r} official={fam_label[m.group(0)]!r}"))
+        # prose inversion check -- per source comment, not a concatenated blob:
+        # the finding has to name WHICH source carries the inverted framing.
         for se in (pr.get('source_entities') or []):
             if (se.get('source_id') or '') in own_ids:
                 c=(se.get('comment') or '').lower()
