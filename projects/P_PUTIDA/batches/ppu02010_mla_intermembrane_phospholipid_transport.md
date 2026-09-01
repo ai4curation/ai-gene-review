@@ -19,7 +19,7 @@ net transport direction open.
 - [ ] Complete OpenScientist gene research.
 - [x] Curate every GOA row for all six genes.
 - [x] Create a species-neutral, multi-part module.
-- [ ] Complete generic module research.
+- [x] Complete generic module research.
 - [x] Complete module + pathway + taxon research.
 - [ ] Validate and render the reviews, module, and project page.
 - [ ] Open one non-draft PR and clear review and CI.
@@ -63,3 +63,7 @@ net transport direction open.
   PP_2163. PP_0140-PP_0142 are a separate Mce-like system despite shared
   MlaF/E/D-like signatures, while PP_1737 remains an unresolved second
   MlaA-family candidate. Neither is counted as a core duplicate.
+- The generic report supports the three-interface boundary and direction-neutral
+  architecture. It also confirms that MlaB is an accessory regulatory/stability
+  subunit, MlaA signal-peptide classes vary, and a named OmpC/OmpF partner
+  should not be required across all diderm lineages.
