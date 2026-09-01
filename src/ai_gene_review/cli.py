@@ -183,6 +183,7 @@ def fetch_gene(
                     result["annotations_added"] > 0
                     or result.get("references_added", 0) > 0
                     or result.get("qualifiers_backfilled", 0) > 0
+                    or result.get("supporting_entities_backfilled", 0) > 0
                 ):
                     parts = []
                     if result["annotations_added"] > 0:
@@ -192,6 +193,11 @@ def fetch_gene(
                     if result.get("qualifiers_backfilled", 0) > 0:
                         parts.append(
                             f"qualifiers on {result.get('qualifiers_backfilled', 0)} annotations"
+                        )
+                    if result.get("supporting_entities_backfilled", 0) > 0:
+                        parts.append(
+                            "supporting entities on "
+                            f"{result.get('supporting_entities_backfilled', 0)} annotations"
                         )
                     typer.echo(
                         f"  - {file_prefix}-ai-review.yaml (added {' and '.join(parts)})"
@@ -1314,13 +1320,24 @@ def seed_goa(
 
     # Perform the seeding
     try:
-        added_count, output_path, refs_added, qualifiers_backfilled = (
+        (
+            added_count,
+            output_path,
+            refs_added,
+            qualifiers_backfilled,
+            supporting_entities_backfilled,
+        ) = (
             validator.seed_missing_annotations(
                 yaml_file, goa_file, output, fetch_titles=fetch_titles
             )
         )
 
-        if added_count > 0 or refs_added > 0 or qualifiers_backfilled > 0:
+        if (
+            added_count > 0
+            or refs_added > 0
+            or qualifiers_backfilled > 0
+            or supporting_entities_backfilled > 0
+        ):
             parts = []
             if added_count > 0:
                 parts.append(f"{added_count} annotations")
@@ -1328,6 +1345,11 @@ def seed_goa(
                 parts.append(f"{refs_added} references")
             if qualifiers_backfilled > 0:
                 parts.append(f"qualifiers on {qualifiers_backfilled} annotations")
+            if supporting_entities_backfilled > 0:
+                parts.append(
+                    "supporting entities on "
+                    f"{supporting_entities_backfilled} annotations"
+                )
             typer.echo(f"\n✓ Successfully added {' and '.join(parts)} to {output_path}")
             typer.echo("\nNote: Review sections left empty for AI to complete")
         else:

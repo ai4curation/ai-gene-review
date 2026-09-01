@@ -38,6 +38,7 @@ def sample_yaml_matching():
                 "term": {"id": "GO:0005515", "label": "protein binding"},
                 "evidence_type": "IPI",
                 "original_reference_id": "PMID:29727692",
+                "supporting_entities": ["UniProtKB:Q9NVR5"],
             },
             {
                 "term": {"id": "GO:0005737", "label": "cytoplasm"},
@@ -80,6 +81,7 @@ def sample_yaml_missing():
                 "term": {"id": "GO:0005515", "label": "protein binding"},
                 "evidence_type": "IPI",
                 "original_reference_id": "PMID:29727692",
+                "supporting_entities": ["UniProtKB:Q9NVR5"],
             },
             {
                 "term": {"id": "GO:0005737", "label": "cytoplasm"},
@@ -108,6 +110,7 @@ def sample_yaml_extra():
                 "term": {"id": "GO:0005515", "label": "protein binding"},
                 "evidence_type": "IPI",
                 "original_reference_id": "PMID:29727692",
+                "supporting_entities": ["UniProtKB:Q9NVR5"],
             },
             {
                 "term": {"id": "GO:0005737", "label": "cytoplasm"},
@@ -158,6 +161,7 @@ def sample_yaml_label_mismatch():
                 },  # Should be 'protein binding'
                 "evidence_type": "IPI",
                 "original_reference_id": "PMID:29727692",
+                "supporting_entities": ["UniProtKB:Q9NVR5"],
             },
             {
                 "term": {"id": "GO:0005737", "label": "cytoplasm"},
@@ -546,7 +550,7 @@ UniProtKB	Q12345	TEST		GO:0009999	test location	CC	ECO:0007322	IEA	PMID:99999		N
 
     try:
         # Seed missing annotations
-        added_count, output_path, refs_added, _ = validator.seed_missing_annotations(
+        added_count, output_path, refs_added, _, _ = validator.seed_missing_annotations(
             yaml_path, goa_path
         )
 
@@ -613,7 +617,9 @@ UniProtKB	Q12345	TEST	part_of	GO:0008888	test complex	CC	ECO:0000314	IDA	PMID:88
         yaml_path = Path(yaml_file.name)
 
     try:
-        added_count, _, _, _ = validator.seed_missing_annotations(yaml_path, goa_path)
+        added_count, _, _, _, _ = validator.seed_missing_annotations(
+            yaml_path, goa_path
+        )
 
         assert added_count == 4
 
@@ -633,6 +639,66 @@ UniProtKB	Q12345	TEST	part_of	GO:0008888	test complex	CC	ECO:0000314	IDA	PMID:88
     finally:
         goa_path.unlink()
         yaml_path.unlink()
+
+
+def test_seed_missing_annotations_backfills_and_splits_supporting_entities(tmp_path):
+    """WITH/FROM-distinct rows must remain distinct in seeded review YAML."""
+    validator = GOAValidator()
+    goa_path = tmp_path / "TEST-goa.tsv"
+    goa_path.write_text(
+        "GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\t"
+        "GO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\t"
+        "TAXON NAME\tASSIGNED BY\tGENE NAME\tDATE\n"
+        "UniProtKB\tQ12345\tTEST\tenables\tGO:0001234\ttest function\tMF\t"
+        "ECO:0000266\tISO\tPMID:12345\tUniProtKB:P11111\tNCBITaxon:9606\t"
+        "Homo sapiens\tUniProt\tTest protein\t20180515\n"
+        "UniProtKB\tQ12345\tTEST\tenables\tGO:0001234\ttest function\tMF\t"
+        "ECO:0000266\tISO\tPMID:12345\tUniProtKB:P22222|UniProtKB:P33333\t"
+        "NCBITaxon:9606\tHomo sapiens\tUniProt\tTest protein\t20180515\n"
+    )
+    yaml_path = tmp_path / "TEST-ai-review.yaml"
+    yaml_path.write_text(
+        "id: Q12345\n"
+        "gene_symbol: TEST\n"
+        "taxon: {id: 'NCBITaxon:9606', label: Homo sapiens}\n"
+        "description: Test gene\n"
+        "existing_annotations:\n"
+        "- term: {id: 'GO:0001234', label: test function}\n"
+        "  evidence_type: ISO\n"
+        "  original_reference_id: PMID:12345\n"
+        "  qualifier: enables\n"
+        "  review: {summary: Already reviewed, action: ACCEPT}\n"
+        "references:\n"
+        "- id: PMID:12345\n"
+        "  title: Existing title\n"
+        "  findings: []\n"
+    )
+
+    before = validator.validate_against_goa(yaml_path, goa_path)
+    assert not before.is_valid
+    assert len(before.missing_in_yaml) == 2
+
+    added, _, references_added, qualifiers_backfilled, supporting_backfilled = (
+        validator.seed_missing_annotations(yaml_path, goa_path)
+    )
+
+    assert (
+        added,
+        references_added,
+        qualifiers_backfilled,
+        supporting_backfilled,
+    ) == (1, 0, 0, 1)
+    document = yaml.safe_load(yaml_path.read_text())
+    annotations = document["existing_annotations"]
+    assert len(annotations) == 2
+    assert annotations[0]["supporting_entities"] == ["UniProtKB:P11111"]
+    assert annotations[0]["review"]["summary"] == "Already reviewed"
+    assert annotations[1]["supporting_entities"] == [
+        "UniProtKB:P22222",
+        "UniProtKB:P33333",
+    ]
+    assert annotations[1]["review"]["action"] == "PENDING"
+    assert validator.validate_against_goa(yaml_path, goa_path).is_valid
 
 
 def test_seed_missing_annotations_reports_backfilled_qualifiers(tmp_path):
@@ -663,11 +729,16 @@ def test_seed_missing_annotations_reports_backfilled_qualifiers(tmp_path):
         "  original_reference_id: PMID:12345\n"
     )
 
-    added, _, references_added, qualifiers_backfilled = (
+    added, _, references_added, qualifiers_backfilled, supporting_backfilled = (
         validator.seed_missing_annotations(yaml_path, goa_path)
     )
 
-    assert (added, references_added, qualifiers_backfilled) == (0, 1, 1)
+    assert (
+        added,
+        references_added,
+        qualifiers_backfilled,
+        supporting_backfilled,
+    ) == (0, 1, 1, 0)
     document = yaml.safe_load(yaml_path.read_text())
     assert document["existing_annotations"][0]["qualifier"] == "enables"
 
@@ -703,11 +774,16 @@ def test_seed_missing_annotations_true_noop_preserves_yaml_bytes(tmp_path):
     )
     yaml_path.write_text(original)
 
-    added, _, references_added, qualifiers_backfilled = (
+    added, _, references_added, qualifiers_backfilled, supporting_backfilled = (
         validator.seed_missing_annotations(yaml_path, goa_path)
     )
 
-    assert (added, references_added, qualifiers_backfilled) == (0, 0, 0)
+    assert (
+        added,
+        references_added,
+        qualifiers_backfilled,
+        supporting_backfilled,
+    ) == (0, 0, 0, 0)
     assert yaml_path.read_text() == original
 
 
@@ -741,13 +817,24 @@ def test_seed_missing_annotations_noop_writes_requested_output(tmp_path):
     )
     output_path = tmp_path / "copy.yaml"
 
-    added, returned_path, references_added, qualifiers_backfilled = (
+    (
+        added,
+        returned_path,
+        references_added,
+        qualifiers_backfilled,
+        supporting_backfilled,
+    ) = (
         validator.seed_missing_annotations(
             yaml_path, goa_path, output_file=output_path
         )
     )
 
-    assert (added, references_added, qualifiers_backfilled) == (0, 0, 0)
+    assert (
+        added,
+        references_added,
+        qualifiers_backfilled,
+        supporting_backfilled,
+    ) == (0, 0, 0, 0)
     assert returned_path == output_path
     assert yaml.safe_load(output_path.read_text()) == yaml.safe_load(
         yaml_path.read_text()
@@ -1088,6 +1175,7 @@ UniProtKB\tQ12345\tTEST\tenables\tGO:0016491\toxidoreductase activity\tMF\tECO:0
                 "evidence_type": "IEA",
                 "original_reference_id": "GO_REF:0000002",
                 "qualifier": "enables",
+                "supporting_entities": ["InterPro:IPR000001"],
                 "review": {"summary": "The subunit does not enable the activity alone", "action": "REMOVE"},
             },
             {
@@ -1236,7 +1324,7 @@ UniProtKB	P19544-1	WT1		GO:0045892	negative regulation of DNA-templated transcri
 
     try:
         # Seed annotations
-        added_count, output_path, refs_added, _ = validator.seed_missing_annotations(
+        added_count, output_path, refs_added, _, _ = validator.seed_missing_annotations(
             yaml_path, goa_path
         )
 
@@ -1300,7 +1388,7 @@ UniProtKB	P19544-1	WT1	NOT|involved_in	GO:0045893	positive regulation of DNA-tem
 
     try:
         # Seed annotations
-        added_count, output_path, refs_added, _ = validator.seed_missing_annotations(
+        added_count, output_path, refs_added, _, _ = validator.seed_missing_annotations(
             yaml_path, goa_path
         )
 
@@ -1352,7 +1440,7 @@ UniProtKB	Q12345	TEST	enables	GO:0001234	test function	MF	ECO:0000353	IPI	PMID:1
 
     try:
         # Seed should create the file
-        added_count, output_path, refs_added, _ = validator.seed_missing_annotations(
+        added_count, output_path, refs_added, _, _ = validator.seed_missing_annotations(
             yaml_path, goa_path
         )
 
