@@ -40,8 +40,8 @@ outside this module even though they occur in the broad KEGG bucket.
 - [x] Complete module + `ppu00240` + PSEPK OpenScientist research.
 - [ ] Complete OpenScientist gene-level research for the seven focused genes.
 - [x] Validate the module and all focused gene reviews.
-- [ ] Render the gene reviews and batch page.
-- [ ] Open one PR for this module and shepherd review and CI.
+- [x] Render the gene reviews and batch page.
+- [x] Open [PR #2483](https://github.com/ai4curation/ai-gene-review/pull/2483) for this module; review and CI are in progress.
 
 ## Focused Genes
 
