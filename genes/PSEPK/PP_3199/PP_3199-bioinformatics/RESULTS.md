@@ -8,6 +8,11 @@ globally with Biopython PairwiseAligner, BLOSUM62, gap-open -10, and gap-extensi
 -0.5. Identity is calculated over columns containing a residue from both
 proteins.
 
+Reciprocal best hits were then identified with `mmseqs easy-search` against
+UniProt proteome FASTA downloads for PSEPK and *H. seropedicae*. Reproduction
+therefore requires the `mmseqs` executable in addition to the inline Biopython
+dependency declared by the script.
+
 ## Results
 
 - Q88I03 length: 374 aa

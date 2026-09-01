@@ -41,7 +41,7 @@ autolink_gene_symbols: false
 | [x] | `PP_3199` | PP_3199 | Q88I03 | recovered from locus/KO reaction | PRESENT | COMPLETE | PRESENT | Predicted FdeE-like FAD-dependent flavonoid monooxygenase; 40.4% identity to characterized Hsero_1007 |
 | [x] | `PP_3204` | PP_3204 | Q88HZ8 | kegg:ppu00946 | PRESENT | COMPLETE | PRESENT | Predicted FdeH cupin component; independent molecular function unresolved |
 | [x] | `PP_3205` | PP_3205 | Q88HZ7 | kegg:ppu00946 | PRESENT | COMPLETE | PRESENT | Predicted FdeI carboxy-lyase; second R13079 activity unresolved |
-| [x] | `PP_3206` | PP_3206 | Q88HZ6 | kegg:ppu00946 | PRESENT | COMPLETE | PRESENT | Predicted FdeJ/R13076 carbon-carbon hydrolase; exact reaction untested |
+| [x] | `PP_3206` | PP_3206 | Q88HZ6 | kegg:ppu00946 | PRESENT | COMPLETE | PRESENT | FdeJ-like pathway component; molecular function and R13076 chemistry unresolved |
 
 ## Notes
 
