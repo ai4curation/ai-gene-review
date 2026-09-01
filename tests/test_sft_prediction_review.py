@@ -31,6 +31,7 @@ from scripts.hf_to_sft_predictions import (
 )
 from scripts.gogpt_predict import deterministic_assessment, load_review_decisions
 from ai_gene_review.sft_prediction_evidence import PROVENANCE_LIMITED_NEGATIVE
+from ai_gene_review.sft_prediction_evidence import NEGATED_ACTION_PREFIX
 
 
 def test_load_aigr_actions_preserves_mixed_decisions(tmp_path):
@@ -48,6 +49,38 @@ existing_annotations:
     assert load_aigr_term_actions(review_file) == {
         "GO:0000001": {"ACCEPT", "REMOVE"}
     }
+
+
+def test_load_aigr_actions_preserves_negated_annotations(tmp_path):
+    review_file = tmp_path / "review.yaml"
+    review_file.write_text(
+        """
+existing_annotations:
+  - term: {id: "GO:0000001", label: absent activity}
+    negated: true
+    review: {action: ACCEPT}
+"""
+    )
+
+    assert load_aigr_term_actions(review_file) == {
+        "GO:0000001": {f"{NEGATED_ACTION_PREFIX}ACCEPT"}
+    }
+
+
+def test_negated_goa_and_aigr_do_not_count_as_positive_support(tmp_path):
+    goa_file = tmp_path / "gene-goa.tsv"
+    goa_file.write_text(
+        "DB\tID\tSYMBOL\tNOT|enables\tGO:0000001\tPMID:1\tIDA\n"
+    )
+    actions = {"GO:0000001": {f"{NEGATED_ACTION_PREFIX}ACCEPT"}}
+
+    assert load_goa_terms(goa_file) == set()
+    assert auto_assess("GO:0000001", set(), actions, set())[:2] == ("NPI", 0)
+    assert deterministic_reclassification(
+        "GO:0000001", "NPI", set(), actions
+    ) is None
+    review = {"assessment": "NPI", "confidence_score": 0}
+    assert list(remaining_conflicts("GO:0000001", review, set(), actions)) == []
 
 
 def test_load_aigr_actions_marks_only_negative_miscitation_decisions(tmp_path):

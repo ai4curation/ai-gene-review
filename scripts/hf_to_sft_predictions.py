@@ -24,6 +24,7 @@ import yaml
 from ai_gene_review.bioreason_ontology import FROZEN_GO_ADAPTER, get_go_adapter
 from ai_gene_review.sft_prediction_evidence import (
     NEGATIVE_ACTIONS,
+    NEGATED_ACTION_PREFIX,
     POSITIVE_ACTIONS,
     PROVENANCE_LIMITED_NEGATIVE,
     load_aigr_term_actions,
@@ -115,7 +116,12 @@ def load_goa_terms(goa_file: Path) -> set[str]:
     with goa_file.open() as handle:
         for line in handle:
             parts = line.rstrip("\n").split("\t")
-            if len(parts) > 4 and re.fullmatch(r"GO:\d{7}", parts[4]):
+            qualifiers = set(parts[3].split("|")) if len(parts) > 3 else set()
+            if (
+                len(parts) > 4
+                and "NOT" not in qualifiers
+                and re.fullmatch(r"GO:\d{7}", parts[4])
+            ):
                 terms.add(parts[4])
     return terms
 
@@ -157,7 +163,18 @@ def assess_prediction(
     core_terms: set[str],
 ) -> dict[str, Any]:
     exact_actions = actions.get(go_id, set())
-    biological_actions = exact_actions - {PROVENANCE_LIMITED_NEGATIVE}
+    biological_actions = {
+        action
+        for action in exact_actions
+        if action != PROVENANCE_LIMITED_NEGATIVE
+        and not action.startswith(NEGATED_ACTION_PREFIX)
+    }
+    accepted_negations = {
+        action.removeprefix(NEGATED_ACTION_PREFIX)
+        for action in exact_actions
+        if action.startswith(NEGATED_ACTION_PREFIX)
+        and action.removeprefix(NEGATED_ACTION_PREFIX) in POSITIVE_ACTIONS
+    }
 
     if biological_actions and biological_actions <= NEGATIVE_ACTIONS:
         return {
@@ -179,6 +196,16 @@ def assess_prediction(
                 "The exact term is already present in AIGR with a positive action "
                 f"({', '.join(sorted(biological_actions & POSITIVE_ACTIONS))}). Correct "
                 "but not novel."
+            ),
+        }
+
+    if accepted_negations:
+        return {
+            "assessment": "NPI",
+            "confidence_score": 0,
+            "summary": (
+                "The current AIGR retains an explicit NOT annotation for this exact "
+                "GO term, which directly contradicts the positive SFT prediction."
             ),
         }
 

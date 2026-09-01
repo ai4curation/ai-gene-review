@@ -16,7 +16,7 @@ GO_ID_RE = re.compile(r"GO:\d{7}")
 
 
 def load_aigr_term_actions(
-    review_file: Path, *, preserve_negated: bool = False
+    review_file: Path, *, preserve_negated: bool = True
 ) -> dict[str, set[str]]:
     """Return exact AIGR action evidence grouped by GO ID.
 
@@ -25,6 +25,9 @@ def load_aigr_term_actions(
     that distinction with a sentinel instead of treating it as either a biological
     refutation or no evidence. The sentinel lets initial assessors return UNC while
     leaving manually adjudicated predictions intact.
+
+    Negated annotations are preserved by default as ``NOT:<action>`` so a retained
+    NOT assertion cannot be mistaken for positive support for the same GO term.
 
     Reference-level correctness is necessarily coarser than a finding review. It is
     used here only for negative actions whose annotation cites that exact reference.
