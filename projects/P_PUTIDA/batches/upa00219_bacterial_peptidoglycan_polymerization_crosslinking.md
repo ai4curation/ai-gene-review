@@ -18,12 +18,12 @@ autolink_gene_symbols: false
 - [x] Confirm no prior PSEPK PR covers this downstream module.
 - [x] Define a reusable module with more than one substantive part.
 - [x] Fetch all selected PSEPK genes.
-- [ ] Complete ten OpenScientist gene runs.
+- [x] Complete ten OpenScientist gene runs.
 - [x] Complete generic module OpenScientist research.
 - [x] Complete module + ppu00550 + PSEPK OpenScientist research.
-- [ ] Review every GOA row and remove all PENDING actions.
-- [ ] Reconcile provider output with UniProt, GOA, primary evidence, and module logic.
-- [ ] Validate and render all changed artifacts.
+- [x] Review every GOA row and remove all PENDING actions.
+- [x] Reconcile provider output with UniProt, GOA, primary evidence, and module logic.
+- [x] Validate and render all changed artifacts.
 - [ ] Shepherd one PR through review and merge readiness.
 
 ## Selected Genes
@@ -39,7 +39,7 @@ autolink_gene_symbols: false
 | `mrcB` | PP_4683 | Q88DY5 | class-A PBP1B | curated; research complete |
 | `pbpC` | PP_0572 | Q88QC2 | accessory PBP1C glycan polymerase | curated; research complete |
 | `mtgA` | PP_5107 | Q88CS3 | monofunctional glycan polymerase | curated; research complete |
-| `dacA` | PP_4803 | Q88DM2 | D,D-carboxypeptidase stem trimming | fetched; research running |
+| `dacA` | PP_4803 | Q88DM2 | D,D-carboxypeptidase stem trimming | curated; research complete |
 
 ## Boundary Decisions
 
@@ -53,6 +53,8 @@ autolink_gene_symbols: false
 - MtgA supplies a distinct monofunctional polymerization role.
 - DacA-mediated pentapeptide trimming is downstream maturation, not generic
   proteolysis.
+- The lateral Rod system, class-A PBP branch, MtgA, and DacA are optional at
+  the reusable bacterial boundary even though KT2440 contains all four.
 - PBP4/DacB endopeptidation and YkuD-family L,D-transpeptidation are adjacent
   crosslink-remodeling systems. They will be curated as a separate reusable
   module rather than appended as isolated steps here.
