@@ -82,4 +82,116 @@ oxidases remain unverified because no KT2440 experiment or archived scan was
 provided. The out-of-scope `PP_0109` heme-A-synthase recommendation was not
 adjudicated as part of this batch.
 
-Generated UTC: 2026-07-20
+## Wave115 Repair Audit
+
+### Reusable Boundary And Logic
+
+The generic module remains a `CONCRETE` chemically defined, leaf-grounded
+protoporphyrin-dependent heme-B pathway. Cross-taxon reuse does not make it an
+`ABSTRACT` gene-free motif. PSEPK-specific pathway-bucket interpretation and
+paralog commentary now live in this batch document rather than in generic
+module evidence or notes.
+
+The C5 and C4/Shemin ALA-entry branches are `ONE_OR_MORE`, matching the two
+late oxidation axes. This avoids an unsupported assertion that a concrete
+organism or compartment can realize exactly one entry system. Minimal route
+enumeration still chooses one branch on each independent axis and yields 12
+paths: two ALA entries, two coproporphyrinogen-oxidation chemistries, and three
+protoporphyrinogen-oxidation chemistries. The shared logical core is ALAD,
+HemC, HemD, HemE, and ferrochelatase. Parent-to-child connections preserve the
+chemical handoffs across the nested entry, shared-trunk, late-oxidation, and
+terminal-ferrochelation nodes.
+
+For the KT2440 realization, `hemA` and `hemL` provide C5 entry, at least one of
+`hemB` and `hemBB` provides ALAD activity, `hemC`, `hemD`, and `hemE` form the
+shared trunk, `hemF` and `hemN` provide alternative coproporphyrinogen
+oxidation chemistries, `PP_0431` provides the HemJ step, and `hemH` performs
+ferrochelation. This does not establish relative `hemB`/`hemBB` flux or require
+both paralogs. The endpoint-specific GO:0006785 decisions in selected PSEPK
+reviews describe this organismal route; they do not make the shared
+intermediate-forming reactions exclusive to heme B.
+
+`gltX` remains upstream because it supplies glutamyl-tRNA to translation as
+well as HemA. Coproheme synthesis, corrin/cobalamin and siroheme branches,
+heme uptake/storage/degradation, and conversion of heme B to heme O, heme A,
+or other modified hemes remain outside the module.
+
+### Exact Family And PAINT Grounding
+
+Reviewed UniProt exemplars were rechecked, including bacterial, human, and
+Rhodobacter/Cereibacter representatives. Every PANTHER label and representative
+member was checked against `panther.obo` and `panther-members.tsv`. The module
+adds only local PAINT MF nodes whose GO assertion and experimental seeds are
+checkable in the corresponding `*-paint.tsv` file:
+
+| Step | PAINT node | MF |
+|---|---|---|
+| HemA | `PTN001464796` | GO:0008883 |
+| HemL | `PTN000241400` | GO:0042286 |
+| eukaryotic ALAS | `PTN000343737` | GO:0003870 |
+| ALAD | `PTN000156046` | GO:0004655 |
+| HemC/HMBS | `PTN000168159` | GO:0004418 |
+| bacterial HemD/UROS | `PTN002866208` | GO:0004852 |
+| eukaryotic UROS | `PTN000273375` | GO:0004852 |
+| HemE/UROD | `PTN000472929` | GO:0004853 |
+| HemF/CPOX | `PTN000079415` | GO:0004109 |
+| HemN | `PTN000358335` | GO:0051989 |
+| HemG | `PTN002445460` | GO:0070819 |
+| eukaryotic PPOX | `PTN000077911` | GO:0004729 |
+| HemH/FECH | `PTN000121751` | GO:0004325 |
+
+No PTN is asserted for HemJ because the local PAINT data do not establish a
+matching MF node. ALAS, HemD/UROS, and HemF retain exact cross-lineage InterPro
+descriptors where a single PANTHER family name would be too narrow or
+misleading; their cited PAINT nodes state the underlying PTHR provenance.
+
+### Required Annotation-Reviewer Pass
+
+An independent read-only annotation reviewer audited every GOA row, action,
+reason, core function, location decision, endpoint-process claim, and local
+evidence file for all 11 pathway anchors. It also checked module boundaries,
+route logic, nested connections, family labels/member containment, and every
+PTN against local PAINT seeds. No blockers or necessary gene-review changes
+were found.
+
+| Gene | Reviewer disposition |
+|---|---|
+| `hemA` | `NO_CHANGES_NEEDED` |
+| `hemL` | `NO_CHANGES_NEEDED` |
+| `hemB` | `NO_CHANGES_NEEDED` |
+| `hemBB` | `NO_CHANGES_NEEDED` |
+| `hemC` | `NO_CHANGES_NEEDED` |
+| `hemD` | `NO_CHANGES_NEEDED` |
+| `hemE` | `NO_CHANGES_NEEDED` |
+| `hemF` | `NO_CHANGES_NEEDED` |
+| `hemN` | `NO_CHANGES_NEEDED` |
+| `PP_0431` | `NO_CHANGES_NEEDED` |
+| `hemH` | `NO_CHANGES_NEEDED` |
+
+### Wave115 OpenScientist Refresh
+
+Both required provider commands were run with the full configured
+`timeout=7200` allowance and were never manually cancelled. The generic module
+job (`78cc5eec-daef-4ec2-bdb9-c3edd3b1154e`) and the PSEPK `ppu00860`
+module+pathway+taxon job (`cfb582a0-062f-4965-a005-88578a183d59`) each remained
+quiet until the provider wrapper reached 7200 seconds and returned its explicit
+timeout failure. Neither run wrote a partial replacement. The prior complete
+generic and PSEPK OpenScientist reports are therefore retained and reused as
+retrieval support, with their overreach caveats above unchanged; no new claim
+was imported from a timed-out run.
+
+### Final Validation
+
+- Rebased onto `origin/main` at `8abe023124e` before the final pass.
+- ModuleReview LinkML validation passes with no issues.
+- Semantic module validation passes. Its 30 warnings are advisory: unavailable
+  CHEBI lookups, the unconfigured InterPro prefix, and four locally verified
+  PAINT nodes beneath broader InterPro-grounded descriptors.
+- `just validate PSEPK <gene>` passes for all 11 selected anchors; no gene
+  review changed.
+- `tests/test_module_logic.py` passes all 34 tests. Direct enumeration asserts
+  12 minimal routes, independent `2 x 2 x 3` axes, and the expected five-step
+  shared core.
+- The module, batch page, and all 11 selected gene reviews render successfully.
+- `git diff --check` passes; generated GO cache and unrelated PANTHER member
+  noise are excluded.
