@@ -34,7 +34,7 @@ autolink_gene_symbols: false
 | `ftsI` | PP_1331 | Q88N82 | septal bPBP D,D-transpeptidase | curated; research complete |
 | `mrdB` | PP_4806 | Q88DL9 | lateral-wall SEDS glycan polymerase | curated; research complete |
 | `mrdA-I` | PP_3741 | Q88GI2 | PBP2/MrdA paralog | curated; research complete |
-| `mrdA-II` | PP_4807 | Q88DL8 | PBP2/MrdA paralog | fetched; research running |
+| `mrdA-II` | PP_4807 | Q88DL8 | operon-linked PBP2/MrdA paralog | curated; research complete |
 | `mrcA` | PP_5084 | Q88CU6 | class-A PBP1A | existing COMPLETE review; research running |
 | `mrcB` | PP_4683 | Q88DY5 | class-A PBP1B | fetched; research running |
 | `pbpC` | PP_0572 | Q88QC2 | accessory PBP1C glycan polymerase | curated; research complete |

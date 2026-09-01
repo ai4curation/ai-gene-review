@@ -1,0 +1,2106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>mrdA-II - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>mrdA-II</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88DL8" target="_blank" class="term-link">
+                        Q88DL8
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "mrdA-II";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88DL8" data-a="DESCRIPTION: MrdA-II/PBP2 is a bitopic inner-membrane class-B p..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>MrdA-II/PBP2 is a bitopic inner-membrane class-B penicillin-binding protein predicted to perform periplasmic D,D-transpeptidation in the RodA-dependent lateral-wall peptidoglycan synthesis machinery. Its operon linkage to mrdB/rodA supports a canonical elongasome role, while the contribution of the second paralog MrdA-I remains unresolved.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DL8" data-a="GO:0003824" data-r="GO_REF:0000104" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The root catalytic term is true but uninformative for a D,D-transpeptidase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> It adds no useful information beyond the family-specific catalytic interpretation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DL8" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MrdA-II is anchored in the cytoplasmic membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Its N-terminal transmembrane helix positions the catalytic domain in the periplasm.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008658" target="_blank" class="term-link">
+                                    GO:0008658
+                                </a>
+                            </span>
+                            <span class="term-label">penicillin binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DL8" data-a="GO:0008658" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The intact PBP active site supports beta-lactam binding.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Penicillin binding is a defining property of the MrdA/PBP2 family.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009002" target="_blank" class="term-link">
+                                    GO:0009002
+                                </a>
+                            </span>
+                            <span class="term-label">serine-type D-Ala-D-Ala carboxypeptidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DL8" data-a="GO:0009002" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MrdA-II performs D,D-transpeptidation rather than primarily D,D-carboxypeptidation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The EC-linked GO label does not accurately describe the core peptide-crosslinking reaction.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009252" target="_blank" class="term-link">
+                                    GO:0009252
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DL8" data-a="GO:0009252" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MrdA-II is the predicted RodA-coupled lateral-wall crosslinking enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Its immediate mrdB/rodA neighbor supplies the glycan-polymerase half of the elongasome synthase.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DL8" data-a="GO:0016020" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Membrane localization is true but less specific than plasma membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0005886 captures the relevant bacterial membrane.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071555" target="_blank" class="term-link">
+                                    GO:0071555
+                                </a>
+                            </span>
+                            <span class="term-label">cell wall organization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DL8" data-a="GO:0071555" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Lateral-wall peptide crosslinking directly contributes to cell-wall organization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The RodA-MrdA machinery organizes and expands the peptidoglycan sacculus.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0071972" target="_blank" class="term-link">
+                                    GO:0071972
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan L,D-transpeptidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DL8" data-a="GO:0071972" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> MrdA family proteins are D,D-transpeptidases, not L,D-transpeptidases.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This TreeGrafter transfer assigns the wrong crosslink chemistry to a class-B PBP.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Predicted canonical MrdA/PBP2 D,D-transpeptidase of the RodA-dependent elongasome.</h3>
+                <span class="vote-buttons" data-g="Q88DL8" data-a="FUNCTION: Predicted canonical MrdA/PBP2 D,D-transpeptidase o..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009252" target="_blank" class="term-link">
+                                peptidoglycan biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/mrdA-II/mrdA-II-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">mrdA-II is the PBP2 physically coupled to its cognate RodA</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/mrdA-II/mrdA-II-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research report on PSEPK MrdA-II (Q88DL8)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report identifies MrdA-II as the operon-linked RodA partner and canonical elongation PBP2.</div>
+
+                        <div class="finding-text">"mrdA-II is the PBP2 physically coupled to its cognate RodA"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The relative roles of MrdA-I and MrdA-II in KT2440 elongation are unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">CURATION</span>
+
+            </p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Operon context favors MrdA-II as the canonical RodA partner but does not establish redundancy or condition-specific deployment.</p>
+
+
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> GO lacks a molecular-function term that cleanly represents PBP-family D,D-transpeptidation.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">ONTOLOGY</span>
+
+            </p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> The available carboxypeptidase term obscures the core peptide-crosslinking reaction.</p>
+
+
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(mrdA-II-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88DL8" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *mrdA-II* (PBP-2) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-31T23:52:41.413434</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="mrdA-II-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="mrdA-II-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-mrda-ii-pbp-2-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>mrdA-II</em> (PBP-2) in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Gene:</strong> <code>mrdA-II</code> (synonym <code>mrdA</code>; ordered locus <strong>PP_4807</strong>)<br />
+<strong>Protein:</strong> Peptidoglycan D,D-transpeptidase MrdA / Penicillin-binding protein 2 (PBP-2)<br />
+<strong>UniProt:</strong> Q88DL8 · <strong>EC:</strong> 3.4.16.4<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> KT2440 (ATCC 47054 / DSM 6125), a Gram-negative, rod-shaped soil γ-proteobacterium<br />
+<strong>Family:</strong> Transpeptidase family, MrdA subfamily (Class B high-molecular-mass PBP)<br />
+<strong>Signature domains:</strong> Penicillin-binding, transpeptidase (IPR001460); Beta-lactam/transpeptidase-like (IPR012338, IPR050515); PBP dimerization "pedestal" domain (IPR005311, IPR036138)</p>
+<hr />
+<h2 id="1-identity-verification">1. Identity verification</h2>
+<p>The gene symbol, the UniProt description, the assigned EC number (3.4.16.4, serine-type D-Ala-D-Ala transpeptidase/carboxypeptidase activity), and the InterPro domain complement are <strong>mutually consistent</strong> and unambiguously identify Q88DL8 as a <strong>Class B penicillin-binding protein 2 (PBP2/MrdA)</strong>. The PCN-bd_Tpept (IPR001460) transpeptidase domain plus the PBP_dimer "pedestal" domain (IPR005311/IPR036138) is the diagnostic two-module architecture of the MrdA/PBP2 subfamily. No conflicting gene-symbol ambiguity was encountered.</p>
+<p><strong>One organism-specific point, established here directly:</strong> the symbol is <code>mrdA-**II**</code> because <em>P. putida</em> KT2440 encodes <strong>two</strong> paralogous PBP2/MrdA transpeptidases. A UniProt proteome query (taxid 160488) returns <strong>mrdA-I = PP_3741</strong> (Q88GI2, 631 aa) and <strong>mrdA-II = PP_4807</strong> (Q88DL8, 629 aa; the target), alongside the divisome transpeptidase <strong>FtsI/PBP3</strong> (PP_1331) and the bifunctional class A PBPs <strong>PBP1A</strong> (<em>mrcA</em>/PP_5084) and <strong>PBP1B</strong> (<em>mrcB</em>/PP_4683). A BLOSUM62 global alignment shows the two PBP2 paralogs are <strong>70.8% identical</strong> (464/655 aligned positions) — high similarity but clearly distinct, indicating a retained, functional gene duplication rather than a recent identical copy or a pseudogene.</p>
+<p><strong>Importantly, despite the "-II" suffix, the target PP_4807 is the <em>genomically canonical<em> elongation PBP2.</em><em> Its gene sits in the classic </em><em>mrd operon</em><em>: the immediately upstream gene </em><em>PP_4806 = </em>mrdB/rodA</em></strong> (Q88DL9) encodes the SEDS <strong>peptidoglycan glycosyltransferase RodA</strong> (EC 2.4.99.28) — the obligate partner of PBP2 in the elongasome — with <strong>PP_4805 = <em>mltB</em></strong> (a lytic transglycosylase) just beyond it. This <em>mrdA–mrdB(rodA)</em> tandem mirrors the <em>E. coli mrdAB</em> operon. The paralog <em>mrdA-I</em> (PP_3741), by contrast, is <strong>not</strong> in an <em>mrd</em> operon (its neighbours are a major-facilitator transporter, a porin-like protein and a glutathione S-transferase, with no adjacent <em>rodA</em>), marking it as the divergent, orphan/accessory copy. Thus <strong>mrdA-II is the PBP2 physically coupled to its cognate RodA</strong>, and the functional description below applies to it with organism-specific genomic support. Direct wet-lab enzymology of PP_4807 in isolation is not yet published, so cross-organism family biochemistry/structure supplies mechanistic detail; the diagnostic catalytic features are nonetheless confirmed <strong>directly on the Q88DL8 sequence</strong> (§2).</p>
+<hr />
+<h2 id="2-primary-molecular-function-the-catalyzed-reaction-and-substrate-specificity">2. Primary molecular function — the catalyzed reaction and substrate specificity</h2>
+<p>MrdA/PBP2 is a <strong>serine D,D-transpeptidase</strong> that catalyzes the <strong>crosslinking step of peptidoglycan (PG, murein) synthesis</strong>. "Penicillin-binding protein 2 (PBP2) plays a key role in the formation of peptidoglycans in bacterial cell walls by crosslinking glycan chains through transpeptidase activity" (Choi et al. 2024, PMID 38581948).</p>
+<ul>
+<li><strong>Reaction:</strong> a D,D-transpeptidation. The enzyme's active-site serine attacks the terminal <strong>D-Ala–D-Ala</strong> peptide bond of a donor stem peptide, forming an acyl-enzyme intermediate and releasing the terminal D-Ala. The acyl group is then transferred to the free amino group of the <strong>meso-diaminopimelate (mDAP)</strong> residue at position 3 of an acceptor stem peptide on a neighbouring glycan strand, producing a <strong>4→3 (D-Ala–mDAP) crosslink</strong>. In Gram-negative γ-proteobacteria such as <em>P. putida</em> the acceptor is mDAP, giving the canonical A1γ (DAP-type) murein.</li>
+<li><strong>Substrate:</strong> the peptide side-chains of nascent <strong>Lipid II–derived glycan strands</strong> (GlcNAc-MurNAc backbone bearing the pentapeptide L-Ala–D-Glu–mDAP–D-Ala–D-Ala). The natural substrate is therefore the polymerized, membrane-associated glycan, not free Lipid II.</li>
+<li><strong>Structure–function basis:</strong> crystal structures of family members show "an elongated two-domain structure, consisting of a transpeptidase domain and a pedestal domain, and … typical active site residues necessary for transpeptidase activity, as observed in other PBP2 proteins" (Choi et al. 2024, PMID 38581948). The transpeptidase domain carries the conserved SxxK, S/YxN and K(T/S)G catalytic motifs; the SxxK serine is the nucleophile.</li>
+<li><strong>Confirmed directly on Q88DL8 (this study, sequence analysis):</strong> the 629-aa target protein contains, in the correct order and spacing, all diagnostic elements: an N-terminal cytoplasmic tail (res 1–20) → single transmembrane helix (res 21–41) → pedestal/dimerization domain (res 63–236, Pfam PF03717) → transpeptidase domain (res 268–604, Pfam PF00905), with the <strong>SxxK nucleophile motif S327-T-I-K330</strong> (UniProt annotates Ser327 as the acyl-ester intermediate) and the <strong>K[S/T]G motif G537-K-S-G540</strong> that lines the substrate/β-lactam pocket. InterPro assigns the subfamily-specific signature <strong>IPR017790 "Penicillin-binding protein 2."</strong> These features are present in the actual sequence, so Ser327 is the predicted catalytic nucleophile of <em>this</em> enzyme.</li>
+<li><strong>Pharmacological signature (mechanistic evidence of function):</strong> because the catalytic serine mimics the D-Ala–D-Ala substrate, <strong>β-lactam antibiotics acylate and irreversibly inhibit it</strong> — this is the "penicillin-binding" property. PBP2 is the specific target of the amidinopenicillin <strong>mecillinam (amdinocillin)</strong>: "amdinocillin (mecillinam) show[s] selectivity for PBP2" (Kocaoglu &amp; Carlson 2015, PMID 25733506), and "the beta-lactam mecillinam specifically targets the PBP2 enzyme in the cell elongation machinery of <em>Escherichia coli</em>" (Lai et al. 2017, PMID 28749938). In pseudomonads specifically, PBP2 is the antibacterial target of the diazabicyclooctane "β-lactam enhancers" zidebactam/WCK 5153 (Moya et al. 2017, PMID 28289035), and a PBP2 point mutation (V516M) confers zidebactam resistance in <em>Pseudomonas</em> (Sastre-Femenia et al. 2026, PMID 42294650) — direct evidence that PBP2 is the physiological, drug-relevant transpeptidase in this genus.</li>
+</ul>
+<hr />
+<h2 id="3-biological-process-cell-elongation-via-the-rod-complex-elongasome">3. Biological process — cell elongation via the Rod complex (elongasome)</h2>
+<p>MrdA/PBP2 is the <strong>cognate transpeptidase of the cell-elongation ("Rod") peptidoglycan synthase</strong>, working in an obligate partnership with the SEDS-family glycosyltransferase <strong>RodA</strong>:</p>
+<ul>
+<li>
+<p><strong>RodA–PBP2 is a two-enzyme PG synthase.</strong> A SEDS glycosyltransferase and a Class B PBP "form the core of the multi-protein complex required for PG assembly" (Nygaard et al. 2023, PMID 37620344, cryo-EM of the <em>E. coli</em> RodA–PBP2 complex). RodA polymerizes Lipid II into a nascent glycan strand; the strand is then delivered to the PBP2 transpeptidase site for crosslinking into the existing sacculus, "functionally linking these two central enzymatic activities required for cell wall peptidoglycan biosynthesis" (PMID 37620344). Thus <strong>glycan polymerization (RodA) and peptide crosslinking (PBP2/MrdA) are physically coupled</strong>.</p>
+</li>
+<li>
+<p><strong>The synthase is organized by the MreB cytoskeleton.</strong> The elongasome/Rod complex "consists of six highly conserved proteins, including the actin-like MreB, the PG synthase complex RodA-PBP2, and three regulatory membrane proteins, MreC, MreD, and RodZ" (Zhan et al. 2026, PMID 42578761). MreB "is localized beneath the cytoplasmic membrane, where it organizes the elongasome complex" (Maharjan et al. 2026, PMID 41802002). PBP2 is coupled directly to this cytoskeleton: "both the cytoplasmic region of PBP2 and the C-terminal tail of RodA interact with MreB … disruption of these interactions results in a loss of rod shape" (Zhan et al. 2026, PMID 42394843).</p>
+</li>
+<li>
+<p><strong>Regulation.</strong> The activity of the RodA–PBP2 synthase is controlled by MreC/MreD and RodZ; "RodZ acts through MreBCD to activate the elongasome" (Zhan et al. 2026, PMID 42578761). In <em>B. subtilis</em> the processive circumferential motion of the complex is tuned by RodA levels via a "molecular motor tug-of-war" (Middlemiss et al. 2024, PMID 38926336).</p>
+</li>
+<li>
+<p><strong>Physiological role and redundancy.</strong> New PG is inserted into the <strong>lateral (side) wall</strong> to extend the cylinder of the rod; PBP2 crosslinking is what converts the newly polymerized glycan into load-bearing wall. Inhibition or loss of PBP2 abolishes rod shape (cells round up) and, under growth, leads to lysis. This elongation function is partly buffered by the class A PBP1B: PBP2 inhibition "can be compensated for by the presence of the class A penicillin binding protein, PBP1B" (Grinnell et al. 2022, PMID 35115684), and endopeptidases that cleave existing crosslinks stimulate new synthesis by the Rod system (Lai et al. 2017, PMID 28749938). This division of labour distinguishes MrdA/PBP2 (elongation) from PBP3/FtsI (septation/division), which is the cognate transpeptidase of the FtsW–PBP3 divisome.</p>
+</li>
+<li>
+<p><strong>Organism-specific genomic evidence that mrdA-II is the RodA-coupled elongation PBP2.</strong> In <em>P. putida</em> KT2440, the target gene <em>mrdA-II</em> (PP_4807) is the second gene of an <em>mrd</em> operon whose first gene, <strong>PP_4806 = <em>mrdB/rodA</em></strong> (Q88DL9), encodes the <strong>SEDS peptidoglycan glycosyltransferase RodA</strong> (EC 2.4.99.28) — precisely the obligate synthase partner that, in the cryo-EM structure (PMID 37620344), polymerizes the glycan and delivers it to the PBP2 transpeptidase site. This tight genomic linkage of <em>mrdA-II</em> to its cognate <em>rodA</em> (mirroring the <em>E. coli mrdAB</em> operon) is direct, organism-specific support that PP_4807 is the elongation-specific PBP2 that assembles the <strong>RodA–PBP2 synthase</strong> in this bacterium. The other PBP2 paralog, <em>mrdA-I</em> (PP_3741), lacks an adjacent <em>rodA</em> and is the divergent/accessory copy.</p>
+</li>
+<li><strong><em>P. putida</em> context.</strong> <em>P. putida</em> is a rod-shaped organism whose DAP-type peptidoglycan is subject to chemical editing by environmental D-amino acids; work in this species showed that non-canonical D-amino acids (e.g. D-canavanine) can be incorporated and perturb crosslinking and division, with resistance mapping to a division transpeptidase (Aliashkevich et al. 2021, PMID 33830599). This confirms that <em>P. putida</em> uses the canonical PBP transpeptidase machinery for wall crosslinking, the elongation arm of which is MrdA/PBP2.</li>
+</ul>
+<hr />
+<h2 id="4-subcellular-localization">4. Subcellular localization</h2>
+<p>MrdA/PBP2 is a <strong>bitopic (single-pass) inner-membrane (cytoplasmic-membrane) protein</strong>:</p>
+<ul>
+<li><strong>Direct annotation:</strong> UniProt (HAMAP-Rule MF_02081) assigns Q88DL8 to the <strong>"Cell inner membrane; Single-pass membrane protein."</strong> UniProt sequence features locate the single transmembrane helix at <strong>residues 21–41</strong>.</li>
+<li><strong>Topology (confirmed on Q88DL8 + family-conserved):</strong> a short N-terminal <strong>cytoplasmic tail (res 1–20)</strong>, a single <strong>non-cleaved transmembrane anchor (res 21–41)</strong>, and a large <strong>periplasmic</strong> region (res ~42–629) comprising the pedestal (dimerization) domain (63–236) and the C-terminal transpeptidase domain (268–604).</li>
+<li><strong>Where catalysis happens:</strong> Lipid II is flipped to the periplasmic (outer) face of the inner membrane, so <strong>the transpeptidase reaction occurs in the periplasm</strong>, on the outer surface of the cytoplasmic membrane, immediately adjacent to the growing sacculus.</li>
+<li><strong>Where it is positioned:</strong> the enzyme is recruited to discrete, circumferentially moving foci along the lateral cell body by the MreB filament, which lies "beneath the cytoplasmic membrane" (PMID 41802002). The cytoplasmic N-terminus of PBP2 contacts MreB (PMID 42394843), so the single membrane pass allows one molecule to <strong>couple cytoplasmic cytoskeletal positioning to periplasmic wall synthesis</strong>.</li>
+</ul>
+<p>Net localization statement: <strong>cytoplasmic (inner) membrane, single-pass, with the catalytic domain projecting into the periplasm; concentrated in mobile lateral-wall elongasome complexes.</strong></p>
+<hr />
+<h2 id="5-pathway-summary">5. Pathway summary</h2>
+<p>Peptidoglycan biosynthesis, elongation branch:</p>
+<p>UDP-MurNAc-pentapeptide → <strong>Lipid I → Lipid II</strong> (cytoplasmic/inner-leaflet steps, MraY/MurG) → flip to periplasmic face (MurJ) → <strong>RodA glycosyltransfer</strong> (glycan-strand polymerization) → <strong>MrdA/PBP2 D,D-transpeptidation</strong> (4→3 mDAP–D-Ala crosslinking) → mature, load-bearing sacculus.<br />
+Spatial control: <strong>MreB–MreC–MreD–RodZ</strong> (Rod complex) direct where and when RodA–PBP2 acts.</p>
+<p>MrdA/PBP2 sits at the <strong>crosslinking node</strong> of this pathway, downstream of glycan polymerization and immediately determining the mechanical integrity and rod geometry of the wall.</p>
+<hr />
+<h2 id="6-evidence-quality-and-hierarchy">6. Evidence quality and hierarchy</h2>
+<ul>
+<li><strong>Direct enzymatic/structural evidence (family, high confidence):</strong> crystal structure and transpeptidase active-site definition of PBP2 (PMID 38581948); cryo-EM mechanism of the RodA–PBP2 synthase (PMID 37620344).</li>
+<li><strong>Direct genetic/physiological evidence (family, high confidence):</strong> mecillinam/zidebactam target specificity for PBP2 (PMID 25733506, 28749938, 28289035; <em>Pseudomonas</em> resistance mutation PMID 42294650); MreB–PBP2 coupling and elongasome organization (PMID 42394843, 42578761, 41802002); redundancy with PBP1B (PMID 35115684).</li>
+<li><strong>Direct sequence/bioinformatic evidence on Q88DL8 (this study):</strong> the target sequence carries the intact SxxK (Ser327) and K[S/T]G (537–540) catalytic motifs, the single TM anchor (21–41), and the pedestal + transpeptidase domain pair (Pfam PF03717/PF00905; InterPro IPR017790 "PBP2"). Global alignment establishes mrdA-II and mrdA-I (PP_3741) as 70.8%-identical paralogs, both catalytically intact — confirming PP_4807 is a functional, not degenerate, PBP2.</li>
+<li><strong>Direct genomic-context evidence on PP_4807 (this study):</strong> <em>mrdA-II</em> is the second gene of an <em>mrd</em> operon with its cognate SEDS partner <em>mrdB/rodA</em> (PP_4806) immediately upstream, marking it as the RodA-coupled, elongation-specific PBP2 in <em>P. putida</em> (whereas <em>mrdA-I</em>/PP_3741 has no adjacent <em>rodA</em>).</li>
+<li><strong><em>P. putida</em>–specific supporting evidence:</strong> DAP-type PG editing and transpeptidase involvement in this organism (PMID 33830599); UniProt "Cell inner membrane; Single-pass membrane protein" annotation for Q88DL8 (HAMAP MF_02081).</li>
+<li><strong>Inference (annotation-level):</strong> the <em>physiological</em> details specific to PP_4807 in cells (essentiality, kinetics, whether it is the principal vs. accessory elongation PBP2, condition-specific deployment) are <strong>not yet measured directly on this locus</strong> and are inferred from family conservation.</li>
+</ul>
+<h2 id="7-limitations-and-future-directions">7. Limitations and future directions</h2>
+<ol>
+<li><strong>Paralog specificity.</strong> <em>P. putida</em> KT2440 encodes two <em>mrdA</em>/PBP2 genes — mrdA-I (PP_3741) and mrdA-II (PP_4807, this target) — that are 70.8% identical and both catalytically intact. Genomic context argues that <strong>mrdA-II is the canonical elongation PBP2</strong> (operon-linked to its RodA partner) and mrdA-I the accessory copy, but this has not been tested functionally: the paralogs' relative essentiality, expression conditions, and differential β-lactam/mecillinam sensitivity remain unknown. Targeted single- and double-deletion/complementation of PP_4807 vs PP_3741, Bocillin-FL PBP profiling, and mecillinam-sensitivity assays would resolve this.</li>
+<li><strong>Direct biochemistry</strong> (kinetics, Lipid II crosslinking assays, β-lactam acylation rates) on the <em>P. putida</em> enzyme itself is lacking.</li>
+<li><strong>In-cell localization/dynamics</strong> (fluorescent-fusion tracking of PP_4807 relative to MreB and the second paralog) would confirm elongasome membership for this specific gene product.</li>
+</ol>
+<hr />
+<h2 id="8-conclusion">8. Conclusion</h2>
+<p><em>mrdA-II</em> (PP_4807, Q88DL8) encodes a <strong>Class B penicillin-binding protein 2 (PBP2/MrdA)</strong>, a <strong>single-pass inner-membrane serine D,D-transpeptidase (EC 3.4.16.4; catalytic nucleophile Ser327)</strong> whose primary function is to <strong>crosslink peptidoglycan (4→3 D-Ala–meso-DAP bonds) during cell-wall elongation</strong>. It acts in the <strong>periplasm</strong> as the <strong>cognate transpeptidase of the RodA–PBP2 synthase</strong>, which is polymerized-glycan–fed by the SEDS enzyme RodA and spatially organized by the <strong>MreB/MreC/MreD/RodZ elongasome</strong>, thereby inserting new lateral wall material to maintain the rod shape of <em>P. putida</em>. It is the physiological target of the PBP2-specific agents mecillinam and zidebactam. Notably, it is <strong>one of two PBP2 paralogs</strong> in KT2440 (with mrdA-I/PP_3741, 70.8% identical); both are catalytically intact. Genomic context marks <strong>mrdA-II (PP_4807) as the canonical elongation PBP2</strong>, since it is encoded in an <em>mrd</em> operon directly downstream of its cognate SEDS glycosyltransferase partner <em>rodA</em>/mrdB (PP_4806), whereas mrdA-I lacks an adjacent <em>rodA</em>. The precise in-cell division of labour between the two paralogs remains to be tested experimentally.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="mrdA-II-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="mrdA-II-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88DL8
+gene_symbol: mrdA-II
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  MrdA-II/PBP2 is a bitopic inner-membrane class-B penicillin-binding protein
+  predicted to perform periplasmic D,D-transpeptidation in the RodA-dependent
+  lateral-wall peptidoglycan synthesis machinery. Its operon linkage to mrdB/rodA
+  supports a canonical elongasome role, while the contribution of the second
+  paralog MrdA-I remains unresolved.
+existing_annotations:
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: The root catalytic term is true but uninformative for a D,D-transpeptidase.
+    action: REMOVE
+    reason: It adds no useful information beyond the family-specific catalytic interpretation.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: MrdA-II is anchored in the cytoplasmic membrane.
+    action: ACCEPT
+    reason: Its N-terminal transmembrane helix positions the catalytic domain in the periplasm.
+- term:
+    id: GO:0008658
+    label: penicillin binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: The intact PBP active site supports beta-lactam binding.
+    action: ACCEPT
+    reason: Penicillin binding is a defining property of the MrdA/PBP2 family.
+- term:
+    id: GO:0009002
+    label: serine-type D-Ala-D-Ala carboxypeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: MrdA-II performs D,D-transpeptidation rather than primarily D,D-carboxypeptidation.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: The EC-linked GO label does not accurately describe the core peptide-crosslinking reaction.
+- term:
+    id: GO:0009252
+    label: peptidoglycan biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: MrdA-II is the predicted RodA-coupled lateral-wall crosslinking enzyme.
+    action: ACCEPT
+    reason: Its immediate mrdB/rodA neighbor supplies the glycan-polymerase half of the elongasome synthase.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: Membrane localization is true but less specific than plasma membrane.
+    action: KEEP_AS_NON_CORE
+    reason: GO:0005886 captures the relevant bacterial membrane.
+- term:
+    id: GO:0071555
+    label: cell wall organization
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: Lateral-wall peptide crosslinking directly contributes to cell-wall organization.
+    action: ACCEPT
+    reason: The RodA-MrdA machinery organizes and expands the peptidoglycan sacculus.
+- term:
+    id: GO:0071972
+    label: peptidoglycan L,D-transpeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: MrdA family proteins are D,D-transpeptidases, not L,D-transpeptidases.
+    action: REMOVE
+    reason: This TreeGrafter transfer assigns the wrong crosslink chemistry to a class-B PBP.
+references:
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/mrdA-II/mrdA-II-deep-research-openscientist.md
+  title: OpenScientist deep research report on PSEPK MrdA-II (Q88DL8)
+  publication_type: DEEP_RESEARCH
+  findings:
+  - statement: The report identifies MrdA-II as the operon-linked RodA partner and canonical elongation PBP2.
+    supporting_text: mrdA-II is the PBP2 physically coupled to its cognate RodA
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: Used as retrieval support; paralog-specific essentiality and physiological specialization are not experimentally established.
+core_functions:
+- description: Predicted canonical MrdA/PBP2 D,D-transpeptidase of the RodA-dependent elongasome.
+  directly_involved_in:
+  - id: GO:0009252
+    label: peptidoglycan biosynthetic process
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: file:PSEPK/mrdA-II/mrdA-II-deep-research-openscientist.md
+    supporting_text: mrdA-II is the PBP2 physically coupled to its cognate RodA
+knowledge_gaps:
+- gap_statement: The relative roles of MrdA-I and MrdA-II in KT2440 elongation are unknown.
+  status: OPEN
+  gap_kind: [BIOLOGY, CURATION]
+  significance: Operon context favors MrdA-II as the canonical RodA partner but does not establish redundancy or condition-specific deployment.
+- gap_statement: GO lacks a molecular-function term that cleanly represents PBP-family D,D-transpeptidation.
+  status: OPEN
+  gap_kind: [ONTOLOGY]
+  significance: The available carboxypeptidase term obscures the core peptide-crosslinking reaction.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
