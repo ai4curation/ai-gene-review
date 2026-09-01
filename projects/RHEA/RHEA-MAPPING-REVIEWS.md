@@ -37,7 +37,7 @@ and `rhea2ec(reaction)=EC`).
 | RHEA:12685 | GO:0050627 mycothione reductase [NAD(P)H] activity | Mycothione reductase (P9WHH3) | Mycobacterium tuberculosis | PE1, PMID:10512639 | exactMatch |
 | RHEA:13817 | GO:0047057 vitamin-K-epoxide reductase (warfarin-sensitive) activity | Vitamin K epoxide reductase complex subunit 1-like protein 1 (Q8N0U8) | Homo sapiens | PE1, PMID:24532791 | exactMatch |
 | RHEA:14105 | GO:0004735 pyrroline-5-carboxylate reductase activity | Pyrroline-5-carboxylate reductase 1, mitochondrial (P32322) | Homo sapiens | PE1, PMID:28258219 | exactMatch |
-| RHEA:16573 | GO:0004648 O-phospho-L-serine:2-oxoglutarate transaminase activity | Phosphoserine aminotransferase (P23721) | Escherichia coli | PE1, PMID:8706854 | exactMatch |
+| RHEA:16573 | GO:0004648 O-phospho-L-serine:2-oxoglutarate transaminase activity | Phosphoserine aminotransferase (P23721) | Escherichia coli | PE1, PMID:8706854 | broadMatch |
 | RHEA:16905 | GO:0047408 alkenylglycerophosphocholine hydrolase activity | Lysoplasmalogenase TMEM86A (Q8N2M4) | Homo sapiens | PE1, PMID:36592658 | exactMatch |
 | RHEA:18021 | GO:0047288 beta-D-galactosyl-(1->3)-N-acetyl-beta-D-galactosaminide alpha-2,3- sialyltransferase activity | CMP-N-acetylneuraminate-beta-galactosamide-alpha-2,3-sialyltransferase 1 (Q11201) | Homo sapiens | PE1, PMID:8027041 | exactMatch |
 | RHEA:16981 | GO:0018506 maleylacetate reductase activity | Maleylacetate reductase 2 (P94135) | Cupriavidus pinatubonensis | PE1, Swiss-Prot curator | exactMatch |
