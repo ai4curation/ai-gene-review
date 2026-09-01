@@ -162,6 +162,33 @@ These are the schema values for `propagation_review.source_entities[].source_sta
 | `NOT_RELEVANT` | Source was inspected but is not relevant to the target annotation. |
 | `UNRESOLVED` | Source could not be classified confidently. |
 
+### How many sources to enumerate
+
+`source_entities` is a **curated subset, not an exhaustive mirror** of the row's
+`WITH/FROM`. Enumerate the sources the review's argument actually rests on; where a
+column carries dozens of donors, characterise the span in prose and name the ones that
+matter. Some rows in this corpus have 47 or 53 donors — listing all of them is noise,
+not rigour, and it buries the two or three that carry the reasoning.
+
+The rule that does bind: **no sentence may claim more than the enumeration shows.**
+A block that names one seed and calls it *"the* IBD seed" asserts a sole-donor fact the
+`WITH/FROM` may contradict, and that is a defect regardless of how many sources are
+listed. Definite singulars — "the IBD seed", "the sole donor", "the only seed" — must be
+checked against the donor count before use; prefer "one of the IBD seeds" whenever more
+than one gene-level donor exists.
+
+Two traps when counting donors:
+
+- The `PANTHER:PTN…` entry is the **node**, not a donor. A row whose `WITH/FROM` is
+  `MGI:MGI:95407|PANTHER:PTN002571322` has exactly one donor, so "the IBD seed" is
+  correct there.
+- The same entity can appear twice under different identifiers — `RGD:2275` and
+  `UniProtKB:P55213` are both rat caspase-3. Two entries, one donor.
+
+Mouse blocks corrected under this rule: `Grpel2 GO:0051082` (1 of 3 listed, "the IBD
+seed" with a human GRPEL1 co-donor) and `Gulo GO:0016491` (2 of 8, seven gene donors
+spanning fungi, plants and bacteria).
+
 ### What an IBA actually asserts, and two ways to misread the WITH/FROM
 
 An IBA is not a similarity transfer from one gene to another. Behind every IBA is a
