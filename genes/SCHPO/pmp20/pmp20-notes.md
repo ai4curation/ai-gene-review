@@ -62,6 +62,10 @@
 - Replaced the partial homolog-panel quote with the exact contiguous RESULTS.md block
   showing 27 proteins, 23 with resolving-cysteine architecture, and Pmp20 in the
   four-member peroxidatic-only class.
-- Made the peroxisome/mitochondrion distinction explicit: peroxisomal Pmp20 biology
-  has support in fungal homologs, whereas the mitochondrial transfer depends on
-  targeting features in animal descendants that are absent from Pmp20.
+- Clarified the peroxisome/mitochondrion comparison after review: fungal homologs
+  independently ground peroxisomal Pmp20 biology, but they too require targeting
+  signals. Because S. pombe Pmp20 lacks an obvious canonical PTS1, the peroxisome
+  transfer remains unverified and is retained only as non-core rather than accepted.
+- Replaced an enzymatic-activity quote attached to the peroxisome annotation with the
+  direct CbPmp20 peroxisomal-membrane localization sentence, and accounted for the
+  rat mitochondrial donor alongside the human and fly sources.
