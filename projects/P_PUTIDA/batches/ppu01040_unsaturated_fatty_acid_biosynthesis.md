@@ -30,12 +30,11 @@ autolink_gene_symbols: false
 ## Biological Conclusion
 
 KEGG ppu01040 does not define a satisfiable three-enzyme biosynthetic pathway
-in KT2440. Its three mapped proteins are hydrolases: TesA is a secreted or
-periplasmic multifunctional thioesterase/lysophospholipase/protease, whereas
-TesB and PP_5331 hydrolyze acyl-CoA thioesters. None supplies the ACP-bound
-dehydration, double-bond isomerization, or condensing reaction that creates a
-cis-unsaturated fatty-acid chain. They are retained as adjacent release or
-turnover candidates, not forced into the module.
+in KT2440. Its three mapped proteins are hydrolases: TesA has multifunctional
+thioesterase, lysophospholipase, and protease assignments, whereas TesB and
+PP_5331 hydrolyze acyl-CoA thioesters. None has a supported ACP-dependent
+reaction that introduces or elongates cis unsaturation. They are retained as
+adjacent release or turnover candidates, not forced into the module.
 
 The defensible route is the canonical oxygen-independent type-II fatty-acid
 synthesis branch. FabA first dehydrates 3-hydroxydecanoyl-ACP and then
@@ -83,8 +82,9 @@ cytosol/cytoplasm calls are not promoted into the module.
 
 Every leaf activity has an exact KT2440 UniProt exemplar. FabA is grounded by
 reviewed UniProt/HAMAP assignments for both exact reactions. FabB and FabF are
-grounded by exact Rhea reactions in their local UniProt records; their current
-GOA rows also carry PAINT nodes PTN002270989 and PTN004296092 respectively.
+grounded by ARBA/PIRNR rule-derived exact Rhea reactions in their local UniProt
+records; their current GOA rows also carry PAINT nodes PTN002270989 and
+PTN004296092 respectively.
 No molecular function or redundant cytoplasm/cytosol term is placed at module
 level.
 
