@@ -65,4 +65,5 @@ over-annotation, and no proA YAML change.
 2026-09-01 validation: Module schema and semantic validation passed; the only
 advisory was an unavailable ontology lookup for `NCBITaxon:2`. Both `proB` and
 `proA` reviews passed full validation. The module, changed gene review, and
-batch page were rendered, and `git diff --check` passed.
+batch page were rendered, and `git diff --check` passed. Repair PR:
+[#2883](https://github.com/ai4curation/ai-gene-review/pull/2883).
