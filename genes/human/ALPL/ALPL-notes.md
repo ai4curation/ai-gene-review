@@ -119,6 +119,40 @@ term other than GO:0140928 itself. Hence a `proposed_new_terms` entry rather tha
   phosphate) all describe regulation *of* ALPL, not function *of* ALPL. Kept non-core;
   none has evidence against it.
 
+## The other three isozymes
+
+ALPI, ALPP and ALPG were reviewed in the same pass; see their own notes files. Decisions
+taken consistently across all four:
+
+- `GO:0016791 phosphatase activity` (InterPro2GO) → MODIFY to `GO:0004035` in every gene.
+  The signature that generates it is the alkaline phosphatase domain itself, so the parent
+  term throws away what the signature actually says.
+- `GO:0009897 external side of plasma membrane` proposed as NEW in all four. Every gene has
+  plasma-membrane rows and none records which face, although ecto-orientation is what makes
+  these enzymes act on extracellular substrates. Evidence differs per gene: PMID:2220817
+  (ALPL, PI-PLC + membrane-impermeable substrates), PMID:29567797 (ALPI, flow cytometry of
+  a GPI-signal truncation), PMID:2153284 (ALPP, the saturation mutagenesis that worked out
+  GPI attachment at Asp-484), PMID:2162249 (ALPG, PI-PLC release of the Nagao isozyme).
+- `GO:0042803 protein homodimerization activity` proposed as NEW in all four. Normally a
+  binding term would not earn a place, but the dimer is functionally load-bearing family-wide:
+  ALPL monomeric mutants are dead and dominant-negative, the ALPP structure credits the
+  interface with mammalian-specific allostery, and ALPI disease alleles act partly by
+  impairing dimerization.
+- Metal terms: ALPL was missing zinc and magnesium; ALPP and ALPI have them but not calcium;
+  ALPG had no metal term at all. Proposed the missing ones in each, with IDA where a human
+  structure resolves the metal (ALPL, ALPP) and ISS where it was resolved in a paralogue
+  (ALPG).
+- Interactome-derived `GO:0005515 protein binding` rows on ALPI and ALPP →
+  MARK_AS_OVER_ANNOTATED. All are binary Y2H maps and the partner lists are dominated by
+  keratin-associated proteins.
+
+The contrast in what can be *asserted* is the main finding of doing all four together. ALPL
+supports three core functions with named substrates and processes. ALPI supports one, with
+LPS and TLR4 attached, on Mendelian evidence GOA has not yet cited. ALPP and ALPG support
+only chemistry and topology — no physiological substrate is known for either — so their core
+functions carry a `knowledge_gaps` entry and no `directly_involved_in`, which is the honest
+representation rather than an omission.
+
 ## Process notes
 
 - `just deep-research-falcon` failed twice before working: first a uv HTTP timeout
