@@ -31,10 +31,24 @@ PATTERNS = sys.argv[1:] or ['genes/mouse/*/*-ai-review.yaml']
 
 # Model-organism database cross-references that appear as self-seed ids in WITH/FROM.
 # The DR line name and the id prefix used in GOA differ for several of these.
+# Model-organism database cross-references that appear as self-seed ids in WITH/FROM.
+# Each entry is (GOA id prefix, which ';'-separated DR field holds the id GOA cites).
+# Two traps here, both of which have silently broken this check before:
+#   * MGI's DR value ALREADY carries the "MGI:" prefix and GOA doubles it, so the
+#     corpus writes MGI:MGI:1346858 (1012 occurrences). Always prepend.
+#   * WormBase's first DR field is the TRANSCRIPT id (T01C8.1a); GOA cites the
+#     WBGene id, which is the third field.
 MOD_XREFS = {
-    'MGI': 'MGI', 'RGD': 'RGD', 'SGD': 'SGD', 'FlyBase': 'FB',
-    'WormBase': 'WB', 'ZFIN': 'ZFIN', 'TAIR': 'TAIR', 'dictyBase': 'dictyBase',
-    'PomBase': 'PomBase', 'CGD': 'CGD',
+    'MGI':        ('MGI', 0),
+    'RGD':        ('RGD', 0),
+    'SGD':        ('SGD', 0),
+    'FlyBase':    ('FB', 0),
+    'WormBase':   ('WB', 2),
+    'ZFIN':       ('ZFIN', 0),
+    'TAIR':       ('TAIR', 0),
+    'dictyBase':  ('dictyBase', 0),
+    'PomBase':    ('PomBase', 0),
+    'CGD':        ('CGD', 0),
 }
 # (organism, gene) -> the set of identifiers that denote the review target itself.
 # Keyed by organism as well as gene because directory basenames collide across species
@@ -47,15 +61,36 @@ for d in sorted(glob.glob('genes/*/*/')):
     f=f'{d}{g}-uniprot.txt'
     if os.path.exists(f):
         txt=open(f).read()
-        for dr_name, id_prefix in MOD_XREFS.items():
-            for m in re.finditer(rf'^DR   {re.escape(dr_name)}; ([^;]+);', txt, re.M):
-                val=m.group(1).strip()
-                ids.add(val if val.startswith(id_prefix+':') else f'{id_prefix}:{val}')
+        for dr_name, (id_prefix, field_idx) in MOD_XREFS.items():
+            for m in re.finditer(rf'^DR   {re.escape(dr_name)}; (.+)$', txt, re.M):
+                fields=[x.strip() for x in m.group(1).split(';')]
+                if field_idx >= len(fields): continue
+                val=fields[field_idx].rstrip('.').strip()
+                if not val: continue
+                # Always prepend the GOA prefix. Do NOT skip when the value already
+                # starts with it: MGI is exactly that case and GOA doubles it.
+                ids.add(f'{id_prefix}:{val}')
         m=re.search(r'^AC   (.+)$', txt, re.M)
         if m:
             for a in m.group(1).split(';'):
                 if a.strip(): ids.add('UniProtKB:'+a.strip())
     own[(org,g)]=ids
+
+# Self-test: the two id conventions that have silently broken self-seed detection
+# before. If these stop holding, SELF_SEED_* can never fire and the audit passes
+# vacuously on the affected organism -- which is worse than failing loudly.
+_selftest_failures = []
+if ('mouse', 'Mapk1') in own and 'MGI:MGI:1346858' not in own[('mouse', 'Mapk1')]:
+    _selftest_failures.append(
+        "MGI self-seed ids must carry the doubled prefix (MGI:MGI:...) as GOA writes them")
+if ('worm', 'aak-2') in own and 'WB:WBGene00020142' not in own[('worm', 'aak-2')]:
+    _selftest_failures.append(
+        "WormBase self-seed ids must be the WBGene id, not the transcript id")
+if _selftest_failures:
+    print("SELF-TEST FAILED - self-seed detection is not working:")
+    for _f in _selftest_failures:
+        print("   ", _f)
+    raise SystemExit(2)
 
 # valid PANTHER family labels
 fam_label={}
@@ -88,6 +123,13 @@ for f in files:
             issues.append((loc,'NO_FAILURE_WITH_MODES',f"{rc}+{fms}"))
         if act=='MODIFY' and rc and rc.startswith('NO_FAILURE'):
             issues.append((loc,'MODIFY_WITH_NO_FAILURE',rc))
+        # Third arm of the same consistency rule: a DEFECT root cause sitting under an
+        # action that accepts the annotation. Usually a stale block left behind when the
+        # action was softened, so the machine-readable field contradicts the prose.
+        DEFECT_RC = {'SOURCE_BAD','SOURCE_STALE_OR_MISSING','SOURCE_WEAK_OR_INFERRED',
+                     'EVIDENCE_CIRCULAR_OR_REDUNDANT','PROPAGATION_BAD','TERM_SCOPING_PROBLEM'}
+        if act in ('ACCEPT','KEEP_AS_NON_CORE') and rc in DEFECT_RC:
+            issues.append((loc,'DEFECT_ROOT_CAUSE_UNDER_ACCEPTING_ACTION',f"{act}+{rc}"))
         for se in (pr.get('source_entities') or []):
             ss=se.get('source_status'); sid=se.get('source_id') or ''
             # source_status is OPTIONAL in the schema; only flag values that are present
