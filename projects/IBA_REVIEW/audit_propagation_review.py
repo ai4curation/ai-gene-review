@@ -7,7 +7,12 @@ Checks each block for:
   * a self-seed source marked CIRCULAR_OR_REDUNDANT, or described with the inverted
     "adds no independent evidence" prose -- finding 1 of
     projects/IBA_REVIEW/propagation-review-audit.md
-  * PANTHER family labels that disagree with interpro/panther/panther.obo
+  * PANTHER family labels that disagree with interpro/panther/panther.obo.
+    Read a hit as LABEL HYGIENE first, not as a hallucinated id: the common case is a
+    truncated or embellished name for a correct family (dropping a trailing
+    'SUBUNIT A', appending '(SF0)'), and the fix is to copy the official name
+    verbatim. Only when the label names a DIFFERENT PROTEIN is it the hazard
+    CLAUDE.md singles out -- and there the fix is the id, never the label.
 
 Usage:  python3 projects/IBA_REVIEW/audit_propagation_review.py [glob ...] [--pair A,B] [--strict]
 Defaults to genes/mouse/*/*-ai-review.yaml; pass globs to audit other organisms,
@@ -167,17 +172,27 @@ try:
 except Exception as _e:
     _selftest_failures.append(f"could not read interpro/panther/panther.obo: {_e!r}")
 
-# PANTHER anchor. fam_label is keyed WITH the 'PANTHER:' prefix, and the lookup used
+# PANTHER anchors. fam_label is keyed WITH the 'PANTHER:' prefix, and the lookup used
 # the bare id for eight rounds -- so the rule never fired once and reported clean the
-# whole time. This asserts the file loaded AND the key shape still matches, which are
-# the two ways this check can go silent.
-if 'PANTHER:PTHR46861' not in fam_label:
+# whole time. Two separate assertions, because they fail for different reasons and a
+# single one would report the wrong cause:
+#   * shape: ANY prefixed key at all. Catches the file not loading and the key
+#     convention changing -- the two ways this check goes silent.
+#   * anchor: one known family. Catches a subtler parse break that still yields
+#     plausible keys. PANTHER may legitimately retire or merge PTHR46861 in a future
+#     release, in which case ONLY this second line fires and the shape line passes,
+#     which is the signal to re-point the anchor rather than to hunt a parser bug.
+if not any(k.startswith('PANTHER:PTHR') for k in fam_label):
     _selftest_failures.append(
         "PANTHER family labels must be keyed with the 'PANTHER:' prefix as panther.obo "
-        "writes them (PANTHER:PTHR46861 not found) - PANTHER_LABEL_MISMATCH cannot fire")
+        "writes them - no such key exists, so PANTHER_LABEL_MISMATCH cannot fire")
+elif 'PANTHER:PTHR46861' not in fam_label:
+    _selftest_failures.append(
+        "PANTHER anchor PTHR46861 is missing while other prefixed keys loaded - the "
+        "family was likely retired or merged upstream; re-point the anchor")
 
 if _selftest_failures:
-    print("SELF-TEST FAILED - self-seed detection is not working:")
+    print("SELF-TEST FAILED - a detection rule cannot fire:")
     for _f in _selftest_failures:
         print("   ", _f)
     raise SystemExit(2)
