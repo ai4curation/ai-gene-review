@@ -76,8 +76,8 @@ consumer of these activated sugars, not part of this module.
   glucose-1-phosphate candidate, AlgC is a bifunctional alternative, GalU forms
   UDP-glucose, and GalE supplies UDP-galactose reversibly.
 - GalE's TreeGrafter annotation to beta-D-galactose catabolism through the
-  Leloir pathway is marked over-annotated. KT2440 lacks an established native
-  GalK/GalT route; their absence is not a gap in this anabolic module.
+  Leloir pathway is removed. KT2440 lacks an established native GalK/GalT
+  route; their absence is not a gap in this anabolic module.
 - Pgm's TreeGrafter phosphopentomutase and purine-ribonucleoside-salvage rows
   are marked over-annotated because they cross divergent phosphomutase family
   functions.
@@ -89,3 +89,12 @@ consumer of these activated sugars, not part of this module.
 ## Notes
 
 Generated UTC: 2026-08-31T16:15:17.144458+00:00
+
+### 2026-09-01 GalE reconciliation
+
+Review against `main` found that this batch had regenerated over an earlier
+curated GalE review and weakened three decisions. The exact catalytic row again
+carries reaction evidence, broad galactose metabolism is retained as non-core,
+and the unsatisfiable TreeGrafter Leloir-catabolism propagation is restored to
+`REMOVE`. The new anabolic LPS-biosynthesis proposal remains, with `IGC`
+evidence reflecting that it is inferred from KT2440 pathway and locus context.
