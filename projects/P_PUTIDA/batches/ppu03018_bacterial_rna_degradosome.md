@@ -13,7 +13,8 @@ autolink_gene_symbols: false
 - Source bucket: KEGG `ppu03018` (RNA degradation)
 - Focused reviews: RNase E, RhlB, and PNPase; enolase assessed and excluded
 - Satisfiability: RNase E covered; accessory-partner realization unresolved
-- OpenScientist module/pathway/taxon and gene research: running
+- OpenScientist module/pathway/taxon research: complete; rhlB gene research
+  attempted but timed out after the full 7,200-second provider allowance
 
 ## Boundary
 
@@ -47,6 +48,12 @@ RNase E and PNPase function but not the exact complex composition. It therefore
 prompted two reusable variant axes: RhlB versus RhlE-family helicases and
 phosphorolytic PNPase versus hydrolytic RNase R. These alternatives are grounded
 in same-genus and close-relative evidence and remain unresolved in KT2440.
+
+The dedicated rhlB OpenScientist request exhausted the provider's 7,200-second
+allowance on 2026-08-31 and produced no report artifact. The rhlB review therefore
+uses the fetched UniProt record, cached full-text PMID:16275923, and the completed
+module-level species-aware report; the failed run is not represented as research
+evidence.
 
 ## Evidence
 

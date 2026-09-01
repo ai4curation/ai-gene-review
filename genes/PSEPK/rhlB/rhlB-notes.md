@@ -17,3 +17,9 @@ its exact KT2440 complex membership remains an explicit question.
 
 The nested localization annotations are normalized by accepting the more
 specific cytosol term and retaining cytoplasm as non-core.
+
+The dedicated OpenScientist gene-level request timed out after its full
+7,200-second provider allowance on 2026-08-31 and produced no report file. No
+biological claims are attributed to that failed run; this review instead cites
+the local UniProt record, cached full-text literature, and the completed
+species-aware degradosome module report.
