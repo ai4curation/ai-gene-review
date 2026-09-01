@@ -191,34 +191,48 @@ elif 'PANTHER:PTHR46861' not in fam_label:
         "PANTHER anchor PTHR46861 is missing while other prefixed keys loaded - the "
         "family was likely retired or merged upstream; re-point the anchor")
 
-# Negation of "circular" in a source comment. The previous version whitelisted four
-# LITERAL strings ('not circular', 'rather than circular', 'is not circular',
-# 'never circular') -- a list of phrasings someone had happened to see, not a match on
-# the grammar. Two of the four were dead (both are substrings of 'not circular'), and
-# it missed the commonest English form: "not A circular transfer" does not contain the
-# substring "not circular". Five of the seven live hits on the human corpus were
-# curators explicitly DISCLAIMING circularity, i.e. exactly the framing CLAUDE.md asks
-# for -- flagged as defects. A rule whose output is mostly good work is a rule that
-# gets ignored, so this matches a negation cue within the same clause instead.
-_NEGATED_CIRCULAR = re.compile(
-    r'(?:\bnot\b|\bnon\b|\bnever\b|\brather\s+than\b|\bavoids?\b)'
-    r'[\s\w,-]{0,40}?circular', re.I)
+# The three framings CLAUDE.md forbids about a self-seed source. All three were
+# once bare substring tests -- a list of phrasings someone had happened to see, not
+# a match on the grammar -- so a curator DISCLAIMING the framing was flagged as
+# committing it. Five of seven live hits were disclaimers.
+#
+# Checked PER OCCURRENCE, not per comment: one clause may disclaim circularity while
+# another asserts "adds no independent support". ACRV1 does exactly that, and a
+# whole-comment test would let its disclaimer suppress its assertion.
+_FLAGGED_FRAMING = re.compile(r'circular|self-supporting|no independent', re.I)
+_NEG_CUE = re.compile(r'\bnot\b|\bnon\b|\bnever\b|\brather\s+than\b|\bavoids?\b', re.I)
+
+def _asserts_inverted_framing(c):
+    """True if c ASSERTS one of the forbidden framings rather than disclaiming it."""
+    for m in _FLAGGED_FRAMING.finditer(c):
+        # Look back only within the same clause: splitting on .;: stops an unrelated
+        # earlier negation from suppressing a later assertion.
+        pre = re.split(r'[.;:]', c[max(0, m.start() - 45):m.start()])[-1]
+        if not _NEG_CUE.search(pre):
+            return True
+    return False
 
 # Self-test the predicate rather than trusting it: the failure direction here is a
 # FALSE POSITIVE, which does not announce itself the way a crash would.
 for _s, _want in (
-        ("not a circular transfer", True), ("not a circular chain", True),
-        ("rather than a circular inference", True), ("makes this non-circular", True),
-        ("strengthens the transfer rather than making it circular", True),
-        ("grounded rather than circular", True), ("never circular", True),
-        ("not circular", True),
-        # These MUST still be flagged -- they assert circularity, they do not deny it.
-        ("this source is circular and adds nothing", False),
-        ("a circular propagation with no experimental grounding", False)):
-    if bool(_NEGATED_CIRCULAR.search(_s)) != _want:
+        # Disclaimers -- must NOT be flagged.
+        ("not a circular transfer", False), ("not a circular chain", False),
+        ("rather than a circular inference", False), ("makes this non-circular", False),
+        ("strengthens the transfer rather than making it circular", False),
+        ("grounded rather than circular", False), ("never circular", False),
+        ("expected rather than self-supporting", False),
+        # Assertions -- must still be flagged.
+        ("this source is circular and adds nothing", True),
+        ("a circular propagation with no experimental grounding", True),
+        ("the propagation adds no independent evidence", True),
+        ("that item is self-supporting", True),
+        # Both in one comment: the disclaimer must not suppress the assertion.
+        ("rather than a circular inference, so it is not a defect; "
+         "it simply adds no independent support", True)):
+    if _asserts_inverted_framing(_s) != _want:
         _selftest_failures.append(
-            f"circularity-negation predicate is wrong for {_s!r} "
-            f"(expected whitelisted={_want}) - SELF_SEED_INVERTED_PROSE will misreport")
+            f"inverted-framing predicate is wrong for {_s!r} "
+            f"(expected flagged={_want}) - SELF_SEED_INVERTED_PROSE will misreport")
 
 if _selftest_failures:
     print("SELF-TEST FAILED - a detection rule cannot fire:")
@@ -364,8 +378,7 @@ for f in files:
         for se in (pr.get('source_entities') or []):
             if (se.get('source_id') or '') in own_ids:
                 c=(se.get('comment') or '').lower()
-                bad_circular = ('circular' in c and not _NEGATED_CIRCULAR.search(c))
-                if 'no independent' in c or 'self-supporting' in c or bad_circular:
+                if _asserts_inverted_framing(c):
                     issues.append((loc,'SELF_SEED_INVERTED_PROSE',se.get('source_id')))
 # ---------------------------------------------------------------------------
 # Cross-gene consistency: the same (term, evidence_type, reference) reviewed with
