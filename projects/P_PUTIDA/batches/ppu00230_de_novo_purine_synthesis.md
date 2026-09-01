@@ -101,6 +101,8 @@ available primary literature.
 
 ## 2026-09-01 Fusion and family repair
 
+Repair PR: [#2865](https://github.com/ai4curation/ai-gene-review/pull/2865).
+
 The human GART fusion P22102 is classified as
 PANTHER:PTHR10520:SF12 at the whole-protein level. The PurD and PurN leaves now
 include that exact fusion family alongside their standalone bacterial families,
