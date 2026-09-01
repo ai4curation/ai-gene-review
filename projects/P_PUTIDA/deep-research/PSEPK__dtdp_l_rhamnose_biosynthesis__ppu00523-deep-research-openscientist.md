@@ -1,10 +1,10 @@
 ---
 provider: openscientist
 model: openscientist-autonomous
-cached: false
-start_time: '2026-07-16T10:53:31.138078'
-end_time: '2026-07-16T11:09:46.527775'
-duration_seconds: 975.39
+cached: true
+start_time: '2026-09-01T14:22:39.165117'
+end_time: '2026-09-01T14:22:39.168106'
+duration_seconds: 0.0
 template_file: templates/module_pathway_taxon_research.md.j2
 template_variables:
   module_title: dTDP-L-rhamnose biosynthesis
