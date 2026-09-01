@@ -23,8 +23,9 @@ the already curated FruB/FruA fructose-uptake PTS. The reusable module is
 
 The branch has no sugar permease and does not transport or phosphorylate a
 carbohydrate. Conditional phosphate input from FruB is documented cross-talk,
-not a required part. PHA accumulation, potassium transport, and central-carbon
-effects are downstream regulatory outputs.
+not a required part. Conserved PtsN-KdpD kinase regulation is represented on
+the terminal relay annoton; the Kdp transport apparatus, PHA accumulation, and
+central-carbon effects remain downstream outputs outside the module boundary.
 
 ## Status
 
@@ -56,10 +57,13 @@ and the coherent PtsP-NPr-PtsN pathway boundary. No annotation remains pending.
 | `ptsH` | 4/4 | Accept cytoplasm; retain broad transferase activity as non-core; mark generic kinase activity over-annotated; remove sugar-PTS process; retain phosphorus-transfer and protein-phosphorylation proposals for the NPr carrier role. |
 | `ptsN` | 3/3 | Remove carbohydrate phosphotransferase activity and sugar-PTS process; modify kinase activator to direction-neutral kinase regulator activity; retain the separately supported signaling, KdpD/potassium, AceE inhibition, and cytoplasmic proposals. |
 
-The module audit treats the KdpD, AceE, PHA, and fructose cross-talk findings as
-PSEPK outputs or optional inputs, not conserved relay parts. The reusable core
-contains only phosphate entry through PtsP, transfer through NPr, and the
-phosphorylation-state-dependent PtsN regulatory readout.
+The module audit treats PtsN-KdpD kinase regulation as a conserved terminal
+output supported in both P. putida and E. coli, while the Kdp apparatus, AceE,
+PHA, and fructose cross-talk remain external outputs or optional inputs. The
+reusable core contains phosphate entry through PtsP, transfer through NPr, and
+the phosphorylation-state-dependent PtsN regulatory readout. Two ontology gaps
+are recorded explicitly: GO:0009401 is sugar-PTS-specific and GO lacks a
+dedicated NPr phosphocarrier molecular-function term.
 
 ## OpenScientist Research
 
