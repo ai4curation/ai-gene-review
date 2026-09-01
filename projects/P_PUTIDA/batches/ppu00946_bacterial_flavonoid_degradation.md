@@ -14,18 +14,18 @@ autolink_gene_symbols: false
   contiguous locus and the FdeD/FdeE reaction assignment
 - Primary bucket genes: 6
 - Existing review files: 8
-- Curated review files: 6
+- Curated review files: 8
 - Existing completed OpenScientist research files: 4
 
 ## Required Workflow
 
-- [ ] Curate or update the species-neutral module.
+- [x] Curate or update the species-neutral module.
 - [ ] Run module-level OpenScientist deep research.
 - [ ] Run module + pathway + PSEPK OpenScientist deep research.
 - [x] Fetch all selected genes with `just fetch-gene PSEPK <gene>`.
 - [ ] Run OpenScientist deep research for selected genes.
-- [ ] Curate each selected gene review.
-- [ ] Validate module and gene reviews.
+- [x] Curate each selected gene review.
+- [x] Validate module and gene reviews.
 - [x] Open [PR #2832](https://github.com/ai4curation/ai-gene-review/pull/2832)
   for this module/pathway.
 - [ ] Shepherd PR through review, CI, and merge readiness.
@@ -39,8 +39,8 @@ autolink_gene_symbols: false
 | [x] | `PP_3197` | PP_3197 | Q88I05 | kegg:ppu00946 | PRESENT | CURATED | PRESENT | Predicted FdeC-like flavonoid A-ring dioxygenase |
 | [x] | `PP_3198` | PP_3198 | Q88I04 | kegg:ppu00946 | PRESENT | DRAFT | FAILED (DNS) | Predicted FdeD Rieske [2Fe-2S] partner; electron-transfer partner remains unknown |
 | [x] | `PP_3199` | PP_3199 | Q88I03 | recovered from locus/KO reaction | PRESENT | DRAFT | PRESENT | Predicted FdeE-like FAD-dependent flavonoid monooxygenase; 40.4% identity to characterized Hsero_1007 |
-| [ ] | `PP_3204` | PP_3204 | Q88HZ8 | kegg:ppu00946 | PRESENT | INITIALIZED | RUNNING | Cupin type-2 domain-containing protein |
-| [ ] | `PP_3205` | PP_3205 | Q88HZ7 | kegg:ppu00946 | PRESENT | INITIALIZED | RUNNING | Fumarylacetoacetate hydrolase family protein |
+| [x] | `PP_3204` | PP_3204 | Q88HZ8 | kegg:ppu00946 | PRESENT | DRAFT | RUNNING | Predicted FdeH cupin component; independent molecular function unresolved |
+| [x] | `PP_3205` | PP_3205 | Q88HZ7 | kegg:ppu00946 | PRESENT | DRAFT | RUNNING | Predicted FdeI carboxy-lyase; second R13079 activity unresolved |
 | [x] | `PP_3206` | PP_3206 | Q88HZ6 | kegg:ppu00946 | PRESENT | DRAFT | PRESENT | Predicted FdeJ/R13076 carbon-carbon hydrolase; exact reaction untested |
 
 ## Notes
@@ -58,3 +58,7 @@ autolink_gene_symbols: false
   connection failures after their full runs and produced no research artifacts.
   Their curation uses fetched database records, primary literature, and
   committed reproducible analyses; provider output was not fabricated.
+- `modules/bacterial_flavonoid_degradation.yaml` models six ordered reaction
+  parts (R13074-R13079), keeps molecular functions on leaf annotons, uses
+  UniProt exemplars without unverified PANTHER/PTN claims, and leaves the FdeH
+  and R13079 molecular functions unset where the chemistry is unresolved.
