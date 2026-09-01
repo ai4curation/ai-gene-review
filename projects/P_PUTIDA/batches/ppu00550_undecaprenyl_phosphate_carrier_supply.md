@@ -17,10 +17,10 @@ glycan polymerization, and peptide crosslinking.
 ## Workflow
 
 - [x] Fetch both PSEPK gene records.
-- [ ] Complete OpenScientist gene research.
+- [ ] Complete OpenScientist gene research (uppP complete; uppS running).
 - [x] Curate every GOA row for both genes.
 - [x] Create a species-neutral, multi-part module with exact UniProt exemplars.
-- [ ] Complete module and module + pathway + taxon research.
+- [ ] Complete module and module + pathway + taxon research (taxon review complete; generic module research running).
 - [ ] Validate and render the reviews, module, and project page.
 - [ ] Open one non-draft PR and clear review and CI.
 
@@ -44,3 +44,13 @@ glycan polymerization, and peptide crosslinking.
   official label describes eukaryotic dehydrodolichyl diphosphate synthase 2,
   despite containing the exact bacterial UppS exemplars. Exact UniProt
   exemplars are retained instead of relabeling or guessing a family ID.
+- Species-aware research confirms both canonical steps are present but finds
+  probable asymmetry in redundancy: UppS appears single-copy, whereas
+  PP_0251, PP_0900, and PP_4813 are PAP2-family candidates that may overlap
+  UppP activity.
+- Those PAP2 candidates remain candidate-uncertain; broad PAP2 membership is
+  not sufficient to assign GO:0050380 because family members can prefer
+  glycerophospholipid or LPS substrates.
+- No direct KT2440 biochemical or genetic evidence was found for either
+  canonical protein. Ortholog-derived periplasm-facing UppP catalysis and a
+  proposed flippase role are not promoted to core-function assertions.
