@@ -17,7 +17,7 @@ is a non-authoritative consistency proposal and is not adopted.
 Reviewed all six GOA rows against the fetched UniProt/HAMAP record,
 PMID:23530902, and the reusable Tat module. Tat-complex membership,
 plasma-membrane localization, and the Tat-specific process are retained. The
-whole-transporter MF and generic protein-transport and membrane parents are
-marked as subunit-level or redundant over-annotations. The publication supports
+whole-transporter MF and generic protein-transport parent are kept as correct
+non-core annotations, while generic membrane remains an over-annotation. The publication supports
 transport by the complete second Tat system, not an isolated TatB activity. No
 row remains PENDING or UNDECIDED.

@@ -10,7 +10,6 @@ consulted, so the receptor role is a family-grounded assignment.
 
 Reviewed all seven GOA rows against the fetched UniProt/HAMAP record and the
 reusable Tat module. Tat-complex membership, plasma-membrane localization, and
-the Tat-specific process are retained. Both transporter MFs are marked as
-whole-complex claims over-annotated to TatC alone; generic membrane and broad
-transmembrane-transport rows are marked redundant. No row remains PENDING or
-UNDECIDED.
+the Tat-specific and parent transmembrane-transport processes are retained.
+Both transporter MFs remain whole-complex claims over-annotated to TatC alone;
+generic membrane is also marked redundant. No row remains PENDING or UNDECIDED.

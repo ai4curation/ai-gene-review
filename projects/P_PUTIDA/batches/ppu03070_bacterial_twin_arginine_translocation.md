@@ -64,19 +64,20 @@ record, PMID:23530902 where applicable, existing deep research, and the repaired
 module. Every row has an explicit action, rationale, and row-level supporting
 text; none remains PENDING or UNDECIDED.
 
-| Gene | Rows | ACCEPT | MARK_AS_OVER_ANNOTATED | MODIFY |
-|---|---:|---:|---:|---:|
-| `tatA-I` | 6 | 3 | 3 | 0 |
-| `tatB-I` | 5 | 2 | 2 | 1 |
-| `tatC-I` | 7 | 3 | 4 | 0 |
-| `tatA-II` | 7 | 3 | 4 | 0 |
-| `tatB` | 6 | 3 | 3 | 0 |
-| `tatC-II` | 7 | 3 | 4 | 0 |
+| Gene | Rows | ACCEPT | KEEP_AS_NON_CORE | MARK_AS_OVER_ANNOTATED | MODIFY |
+|---|---:|---:|---:|---:|---:|
+| `tatA-I` | 6 | 4 | 1 | 1 | 0 |
+| `tatB-I` | 5 | 2 | 2 | 0 | 1 |
+| `tatC-I` | 7 | 4 | 0 | 3 | 0 |
+| `tatA-II` | 7 | 5 | 1 | 1 | 0 |
+| `tatB` | 6 | 3 | 2 | 1 | 0 |
+| `tatC-II` | 7 | 4 | 0 | 3 | 0 |
 
 The single MODIFY is the generic membrane annotation on the less-completely
 annotated TatB-I record, replaced by bacterial plasma membrane. Broad parent
-processes and generic membrane terms are retained as over-annotations where a
-more informative Tat-specific process or plasma-membrane term is present.
+processes are kept as correct non-core annotations where a more informative
+Tat-specific process is present; generic membrane terms remain over-annotated
+where a plasma-membrane term is available.
 
 ## Family and evolutionary grounding
 

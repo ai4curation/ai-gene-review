@@ -12,8 +12,8 @@ substrate usage by the second Tat locus is not asserted.
 
 Reviewed all seven GOA rows against the fetched UniProt/HAMAP record,
 PMID:23530902, and the reusable Tat module. Tat-complex membership,
-plasma-membrane localization, and the Tat-specific process are retained. Both
-transporter MFs are whole-complex claims over-annotated to TatC-II alone;
-generic membrane and broad transmembrane-transport rows are marked redundant.
+plasma-membrane localization, and the Tat-specific and parent transmembrane-
+transport processes are retained. Both transporter MFs are whole-complex claims
+over-annotated to TatC-II alone; generic membrane is marked redundant.
 The publication supports the complete second Tat system, not isolated TatC-II
 activity. No row remains PENDING or UNDECIDED.

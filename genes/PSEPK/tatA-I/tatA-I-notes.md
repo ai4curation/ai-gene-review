@@ -11,6 +11,6 @@ KT2440 Tat systems remains unresolved.
 
 Reviewed all six GOA rows against the fetched UniProt record and the reusable
 Tat module. The Tat-specific process, Tat-complex membership, and plasma-membrane
-location are retained. Whole-transporter MF is marked as a subunit-level
-over-annotation, and the generic protein-transport and membrane parents are
-marked as redundant over-annotations. No row remains PENDING or UNDECIDED.
+location and TatA transporter activity are retained. Generic protein transport
+is kept as a correct non-core parent, while generic membrane is marked as a
+redundant over-annotation. No row remains PENDING or UNDECIDED.

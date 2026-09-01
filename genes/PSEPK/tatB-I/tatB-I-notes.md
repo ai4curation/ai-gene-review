@@ -12,6 +12,6 @@ an explicit question.
 Reviewed all five GOA rows against the fetched UniProt record, TatB-specific
 InterPro assignment, locus context, and reusable Tat module. Tat-complex
 membership and the Tat-specific process are retained; the isolated-subunit
-transporter MF and broad protein-transport parent are marked as
-over-annotations. The generic membrane row is retained as MODIFY to the
+transporter MF and broad protein-transport parent are kept as correct non-core
+annotations. The generic membrane row is retained as MODIFY to the
 bacterial plasma membrane. No row remains PENDING or UNDECIDED.

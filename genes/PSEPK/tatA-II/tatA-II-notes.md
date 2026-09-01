@@ -5,8 +5,8 @@
 Reviewed all seven GOA rows against the fetched UniProt/HAMAP record,
 PMID:23530902, the existing OpenScientist gene report, and the reusable Tat
 module. Tat-complex membership, plasma-membrane localization, and the
-Tat-specific process are retained. The isolated-subunit transporter MF and
-broad protein-transport, membrane, and transmembrane-transport rows are marked
-as over-annotations. PMID:23530902 supports transport by both complete PSEPK Tat
-systems but does not resolve the action of TatA-II in isolation. No row remains
-PENDING or UNDECIDED.
+Tat-specific and parent transmembrane-transport processes plus TatA transporter
+activity are retained. Broad protein transport is kept as non-core, while
+generic membrane is marked as an over-annotation. PMID:23530902 supports
+transport by both complete PSEPK Tat systems. No row remains PENDING or
+UNDECIDED.
