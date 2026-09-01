@@ -9,7 +9,7 @@ Checks each block for:
     projects/IBA_REVIEW/propagation-review-audit.md
   * PANTHER family labels that disagree with interpro/panther/panther.obo
 
-Usage:  python3 projects/IBA_REVIEW/audit_propagation_review.py [glob ...] [--pair A,B]
+Usage:  python3 projects/IBA_REVIEW/audit_propagation_review.py [glob ...] [--pair A,B] [--strict]
 Defaults to genes/mouse/*/*-ai-review.yaml; pass globs to audit other organisms,
 e.g. the ISO backlog:  ... audit_propagation_review.py 'genes/human/*/*-ai-review.yaml'
 
@@ -46,11 +46,23 @@ def _parse_argv(argv):
     """
     globs, pair, strict, i = [], None, False, 0
     while i < len(argv):
-        if argv[i] == '--pair' and i + 1 < len(argv):
+        tok = argv[i]
+        if tok == '--pair' and i + 1 < len(argv):
             pair = argv[i + 1]; i += 2; continue
-        if argv[i] == '--strict':
+        if tok.startswith('--pair='):
+            pair = tok[len('--pair='):]; i += 1; continue
+        if tok == '--strict':
             strict = True; i += 1; continue
-        globs.append(argv[i]); i += 1
+        # Anything else that LOOKS like a flag is a typo, not a glob. Falling through
+        # to globs is only caught by the zero-inputs guard when no real glob is also
+        # passed; with one, '--pairs A,B <glob>' or '--strct <glob>' audits every file
+        # and exits 0 having done neither thing the caller asked for -- and a mistyped
+        # --strict silently turns a CI gate back into a report while still going green.
+        if tok.startswith('-'):
+            print(f"unrecognized flag {tok!r}. Accepted: --pair A,B (or --pair=A,B), --strict.")
+            print("  Everything else is treated as a file glob; flags are not.")
+            raise SystemExit(2)
+        globs.append(tok); i += 1
     return globs, pair, strict
 
 _GLOBS, PAIR_ARG, STRICT = _parse_argv(sys.argv[1:])
@@ -180,11 +192,22 @@ if PAIR_ARG:
         print(f"--pair: {PAIR_ARG!r} resolves to fewer than two distinct genes "
               f"({sorted(_orgs)}) - nothing to compare.")
         raise SystemExit(2)
-    if len({g for _, g in _orgs}) == 1 and len({o for o, _ in _orgs}) > 1:
-        print(f"--pair: {PAIR_ARG!r} matched the same gene in several organisms "
-              f"({sorted(_orgs)}). That compares orthologs across species, not paralogs.")
-        print("  Disambiguate with the organism/Gene form, e.g. --pair mouse/Mapk1,mouse/Mapk3")
-        raise SystemExit(2)
+    # Check each BARE name independently. An earlier version asked whether every
+    # matched path shared one gene name, which only caught --pair X,X: with two
+    # distinct colliding names (--pair Casp3,Ghr over a mouse+rat glob) the gene set
+    # has size 2, the guard passed, and the combinations included mouse Casp3 vs rat
+    # Casp3. Per-name is the right granularity and subsumes the same-gene case.
+    for _nm in _names:
+        if '/' in _nm:
+            continue  # already disambiguated by the caller
+        _nm_orgs = sorted({o for o, g in _orgs if g == _nm})
+        if len(_nm_orgs) > 1:
+            print(f"--pair: bare name {_nm!r} matched {len(_nm_orgs)} organisms "
+                  f"({_nm_orgs}). Comparing those pairs orthologs across species, "
+                  f"not paralogs.")
+            print(f"  Disambiguate with the organism/Gene form, "
+                  f"e.g. --pair {_nm_orgs[0]}/{_nm},...")
+            raise SystemExit(2)
 
 for f in files:
     _parts=os.path.dirname(f).split(os.sep)
@@ -277,7 +300,11 @@ pair_arg = PAIR_ARG
 if pair_arg:
     _paths = PAIR_PATHS  # already validated above, before the audit ran
     _combos = [(_paths[i], _paths[j]) for i in range(len(_paths)) for j in range(i + 1, len(_paths))]
-    if not _combos:
+    # Unreachable as written: the validation above requires >=2 distinct (organism,
+    # gene) in PAIR_PATHS, so there is always >=1 combination. Kept as a backstop in
+    # case that validation is later relaxed -- but it is NOT the live guard, and
+    # editing it will not change any behaviour. The real checks are with PAIR_PATHS.
+    if not _combos:  # pragma: no cover - see above
         print(f"--pair: {pair_arg!r} produced no comparable pair - nothing compared.")
         raise SystemExit(2)
 else:
