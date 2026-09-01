@@ -51,3 +51,17 @@
   inference and noted the absence of an obvious canonical C-terminal PTS1 motif.
 - Added explicit questions and experiments for endogenous holdase clients and direct
   organelle-localization testing.
+
+## 2026-09-01 — post-merge evidence follow-up
+
+- Accounted explicitly for the fly mitochondrial PAINT donor rather than discussing
+  only mammalian PRDX5; the fly localization can support that descendant without
+  supplying a targeting mechanism or target-specific evidence for S. pombe Pmp20.
+- Added direct file-backed evidence for the P30044 residues 1–52 transit peptide and
+  for the reviewed cytoplasmic localization of O14313.
+- Replaced the partial homolog-panel quote with the exact contiguous RESULTS.md block
+  showing 27 proteins, 23 with resolving-cysteine architecture, and Pmp20 in the
+  four-member peroxidatic-only class.
+- Made the peroxisome/mitochondrion distinction explicit: peroxisomal Pmp20 biology
+  has support in fungal homologs, whereas the mitochondrial transfer depends on
+  targeting features in animal descendants that are absent from Pmp20.
