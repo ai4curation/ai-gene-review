@@ -98,9 +98,12 @@ pathway holes.
   identifier.
 - Molecular functions occur only on leaf annotons, and no module-level
   cytoplasm/cytosol pair is asserted.
-- The obsolete GO:0009089 cross-reference is not authored as a new core term.
-  Gene reviews use current GO:0009085 for L-lysine biosynthesis while
-  preserving machine-sourced existing IDs for review.
+- GO:0009089 is not used as the justification for a new core term. Local
+  resources disagree about its status: the current local OAK snapshot labels
+  it obsolete, while `rules/_labels.json` and UniProt-derived metadata retain
+  the unprefixed label. The reviews therefore keep their current GOA-backed
+  GO:0009085 L-lysine biosynthetic-process term, which safely covers the full
+  route, while preserving machine-sourced existing IDs for review.
 
 ## Research Interpretation
 
@@ -126,6 +129,11 @@ pathway holes.
 - PP_1588 has DapC-specific InterPro/NCBIfam signatures and remains the selected
   step-4 enzyme. The possible contribution of the broader ArgD/AruC family is a
   physiological flux question rather than a pathway hole.
+- Reviewed UniProt searches found characterized bifunctional ArgD/DapC proteins
+  and a dedicated mycobacterial DapC, but no reviewed exemplar in the exact
+  beta/gammaproteobacterial IPR019878/TIGR03538 lineage. E. coli P18335 is kept
+  only as a reaction exemplar and is explicitly not asserted as an ortholog or
+  shared family member.
 
 ## Validation
 
