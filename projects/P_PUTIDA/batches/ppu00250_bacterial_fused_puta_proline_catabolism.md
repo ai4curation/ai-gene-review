@@ -16,7 +16,7 @@ autolink_gene_symbols: false
 - [x] Complete the module and PSEPK pathway research attempts.
 - [x] Curate every GOA row and consult the annotation reviewer.
 - [x] Validate and render all artifacts.
-- [ ] Open one draft PR.
+- [x] Open one draft PR: [PR #2829](https://github.com/ai4curation/ai-gene-review/pull/2829).
 
 ## Boundary
 
@@ -66,3 +66,9 @@ provider clients later exited naturally without publishing report artifacts.
 They were not restarted or terminated. The curation therefore uses the
 completed PutA report as retrieval support and grounds decisions in the exact
 UniProt/QuickGO records and cached primary literature.
+
+2026-08-31: Opened focused draft PR #2829 after correcting the distinction
+between direct pathway evidence and homology-supported catalytic assignments,
+adding direct P. putida PutA-DNA structural evidence, and fixing broad-term and
+supporting-text decisions. Full-allowance OpenScientist retries for PutP, the
+generic module, and the PSEPK module/pathway context are active.
