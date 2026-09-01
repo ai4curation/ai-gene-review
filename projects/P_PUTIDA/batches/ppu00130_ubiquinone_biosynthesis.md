@@ -95,9 +95,10 @@ Module repair (2026-09-01):
   a localization claim for the module.
 - Modeled UbiF and Coq7 as lineage-specific alternatives for late C-3
   hydroxylation, rather than requiring the Pseudomonas Coq7 replacement in all
-  bacterial implementations.
+  bacterial implementations; the UbiF branch is grounded by its reviewed E.
+  coli exemplar rather than the distinct Coq7 EC/Rhea reaction.
 - Added direct E. coli UbiG and UbiE evidence, documented residual SF19/SF24
-  heterogeneity, and demoted unsupported UbiC cytosol localization from the
-  core function.
+  heterogeneity, retained supported UbiC cytoplasm localization in the core
+  function, and marked the more specific cytosol transfer as over-annotated.
 
 Generated UTC: 2026-07-19T02:51:10Z
