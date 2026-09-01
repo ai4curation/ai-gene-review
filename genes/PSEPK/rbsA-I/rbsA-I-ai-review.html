@@ -1,0 +1,2244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rbsA-I - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>rbsA-I</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88K37" target="_blank" class="term-link">
+                        Q88K37
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "rbsA-I";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88K37" data-a="DESCRIPTION: RbsA-I is the peripheral membrane ATP-binding comp..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>RbsA-I is the peripheral membrane ATP-binding component of the PP_2454-PP_2459 carbohydrate ABC importer. It hydrolyzes ATP to energize the neighboring RbsC permease and is inferred from locus context to support D-ribose uptake; its allose-related PANTHER subfamily label is not treated as substrate-specific evidence.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000166" target="_blank" class="term-link">
+                                    GO:0000166
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K37" data-a="GO:0000166" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> True but less informative than the ATP-binding and ATP-hydrolysis annotations.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K37" data-a="GO:0005524" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct substrate binding for an ABC energy-coupling ATPase.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K37" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct membrane association through the transporter, although RbsA-I is a peripheral ATPase rather than an integral membrane subunit.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                                    GO:0016887
+                                </a>
+                            </span>
+                            <span class="term-label">ATP hydrolysis activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K37" data-a="GO:0016887" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct catalytic activity that supplies energy to the ABC importer.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015752" target="_blank" class="term-link">
+                                    GO:0015752
+                                </a>
+                            </span>
+                            <span class="term-label">D-ribose transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/rbsA-I/rbsA-I-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K37" data-a="GO:0015752" data-r="file:PSEPK/rbsA-I/rbsA-I-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed process annotation for the ATPase subunit of the contiguous RbsABC locus; UniProt already carries the broader parent GO:0015749 monosaccharide transmembrane transport, while D-ribose specificity remains inferred from locus context.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rbsA-I/rbsA-I-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   SubName: Full=Ribose ABC transporter-ATP-binding subunit {ECO:0000313|EMBL:AAN68067.1};</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043190" target="_blank" class="term-link">
+                                    GO:0043190
+                                </a>
+                            </span>
+                            <span class="term-label">ATP-binding cassette (ABC) transporter complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/rbsA-I/rbsA-I-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K37" data-a="GO:0043190" data-r="file:PSEPK/rbsA-I/rbsA-I-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Proposed complex membership for the energy-coupling subunit.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rbsA-I/rbsA-I-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DE   SubName: Full=Ribose ABC transporter-ATP-binding subunit {ECO:0000313|EMBL:AAN68067.1};</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Hydrolyzes ATP to energize the RbsABC carbohydrate importer and, by locus context, contributes to D-ribose uptake through the neighboring RbsC permease.</h3>
+                <span class="vote-buttons" data-g="Q88K37" data-a="FUNCTION: Hydrolyzes ATP to energize the RbsABC carbohydrate..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                            ATP hydrolysis activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015752" target="_blank" class="term-link">
+                                D-ribose transmembrane transport
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043190" target="_blank" class="term-link">
+                            ATP-binding cassette (ABC) transporter complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/rbsA-I/rbsA-I-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DE   SubName: Full=Ribose ABC transporter-ATP-binding subunit {ECO:0000313|EMBL:AAN68067.1};</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/rbsA-I/rbsA-I-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">No direct experimental data on PP_2455 itself.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/rbsA-I/rbsA-I-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for Pseudomonas putida KT2440 rbsA-I</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The record identifies Q88K37 as the ATP-binding subunit of a ribose ABC transporter.</div>
+
+                        <div class="finding-text">"DE   SubName: Full=Ribose ABC transporter-ATP-binding subunit {ECO:0000313|EMBL:AAN68067.1};"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The PANTHER subfamily label does not distinguish ribose from allose import ATPases.</div>
+
+                        <div class="finding-text">"DR   PANTHER; PTHR43790:SF3; D-ALLOSE IMPORT ATP-BINDING PROTEIN ALSA-RELATED; 1."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/rbsA-I/rbsA-I-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research report for rbsA-I in Pseudomonas putida KT2440</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report found no direct experimental study of Q88K37.</div>
+
+                        <div class="finding-text">"No direct experimental data on PP_2455 itself."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does RbsA-I couple specifically to RbsC and Q88K38-bound D-ribose in KT2440?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88K37" data-a="Q: Does RbsA-I couple specifically to RbsC and Q88K38..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute RbsA-I with RbsC and RbsB and measure substrate-dependent ATPase and transport activity.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: transporter reconstitution</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88K37" data-a="EXPERIMENT: Reconstitute RbsA-I with RbsC and RbsB and measure..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rbsA-I-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88K37" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: rbsA-I (PP_2455 / Q88K37) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">2 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-31T11:50:34.780427</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="rbsA-I-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="rbsA-I-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-rbsa-i-pp_2455-q88k37-in-pseudomonas-putida-kt2440">Functional Annotation Report: rbsA-I (PP_2455 / Q88K37) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>rbsA-I (PP_2455; UniProt Q88K37) encodes the cytoplasmic ATP-binding (ATPase) subunit of the high-affinity D-ribose ABC importer of <em>Pseudomonas putida</em> KT2440.</strong> It is a 524-amino-acid soluble protein built from two fused nucleotide-binding domains (NBDs), each carrying the canonical Walker A / P-loop and Walker B catalytic motifs of the ABC-transporter ATPase superfamily. Its primary function is not to catalyze a stand-alone metabolic reaction but to serve as the energy-coupling motor of a membrane transport machine: it binds and hydrolyzes ATP at the cytoplasmic face of the inner membrane, and the resulting conformational cycling drives the vectorial translocation of D-ribose from the periplasm into the cytoplasm through its partner permease. The enzyme classification EC 7.5.2.7 (previously EC 3.6.3.17), KEGG orthology K10441 ("ribose transport system ATP-binding protein"), and GO terms GO:0005524 (ATP binding), GO:0016887 (ATP hydrolysis activity), and GO:0015749 (monosaccharide transmembrane transport) all converge on this assignment.</p>
+<p>The identity of the protein is unambiguous. PP_2455 sits within a complete, canonically organized chromosomal ribose (<em>rbs</em>) operon (PP_2454–PP_2460) that encodes the periplasmic ribose-binding protein (RbsB), the ATPase (RbsA-I), the permease (RbsC), a LacI-family repressor (RbsR), and the downstream catabolic enzymes ribokinase (RbsK), ribose pyranase (RbsD), and a ribonucleoside hydrolase. This gene neighborhood mirrors the archetypal <em>Escherichia coli</em> <em>rbsDACBK</em>–<em>rbsR</em> system, in which the RbsABC complex is the high-affinity transporter and RbsD/RbsK convert imported D-ribose into D-ribose-5-phosphate for entry into the pentose-phosphate pathway. RbsA-I shares 41% amino-acid identity with the biochemically characterized <em>E. coli</em> RbsA, a level well above the threshold generally accepted for confident cross-genus functional transfer among transporter ATPases.</p>
+<p>The substrate specificity of the transporter — D-ribose — is determined by the periplasmic binding protein RbsB rather than by RbsA-I itself; the ATPase is the generic energizing component. RbsA-I therefore acts at the cytoplasmic face of the inner membrane, physically docked onto the RbsC permease homodimer, where its nucleotide-binding state governs the assembly and conformational state of the full RbsABC₂ translocation complex. This report details the evidence for each of these conclusions, presents a mechanistic model, evaluates the supporting literature, and identifies the residual knowledge gaps and experiments that would close them.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-pp_2455-rbsa-i-encodes-the-atp-binding-atpase-subunit-of-a-canonical-d-ribose-abc-importer">Finding 1 — PP_2455 (rbsA-I) encodes the ATP-binding (ATPase) subunit of a canonical D-ribose ABC importer</h3>
+<p>The core functional assignment rests on a convergence of sequence, domain, and orthology evidence. UniProt Q88K37 describes a 524-amino-acid protein annotated with the keywords ATP-binding, Nucleotide-binding, Translocase/Hydrolase, and Sugar transport. Domain analysis identifies two copies of the Pfam PF00005 ABC_tran domain (a tandem, repeated architecture), together with InterPro signatures IPR050107 (ABC carbohydrate-import ATPase), IPR003439 (ABC transporter-like ATP-binding domain), IPR003593 (AAA+ ATPase), and IPR027417 (P-loop NTPase). The KEGG entry ppu:PP_2455 maps to KEGG Orthology K10441, "ribose transport system ATP-binding protein," with EC 7.5.2.7 (ABC-type D-ribose transporter; the modern reclassification of the legacy EC 3.6.3.17 cited in the UniProt record). The Gene Ontology annotations — GO:0005524 (ATP binding), GO:0016887 (ATP hydrolysis activity), and GO:0015749 (monosaccharide transmembrane transport) — are fully consistent with an ABC-transporter ATPase. Direct inspection of the primary sequence confirms a Walker A / P-loop motif (…TGENGAGKSTL…) diagnostic of nucleotide binding.</p>
+<p>The protein's length is itself informative. At 524 aa, RbsA-I is roughly twice the size of a single ~260-aa nucleotide-binding domain, consistent with two fused NBDs — exactly the architecture of the experimentally defined <em>E. coli</em> RbsA. The reconstitution study of the <em>E. coli</em> ribose transporter states plainly that "the ribose transporter in <em>Escherichia coli</em> is a tripartite complex consisting of a cytoplasmic ATP-binding cassette protein, RbsA, with fused nucleotide binding domains; a transmembrane domain homodimer, RbsC₂; and a periplasmic substrate binding protein, RbsB" (<a href="https://pubmed.ncbi.nlm.nih.gov/25533465/">PMID: 25533465</a>). This description of RbsA as a cytoplasmic ABC protein with two fused NBDs matches the observed 524-aa, two-NBD architecture of Q88K37 point for point.</p>
+<p><strong>Interpretation:</strong> RbsA-I is the ATP-hydrolyzing engine of an importer. It supplies the free energy — through ATP binding and hydrolysis — that powers uphill accumulation of D-ribose against a concentration gradient. It is a transporter subunit, not an independent catabolic enzyme.</p>
+<h3 id="finding-2-rbsa-i-lies-within-a-complete-chromosomal-ribose-rbs-operon-dedicated-to-d-ribose-uptake-and-catabolism">Finding 2 — rbsA-I lies within a complete chromosomal ribose (<em>rbs</em>) operon dedicated to D-ribose uptake and catabolism</h3>
+<p>Gene context is one of the strongest lines of evidence for the function of a transporter subunit, because ABC-importer genes are almost universally clustered with their cognate binding protein, permease, and downstream catabolic enzymes. The KEGG genomic neighborhood of PP_2455 (chromosomal coordinates ~2,801,617–2,803,191 and flanking genes) comprises:</p>
+<table>
+<thead>
+<tr>
+<th>Locus tag</th>
+<th>Gene</th>
+<th>Product</th>
+<th>Role in ribose utilization</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_2454</td>
+<td>rbsB</td>
+<td>Periplasmic ribose-binding protein</td>
+<td>Captures D-ribose in periplasm; sets substrate specificity</td>
+</tr>
+<tr>
+<td><strong>PP_2455</strong></td>
+<td><strong>rbsA-I</strong></td>
+<td><strong>ABC transporter ATP-binding subunit</strong></td>
+<td><strong>Energizes transport via ATP hydrolysis (this study)</strong></td>
+</tr>
+<tr>
+<td>PP_2456</td>
+<td>rbsC</td>
+<td>Ribose permease (transmembrane domain)</td>
+<td>Forms the translocation channel</td>
+</tr>
+<tr>
+<td>PP_2457</td>
+<td>rbsR</td>
+<td>LacI-family transcriptional repressor</td>
+<td>Regulates operon expression</td>
+</tr>
+<tr>
+<td>PP_2458</td>
+<td>rbsK</td>
+<td>Ribokinase</td>
+<td>Phosphorylates D-ribose → D-ribose-5-phosphate</td>
+</tr>
+<tr>
+<td>PP_2459</td>
+<td>rbsD</td>
+<td>Ribose pyranase</td>
+<td>Interconverts ribose anomers/forms for kinase</td>
+</tr>
+<tr>
+<td>PP_2460</td>
+<td>—</td>
+<td>Ribonucleoside hydrolase</td>
+<td>Liberates ribose from nucleosides</td>
+</tr>
+</tbody>
+</table>
+<p>This organization recapitulates the <em>E. coli</em> <em>rbsDACBK</em>–<em>rbsR</em> system, in which RbsABC is the high-affinity transporter and RbsD/RbsK convert D-ribose into D-ribose-5-phosphate. The regulatory and metabolic logic of the operon is well established: "the genes for the transport and initial-step metabolism of D-ribose form a single <em>rbsDACBK</em> operon. RbsABC forms the ABC-type high-affinity D-ribose transporter, while RbsD and RbsK are involved in the conversion of D-ribose into D-ribose 5-phosphate" (<a href="https://pubmed.ncbi.nlm.nih.gov/23651393/">PMID: 23651393</a>). The presence in the <em>P. putida</em> cluster of all three transporter genes (<em>rbsB</em>, <em>rbsA-I</em>, <em>rbsC</em>) together with <em>rbsK</em>, <em>rbsD</em>, and a ribonucleoside hydrolase confirms that this locus constitutes a complete, self-contained ribose acquisition-and-catabolism module.</p>
+<p><strong>Interpretation:</strong> The operon context removes essentially all ambiguity about the substrate and pathway. RbsA-I energizes the import of D-ribose, which is immediately handed off to RbsK/RbsD for conversion to D-ribose-5-phosphate and entry into the pentose-phosphate pathway. The co-localized RbsR repressor places the entire module under substrate-responsive transcriptional control.</p>
+<h3 id="finding-3-rbsa-localizes-to-the-cytoplasmic-face-of-the-inner-membrane-and-powers-transport-via-atp-hydrolysis-within-the-rbsabc2-complex">Finding 3 — RbsA localizes to the cytoplasmic face of the inner membrane and powers transport via ATP hydrolysis within the RbsABC₂ complex</h3>
+<p>The subcellular localization annotation in UniProt places Q88K37 at the cell inner membrane / cell membrane as a peripheral protein on the cytoplasmic side. This is precisely the expected topology for a soluble ABC-ATPase that docks onto the cytoplasmic coupling helices of its permease. The functional dynamics of this arrangement were resolved biochemically for the <em>E. coli</em> orthologue. In vitro reassembly of the ribose transporter demonstrated that RbsA associates with the RbsC₂ permease homodimer, and that the composition of the isolated complex depends on the nucleotide state: "we were able to purify a full complex, RbsABC₂, in the presence of stable, transition state mimics (ATP, Mg²⁺, and VO₄); a RbsAC complex in the presence of ADP and Mg²⁺; and a heretofore unobserved RbsBC complex in the absence of cofactors" (<a href="https://pubmed.ncbi.nlm.nih.gov/25533465/">PMID: 25533465</a>).</p>
+<p>This nucleotide-dependent assembly is direct experimental evidence that RbsA's catalytic cycle — ATP binding, hydrolysis to ADP, and product release — drives the conformational transitions that alternately assemble and disassemble the translocation-competent complex. The transition-state mimic (ATP·Mg·VO₄) traps the full RbsABC₂ complex, whereas the post-hydrolysis ADP·Mg state yields only RbsAC, illustrating how the ATPase gates the recruitment of the substrate-loaded binding protein. Because RbsA-I of <em>P. putida</em> is 41% identical to this <em>E. coli</em> RbsA and conserves all catalytic motifs (Finding 4), the same mechanism is confidently inferred.</p>
+<p><strong>Interpretation:</strong> RbsA-I performs its function as a membrane-associated (but not membrane-integral) subunit on the inner (cytoplasmic) leaflet of the inner membrane. Its ATPase cycle mechanically couples chemical energy to the alternating-access motion of the RbsC permease, achieving vectorial import of D-ribose.</p>
+<h3 id="finding-4-rbsa-i-shares-41-identity-with-experimentally-characterized-e-coli-rbsa-and-possesses-the-conserved-dual-abc-atpase-motif-set">Finding 4 — RbsA-I shares 41% identity with experimentally characterized <em>E. coli</em> RbsA and possesses the conserved dual ABC-ATPase motif set</h3>
+<p>A Needleman–Wunsch global alignment of Q88K37 (524 aa) against <em>E. coli</em> RbsA (UniProt P04983, 501 aa) yields 41.2% identity over 498 aligned columns. For transporter ATPases, identity in this range across genera is a strong basis for functional transfer, especially when combined with conserved active-site motifs and identical genomic context. A motif scan of Q88K37 confirms the tandem two-NBD architecture expected of RbsA:</p>
+<table>
+<thead>
+<tr>
+<th>Motif</th>
+<th>NBD1</th>
+<th>NBD2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Walker A / P-loop</td>
+<td>GENGAGKS (residue ~48)</td>
+<td>P-loop-type region (AASGLGKT, res ~18 region)</td>
+</tr>
+<tr>
+<td>Walker B (…hhhhDE)</td>
+<td>LILDE (res ~174)</td>
+<td>LLFDE (res ~430)</td>
+</tr>
+</tbody>
+</table>
+<p>The two cleanly separated Walker B motifs demarcate the two fused nucleotide-binding domains, exactly as expected for a "double-NBD" importer ATPase. The presence of two complete Walker A/Walker B pairs distinguishes RbsA from single-NBD ABC-ATPases (which function as homodimers) and identifies it as the intramolecularly-fused variant characteristic of the ribose importer family.</p>
+<p><strong>Interpretation:</strong> The high sequence identity to a functionally validated orthologue, combined with the fully conserved catalytic apparatus (two P-loops, two Walker B motifs), makes the functional assignment of RbsA-I as an ATP-hydrolyzing ribose-importer subunit essentially certain by homology, independent of the operon-context evidence.</p>
+<h3 id="finding-5-p-putida-encodes-two-ribose-abc-atpase-paralogs-rbsa-i-pp_2455-is-the-copy-embedded-in-the-complete-catabolic-ribose-operon">Finding 5 — <em>P. putida</em> encodes two ribose ABC-ATPase paralogs; rbsA-I (PP_2455) is the copy embedded in the complete catabolic ribose operon</h3>
+<p><em>P. putida</em> KT2440 possesses two loci mapped to KEGG Orthology K10441: PP_2455 (rbsA-I, Q88K37, 524 aa) and PP_2759 (rbsA / "rbsA-II", Q88J90, 512 aa). The two paralogs share only 42.9% identity by global alignment, comparable to their individual identity with <em>E. coli</em> RbsA, indicating an ancient duplication or independent acquisition rather than a recent gene doubling. Critically, only PP_2455 sits within a <em>complete</em> ribose operon: it is flanked by the substrate-binding protein (rbsB, PP_2454), the permease (rbsC, PP_2456), the regulator (rbsR, PP_2457), and the downstream catabolic genes ribokinase (rbsK, PP_2458), ribose pyranase (rbsD, PP_2459), and a ribonucleoside hydrolase (PP_2460). By contrast, the PP_2759 cluster (PP_2757–PP_2761) contains two K10439-type binding proteins, the PP_2759 ATPase, and two K10440-type permeases but <em>lacks adjacent ribokinase and pyranase genes</em>.</p>
+<p><strong>Interpretation:</strong> The absence of co-localized catabolic enzymes at the PP_2759 cluster suggests that paralog carries out a related but distinct transport role (potentially a different pentose or ribose-derivative, or feeding a different metabolic branch), whereas rbsA-I (PP_2455) is the transporter ATPase directly wired to D-ribose catabolism through the pentose-phosphate pathway. This paralog distinction is important for correct annotation: RbsA-I is the "canonical," catabolically-coupled ribose importer ATPase of <em>P. putida</em>.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>The findings assemble into a coherent picture of a Type I ABC importer operating at the <em>P. putida</em> inner membrane. The transport module is tripartite plus a soluble receptor, and RbsA-I is its ATP-hydrolyzing motor.</p>
+<div class="codehilite"><pre><span></span><code>          PERIPLASM
+ D-ribose  ●
+            \
+    ┌────────▼────────┐
+    │  RbsB (PP_2454) │   periplasmic binding protein
+    │  captures ribose│   → sets D-ribose specificity
+    └────────┬────────┘
+             │ delivers substrate
+   ══════════════════════════╪══════════════════════  INNER MEMBRANE
+┌──────────────┐     │      ┌──────────────┐
+│  RbsC (PP_2456) permease homodimer (RbsC2) │  translocation channel
+└──────┬───────┘            └───────┬───────┘
+       │  coupling helices          │
+┌──────▼────────────────────────────▼──────┐
+│        RbsA-I (PP_2455)  —  ATPase        │  CYTOPLASMIC face
+│   NBD1 [Walker A GENGAGKS | Walker B LILDE]│
+│   NBD2 [Walker A/P-loop   | Walker B LLFDE]│
+│        ATP → ADP + Pi  (EC 7.5.2.7)        │
+└────────────────────┬──────────────────────┘
+          CYTOPLASM
+ D-ribose  ●
+            │  RbsK ribokinase (PP_2458)
+            │  RbsD pyranase   (PP_2459)
+            ▼
+ D-ribose-5-phosphate  →  Pentose-phosphate pathway
+</code></pre></div>
+
+<p><strong>Transport cycle.</strong> In the resting state, the periplasmic RbsB scavenges D-ribose. Substrate-loaded RbsB docks onto the periplasmic face of the RbsC₂ permease. On the cytoplasmic side, RbsA-I binds two molecules of Mg·ATP at the interface of its two NBDs. ATP binding drives NBD dimerization/closure, which is transmitted through the permease coupling helices to open the transmembrane cavity toward the periplasm and accept the substrate. ATP hydrolysis and Pi/ADP release reset the transporter to the inward-open state, delivering D-ribose to the cytoplasm. The <em>E. coli</em> reconstitution study captured discrete snapshots of this cycle — full RbsABC₂ in the ATP transition-state mimic, RbsAC in the ADP state — providing direct structural-biochemical validation of the nucleotide-gated mechanism (<a href="https://pubmed.ncbi.nlm.nih.gov/25533465/">PMID: 25533465</a>).</p>
+<p><strong>Metabolic coupling.</strong> Imported D-ribose is immediately committed to catabolism by the co-operonic enzymes: ribose pyranase (RbsD) equilibrates the ribose anomeric forms, and ribokinase (RbsK) phosphorylates D-ribose to D-ribose-5-phosphate, the entry metabolite of the non-oxidative pentose-phosphate pathway (<a href="https://pubmed.ncbi.nlm.nih.gov/23651393/">PMID: 23651393</a>). The adjacent ribonucleoside hydrolase (PP_2460) can additionally liberate ribose from nucleosides, feeding the same pathway.</p>
+<p><strong>Regulation.</strong> The LacI-family repressor RbsR (PP_2457) controls operon expression in a substrate-responsive manner. In <em>E. coli</em>, RbsR additionally links ribose availability to purine nucleotide synthesis regulation, a role that underscores the tight integration of ribose transport with central nucleotide metabolism (<a href="https://pubmed.ncbi.nlm.nih.gov/23651393/">PMID: 23651393</a>).</p>
+<p><strong>Division of labor / annotation clarity.</strong> Substrate specificity resides in RbsB, not RbsA-I. RbsA-I is the interchangeable energizing subunit; its function is transport energization, and its "substrate" in the enzymatic sense is ATP. The presence of a second K10441 paralog (PP_2759) that is <em>not</em> embedded in a complete catabolic operon reinforces that PP_2455 specifically is the ribose-catabolism-coupled importer ATPase.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports the findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25533465/">25533465</a></td>
+<td><em>In vitro reassembly of the ribose ABC transporter…</em></td>
+<td><strong>Primary experimental anchor.</strong> Defines RbsA as the cytoplasmic ABC protein with fused NBDs (supports F001, F004); shows nucleotide-state-dependent assembly of RbsABC₂ / RbsAC complexes, evidencing ATP-hydrolysis-driven transport at the membrane (supports F003).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23651393/">23651393</a></td>
+<td><em>Involvement of the ribose operon repressor RbsR in regulation of purine nucleotide synthesis in E. coli.</em></td>
+<td>Establishes the <em>rbsDACBK</em> operon organization and that RbsABC is the high-affinity D-ribose transporter feeding RbsD/RbsK to make D-ribose-5-phosphate (supports F002); links the operon to nucleotide metabolism via RbsR.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10941799/">10941799</a></td>
+<td><em>Ribose utilization in Lactobacillus sakei…</em></td>
+<td><strong>Contrasting case.</strong> Demonstrates that some bacteria dispense with the RbsABC ABC transporter entirely, using an alternative permease (RbsU) — highlighting that the ABC-transporter route seen in <em>P. putida</em> is one of several evolutionary solutions, and underscoring the value of <em>P. putida</em>'s complete <em>rbsBACR-KD</em> operon in confirming the ABC route here.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Assessment.</strong> The two supporting papers (<a href="https://pubmed.ncbi.nlm.nih.gov/25533465/">PMID: 25533465</a> and <a href="https://pubmed.ncbi.nlm.nih.gov/23651393/">PMID: 23651393</a>) are precise, mechanism-focused studies of the <em>E. coli</em> ribose system — the closest well-characterized orthologue. Together with the 41% sequence identity and complete conserved operon in <em>P. putida</em>, they provide a robust, non-high-throughput basis for the functional assignment. No direct experimental characterization of PP_2455 itself (e.g., in vitro ATPase assay, transport assay, or knockout) was located; the assignment is therefore inference-by-orthology of high confidence rather than direct demonstration.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct experimental data on PP_2455 itself.</strong> All mechanistic evidence derives from the <em>E. coli</em> orthologue. There is no published in vitro ATPase measurement, ribose-transport assay, structure, or gene-deletion phenotype specifically for <em>P. putida</em> RbsA-I. The assignment, while strong, is homology- and context-based.</p>
+</li>
+<li>
+<p><strong>Substrate specificity is inferred, not measured, in <em>P. putida</em>.</strong> D-ribose specificity is attributed to RbsB by analogy. It remains possible (though unlikely) that the <em>P. putida</em> system has broadened or shifted specificity toward a ribose-related pentose.</p>
+</li>
+<li>
+<p><strong>Role of the second paralog (PP_2759 / rbsA-II) is unresolved.</strong> Its cluster lacks co-localized ribokinase/pyranase; whether it transports ribose under different conditions, a different sugar, or feeds a different pathway is not established. This affects the completeness of the ribose-transport annotation for the organism.</p>
+</li>
+<li>
+<p><strong>Regulatory details in <em>P. putida</em> are unverified.</strong> RbsR-mediated, ribose-responsive control of the PP_2454–PP_2460 operon is inferred from <em>E. coli</em>; the effector and operator architecture in <em>P. putida</em> have not been experimentally mapped.</p>
+</li>
+<li>
+<p><strong>Quantitative kinetics unknown.</strong> Affinity (K_m/K_d) for ribose, ATP turnover rate, and coupling stoichiometry (ATP hydrolyzed per ribose imported) are unmeasured for this protein.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Direct ATPase assay.</strong> Heterologously express and purify RbsA-I (PP_2455), and measure Mg-ATP hydrolysis (malachite-green / NADH-coupled assay), ideally with and without reconstituted RbsC permease to demonstrate permease-stimulated ATPase activity.</p>
+</li>
+<li>
+<p><strong>Transport assay in a defined background.</strong> Construct a ΔPP_2455 deletion (and a ΔPP_2455 ΔPP_2759 double mutant) and assay ¹⁴C-D-ribose uptake and growth on D-ribose as the sole carbon source. A growth/uptake defect rescued by complementation would provide direct in vivo proof of function and clarify the division of labor with the PP_2759 paralog.</p>
+</li>
+<li>
+<p><strong>Reconstitution / structure.</strong> Co-express RbsA-I with RbsC (PP_2456) and RbsB (PP_2454), reconstitute into nanodiscs/proteoliposomes, and use cryo-EM to capture nucleotide-state-dependent conformations, paralleling the <em>E. coli</em> study (<a href="https://pubmed.ncbi.nlm.nih.gov/25533465/">PMID: 25533465</a>).</p>
+</li>
+<li>
+<p><strong>Specificity screen of RbsB.</strong> Determine the binding spectrum of the periplasmic RbsB (PP_2454) by isothermal titration calorimetry against D-ribose and related pentoses to confirm that specificity is set at the binding-protein step.</p>
+</li>
+<li>
+<p><strong>Operon regulation mapping.</strong> Test RbsR (PP_2457) binding to the operon promoter by EMSA and identify the physiological inducer, confirming ribose-responsive transcriptional control in <em>P. putida</em>.</p>
+</li>
+<li>
+<p><strong>Paralog functional dissection.</strong> Characterize the PP_2757–PP_2761 cluster (including PP_2759) transport specificity to resolve whether it is a second ribose route or handles a distinct substrate, completing the transport annotation of the organism.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>rbsA-I (PP_2455 / Q88K37) is the cytoplasmic ATP-binding subunit of the high-affinity D-ribose ABC importer of <em>Pseudomonas putida</em> KT2440. It is a 524-amino-acid, two-fused-NBD ABC-ATPase (EC 7.5.2.7, KEGG K10441) that hydrolyzes ATP at the cytoplasmic face of the inner membrane to energize D-ribose translocation through the RbsC permease, working with the periplasmic RbsB substrate-binding protein that dictates D-ribose specificity. It is embedded in a complete <em>rbs</em> operon (rbsB–rbsA-I–rbsC–rbsR–rbsK–rbsD–nucleoside hydrolase) that channels imported ribose, via ribokinase-produced D-ribose-5-phosphate, into the pentose-phosphate pathway. The assignment is supported by 41% identity to the biochemically characterized <em>E. coli</em> RbsA, full conservation of the dual Walker A/Walker B catalytic apparatus, unambiguous operon context, and reconstitution studies of the <em>E. coli</em> RbsABC₂ transporter — while remaining, at present, an inference-by-orthology that has not yet been directly validated for the <em>P. putida</em> protein itself.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="rbsA-I-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="rbsA-I-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:25533465</li>
+<li>PMID:23651393</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rbsA-I-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88K37" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="rbsa-i-curation-notes">rbsA-I curation notes</h1>
+<p>Q88K37 is the ATP-binding component in the contiguous PP_2454-PP_2459 <code>rbs</code><br />
+locus. ATP hydrolysis is its intrinsic catalytic function; D-ribose transporter<br />
+activity belongs to the assembled RbsABC complex and must use a <code>contributes_to</code><br />
+qualifier in the synthesized core. The protein is peripheral to the inner<br />
+membrane rather than an integral permease<br />
+[file:PSEPK/rbsA-I/rbsA-I-uniprot.txt, "CC       {ECO:0000256|ARBA:ARBA00004202}; Peripheral membrane protein"].</p>
+<p>The submitted name and locus support ribose import, but the current PANTHER<br />
+subfamily is D-allose-import-related. It is therefore omitted from the reusable<br />
+module rather than relabeled<br />
+[file:PSEPK/rbsA-I/rbsA-I-uniprot.txt, "DR   PANTHER; PTHR43790:SF3; D-ALLOSE<br />
+IMPORT ATP-BINDING PROTEIN ALSA-RELATED; 1."].</p>
+<p>OpenScientist supports a two-fused-NBD RbsA-family ATPase interpretation from<br />
+the sequence architecture, locus, and E. coli ortholog literature, but it<br />
+states, "No direct experimental data on PP_2455 itself."<br />
+[file:PSEPK/rbsA-I/rbsA-I-deep-research-openscientist.md]. It also emphasizes<br />
+that substrate specificity is assigned by RbsB rather than by RbsA-I. The<br />
+report therefore reinforces <code>ATP hydrolysis activity</code> as intrinsic and<br />
+<code>ABC-type D-ribose transporter activity</code> as <code>contributes_to</code>.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88K37
+gene_symbol: rbsA-I
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  RbsA-I is the peripheral membrane ATP-binding component of the
+  PP_2454-PP_2459 carbohydrate ABC importer. It hydrolyzes ATP to energize the
+  neighboring RbsC permease and is inferred from locus context to support
+  D-ribose uptake; its allose-related PANTHER subfamily label is not treated as
+  substrate-specific evidence.
+existing_annotations:
+  - term:
+      id: GO:0000166
+      label: nucleotide binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000104
+    qualifier: enables
+    review:
+      summary: True but less informative than the ATP-binding and ATP-hydrolysis annotations.
+      action: KEEP_AS_NON_CORE
+  - term:
+      id: GO:0005524
+      label: ATP binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: enables
+    review:
+      summary: Correct substrate binding for an ABC energy-coupling ATPase.
+      action: KEEP_AS_NON_CORE
+  - term:
+      id: GO:0005886
+      label: plasma membrane
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000044
+    qualifier: located_in
+    review:
+      summary: &gt;-
+        Correct membrane association through the transporter, although RbsA-I
+        is a peripheral ATPase rather than an integral membrane subunit.
+      action: KEEP_AS_NON_CORE
+  - term:
+      id: GO:0016887
+      label: ATP hydrolysis activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: Direct catalytic activity that supplies energy to the ABC importer.
+      action: ACCEPT
+  - term:
+      id: GO:0015752
+      label: D-ribose transmembrane transport
+    evidence_type: ISS
+    original_reference_id: file:PSEPK/rbsA-I/rbsA-I-uniprot.txt
+    qualifier: involved_in
+    review:
+      summary: &gt;-
+        Proposed process annotation for the ATPase subunit of the contiguous
+        RbsABC locus; UniProt already carries the broader parent GO:0015749
+        monosaccharide transmembrane transport, while D-ribose specificity
+        remains inferred from locus context.
+      action: NEW
+      supported_by:
+        - reference_id: file:PSEPK/rbsA-I/rbsA-I-uniprot.txt
+          supporting_text: &#34;DE   SubName: Full=Ribose ABC transporter-ATP-binding subunit {ECO:0000313|EMBL:AAN68067.1};&#34;
+  - term:
+      id: GO:0043190
+      label: ATP-binding cassette (ABC) transporter complex
+    evidence_type: ISS
+    original_reference_id: file:PSEPK/rbsA-I/rbsA-I-uniprot.txt
+    qualifier: part_of
+    review:
+      summary: Proposed complex membership for the energy-coupling subunit.
+      action: NEW
+      supported_by:
+        - reference_id: file:PSEPK/rbsA-I/rbsA-I-uniprot.txt
+          supporting_text: &#34;DE   SubName: Full=Ribose ABC transporter-ATP-binding subunit {ECO:0000313|EMBL:AAN68067.1};&#34;
+references:
+  - id: file:PSEPK/rbsA-I/rbsA-I-uniprot.txt
+    title: UniProtKB entry for Pseudomonas putida KT2440 rbsA-I
+    findings:
+      - statement: The record identifies Q88K37 as the ATP-binding subunit of a ribose ABC transporter.
+        supporting_text: &#34;DE   SubName: Full=Ribose ABC transporter-ATP-binding subunit {ECO:0000313|EMBL:AAN68067.1};&#34;
+      - statement: The PANTHER subfamily label does not distinguish ribose from allose import ATPases.
+        supporting_text: &#34;DR   PANTHER; PTHR43790:SF3; D-ALLOSE IMPORT ATP-BINDING PROTEIN ALSA-RELATED; 1.&#34;
+  - id: file:PSEPK/rbsA-I/rbsA-I-deep-research-openscientist.md
+    title: OpenScientist deep research report for rbsA-I in Pseudomonas putida KT2440
+    findings:
+      - statement: The report found no direct experimental study of Q88K37.
+        supporting_text: &#34;No direct experimental data on PP_2455 itself.&#34;
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+    findings: []
+  - id: GO_REF:0000044
+    title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt
+    findings: []
+  - id: GO_REF:0000104
+    title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+    findings: []
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings: []
+core_functions:
+  - description: &gt;-
+      Hydrolyzes ATP to energize the RbsABC carbohydrate importer and, by locus
+      context, contributes to D-ribose uptake through the neighboring RbsC
+      permease.
+    molecular_function:
+      id: GO:0016887
+      label: ATP hydrolysis activity
+    contributes_to_molecular_function:
+      id: GO:0015611
+      label: ABC-type D-ribose transporter activity
+    directly_involved_in:
+      - id: GO:0015752
+        label: D-ribose transmembrane transport
+    in_complex:
+      id: GO:0043190
+      label: ATP-binding cassette (ABC) transporter complex
+    supported_by:
+      - reference_id: file:PSEPK/rbsA-I/rbsA-I-uniprot.txt
+        supporting_text: &#34;DE   SubName: Full=Ribose ABC transporter-ATP-binding subunit {ECO:0000313|EMBL:AAN68067.1};&#34;
+      - reference_id: file:PSEPK/rbsA-I/rbsA-I-deep-research-openscientist.md
+        supporting_text: &#34;No direct experimental data on PP_2455 itself.&#34;
+suggested_questions:
+  - question: Does RbsA-I couple specifically to RbsC and Q88K38-bound D-ribose in KT2440?
+suggested_experiments:
+  - description: Reconstitute RbsA-I with RbsC and RbsB and measure substrate-dependent ATPase and transport activity.
+    experiment_type: transporter reconstitution
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
