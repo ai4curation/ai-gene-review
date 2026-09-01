@@ -76,14 +76,16 @@ snapshot.
 ## 2026-09-01 Family-Grounding Repair
 
 The FabA isomerase selector is now grounded on `PTHR30272:SF8` with reviewed
-E. coli P0A6Q3. The shared-cycle FabA dehydratase selector uses the same
-subfamily and the dehydratase-specific PAINT node PTN008624492; that node is
-not applied to the distinct isomerase activity. Role-specific FabB selectors
+E. coli P0A6Q3. FabZ is independently narrowed to `PTHR30272:SF1` with reviewed
+E. coli P0A6Q6. The shared-cycle FabA dehydratase selector uses SF8 and the
+family-level PAINT dehydratase node PTN008624492; because this node is ancestral
+to both FabA and FabZ, it is not described as FabA-specific and is not applied
+to the distinct isomerase activity. Role-specific FabB selectors
 use `PTHR11712:SF306` with P0A953,
 and the FabF elongation selector uses `PTHR11712:SF336` with P0AAI5. The
-official SF336 name contains "mitochondrial" even though the subfamily also
-contains bacterial FabF proteins; it is retained verbatim as a PANTHER label
-and is not interpreted as a localization assertion.
+official SF336 name contains "mitochondrial" and the broad subfamily includes
+both genuine mitochondrial KAS proteins and several bacterial KAS/PKS roles;
+the reviewed exemplar and leaf function delimit the intended FabF role.
 
 The MadB-dependent initiation variant intentionally retains parent
 `PTHR11712`: its descriptor spans both FabB and FabF representatives, which
