@@ -121,9 +121,10 @@ The bifunctional *Pasteurella multocida* GshAB/GshF exemplar Q9CM00 is assigned
 to PANTHER:PTHR38761:SF1 on the basis of its N-terminal glutamate--cysteine
 ligase region, even though the same polypeptide also performs the second
 glutathione-synthetase reaction. The second module leaf now includes that exact
-whole-protein family assignment so its representative-member declaration is
-internally valid. This does not treat the misleadingly narrow PANTHER label as
-evidence for the second activity: InterPro:IPR040657 identifies the C-terminal
-ATP-grasp-like domain and PMID:16339152 directly establishes both activities in
-the recombinant fusion. The two reaction leaves and the canonical monofunctional
-GshA and GshB families remain unchanged.
+whole-protein classification only in the exemplar description, not as a family
+selector. The same subfamily contains monofunctional GshA proteins, so asserting
+it on the second leaf would falsely imply glutathione-synthetase activity for
+those proteins. InterPro:IPR040657 identifies the C-terminal ATP-grasp-like
+domain and PMID:16339152 directly establishes both activities in the recombinant
+fusion. The resulting outside-family advisory for Q9CM00 is intentional and
+documents fusion architecture rather than a validation failure.
