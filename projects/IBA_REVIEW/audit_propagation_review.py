@@ -79,7 +79,10 @@ for f in files:
             issues.append((loc,'MODIFY_WITH_NO_FAILURE',rc))
         for se in (pr.get('source_entities') or []):
             ss=se.get('source_status'); sid=se.get('source_id') or ''
-            if ss not in VALID_SS: issues.append((loc,'BAD_SOURCE_STATUS',ss))
+            # source_status is OPTIONAL in the schema; only flag values that are present
+            # but not legal enum members.
+            if ss is not None and ss not in VALID_SS:
+                issues.append((loc,'BAD_SOURCE_STATUS',ss))
             if sid in own.get(g,set()) and ss=='CIRCULAR_OR_REDUNDANT':
                 issues.append((loc,'SELF_SEED_MARKED_CIRCULAR',sid))
             lab=se.get('source_label') or ''
