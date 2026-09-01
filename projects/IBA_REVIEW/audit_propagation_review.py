@@ -191,6 +191,35 @@ elif 'PANTHER:PTHR46861' not in fam_label:
         "PANTHER anchor PTHR46861 is missing while other prefixed keys loaded - the "
         "family was likely retired or merged upstream; re-point the anchor")
 
+# Negation of "circular" in a source comment. The previous version whitelisted four
+# LITERAL strings ('not circular', 'rather than circular', 'is not circular',
+# 'never circular') -- a list of phrasings someone had happened to see, not a match on
+# the grammar. Two of the four were dead (both are substrings of 'not circular'), and
+# it missed the commonest English form: "not A circular transfer" does not contain the
+# substring "not circular". Five of the seven live hits on the human corpus were
+# curators explicitly DISCLAIMING circularity, i.e. exactly the framing CLAUDE.md asks
+# for -- flagged as defects. A rule whose output is mostly good work is a rule that
+# gets ignored, so this matches a negation cue within the same clause instead.
+_NEGATED_CIRCULAR = re.compile(
+    r'(?:\bnot\b|\bnon\b|\bnever\b|\brather\s+than\b|\bavoids?\b)'
+    r'[\s\w,-]{0,40}?circular', re.I)
+
+# Self-test the predicate rather than trusting it: the failure direction here is a
+# FALSE POSITIVE, which does not announce itself the way a crash would.
+for _s, _want in (
+        ("not a circular transfer", True), ("not a circular chain", True),
+        ("rather than a circular inference", True), ("makes this non-circular", True),
+        ("strengthens the transfer rather than making it circular", True),
+        ("grounded rather than circular", True), ("never circular", True),
+        ("not circular", True),
+        # These MUST still be flagged -- they assert circularity, they do not deny it.
+        ("this source is circular and adds nothing", False),
+        ("a circular propagation with no experimental grounding", False)):
+    if bool(_NEGATED_CIRCULAR.search(_s)) != _want:
+        _selftest_failures.append(
+            f"circularity-negation predicate is wrong for {_s!r} "
+            f"(expected whitelisted={_want}) - SELF_SEED_INVERTED_PROSE will misreport")
+
 if _selftest_failures:
     print("SELF-TEST FAILED - a detection rule cannot fire:")
     for _f in _selftest_failures:
@@ -335,8 +364,7 @@ for f in files:
         for se in (pr.get('source_entities') or []):
             if (se.get('source_id') or '') in own_ids:
                 c=(se.get('comment') or '').lower()
-                bad_circular = ('circular' in c and not any(k in c for k in
-                    ('not circular','rather than circular','is not circular','never circular')))
+                bad_circular = ('circular' in c and not _NEGATED_CIRCULAR.search(c))
                 if 'no independent' in c or 'self-supporting' in c or bad_circular:
                     issues.append((loc,'SELF_SEED_INVERTED_PROSE',se.get('source_id')))
 # ---------------------------------------------------------------------------
