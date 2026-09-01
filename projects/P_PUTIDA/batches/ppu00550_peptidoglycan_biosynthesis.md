@@ -37,8 +37,8 @@ OpenScientist report beside the module YAML.
   OpenScientist reports.
 - [x] Apply the annotation-reviewer workflow to every selected gene and every
   GOA row (69/69 rows; no `PENDING` or `UNDECIDED` decisions).
-- [x] Replace PSEPK-only module exemplars with reviewed cross-species UniProt
-  proteins and remove repeated generic membrane locations.
+- [x] Add reviewed cross-species UniProt exemplars alongside the PSEPK proteins
+  and restrict membrane locations to the three membrane-associated steps.
 - [x] Verify the MurE branch, Ddl input, and MurF-to-MurJ route logic without
   importing polymerization, cross-linking, remodeling, recycling, or carrier
   supply.
@@ -103,12 +103,12 @@ in the target UniProt reaction. No experimental annotation is overruled.
 - Reviewed *Escherichia coli* K-12 proteins ground the conserved
   DAP-containing route; reviewed *Staphylococcus aureus* MurE Q2FZP6 grounds
   the L-lysine alternative.
-- No PANTHER or PTN identifier is asserted. Exact current UniProt
-  classifications were checked, but most reviewed cross-species exemplars are
-  absent from the checked-in PANTHER member index, and the shared MurE family
-  does not encode DAP-versus-L-lysine substrate specificity.
-- Molecular functions occur only on leaf annotons. The module has no generic
-  module-level or repeated leaf-level location assertions.
+- No PANTHER or PTN identifier is asserted. The shared MurE family does not
+  encode DAP-versus-L-lysine substrate specificity, and an exact evolutionary
+  family was not established for each reusable role.
+- Molecular functions occur only on the eleven leaf annotons. Plasma membrane
+  is asserted on MraY, MurG, and MurJ, the three membrane-associated steps, and
+  no location is asserted at module level.
 - The terminal product is exported lipid II. SEDS/class-A-PBP polymerization,
   D,D-transpeptidation, carboxypeptidase remodeling, peptidoglycan recycling,
   and undecaprenyl-carrier supply/recycling stay in their separate modules or
