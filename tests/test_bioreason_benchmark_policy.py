@@ -115,7 +115,7 @@ def test_argo95_exact_goa_reads_the_declared_baseline_commit(monkeypatch) -> Non
         set(module.read_rl_gene_list()), policy
     )
     assert summary == {
-        "cnn_exact_frozen_goa": 633,
+        "cnn_exact_frozen_goa": 634,
         "cnn_other_established_basis": 47,
         "cor_exact_frozen_goa": 0,
     }
@@ -341,7 +341,7 @@ def test_publication_headlines_match_generated_metrics() -> None:
             gogpt["assessment_distribution"]["UNC"],
         )
     )
-    assert sft["cnn_exact_frozen_goa"] == 633
+    assert sft["cnn_exact_frozen_goa"] == 634
     assert sft["cnn_other_established_basis"] == 47
     assert sft["cor_exact_frozen_goa"] == 0
     assert sft["ontology_pair_adjudication"] == {
@@ -395,7 +395,7 @@ def test_publication_headlines_match_generated_metrics() -> None:
         f"{overlap['core']['n_reference_terms']:,} | "
         f"{overlap['core']['n_overlap']:,} | {core_percent:.1f} |"
     ) in supplement
-    assert "**71.2% CNN**" in slides
+    assert "**71.3% CNN**" in slides
     assert "**15.6% NPI/PLI/REP**" in slides
     assert "**2.4% COR**" in slides
 

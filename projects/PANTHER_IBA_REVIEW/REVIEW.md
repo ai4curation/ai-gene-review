@@ -29,7 +29,7 @@ Output: `iba_propagation.tsv` (one row per IBA, with our curation action joined)
 
 ```
 IBA annotations analyzed: 157
-  with UniProt seeds mappable to subfamilies: 88
+  with UniProt seeds mappable to subfamilies: 87
   CROSS_SUBFAMILY (seeds only from other subfamilies): 36
 ```
 
