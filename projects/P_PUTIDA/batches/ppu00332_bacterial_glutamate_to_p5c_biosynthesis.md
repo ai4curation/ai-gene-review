@@ -67,3 +67,12 @@ advisory was an unavailable ontology lookup for `NCBITaxon:2`. Both `proB` and
 `proA` reviews passed full validation. The module, changed gene review, and
 batch page were rendered, and `git diff --check` passed. Repair PR:
 [#2883](https://github.com/ai4curation/ai-gene-review/pull/2883).
+
+2026-09-01 review follow-up: Restored the valid parent families
+`PTHR43654` (GLUTAMATE 5-KINASE) and `PTHR11063` (GLUTAMATE SEMIALDEHYDE
+DEHYDROGENASE), while retaining the caveat only for misleading subfamilies
+`PTHR43654:SF1` and `PTHR11063:SF8`. Refreshed PANTHER membership and retained
+only the required P0A7B5 and P07004 index rows. Added the locally verified
+PSEPK GOA PTN context and the distinct `PTN001337743` IRD loss-clade caveat,
+and strengthened the positive regulatory-role rationale for the proB
+RNA-binding over-annotation.
