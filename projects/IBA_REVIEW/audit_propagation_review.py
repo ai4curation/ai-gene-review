@@ -207,7 +207,7 @@ def _asserts_inverted_framing(c):
     for m in _FLAGGED_FRAMING.finditer(c):
         # Look back only within the same clause: splitting on .;: stops an unrelated
         # earlier negation from suppressing a later assertion.
-        pre = re.split(r'[.;:]', c[max(0, m.start() - 45):m.start()])[-1]
+        pre = re.split(r'[.;:,]', c[max(0, m.start() - 45):m.start()])[-1]
         if not _NEG_CUE.search(pre):
             return True
     return False
@@ -228,7 +228,11 @@ for _s, _want in (
         ("that item is self-supporting", True),
         # Both in one comment: the disclaimer must not suppress the assertion.
         ("rather than a circular inference, so it is not a defect; "
-         "it simply adds no independent support", True)):
+         "it simply adds no independent support", True),
+        # A cue in a PRECEDING comma-clause must not reach across it. Without ','
+        # in the split set this reads as a disclaimer and the assertion is lost --
+        # a false negative, the worse direction.
+        ("this donor is not the closest ortholog, and the chain is circular", True)):
     if _asserts_inverted_framing(_s) != _want:
         _selftest_failures.append(
             f"inverted-framing predicate is wrong for {_s!r} "
