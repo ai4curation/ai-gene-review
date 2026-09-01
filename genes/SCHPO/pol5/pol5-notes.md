@@ -9,3 +9,9 @@
 - Accepted the current NOT ISO annotation to `GO:0042790 nucleolar large rRNA transcription by RNA polymerase I`; it is compatible with promoter-fragment binding because a binding activity does not establish direct participation in the transcription process.
 - Removed broad InterPro-derived `nucleotide binding` and `regulation of DNA-templated transcription`; modified broad nucleic-acid/DNA-binding rows to specific rDNA/rRNA-binding terms; removed generic `protein binding`; and retained target-supported nuclear/nucleolar localization plus the observed cytosolic pool as non-core.
 - Verified from the refreshed PANTHER cache that O60094 is in `PTHR13213:SF2`; the official family name is `MYB-BINDING PROTEIN 1A FAMILY MEMBER` and the official subfamily name is `MYB-BINDING PROTEIN 1A`.
+
+## 2026-09-01 — PR review follow-up
+
+- Replaced the broad proposed `GO:0042254 ribosome biogenesis` transfer with the experimentally resolved `GO:0042273 ribosomal large subunit biogenesis` and `GO:0042274 ribosomal small subunit biogenesis` processes. Both proposals now identify PMID:31745560 and SGD Pol5 (`S000000781`) as their evidence and transfer source.
+- Added the same publication and ortholog provenance to the proposed rRNA-binding transfer, removed an invalid reliance on a NOT transcription annotation when assessing broad transcription regulation, and recorded the unresolved functional consequence of Eso1-dependent K47 acetylation.
+- A repository-wide prediction-audit failure exposed while shepherding this gene was fixed independently in PR #2845; the Pol5 review was then rebased onto that merged wrapper-layer fix.
