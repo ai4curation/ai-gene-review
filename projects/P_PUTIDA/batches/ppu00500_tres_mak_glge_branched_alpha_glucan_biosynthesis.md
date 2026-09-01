@@ -37,7 +37,7 @@ autolink_gene_symbols: false
 - [x] Curate each selected gene review.
 - [x] Validate module and gene reviews.
 - [x] Review the merged baseline from [#2326](https://github.com/ai4curation/ai-gene-review/pull/2326).
-- [ ] Open one repair PR for this module/pathway.
+- [x] Open one repair PR for this module/pathway: [#2923](https://github.com/ai4curation/ai-gene-review/pull/2923).
 - [ ] Shepherd PR through review, CI, and merge readiness.
 
 ## Annotation-Reviewer Audit
