@@ -24,6 +24,12 @@ Usage:  python3 projects/IBA_REVIEW/shared_reason_groups.py [glob ...] [--action
 Defaults to genes/mouse/*/*-ai-review.yaml.
   --action REMOVE   restrict to rows whose review.action is REMOVE (the scoped figure)
   --list            print each qualifying group: rows, genes, and the reason's first line
+  --classify-labels ignore the grouping entirely and print the propagation_review
+                    source_label split instead (self / third-party, provenanced or not),
+                    which projects/IBA_REVIEW.md quotes. It lives here because the
+                    predicate went wrong once while it existed only as prose: matching the
+                    gene_symbol anywhere in the label filed five cross-species ortholog
+                    labels ("rat Casp3", "Drosophila Nf1") as self-labels.
 
 Exits 2 if the glob matches no files, the self-test fails, or --action names something the
 corpus has no rows for. That last case matters more than it looks: a typo ("remove",
@@ -34,8 +40,9 @@ people quote is the failure this script exists to prevent, so it is an error, no
 Otherwise exits 0. This is a measurement tool, not a checker -- it has no notion of a finding.
 """
 import glob
+import re
 import sys
-from collections import defaultdict
+from collections import Counter, defaultdict
 
 import yaml
 
@@ -66,6 +73,58 @@ def collect(paths, action=None):
                 continue
             groups[reason].append((gene, (ann.get("term") or {}).get("id")))
     return groups, actions_seen
+
+
+MOD_PREFIXES = ('MGI:', 'RGD:', 'SGD:', 'FB:', 'WB:', 'ZFIN:', 'TAIR:', 'PomBase:',
+                'dictyBase:', 'CGD:', 'Xenbase:')
+SELF_MARKER = re.compile(r'this gene|the review target itself', re.I)
+NEGATION = re.compile(r'\bnot\s+(mouse|the target)', re.I)
+OTHER_SPECIES = re.compile(
+    r'\b(rat|human|Drosophila|zebrafish|budding-yeast|fission-yeast|fly|worm|chicken|'
+    r'bovine|Xenopus|Arabidopsis|yeast)\b', re.I)
+PROVENANCE_VERBS = re.compile(
+    r'\bresolv|\bcorroborat|asserted from external knowledge', re.I)
+
+
+def is_self_label(label, gene_symbol):
+    """True when the label names the review target itself, so nothing needs establishing.
+
+    Deliberately NOT "the symbol appears in the label". That looser test admitted
+    "rat Casp3" in Casp3, "Drosophila Nf1" in Nf1, and an Fbxo2 label whose whole
+    content is "not mouse Fbxo2" -- every one a claim about a DIFFERENT gene, and
+    exactly the class the provenance rule exists for. A self-label carries an explicit
+    marker, or IS the symbol (optionally "mouse "-prefixed, optionally with a trailing
+    parenthetical), with no other-species qualifier and no negation.
+    """
+    if NEGATION.search(label) or OTHER_SPECIES.search(label):
+        return False
+    if SELF_MARKER.search(label):
+        return True
+    bare = re.sub(r'\s*\(.*\)\s*$', '', label.strip()).lower()
+    return bare in (gene_symbol.lower(), f"mouse {gene_symbol}".lower())
+
+
+def classify_labels(paths):
+    """Return (self_rows, third_provenanced, third_bare) for labelled MOD sources."""
+    selfs, prov, bare = [], [], []
+    for path in paths:
+        with open(path) as handle:
+            doc = yaml.safe_load(handle) or {}
+        gene = doc.get("gene_symbol") or path.split("/")[-2]
+        for ann in doc.get("existing_annotations") or []:
+            block = (ann.get("review") or {}).get("propagation_review") or {}
+            for src in block.get("source_entities") or []:
+                sid, label = src.get("source_id", ""), src.get("source_label")
+                if not label or not sid.startswith(MOD_PREFIXES):
+                    continue
+                row = (gene, sid, label)
+                if is_self_label(label, gene):
+                    selfs.append(row)
+                elif PROVENANCE_VERBS.search(src.get("comment") or ""):
+                    prov.append(row)
+                else:
+                    bare.append(row)
+    return selfs, prov, bare
 
 
 def _known_actions():
@@ -127,6 +186,23 @@ def _self_test():
     if len(qualifying(three_terms)["r"]) != 3:
         return "qualifying() must report ROW count, not distinct-term count"
 
+    if not is_self_label("mouse Ccnb1 (this gene)", "Ccnb1"):
+        return "an explicit self-marker must count as a self-label"
+    if not is_self_label("Grb2", "Grb2"):
+        return "a bare symbol must count as a self-label"
+    if not is_self_label("mouse Ccne1 (cyclin E1)", "Ccne1"):
+        return "a mouse-prefixed symbol with a parenthetical must count as a self-label"
+    if is_self_label("rat Casp3", "Casp3"):
+        return "a cross-species ortholog must NOT count as a self-label"
+    if is_self_label("Drosophila Nf1 (Neurofibromin 1)", "Nf1"):
+        return "a fly ortholog must NOT count as a self-label"
+    if is_self_label("a mouse F-box family member; not mouse Fbxo2", "Fbxo2"):
+        return "a label saying it is NOT the target must NOT count as a self-label"
+    if is_self_label("budding-yeast CLB5", "Ccnb1"):
+        return "a bare FOREIGN symbol must NOT count as a self-label"
+    if is_self_label("zebrafish ednraa", "Ednra"):
+        return "a substring-like foreign symbol must NOT count as a self-label"
+
     seen, known = {"REMOVE"}, {"REMOVE", "ACCEPT"}
     if action_error("REMOVE", seen, known) is not None:
         return "an action present in the corpus must be measurable"
@@ -139,9 +215,9 @@ def _self_test():
     if action_error("ACCEPT", seen, set()) is None:
         return "an unreadable schema must still reject an action with no rows"
 
-    if parse_argv(["--action", "REMOVE", "--list", "g/*.yaml"]) != (["g/*.yaml"], "REMOVE", True):
+    if parse_argv(["--action", "REMOVE", "--list", "g/*.yaml"]) != (["g/*.yaml"], "REMOVE", True, False):
         return "parse_argv must return patterns, action and --list as given"
-    if parse_argv([]) != ([], None, False):
+    if parse_argv([]) != ([], None, False, False):
         return "an empty argv must parse to no patterns and no action"
     if not isinstance(parse_argv(["--action"]), str):
         return "a trailing --action must be an error, not a whole-corpus run"
@@ -155,19 +231,21 @@ def _self_test():
 
 
 def parse_argv(argv):
-    """Return (patterns, action, show) or a str explaining why argv is unusable.
+    """Return (patterns, action, show, classify) or a str explaining why argv is unusable.
 
     A pure function for the same reason action_error() is one: an inline guard has
     nothing to anchor it, so a refactor can drop it while the self-test stays green.
     The two guards that matter here both turn a mistyped flag into a silent
     whole-corpus run: "--action" as the last token, and an empty value.
     """
-    action, show, patterns = None, False, []
+    action, show, classify, patterns = None, False, False, []
     rest = list(argv)
     while rest:
         arg = rest.pop(0)
         if arg == "--list":
             show = True
+        elif arg == "--classify-labels":
+            classify = True
         elif arg == "--action":
             if not rest:
                 return "--action needs a value, e.g. --action REMOVE"
@@ -180,7 +258,7 @@ def parse_argv(argv):
             patterns.append(arg)
     if action is not None and not action.strip():
         return "--action: empty value. Give an action, e.g. --action REMOVE"
-    return patterns, action, show
+    return patterns, action, show, classify
 
 
 def main(argv):
@@ -193,12 +271,26 @@ def main(argv):
     if isinstance(parsed, str):
         print(parsed)
         return 2
-    patterns, action, show = parsed
+    patterns, action, show, classify = parsed
 
     paths = sorted({p for pattern in (patterns or [DEFAULT_GLOB]) for p in glob.glob(pattern)})
     if not paths:
         print(f"no files matched: {' '.join(patterns or [DEFAULT_GLOB])}")
         return 2
+
+    if classify:
+        selfs, prov, bare = classify_labels(paths)
+        total = len(selfs) + len(prov) + len(bare)
+        print(f"{len(paths)} files, {total} labelled MOD sources: {len(selfs)} self, "
+              f"{len(prov) + len(bare)} third-party ({len(prov)} with a provenance verb, "
+              f"{len(bare)} without)")
+        if show:
+            by_gene = Counter(g for g, _s, _l in bare)
+            print("  third-party without provenance, by gene: "
+                  + ", ".join(f"{g} {n}" for g, n in sorted(by_gene.items(), key=lambda kv: (-kv[1], kv[0]))))
+            for g, sid, lab in bare:
+                print(f"    {g:12} {sid:22} {lab[:60]}")
+        return 0
 
     raw, actions_seen = collect(paths, action)
     problem = action_error(action, actions_seen, _known_actions())

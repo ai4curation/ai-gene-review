@@ -475,6 +475,13 @@ asserts something a reader could not otherwise check. **31 of those carry a prov
 clause; 31 do not**, across ten files: Sox2 6, Mapk1 5, Ifi204 4, Mapk3 4, Drd1 3, Frmpd2 3,
 Nf1 3, Agtr1a 1, Aldh2 1, Ccne1 1.
 
+Reproduce the split, and the residual by file:
+
+```
+python3 projects/IBA_REVIEW/shared_reason_groups.py --classify-labels
+python3 projects/IBA_REVIEW/shared_reason_groups.py --classify-labels --list
+```
+
 **The classifier has to be stricter than "contains the target's symbol", and the first
 version was not.** An earlier revision matched the `gene_symbol` as a word anywhere in the
 label and published 32/57/28/29 — five rows too many on the self side, every one of them a
@@ -486,6 +493,13 @@ establish". A label is a self-label only when it carries a self-marker ("this ge
 review target itself") or *is* the bare symbol (optionally "mouse "-prefixed and with a
 parenthetical), and carries no other-species qualifier and no negation. `Ednra`'s "zebrafish
 ednraa" is why the symbol test must be an exact match rather than a substring.
+
+That predicate is now `is_self_label()` in the script rather than prose, with the boundary
+cases as self-test arms — because the bare-symbol form is the only one classified by
+comparison rather than by a visible marker, and so the first thing a refactor breaks.
+`Hsp90aa1`'s "Hsp90aa1" and `Grb2`'s "Grb2" are the self side of that boundary; `Ccnb1`'s
+"budding-yeast CLB5" is the foreign side. Substituting the old word-boundary predicate now
+fails the self-test rather than silently republishing 32/57.
 
 Two of the five were unprovenanced, so the residual gained a file. **`Aldh2 RGD:69219` is the
 highest-leverage entry**: `genes/rat/Aldh2` does not exist, the accession appears nowhere
