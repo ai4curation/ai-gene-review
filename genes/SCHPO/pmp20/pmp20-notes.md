@@ -37,3 +37,17 @@
   citrate-synthase assay measured prevention of aggregation, not active refolding.
   Cytosol and nucleus are retained as experimentally observed locations; inferred
   peroxisome and mitochondrion are not promoted to core locations.
+
+## 2026-09-01 — PR review follow-up
+
+- Replaced all paraphrased `RESULTS.md` supporting text with exact substrings and
+  removed an unused deep-research reference carrying a non-verbatim finding.
+- Reclassified the mitochondrial IBA as over-annotated. The supporting mammalian
+  PRDX5 protein has a 52-residue N-terminal mitochondrial transit peptide, whereas
+  the 156-residue Pmp20 target lacks that extension; its reviewed UniProt record and
+  systematic S. pombe localization data instead identify cytoplasmic and nuclear
+  pools. This is a compartment-transfer problem, not weak donor biology.
+- Clarified that peroxisomal retention is only a non-core family/nomenclature-level
+  inference and noted the absence of an obvious canonical C-terminal PTS1 motif.
+- Added explicit questions and experiments for endogenous holdase clients and direct
+  organelle-localization testing.
