@@ -14,3 +14,10 @@ been demonstrated. The species-aware OpenScientist report also identifies
 unresolved RhlB-versus-RhlE and PNPase-versus-RNase R partner choices in
 KT2440. The revised module therefore treats all three accessory choices as
 variant or experimental questions rather than fixed species facts.
+
+OpenScientist also flagged the UniProt family-text conflict: Q88LM4 carries a
+large C-terminal scaffold and intact RNase E architecture, while KT2440 encodes
+a separate RNase G. The direct KT2440 deletion study analyzed RNase E and RNase
+G as distinct endoribonucleases and found species-specific physiological effects
+[PMID:33089610 "Each mutant lacked either one exoribonuclease (PNPase, RNase R)
+or one endoribonuclease (RNase E, RNase III, RNase G)."].
