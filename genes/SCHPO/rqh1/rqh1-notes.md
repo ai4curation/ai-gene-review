@@ -92,8 +92,8 @@ Rqh1 (aka rad12, hus2, rec9) is the single RecQ-family ATP-dependent 3'-5' DNA h
   3' to 5' DNA helicase activity"; PMID:12724426 "Rqh1 functions after Rad51 focus
   formation during DNA repair"]. Its appearance among PAINT descendants is expected
   target grounding, not circularity.
-- Accepted four-way junction helicase activity as a conserved RecQ-family substrate
-  specialization. PAINT places it on PTN000344873 with same-subfamily BLM and sibling
+- Retained four-way junction helicase activity as a non-core conserved RecQ-family
+  substrate specialization. PAINT places it on PTN000344873 with same-subfamily BLM and sibling
   WRN/plant RecQ evidence, and Rqh1 independently disassembles branched D-loops
   [PMID:25313826 "CAF-1 promotes template switch by counteracting D-loop disassembly
   by Rqh1"]. Direct purified-Rqh1 activity on a four-way substrate remains an explicit
@@ -110,3 +110,21 @@ Rqh1 (aka rad12, hus2, rec9) is the single RecQ-family ATP-dependent 3'-5' DNA h
   in-vitro four-way-junction unwinding or branch migration by purified Rqh1"]. This
   supports retaining GO:0009378 as IBA while explicitly avoiding any experimental
   evidence upgrade; the existing reconstitution experiment remains the decisive gap.
+- The full text also reports an informative assay limitation and negative observation:
+  the RTS1-repeat Holliday junctions cannot branch migrate in vitro and therefore
+  cannot be dissolved, and HJ-like intermediates did not accumulate in `rqh1-d`
+  relative to wild type [PMID:25313826 "In the RTS1-RFB assay, HJs formed between
+  RTS1 repeats cannot branch migrate in vitro and thus cannot be resolved by dissolution.
+  Accordingly, HJ-like intermediates did not accumulate in rqh1-d cells compared
+  to wt cells"]. This is not a refutation of four-way-junction unwinding because
+  the assay design precludes the relevant branch-migration/dissolution reaction;
+  it reinforces the need for a direct purified-Rqh1 substrate assay.
+- Removed generic helicase/pathway quotes from cellular-component annotations after
+  checking that they did not demonstrate localization. Refreshing PMID:12023299 and
+  PMID:12724426 through `just fetch-pmid ... --force` recovered their Results sections,
+  including direct observations that Rqh1 is nuclear, predominantly nucleolar and
+  relocalizes to chromatin foci after irradiation [PMID:12724426 "Rqh1 localized
+  to the nucleus throughout the cell cycle"; PMID:12023299 "Rqh1 relocalized from
+  a predominantly nucleolar distribution to discrete foci in the chromatin compartment
+  1 h postirradiation"]. The localization annotations now cite those assay-relevant
+  passages.
