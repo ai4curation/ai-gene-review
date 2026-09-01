@@ -1,10 +1,11 @@
-# lolE curation notes
+# LolE curation notes
 
-- Q88KY3 is a multi-pass membrane member of the ABC-4 LolC/E subfamily [file:PSEPK/lolE/lolE-uniprot.txt, "Belongs to the ABC-4 integral membrane protein family. LolC/E subfamily"].
-- The PSEPK record lacks a direct function comment, so the specific pathway role remains orthology-based pending OpenScientist retrieval.
-- LolE is modeled as an integral component of the LolCDE extraction machinery,
-  not as an independent pore-forming transporter.
-- The initial generic GO:0022857 contribution was removed because LolCDE
-  extracts lipoprotein from the outer leaflet by mechanotransmission rather
-  than carrying substrate through a membrane pore; the specific
-  lipoprotein-localization process remains.
+- OpenScientist confirmed Q88KY3/PP_2156 as the LolE membrane subunit from its
+  diagnostic MacB/FtsX-family domains, four-pass topology, and position after
+  lolD in the PP_2154-PP_2156 cluster
+  [file:PSEPK/lolE/lolE-deep-research-openscientist.md].
+- The report's LolE cargo-cleft and LolC/LolE asymmetry claims derive from
+  characterized Escherichia coli orthologs. They support the role assignment
+  but are not promoted to a target-specific GO MF.
+- LolE contributes to assembled LolCDE extraction; it is not assigned generic
+  transmembrane transporter activity as an isolated subunit.

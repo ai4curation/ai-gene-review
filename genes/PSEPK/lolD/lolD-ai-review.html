@@ -1,0 +1,2306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>lolD - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>lolD</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88KY4" target="_blank" class="term-link">
+                        Q88KY4
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "lolD";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88KY4" data-a="DESCRIPTION: Cytoplasmic ATPase subunit of the inner-membrane L..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Cytoplasmic ATPase subunit of the inner-membrane LolCDE complex. LolD hydrolyzes ATP to power extraction of outer-membrane-destined mature lipoproteins from the inner membrane and their transfer to LolA.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KY4" data-a="GO:0005524" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct for this ABC-family ATPase but less informative than ATP hydrolysis activity.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KY4" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LolD is peripherally associated with the inner membrane through LolCDE.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KY4" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but redundant with the more specific plasma membrane annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                                    GO:0016887
+                                </a>
+                            </span>
+                            <span class="term-label">ATP hydrolysis activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KY4" data-a="GO:0016887" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LolD is the catalytic ATPase subunit that powers LolCDE.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022857" target="_blank" class="term-link">
+                                    GO:0022857
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KY4" data-a="GO:0022857" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LolD is a peripheral ATPase rather than a transmembrane transporter; transport activity belongs to the assembled LolCDE complex.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044873" target="_blank" class="term-link">
+                                    GO:0044873
+                                </a>
+                            </span>
+                            <span class="term-label">lipoprotein localization to membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KY4" data-a="GO:0044873" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad parent of the accepted outer-membrane localization process.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044874" target="_blank" class="term-link">
+                                    GO:0044874
+                                </a>
+                            </span>
+                            <span class="term-label">lipoprotein localization to outer membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KY4" data-a="GO:0044874" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LolD powers the initiating LolCDE release step.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055085" target="_blank" class="term-link">
+                                    GO:0055085
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KY4" data-a="GO:0055085" data-r="GO_REF:0000118" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad compared with the lipoprotein-specific localization annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0089705" target="_blank" class="term-link">
+                                    GO:0089705
+                                </a>
+                            </span>
+                            <span class="term-label">protein localization to outer membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88KY4" data-a="GO:0089705" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Broad compared with lipoprotein localization to outer membrane.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>ATP hydrolysis that powers LolCDE-dependent lipoprotein extraction and release to LolA.</h3>
+                <span class="vote-buttons" data-g="Q88KY4" data-a="FUNCTION: ATP hydrolysis that powers LolCDE-dependent lipopr..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016887" target="_blank" class="term-link">
+                            ATP hydrolysis activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044874" target="_blank" class="term-link">
+                                lipoprotein localization to outer membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/lolD/lolD-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">The protein is **only ~227 aa with no transmembrane segment** — i.e., a **stand-alone nucleotide-binding domain**, exactly the architecture expected for the separate cytoplasmic LolD ATPase that dimerizes and docks onto the integral-membrane LolC/LolE subunits.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/lolD/lolD-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt record for Pseudomonas putida KT2440 LolD (Q88KY4)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt identifies LolD as the ATP-binding subunit of the inner-membrane LolCDE complex.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/lolD/lolD-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research report on PSEPK LolD (Q88KY4)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Q88KY4 is a complete LolD-type ABC ATPase encoded between lolC and lolE.</div>
+
+                        <div class="finding-text">"This chromosomal **lolC–lolD–lolE cluster** mirrors the *E. coli lolCDE* operon and demonstrates that *P. putida* encodes a **complete LolCDE transporter** with LolD&#39;s integral-membrane partners present and adjacently encoded"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What ATPase cycle and subunit stoichiometry optimize KT2440 LolCDE activity?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88KY4" data-a="Q: What ATPase cycle and subunit stoichiometry optimi..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute LolCDE and couple ATP hydrolysis measurements to lipoprotein release onto LolA.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: coupled ATPase and transport assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88KY4" data-a="EXPERIMENT: Reconstitute LolCDE and couple ATP hydrolysis meas..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> ATPase kinetics and subunit coupling have not been measured for the KT2440 LolCDE complex.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+
+            </p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> The catalytic assignment is strong, but quantitative behavior is transferred from characterized orthologs.</p>
+
+
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(lolD-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88KY4" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of LolD (Q88KY4 / PP_2155) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-01T04:03:31.799012</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="lolD-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="lolD-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-lold-q88ky4-pp_2155-in-pseudomonas-putida-kt2440">Functional Annotation of LolD (Q88KY4 / PP_2155) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="0-identity-verification-performed-first">0. Identity verification (performed first)</h2>
+<ul>
+<li><strong>UniProt:</strong> Q88KY4 — "Lipoprotein-releasing system ATP-binding protein LolD"; EC 7.6.2.- (translocase / ABC-transporter ATPase).</li>
+<li><strong>Gene / locus:</strong> <em>lolD</em> / PP_2155, <em>Pseudomonas putida</em> KT2440.</li>
+<li><strong>Family / domains:</strong> ABC transporter superfamily (LolD subfamily); AAA+ ATPase (IPR003593), ABC transporter-like ATP-binding domain (IPR003439/IPR017871), LolD-like ATP-binding (IPR015854), and the diagnostic <strong>LolD lipoprotein-release ATP-binding</strong> signature (IPR011924).</li>
+</ul>
+<p><strong>Verification result: CONFIRMED, unambiguous.</strong> The gene symbol <em>lolD</em>, the "lipoprotein-releasing system ATP-binding protein" description, the EC 7.6.2.- translocase class, and the LolD-specific InterPro signature (IPR011924) all coincide with a single, well-defined function: the ATPase subunit of the Lol (Localization of lipoprotein) ABC transporter LolCDE. The symbol is <strong>not</strong> ambiguous — "LolD" is used consistently across Gram-negative bacteria for this exact subunit. There is no competing gene family sharing the symbol. No <em>P. putida</em>-specific primary study of PP_2155 exists, so the functional narrative below is built from (i) the extensively characterized <em>Escherichia coli</em> system and (ii) the experimentally validated <em>Pseudomonas aeruginosa</em> orthologous system, then transferred to <em>P. putida</em> by orthology.</p>
+<hr />
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (answer to the research question)</h2>
+<p>LolD (Q88KY4, PP_2155) is the <strong>cytoplasmic ATP-binding/ATP-hydrolyzing (nucleotide-binding-domain) subunit of the LolCDE ABC transporter</strong>, the machine that initiates sorting of outer-membrane lipoproteins in Gram-negative bacteria. Two copies of LolD associate with one integral-membrane LolC and one LolE to form LolCDE in the <strong>inner (cytoplasmic) membrane</strong>; LolD hydrolyzes ATP on the <strong>cytoplasmic face</strong> of that membrane, and this chemical energy is mechanically coupled — via the conserved "LolD motif" that contacts LolC/LolE — to the <strong>detachment (release) of triacylated outer-membrane lipoproteins from the periplasmic leaflet of the inner membrane</strong>. Unusually for an ABC transporter, LolCDE does not translocate a solute across the bilayer; instead LolD's ATPase activity powers extraction of the lipoprotein's lipid anchor and its hand-off to the periplasmic chaperone LolA, the committed first step of the Lol trafficking pathway. The reaction is essential for outer-membrane biogenesis and viability, making LolCDE (and thus LolD) a validated antibacterial target.</p>
+<p><strong>Confidence:</strong> Very high. The annotation rests on four independent, converging evidence layers: (1) direct <em>E. coli</em>/<em>P. aeruginosa</em> biochemistry establishing LolD's reaction, mechanism and essentiality; (2) <em>P. putida</em>-specific sequence analysis showing a complete, canonical ABC nucleotide-binding domain (NBD-only architecture); (3) 81.5% identity to the biochemically validated <em>P. aeruginosa</em> LolD ortholog; and (4) an intact chromosomal <em>lolC–lolD–lolE</em> cluster in <em>P. putida</em> KT2440, confirming the full machine is encoded in the target organism. No experimental study of PP_2155 itself exists, but function transfer is exceptionally well supported.</p>
+<hr />
+<h2 id="2-biological-context-the-lipoprotein-biogenesis-and-lol-sorting-pathway">2. Biological context: the lipoprotein biogenesis and Lol sorting pathway</h2>
+<p>Bacterial lipoproteins are made as cytoplasmic precursors, exported by Sec to the periplasmic (outer) leaflet of the inner membrane, and matured by three enzymes — Lgt (diacylglyceryl transferase), LspA (signal peptidase II), and Lnt (apolipoprotein N-acyltransferase) — to yield the N-terminal triacyl-cysteine lipid anchor (Narita &amp; Tokuda 2010, PMID 26443779). <em>E. coli</em> has &gt;90 lipoproteins, most destined for the outer membrane (Narita &amp; Tokuda 2010; Narita, Matsuyama &amp; Tokuda 2004, PMID 15221203).</p>
+<p>Sorting of the outer-membrane subset requires the <strong>five-protein Lol system, LolABCDE</strong> (Okuda &amp; Tokuda 2011, PMID 21663440):</p>
+<ol>
+<li><strong>LolCDE</strong> (inner-membrane ABC transporter; contains <strong>LolD</strong>) recognizes an outer-membrane-destined lipoprotein and, using ATP, <strong>releases it from the inner membrane</strong>, generating a soluble LolA–lipoprotein complex.</li>
+<li><strong>LolA</strong> (periplasmic chaperone) shields the acyl chains in a hydrophobic cavity and ferries the lipoprotein across the aqueous periplasm.</li>
+<li><strong>LolB</strong> (outer-membrane receptor lipoprotein) accepts the cargo and <strong>inserts it into the inner leaflet of the outer membrane</strong> (Narita &amp; Tokuda 2010, PMID 20419407).</li>
+</ol>
+<p><strong>LolD is the energizing engine of step 1</strong> — the committed, rate-initiating step of the whole pathway.</p>
+<hr />
+<h2 id="3-primary-molecular-function-of-lold">3. Primary molecular function of LolD</h2>
+<h3 id="31-it-is-the-atpase-subunit-of-lolcde">3.1 It is the ATPase subunit of LolCDE</h3>
+<p>The founding study reconstituted LolCDE in proteoliposomes and showed it "belong[s] to the ATP-binding cassette (ABC) transporter family" and "catalyses the release of lipoproteins in LolA- and sorting-signal-dependent manners" (Yakushi et al. 2000, PMID 10783239). Notably, the authors emphasized that "the LolCDE complex differs mechanistically from all other ABC transporters as it is not involved in the transmembrane transport of substrates" — i.e., LolD's ATP hydrolysis powers a <em>release/extraction</em> reaction, not vectorial solute transport.</p>
+<h3 id="32-stoichiometry-and-site-of-catalysis">3.2 Stoichiometry and site of catalysis</h3>
+<p>LolCDE contains "two copies of an ATPase subunit, LolD, and one copy each of integral membrane subunits LolC and LolE. <strong>LolD hydrolyzes ATP on the cytoplasmic side of the inner membrane</strong>, while LolC and/or LolE recognize and release lipoproteins anchored to the periplasmic leaflet of the inner membrane" (Ito et al. 2006, PMID 16585747). Thus the catalytic reaction — ATP + H₂O → ADP + Pᵢ — occurs in the <strong>cytoplasm</strong>, at the two LolD nucleotide-binding domains, while the substrate-handling occurs on the opposite (periplasmic) face.</p>
+<h3 id="33-substrate-specificity">3.3 Substrate specificity</h3>
+<p>LolCDE's substrate is the set of <strong>mature triacylated lipoproteins bearing an outer-membrane sorting signal</strong>. Specificity is governed by the residue(s) following the N-terminal acyl-Cys: in <em>E. coli</em> the "+2 rule" (Asp at position 2 = inner-membrane retention / LolCDE-avoidance signal), and in <em>Pseudomonas</em> the "+3,+4 rule" (Narita &amp; Tokuda 2007, PMID 17350956). LolCDE releases only lipoproteins <strong>lacking</strong> the retention signal. LolD itself does not read the sorting signal (that is done by LolC/LolE); LolD supplies the energy that acts on whatever cargo the membrane subunits have engaged. Aminoacylation of the N-terminal cysteine (Lnt product) is required for Lol-dependent release (Fukuda et al. 2002, PMID 12198129).</p>
+<h3 id="34-mechanistic-coupling-the-lold-motif">3.4 Mechanistic coupling — the "LolD motif"</h3>
+<p>LolD carries "a characteristic sequence called the LolD motif, which is highly conserved among LolD homologs but not other ABC transporters of <em>E. coli</em>" (Ito et al. 2006, PMID 16585747). Systematic mutagenesis of all 32 residues of this motif produced 26 dominant-negative alleles (growth arrest on overexpression), and suppressor mutations mapped to the periplasmic loops of LolC and cytoplasmic loops of LolE — genetically defining the <strong>LolD↔LolC/E interaction surface</strong> through which ATP hydrolysis is transmitted to the membrane subunits to drive release. This is the mechanistic heart of energy coupling: LolD is the motor, LolC/E the substrate-handling stators.</p>
+<h3 id="35-biochemical-reconstitution">3.5 Biochemical reconstitution</h3>
+<p>The functional machine was rebuilt from separately purified subunits: "the functional lipoprotein-releasing machinery was reconstituted into proteoliposomes with <em>E. coli</em> phospholipids and separately purified LolC, LolD and LolE" (Kanamaru et al. 2007, PMID 17509078). LolD's ATPase activity (and its dependence on phospholipids/assembly) was directly measured, and — strikingly — a minimal releasing activity could form from LolE + LolD without LolC, underscoring LolD as the indispensable catalytic partner.</p>
+<hr />
+<h2 id="4-subcellular-localization-where-lold-acts">4. Subcellular localization / where LolD acts</h2>
+<ul>
+<li><strong>Compartment:</strong> peripheral membrane protein of the <strong>inner (cytoplasmic) membrane</strong>, associated with the integral-membrane subunits LolC/LolE.</li>
+<li><strong>Catalytic site orientation:</strong> the two LolD nucleotide-binding domains face the <strong>cytoplasm</strong>, where ATP hydrolysis occurs (Ito et al. 2006, PMID 16585747).</li>
+<li><strong>Site of the biological reaction it powers:</strong> extraction of lipoproteins from the <strong>periplasmic leaflet of the inner membrane</strong>, with product delivery into the <strong>periplasm</strong> (as the LolA–lipoprotein complex). Downstream steps (LolA transit, LolB insertion) occur in the periplasm and outer membrane respectively (Okuda &amp; Tokuda 2011, PMID 21663440).</li>
+</ul>
+<hr />
+<h2 id="5-transfer-to-pseudomonas-putida-orthology-evidence">5. Transfer to <em>Pseudomonas putida</em> (orthology evidence)</h2>
+<p>No PP_2155-specific experimental study exists. Confidence in the annotation rests on:</p>
+<ul>
+<li><strong>Close-relative validation:</strong> In <em>P. aeruginosa</em>, cloned LolCDE (with its LolD ATPase), LolA and LolB homologs are functional — purified LolCDE "reconstituted into proteoliposomes … When incubated in the presence of ATP and a LolA homologue, the reconstituted LolCDE homologue released lipoproteins, leading to the formation of a LolA-lipoprotein complex," with subsequent LolB-dependent outer-membrane insertion (Tanaka et al. 2007, PMID 17350955). <em>P. putida</em> is a close congener of <em>P. aeruginosa</em>.</li>
+<li><strong>Pseudomonas sorting logic:</strong> the "+3,+4 rule" defines the inner-membrane retention signal read by the <em>Pseudomonas</em> Lol system (Narita &amp; Tokuda 2007, PMID 17350956) — the specificity framework applicable to <em>P. putida</em>.</li>
+<li><strong>Sequence/domain conservation:</strong> Q88KY4 bears the LolD-diagnostic InterPro signature (IPR011924) plus the canonical Walker A/B and ABC signature motifs (IPR003439/IPR017871), i.e., a bona fide LolD-type nucleotide-binding domain.</li>
+</ul>
+<h3 id="51-organism-specific-sequence-evidence-this-work">5.1 Organism-specific sequence evidence (this work)</h3>
+<p>Direct motif analysis of the retrieved 227-residue Q88KY4 sequence confirms a <strong>complete, canonical ABC nucleotide-binding domain</strong> in correct order and spacing:</p>
+<table>
+<thead>
+<tr>
+<th>Motif</th>
+<th>Sequence (residues)</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Walker A / P-loop</td>
+<td><strong>GSSGSGKST</strong> (~42–50)</td>
+<td>binds ATP β/γ phosphates</td>
+</tr>
+<tr>
+<td>Q-loop</td>
+<td><strong>Q84</strong> (in QFHH)</td>
+<td>coordinates Mg²⁺/catalytic water; couples to TMD partner</td>
+</tr>
+<tr>
+<td>ABC signature / C-loop</td>
+<td><strong>LSGGERQR</strong> (~147–154)</td>
+<td>forms composite ATP site at NBD dimer interface</td>
+</tr>
+<tr>
+<td>Walker B</td>
+<td><strong>LVMLDE</strong> (~167–172; D171/E172)</td>
+<td>Mg²⁺ coordination and catalytic base</td>
+</tr>
+<tr>
+<td>H-loop / switch</td>
+<td><strong>H</strong> in VVTHD (~205–208)</td>
+<td>stabilizes transition state</td>
+</tr>
+</tbody>
+</table>
+<p>The protein is <strong>only ~227 aa with no transmembrane segment</strong> — i.e., a <strong>stand-alone nucleotide-binding domain</strong>, exactly the architecture expected for the separate cytoplasmic LolD ATPase that dimerizes and docks onto the integral-membrane LolC/LolE subunits. This constitutes direct <em>P. putida</em>-specific molecular evidence that Q88KY4 is a catalytically competent ABC ATPase of the LolD type, complementing the <em>E. coli</em>/<em>P. aeruginosa</em> biochemistry.</p>
+<h3 id="52-quantitative-orthology-to-experimentally-validated-lold-this-work">5.2 Quantitative orthology to experimentally validated LolD (this work)</h3>
+<p>Global (Needleman–Wunsch) pairwise alignment of the retrieved UniProt sequences:</p>
+<table>
+<thead>
+<tr>
+<th>Comparison</th>
+<th>Identity</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>P. putida</em> LolD (Q88KY4, 227 aa) vs <em>P. aeruginosa</em> LolD (Q9HZL7 / LOLD_PSEAE, 227 aa)</td>
+<td><strong>81.5%</strong> (185/227)</td>
+<td>same length; P. aeruginosa ortholog is experimentally validated (PMID 17350955)</td>
+</tr>
+<tr>
+<td><em>P. putida</em> LolD vs <em>E. coli</em> LolD (P75957 / LOLD_ECOLI, 233 aa)</td>
+<td><strong>57.3%</strong> (134/234)</td>
+<td>cross-genus; well above the ~30% "safe" ortholog-transfer threshold</td>
+</tr>
+</tbody>
+</table>
+<p>All three proteins carry the <strong>identical Walker A P-loop (GSSGSGKS)</strong> and <strong>identical ABC signature (LSGGE)</strong> and are all annotated "Lipoprotein-releasing system ATP-binding protein LolD." The 81.5% identity to a biochemically validated same-genus ortholog, with perfectly conserved catalytic motifs and identical NBD-only architecture, elevates the annotation of PP_2155 from <em>inferred</em> to <em>strongly supported by quantitative homology to an experimentally characterized ortholog</em>.</p>
+<h3 id="53-genomic-context-a-complete-lolcde-cluster-in-p-putida-this-work">5.3 Genomic context: a complete lolCDE cluster in P. putida (this work)</h3>
+<p>The loci flanking <em>lolD</em> in the <em>P. putida</em> KT2440 chromosome encode its two obligate membrane partners, in the canonical arrangement:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Gene</th>
+<th>UniProt</th>
+<th>Length</th>
+<th>Product / localization</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_2154</td>
+<td><strong>lolC</strong></td>
+<td>Q88KY5</td>
+<td>416 aa</td>
+<td>LolC; cell membrane, multi-pass</td>
+</tr>
+<tr>
+<td><strong>PP_2155</strong></td>
+<td><strong>lolD</strong></td>
+<td><strong>Q88KY4</strong></td>
+<td>227 aa</td>
+<td><strong>LolD ATPase; cell inner membrane, peripheral membrane protein</strong></td>
+</tr>
+<tr>
+<td>PP_2156</td>
+<td><strong>lolE</strong></td>
+<td>Q88KY3</td>
+<td>413 aa</td>
+<td>LolE "lipoprotein releasing system, permease protein"; cell membrane, multi-pass</td>
+</tr>
+</tbody>
+</table>
+<p>Flanking genes (PP_2153, a PilZ-domain protein; PP_2157, a sensor histidine kinase) are unrelated. This chromosomal <strong>lolC–lolD–lolE cluster</strong> mirrors the <em>E. coli lolCDE</em> operon and demonstrates that <em>P. putida</em> encodes a <strong>complete LolCDE transporter</strong> with LolD's integral-membrane partners present and adjacently encoded — independent genomic-synteny evidence that PP_2155 is the ATPase subunit of an assembled LolCDE machine. The UniProt subcellular annotation for Q88KY4 — "Cell inner membrane; Peripheral membrane protein" (HAMAP-Rule MF_01708) — confirms the localization stated in §4.</p>
+<hr />
+<h2 id="6-essentiality-and-pathway-significance">6. Essentiality and pathway significance</h2>
+<p>The Lol pathway is required for viability; a phenotypic screen identified a pyrazole inhibitor whose resistance mutations map to "LolC or LolE, components of the <strong>essential LolCDE transporter complex</strong>, which is required for trafficking of lipoproteins to the outer membrane," and the compound blocked ATP-dependent lipoprotein release in spheroplasts (Nayar et al. 2015, PMID 25733621). Because LolD supplies the ATP hydrolysis that powers this essential release reaction, its activity is indispensable for outer-membrane biogenesis. This is the basis for interest in LolCDE/LolD as an antibacterial target.</p>
+<hr />
+<h2 id="7-supported-and-refuted-hypotheses">7. Supported and refuted hypotheses</h2>
+<p><strong>Supported</strong><br />
+- H1: Q88KY4 is the ATPase (NBD) subunit of the LolCDE ABC transporter — supported (PMID 10783239, 16585747, 17509078).<br />
+- H2: LolD hydrolyzes ATP in the cytoplasm and this energizes lipoprotein release from the inner-membrane periplasmic leaflet — supported (PMID 16585747).<br />
+- H3: Energy coupling proceeds via the conserved LolD motif contacting LolC/LolE — supported by mutagenesis/suppressor genetics (PMID 16585747).<br />
+- H4: Function is conserved in <em>Pseudomonas</em>, licensing orthologous annotation of PP_2155 — supported (PMID 17350955, 17350956).<br />
+- H5: The complex is essential and drug-targetable — supported (PMID 25733621).</p>
+<p><strong>Refuted / excluded</strong><br />
+- LolCDE is <strong>not</strong> a classical solute-translocating ABC transporter; it does not move substrate across the bilayer (explicitly stated in PMID 10783239). LolD therefore is not annotated as energizing transmembrane import/export of small molecules.<br />
+- The symbol <em>lolD</em> is <strong>not</strong> ambiguous with any unrelated gene family; no alternative identity was found.</p>
+<hr />
+<h2 id="8-limitations-and-future-directions">8. Limitations and future directions</h2>
+<ul>
+<li><strong>Organism gap:</strong> All mechanistic data derive from <em>E. coli</em> and <em>P. aeruginosa</em>; direct <em>P. putida</em> KT2440 biochemistry/genetics on PP_2155 is lacking. A conditional depletion or purified-complex assay in <em>P. putida</em> would confirm the transfer.</li>
+<li><strong>Structure:</strong> Cryo-EM structures of <em>E. coli</em> LolCDE exist (referenced in Tao et al. 2024, PMID 38156779) and show a central lipoprotein-binding cavity; an experimental or AlphaFold model of <em>P. putida</em> LolD could confirm Walker A/B, signature, Q-loop and the LolD-motif interface, and quantify conservation.</li>
+<li><strong>Sorting signal:</strong> Whether <em>P. putida</em> strictly follows the +3,+4 rule for its own lipoprotein repertoire has not been individually tested.</li>
+</ul>
+<hr />
+<h2 id="references-pmids">References (PMIDs)</h2>
+<ul>
+<li>10783239 — Yakushi et al. 2000, <em>Nat Cell Biol.</em> Discovery of LolCDE as lipoprotein-releasing ABC transporter.</li>
+<li>16585747 — Ito et al. 2006, <em>J Bacteriol.</em> LolD stoichiometry, cytoplasmic ATP hydrolysis, LolD motif genetics.</li>
+<li>17509078 — Kanamaru et al. 2007, <em>J Biol Chem.</em> Complete reconstitution from separate subunits; LolD ATPase.</li>
+<li>20888319 — Sakamoto et al. 2010. LolCDE (incl. LolD) mutations altering sorting.</li>
+<li>17350955 — Tanaka et al. 2007. <em>P. aeruginosa</em> Lol system reconstitution.</li>
+<li>17350956 — Narita &amp; Tokuda 2007. Pseudomonas "+3,+4 rule".</li>
+<li>12198129 — Fukuda et al. 2002. N-Cys aminoacylation required for Lol release.</li>
+<li>21663440 — Okuda &amp; Tokuda 2011. Review: lipoprotein sorting in bacteria.</li>
+<li>26443779 — Narita &amp; Tokuda 2010. Review: biogenesis/membrane targeting of lipoproteins.</li>
+<li>20419407 — Narita &amp; Tokuda 2010. Review: sorting by the Lol system.</li>
+<li>15221203 — Narita, Matsuyama &amp; Tokuda 2004. Review: lipoprotein trafficking in <em>E. coli</em>.</li>
+<li>25733621 — Nayar et al. 2015. LolCDE essential; small-molecule inhibitor of release.</li>
+<li>38156779 — Tao et al. 2024. Photo-crosslinking dissection of LolCDE function.</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="lolD-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="lolD-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(lolD-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88KY4" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="lold-curation-notes">LolD curation notes</h1>
+<ul>
+<li>OpenScientist completed after 6602 seconds and confirmed Q88KY4/PP_2155 as a<br />
+  227-residue, NBD-only LolD ATPase in the PP_2154-PP_2156 lolC-lolD-lolE<br />
+  cluster [file:PSEPK/lolD/lolD-deep-research-openscientist.md].</li>
+<li>ATP hydrolysis is assigned directly to LolD. Lipoprotein extraction and<br />
+  release are modeled on the assembled LolCDE complex, not as a LolD<br />
+  transmembrane-transporter MF.</li>
+<li>Direct KT2440 kinetics and coupling measurements remain unavailable.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88KY4
+gene_symbol: lolD
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  Cytoplasmic ATPase subunit of the inner-membrane LolCDE complex. LolD
+  hydrolyzes ATP to power extraction of outer-membrane-destined mature
+  lipoproteins from the inner membrane and their transfer to LolA.
+existing_annotations:
+  - term: {id: &#34;GO:0005524&#34;, label: ATP binding}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: Correct for this ABC-family ATPase but less informative than ATP hydrolysis activity.
+      action: KEEP_AS_NON_CORE
+  - term: {id: &#34;GO:0005886&#34;, label: plasma membrane}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: located_in
+    review:
+      summary: LolD is peripherally associated with the inner membrane through LolCDE.
+      action: ACCEPT
+  - term: {id: &#34;GO:0016020&#34;, label: membrane}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: located_in
+    review:
+      summary: Correct but redundant with the more specific plasma membrane annotation.
+      action: MARK_AS_OVER_ANNOTATED
+  - term: {id: &#34;GO:0016887&#34;, label: ATP hydrolysis activity}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: LolD is the catalytic ATPase subunit that powers LolCDE.
+      action: ACCEPT
+  - term: {id: &#34;GO:0022857&#34;, label: transmembrane transporter activity}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000118
+    qualifier: enables
+    review:
+      summary: &gt;-
+        LolD is a peripheral ATPase rather than a transmembrane transporter;
+        transport activity belongs to the assembled LolCDE complex.
+      action: REMOVE
+  - term: {id: &#34;GO:0044873&#34;, label: lipoprotein localization to membrane}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review:
+      summary: Broad parent of the accepted outer-membrane localization process.
+      action: MARK_AS_OVER_ANNOTATED
+  - term: {id: &#34;GO:0044874&#34;, label: lipoprotein localization to outer membrane}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: involved_in
+    review:
+      summary: LolD powers the initiating LolCDE release step.
+      action: ACCEPT
+  - term: {id: &#34;GO:0055085&#34;, label: transmembrane transport}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000118
+    qualifier: involved_in
+    review:
+      summary: Broad compared with the lipoprotein-specific localization annotation.
+      action: MARK_AS_OVER_ANNOTATED
+  - term: {id: &#34;GO:0089705&#34;, label: protein localization to outer membrane}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: involved_in
+    review:
+      summary: Broad compared with lipoprotein localization to outer membrane.
+      action: MARK_AS_OVER_ANNOTATED
+references:
+  - {id: &#34;GO_REF:0000002&#34;, title: Gene Ontology annotation through association of InterPro records with GO terms, findings: []}
+  - {id: &#34;GO_REF:0000118&#34;, title: TreeGrafter-generated GO annotations, findings: []}
+  - {id: &#34;GO_REF:0000120&#34;, title: Combined Automated Annotation using Multiple IEA Methods, findings: []}
+  - id: file:PSEPK/lolD/lolD-uniprot.txt
+    title: UniProt record for Pseudomonas putida KT2440 LolD (Q88KY4)
+    findings:
+      - statement: UniProt identifies LolD as the ATP-binding subunit of the inner-membrane LolCDE complex.
+  - id: file:PSEPK/lolD/lolD-deep-research-openscientist.md
+    title: OpenScientist deep research report on PSEPK LolD (Q88KY4)
+    publication_type: DEEP_RESEARCH
+    findings:
+      - statement: Q88KY4 is a complete LolD-type ABC ATPase encoded between lolC and lolE.
+        supporting_text: &gt;-
+          This chromosomal **lolC–lolD–lolE cluster** mirrors the *E. coli lolCDE*
+          operon and demonstrates that *P. putida* encodes a **complete LolCDE
+          transporter** with LolD&#39;s integral-membrane partners present and
+          adjacently encoded
+    reference_review:
+      relevance: HIGH
+      correctness: UNVERIFIED
+      review_notes: Used for target-specific motif, architecture, orthology, and synteny synthesis; mechanistic claims remain ortholog-derived.
+core_functions:
+  - description: ATP hydrolysis that powers LolCDE-dependent lipoprotein extraction and release to LolA.
+    molecular_function: {id: &#34;GO:0016887&#34;, label: ATP hydrolysis activity}
+    directly_involved_in:
+      - {id: &#34;GO:0044874&#34;, label: lipoprotein localization to outer membrane}
+    locations:
+      - {id: &#34;GO:0005886&#34;, label: plasma membrane}
+    supported_by:
+      - reference_id: file:PSEPK/lolD/lolD-deep-research-openscientist.md
+        supporting_text: &gt;-
+          The protein is **only ~227 aa with no transmembrane segment** — i.e., a
+          **stand-alone nucleotide-binding domain**, exactly the architecture
+          expected for the separate cytoplasmic LolD ATPase that dimerizes and
+          docks onto the integral-membrane LolC/LolE subunits.
+knowledge_gaps:
+  - gap_statement: ATPase kinetics and subunit coupling have not been measured for the KT2440 LolCDE complex.
+    status: OPEN
+    gap_kind: [BIOLOGY]
+    significance: The catalytic assignment is strong, but quantitative behavior is transferred from characterized orthologs.
+suggested_questions:
+  - question: What ATPase cycle and subunit stoichiometry optimize KT2440 LolCDE activity?
+suggested_experiments:
+  - description: Reconstitute LolCDE and couple ATP hydrolysis measurements to lipoprotein release onto LolA.
+    experiment_type: coupled ATPase and transport assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

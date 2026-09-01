@@ -1,6 +1,9 @@
-# lolD curation notes
+# LolD curation notes
 
-- Q88KY4 is the reviewed LolD ATPase subunit [file:PSEPK/lolD/lolD-uniprot.txt, "RecName: Full=Lipoprotein-releasing system ATP-binding protein LolD"].
-- UniProt describes LolD as a peripheral inner-membrane subunit of LolCDE [file:PSEPK/lolD/lolD-uniprot.txt, "Cell inner membrane"].
-- The TreeGrafter assertion that LolD itself enables transmembrane transporter activity is removed: LolD directly hydrolyzes ATP, while transport is a property of assembled LolCDE.
-
+- OpenScientist completed after 6602 seconds and confirmed Q88KY4/PP_2155 as a
+  227-residue, NBD-only LolD ATPase in the PP_2154-PP_2156 lolC-lolD-lolE
+  cluster [file:PSEPK/lolD/lolD-deep-research-openscientist.md].
+- ATP hydrolysis is assigned directly to LolD. Lipoprotein extraction and
+  release are modeled on the assembled LolCDE complex, not as a LolD
+  transmembrane-transporter MF.
+- Direct KT2440 kinetics and coupling measurements remain unavailable.

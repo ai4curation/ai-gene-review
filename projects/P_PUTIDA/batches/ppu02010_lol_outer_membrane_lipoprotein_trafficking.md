@@ -15,7 +15,7 @@ periplasm, and into the outer membrane.
 ## Workflow
 
 - [x] Fetch all five PSEPK Lol gene records.
-- [ ] Complete OpenScientist gene research (lolB and lolC complete; three jobs running).
+- [ ] Complete OpenScientist gene research (lolB, lolC, lolD, and lolE complete; lolA running).
 - [x] Curate every GOA row for all five genes.
 - [x] Create a species-neutral, multi-part module.
 - [x] Complete generic module research.
@@ -71,3 +71,9 @@ periplasm, and into the outer membrane.
 - Recent model-organism bypass experiments caution against asserting universal
   LolA/LolB essentiality. No such bypass or essentiality result is projected
   onto KT2440.
+- LolD research confirms a complete NBD-only ABC ATPase architecture and the
+  adjacent PP_2154-PP_2156 lolC-lolD-lolE cluster. ATP hydrolysis remains a
+  direct LolD MF; extraction remains an assembled-complex role.
+- LolE research confirms the diagnostic MacB/FtsX-family topology and operon
+  position. The E. coli cargo-cleft asymmetry is retained as ortholog-derived
+  mechanistic context, not promoted as a KT2440-specific molecular function.
