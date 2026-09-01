@@ -53,6 +53,12 @@ biogenesis contexts, not part of the maturation chemistry.
 
 ## Notes
 
+Structural review, 2026-09-01:
+
+- Removed the module-level plasma-membrane context because each Lgt, LspA, and
+  Lnt leaf annoton already carries GO:0005886. The bacterial taxon context and
+  the three ordered reaction parts remain unchanged.
+
 Curator notes, 2026-07-14:
 
 - Added `modules/bacterial_lipoprotein_maturation.yaml` as the multi-part
