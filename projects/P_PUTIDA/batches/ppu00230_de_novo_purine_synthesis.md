@@ -98,3 +98,22 @@ also returned no report. These retrieval outcomes do not create pathway holes:
 all eleven target assignments were adjudicated against exact UniProt records,
 domain/family evidence, the completed generic module research, and the
 available primary literature.
+
+## 2026-09-01 Fusion and family repair
+
+The human GART fusion P22102 is classified as
+PANTHER:PTHR10520:SF12 at the whole-protein level. The PurD and PurN leaves now
+include that exact fusion family alongside their standalone bacterial families,
+while the reviewed GART record's N-terminal ATP-grasp and C-terminal
+transformylase domain assignments establish the leaf activities. The existing
+PurM leaf already carried the same PANTHER family lineage and deliberately
+retains parent PTHR10520 because SF12 conflates standalone PurM proteins with
+the GART fusion. Human ADSL P30566 is now
+represented by its exact eukaryotic PTHR43172:SF1 family alongside the distinct
+bacterial PTHR43411 PurB family. These repairs preserve ten ordered reaction
+positions and do not treat a fusion as a one-step module.
+The same audit moved purely electronic cytosol or cytoplasm annotations to
+non-core in `purN`, `purT`, `purL`, `purM`, `purK`, `purC`, `purB`, and `purH`,
+and removed those locations from synthesized core functions. Redundant broad
+cytoplasm rows in `purN` and `purM` are marked over-annotated rather than
+converted into duplicate cytosol assertions.
