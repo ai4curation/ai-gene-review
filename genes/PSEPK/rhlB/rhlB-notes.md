@@ -10,6 +10,8 @@ ribonucleolytically active complex"] and that RhlB supports PNPase degradation
 of structured RNA. This is strong mechanistic evidence from *E. coli* and is
 used as homologous support, not as a claim that the KT2440 complex has been
 purified.
+PMID:40096066 adds direct same-genus evidence for RhlB binding to the P.
+aeruginosa RNase E scaffold, while the KT2440 interaction remains untested.
 
 The species-aware OpenScientist report identifies RhlE-family paralogs as
 plausible alternative degradosome helicases in pseudomonads. RhlB is therefore

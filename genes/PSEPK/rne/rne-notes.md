@@ -7,6 +7,9 @@ scaffold of the RNase E-centered degradosome. The conserved scaffold claim is
 supported by full-text work in *E. coli*, where PNPase, RhlB, and enolase bind
 the C-terminal scaffold region [PMID:16275923 "the C-terminal \"scaffold\"
 region of RNase E to form a complex termed the RNA degradosome."].
+Same-genus PMID:40096066 directly maps PNPase and RhlB binding plus membrane
+attachment motifs on the P. aeruginosa RNase E scaffold; these findings support
+the architecture while leaving KT2440 partner composition to be tested.
 
 That paper does not establish the exact accessory composition in *P. putida*.
 The existing KT2440 eno review explicitly says its degradosome role has not

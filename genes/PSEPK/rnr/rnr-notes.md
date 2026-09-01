@@ -6,6 +6,9 @@ All nine seeded GOA rows were reviewed against Q88DE6 UniProt/HAMAP evidence
 and Pseudomonas literature. Exoribonuclease II activity, RNA binding, mRNA
 catabolism, and cytosolic localization are accepted. Broad nucleic-acid/nuclease
 parents, RNA metabolism, and cytoplasm are retained as non-core.
+GO:0006396 RNA processing is added from the target UniProt statement that RNase
+R participates in maturation of structured RNAs, and is included in the core
+function alongside mRNA catabolism.
 
 Direct KT2440 work included RNase R among tested exoribonuclease deletions
 [PMID:33089610 "Each mutant lacked either one exoribonuclease (PNPase, RNase R)
