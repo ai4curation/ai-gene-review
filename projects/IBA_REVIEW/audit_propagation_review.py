@@ -134,6 +134,18 @@ except Exception: pass
 
 issues=[]; n=0
 files=[f for pat in PATTERNS for f in sorted(glob.glob(pat))]
+
+# ZERO INPUTS IS AN ERROR, NOT A PASS. Every entry point that can silently audit
+# nothing has produced a false "clean" in this tool's history: a mistyped glob, a
+# --pair whose value was omitted (so the flag itself became a glob), the --pair=X
+# equals-form, a typo'd flag name. The self-test above cannot catch these -- it globs
+# genes/*/*/ independently of PATTERNS -- so the check belongs here.
+if not files:
+    print("NO INPUT FILES MATCHED - refusing to report a clean audit.")
+    print("  patterns:", PATTERNS)
+    print("  (a mistyped glob, or --pair given without a value, lands here)")
+    raise SystemExit(2)
+
 for f in files:
     _parts=os.path.dirname(f).split(os.sep)
     org, g = _parts[-2], _parts[-1]
@@ -225,6 +237,14 @@ pair_arg = PAIR_ARG
 if pair_arg:
     _names = pair_arg.split(',')
     _paths = [f for f in files if os.path.basename(os.path.dirname(f)) in _names]
+    _found = {os.path.basename(os.path.dirname(f)) for f in _paths}
+    _missing = [nm for nm in _names if nm not in _found]
+    if _missing:
+        # Otherwise _combos is empty, the cross-gene section never prints, and the run
+        # reports clean without having compared anything.
+        print(f"--pair: no file matched {_missing} in the audited set - nothing compared.")
+        print("  audited patterns:", PATTERNS)
+        raise SystemExit(2)
     _combos = [(_paths[i], _paths[j]) for i in range(len(_paths)) for j in range(i + 1, len(_paths))]
 else:
     # No automatic pairing. Two unrelated genes sharing a term legitimately get
