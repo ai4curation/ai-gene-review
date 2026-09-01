@@ -108,8 +108,9 @@ enzymology or a FolD1/FolD2 division of labor.
   in all four independent combinations.
 - Local `PTHR48099` entries place Q88LI7 and Q88KM5 in `SF5` and human
   MTHFD1 in `SF1`, despite the same generic PANTHER label. The local PAINT
-  file supports GO:0004488/GO:0004477 at `PTN000002250` and GO:0004487 at
-  `PTN002224686`.
+  file supports bacterial GO:0004488 at `PTN000002429`, cytosolic animal
+  GO:0004488 at `PTN002878475`, shared GO:0004477 at `PTN000002250`, and
+  GO:0004487 at `PTN002224686`.
 - `PTHR45754:SF3` contains both E. coli NADH MetF P0AEZ1 and human MTHFR
   P42898, plus Arabidopsis, rice, and maize NADH-labeled proteins, despite its
   NADPH label. The compact bacterial selector therefore uses the exact
@@ -149,3 +150,12 @@ and housekeeping claims are recorded as unverified and excluded from the
 curation evidence.
 
 Generated UTC: 2026-07-21T03:14:48Z
+
+## Repair Checkpoint
+
+On 2026-09-01, the two NADP-linked dehydrogenase variants were moved from the
+cyclohydrolase-only `PTN000002250` node to the lineage-appropriate GO:0004488
+nodes `PTN000002429` and `PTN002878475`. The shared cyclohydrolase activity
+remains grounded at `PTN000002250`. The SF5 FolD implementation is explicitly
+restricted to bacteria, matching the taxonomic scope of `PTN000002429`, and
+the two KT2440 FolD reviews now cite the corrected PAINT row.
