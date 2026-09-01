@@ -28,10 +28,11 @@ from ruamel.yaml import YAML
 from ai_gene_review.bioreason_ontology import FROZEN_GO_ADAPTER, get_go_adapter
 from ai_gene_review.sft_prediction_evidence import (
     NEGATIVE_ACTIONS,
-    NEGATED_ACTION_PREFIX,
     POSITIVE_ACTIONS,
     PROVENANCE_LIMITED_NEGATIVE,
     load_aigr_term_actions,
+    load_positive_goa_terms,
+    split_action_evidence,
 )
 
 
@@ -525,20 +526,7 @@ class OntologyLabelChecker:
 
 def load_goa_terms(goa_file: Path) -> set[str]:
     """Return positive exact GO identifiers in a local GOA TSV."""
-    terms: set[str] = set()
-    if not goa_file.exists():
-        return terms
-    with goa_file.open() as handle:
-        for line in handle:
-            parts = line.rstrip("\n").split("\t")
-            qualifiers = set(parts[3].split("|")) if len(parts) > 3 else set()
-            if (
-                len(parts) > 4
-                and "NOT" not in qualifiers
-                and re.fullmatch(r"GO:\d{7}", parts[4])
-            ):
-                terms.add(parts[4])
-    return terms
+    return load_positive_goa_terms(goa_file)
 
 
 def load_aigr_core_terms(review_file: Path) -> set[str]:
@@ -577,18 +565,17 @@ def auto_assess(
 ) -> tuple[str, int, str]:
     """Create a schema-valid initial assessment from exact local evidence."""
     actions = aigr_actions.get(go_id, set())
-    biological_actions = {
-        action
-        for action in actions
-        if action != PROVENANCE_LIMITED_NEGATIVE
-        and not action.startswith(NEGATED_ACTION_PREFIX)
-    }
-    accepted_negations = {
-        action.removeprefix(NEGATED_ACTION_PREFIX)
-        for action in actions
-        if action.startswith(NEGATED_ACTION_PREFIX)
-        and action.removeprefix(NEGATED_ACTION_PREFIX) in POSITIVE_ACTIONS
-    }
+    biological_actions, accepted_negations = split_action_evidence(actions)
+    positive_actions = biological_actions & POSITIVE_ACTIONS
+
+    if positive_actions and accepted_negations:
+        return (
+            "UNC",
+            1,
+            "The current AIGR contains both retained positive and retained NOT "
+            "annotations for this exact GO term; context or isoform-specific manual "
+            "adjudication is required.",
+        )
 
     if biological_actions and biological_actions <= NEGATIVE_ACTIONS:
         return (
@@ -598,12 +585,12 @@ def auto_assess(
             f"{', '.join(sorted(biological_actions))}; the prediction reproduces an annotation "
             "that the current review rejects or marks as over-annotated.",
         )
-    if biological_actions & POSITIVE_ACTIONS:
+    if positive_actions:
         return (
             "CNN",
             2,
             "The exact term is already present in AIGR with a positive action "
-            f"({', '.join(sorted(biological_actions & POSITIVE_ACTIONS))}). Correct but not novel.",
+            f"({', '.join(sorted(positive_actions))}). Correct but not novel.",
         )
     if accepted_negations:
         return (
@@ -652,18 +639,15 @@ def deterministic_reclassification(
     actions: set[str],
 ) -> tuple[str, str] | None:
     """Return a correction only for an exact, unambiguous contradiction."""
-    biological_actions = {
-        action
-        for action in actions
-        if action != PROVENANCE_LIMITED_NEGATIVE
-        and not action.startswith(NEGATED_ACTION_PREFIX)
-    }
-    accepted_negations = {
-        action.removeprefix(NEGATED_ACTION_PREFIX)
-        for action in actions
-        if action.startswith(NEGATED_ACTION_PREFIX)
-        and action.removeprefix(NEGATED_ACTION_PREFIX) in POSITIVE_ACTIONS
-    }
+    biological_actions, accepted_negations = split_action_evidence(actions)
+    positive_actions = biological_actions & POSITIVE_ACTIONS
+    if positive_actions and accepted_negations:
+        if current_assessment != "UNC":
+            return (
+                "UNC",
+                "the current AIGR retains both positive and NOT annotations for this exact GO term",
+            )
+        return None
     if biological_actions and biological_actions <= NEGATIVE_ACTIONS:
         if current_assessment in {"PLI", "REP"}:
             return None
@@ -680,11 +664,11 @@ def deterministic_reclassification(
             )
         return None
 
-    if biological_actions & POSITIVE_ACTIONS and current_assessment in {"NPI", "UNC"}:
+    if positive_actions and current_assessment in {"NPI", "UNC"}:
         return (
             "CNN",
             "the current AIGR contains a positive exact action "
-            f"({', '.join(sorted(biological_actions & POSITIVE_ACTIONS))})",
+            f"({', '.join(sorted(positive_actions))})",
         )
 
     if accepted_negations and current_assessment not in {"NPI", "PLI", "REP"}:
@@ -931,18 +915,8 @@ def remaining_conflicts(
     actions: set[str],
 ) -> Iterable[str]:
     assessment = review.get("assessment", "")
-    biological_actions = {
-        action
-        for action in actions
-        if action != PROVENANCE_LIMITED_NEGATIVE
-        and not action.startswith(NEGATED_ACTION_PREFIX)
-    }
-    accepted_negations = {
-        action.removeprefix(NEGATED_ACTION_PREFIX)
-        for action in actions
-        if action.startswith(NEGATED_ACTION_PREFIX)
-        and action.removeprefix(NEGATED_ACTION_PREFIX) in POSITIVE_ACTIONS
-    }
+    biological_actions, accepted_negations = split_action_evidence(actions)
+    positive_actions = biological_actions & POSITIVE_ACTIONS
     confidence = review.get("confidence_score")
     if EXPECTED_CONFIDENCE.get(assessment) != confidence:
         yield "assessment_confidence"
@@ -962,12 +936,16 @@ def remaining_conflicts(
         )
         if not any(marker in rationale for marker in non_novel_markers):
             yield "CNN_without_GOA_or_non_novel_basis"
-    if biological_actions and biological_actions <= NEGATIVE_ACTIONS and assessment in {"COR", "CNN", "LSP", "UNC"}:
-        yield "nonnegative_assessment_vs_negative_AIGR"
-    if biological_actions & POSITIVE_ACTIONS and assessment in {"NPI", "UNC"}:
-        yield "NPI_or_UNC_vs_positive_AIGR"
-    if accepted_negations and assessment in {"COR", "CNN", "LSP", "UNC"}:
-        yield "nonnegative_assessment_vs_negated_AIGR"
+    if positive_actions and accepted_negations:
+        if assessment != "UNC":
+            yield "nonuncertain_assessment_vs_mixed_positive_and_negated_AIGR"
+    else:
+        if biological_actions and biological_actions <= NEGATIVE_ACTIONS and assessment in {"COR", "CNN", "LSP", "UNC"}:
+            yield "nonnegative_assessment_vs_negative_AIGR"
+        if positive_actions and assessment in {"NPI", "UNC"}:
+            yield "NPI_or_UNC_vs_positive_AIGR"
+        if accepted_negations and assessment in {"COR", "CNN", "LSP", "UNC"}:
+            yield "nonnegative_assessment_vs_negated_AIGR"
     error_type = review.get("error_type")
     if error_type and assessment not in INCORRECT_ASSESSMENTS:
         yield "error_type_on_nonincorrect_assessment"

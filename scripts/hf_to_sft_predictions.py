@@ -24,10 +24,11 @@ import yaml
 from ai_gene_review.bioreason_ontology import FROZEN_GO_ADAPTER, get_go_adapter
 from ai_gene_review.sft_prediction_evidence import (
     NEGATIVE_ACTIONS,
-    NEGATED_ACTION_PREFIX,
     POSITIVE_ACTIONS,
     PROVENANCE_LIMITED_NEGATIVE,
     load_aigr_term_actions,
+    load_positive_goa_terms,
+    split_action_evidence,
 )
 
 
@@ -110,20 +111,8 @@ def extract_go_terms(generation: str) -> list[tuple[str, str, str]]:
 
 
 def load_goa_terms(goa_file: Path) -> set[str]:
-    terms: set[str] = set()
-    if not goa_file.exists():
-        return terms
-    with goa_file.open() as handle:
-        for line in handle:
-            parts = line.rstrip("\n").split("\t")
-            qualifiers = set(parts[3].split("|")) if len(parts) > 3 else set()
-            if (
-                len(parts) > 4
-                and "NOT" not in qualifiers
-                and re.fullmatch(r"GO:\d{7}", parts[4])
-            ):
-                terms.add(parts[4])
-    return terms
+    """Return positive exact GO identifiers in a local GOA TSV."""
+    return load_positive_goa_terms(goa_file)
 
 
 def load_aigr_review(review_file: Path) -> tuple[dict[str, set[str]], set[str]]:
@@ -163,18 +152,19 @@ def assess_prediction(
     core_terms: set[str],
 ) -> dict[str, Any]:
     exact_actions = actions.get(go_id, set())
-    biological_actions = {
-        action
-        for action in exact_actions
-        if action != PROVENANCE_LIMITED_NEGATIVE
-        and not action.startswith(NEGATED_ACTION_PREFIX)
-    }
-    accepted_negations = {
-        action.removeprefix(NEGATED_ACTION_PREFIX)
-        for action in exact_actions
-        if action.startswith(NEGATED_ACTION_PREFIX)
-        and action.removeprefix(NEGATED_ACTION_PREFIX) in POSITIVE_ACTIONS
-    }
+    biological_actions, accepted_negations = split_action_evidence(exact_actions)
+    positive_actions = biological_actions & POSITIVE_ACTIONS
+
+    if positive_actions and accepted_negations:
+        return {
+            "assessment": "UNC",
+            "confidence_score": 1,
+            "summary": (
+                "The current AIGR contains both retained positive and retained NOT "
+                "annotations for this exact GO term; context or isoform-specific "
+                "manual adjudication is required."
+            ),
+        }
 
     if biological_actions and biological_actions <= NEGATIVE_ACTIONS:
         return {
@@ -188,13 +178,13 @@ def assess_prediction(
             ),
         }
 
-    if biological_actions & POSITIVE_ACTIONS:
+    if positive_actions:
         return {
             "assessment": "CNN",
             "confidence_score": 2,
             "summary": (
                 "The exact term is already present in AIGR with a positive action "
-                f"({', '.join(sorted(biological_actions & POSITIVE_ACTIONS))}). Correct "
+                f"({', '.join(sorted(positive_actions))}). Correct "
                 "but not novel."
             ),
         }

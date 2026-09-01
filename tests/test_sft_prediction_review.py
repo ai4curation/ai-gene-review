@@ -27,11 +27,15 @@ from scripts.auto_review_sft_predictions import (
 from scripts.hf_to_sft_predictions import (
     assess_prediction,
     load_aigr_review,
+    load_goa_terms as load_hf_goa_terms,
     ontology_label_note,
 )
 from scripts.gogpt_predict import deterministic_assessment, load_review_decisions
-from ai_gene_review.sft_prediction_evidence import PROVENANCE_LIMITED_NEGATIVE
-from ai_gene_review.sft_prediction_evidence import NEGATED_ACTION_PREFIX
+from ai_gene_review.sft_prediction_evidence import (
+    NEGATED_ACTION_PREFIX,
+    PROVENANCE_LIMITED_NEGATIVE,
+    split_action_evidence,
+)
 
 
 def test_load_aigr_actions_preserves_mixed_decisions(tmp_path):
@@ -81,6 +85,68 @@ def test_negated_goa_and_aigr_do_not_count_as_positive_support(tmp_path):
     ) is None
     review = {"assessment": "NPI", "confidence_score": 0}
     assert list(remaining_conflicts("GO:0000001", review, set(), actions)) == []
+
+
+def test_split_action_evidence_separates_accepted_negations():
+    actions = {
+        "REMOVE",
+        "ACCEPT",
+        f"{NEGATED_ACTION_PREFIX}ACCEPT",
+        f"{NEGATED_ACTION_PREFIX}REMOVE",
+        PROVENANCE_LIMITED_NEGATIVE,
+    }
+
+    assert split_action_evidence(actions) == (
+        {"REMOVE", "ACCEPT"},
+        {"ACCEPT"},
+    )
+
+
+def test_positive_and_negated_goa_rows_keep_positive_term(tmp_path):
+    goa_file = tmp_path / "gene-goa.tsv"
+    goa_file.write_text(
+        "DB\tID\tSYMBOL\tenables\tGO:0000001\tPMID:1\tIDA\n"
+        "DB\tID\tSYMBOL\tNOT|enables\tGO:0000001\tPMID:2\tIDA\n"
+    )
+
+    assert load_goa_terms(goa_file) == {"GO:0000001"}
+    assert load_hf_goa_terms(goa_file) == {"GO:0000001"}
+
+
+def test_negated_aigr_drives_all_sft_assessment_paths_to_npi():
+    actions = {"GO:0000001": {f"{NEGATED_ACTION_PREFIX}ACCEPT"}}
+
+    assert assess_prediction("GO:0000001", set(), actions, set())["assessment"] == "NPI"
+    assert deterministic_reclassification(
+        "GO:0000001", "CNN", set(), actions["GO:0000001"]
+    )[0] == "NPI"
+    review = {"assessment": "CNN", "confidence_score": 2}
+    assert "nonnegative_assessment_vs_negated_AIGR" in list(
+        remaining_conflicts(
+            "GO:0000001", review, set(), actions["GO:0000001"]
+        )
+    )
+
+
+def test_mixed_positive_and_negated_evidence_is_stably_uncertain():
+    exact_actions = {"ACCEPT", f"{NEGATED_ACTION_PREFIX}ACCEPT"}
+    actions = {"GO:0000001": exact_actions}
+
+    assert auto_assess("GO:0000001", {"GO:0000001"}, actions, set())[:2] == (
+        "UNC",
+        1,
+    )
+    assert assess_prediction("GO:0000001", {"GO:0000001"}, actions, set())[
+        "assessment"
+    ] == "UNC"
+    assert deterministic_assessment("GO:0000001", actions)[0] == "UNC"
+    assert deterministic_reclassification(
+        "GO:0000001", "UNC", {"GO:0000001"}, exact_actions
+    ) is None
+    review = {"assessment": "UNC", "confidence_score": 1}
+    assert list(
+        remaining_conflicts("GO:0000001", review, {"GO:0000001"}, exact_actions)
+    ) == []
 
 
 def test_load_aigr_actions_marks_only_negative_miscitation_decisions(tmp_path):
