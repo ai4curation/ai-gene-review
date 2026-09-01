@@ -963,7 +963,9 @@ def fetch_uniprot_data(uniprot_id: str) -> str:
 def fetch_goa_data(uniprot_id: str) -> str:
     """Fetch Gene Ontology Annotation (GOA) data from QuickGO API.
 
-    Fetches ALL annotations using pagination if necessary.
+    Fetches ALL annotations using pagination if necessary. Byte-identical TSV rows
+    are deduplicated after projection, so annotations that differ only in fields the
+    TSV does not represent (such as annotation extensions) collapse to one row.
 
     Args:
         uniprot_id: UniProt accession ID
@@ -1062,6 +1064,9 @@ def fetch_goa_data(uniprot_id: str) -> str:
     tsv_lines = [
         "GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\tGO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\tTAXON NAME\tASSIGNED BY\tGENE NAME\tDATE"
     ]
+    # Extensions are not represented in the TSV; collapse rows that become identical
+    # after projection while retaining annotations that differ in any exported field.
+    seen_tsv_rows: set[str] = set()
 
     for result in sorted_results:
         # Extract database and ID from geneProductId
@@ -1102,7 +1107,11 @@ def fetch_goa_data(uniprot_id: str) -> str:
             result.get("date", ""),  # DATE
         ]
 
-        tsv_lines.append("\t".join(row))
+        tsv_row = "\t".join(row)
+        if tsv_row in seen_tsv_rows:
+            continue
+        seen_tsv_rows.add(tsv_row)
+        tsv_lines.append(tsv_row)
 
     return "\n".join(tsv_lines) + "\n"
 
