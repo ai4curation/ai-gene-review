@@ -13,7 +13,7 @@ Usage:  python3 projects/IBA_REVIEW/audit_propagation_review.py [glob ...]
 Defaults to genes/mouse/*/*-ai-review.yaml; pass globs to audit other organisms,
 e.g. the ISO backlog:  ... audit_propagation_review.py 'genes/human/*/*-ai-review.yaml'
 """
-import yaml, glob, os, re, csv
+import yaml, glob, os, re
 
 VALID_RC={'NO_FAILURE_CORE','NO_FAILURE_NON_CORE','SOURCE_BAD','SOURCE_STALE_OR_MISSING',
  'SOURCE_WEAK_OR_INFERRED','EVIDENCE_CIRCULAR_OR_REDUNDANT','PROPAGATION_BAD',
@@ -81,9 +81,12 @@ _selftest_failures = []
 # Guard the guards: if `own` is empty (run from the wrong cwd, so glob matched nothing)
 # every conditional check below is skipped and SELF_SEED_* passes vacuously -- the exact
 # failure shape this self-test exists to prevent.
-if not own:
+if not any(own.values()):
+    # `own` gets a key for every gene directory, including ones with no -uniprot.txt,
+    # so a non-empty dict does NOT mean any identifier was parsed. Check the values.
     _selftest_failures.append(
-        "no gene directories found under genes/*/*/ - wrong working directory?")
+        "no self-identifiers parsed from any gene directory - wrong cwd, partial "
+        "checkout, or the UniProt DR format changed?")
 if ('mouse', 'Mapk1') in own and 'MGI:MGI:1346858' not in own[('mouse', 'Mapk1')]:
     _selftest_failures.append(
         "MGI self-seed ids must carry the doubled prefix (MGI:MGI:...) as GOA writes them")
@@ -133,8 +136,20 @@ for f in files:
         # over-scoped but the annotation is still worth keeping (e.g. human IDO1
         # GO:0034354, which contributes only the pathway's entry step). The three below
         # assert the propagation or its source is wrong, which accepting contradicts.
+        # ...and gated further: fire only when NOTHING IN THE BLOCK SUBSTANTIATES the
+        # claimed failure, i.e. every source_entity (if any) says SUPPORTS_TRANSFER. A
+        # block that accepts the term while recording a genuinely faulted source is a
+        # coherent stance about two different objects -- the action adjudicates the TERM,
+        # these root causes adjudicate the PROVENANCE. Human LMTK2 GO:0070853 (ACCEPT +
+        # SOURCE_BAD, flagging a homonym accession) and ADIRF (ACCEPT +
+        # EVIDENCE_CIRCULAR_OR_REDUNDANT, "correct term, zero added information") are
+        # both deliberate and correct. The Mapk1 block this rule was written for had NO
+        # source_entities at all, so nothing backed its PROPAGATION_BAD claim.
         CONTRADICTORY_RC = {'PROPAGATION_BAD','SOURCE_BAD','EVIDENCE_CIRCULAR_OR_REDUNDANT'}
-        if act in ('ACCEPT','KEEP_AS_NON_CORE') and rc in CONTRADICTORY_RC:
+        _srcs = pr.get('source_entities') or []
+        _unsubstantiated = all((se.get('source_status') or 'SUPPORTS_TRANSFER')
+                               == 'SUPPORTS_TRANSFER' for se in _srcs)
+        if act in ('ACCEPT','KEEP_AS_NON_CORE') and rc in CONTRADICTORY_RC and _unsubstantiated:
             issues.append((loc,'DEFECT_ROOT_CAUSE_UNDER_ACCEPTING_ACTION',f"{act}+{rc}"))
         # Fourth arm: the inverse -- a corrective action declaring no failure at all.
         if act in ('REMOVE','MARK_AS_OVER_ANNOTATED') and rc and rc.startswith('NO_FAILURE'):
@@ -204,9 +219,20 @@ if cross:
     for c in cross:
         print(f"   {c[0]}  {c[1]} {c[2]}: {c[3]} vs {c[4]}")
 
+# The four consistency arms overlap: a NO_FAILURE_* block carrying failure_modes under a
+# corrective action trips arms 1 and 4 both. Report one per row so a count means "rows
+# with a problem" rather than "rules that fired".
+_seen=set(); _dedup=[]
+for _i in issues:
+    _k=(_i[0], _i[1])
+    if _k in _seen: continue
+    _seen.add(_k); _dedup.append(_i)
+_rows={_i[0] for _i in _dedup}
+issues=_dedup
+
 print(f"audited {n} propagation_review blocks across {len(files)} files")
 if issues:
-    print(f"ISSUES ({len(issues)}):")
+    print(f"ISSUES ({len(issues)} across {len(_rows)} rows):")
     for x in issues: print("  ", x)
 else:
     print("no issues found")
