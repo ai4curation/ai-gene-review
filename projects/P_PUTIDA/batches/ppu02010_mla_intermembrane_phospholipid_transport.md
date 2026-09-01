@@ -20,7 +20,7 @@ net transport direction open.
 - [x] Curate every GOA row for all six genes.
 - [x] Create a species-neutral, multi-part module.
 - [ ] Complete generic module research.
-- [ ] Complete module + pathway + taxon research.
+- [x] Complete module + pathway + taxon research.
 - [ ] Validate and render the reviews, module, and project page.
 - [ ] Open one non-draft PR and clear review and CI.
 
@@ -59,3 +59,7 @@ net transport direction open.
 - The KEGG ABC-transporter bucket contains MlaFEDB and Ttg2D/Ttg2E but omits
   VacJ/MlaA from the same primary bucket; module curation restores the complete
   envelope-spanning system.
+- The species-aware report confirms complete coverage by PP_0958-PP_0962 plus
+  PP_2163. PP_0140-PP_0142 are a separate Mce-like system despite shared
+  MlaF/E/D-like signatures, while PP_1737 remains an unresolved second
+  MlaA-family candidate. Neither is counted as a core duplicate.
