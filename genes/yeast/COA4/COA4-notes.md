@@ -103,5 +103,5 @@ that treats Coa4 as soluble-releasable. Best read as peripheral association; kep
 - Does Ptc5 dephosphorylate Coa4, and does that regulate copper delivery? Only co-IP enrichment.
 - Why does high-copy CYC1 suppress coa4Δ? Bestwick called this "a major clue" and it has never
   been followed up.
-- Would a **N**-terminally tagged or untagged Coa4 GFP construct abolish the nuclear/cytoplasmic
-  signal? That is the experiment that would settle the HDA rows.
+- Would an **N**-terminally tagged or untagged Coa4 GFP construct abolish the nuclear signal?
+  That is the experiment that would settle the contested nucleus row.
