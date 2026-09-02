@@ -130,3 +130,38 @@ GOA (AAD3-goa.tsv) has 4 annotations:
 - For core_functions I will use only well-supported author-checked ids. Candidate broader MF:
   GO:0016616 "oxidoreductase activity, acting on the CH-OH group of donors, NAD or NADP as acceptor"
   (verified via OLS) — this is the honest superfamily-level activity I can defend from fold + family.
+
+## Update 2026-09-02 — direct biochemistry supersedes homology annotations
+
+Re-review found an oversight: the prior review treated the aryl-alcohol dehydrogenase
+annotations as merely *over-specific* homology transfers (MARK_AS_OVER_ANNOTATED, plus a
+proposed broad GO:0016616 oxidoreductase term). The direct biochemical characterization of
+the AAD3 gene product was not incorporated.
+
+Yang et al. 2018 (PMID:29079624, Appl Environ Microbiol; full text now cached) purified all
+seven recombinant Sc Aad proteins and assayed them:
+
+- Only Aad4p and Aad14p reduced aryl-aldehydes with NADPH; **purified Aad3p was inactive on
+  the whole panel.** [PMID:29079624 "only ScAad14p and ScAad4p were able to reduce a group of
+  candidate aryl-aldehydes with the consumption of NADPH"]
+- Aad3p has **Cys73 at the position of the catalytically essential Tyr** of the AKR tetrad,
+  and **reverting Cys73→Tyr did not restore activity** ("correction of the missense mutation
+  in ScAadCys73Tyrp failed to produce a functional enzyme"), so additional inactivating
+  changes are present → the authors call the AAD genes (AAD3 included) **pseudogenizing**.
+- **Overexpression of AAD3** did not raise aryl-aldehyde reductase activity in crude extracts
+  and gave no aryl-aldehyde resistance (Fig. S7).
+
+Consequence for annotation actions:
+- The two aryl-alcohol dehydrogenase (GO:0047681) annotations (IEA and ISS) are now **REMOVE**,
+  not MARK_AS_OVER_ANNOTATED: the specific function has been tested on the target and refuted
+  (contradicted, not just over-specific).
+- The aldehyde metabolic process (GO:0006081) ISS is now **REMOVE**: its premise (an active
+  aldehyde reductase) is refuted and no phenotype ties AAD3 to aldehyde metabolism.
+- The previously proposed **NEW GO:0016616 broad oxidoreductase** term is **withdrawn** and
+  core_functions rewritten to "no assignable molecular function" — asserting even a broad
+  catalytic activity is not defensible for a protein shown to be catalytically dead.
+- ND root CC (GO:0005575) unchanged → ACCEPT.
+
+Adamczyk et al. 2016 (PMID:27299603) added as LOW-relevance context: copy-number loss of
+several AAD genes (AAD3 among them) correlates with redox imbalance in brewing strains, but is
+a family-level correlation and establishes no AAD3-specific function.
