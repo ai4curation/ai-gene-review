@@ -438,3 +438,83 @@ skill catalogues. Cleaned up and retried once; the retry succeeded.
   with three experimental UniProt references, and Reactome models every reaction on the
   "SULT1A1 dimer"/"SULT1A1 homodimer".
 - 4-ethylphenol sulfation (RHEA:70607, PMID:35165440) is in UniProt but absent from GOA.
+
+---
+
+## 10. Thyroid-hormone literature added on PR review
+
+Four papers were fetched during the OpenScientist work but initially cited only inside
+the hypothesis reports. PR #2835 review flagged this; they are now in `references:`.
+Three of them bear directly on the iodothyronine story:
+
+- **[PMID:11739018]** (Li et al. 2001, *J Endocrinol*) — independent replication of the
+  substrate ordering in a second laboratory, across both common allozymes, extending the
+  series with 3,5-T2 as by far the poorest acceptor:
+  [PMID:11739018 "the preferences of these SULT1A1 allozymes for iodothyronine
+  substrates were the same (3,3'-diiodothyronine (3,3'-T(2))>3', 5',3-triiodothyronine
+  (rT(3))>T(3)>thyroxine (T(4))>>3,5-diiodothyronine (3,5-T(2)))"]. It also shows the
+  Arg213His polymorphism changes catalytic activity and thermostability, **not**
+  substrate specificity.
+- **[PMID:15531517]** (Ebmeier & Anderson 2004, *JCEM*) — SULT1A1 activity measured in
+  native human thyroid cytosol across 86 surgically obtained glands. This is what moves
+  iodothyronine sulfation past recombinant-enzyme-only evidence, and is why **thyroid**
+  was added to the tissue list in the description.
+- **[PMID:9848125]** (Schuur et al. 1998) — hydroxylated PCBs inhibit 3,3'-T2 sulfation
+  by hSULT1A1 but not hSULT1A3, discriminating the two closest paralogs on this
+  chemistry. Note the human enzymes are recombinant (V79 cells) and the liver cytosols
+  assayed are **rat**, so it speaks to isozyme discrimination, not to which enzyme
+  carries the activity in human liver.
+
+`PMID:28109953` is a review, added for pathway orientation only and marked
+`relevance: LOW`; it carries no annotation.
+
+**The thyroid knowledge gap stays open.** PMID:15531517 measures *tissue* activity and
+its abstract says "only 3,3'-T2 and daidzein served as substrates for the normal thyroid
+**SULT activities**" — plural, unresolved between 1A1 and 1A3. It narrows the
+recombinant-only concession without attributing the activity to the gene product by
+knockdown or immunodepletion, so it does not close the gap.
+
+### 10.1 A chemistry error, and its correction
+
+A first attempt at wiring PMID:11739018 in described 3,5-T2 as *"the one iodothyronine of
+the series without an outer-ring hydroxyl"*, and cited that as licensing the 4′-
+regiospecificity clause of the proposed term. **That is wrong**, and it was recorded in
+two places.
+
+Thyronine is 4-(4-hydroxyphenoxy)-L-phenylalanine, so the 4′-phenolic hydroxyl is part of
+the scaffold and is present in *every* iodothyronine, 3,5-T2 included. Verified against
+ChEBI:89575, whose SMILES `NC(Cc1cc(I)c(Oc2ccc(O)cc2)c(I)c1)C(=O)O` shows an intact
+4-hydroxyphenoxy outer ring with **both iodines on the inner tyrosyl ring**. 3,5-T2 is
+itself sulfated at the 4′-OH — 3,5-T2 sulfate is a documented metabolite. It is simply a
+poor *SULT1A1* acceptor.
+
+What 3,5-T2 lacks is outer-ring **iodination**, and re-reading the series that way is a
+sharper result than the one originally written:
+
+| Substrate | Outer-ring iodines | Rank |
+|---|---:|---|
+| 3,3′-T2 | 1 | best |
+| rT3 | 2 | |
+| T3 | 1 | |
+| T4 | 2 (+2 inner) | |
+| 3,5-T2 | **0** | far worst |
+
+So SULT1A1 selects for iodine substitution *adjacent to* the 4′-hydroxyl — plausibly via
+the lowered phenol pKa — rather than for the hydroxyl itself. The 4′-regiochemistry in the
+proposed definition is instead sourced to the identity of the products (the iodothyronine
+sulfates are 4′-O-sulfates) and to the UniProt/RHEA reactions already cited.
+
+Worth recording that the OpenScientist report had this right — it calls 3,5-T2 "an
+inner-ring diiodothyronine". The error entered when the finding was transcribed into YAML.
+
+### 10.2 GO label confirmations
+
+The review asked for live lookups on two ids used in `proposed_replacement_terms`, which
+is `range: Term` and therefore *not* label-validated by the toolchain. Confirmed against
+EBI QuickGO:
+
+| ID | Confirmed label |
+|---|---|
+| `GO:1990135` | flavonoid sulfotransferase activity |
+| `GO:0004027` | alcohol sulfotransferase activity |
+| `GO:0004062` | aryl sulfotransferase activity |
