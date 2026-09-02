@@ -65,14 +65,19 @@ dark gene, is almost never in the title.
 ## Recall does not depend on how well-studied the gene is
 
 The sorted per-gene table invites a tempting misreading. Genes at the 100%-recall
-end (RAD51C, RFWD3, SLX4, UBE2T, XRCC2) are all well-characterised, and genes at
-the 0% end (AADACL2/3/4, ACP7, ACTL10, ACTR8, ACTR1B) are all obscure, which looks
-like a clean story about the provider failing on dark genes.
+end (RAD51C, RFWD3, SLX4, UBE2T, XRCC2) are all well-characterised, and five of
+the seven at the 0% end (AADACL2/3/4, ACP7, ACTL10) have no GOA references at
+all, which looks like a clean story about the provider failing on dark genes.
 
-It is an artifact of small denominators. Those 100% genes had one to five novel
-references each; a gene with a single novel reference scores 0% or 100% and
-nothing in between. Pooling references within bands of curation depth removes the
-artifact:
+The 100% end is an artifact of small denominators. Those genes had one to five
+novel references each, and a gene with a single novel reference scores 0% or 100%
+and nothing in between.
+
+The 0% end does not hold up either. The other two zero-recall genes are not
+obscure: by the script's own banding, ACTR8 has 12 GOA references and sits in the
+well-studied band, and ACTR1B has 8 and sits in the medium band.
+
+Pooling references within bands of curation depth removes both effects:
 
 | curation depth | genes | novel refs | supplied | recall |
 |----------------|------:|-----------:|---------:|-------:|
