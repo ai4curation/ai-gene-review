@@ -170,8 +170,9 @@ def paralog_mismatches(
             named = set(re.findall(rf"\b{re.escape(stem)}\d+[A-Z]?\b", text))
             if not named:
                 continue  # paper names no family member; nothing to compare
+            # `absent` is a subset of `members`, so no size guard is meaningful here.
             absent = sorted(g for g in members if g.upper() not in named)
-            if absent and len(absent) < len(members) + 1:
+            if absent:
                 rows.append(
                     {
                         "citation": citation,
@@ -193,6 +194,11 @@ def main() -> None:
     ap.add_argument("--out-dir", default="projects/MISCITATION_AUDIT/reports")
     ap.add_argument("--check-pubmed", action="store_true", help="run Check A (needs network)")
     ap.add_argument("--min-family", type=int, default=3)
+    ap.add_argument(
+        "--check-paralogs",
+        action="store_true",
+        help="run Check B (known low precision; see the project page before trusting output)",
+    )
     args = ap.parse_args()
     os.makedirs(args.out_dir, exist_ok=True)
 
@@ -244,8 +250,8 @@ def main() -> None:
             lines.append("")
 
     # ---- Check B ----
-    clusters = family_clusters(usage, args.min_family)
-    mismatches = paralog_mismatches(usage, args.publications_dir)
+    clusters = family_clusters(usage, args.min_family) if args.check_paralogs else []
+    mismatches = paralog_mismatches(usage, args.publications_dir) if args.check_paralogs else []
     lines += [
         "## Check B - paralog mismatch",
         "",
@@ -258,7 +264,14 @@ def main() -> None:
         "`family_clusters.tsv` only.)",
         "",
     ]
-    if not mismatches:
+    if not args.check_paralogs:
+        lines += [
+            "Not run (pass `--check-paralogs`). This check is documented as low precision: it "
+            "misses alias-renamed cases and its hits are dominated by legitimate complex-wide "
+            "papers. It is opt-in so its output is not mistaken for a findings list.",
+            "",
+        ]
+    elif not mismatches:
         lines += ["No paralog mismatches detected.", ""]
     else:
         lines += [
@@ -277,19 +290,27 @@ def main() -> None:
             lines.append(f"| ... | ... | ... | {len(mismatches) - 80} more in the TSV |")
         lines.append("")
 
-    with open(os.path.join(args.out_dir, "paralog_mismatches.tsv"), "w", newline="") as fh:
-        w = csv.DictWriter(
-            fh,
-            fieldnames=["citation", "species", "family_stem", "named_in_paper", "citing_but_absent", "n_absent"],
-            delimiter="\t",
-        )
-        w.writeheader()
-        w.writerows(mismatches)
+    if args.check_paralogs:
+        with open(os.path.join(args.out_dir, "paralog_mismatches.tsv"), "w", newline="") as fh:
+            w = csv.DictWriter(
+                fh,
+                fieldnames=[
+                    "citation", "species", "family_stem", "named_in_paper",
+                    "citing_but_absent", "n_absent",
+                ],
+                delimiter="\t",
+            )
+            w.writeheader()
+            w.writerows(mismatches)
 
-    with open(os.path.join(args.out_dir, "family_clusters.tsv"), "w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=["citation", "species", "family_stem", "n_members", "members"], delimiter="\t")
-        w.writeheader()
-        w.writerows(clusters)
+        with open(os.path.join(args.out_dir, "family_clusters.tsv"), "w", newline="") as fh:
+            w = csv.DictWriter(
+                fh,
+                fieldnames=["citation", "species", "family_stem", "n_members", "members"],
+                delimiter="\t",
+            )
+            w.writeheader()
+            w.writerows(clusters)
 
     if args.check_pubmed:
         with open(os.path.join(args.out_dir, "unresolvable_pmids.tsv"), "w", newline="") as fh:

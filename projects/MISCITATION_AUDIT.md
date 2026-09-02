@@ -8,10 +8,17 @@ autolink_gene_symbols: false
 # Miscitation Audit
 
 **A cited identifier that resolves to a different paper cannot support the annotation
-it is attached to. Reviewers here have flagged 284 such defects one gene at a time
-over the life of the repository, and they have never been aggregated. This project
-collects them, keys them on the *citation* rather than the gene, and separates the
-ones we can fix from the ones only the assigning group can.**
+it is attached to. Reviewers here have flagged 27 such rows — 20 distinct citations —
+one gene at a time over the life of the repository, alongside a softer class of 257
+`MISCITED` rows where the paper is right but does not support the claim. None of it has
+ever been aggregated. This project collects both, keys them on the *citation* rather
+than the gene, and separates the ones we can fix from the ones only the assigning group
+can.**
+
+The two classes are not interchangeable and this page keeps them apart throughout:
+**`WRONG_IDENTIFIER` (27 rows / 20 citations)** is mechanically checkable and is the
+tier to act on; **`MISCITED` (257 rows / 215 citations)** is a judgement call that has
+not been sampled for precision.
 
 ## Why the citation, not the gene, is the right key
 

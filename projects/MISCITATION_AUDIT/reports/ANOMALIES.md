@@ -11,96 +11,16 @@ Both checks produce **candidates for adjudication, not verdicts**.
 
 ## Check A - unresolvable identifiers
 
-Not run (pass `--check-pubmed`). 1 cited PMIDs have no cached record and would be queried.
+**1** cited PMIDs returned no PubMed record. An identifier that does not resolve cannot support any annotation.
+
+| PMID | Cited by |
+|---|---|
+| `PMID:34521819` | human/JAK1, human/STAT1, human/STAT2 |
 
 ## Check B - paralog mismatch
 
 A citation whose cached record names some members of a numbered symbol family but **not** a gene that cites it. Candidates for a citation copied across a family that in fact characterises one member.
 
-(1547 citation/family co-citation pairs were considered at >= 3 members; bare co-citation is not itself a defect and is dumped to `family_clusters.tsv` only.)
+(0 citation/family co-citation pairs were considered at >= 3 members; bare co-citation is not itself a defect and is dumped to `family_clusters.tsv` only.)
 
-**356** candidates.
-
-| Citation | Family | Named in paper | Cites it but absent |
-|---|---|---|---|
-| `PMID:16554368` | human CHMP* | CHMP3 | **CHMP1A, CHMP1B, CHMP2A, CHMP2B, CHMP4A, CHMP4B, CHMP4C, CHMP5, CHMP6, CHMP7** |
-| `PMID:17984323` | human CHMP* | CHMP2, CHMP2B | **CHMP1A, CHMP1B, CHMP2A, CHMP3, CHMP4A, CHMP4B, CHMP4C, CHMP5, CHMP6, CHMP7** |
-| `PMID:26040712` | human CHMP* | CHMP7 | **CHMP1A, CHMP1B, CHMP2A, CHMP2B, CHMP3, CHMP4A, CHMP4B, CHMP4C, CHMP5, CHMP6** |
-| `PMID:34800366` | human COX* | COX1, COX10, COX11, COX2, COX4I, COX4L, COX5A | **COX14, COX15, COX16, COX18, COX20, COX5B, COX7B, COX8A** |
-| `PMID:21525035` | human PEX* | PEX14 | **PEX1, PEX12, PEX13, PEX16, PEX19, PEX2, PEX3, PEX5** |
-| `PMID:22119785` | human EMC* | EMC3 | **EMC1, EMC10, EMC2, EMC4, EMC6, EMC7, EMC8, EMC9** |
-| `PMID:14505570` | human CHMP* | CHMP4 | **CHMP1A, CHMP1B, CHMP2A, CHMP3, CHMP4A, CHMP4B, CHMP4C, CHMP6** |
-| `PMID:32296183` | human RNF* | RNF115 | **RNF14, RNF166, RNF170, RNF185, RNF25, RNF41, RNF5** |
-| `PMID:34800366` | human NDUFA* | NDUFA2, NDUFA4, NDUFA6, NDUFA9 | **NDUFA1, NDUFA10, NDUFA11, NDUFA12, NDUFA13, NDUFA5, NDUFA8** |
-| `PMID:16730941` | human CHMP* | CHMP1A | **CHMP1B, CHMP2A, CHMP2B, CHMP4A, CHMP4B, CHMP5, CHMP6** |
-| `PMID:20588296` | human VPS* | VPS20 | **VPS28, VPS37A, VPS37B, VPS37C, VPS37D, VPS4A, VPS4B** |
-| `PMID:26040713` | human CHMP* | CHMP2, CHMP2A, CHMP2B, CHMP3, CHMP4, CHMP4B | **CHMP1A, CHMP1B, CHMP4A, CHMP4C, CHMP5, CHMP6, CHMP7** |
-| `PMID:30415835` | human EMC* | EMC3, EMC5, EMC6 | **EMC1, EMC10, EMC2, EMC4, EMC7, EMC8, EMC9** |
-| `PMID:32439656` | human EMC* | EMC3, EMC6 | **EMC1, EMC10, EMC2, EMC4, EMC7, EMC8, EMC9** |
-| `PMID:34800366` | human NDUFS* | NDUFS1 | **NDUFS2, NDUFS3, NDUFS4, NDUFS6, NDUFS7, NDUFS8** |
-| `PMID:20080638` | human BBS* | BBS10, BBS12, BBS6 | **BBS1, BBS2, BBS4, BBS5, BBS7, BBS9** |
-| `PMID:20937905` | human ELOVL* | ELOVL1 | **ELOVL2, ELOVL3, ELOVL4, ELOVL5, ELOVL6, ELOVL7** |
-| `PMID:20616062` | human CHMP* | CHMP1A, CHMP1B, CHMP2A, CHMP3, CHMP4, CHMP5 | **CHMP2B, CHMP4A, CHMP4B, CHMP4C, CHMP6, CHMP7** |
-| `PMID:29242231` | human EMC* | EMC2, EMC3, EMC5, EMC6 | **EMC1, EMC10, EMC4, EMC7, EMC8, EMC9** |
-| `PMID:12096124` | human PEX* | PEX12P, PEX13P, PEX14P, PEX19P, PEX5P | **PEX11B, PEX12, PEX14, PEX19, PEX3, PEX5** |
-| `PMID:16762366` | yeast CCT* | CCT3 | **CCT2, CCT4, CCT5, CCT6, CCT7, CCT8** |
-| `PMID:15704212` | yeast CCT* | CCT1P, CCT6, CCT6P, CCT8P | **CCT2, CCT3, CCT4, CCT5, CCT7, CCT8** |
-| `PMID:24920445` | POPTR CASP* | CASP1 | **CASP2, CASP3, CASP4, CASP5, CASP6** |
-| `PMID:22302990` | human BBS* | BBS7 | **BBS1, BBS10, BBS2, BBS4, BBS5** |
-| `PMID:19464326` | human HSPB* | HSPB1, HSPB5, HSPB7 | **HSPB2, HSPB3, HSPB6, HSPB8, HSPB9** |
-| `PMID:21231916` | human HSPA* | HSPA1A, HSPA6 | **HSPA14, HSPA1B, HSPA1L, HSPA2, HSPA8** |
-| `PMID:18005716` | human VPS* | VPS28, VPS37 | **VPS37A, VPS37B, VPS37C, VPS37D, VPS4A** |
-| `PMID:20531392` | human PEX* | PEX19P, PEX5P | **PEX11B, PEX13, PEX19, PEX2, PEX26** |
-| `PMID:19715580` | DROME HSP* | HSP100, HSP19, HSP20, HSP60, HSP70, HSP90 | **Hsp22, Hsp23, Hsp26, Hsp27** |
-| `PMID:34800366` | human NDUFB* | NDUFB8, NDUFB9 | **NDUFB10, NDUFB11, NDUFB3, NDUFB7** |
-| `PMID:28514442` | human FBXO* | FBXO28 | **FBXO17, FBXO30, FBXO6, FBXO7** |
-| `PMID:18762586` | human BBS* | BBS4 | **BBS1, BBS2, BBS5, BBS7** |
-| `PMID:24550735` | human BBS* | BBS3, BBS4, BBS5 | **BBS1, BBS2, BBS7, BBS9** |
-| `PMID:25552655` | human BBS* | BBS2, BBS5, BBS8 | **BBS1, BBS4, BBS7, BBS9** |
-| `PMID:24878737` | human CHMP* | CHMP1, CHMP1B, CHMP2, CHMP2A, CHMP2B, CHMP3, CHMP4, CHMP4A, CHMP4B, CHMP6 | **CHMP1A, CHMP4C, CHMP5, CHMP7** |
-| `PMID:23921388` | human HSPA* | HSPA8 | **HSPA1A, HSPA1B, HSPA2, HSPA6** |
-| `PMID:21255211` | human RAB* | RAB20, RAB22B, RAB32, RAB34, RAB38, RAB39, RAB43, RAB7 | **RAB7A, RAB7B, RAB9A, RAB9B** |
-| `PMID:19778961` | SCHPO ATG* | ATG8 | **atg13, atg2, atg5** |
-| `PMID:34800366` | human TOMM* | TOMM20, TOMM22, TOMM34, TOMM40, TOMM70 | **TOMM5, TOMM6, TOMM7** |
-| `PMID:9922452` | human PEX* | PEX1, PEX10, PEX11, PEX12, PEX14, PEX16, PEX2, PEX5, PEX6 | **PEX11A, PEX11B, PEX3** |
-| `PMID:19167051` | human AGO* | AGO2 | **AGO1, AGO3, AGO4** |
-| `PMID:19324964` | human AGO* | AGO2 | **AGO1, AGO3, AGO4** |
-| `PMID:27173435` | human BBS* | BBS2, BBS4, BBS5 | **BBS1, BBS7, BBS9** |
-| `PMID:22139371` | human BBS* | BBS3 | **BBS1, BBS2, BBS9** |
-| `PMID:34524948` | human ATG* | ATG101, ATG12, ATG2, ATG4B, ATG5, ATG8, ATG9A | **ATG14, ATG2B, ATG7** |
-| `PMID:17977534` | human CERS* | CERS4 | **CERS1, CERS2, CERS3** |
-| `PMID:17711858` | human CHMP* | CHMP1A, CHMP1B, CHMP3, CHMP7 | **CHMP4B, CHMP4C, CHMP5** |
-| `PMID:16920360` | human EIF* | EIF3 | **EIF3E, EIF3G, EIF3J** |
-| `PMID:17322308` | human EIF* | EIF3, EIF3A | **EIF3E, EIF3G, EIF3J** |
-| `PMID:29809151` | human EMC* | EMC1, EMC10, EMC2, EMC3, EMC4, EMC5, EMC6 | **EMC7, EMC8, EMC9** |
-| `PMID:12052864` | human GADD* | GADD45 | **GADD45A, GADD45B, GADD45G** |
-| `PMID:12716909` | human GADD* | GADD45 | **GADD45A, GADD45B, GADD45G** |
-| `PMID:9827804` | human GADD* | GADD45 | **GADD45A, GADD45B, GADD45G** |
-| `PMID:25732826` | human NAA* | NAA60 | **NAA10, NAA30, NAA40** |
-| `PMID:20826455` | human PEX* | PEX11 | **PEX11A, PEX11B, PEX11G** |
-| `PMID:12488033` | human PEX* | PEX14P, PEX5P | **PEX14, PEX19, PEX5** |
-| `PMID:22405001` | human VPS* | VPS23, VPS28, VPS37 | **VPS37B, VPS37C, VPS37D** |
-| `PMID:14660704` | yeast SWI* | SWI2P | **SWI1, SWI2, SWI3** |
-| `PMID:9710643` | yeast SIR* | SIR2P, SIR3P, SIR4P | **SIR2, SIR3, SIR4** |
-| `PMID:17496903` | yeast SWI* | SWI2P, SWI3P | **SWI1, SWI2, SWI3** |
-| `PMID:9789005` | yeast SSA* | SSA1 | **SSA2, SSA3, SSA4** |
-| `PMID:9342315` | ARATH ARF* | ARF1 | **ARF19, ARF5** |
-| `PMID:30083810` | POPTR XGOAT* | XGOAT1, XGOAT2 | **XGOAT3, XGOAT4** |
-| `PMID:41029715` | PSEPK AROQ* | AROQ15 | **aroQ1, aroQ2** |
-| `PMID:19686686` | SCHPO CDC* | CDC13P, CDC14, CDC2P | **cdc13, cdc2** |
-| `PMID:34499173` | SCHPO ATG* | ATG1, ATG38 | **atg101, atg13** |
-| `PMID:27737912` | SCHPO ATG* | ATG20, ATG24, ATG24B, ATG8 | **atg13, atg5** |
-| `PMID:14602073` | SCHPO CDC* | CDC12P, CDC15P, CDC8P | **cdc12, cdc15** |
-| `PMID:24790095` | SCHPO CDC* | CDC11, CDC11P, CDC12P, CDC14, CDC15P, CDC25, CDC4P | **cdc12, cdc15** |
-| `PMID:28242692` | human VPS* | VPS4, VPS4P | **VPS4A, VPS4B** |
-| `PMID:32296183` | human TMEM* | TMEM258 | **TMEM43, TMEM70** |
-| `PMID:34800366` | human LYRM* | LYRM9 | **LYRM4, LYRM7** |
-| `PMID:21102411` | human PEX* | PEX11P, PEX13P, PEX19P, PEX3P | **PEX19, PEX3** |
-| `PMID:31980649` | human HSPA* | HSPA1A, HSPA8 | **HSPA6, HSPA9** |
-| `PMID:33734450` | human ACTR* | ACTR10 | **ACTR1A, ACTR1B** |
-| `PMID:33988507` | human ADCK* | ADCK5 | **ADCK1, ADCK2** |
-| `PMID:27499296` | human LYRM* | LYRM5 | **LYRM4, LYRM7** |
-| `PMID:39083597` | human LPAR* | LPAR2 | **LPAR1, LPAR4** |
-| `PMID:19383768` | human AGO* | AGO1, AGO4 | **AGO2, AGO3** |
-| `PMID:12592373` | human AGR* | AGR1 | **AGR2, AGR3** |
-| ... | ... | ... | 276 more in the TSV |
+Not run (pass `--check-paralogs`). This check is documented as low precision: it misses alias-renamed cases and its hits are dominated by legitimate complex-wide papers. It is opt-in so its output is not mistaken for a findings list.
