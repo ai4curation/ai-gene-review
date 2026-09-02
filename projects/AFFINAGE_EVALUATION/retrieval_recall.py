@@ -330,7 +330,9 @@ def _pct(x: float | None) -> str:
 @app.command()
 def main(
     genes: list[str] = typer.Argument(None, help="Gene symbols; omit with --all."),
-    all_genes: bool = typer.Option(False, "--all", help="Score every gene with a report."),
+    all_genes: bool = typer.Option(
+        False, "--all", help="Score every gene with a report."
+    ),
     genes_file: Path = typer.Option(None, "--genes-file", help="One symbol per line."),
 ) -> None:
     """Score Affinage retrieval recall and write results/paint-campaign/."""
