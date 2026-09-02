@@ -75,30 +75,83 @@ def collect(paths, action=None):
     return groups, actions_seen
 
 
-MOD_PREFIXES = ('MGI:', 'RGD:', 'SGD:', 'FB:', 'WB:', 'ZFIN:', 'TAIR:', 'PomBase:',
-                'dictyBase:', 'CGD:', 'Xenbase:')
+# MOD namespace -> the genes/<organism>/ directory whose species that MOD curates. A MOD
+# accession names a gene in exactly one species, so this is a HARDER signal than anything
+# the label says: an MGI id in genes/human is the mouse ortholog no matter how the label
+# is written. genes/human and genes/ECOLI appear in no value, which is correct -- neither
+# has a MOD in this list, so every MOD-sourced row in those directories is third-party.
+MOD_ORGANISM = {'MGI': 'mouse', 'RGD': 'rat', 'SGD': 'yeast', 'FB': 'DROME',
+                'WB': 'worm', 'ZFIN': 'DANRE', 'TAIR': 'ARATH', 'PomBase': 'SCHPO',
+                'dictyBase': 'DICDI', 'CGD': 'CANAL', 'Xenbase': 'XENLA'}
+MOD_PREFIXES = tuple(f'{prefix}:' for prefix in MOD_ORGANISM)
 SELF_MARKER = re.compile(r"this gene|the review target itself|the target's own", re.I)
 NEGATION = re.compile(r'\bnot\s+(?:the\s+target|[a-z-]+\s+\S)', re.I)
 # Every species word the corpus uses in a source_label. The TARGET organism's own words
 # are removed per call, so "rat Casp3" is third-party in genes/mouse and a self-label in
 # genes/rat. Written from the labels that exist, not from a taxonomy: a species the corpus
 # has not yet named is simply not matched, which fails toward self rather than away.
+#
+# Since MOD_PREFIXES is DERIVED from MOD_ORGANISM, the accession gate now resolves every
+# cross-species row before the label is read: of 714 labelled MOD sources it decides 597,
+# leaving 117 same-species rows to the predicate below. So this list no longer carries the
+# foreign-species decision -- what the predicate still does, on those 117, is separate the
+# target from its own PARALOGS ("mouse Bax" in Bcl2, "Dictyostelium cAR1-type paralog" in
+# carD: 77 of the 117). Keep the list as the fallback and as what makes is_self_label
+# meaningful standalone, but do not grow it expecting it to decide anything.
 SPECIES_WORDS = ('mouse', 'rat', 'human', 'Drosophila', 'zebrafish', 'budding-yeast',
                  'fission-yeast', 'fly', 'worm', 'chicken', 'bovine', 'Xenopus',
-                 'Arabidopsis', 'yeast', r'S\. cerevisiae', r'S\. pombe', r'C\. elegans',
-                 r'E\. coli', 'Dictyostelium', 'cerevisiae', 'pombe', 'elegans')
+                 'Arabidopsis', 'yeast', 'Dictyostelium',
+                 # Both written forms of every binomial the corpus uses, full and
+                 # abbreviated -- "Mus musculus" and "M. musculus" both occur. Entries are
+                 # forms a label is actually written in; a bare epithet ("musculus",
+                 # "melanogaster") is not one, so those are deliberately absent. That line
+                 # is what keeps 'Drosophila' -- a real written form -- while excluding
+                 # 'melanogaster', where a "changed no row" test would drop both.
+                 'Mus musculus', r'M\. musculus',
+                 'Rattus norvegicus', r'R\. norvegicus',
+                 'Homo sapiens', 'Saccharomyces cerevisiae', r'S\. cerevisiae',
+                 'Schizosaccharomyces pombe', r'S\. pombe',
+                 'Caenorhabditis elegans', r'C\. elegans',
+                 'Drosophila melanogaster', r'D\. melanogaster',
+                 'Dictyostelium discoideum', r'D\. discoideum',
+                 'Candida albicans', r'C\. albicans',
+                 'Escherichia coli', r'E\. coli', 'Mycobacterium tuberculosis',
+                 'Plasmodium falciparum', 'Sus scrofa', 'Gallus gallus', 'Danio rerio')
 # genes/<organism>/ -> every word a label may use for THAT organism. Several directories
 # have more than one: genes/yeast labels say "budding-yeast" and "S. cerevisiae" as well
 # as "yeast", and treating only the directory name as its own word filed those foreign.
 ORGANISM_WORDS = {
-    'mouse': ('mouse',), 'rat': ('rat',), 'human': ('human',),
-    'worm': ('worm', r'C\. elegans', 'elegans'),
-    'yeast': ('yeast', 'budding-yeast', r'S\. cerevisiae', 'cerevisiae'),
-    'SCHPO': ('fission-yeast', r'S\. pombe', 'pombe'),
-    'DICDI': ('Dictyostelium',), 'ECOLI': (r'E\. coli', 'coli'),
+    'mouse': ('mouse', 'Mus musculus', r'M\. musculus'),
+    'rat': ('rat', 'Rattus norvegicus', r'R\. norvegicus'),
+    'human': ('human', 'Homo sapiens'),
+    'worm': ('worm', 'Caenorhabditis elegans', r'C\. elegans'),
+    'yeast': ('yeast', 'budding-yeast', 'Saccharomyces cerevisiae', r'S\. cerevisiae'),
+    'SCHPO': ('fission-yeast', 'yeast', 'Schizosaccharomyces pombe', r'S\. pombe'),
+    'DICDI': ('Dictyostelium', 'Dictyostelium discoideum', r'D\. discoideum'),
+    'ECOLI': ('Escherichia coli', r'E\. coli'),
+    'DROME': ('Drosophila', 'fly', 'Drosophila melanogaster', r'D\. melanogaster'),
+    'ARATH': ('Arabidopsis',), 'CANAL': ('Candida albicans', r'C\. albicans'),
+    'MYCTU': ('Mycobacterium tuberculosis',), 'DANRE': ('zebrafish', 'Danio rerio'),
+    'CHICK': ('chicken', 'Gallus gallus'), 'PIG': ('Sus scrofa',),
+    'XENLA': ('Xenopus',),
 }
 PROVENANCE_VERBS = re.compile(
     r'\bresolv|\bcorroborat|asserted from external knowledge', re.I)
+
+
+def mod_source_is_foreign(source_id, organism):
+    """True when the source id's MOD curates a DIFFERENT species than the review's.
+
+    This exists because the label word list cannot see what is not written. The mouse
+    Fen1 is cited in genes/human/FEN1 as bare "Fen1", which case-insensitively equals
+    the human symbol FEN1 and so passed the equality test as a self-label -- with no
+    species word present for any word list to catch. The accession says what the prose
+    omits. Returns False for an unmapped prefix, leaving the label predicate in charge
+    rather than guessing.
+    """
+    prefix = source_id.split(':', 1)[0]
+    source_organism = MOD_ORGANISM.get(prefix)
+    return source_organism is not None and source_organism != organism
 
 
 def is_self_label(label, gene_symbol, organism='mouse'):
@@ -123,7 +176,10 @@ def is_self_label(label, gene_symbol, organism='mouse'):
     own = ORGANISM_WORDS.get(organism, (organism,))
     own_lower = {w.replace('\\', '').lower() for w in own}
     foreign_words = [w for w in SPECIES_WORDS if w.replace('\\', '').lower() not in own_lower]
-    foreign = re.compile(r'(?<!\w)(' + '|'.join(foreign_words) + r')(?!\w)', re.I)
+    # Longest first: otherwise "yeast" matches inside "fission-yeast" (the hyphen is not
+    # a word character), and a SCHPO self-label would be filed foreign.
+    foreign = re.compile(r'(?<!\w)(' + '|'.join(sorted(foreign_words, key=len, reverse=True))
+                         + r')(?![\w-])', re.I)
     if NEGATION.search(label) or foreign.search(label):
         return False
     if SELF_MARKER.search(label):
@@ -131,6 +187,19 @@ def is_self_label(label, gene_symbol, organism='mouse'):
     bare = re.sub(r'\s*\(.*\)\s*$', '', label.strip()).lower()
     return bare == gene_symbol.lower() or bare in {f"{w} {gene_symbol}".lower()
                                                    for w in own_lower}
+
+
+def is_target_source(source_id, label, gene_symbol, organism):
+    """True when this source row IS the review target: accession gate, then label.
+
+    Named rather than inlined into classify_labels so the self-test can bite on the
+    COMPOSITION. Testing mod_source_is_foreign alone would leave the arm green if the
+    call were dropped from the caller, which is the failure this file has hit before.
+    The accession is checked first because it overrules the prose: a MOD id from
+    another species is third-party however the label reads.
+    """
+    return (not mod_source_is_foreign(source_id, organism)
+            and is_self_label(label, gene_symbol, organism))
 
 
 def organism_from_path(path):
@@ -165,12 +234,13 @@ def classify_labels(paths):
                 if not label or not sid.startswith(MOD_PREFIXES):
                     continue
                 row = (gene, sid, label)
-                if is_self_label(label, gene, organism):
-                    selfs.append(row)
-                elif PROVENANCE_VERBS.search(src.get("comment") or ""):
-                    prov.append(row)
+                if not is_target_source(sid, label, gene, organism):
+                    if PROVENANCE_VERBS.search(src.get("comment") or ""):
+                        prov.append(row)
+                    else:
+                        bare.append(row)
                 else:
-                    bare.append(row)
+                    selfs.append(row)
     if unresolved:
         raise SystemExit(
             f"cannot tell which organism {len(unresolved)} path(s) belong to - no "
@@ -279,6 +349,41 @@ def _self_test():
         return "a same-symbol ortholog in another species must NOT count as a self-label"
     if is_self_label("ATG12 (Saccharomyces cerevisiae)", "ATG12", "human"):
         return "a same-symbol yeast ortholog in a human file must NOT count as a self-label"
+
+    # The mammalian binomials, missing while the yeast ones were present.
+    if is_self_label("Acrbp (Mus musculus)", "ACRBP", "human"):
+        return "a Mus musculus ortholog in a human file must NOT count as a self-label"
+    if not is_self_label("Acrbp (Mus musculus)", "Acrbp", "mouse"):
+        return "on a mouse review, 'Acrbp (Mus musculus)' IS the self-label"
+    # "yeast" must not match inside "fission-yeast".
+    if not is_self_label("fission-yeast mim1", "mim1", "SCHPO"):
+        return "'yeast' must not match inside 'fission-yeast' for a SCHPO target"
+    if is_self_label("budding-yeast CLB5", "CLB5", "SCHPO"):
+        return "'budding-yeast' is still foreign for a SCHPO target"
+
+    # The accession gate, which catches what no word list can: genes/human/FEN1 cites
+    # MGI:MGI:102779 as bare "Fen1", equal to FEN1 case-insensitively and carrying no
+    # species word at all. Only the namespace says it is the mouse ortholog.
+    if not mod_source_is_foreign("MGI:MGI:102779", "human"):
+        return "an MGI accession in a human review is the mouse ortholog, not the target"
+    if mod_source_is_foreign("MGI:MGI:88138", "mouse"):
+        return "an MGI accession in a mouse review is the target's own MOD"
+    if mod_source_is_foreign("UniProtKB:P10417", "human"):
+        return "an unmapped prefix must defer to the label predicate, not claim foreign"
+    # The label predicate alone cannot reach this row -- which is the point: it must be
+    # the COMPOSITION that rejects it, or dropping the gate from the caller is silent.
+    if not is_self_label("Fen1", "FEN1", "human"):
+        return "the label predicate is expected to MISS this; the gate is what catches it"
+    if is_target_source("MGI:MGI:102779", "Fen1", "FEN1", "human"):
+        return "is_target_source must apply the accession gate, not the label alone"
+    if not is_target_source("MGI:MGI:88138", "mouse Bcl2 (this gene)", "Bcl2", "mouse"):
+        return "the accession gate must not reject a target's own MOD id"
+
+    # Bare epithets, from the corpus's abbreviated binomials.
+    if is_self_label("Arp8 (D. melanogaster)", "Arp8", "human"):
+        return "'D. melanogaster' must read as foreign in a human review"
+    if not is_self_label("D. discoideum acaA", "acaA", "DICDI"):
+        return "'D. discoideum' is the target's own species in genes/DICDI"
 
     if organism_from_path("genes/yeast/MIM1/MIM1-ai-review.yaml") != "yeast":
         return "organism_from_path must read the segment after genes/"

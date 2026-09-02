@@ -506,12 +506,39 @@ highest-leverage entry**: `genes/rat/Aldh2` does not exist, the accession appear
 name-carrying in the repository, and it is the ISO donor for nine further rows in that same
 file — one establish would ground ten rows.
 
-Beware two numerical coincidences in this paragraph, since they are the kind that hide an
-error. **31 appears twice** and means different things — 31 third-party labels carry a
-provenance clause and 31 do not. And **32** is the count of *all* labelled MOD sources whose
-comment carries one of the three verbs, which is 31 third-party **plus one self-label**
-(`Gulo`), so 31 and 32 are both right about different sets rather than one being a correction
-of the other.
+**The label is the weaker signal, and the accession is the stronger one.** Two further
+misclassifications of the same shape turned up outside mouse — `ACRBP` and `ADAMTSL5` each
+cite a mouse ortholog whose label the species list did not cover — and chasing them
+through that list was the wrong layer. A MOD accession names a gene in exactly one
+species, so `MGI:` in `genes/human` is the mouse ortholog *however the label reads* — and
+because `MOD_PREFIXES` is derived from a `MOD_ORGANISM` map rather than listed separately,
+every MOD-prefixed source resolves. `mod_source_is_foreign()` applies that first; of the
+714 labelled MOD sources across the whole corpus it settles **597**, leaving **117**
+same-species rows to `is_self_label()`, whose live remaining job is separating the target
+from its own **paralogs** ("mouse Bax" in `Bcl2`, "Dictyostelium cAR1-type paralog" in
+`carD`: 77 of the 117). The word list is now the fallback, not the decision.
+
+That matters because the label can be silent. Four rows move corpus-wide, all in
+`genes/human`, and **two of them no word list could ever have reached**:
+`genes/human/FEN1` cites `MGI:MGI:102779` as bare **"Fen1"** — case-insensitively equal to
+its own `gene_symbol` FEN1, with no species word present to match. `ACRBP`'s "Acrbp (Mus
+musculus)" and `ADAMTSL5`'s "Adamtsl5 (M. musculus)" the word list does now catch, but the
+accession catches them too and would have without the patch. Afterwards `genes/human` has
+**0** MOD self-labels, which is right *by construction*: no MOD namespace maps to human, so a
+human review's own annotation can never arrive under one.
+
+**None of this moves mouse.** Every mouse self-label is MGI-sourced — mouse's own MOD — so
+the gate is a no-op there and the 27 / 62 / 31 / 31 figures above are unaffected. The
+composition is named `is_target_source()` rather than inlined, so a self-test arm can bite on
+the gate being *applied*; testing `mod_source_is_foreign()` alone would stay green if the call
+were dropped from the caller.
+
+Beware two numerical coincidences in the 27 / 62 / 31 / 31 split above, since they are the
+kind that hide an error. **31 appears twice** and means different things — 31 third-party
+labels carry a provenance clause and 31 do not. And **32** is the count of *all* labelled
+MOD sources whose comment carries one of the three verbs, which is 31 third-party **plus
+one self-label** (`Gulo`), so 31 and 32 are both right about different sets rather than
+one being a correction of the other.
 
 The reason the split matters is that it stops the count from being read as a defect count.
 Sixty-two unprovenanced labels would be alarming; 31 third-party labels in ten files is a
