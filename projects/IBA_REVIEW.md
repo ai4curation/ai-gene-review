@@ -527,6 +527,22 @@ accession catches them too and would have without the patch. Afterwards `genes/h
 **0** MOD self-labels, which is right *by construction*: no MOD namespace maps to human, so a
 human review's own annotation can never arrive under one.
 
+`ORGANISM_WORDS` is keyed by directory, and its scope is the directories that carry a
+`source_label` — 16 of the 181 under `genes/`, enumerable with
+
+```
+grep -rl 'source_label:' genes/ --include='*-ai-review.yaml' | cut -d/ -f2 | sort -u
+```
+
+— all 16 of which are now keys. A first pass at that list was assembled from a taxonomy
+rather than from the corpus and got it wrong in both directions: it omitted `VIBCH`,
+`PSEPK`, `NEUCR` and `ANOGA`, which do carry labels (`PSEPK` is the second-largest gene
+directory in the repo), while adding `PIG` and `XENLA`, which are **not directories in this
+repository at all**. A self-test arm now requires every key to name a real `genes/<key>`
+directory, which is what catches the invented half; the species names for the four real ones
+are read off each directory's own `taxon.label`. `CHICK` and `DANRE` are kept as keys with
+no labels yet, because those directories do exist.
+
 **None of this moves mouse.** Every mouse self-label is MGI-sourced — mouse's own MOD — so
 the gate is a no-op there and the 27 / 62 / 31 / 31 figures above are unaffected. The
 composition is named `is_target_source()` rather than inlined, so a self-test arm can bite on

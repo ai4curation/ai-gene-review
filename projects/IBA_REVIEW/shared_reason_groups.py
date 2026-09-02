@@ -40,6 +40,7 @@ people quote is the failure this script exists to prevent, so it is an error, no
 Otherwise exits 0. This is a measurement tool, not a checker -- it has no notion of a finding.
 """
 import glob
+import os
 import re
 import sys
 from collections import Counter, defaultdict
@@ -120,6 +121,13 @@ SPECIES_WORDS = ('mouse', 'rat', 'human', 'Drosophila', 'zebrafish', 'budding-ye
 # genes/<organism>/ -> every word a label may use for THAT organism. Several directories
 # have more than one: genes/yeast labels say "budding-yeast" and "S. cerevisiae" as well
 # as "yeast", and treating only the directory name as its own word filed those foreign.
+#
+# Scope is the directories that CARRY a source_label, not all 181 under genes/:
+#     grep -rl 'source_label:' genes/ --include='*-ai-review.yaml' | cut -d/ -f2 | sort -u
+# gives 16, all of which are keys here. CHICK and DANRE are keys with no labels yet, kept
+# because the directories exist. An earlier revision also had PIG and XENLA, which are NOT
+# directories in this repo at all -- invented from a taxonomy rather than read off the
+# corpus, which is the failure the arm below now catches.
 ORGANISM_WORDS = {
     'mouse': ('mouse', 'Mus musculus', r'M\. musculus'),
     'rat': ('rat', 'Rattus norvegicus', r'R\. norvegicus'),
@@ -132,8 +140,10 @@ ORGANISM_WORDS = {
     'DROME': ('Drosophila', 'fly', 'Drosophila melanogaster', r'D\. melanogaster'),
     'ARATH': ('Arabidopsis',), 'CANAL': ('Candida albicans', r'C\. albicans'),
     'MYCTU': ('Mycobacterium tuberculosis',), 'DANRE': ('zebrafish', 'Danio rerio'),
-    'CHICK': ('chicken', 'Gallus gallus'), 'PIG': ('Sus scrofa',),
-    'XENLA': ('Xenopus',),
+    'CHICK': ('chicken', 'Gallus gallus'),
+    # Species names taken from each directory's own taxon.label, not from memory.
+    'VIBCH': ('Vibrio cholerae',), 'PSEPK': ('Pseudomonas putida',),
+    'NEUCR': ('Neurospora crassa',), 'ANOGA': ('Anopheles gambiae',),
 }
 PROVENANCE_VERBS = re.compile(
     r'\bresolv|\bcorroborat|asserted from external knowledge', re.I)
@@ -384,6 +394,14 @@ def _self_test():
         return "'D. melanogaster' must read as foreign in a human review"
     if not is_self_label("D. discoideum acaA", "acaA", "DICDI"):
         return "'D. discoideum' is the target's own species in genes/DICDI"
+
+    # Every ORGANISM_WORDS key must name a real genes/<organism>/ directory. Skipped
+    # rather than failed when genes/ is absent (wrong cwd), matching _known_actions.
+    if os.path.isdir("genes"):
+        missing = sorted(k for k in ORGANISM_WORDS if not os.path.isdir(f"genes/{k}"))
+        if missing:
+            return ("ORGANISM_WORDS keys that are not directories under genes/: "
+                    + ", ".join(missing))
 
     if organism_from_path("genes/yeast/MIM1/MIM1-ai-review.yaml") != "yeast":
         return "organism_from_path must read the segment after genes/"
