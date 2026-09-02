@@ -513,7 +513,7 @@ through that list was the wrong layer. A MOD accession names a gene in exactly o
 species, so `MGI:` in `genes/human` is the mouse ortholog *however the label reads* — and
 because `MOD_PREFIXES` is derived from a `MOD_ORGANISM` map rather than listed separately,
 every prefix in that map resolves. `mod_source_is_foreign()` applies that first; of the
-729 labelled MOD sources across the whole corpus it settles **612**, leaving **117**
+825 labelled species-scoped sources across the whole corpus it settles **708**, leaving **117**
 same-species rows to `is_self_label()`, whose live remaining job is separating the target
 from its own **paralogs** ("mouse Bax" in `Bcl2`, "Dictyostelium cAR1-type paralog" in
 `carD`: 77 of the 117). The word list is now the fallback, not the decision.
@@ -542,6 +542,23 @@ directory — the identical invented-entry defect described below, in the map th
 derives everything from, and the arm written to catch that class checked only the sibling
 map. Adding the one and dropping the other moves the corpus denominator 714 → **729**
 (gate 597 → 612) and leaves mouse untouched.
+
+The same grep then caught the roster one level up. `ensembl:` was excluded on the stated
+ground that it "names no gene in exactly one species" — true of `UniProtKB`, `PANTHER`,
+`InterPro`, `GO`, `RHEA` and `EC`, and **false of `ensembl`**: all 312 of its sources are
+`ENSMUSP` (216) or `ENSRNOP` (96), so the species is readable from the accession string,
+which is more than `UniProtKB` offers. That left **96 labelled sources** outside the gate —
+and the hole is precisely the `FEN1` case, since a bare-symbol `ensembl:ENSMUSP…` label in
+`genes/human` would have no namespace to catch it. Not live today (none of the 96 is filed
+self by the label predicate), but closed rather than documented, because all 96 sit in
+`genes/human` and none in `genes/mouse`, so nothing published moves: denominator 729 →
+**825**, gate 612 → **708**, the 117 same-species rows and their 77 paralogs unchanged.
+
+`--check-coverage` now also **prints the prefixes it declines** instead of skipping them.
+The roster deciding what counts as a gap was itself hand-written, so it could silently
+narrow what the checker was allowed to find — which is exactly how `ensembl` stayed outside
+the gate while the checker reported zero gaps. Printing the declined list puts that
+judgement in front of the reader on every run.
 
 `--check-coverage` now runs the corpus greps for all three lists and reports gaps in both
 directions, so "the list matches the corpus" is something to run rather than something to

@@ -100,13 +100,27 @@ MOD_ORGANISM = {'MGI': 'mouse', 'RGD': 'rat', 'SGD': 'yeast', 'FB': 'DROME',
                 # AGI_LocusCode:AT2G17800 where GOA writes TAIR:locus:2827916. Same
                 # both-written-forms problem as the binomials, one field over.
                 'TAIR': 'ARATH', 'AGI_LocusCode': 'ARATH'}
-MOD_PREFIXES = tuple(f'{prefix}:' for prefix in MOD_ORGANISM)
-# Prefixes that ARE species-scoped MOD gene ids, so a missing one is a real gap.
-# UniProtKB, PANTHER, InterPro, GO, RHEA, EC and ensembl are identifiers too, but
-# none names a gene in exactly one species, which is the gate's whole basis.
-_MOD_SHAPED = frozenset({'MGI', 'RGD', 'SGD', 'FB', 'WB', 'ZFIN', 'TAIR', 'PomBase',
-                         'dictyBase', 'CGD', 'Xenbase', 'AGI_LocusCode', 'MGI:MGI',
-                         'FlyBase', 'WormBase', 'Araport', 'ASPGD', 'PseudoCAP'})
+# Namespaces where the species is not in the PREFIX but in the accession itself. Every
+# ensembl: source in the corpus is ENSMUSP (216) or ENSRNOP (96), so the species is
+# readable from the string -- more than UniProtKB offers, where the species is real but
+# needs a lookup. An earlier comment listed ensembl among the namespaces that "name no
+# gene in exactly one species", which is true of the other five it named and false of
+# this one, and left 96 labelled sources outside the gate. An unrecognised ENS tag
+# resolves to nothing and falls through to the label, same as an unmapped prefix.
+ACCESSION_ORGANISM = {'ensembl': {'ENSMUSP': 'mouse', 'ENSRNOP': 'rat'}}
+SPECIES_SCOPED_PREFIXES = tuple(f'{prefix}:' for prefix in
+                                tuple(MOD_ORGANISM) + tuple(ACCESSION_ORGANISM))
+MOD_PREFIXES = SPECIES_SCOPED_PREFIXES  # historical name, kept for readability at callers
+# Prefixes that COULD be species-scoped, so one the corpus writes and neither map
+# resolves is a real gap rather than an uninteresting one. UniProtKB, PANTHER, InterPro,
+# GO, RHEA and EC are identifiers too, but none pins a species without a lookup.
+# check_coverage reports what it declines rather than skipping silently, so this roster
+# cannot quietly narrow what the checker is allowed to find -- the failure that put
+# ensembl outside it.
+_SPECIES_SCOPED_SHAPED = frozenset({'MGI', 'RGD', 'SGD', 'FB', 'WB', 'ZFIN', 'TAIR',
+                                    'PomBase', 'dictyBase', 'CGD', 'Xenbase',
+                                    'AGI_LocusCode', 'ensembl', 'FlyBase', 'WormBase',
+                                    'Araport', 'ASPGD', 'PseudoCAP'})
 SELF_MARKER = re.compile(r"this gene|the review target itself|the target's own", re.I)
 NEGATION = re.compile(r'\bnot\s+(?:the\s+target|[a-z-]+\s+\S)', re.I)
 # Every species word the corpus uses in a source_label. The TARGET organism's own words
@@ -194,8 +208,14 @@ def mod_source_is_foreign(source_id, organism):
     omits. Returns False for an unmapped prefix, leaving the label predicate in charge
     rather than guessing.
     """
-    prefix = source_id.split(':', 1)[0]
+    prefix, _, accession = source_id.partition(':')
     source_organism = MOD_ORGANISM.get(prefix)
+    if source_organism is None and prefix in ACCESSION_ORGANISM:
+        # Species in the accession rather than the prefix; see ACCESSION_ORGANISM.
+        for tag, tagged in ACCESSION_ORGANISM[prefix].items():
+            if accession.startswith(tag):
+                source_organism = tagged
+                break
     return source_organism is not None and source_organism != organism
 
 
@@ -292,7 +312,10 @@ def classify_labels(paths):
 
 
 def check_coverage(paths):
-    """Report where MOD_ORGANISM, ORGANISM_WORDS and SPECIES_WORDS miss the corpus.
+    """Report where the species maps and SPECIES_WORDS miss the corpus.
+
+    Returns (findings, declined): findings are gaps, declined are prefixes the roster
+    says are not species-scoped, printed so the roster is auditable rather than trusted.
 
     Both maps were written from rosters -- a list of MODs, a taxonomy -- rather than from
     what the reviews actually write, and each was wrong in both directions: a namespace
@@ -318,21 +341,31 @@ def check_coverage(paths):
     known_species = {w.replace("\\", "").lower()
                      for w in SPECIES_WORDS + tuple(w for v in ORGANISM_WORDS.values()
                                                     for w in v)}
-    findings = []
-    # A prefix this map does not know is invisible to the gate AND to the measurement.
+    findings, declined = [], []
+    # A prefix neither map resolves is invisible to the gate AND to the measurement.
+    resolved = set(MOD_ORGANISM) | set(ACCESSION_ORGANISM)
     for prefix, n in sorted(prefixes.items(), key=lambda kv: -kv[1]):
-        if prefix in MOD_ORGANISM or prefix not in _MOD_SHAPED:
+        if prefix in resolved:
             continue
-        findings.append(f"MOD_ORGANISM is missing {prefix!r}, used {n} times")
-    for prefix in sorted(MOD_ORGANISM):
+        if prefix in _SPECIES_SCOPED_SHAPED:
+            findings.append(f"no species map resolves {prefix!r}, used {n} times")
+        else:
+            declined.append(f"{prefix} ({n})")
+    for prefix in sorted(resolved):
         if not prefixes.get(prefix):
-            findings.append(f"MOD_ORGANISM has {prefix!r}, which the corpus never uses")
+            findings.append(f"the species maps carry {prefix!r}, which the corpus "
+                            "never uses")
     for organism in sorted(d for d in label_dirs if d and d not in ORGANISM_WORDS):
         findings.append(f"ORGANISM_WORDS is missing {organism!r}, which carries labels")
     for abbrev, n in sorted(abbrevs.items(), key=lambda kv: -kv[1]):
         if abbrev.lower() not in known_species:
             findings.append(f"SPECIES_WORDS is missing {abbrev!r}, written {n} times")
-    return findings
+    # Not a finding, but printed: _SPECIES_SCOPED_SHAPED is itself a hand-written roster
+    # deciding what this checker may report, and a prefix it omits is skipped in silence.
+    # That is how ensembl -- 312 uses, species readable from every accession -- stayed
+    # outside the gate while the checker reported zero gaps. Showing the declined list
+    # puts the roster's own coverage in front of the reader on every run.
+    return findings, declined
 
 
 def _known_actions():
@@ -488,6 +521,17 @@ def _self_test():
             return ("ORGANISM_WORDS keys / MOD_ORGANISM values that are not directories "
                     "under genes/: " + ", ".join(missing))
 
+    # ensembl: the species is in the ACCESSION, not the prefix. All 312 in the corpus
+    # are ENSMUSP or ENSRNOP; an unrecognised tag must fall through to the label.
+    if not mod_source_is_foreign("ensembl:ENSMUSP00000021573", "human"):
+        return "an ENSMUSP accession in a human review is the mouse ortholog"
+    if mod_source_is_foreign("ensembl:ENSMUSP00000021573", "mouse"):
+        return "an ENSMUSP accession in a mouse review is the target's own species"
+    if not mod_source_is_foreign("ensembl:ENSRNOP00000012345", "mouse"):
+        return "an ENSRNOP accession in a mouse review is the rat ortholog"
+    if mod_source_is_foreign("ensembl:ENSGALP00000099999", "human"):
+        return "an unrecognised ENS tag must defer to the label, not claim foreign"
+
     # AGI_LocusCode is the Arabidopsis locus spelling, so it must gate like TAIR.
     if not mod_source_is_foreign("AGI_LocusCode:AT2G15570", "ECOLI"):
         return "an Arabidopsis locus code in genes/ECOLI is foreign"
@@ -584,9 +628,12 @@ def main(argv):
         return 2
 
     if coverage:
-        findings = check_coverage(paths)
+        findings, declined = check_coverage(paths)
         for finding in findings:
             print(f"  {finding}")
+        if declined:
+            print("  declined as not species-scoped (check these by eye, they are NOT "
+                  "gaps): " + ", ".join(declined))
         print(f"{len(paths)} files: {len(findings)} coverage gap(s)")
         return 1 if findings else 0
 
