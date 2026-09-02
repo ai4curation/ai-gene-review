@@ -77,16 +77,26 @@ def collect(paths, action=None):
 
 MOD_PREFIXES = ('MGI:', 'RGD:', 'SGD:', 'FB:', 'WB:', 'ZFIN:', 'TAIR:', 'PomBase:',
                 'dictyBase:', 'CGD:', 'Xenbase:')
-SELF_MARKER = re.compile(r'this gene|the review target itself', re.I)
+SELF_MARKER = re.compile(r"this gene|the review target itself|the target's own", re.I)
 NEGATION = re.compile(r'\bnot\s+(?:the\s+target|[a-z-]+\s+\S)', re.I)
-# Species words a label may carry. The TARGET organism is removed from this set per
-# call, so "rat Casp3" is third-party in genes/mouse and a self-label in genes/rat.
+# Every species word the corpus uses in a source_label. The TARGET organism's own words
+# are removed per call, so "rat Casp3" is third-party in genes/mouse and a self-label in
+# genes/rat. Written from the labels that exist, not from a taxonomy: a species the corpus
+# has not yet named is simply not matched, which fails toward self rather than away.
 SPECIES_WORDS = ('mouse', 'rat', 'human', 'Drosophila', 'zebrafish', 'budding-yeast',
                  'fission-yeast', 'fly', 'worm', 'chicken', 'bovine', 'Xenopus',
-                 'Arabidopsis', 'yeast')
-# genes/<organism>/<GENE>/... -- the organism directory, mapped to the word a label uses.
-ORGANISM_WORD = {'mouse': 'mouse', 'rat': 'rat', 'human': 'human', 'worm': 'worm',
-                 'yeast': 'yeast', 'SCHPO': 'fission-yeast'}
+                 'Arabidopsis', 'yeast', r'S\. cerevisiae', r'S\. pombe', r'C\. elegans',
+                 r'E\. coli', 'Dictyostelium', 'cerevisiae', 'pombe', 'elegans')
+# genes/<organism>/ -> every word a label may use for THAT organism. Several directories
+# have more than one: genes/yeast labels say "budding-yeast" and "S. cerevisiae" as well
+# as "yeast", and treating only the directory name as its own word filed those foreign.
+ORGANISM_WORDS = {
+    'mouse': ('mouse',), 'rat': ('rat',), 'human': ('human',),
+    'worm': ('worm', r'C\. elegans', 'elegans'),
+    'yeast': ('yeast', 'budding-yeast', r'S\. cerevisiae', 'cerevisiae'),
+    'SCHPO': ('fission-yeast', r'S\. pombe', 'pombe'),
+    'DICDI': ('Dictyostelium',), 'ECOLI': (r'E\. coli', 'coli'),
+}
 PROVENANCE_VERBS = re.compile(
     r'\bresolv|\bcorroborat|asserted from external knowledge', re.I)
 
@@ -110,26 +120,44 @@ def is_self_label(label, gene_symbol, organism='mouse'):
     organism is the genes/<organism>/ directory, so this works outside genes/mouse: on a
     rat review "rat Casp3" is the self-label and "mouse Casp3" is the foreign one.
     """
-    own = ORGANISM_WORD.get(organism, organism).lower()
-    foreign = re.compile(r'\b(' + '|'.join(w for w in SPECIES_WORDS if w.lower() != own)
-                         + r')\b', re.I)
+    own = ORGANISM_WORDS.get(organism, (organism,))
+    own_lower = {w.replace('\\', '').lower() for w in own}
+    foreign_words = [w for w in SPECIES_WORDS if w.replace('\\', '').lower() not in own_lower]
+    foreign = re.compile(r'(?<!\w)(' + '|'.join(foreign_words) + r')(?!\w)', re.I)
     if NEGATION.search(label) or foreign.search(label):
         return False
     if SELF_MARKER.search(label):
         return True
     bare = re.sub(r'\s*\(.*\)\s*$', '', label.strip()).lower()
-    return bare in (gene_symbol.lower(), f"{own} {gene_symbol}".lower())
+    return bare == gene_symbol.lower() or bare in {f"{w} {gene_symbol}".lower()
+                                                   for w in own_lower}
+
+
+def organism_from_path(path):
+    """The genes/<organism>/ directory for a review path, or None if there isn't one.
+
+    None rather than a "mouse" default: defaulting is the hardcoding this predicate was
+    just generalised out of, and it would be silent. The caller turns None into exit 2.
+    Takes the LAST "genes" segment, so an absolute path with an earlier one still works.
+    """
+    parts = path.split("/")
+    if "genes" not in parts:
+        return None
+    idx = len(parts) - 1 - parts[::-1].index("genes")
+    return parts[idx + 1] if idx + 1 < len(parts) else None
 
 
 def classify_labels(paths):
     """Return (self_rows, third_provenanced, third_bare) for labelled MOD sources."""
-    selfs, prov, bare = [], [], []
+    selfs, prov, bare, unresolved = [], [], [], []
     for path in paths:
         with open(path) as handle:
             doc = yaml.safe_load(handle) or {}
         gene = doc.get("gene_symbol") or path.split("/")[-2]
-        parts = path.split("/")
-        organism = parts[parts.index("genes") + 1] if "genes" in parts else "mouse"
+        organism = organism_from_path(path)
+        if organism is None:
+            unresolved.append(path)
+            continue
         for ann in doc.get("existing_annotations") or []:
             block = (ann.get("review") or {}).get("propagation_review") or {}
             for src in block.get("source_entities") or []:
@@ -143,6 +171,11 @@ def classify_labels(paths):
                     prov.append(row)
                 else:
                     bare.append(row)
+    if unresolved:
+        raise SystemExit(
+            f"cannot tell which organism {len(unresolved)} path(s) belong to - no "
+            f"'genes/<organism>/' segment, e.g. {unresolved[0]}. Pass a glob rooted at "
+            f"the repository, not one relative to genes/.")
     return selfs, prov, bare
 
 
@@ -232,6 +265,27 @@ def _self_test():
         return "on a rat review, 'rat Casp3' IS the self-label"
     if is_self_label("mouse Casp3", "Casp3", "rat"):
         return "on a rat review, 'mouse Casp3' is the foreign one"
+
+    # An organism directory can own more than one word, and the corpus uses all of them.
+    if not is_self_label("budding-yeast CLB5", "CLB5", "yeast"):
+        return "'budding-yeast' is one of genes/yeast's own words"
+    if not is_self_label("MIM1 (S. cerevisiae), the target's own experimental annotation",
+                         "MIM1", "yeast"):
+        return "a self-marker phrased 'the target's own' must count, with its own species"
+
+    # The hardest case: a FOREIGN ortholog whose symbol is the same word as the target's.
+    # The parenthetical strip removes the species, leaving bare equality to say "self".
+    if is_self_label("mim1 (S. pombe, UniProtKB:Q9C1W7)", "MIM1", "yeast"):
+        return "a same-symbol ortholog in another species must NOT count as a self-label"
+    if is_self_label("ATG12 (Saccharomyces cerevisiae)", "ATG12", "human"):
+        return "a same-symbol yeast ortholog in a human file must NOT count as a self-label"
+
+    if organism_from_path("genes/yeast/MIM1/MIM1-ai-review.yaml") != "yeast":
+        return "organism_from_path must read the segment after genes/"
+    if organism_from_path("/a/genes/b/genes/rat/Casp3/Casp3-ai-review.yaml") != "rat":
+        return "organism_from_path must take the LAST genes/ segment"
+    if organism_from_path("yeast/MIM1/MIM1-ai-review.yaml") is not None:
+        return "a path with no genes/ segment must be unresolvable, not defaulted"
 
     seen, known = {"REMOVE"}, {"REMOVE", "ACCEPT"}
     if action_error("REMOVE", seen, known) is not None:
