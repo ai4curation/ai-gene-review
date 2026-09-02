@@ -165,3 +165,45 @@ Consequence for annotation actions:
 Adamczyk et al. 2016 (PMID:27299603) added as LOW-relevance context: copy-number loss of
 several AAD genes (AAD3 among them) correlates with redox imbalance in brewing strains, but is
 a family-level correlation and establishes no AAD3-specific function.
+
+## 2026-09-02 — PR #2929 review follow-up: bring knowledge_gaps and suggested_* into line
+
+The automated review of PR #2929 correctly flagged that `knowledge_gaps`,
+`suggested_questions` and `suggested_experiments` were left byte-for-byte unchanged when the
+PMID:29079624 evidence was incorporated, so the file simultaneously asserted "purified Aad3p
+is catalytically inactive" and "AAD3 has never been characterized". Fixed:
+
+- **Gap 1 (MF_DARK)** narrowed and moved `OPEN` → `NARROWING`. The aryl-alcohol dehydrogenase
+  activity is no longer an open question — it was assayed on the target and refuted. The
+  residual gap is whether Aad3p has activity on substrate classes *outside* the tested panel
+  or a non-catalytic role. Note that both cofactors were covered: [PMID:29079624 "While
+  PcAad1p can use both NADPH (Km, 39 μM) and NADH (Km, 220 μM), neither of the yeast Aad
+  proteins was active with NADH as a reduction cofactor."] Provenance re-pointed from
+  PMID:10572264 (deletion phenotype) to PMID:29079624 (direct assay).
+- **Gap 2 (BP_DARK)** kept OPEN — a biological role genuinely remains undetermined — but the
+  boundary is re-anchored on the new *negative* gain-of-function and expression data, which
+  exclude the aryl-aldehyde detoxification hypothesis from both directions: [PMID:29079624
+  "Contrary to expectation, none of the seven AAD transcript levels increased following 1 to
+  2 h treatment with aryl-aldehydes, relative to a no-aldehyde control"] and [PMID:29079624
+  "None of the transformants exhibited growth improvement on the four aryl-aldehydes"].
+- **Gap 3 (family expansion)** kept OPEN but restated: AAD3's functional status is now settled
+  (relic), so the open question is why a catalytically dead member is retained as a
+  full-length ORF across strains rather than eroded, given that AAD15 *was* truncated.
+- **Q1 / experiment 1** previously proposed verbatim the experiment Yang et al. already
+  performed. Rewritten to target untested space (non-aryl-aldehyde AKR substrate classes,
+  direct NADP(H)-binding measurement, structure); added a question and experiment on a
+  possible non-catalytic role, which is the live hypothesis for ORF retention.
+
+Also, per the same review:
+- The 4th PMID:29079624 finding's `supporting_text` was the Tyr73-repair sentence while the
+  statement was about the authors' pseudogenization conclusion. Replaced with the matching
+  verbatim sentence ["Our observation that the majority of BY4741 AAD genes were undergoing
+  pseudogenization prompted us to survey their distribution..."].
+- Added a caveat to the PMID:29079624 `review_notes` that the Cys73→Tyr revertant assay — the
+  single result carrying the step from "inactive" to "irreversibly pseudogenized" — is
+  reported as "data not shown". The REMOVE actions rest on the shown Fig. 1 negative result,
+  not on that revertant.
+
+Left alone (flagged for a human): the `failure_modes` asymmetry between the IEA row
+(`FUNCTIONAL_DIVERGENCE`) and the ISS rows (`WRONG_ORTHOLOG_OR_PARALOG`), the suggestion to
+propose a `NOT|enables GO:0047681` annotation to SGD/UniProt, and `status: INITIALIZED`.
