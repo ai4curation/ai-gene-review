@@ -71,16 +71,18 @@ DEFAULT_OUTDIR = HERE / "results" / "paint-campaign"
 GENES = REPO / "genes" / DEFAULT_SPECIES
 OUTDIR = DEFAULT_OUTDIR
 
-# PMIDs appear as "PMID:12345678" and, rarely, as "PMID: 12345678".
+# PMIDs appear as "PMID:12345678", "PMID: 12345678" and "PMID 12345678" (the
+# colon-less form is used by NAGK and by several non-human reviews).
 #
 # The digit floor cannot simply be dropped to catch pre-1975 four- and five-digit
 # PMIDs, because review prose contains phrases like "Queried by PMID: 3
 # annotations" where the number is a count, not an identifier — widening to
-# \d{1,9} silently turns three such phrases in ACTA1 into citations. Spacing is
-# what separates the two cases in this corpus: every short PMID is written
-# unspaced, and every spaced occurrence is a full-length id. So allow whitespace
-# only for ids long enough to be unambiguous.
-PMID_RE = re.compile(r"PMID:\s*(\d{6,9})\b|PMID:(\d{4,5})\b")
+# \d{1,9} silently turns three such phrases in ACTA1 into citations. Separator
+# strictness is what distinguishes the two cases in this corpus: every short PMID
+# is written tight against the colon, and every separated occurrence is a
+# full-length id. So a separator is allowed only for ids long enough to be
+# unambiguous, and a short id must be tight against a colon.
+PMID_RE = re.compile(r"PMID:?\s*(\d{6,9})\b|PMID:(\d{4,5})\b")
 
 app = typer.Typer(add_completion=False, help=__doc__)
 
@@ -100,11 +102,17 @@ def pmids_in(path: Path) -> set[str]:
     >>> sorted(pmids_in(d / "old.md"))
     ['24417', '4874']
 
-    A spaced short number is prose, not a citation, and must not be counted:
+    A separated short number is prose, not a citation, and must not be counted:
 
     >>> _ = (d / "prose.md").write_text("Queried by PMID: 3 annotations, 2 on ACTA1")
     >>> pmids_in(d / "prose.md")
     set()
+
+    The colon-less form is real and must be kept:
+
+    >>> _ = (d / "nocolon.md").write_text("as shown in PMID 10824116")
+    >>> sorted(pmids_in(d / "nocolon.md"))
+    ['10824116']
 
     >>> pmids_in(d / "missing.md")
     set()
