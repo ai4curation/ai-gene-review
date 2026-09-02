@@ -9,3 +9,24 @@ The strongest core function is hydrolytic histone deacetylase activity in the HD
 Falcon supports H3/H2B deacetylation in promoter-proximal repression contexts and H4 deacetylation in highly transcribed coding regions [file:yeast/HDA1/HDA1-deep-research-falcon.md "Tup1 recruits Hda1 to deacetylate histones **H3 and H2B** at promoter-adjacent nucleosomes (e.g., ENA1), supporting histone-substrate specificity and a repression mechanism."] [file:yeast/HDA1/HDA1-deep-research-falcon.md "Modern spike-in normalized ChIP-seq/ChIP-qPCR demonstrates Hda1C-dependent **H4 deacetylation within coding regions** of highly transcribed genes."]. This means the previous review's H3/H2B emphasis was broadly correct, but the description needed to avoid implying that H4 is unsupported.
 
 Non-core calls are important here. Falcon found weak support for cytoplasmic HDA1 localization, noting that cytosolic relocalization evidence in the retrieved set concerns Hda2/Hda3 rather than Hda1 itself [file:yeast/HDA1/HDA1-deep-research-falcon.md "No direct evidence for Hda1; cytosolic relocalization reported for Hda2/Hda3 under hypoxia, not Hda1"]. Positive transcriptional effects appear rare or indirect relative to the dominant repression/dampening model [file:yeast/HDA1/HDA1-deep-research-falcon.md "The dominant evidence supports repression/dampening via deacetylation."].
+
+## 2026-09-02 Audit correction: GO:0005737 cytoplasm IBA should not be REMOVEd
+
+The GO:0005737 (cytoplasm, is_active_in, IBA) row was previously marked `action: REMOVE`
+on the grounds that HDA1's documented function is nuclear. That reasoning does not meet
+the project's bar for overturning an IBA: per CLAUDE.md, an IBA reflects a PAINT
+curator's phylogenetic judgment and "short WITH/FROM is NOT weak" and "only overturn an
+IBA with target-specific divergence/loss evidence" (see `.claude` project instructions
+and `projects/IBA_REVIEW.md`). The WITH/FROM for this row includes several human class
+IIa/IIb HDAC orthologs (e.g. HDAC4/5/7/9, HDAC6), and nucleocytoplasmic shuttling is a
+well-established, phylogenetically conserved property of this HDAC subfamily -- HDAC6 in
+particular is a predominantly cytoplasmic tubulin deacetylase, and class IIa HDACs
+shuttle between nucleus and cytoplasm in a phosphorylation-dependent manner. There is no
+HDA1-specific evidence contradicting this ancestral capacity: the only relevant note in
+the falcon deep-research report is that cytosolic relocalization has been reported for
+HDA1's partners HDA2/HDA3 under hypoxia but not tested directly for HDA1
+[file:yeast/HDA1/HDA1-deep-research-falcon.md "No direct evidence for Hda1; cytosolic
+relocalization reported for Hda2/Hda3 under hypoxia, not Hda1"] -- an absence of positive
+evidence, not evidence of divergence or loss. The action was changed from `REMOVE` to
+`KEEP_AS_NON_CORE`: the term is retained (not removed) but marked non-core, since HDA1's
+established, core function remains nuclear chromatin deacetylation.
