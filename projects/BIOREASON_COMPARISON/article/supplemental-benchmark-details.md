@@ -11,7 +11,7 @@ This supplement documents analyses that are useful for reproducibility but are n
 
 The main RL benchmark is ARGO139, a fixed 139-gene set listed in `../genes.csv`. The main SFT term benchmark is ARGO95, the 95-gene ARGO139 subset present in the HuggingFace `wanglab/protein_catalogue` SFT download.
 
-ARGO139 uses agent-adjudicated local AIGR references, not independently expert-signed ground truth: as of the current refresh, 77 are `COMPLETE`, 46 `DRAFT`, 12 `IN_PROGRESS`, and 4 `INITIALIZED`. The RL performance set excludes the wrong-input `csr-1` export (n=138) and separately flags seven retained exports truncated at the 2,000-residue model limit.
+ARGO139 uses agent-adjudicated local AIGR references, not independently expert-signed ground truth: as of the current refresh, 78 are `COMPLETE`, 46 `DRAFT`, 11 `IN_PROGRESS`, and 4 `INITIALIZED`. The RL performance set excludes the wrong-input `csr-1` export (n=138) and separately flags seven retained exports truncated at the 2,000-residue model limit.
 
 **Table S1.** Cohorts emitted by `write_benchmark_sidecars.py`.
 
@@ -34,7 +34,7 @@ The key availability issue is simple: the HuggingFace `wanglab/protein_catalogue
 
 | Benchmark | Genes | Terms | CNN | NPI | PLI | COR | LSP | REP | UNC |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| ARGO95 (HF catalogue) | 95 | 955 | 681 (71.3%) | 115 (12.0%) | 5 (0.5%) | 24 (2.5%) | 43 (4.5%) | 29 (3.0%) | 58 (6.1%) |
+| ARGO95 (HF catalogue) | 95 | 955 | 681 (71.3%) | 115 (12.0%) | 5 (0.5%) | 23 (2.4%) | 43 (4.5%) | 29 (3.0%) | 59 (6.2%) |
 
 For comparison, the mixed-source ARGO139 view is retained as a source-diagnostic table, not as a primary SFT benchmark.
 
@@ -42,9 +42,9 @@ For comparison, the mixed-source ARGO139 view is retained as a source-diagnostic
 
 | Source | Genes | Terms | CNN | NPI | PLI | COR | LSP | REP | UNC |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| HF catalogue / ARGO95 | 95 | 955 | 681 (71.3%) | 115 (12.0%) | 5 (0.5%) | 24 (2.5%) | 43 (4.5%) | 29 (3.0%) | 58 (6.1%) |
+| HF catalogue / ARGO95 | 95 | 955 | 681 (71.3%) | 115 (12.0%) | 5 (0.5%) | 23 (2.4%) | 43 (4.5%) | 29 (3.0%) | 59 (6.2%) |
 | Web export | 44 | 9,742 | 2,321 (23.8%) | 42 (0.4%) | 0 (0.0%) | 7 (0.1%) | 388 (4.0%) | 1 (0.0%) | 6,983 (71.7%) |
-| Mixed-source ARGO139 total | 139 | 10,697 | 3,002 (28.1%) | 157 (1.5%) | 5 (0.0%) | 31 (0.3%) | 431 (4.0%) | 30 (0.3%) | 7,041 (65.8%) |
+| Mixed-source ARGO139 total | 139 | 10,697 | 3,002 (28.1%) | 157 (1.5%) | 5 (0.0%) | 30 (0.3%) | 431 (4.0%) | 30 (0.3%) | 7,042 (65.8%) |
 
 The DnaK comprehensive review moved zinc ion binding (`GO:0008270`) from
 `NPI` to `CNN`: PMID:11985624 directly identifies DnaK in a radioactive
@@ -68,9 +68,9 @@ The all-HF view is still useful as the broadest single-source HF view, but it is
 |---|---:|---:|
 | CNN | 920 | 67.7 |
 | NPI | 169 | 12.4 |
-| UNC | 144 | 10.6 |
+| UNC | 145 | 10.7 |
 | LSP | 56 | 4.1 |
-| COR | 31 | 2.3 |
+| COR | 30 | 2.2 |
 | REP | 33 | 2.4 |
 | PLI | 5 | 0.4 |
 
@@ -80,11 +80,11 @@ The all-source union is the broadest source-availability view, but it combines A
 
 | Assessment | Count | % |
 |---|---:|---:|
-| UNC | 7,127 | 64.2 |
+| UNC | 7,128 | 64.2 |
 | CNN | 3,241 | 29.2 |
 | LSP | 444 | 4.0 |
 | NPI | 211 | 1.9 |
-| COR | 38 | 0.3 |
+| COR | 37 | 0.3 |
 | REP | 34 | 0.3 |
 | PLI | 5 | 0.0 |
 
@@ -116,7 +116,7 @@ A second rater scored 20 RL Functional Summaries without access to the first-rat
 
 ## S6. GO-GPT reviews
 
-The ARGO139 web-export leaf review is explicitly pending rather than a completed benchmark. Ontology-aware rebuilding retained 5,923 terms: 1,900 exact positive AIGR matches (`CNN`), 127 exact rejected/over-annotated matches (`NPI`), and 3,896 unresolved terms (`UNC`). Accordingly, 138 documents are `DRAFT` and only the fully deterministic `BACSU/ftsZ` file is `COMPLETE`.
+The ARGO139 web-export leaf review is explicitly pending rather than a completed benchmark. Ontology-aware rebuilding retained 5,923 terms: 1,896 `CNN`, 125 `NPI`, 3 `LSP`, and 3,899 `UNC`. Accordingly, 137 documents are `DRAFT`; the fully resolved `BACSU/ftsZ` and manually reviewed `SCHPO/ral2` files are `COMPLETE`.
 
 A distinct supplemental analysis, `supplement_gogpt_overlap_300`, contains 8,871 GO-GPT predictions across 299 canonical genes. The historical cohort identifier is retained for continuity; the count fell from 300 after the duplicate `ARATH/Q9XIR4` alias for `ARATH/APO1` was removed. It is not the pending 5,923-term ARGO139 leaf set above and is not a paired ARGO139 BioReason-Pro result. This separate overlap analysis remains useful for showing how much apparent agreement changes when the reference set moves from raw GOA to AIGR core biology.
 
@@ -124,9 +124,9 @@ A distinct supplemental analysis, `supplement_gogpt_overlap_300`, contains 8,871
 
 | Reference level | Terms in reference | Predictions overlapping | % of 8,871 predictions |
 |---|---:|---:|---:|
-| Raw GOA | 2,957 | 1,037 | 11.7 |
-| Retained/replacement/proposed-new AIGR annotations | 2,762 | 850 | 9.6 |
-| All GO-valued AIGR core-function slots | 1,230 | 349 | 3.9 |
+| Raw GOA | 2,954 | 1,035 | 11.7 |
+| Retained/replacement/proposed-new AIGR annotations | 2,761 | 849 | 9.6 |
+| All GO-valued AIGR core-function slots | 1,230 | 350 | 3.9 |
 
 The core-function comparison includes HdeB's GO:0051082 match as an explicitly
 interim representation of in-situ holdase activity pending creation of the general
