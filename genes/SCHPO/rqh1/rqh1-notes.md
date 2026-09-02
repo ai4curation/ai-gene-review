@@ -82,3 +82,49 @@ Rqh1 (aka rad12, hus2, rec9) is the single RecQ-family ATP-dependent 3'-5' DNA h
   and recovery from replication stress; dissolution of recombination intermediates (double HJ / D-loops)
   with Top3; DSB repair via HR (resection minor role; intermediate processing major role); S-phase DNA
   damage checkpoint (replication slowing); rDNA maintenance & chromosome segregation.
+
+## Re-review journal — 2026-09-01
+
+- Refreshed UniProt and GOA through `just fetch-gene SCHPO rqh1 --force`; the current
+  50-row GOA added three IBA tuples: GO:0043138, GO:0000724 and GO:0009378.
+- Accepted the 3'-5' helicase and HR-repair IBAs because Rqh1's own experimental
+  annotations ground both ancestral nodes [PMID:12478586 "the Rqh1p protein displays
+  3' to 5' DNA helicase activity"; PMID:12724426 "Rqh1 functions after Rad51 focus
+  formation during DNA repair"]. Its appearance among PAINT descendants is expected
+  target grounding, not circularity.
+- Retained four-way junction helicase activity as a non-core conserved RecQ-family
+  substrate specialization. PAINT places it on PTN000344873 with same-subfamily BLM and sibling
+  WRN/plant RecQ evidence, and Rqh1 independently disassembles branched D-loops
+  [PMID:25313826 "CAF-1 promotes template switch by counteracting D-loop disassembly
+  by Rqh1"]. Direct purified-Rqh1 activity on a four-way substrate remains an explicit
+  experimental question, not an asserted direct assay.
+- Refreshed the PANTHER IBA project through `just refresh-panther-iba-project`, then
+  isolated the Rqh1 changes from unrelated live PAINT drift. The committed project
+  data now reproduce 160 IBAs, 90 with subfamily-mappable UniProt seeds, and 36
+  cross-subfamily flags.
+- Launched the focused OpenScientist hypothesis through the project wrapper. The
+  run completed successfully and found the four-way-junction claim partially/weakly
+  supported by orthology rather than a direct Rqh1 assay
+  [file:SCHPO/rqh1/rqh1-hypotheses/free-text-schizosaccharomyces-pombe-rqh1-directly-unwinds-four-way-holliday-junction-dna-substra/openscientist.md
+  "Targeted literature searches did not identify any primary paper demonstrating
+  in-vitro four-way-junction unwinding or branch migration by purified Rqh1"]. This
+  supports retaining GO:0009378 as IBA while explicitly avoiding any experimental
+  evidence upgrade; the existing reconstitution experiment remains the decisive gap.
+- The full text also reports an informative assay limitation and negative observation:
+  the RTS1-repeat Holliday junctions cannot branch migrate in vitro and therefore
+  cannot be dissolved, and HJ-like intermediates did not accumulate in `rqh1-d`
+  relative to wild type [PMID:25313826 "In the RTS1-RFB assay, HJs formed between
+  RTS1 repeats cannot branch migrate in vitro and thus cannot be resolved by dissolution.
+  Accordingly, HJ-like intermediates did not accumulate in rqh1-d cells compared
+  to wt cells"]. This is not a refutation of four-way-junction unwinding because
+  the assay design precludes the relevant branch-migration/dissolution reaction;
+  it reinforces the need for a direct purified-Rqh1 substrate assay.
+- Removed generic helicase/pathway quotes from cellular-component annotations after
+  checking that they did not demonstrate localization. Refreshing PMID:12023299 and
+  PMID:12724426 through `just fetch-pmid ... --force` recovered their Results sections,
+  including direct observations that Rqh1 is nuclear, predominantly nucleolar and
+  relocalizes to chromatin foci after irradiation [PMID:12724426 "Rqh1 localized
+  to the nucleus throughout the cell cycle"; PMID:12023299 "Rqh1 relocalized from
+  a predominantly nucleolar distribution to discrete foci in the chromatin compartment
+  1 h postirradiation"]. The localization annotations now cite those assay-relevant
+  passages.

@@ -42,6 +42,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           persist-credentials: false
+          fetch-depth: 1
 
       - name: Check for source changes
         uses: dorny/paths-filter@v3
@@ -92,6 +93,18 @@ jobs:
               - 'scripts/run_reference_validator.sh'
               - 'justfile'
               - 'project.justfile'
+
+      - name: Fetch benchmark baseline commit
+        if: steps.changes.outputs.src == 'true'
+        shell: bash
+        run: |
+          benchmark_baseline="$(sed -n 's/^baseline_commit: //p' projects/BIOREASON_COMPARISON/benchmark-policy.yaml)"
+          if [[ ! "$benchmark_baseline" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Invalid BioReason benchmark baseline_commit: $benchmark_baseline" >&2
+            exit 1
+          fi
+          # persist-credentials is disabled; this targeted fetch uses public read access.
+          git fetch --no-tags --depth=1 origin "$benchmark_baseline"
 
       # https://github.com/astral-sh/setup-uv
       - name: Install uv

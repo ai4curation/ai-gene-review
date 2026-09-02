@@ -4,7 +4,7 @@ title: "PANTHER IBA family review"
 
 # PANTHER IBA family review
 
-Family-level (PANTHER/PAINT) review of the IBA annotations on the 40 reviewed
+Family-level (PANTHER/PAINT) review of the IBA annotations on the 41 reviewed
 S. pombe genes. Reviews the *source* of the IBAs — the phylogenetic
 propagation — rather than re-judging gene by gene.
 
@@ -18,7 +18,7 @@ propagation — rather than re-judging gene by gene.
   node, vs. the few `n_seeds` echoed into the leaf), `node_evidence`
   (IBD/IRD/IKR), and `node_loss`. New flags: `SINGLE_NODE_SEED` (≤1 canonical
   seed — weak support), `NODE_LOSS` (an IRD/IKR loss at the source node), and
-  `NODE_NOT_IN_IBD`.
+  `NODE_NOT_IN_IBD`; `NONE` denotes a row with no propagation flags.
 - `extract_node_annotations.py` — pulls the **PTN node-level (PAINT) annotations**
   themselves from PANTHER's `IBD.gaf` (the IBD/IRD/IKR — plus a few IBA-on-node —
   layer that is the *source* of every IBA). For each ancestral node our genes
@@ -55,17 +55,20 @@ propagation — rather than re-judging gene by gene.
   Note: `loss_clade`/`retaining_clade` are resolved from the *reviewed* member
   tables + leaf GAF, so a finding with `n_members_affected=0` yields an empty
   `loss_clade` (the loss is in an unsampled subfamily); seeds are still provided.
-  Of the 296 IKR findings, 49 have ≥1 attributed reviewed member and are
+  Of the 403 IKR findings, 63 have ≥1 attributed reviewed member and are
   immediately actionable.
 - `REVIEW.md` — the written review and findings.
 
 Regenerate:
 
 ```bash
-uv run python projects/PANTHER_IBA_REVIEW/extract_iba_propagation.py
-uv run python projects/PANTHER_IBA_REVIEW/extract_node_annotations.py
-uv run python projects/PANTHER_IBA_REVIEW/extract_function_losses.py
+just refresh-panther-iba-project
 ```
+
+The three tables can also be refreshed independently with
+`just refresh-panther-iba-propagation`,
+`just refresh-panther-iba-node-annotations`, and
+`just refresh-panther-iba-function-losses`.
 
 The node-level source files (`IBD.gaf`, leaf GAF) are downloaded on demand into
 a gitignored `.cache/panther/` and are not committed. Per-family node slices can
@@ -75,6 +78,6 @@ be materialised under `interpro/panther/<FAM>/<FAM>-paint.tsv` with:
 just fetch-panther-paint PTHR10177
 ```
 
-Scope: the 151 IBAs in the 40 reviewed genes (38 PANTHER families, all cached
+Scope: the 160 IBAs in the 41 reviewed genes (39 PANTHER families, all cached
 locally). Note the cross-subfamily flag is deliberately sensitive and
 over-fires on broadly conserved functions — it is triage, not a verdict.
