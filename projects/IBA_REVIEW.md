@@ -645,17 +645,45 @@ as *not-`UniProtKB`, not-`PANTHER`* — a filter that also admits the two `Inter
 `Serpinh1`. Same finding either way; different set.
 
 **A self-seed marks node membership always; it marks independent grounding only when the
-target's own same-term annotation is itself retained.** `CLAUDE.md` glosses a self-seed as
-"a marker that experimental grounding exists on the target itself", and that is the usual
-case — but it presumes this review still stands behind that annotation. Where the target's
-only same-term experimental row is one this review removes, the self-seed still shows the
-target is inside the clade and `SUPPORTS_TRANSFER` is still right (`CIRCULAR_OR_REDUNDANT`
-is forbidden for a self-seed), yet citing it as grounding leans on evidence the same file
-rejects. Say node membership and say explicitly that grounding is not claimed. One block in
-`genes/mouse` needed this — `Agtr1a GO:0006954`, whose own IGI at the term is `REMOVE`d on
-full text that *is* available. Its comment asserted the canonical gloss until `9ce63aa88`, so
-the block as it now stands is the corrected form, not the defect. The other twelve self-seed
-claims cite annotations their files retain, so the canonical gloss holds for them.
+target's own experimental annotation behind the IBD is itself RETAINED by this review.**
+The operative word is *retained*, not *same-term*. An earlier revision of this sentence said
+"same-term", which is narrower than both PAINT semantics and the practice underneath it: an
+IBD seed is a gene whose experimental evidence the curator judged relevant to the node, which
+routinely means a **descendant or mechanistically adjacent** term rather than the propagated
+one. Of the eleven blocks in `genes/mouse` carrying the canonical gloss
+(`grep -rn "grounding exists on the target" genes/mouse`), only three ground on the block's
+own term; **six legitimately ground on a different one** — `Mapk1 GO:0035556` and `GO:0007166`
+on `GO:0000165`, `Mapk3`'s pair on `GO:0070371`, `Nf1 GO:1902531` on `GO:0005096` and
+`GO:0007265` (its comment says so outright: "which are among the descendant evidences behind
+the IBD"), and `Sox2 GO:0030182` on `GO:0045665`. A literal same-term check would report all
+six as defects, and a rule that mostly flags correct work is a rule that gets ignored.
+
+`Acadl GO:0005737` is the cleanest case: it has **no** experimental `GO:0005737` row at all —
+the only one is the IBA itself — and its grounding is the `located_in GO:0005739 mitochondrion`
+IDA (`ECO:0000314`, PMID:26767982), which QuickGO confirms has `GO:0005737` among its
+`is_a`/`part_of` ancestors and which this review retains as `KEEP_AS_NON_CORE`. Textbook under
+the descendant reading; a defect under "same-term".
+
+`CLAUDE.md` glosses a self-seed as "a marker that experimental grounding exists on the target
+itself", and that is the usual case — but it presumes this review still stands behind that
+annotation. Where the experimental row the self-seed rests on is one this review removes, the
+self-seed still shows the target is inside the clade and `SUPPORTS_TRANSFER` is still right
+(`CIRCULAR_OR_REDUNDANT` is forbidden for a self-seed), yet citing it as grounding leans on
+evidence the same file rejects. Say node membership and say explicitly that grounding is
+not claimed. One block in `genes/mouse` needed this — `Agtr1a GO:0006954`, whose own IGI
+is `REMOVE`d on full text that *is* available. Its comment asserted the canonical gloss
+until `9ce63aa88`, so the block as it now stands is the corrected form, not the defect.
+The other twelve self-seed claims cite annotations their files retain, so the canonical
+gloss holds for them.
+
+Note what carries the `Agtr1a` example: the IGI being **removed**, not the term matching.
+The retained test also catches a case a same-term test would wave through. `Grb2`'s block
+sits on `GO:0007165`, and the experimental row nearest it by term is `GO:0008180 COP9
+signalosome` (IDA, PMID:22561606) — which this very file marks `MARK_AS_OVER_ANNOTATED`,
+so it is precisely what must **not** be cited as grounding. What does ground the block is
+`GO:0005091 guanyl-nucleotide exchange factor adaptor activity` (IDA ×3, all `ACCEPT`), a
+*different* term: the SOS1-recruitment adapter activity that couples receptors to Ras,
+matching the block's own `GO:0007165` → `GO:0007265` refinement.
 
 **Finally, keep the row's own evidence pointing the same way as its verdict.** When an action
 is withdrawn, the `summary` and the `supported_by` have to move with it; otherwise the block

@@ -156,6 +156,9 @@ NEGATION = re.compile(r'\bnot\s+(?:the\s+target|[a-z-]+\s+\S)', re.I)
 # Re-derive:
 #     python3 projects/IBA_REVIEW/shared_reason_groups.py 'genes/*/*/*-ai-review.yaml' \
 #       --classify-labels
+# which prints four quantities: labelled species-scoped sources, of which SELF (the review
+# target), THIRD-PARTY WITH a provenance verb in the comment, and THIRD-PARTY WITHOUT one.
+# Scope it to 'genes/mouse/*/*-ai-review.yaml' for the split IBA_REVIEW.md publishes.
 SPECIES_WORDS = ('mouse', 'rat', 'human', 'Drosophila', 'zebrafish', 'budding-yeast',
                  'fission-yeast', 'fly', 'worm', 'chicken', 'bovine', 'Xenopus',
                  'Arabidopsis', 'yeast', 'Dictyostelium',
