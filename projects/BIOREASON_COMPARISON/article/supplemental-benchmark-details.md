@@ -125,8 +125,8 @@ A distinct supplemental analysis, `supplement_gogpt_overlap_300`, contains 8,871
 | Reference level | Terms in reference | Predictions overlapping | % of 8,871 predictions |
 |---|---:|---:|---:|
 | Raw GOA | 2,954 | 1,035 | 11.7 |
-| Retained/replacement/proposed-new AIGR annotations | 2,761 | 848 | 9.6 |
-| All GO-valued AIGR core-function slots | 1,234 | 351 | 4.0 |
+| Retained/replacement/proposed-new AIGR annotations | 2,760 | 848 | 9.6 |
+| All GO-valued AIGR core-function slots | 1,233 | 351 | 4.0 |
 
 The core-function comparison includes HdeB's GO:0051082 match as an explicitly
 interim representation of in-situ holdase activity pending creation of the general
@@ -162,8 +162,19 @@ by these curation-only updates. SlyD is the exception: its committed GOA snapsho
 refetched, removing exact matches to obsolete `GO:0051082` and the active broad parents
 `GO:0016853` and `GO:0046872`. This reduced the raw and post-review reference totals and
 overlaps by three, while its term-less holdase core reduced the GO-valued core total and
-overlap by one. Thus the recorded denominator changes combine upstream reference
-curation with one explicit committed-snapshot refresh; the GO-GPT prediction set itself
+overlap by one. The CnoX comprehensive review likewise refetched its committed GOA
+snapshot, removing obsolete `GO:0051082` and two stale process rows, which reduced the
+raw reference total by three and the exact overlaps by two; its completed review added
+evidence-backed `GO:0009408` to the post-review set and dropped general redox homeostasis
+from the core, leaving `GO:0051087` as an evidence-backed core activity that GO-GPT did
+not predict.
+Most recently, `BACSU/lipA` followed the obsoletion of `GO:0009107`: both lipoate
+biosynthesis rows now resolve to the replacement `GO:0009249`, which the review already
+carried, so the post-review reference total fell by one distinct term, and the
+core-function slot keyed on the obsolete term was dropped, reducing the GO-valued core
+total by one. Neither exact-overlap count moved, because `GO:0009107` was never in the
+GO-GPT prediction set. Thus the recorded denominator changes combine upstream reference
+curation with two explicit committed-snapshot refreshes; the GO-GPT prediction set itself
 did not change.
 
 ![GO-GPT prediction overlap at three reference levels.](figures/three_level_overlap.png)
