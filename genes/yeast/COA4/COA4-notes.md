@@ -74,20 +74,24 @@ the human review not to assert a molecular function term.
 to that paper, which assayed respiratory chain function generally, but superseded by the
 complex IV–specific IMP rows from focused studies. MODIFY → `GO:0033617`.
 
-**`GO:0005634 nucleus` and `GO:0005737 cytoplasm` (HDA, PMID:14562095).** Both from the
-genome-wide C-terminal GFP localization library. These conflict with everything else known:
-- Coa4 is a 96 aa twin CX9C protein whose import requires the Mia40 relay and the trapping of
-  its two disulfides. A C-terminal GFP fusion on a substrate this small is a well-known cause of
-  failed IMS import, leaving the fusion in the cytosol.
-- Directly contradicted by EXP IMS proteomics, two IDA IMS rows, IBA, IEA, TAS and UniProt.
-- The cytoplasm signal additionally has an innocent explanation: Mia40 substrates genuinely
-  dwell in the cytosol before import — "substrates of Mia40 remain in the cytosol for several
-  minutes" [PMID:23676665, human study of the same pathway].
+**`GO:0005634 nucleus` (HDA, PMID:14562095) — flagged.** From the genome-wide C-terminal GFP
+library. Flagged on conflict grounds, not because the underlying images are unavailable:
+- Coa4 is a twin CX9C substrate of the MIA40-ERV1 relay, and there is no described route by which
+  such a protein reaches the nucleus — import commits it to the IMS, where its disulfides are
+  oxidatively trapped.
+- Contradicted by EXP IMS proteomics, two IDA rows, IBA, IEA, TAS and UniProt, with no other
+  source of any kind placing Coa4 in the nucleus.
+- Most likely a C-terminal GFP fusion that blocked import and was scored outside mitochondria.
 
-Marked `MARK_AS_OVER_ANNOTATED` rather than `REMOVE`. `REMOVE` would be defensible for the
-nucleus row in particular, but the cached record for PMID:14562095 is abstract-only and does not
-name Coa4, so the specific imaging evidence cannot be inspected. Flagged for a curator rather
-than deleted unilaterally.
+Marked `MARK_AS_OVER_ANNOTATED` rather than `REMOVE` so a curator with the original images makes
+the final call. `REMOVE` would be defensible.
+
+**`GO:0005737 cytoplasm` (HDA, PMID:14562095) — accepted, non-core.** Deliberately treated
+differently from the nucleus row. Mia40 substrates genuinely dwell in the cytosol before import —
+"substrates of Mia40 remain in the cytosol for several minutes" [PMID:23676665, human study of the
+same pathway] — so a cytosolic signal here is *expected*, not anomalous. The GFP tag may
+additionally inflate it, but nothing known about Coa4 contradicts a real cytosolic pool, so the
+annotation stands as a correct compartment. Kept non-core because the functional pool is the IMS one.
 
 **`GO:0005743 mitochondrial inner membrane` (IEA).** Consistent with UniProt and with Bestwick's
 "associated with the inner membrane", but in slight tension with the Bax-release IMS proteomics

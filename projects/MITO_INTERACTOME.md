@@ -285,12 +285,17 @@ Three findings from the pathway set that generalize beyond it:
    the faulty provenance but is factually correct, so it is kept non-core with the problem recorded.
    This case seeded [MISCITATION_AUDIT.md](MISCITATION_AUDIT.md), which found it is one of 27 such
    defects already flagged across the repository — 26 of them GOA-sourced.
-2. **A systematic GFP-library artifact.** Nucleus and/or cytoplasm rows from the genome-wide
-   C-terminal GFP library ([PMID:14562095](https://pubmed.ncbi.nlm.nih.gov/14562095/)) appear on
-   COA4, CMC2 and COX23. C-terminal tagging of a small twin CX9C protein blocks MIA40-dependent
-   import and strands the fusion outside mitochondria. Flagged rather than deleted — the cached
-   record is abstract-only — except on COX23, where a genuine IDA independently supports a
-   cytosolic pool, so the compartment call there is sound.
+2. **A GFP-library artifact — but only where biology says so.** Nucleus and/or cytoplasm rows
+   from the genome-wide C-terminal GFP library
+   ([PMID:14562095](https://pubmed.ncbi.nlm.nih.gov/14562095/)) appear on COA4, CMC2 and COX23.
+   Only the **nucleus** calls (COA4, CMC2) are flagged, and on conflict grounds: a twin CX9C
+   MIA40 substrate has no described route to the nucleus, and every other source — EXP IMS
+   proteomics, IDA, IBA, IEA, TAS, UniProt — places these proteins in the intermembrane space.
+   The **cytoplasm** calls are accepted as correct-but-non-core, because Mia40 substrates
+   genuinely dwell in the cytosol before import, so a cytosolic pool is expected rather than
+   anomalous. The governing principle: an annotation is assumed correct unless positive
+   knowledge contradicts it — inability to inspect the underlying evidence is not itself grounds
+   for flagging.
 3. **Four ND molecular functions in a row.** COA4, COX23, CMC2 and PET191 all carry SGD's explicit
    `GO:0003674` "no data" placeholder, and all four are argued to *keep* it. These are accessory
    factors that support metallochaperone action without binding metal themselves, and GO has no
