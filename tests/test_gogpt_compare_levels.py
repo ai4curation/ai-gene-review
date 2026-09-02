@@ -154,8 +154,13 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
         # completed review plus follow-up adds evidence-backed GO:0009408 to the
         # post-review set while removing general redox homeostasis from the core;
         # GO:0051087 remains an evidence-backed core activity and predicted overlap.
-        "post_review": {"overlap": 849, "total": 2761, "pred": 8871},
-        "core": {"overlap": 350, "total": 1230, "pred": 8871},
+        # The AT1G06680 (PSBP1) re-review synthesizes a core_functions block for
+        # the first time: four GO-valued core slots, one of which (GO:0019684)
+        # is a predicted overlap (+4 core total, +1 core overlap). The same
+        # re-review stops retaining GO:0009535 post-review, dropping one
+        # predicted post-review overlap without changing the post-review total.
+        "post_review": {"overlap": 848, "total": 2761, "pred": 8871},
+        "core": {"overlap": 351, "total": 1234, "pred": 8871},
     }
 
 
