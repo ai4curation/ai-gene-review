@@ -16,6 +16,8 @@ Genes where Affinage supplied **none** of the novel references (7): AADACL2, AAD
 
 ## Does recall depend on how well-studied the gene is?
 
+Covers the 90 of 91 scored genes with at least one novel reference; a gene whose references were all GOA-supplied has no recall to measure and is excluded.
+
 | curation depth | genes | novel refs | supplied | recall |
 |----------------|------:|-----------:|---------:|-------:|
 | dark (0-2 GOA refs) | 25 | 167 | 87 | 52% |

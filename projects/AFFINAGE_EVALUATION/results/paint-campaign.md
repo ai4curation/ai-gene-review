@@ -66,8 +66,8 @@ dark gene, is almost never in the title.
 
 The sorted per-gene table invites a tempting misreading. Genes at the 100%-recall
 end (RAD51C, RFWD3, SLX4, UBE2T, XRCC2) are all well-characterised, and genes at
-the 0% end (AADACL2/3/4, ACP7, ACTL10, ACTR8, ACTR1B, AGFG1) are all obscure,
-which looks like a clean story about the provider failing on dark genes.
+the 0% end (AADACL2/3/4, ACP7, ACTL10, ACTR8, ACTR1B) are all obscure, which looks
+like a clean story about the provider failing on dark genes.
 
 It is an artifact of small denominators. Those 100% genes had one to five novel
 references each; a gene with a single novel reference scores 0% or 100% and
@@ -127,12 +127,25 @@ are written down somewhere.
 
 ## Limits of this analysis
 
-Recall is measured against a single finished review per gene, which is itself an
-imperfect standard — a reference neither Affinage nor the reviewer found is
-invisible here, so 52% is an upper bound on true recall.
+**52% is an upper bound, for two reasons, and the second is the larger one.**
+
+The reviews were written *with the Affinage report in hand* — 56 of the 91 cite it
+as a source. The reference set being scored is therefore partly **caused by** the
+thing being scored: a paper Affinage surfaced is more likely to end up in the
+review than an equally relevant paper it did not, so the numerator is enriched by
+construction. Measuring recall against a reviewer who read the report is not the
+same as measuring it against an independent literature search, and the honest
+reading of 52% is "of the references that ended up mattering, Affinage had already
+supplied about half" — not "Affinage finds half of what is findable." A clean
+estimate would need reviews written blind to the report.
+
+Recall is also measured against a single finished review per gene, which is an
+imperfect standard in the other direction: a reference neither Affinage nor the
+reviewer found is invisible here.
 
 Reference sets are compared by PMID string matching, so a paper cited in the
-report by DOI or title alone is scored as a miss.
+report by DOI or title alone would score as a miss. In this cohort that caveat
+never bites — no Affinage report cites by DOI anywhere.
 
 The 91 scored genes are those with a committed Affinage report, not a random
 sample of the campaign. Genes where the provider errored and the reviewer moved

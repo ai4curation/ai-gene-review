@@ -38,9 +38,10 @@ We also report ``unused`` = affinage - review: returned references the finished
 review never cited. That is the precision-side cost, and it is expected to be
 non-zero for any literature sweep.
 
-Nothing is hard-coded. Every number derives from files committed in the repo.
-Genes with no Affinage report, or with an empty report, are reported as such —
-an empty return is a real and important result, not an error to be skipped.
+No result is hard-coded: every number derives from files committed in the repo,
+and the cohort, species and output directory are all arguments. Genes with no
+Affinage report, or with an empty report, are reported as such — an empty return
+is a real and important result, not an error to be skipped.
 
 Usage
 -----
@@ -62,12 +63,24 @@ import typer
 
 HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
-GENES = REPO / "genes" / "human"
-OUTDIR = HERE / "results" / "paint-campaign"
+DEFAULT_SPECIES = "human"
+DEFAULT_OUTDIR = HERE / "results" / "paint-campaign"
 
-# PMIDs are written as "PMID:12345678" in reviews and either that or a bare
-# "PMID 12345678" / "[PMID:12345678]" in provider reports.
-PMID_RE = re.compile(r"PMID:?\s*(\d{6,9})")
+# Rebound by main() when --species / --outdir are given; the defaults describe the
+# committed cohort rather than limiting the script to it.
+GENES = REPO / "genes" / DEFAULT_SPECIES
+OUTDIR = DEFAULT_OUTDIR
+
+# PMIDs appear as "PMID:12345678" and, rarely, as "PMID: 12345678".
+#
+# The digit floor cannot simply be dropped to catch pre-1975 four- and five-digit
+# PMIDs, because review prose contains phrases like "Queried by PMID: 3
+# annotations" where the number is a count, not an identifier — widening to
+# \d{1,9} silently turns three such phrases in ACTA1 into citations. Spacing is
+# what separates the two cases in this corpus: every short PMID is written
+# unspaced, and every spaced occurrence is a full-length id. So allow whitespace
+# only for ids long enough to be unambiguous.
+PMID_RE = re.compile(r"PMID:\s*(\d{6,9})\b|PMID:(\d{4,5})\b")
 
 app = typer.Typer(add_completion=False, help=__doc__)
 
@@ -80,19 +93,37 @@ def pmids_in(path: Path) -> set[str]:
     >>> _ = (d / "x.md").write_text("see PMID:12345678 and PMID: 987654 again PMID:12345678")
     >>> sorted(pmids_in(d / "x.md"))
     ['12345678', '987654']
+
+    Pre-1975 PMIDs are four or five digits and are kept when written unspaced:
+
+    >>> _ = (d / "old.md").write_text("classic PMID:4874 and PMID:24417")
+    >>> sorted(pmids_in(d / "old.md"))
+    ['24417', '4874']
+
+    A spaced short number is prose, not a citation, and must not be counted:
+
+    >>> _ = (d / "prose.md").write_text("Queried by PMID: 3 annotations, 2 on ACTA1")
+    >>> pmids_in(d / "prose.md")
+    set()
+
     >>> pmids_in(d / "missing.md")
     set()
     """
     if not path.is_file():
         return set()
-    return set(PMID_RE.findall(path.read_text(encoding="utf-8", errors="replace")))
+    text = path.read_text(encoding="utf-8", errors="replace")
+    # Two alternatives, so each match yields one populated group and one empty.
+    return {hit for groups in PMID_RE.findall(text) for hit in groups if hit}
 
 
 def goa_pmids(path: Path) -> set[str]:
-    """PMIDs in the GOA reference column — references the reviewer is *given*.
+    """PMIDs anywhere in the GOA file — the references the reviewer is *given*.
 
-    The GOA TSV reference column holds values like ``PMID:9560228`` or
-    ``GO_REF:0000033``; only the former count here.
+    This is a whole-file scan, not a parse of the ``REFERENCE`` column. In
+    practice the two are equivalent: no ``*-goa.tsv`` in this repo carries a PMID
+    outside that column, and the other reference values are ``GO_REF:*``, which
+    carry no PMID. Scanning the whole file also keeps the count right if a PMID
+    ever appears in a with/from field.
 
     >>> import tempfile, pathlib
     >>> d = pathlib.Path(tempfile.mkdtemp())
@@ -147,6 +178,9 @@ def analyse(symbol: str) -> dict:
 def gates_flag(report: Path) -> str:
     """Read the ``gates_passed`` front-matter value, or 'absent' if the field is missing.
 
+    The scan is bounded to the leading ``---`` block so that prose mentioning
+    ``gates_passed`` cannot win, and a key without a colon cannot raise.
+
     >>> import tempfile, pathlib
     >>> d = pathlib.Path(tempfile.mkdtemp())
     >>> _ = (d / "a.md").write_text("---\\ngates_passed: True\\n---\\n")
@@ -155,13 +189,39 @@ def gates_flag(report: Path) -> str:
     >>> _ = (d / "b.md").write_text("---\\ntitle: x\\n---\\n")
     >>> gates_flag(d / "b.md")
     'absent'
+
+    Body text is not front matter, and a colon-less line is ignored:
+
+    >>> _ = (d / "c.md").write_text("---\\ntitle: x\\n---\\nwe discuss gates_passed here\\n")
+    >>> gates_flag(d / "c.md")
+    'absent'
+    >>> _ = (d / "d.md").write_text("---\\ngates_passed\\n---\\n")
+    >>> gates_flag(d / "d.md")
+    'absent'
     """
     if not report.is_file():
         return "no_report"
-    for line in report.read_text(encoding="utf-8", errors="replace").splitlines():
-        if line.strip().lower().startswith("gates_passed"):
+    for line in front_matter(report.read_text(encoding="utf-8", errors="replace")):
+        if line.strip().lower().startswith("gates_passed") and ":" in line:
             return line.split(":", 1)[1].strip()
     return "absent"
+
+
+def front_matter(text: str) -> list[str]:
+    """Lines inside the leading ``---`` block, or [] when there is no front matter.
+
+    >>> front_matter("---\\na: 1\\nb: 2\\n---\\nbody\\n")
+    ['a: 1', 'b: 2']
+    >>> front_matter("no front matter here\\n")
+    []
+    """
+    lines = text.splitlines()
+    if not lines or lines[0].strip() != "---":
+        return []
+    for i, line in enumerate(lines[1:], start=1):
+        if line.strip() == "---":
+            return lines[1:i]
+    return []
 
 
 def ratio(num: int, den: int) -> float | None:
@@ -197,7 +257,13 @@ def aggregate(rows: list[dict]) -> dict:
         "n_genes_total": len(rows),
         "total_affinage_pmids": tot_aff,
         "total_review_pmids": tot_rev,
-        "total_goa_pmids": sum(r["n_goa"] for r in scored),
+        # The count of *review* PMIDs that GOA already supplied, i.e. Σ|rev ∩ goa|.
+        # Derived by subtraction so the headline table always adds up. Summing
+        # per-gene |goa| would give the same number only while goa ⊆ rev for every
+        # gene (true today, since a review must cover every GOA annotation, but
+        # nothing enforces it) and would silently overstate the GOA share the first
+        # time a review omitted a GOA reference.
+        "total_goa_pmids": tot_rev - tot_novel,
         "total_novel_pmids": tot_novel,
         "total_hits": tot_hits,
         "pooled_novel_recall": ratio(tot_hits, tot_novel),
@@ -294,6 +360,11 @@ def write_outputs(rows: list[dict], summary: dict) -> None:
         "",
         "## Does recall depend on how well-studied the gene is?",
         "",
+        f"Covers the {sum(a['genes'] for a in summary['by_curation_depth'].values())} "
+        f"of {summary['n_genes_scored']} scored genes with at least one novel "
+        "reference; a gene whose references were all GOA-supplied has no recall to "
+        "measure and is excluded.",
+        "",
         "| curation depth | genes | novel refs | supplied | recall |",
         "|----------------|------:|-----------:|---------:|-------:|",
     ]
@@ -334,8 +405,20 @@ def main(
         False, "--all", help="Score every gene with a report."
     ),
     genes_file: Path = typer.Option(None, "--genes-file", help="One symbol per line."),
+    species: str = typer.Option(
+        DEFAULT_SPECIES, "--species", help="Directory under genes/ to score."
+    ),
+    outdir: Path = typer.Option(
+        DEFAULT_OUTDIR, "--outdir", help="Where to write per-gene.json / summary.*"
+    ),
 ) -> None:
-    """Score Affinage retrieval recall and write results/paint-campaign/."""
+    """Score Affinage retrieval recall and write the results triple."""
+    global GENES, OUTDIR
+    GENES = REPO / "genes" / species
+    OUTDIR = outdir
+    if not GENES.is_dir():
+        raise typer.BadParameter(f"no such species directory: {GENES}")
+
     symbols = list(genes or [])
     if genes_file:
         symbols += [
