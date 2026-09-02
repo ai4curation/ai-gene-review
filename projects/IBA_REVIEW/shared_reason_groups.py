@@ -24,6 +24,8 @@ Usage:  python3 projects/IBA_REVIEW/shared_reason_groups.py [glob ...] [--action
 Defaults to genes/mouse/*/*-ai-review.yaml.
   --action REMOVE   restrict to rows whose review.action is REMOVE (the scoped figure)
   --list            print each qualifying group: rows, genes, and the reason's first line
+  --check-coverage  check MOD_ORGANISM / ORGANISM_WORDS / SPECIES_WORDS against the
+                    corpus and report gaps in both directions; exit 1 if any.
   --classify-labels ignore the grouping entirely and print the propagation_review
                     source_label split instead (self / third-party, provenanced or not),
                     which projects/IBA_REVIEW.md quotes. It lives here because the
@@ -81,10 +83,30 @@ def collect(paths, action=None):
 # the label says: an MGI id in genes/human is the mouse ortholog no matter how the label
 # is written. genes/human and genes/ECOLI appear in no value, which is correct -- neither
 # has a MOD in this list, so every MOD-sourced row in those directories is third-party.
+#
+# Keys are the prefixes the CORPUS writes, not a roster of model-organism databases:
+#     grep -rhoE 'source_id: [A-Za-z0-9_.-]+:' genes/ --include='*-ai-review.yaml' \
+#       | sort | uniq -c | sort -rn
+# `--check-coverage` runs that and reports both directions. Deriving MOD_PREFIXES from
+# this map makes the two agree with EACH OTHER and checks neither against the corpus, so
+# a namespace missing here is silently dropped by classify_labels' startswith filter
+# before the gate is ever consulted -- which is how AGI_LocusCode (22 uses, 15 of them
+# labelled) went unmeasured, and how Xenbase sat here with 0 uses and a genes/XENLA
+# directory that does not exist.
 MOD_ORGANISM = {'MGI': 'mouse', 'RGD': 'rat', 'SGD': 'yeast', 'FB': 'DROME',
-                'WB': 'worm', 'ZFIN': 'DANRE', 'TAIR': 'ARATH', 'PomBase': 'SCHPO',
-                'dictyBase': 'DICDI', 'CGD': 'CANAL', 'Xenbase': 'XENLA'}
+                'WB': 'worm', 'ZFIN': 'DANRE', 'PomBase': 'SCHPO',
+                'dictyBase': 'DICDI', 'CGD': 'CANAL',
+                # Both spellings of the Arabidopsis locus: PAINT writes
+                # AGI_LocusCode:AT2G17800 where GOA writes TAIR:locus:2827916. Same
+                # both-written-forms problem as the binomials, one field over.
+                'TAIR': 'ARATH', 'AGI_LocusCode': 'ARATH'}
 MOD_PREFIXES = tuple(f'{prefix}:' for prefix in MOD_ORGANISM)
+# Prefixes that ARE species-scoped MOD gene ids, so a missing one is a real gap.
+# UniProtKB, PANTHER, InterPro, GO, RHEA, EC and ensembl are identifiers too, but
+# none names a gene in exactly one species, which is the gate's whole basis.
+_MOD_SHAPED = frozenset({'MGI', 'RGD', 'SGD', 'FB', 'WB', 'ZFIN', 'TAIR', 'PomBase',
+                         'dictyBase', 'CGD', 'Xenbase', 'AGI_LocusCode', 'MGI:MGI',
+                         'FlyBase', 'WormBase', 'Araport', 'ASPGD', 'PseudoCAP'})
 SELF_MARKER = re.compile(r"this gene|the review target itself|the target's own", re.I)
 NEGATION = re.compile(r'\bnot\s+(?:the\s+target|[a-z-]+\s+\S)', re.I)
 # Every species word the corpus uses in a source_label. The TARGET organism's own words
@@ -108,15 +130,27 @@ SPECIES_WORDS = ('mouse', 'rat', 'human', 'Drosophila', 'zebrafish', 'budding-ye
                  # "melanogaster") is not one, so those are deliberately absent. That line
                  # is what keeps 'Drosophila' -- a real written form -- while excluding
                  # 'melanogaster', where a "changed no row" test would drop both.
+                 #
+                 # The abbreviations are swept from the labels rather than written out:
+                 #     grep -rh 'source_label:' genes/ --include='*-ai-review.yaml' \
+                 #       | grep -oE '\b[A-Z]\. [a-z]+' | sort | uniq -c | sort -rn
+                 # A first pass claimed to carry "both forms of every binomial" while
+                 # missing five of the fourteen that sweep returns. `--check-coverage`
+                 # re-runs it.
                  'Mus musculus', r'M\. musculus',
                  'Rattus norvegicus', r'R\. norvegicus',
-                 'Homo sapiens', 'Saccharomyces cerevisiae', r'S\. cerevisiae',
+                 'Homo sapiens', r'H\. sapiens',
+                 'Saccharomyces cerevisiae', r'S\. cerevisiae',
                  'Schizosaccharomyces pombe', r'S\. pombe',
                  'Caenorhabditis elegans', r'C\. elegans',
                  'Drosophila melanogaster', r'D\. melanogaster',
                  'Dictyostelium discoideum', r'D\. discoideum',
                  'Candida albicans', r'C\. albicans',
-                 'Escherichia coli', r'E\. coli', 'Mycobacterium tuberculosis',
+                 'Escherichia coli', r'E\. coli',
+                 'Mycobacterium tuberculosis', r'M\. tuberculosis',
+                 'Arabidopsis thaliana', r'A\. thaliana',
+                 'Trypanosoma brucei', r'T\. brucei',
+                 'Aspergillus nidulans', r'A\. nidulans',
                  'Plasmodium falciparum', 'Sus scrofa', 'Gallus gallus', 'Danio rerio')
 # genes/<organism>/ -> every word a label may use for THAT organism. Several directories
 # have more than one: genes/yeast labels say "budding-yeast" and "S. cerevisiae" as well
@@ -138,7 +172,8 @@ ORGANISM_WORDS = {
     'DICDI': ('Dictyostelium', 'Dictyostelium discoideum', r'D\. discoideum'),
     'ECOLI': ('Escherichia coli', r'E\. coli'),
     'DROME': ('Drosophila', 'fly', 'Drosophila melanogaster', r'D\. melanogaster'),
-    'ARATH': ('Arabidopsis',), 'CANAL': ('Candida albicans', r'C\. albicans'),
+    'ARATH': ('Arabidopsis', 'Arabidopsis thaliana', r'A\. thaliana'),
+    'CANAL': ('Candida albicans', r'C\. albicans'),
     'MYCTU': ('Mycobacterium tuberculosis',), 'DANRE': ('zebrafish', 'Danio rerio'),
     'CHICK': ('chicken', 'Gallus gallus'),
     # Species names taken from each directory's own taxon.label, not from memory.
@@ -186,10 +221,7 @@ def is_self_label(label, gene_symbol, organism='mouse'):
     own = ORGANISM_WORDS.get(organism, (organism,))
     own_lower = {w.replace('\\', '').lower() for w in own}
     foreign_words = [w for w in SPECIES_WORDS if w.replace('\\', '').lower() not in own_lower]
-    # Longest first: otherwise "yeast" matches inside "fission-yeast" (the hyphen is not
-    # a word character), and a SCHPO self-label would be filed foreign.
-    foreign = re.compile(r'(?<!\w)(' + '|'.join(sorted(foreign_words, key=len, reverse=True))
-                         + r')(?![\w-])', re.I)
+    foreign = re.compile(r'(?<!\w)(' + '|'.join(foreign_words) + r')(?!\w)', re.I)
     if NEGATION.search(label) or foreign.search(label):
         return False
     if SELF_MARKER.search(label):
@@ -257,6 +289,50 @@ def classify_labels(paths):
             f"'genes/<organism>/' segment, e.g. {unresolved[0]}. Pass a glob rooted at "
             f"the repository, not one relative to genes/.")
     return selfs, prov, bare
+
+
+def check_coverage(paths):
+    """Report where MOD_ORGANISM, ORGANISM_WORDS and SPECIES_WORDS miss the corpus.
+
+    Both maps were written from rosters -- a list of MODs, a taxonomy -- rather than from
+    what the reviews actually write, and each was wrong in both directions: a namespace
+    used 22 times absent, one used 0 times present; four label-carrying directories
+    unmapped, two mapped directories nonexistent. Deriving MOD_PREFIXES from MOD_ORGANISM
+    made the two agree with each other and checked neither against the corpus, so the
+    missing namespace was dropped by classify_labels' filter BEFORE the gate could see it.
+
+    Scanned as text, not parsed: this walks the whole corpus and only needs the shapes.
+    """
+    sid_re = re.compile(r"source_id:\s*([A-Za-z0-9_.-]+):")
+    label_re = re.compile(r"source_label:\s*(.+)")
+    abbrev_re = re.compile(r"(?<!\w)([A-Z]\. [a-z]+)")
+    prefixes, label_dirs, abbrevs = Counter(), set(), Counter()
+    for path in paths:
+        organism = organism_from_path(path)
+        text = open(path, errors="replace").read()
+        prefixes.update(sid_re.findall(text))
+        for label in label_re.findall(text):
+            label_dirs.add(organism)
+            abbrevs.update(abbrev_re.findall(label))
+
+    known_species = {w.replace("\\", "").lower()
+                     for w in SPECIES_WORDS + tuple(w for v in ORGANISM_WORDS.values()
+                                                    for w in v)}
+    findings = []
+    # A prefix this map does not know is invisible to the gate AND to the measurement.
+    for prefix, n in sorted(prefixes.items(), key=lambda kv: -kv[1]):
+        if prefix in MOD_ORGANISM or prefix not in _MOD_SHAPED:
+            continue
+        findings.append(f"MOD_ORGANISM is missing {prefix!r}, used {n} times")
+    for prefix in sorted(MOD_ORGANISM):
+        if not prefixes.get(prefix):
+            findings.append(f"MOD_ORGANISM has {prefix!r}, which the corpus never uses")
+    for organism in sorted(d for d in label_dirs if d and d not in ORGANISM_WORDS):
+        findings.append(f"ORGANISM_WORDS is missing {organism!r}, which carries labels")
+    for abbrev, n in sorted(abbrevs.items(), key=lambda kv: -kv[1]):
+        if abbrev.lower() not in known_species:
+            findings.append(f"SPECIES_WORDS is missing {abbrev!r}, written {n} times")
+    return findings
 
 
 def _known_actions():
@@ -365,9 +441,13 @@ def _self_test():
         return "a Mus musculus ortholog in a human file must NOT count as a self-label"
     if not is_self_label("Acrbp (Mus musculus)", "Acrbp", "mouse"):
         return "on a mouse review, 'Acrbp (Mus musculus)' IS the self-label"
-    # "yeast" must not match inside "fission-yeast".
+    # What makes this pass is 'yeast' being one of SCHPO's OWN words above, so it never
+    # enters the foreign alternation. An earlier revision credited a longest-first sort
+    # and a (?![\w-]) lookahead; mutation showed both unexercised -- the arm stayed green
+    # and no corpus row moved with either removed -- so they are gone and this says what
+    # actually holds it up.
     if not is_self_label("fission-yeast mim1", "mim1", "SCHPO"):
-        return "'yeast' must not match inside 'fission-yeast' for a SCHPO target"
+        return "'yeast' must be one of SCHPO's own words, not a foreign match"
     if is_self_label("budding-yeast CLB5", "CLB5", "SCHPO"):
         return "'budding-yeast' is still foreign for a SCHPO target"
 
@@ -397,11 +477,26 @@ def _self_test():
 
     # Every ORGANISM_WORDS key must name a real genes/<organism>/ directory. Skipped
     # rather than failed when genes/ is absent (wrong cwd), matching _known_actions.
+    # MOD_ORGANISM VALUES get the same treatment. The first version of this arm checked
+    # ORGANISM_WORDS only, and so could not see 'Xenbase': 'XENLA' one screen up -- the
+    # identical invented-directory defect, in the map the gate derives everything from.
     if os.path.isdir("genes"):
-        missing = sorted(k for k in ORGANISM_WORDS if not os.path.isdir(f"genes/{k}"))
+        missing = sorted(
+            {k for k in ORGANISM_WORDS if not os.path.isdir(f"genes/{k}")}
+            | {v for v in MOD_ORGANISM.values() if not os.path.isdir(f"genes/{v}")})
         if missing:
-            return ("ORGANISM_WORDS keys that are not directories under genes/: "
-                    + ", ".join(missing))
+            return ("ORGANISM_WORDS keys / MOD_ORGANISM values that are not directories "
+                    "under genes/: " + ", ".join(missing))
+
+    # AGI_LocusCode is the Arabidopsis locus spelling, so it must gate like TAIR.
+    if not mod_source_is_foreign("AGI_LocusCode:AT2G15570", "ECOLI"):
+        return "an Arabidopsis locus code in genes/ECOLI is foreign"
+    if mod_source_is_foreign("AGI_LocusCode:AT2G15570", "ARATH"):
+        return "an Arabidopsis locus code in genes/ARATH is the target's own namespace"
+    if not is_self_label("A. thaliana AGD1", "AGD1", "ARATH"):
+        return "'A. thaliana' is ARATH's own species word"
+    if is_self_label("A. thaliana AGD1", "AGD1", "human"):
+        return "'A. thaliana' must read as foreign in a human review"
 
     if organism_from_path("genes/yeast/MIM1/MIM1-ai-review.yaml") != "yeast":
         return "organism_from_path must read the segment after genes/"
@@ -422,9 +517,10 @@ def _self_test():
     if action_error("ACCEPT", seen, set()) is None:
         return "an unreadable schema must still reject an action with no rows"
 
-    if parse_argv(["--action", "REMOVE", "--list", "g/*.yaml"]) != (["g/*.yaml"], "REMOVE", True, False):
+    if parse_argv(["--action", "REMOVE", "--list", "g/*.yaml"]) != (
+            ["g/*.yaml"], "REMOVE", True, False, False):
         return "parse_argv must return patterns, action and --list as given"
-    if parse_argv([]) != ([], None, False, False):
+    if parse_argv([]) != ([], None, False, False, False):
         return "an empty argv must parse to no patterns and no action"
     if not isinstance(parse_argv(["--action"]), str):
         return "a trailing --action must be an error, not a whole-corpus run"
@@ -438,14 +534,14 @@ def _self_test():
 
 
 def parse_argv(argv):
-    """Return (patterns, action, show, classify) or a str explaining why argv is unusable.
+    """Return (patterns, action, show, classify, coverage) or a str explaining argv.
 
     A pure function for the same reason action_error() is one: an inline guard has
     nothing to anchor it, so a refactor can drop it while the self-test stays green.
     The two guards that matter here both turn a mistyped flag into a silent
     whole-corpus run: "--action" as the last token, and an empty value.
     """
-    action, show, classify, patterns = None, False, False, []
+    action, show, classify, coverage, patterns = None, False, False, False, []
     rest = list(argv)
     while rest:
         arg = rest.pop(0)
@@ -453,6 +549,8 @@ def parse_argv(argv):
             show = True
         elif arg == "--classify-labels":
             classify = True
+        elif arg == "--check-coverage":
+            coverage = True
         elif arg == "--action":
             if not rest:
                 return "--action needs a value, e.g. --action REMOVE"
@@ -465,7 +563,7 @@ def parse_argv(argv):
             patterns.append(arg)
     if action is not None and not action.strip():
         return "--action: empty value. Give an action, e.g. --action REMOVE"
-    return patterns, action, show, classify
+    return patterns, action, show, classify, coverage
 
 
 def main(argv):
@@ -478,12 +576,19 @@ def main(argv):
     if isinstance(parsed, str):
         print(parsed)
         return 2
-    patterns, action, show, classify = parsed
+    patterns, action, show, classify, coverage = parsed
 
     paths = sorted({p for pattern in (patterns or [DEFAULT_GLOB]) for p in glob.glob(pattern)})
     if not paths:
         print(f"no files matched: {' '.join(patterns or [DEFAULT_GLOB])}")
         return 2
+
+    if coverage:
+        findings = check_coverage(paths)
+        for finding in findings:
+            print(f"  {finding}")
+        print(f"{len(paths)} files: {len(findings)} coverage gap(s)")
+        return 1 if findings else 0
 
     if classify:
         selfs, prov, bare = classify_labels(paths)

@@ -512,8 +512,8 @@ cite a mouse ortholog whose label the species list did not cover — and chasing
 through that list was the wrong layer. A MOD accession names a gene in exactly one
 species, so `MGI:` in `genes/human` is the mouse ortholog *however the label reads* — and
 because `MOD_PREFIXES` is derived from a `MOD_ORGANISM` map rather than listed separately,
-every MOD-prefixed source resolves. `mod_source_is_foreign()` applies that first; of the
-714 labelled MOD sources across the whole corpus it settles **597**, leaving **117**
+every prefix in that map resolves. `mod_source_is_foreign()` applies that first; of the
+729 labelled MOD sources across the whole corpus it settles **612**, leaving **117**
 same-species rows to `is_self_label()`, whose live remaining job is separating the target
 from its own **paralogs** ("mouse Bax" in `Bcl2`, "Dictyostelium cAR1-type paralog" in
 `carD`: 77 of the 117). The word list is now the fallback, not the decision.
@@ -526,6 +526,33 @@ musculus)" and `ADAMTSL5`'s "Adamtsl5 (M. musculus)" the word list does now catc
 accession catches them too and would have without the patch. Afterwards `genes/human` has
 **0** MOD self-labels, which is right *by construction*: no MOD namespace maps to human, so a
 human review's own annotation can never arrive under one.
+
+**Deriving one list from another checks it against nothing.** `MOD_PREFIXES` is derived
+from `MOD_ORGANISM`, which makes the two agree with *each other* and neither with the
+corpus — and `MOD_ORGANISM` was itself written from a roster of model-organism databases.
+It was wrong in both directions. `AGI_LocusCode` is used **22 times, 15 of them on labelled
+sources**, and was absent: because the derived `MOD_PREFIXES` gates `classify_labels`'
+`startswith` filter, those rows were discarded *before* `mod_source_is_foreign()` could
+see them, so they were missing from all four buckets and from the denominator. It is not
+an exotic namespace — it is the Arabidopsis locus spelling of the species `TAIR` already
+maps to (`AGI_LocusCode:AT2G17800` where GOA writes `TAIR:locus:2827916`), i.e. the same
+both-written-forms problem as `Mus musculus` / `M. musculus`, one field over. In the other
+direction `Xenbase` sat in the map with **0** uses and a `genes/XENLA` value that is not a
+directory — the identical invented-entry defect described below, in the map the gate
+derives everything from, and the arm written to catch that class checked only the sibling
+map. Adding the one and dropping the other moves the corpus denominator 714 → **729**
+(gate 597 → 612) and leaves mouse untouched.
+
+`--check-coverage` now runs the corpus greps for all three lists and reports gaps in both
+directions, so "the list matches the corpus" is something to run rather than something to
+trust:
+
+```
+python3 projects/IBA_REVIEW/shared_reason_groups.py 'genes/*/*/*-ai-review.yaml' --check-coverage
+```
+
+It reports 0 gaps over 4466 files, and re-introducing any of the four original defects
+makes either it or the self-test fail.
 
 `ORGANISM_WORDS` is keyed by directory, and its scope is the directories that carry a
 `source_label` — 16 of the 181 under `genes/`, enumerable with
