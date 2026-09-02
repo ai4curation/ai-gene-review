@@ -112,11 +112,24 @@ SPECIES_SCOPED_PREFIXES = tuple(f'{prefix}:' for prefix in
                                 tuple(MOD_ORGANISM) + tuple(ACCESSION_ORGANISM))
 MOD_PREFIXES = SPECIES_SCOPED_PREFIXES  # historical name, kept for readability at callers
 # Prefixes that COULD be species-scoped, so one the corpus writes and neither map
-# resolves is a real gap rather than an uninteresting one. UniProtKB, PANTHER, InterPro,
-# GO, RHEA and EC are identifiers too, but none pins a species without a lookup.
-# check_coverage reports what it declines rather than skipping silently, so this roster
-# cannot quietly narrow what the checker is allowed to find -- the failure that put
-# ensembl outside it.
+# resolves is a real gap rather than an uninteresting one. check_coverage PRINTS what it
+# declines rather than skipping silently, so this roster cannot quietly narrow what the
+# checker is allowed to find -- the failure that put ensembl outside it.
+#
+# What gets declined, for a reader checking that printed list by eye: UniProtKB, PANTHER,
+# InterPro, GO, RHEA and EC are gene- or entity-identifiers that pin no species without a
+# lookup. The rest are not gene identifiers at all -- UniProtKB-SubCell is a location,
+# ARBA an annotation rule, PMID a paper, ChEBI a chemical, GO_REF a reference, Reactome
+# and UniPathway pathways, ComplexPortal a complex, tfclass a TF class, gomodel a GO-CAM.
+# That is all sixteen the checker currently prints, and none of the ten could name a gene
+# in any species, so none is a candidate for the gate.
+#
+# Six entries here are in NEITHER map nor the corpus: Xenbase, FlyBase, WormBase, Araport,
+# ASPGD, PseudoCAP. That is deliberate and is the safe direction -- if one ever appears in
+# a review it becomes a reported finding rather than a silent decline. In particular
+# Xenbase belongs here even though the previous commit removed it from MOD_ORGANISM as
+# invented-from-a-roster: there it asserted a genes/XENLA directory that does not exist,
+# here it only says "if this shows up, tell me".
 _SPECIES_SCOPED_SHAPED = frozenset({'MGI', 'RGD', 'SGD', 'FB', 'WB', 'ZFIN', 'TAIR',
                                     'PomBase', 'dictyBase', 'CGD', 'Xenbase',
                                     'AGI_LocusCode', 'ensembl', 'FlyBase', 'WormBase',
@@ -128,13 +141,21 @@ NEGATION = re.compile(r'\bnot\s+(?:the\s+target|[a-z-]+\s+\S)', re.I)
 # genes/rat. Written from the labels that exist, not from a taxonomy: a species the corpus
 # has not yet named is simply not matched, which fails toward self rather than away.
 #
-# Since MOD_PREFIXES is DERIVED from MOD_ORGANISM, the accession gate now resolves every
-# cross-species row before the label is read: of 714 labelled MOD sources it decides 597,
-# leaving 117 same-species rows to the predicate below. So this list no longer carries the
-# foreign-species decision -- what the predicate still does, on those 117, is separate the
-# target from its own PARALOGS ("mouse Bax" in Bcl2, "Dictyostelium cAR1-type paralog" in
-# carD: 77 of the 117). Keep the list as the fallback and as what makes is_self_label
-# meaningful standalone, but do not grow it expecting it to decide anything.
+# The accession gate (MOD_ORGANISM and ACCESSION_ORGANISM together) resolves every
+# CROSS-species row before the label is read, so this list no longer carries the
+# foreign-species decision. What the predicate still does, on the same-species rows the
+# gate leaves it, is separate the target from its own PARALOGS -- "mouse Bax" in Bcl2,
+# "Dictyostelium cAR1-type paralog" in carD. Keep the list as the fallback and as what
+# makes is_self_label meaningful standalone, but do not grow it expecting it to decide.
+#
+# No figures here on purpose. An earlier version quoted a denominator and the split, and
+# both went stale twice in two commits -- AGI_LocusCode moved them, then ensembl did --
+# while the sentence explaining them still asserted that MOD_PREFIXES derives from
+# MOD_ORGANISM alone, which is exactly what adding ACCESSION_ORGANISM falsified. A
+# superseded number inside the file that computes it is the worst place to keep one.
+# Re-derive:
+#     python3 projects/IBA_REVIEW/shared_reason_groups.py 'genes/*/*/*-ai-review.yaml' \
+#       --classify-labels
 SPECIES_WORDS = ('mouse', 'rat', 'human', 'Drosophila', 'zebrafish', 'budding-yeast',
                  'fission-yeast', 'fly', 'worm', 'chicken', 'bovine', 'Xenopus',
                  'Arabidopsis', 'yeast', 'Dictyostelium',
