@@ -12,6 +12,7 @@ that breaks the correspondence fails loudly.
 
 from __future__ import annotations
 
+import doctest
 import json
 import re
 import sys
@@ -26,7 +27,9 @@ WRITEUP = PROJECT_DIR / "results" / "paint-campaign.md"
 
 sys.path.insert(0, str(PROJECT_DIR))
 
-from retrieval_recall import band, pmids_in  # noqa: E402
+# The script lives under projects/, not in the installed package, so it is
+# importable only via the sys.path insert above and mypy cannot resolve it.
+from retrieval_recall import band, pmids_in  # type: ignore[import-not-found] # noqa: E402
 
 
 @pytest.fixture(scope="module")
@@ -90,24 +93,56 @@ def test_zero_recall_genes_are_exactly_those_with_no_hits(
 
 
 def test_narrative_zero_recall_list_matches_generated_data(
-    summary: dict, writeup: str
+    summary: dict, by_gene: dict[str, dict], writeup: str
 ) -> None:
     """No gene may be named as zero-recall in prose unless the data says so.
 
     The AGFG1 finding: the write-up listed it among the 0% genes while the table
     scored it 7% (1 hit of 14 novel references).
+
+    Every symbol in the sentence is checked, not a hardcoded shortlist, and the
+    anchor is required to match — an unfindable anchor fails rather than passing
+    on an empty set.
     """
-    listed = set(re.findall(r"\b(?:AADACL[0-9]|AC[PT][A-Z0-9]*|AGFG[0-9])\b", writeup))
-    claimed_zero = {
-        name for name in listed if f"{name}" in _zero_recall_sentence(writeup)
-    }
-    assert claimed_zero <= set(summary["zero_recall_genes"])
+    named = genes_named(zero_recall_sentence(writeup)) & set(by_gene)
+    assert named, "no known gene symbols parsed out of the 0%-recall sentence"
+    assert named <= set(summary["zero_recall_genes"])
 
 
-def _zero_recall_sentence(writeup: str) -> str:
-    """The paragraph naming the 0%-recall end, or '' if the phrasing changed."""
-    match = re.search(r"at the 0% end \(([^)]*)\)", writeup)
-    return match.group(1) if match else ""
+def zero_recall_sentence(writeup: str) -> str:
+    """The parenthesised gene list naming the 0%-recall end.
+
+    Raises rather than returning '' when the anchor cannot be found: a guard that
+    silently disarms itself on a prose edit is worse than no guard, and prose
+    edits are the side that produced the AGFG1 defect.
+    """
+    match = re.search(r"at the (?:0%|zero-recall) end \(([^)]*)\)", writeup)
+    if match is None:
+        raise AssertionError(
+            "could not locate the 0%-recall sentence in paint-campaign.md, so the "
+            "gene list is unverified — re-point the anchor pattern in this test"
+        )
+    return match.group(1)
+
+
+def genes_named(fragment: str) -> set[str]:
+    """Gene symbols in a prose fragment, expanding the 'AADACL2/3/4' shorthand.
+
+    Written generically so a symbol newly mentioned in the sentence is checked
+    without editing this test.
+
+    >>> sorted(genes_named("AADACL2/3/4, ACP7, ACTL10"))
+    ['AADACL2', 'AADACL3', 'AADACL4', 'ACP7', 'ACTL10']
+    >>> sorted(genes_named("RAD51C, SLX4 and XRCC2"))
+    ['RAD51C', 'SLX4', 'XRCC2']
+    >>> genes_named("nothing but lower case")
+    set()
+    """
+    found: set[str] = set()
+    for prefix, numbers in re.findall(r"\b([A-Z][A-Z0-9]*?)(\d+(?:/\d+)+)\b", fragment):
+        found.update(f"{prefix}{n}" for n in numbers.split("/"))
+    found.update(re.findall(r"\b[A-Z][A-Z0-9]+\b", fragment))
+    return found
 
 
 @pytest.mark.parametrize(
@@ -159,6 +194,20 @@ def test_empty_reports_really_contain_no_pmids(summary: dict) -> None:
         assert pmids_in(report) == set()
 
 
+def test_script_doctests_are_executed() -> None:
+    """Run the script's doctests, which no other harness collects.
+
+    ``just doctest`` is ``pytest --doctest-modules src`` and pytest's testpaths is
+    ``["tests"]``, so nothing under ``projects/`` is collected. Without this call
+    every doctest in ``retrieval_recall.py`` is documentation rather than a test.
+    """
+    import retrieval_recall
+
+    results = doctest.testmod(retrieval_recall, verbose=False)
+    assert results.failed == 0, f"{results.failed} doctest failure(s)"
+    assert results.attempted > 0, "no doctests ran — did the module move?"
+
+
 @pytest.mark.parametrize(
     ("text", "expected"),
     [
@@ -169,6 +218,10 @@ def test_empty_reports_really_contain_no_pmids(summary: dict) -> None:
         ("PMID:4874", {"4874"}),  # four-digit id
         ("Queried by PMID: 3 annotations", set()),  # prose, not a citation
         ("Queried by PMID: 12 annotations", set()),  # ditto, two digits
+        # A separated short number is prose whether or not a colon is present.
+        # This is the case that would catch a later "simplification" of the two
+        # regex branches into PMID:?\s*(\d{4,9}).
+        ("PMID 12345", set()),
     ],
 )
 def test_pmid_matching_keeps_citations_and_rejects_prose(
