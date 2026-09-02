@@ -2814,7 +2814,9 @@ validate-history-all:
     uv run linkml-validate --schema {{history_schema_path}} --target-class HistoryRecord "${files[@]}"
 
 # Retrospectively backfill history records from PR metadata (needs `gh`).
-# Example: just backfill-history --state open --dry-run
+# Prefer --state merged: an open PR's new targets are not on this checkout,
+# so its records get skipped as missing (see docs/history.md).
+# Example: just backfill-history --state merged --dry-run
 [group('QC')]
 [positional-arguments]
 backfill-history *ARGS:
