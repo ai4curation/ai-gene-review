@@ -42,6 +42,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           persist-credentials: false
+          fetch-depth: 1
 
       - name: Check for source changes
         uses: dorny/paths-filter@v3
@@ -78,15 +79,30 @@ jobs:
             modules:
               - 'modules/**/*.yaml'
               - 'modules/**/*.yml'
+            # The curated dirs are here because the history layout test asserts
+            # every record's target.path exists on disk -- an invariant a
+            # gene/module/gocam/project rename or delete can break without
+            # touching history/ itself.
             history:
               - 'history/**/*.yaml'
               - 'src/ai_gene_review/schema/history.yaml'
               - 'scripts/new_history.py'
               - 'scripts/backfill_history_from_prs.py'
+              - 'tests/test_history_schema.py'
+              - 'tests/test_backfill_history.py'
+              - 'genes/**'
+              - 'modules/**'
+              - 'gocams/**'
+              - 'projects/**'
+            families:
+              - 'interpro/panther/**/*-review.yaml'
             # Anything that can change validation behaviour for ALL genes. If any of
             # these change we cannot trust per-gene scoping, so we validate everything.
             infra:
               - 'src/ai_gene_review/schema/**'
+              # The history schema cannot affect gene validation; without this
+              # negation, editing it would trigger validate-all over ~1200 genes.
+              - '!src/ai_gene_review/schema/history.yaml'
               - 'src/ai_gene_review/validation/**'
               - 'src/ai_gene_review/cli.py'
               - 'src/ai_gene_review/tools/validate_pmid_references.py'
@@ -95,6 +111,18 @@ jobs:
               - 'scripts/run_reference_validator.sh'
               - 'justfile'
               - 'project.justfile'
+
+      - name: Fetch benchmark baseline commit
+        if: steps.changes.outputs.src == 'true'
+        shell: bash
+        run: |
+          benchmark_baseline="$(sed -n 's/^baseline_commit: //p' projects/BIOREASON_COMPARISON/benchmark-policy.yaml)"
+          if [[ ! "$benchmark_baseline" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Invalid BioReason benchmark baseline_commit: $benchmark_baseline" >&2
+            exit 1
+          fi
+          # persist-credentials is disabled; this targeted fetch uses public read access.
+          git fetch --no-tags --depth=1 origin "$benchmark_baseline"
 
       # https://github.com/astral-sh/setup-uv
       - name: Install uv
@@ -131,6 +159,18 @@ jobs:
           restore-keys: |
             oaklib-${{ runner.os }}-
 
+      # Residue validation resolves UniProt sequences. Caching them keeps
+      # validate-families from depending on UniProt being reachable on every run,
+      # which is what lets it stay scoped to gene changes as well as family ones.
+      # Same weekly rotation as above; sequences change far less often than that.
+      - name: Cache UniProt sequences
+        uses: actions/cache@v6
+        with:
+          path: .cache/uniprot_seq
+          key: uniprot-seq-${{ runner.os }}-${{ steps.ontoweek.outputs.week }}
+          restore-keys: |
+            uniprot-seq-${{ runner.os }}-
+
       # Scope validation to what changed: a change to schema/validators/config could
       # affect every gene (-> full validate-all); otherwise validate only changed genes.
       - name: Validate gene reviews (scoped)
@@ -163,7 +203,8 @@ jobs:
 
       # History records (append-only session provenance under history/, ported
       # from dismech) validate against src/ai_gene_review/schema/history.yaml.
-      # Cheap, so run whenever they or their tooling change, or on the full pass.
+      # Cheap, so run whenever they, their tooling, or the curated dirs whose
+      # paths the layout test checks change, or on the full pass.
       - name: Validate history records (scoped)
         if: >-
           github.event_name == 'schedule' ||
@@ -172,14 +213,16 @@ jobs:
           steps.changes.outputs.history == 'true'
         run: |
           just validate-history-all
-          uv run pytest tests/test_history_schema.py -q
+          uv run pytest tests/test_history_schema.py tests/test_backfill_history.py -q
 
-      # Advisory-only nudge (never fails the build): if a PR edits curated
-      # content (gene reviews or modules) but adds no matching history/ record,
-      # warn so curation provenance keeps pace with content. See docs/history.md
-      # and `just new-history`.
+      # Advisory-only nudge: if a PR edits curated content but adds no matching
+      # history/ record, warn so curation provenance keeps pace with content.
+      # See docs/history.md and `just new-history`. continue-on-error is what
+      # makes "advisory" true: without it a gh api hiccup (rate limit, fork-PR
+      # token scope, >3000-file PR) would fail an unrelated curation PR.
       - name: Check curation history coverage
         if: github.event_name == 'pull_request'
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -194,8 +237,10 @@ jobs:
             --jq '.[] | select(.status == "added") | .filename' \
             | grep -E '^history/.*\.yaml$' || true)
 
+          # Curated content per docs/history.md: gene reviews, modules (nested
+          # included), GO-CAM reviews, and project pages.
           CURATED=$(echo "$CHANGED" \
-            | grep -E '^(genes/[^/]+/[^/]+/[^/]+-ai-review\.yaml|modules/[^/]+\.yaml)$' \
+            | grep -E '^(genes/[^/]+/[^/]+/[^/]+-ai-review\.yaml|modules/.+\.ya?ml|gocams/[^/]+/[^/]+-review\.yaml|projects/.+\.md)$' \
             || true)
 
           if [ -z "$CURATED" ]; then
@@ -212,6 +257,23 @@ jobs:
             echo "History records added:"
             echo "$ADDED_HISTORY"
           fi
+
+      # Family reviews carry residue sites and node assessments that gene reviews
+      # cite, so a change to either side can break the join.
+      #
+      # Also fires on gene changes, because a gene residue_claim can cite a family
+      # site and the join breaks from either side. The UniProt cache restored above is
+      # what makes that affordable: without it every run would resolve each sequence
+      # over the network, and an upstream outage would block curation that cannot have
+      # broken these checks.
+      - name: Validate family reviews (scoped)
+        if: >-
+          github.event_name == 'schedule' ||
+          github.event_name == 'workflow_dispatch' ||
+          steps.changes.outputs.infra == 'true' ||
+          steps.changes.outputs.families == 'true' ||
+          steps.changes.outputs.genes == 'true'
+        run: just validate-families
 
       # PTN claims are validated against interpro/panther/*/*-paint.tsv slices
       # that curation PRs commit alongside the claim they justify, so per-PR CI

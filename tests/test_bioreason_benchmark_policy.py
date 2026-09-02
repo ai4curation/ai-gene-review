@@ -98,6 +98,39 @@ def test_benchmark_and_refresh_commands_share_frozen_go_release() -> None:
     assert FROZEN_GO_ADAPTER == "frozen-go-2026-03-25"
 
 
+def test_argo95_exact_goa_reads_the_declared_baseline_commit(monkeypatch) -> None:
+    module = _load_sidecar_module()
+    policy = yaml.safe_load((PROJECT_DIR / "benchmark-policy.yaml").read_text())
+    baseline = policy["baseline_commit"]
+
+    frozen = module.frozen_goa_ids("genes/ECOLI/SlyD/SlyD-goa.tsv", baseline)
+    assert {"GO:0016853", "GO:0046872", "GO:0051082"} <= frozen
+
+    def reject_working_tree_goa(_path: Path) -> set[str]:
+        raise AssertionError("frozen metric consulted a working-tree GOA snapshot")
+
+    for helper in ("goa_ids", "latest_goa_date", "sha256"):
+        monkeypatch.setattr(module, helper, reject_working_tree_goa)
+    summary = module.argo95_exact_goa_summary(
+        set(module.read_rl_gene_list()), policy
+    )
+    assert summary == {
+        "cnn_exact_frozen_goa": 634,
+        "cnn_other_established_basis": 47,
+        "cor_exact_frozen_goa": 0,
+    }
+
+    overrides = policy["cohorts"]["argo139_rl_narrative"]["frozen_inputs"][
+        "goa_path_overrides"
+    ]
+    assert overrides == {
+        "DROME/Git": "genes/DROME/git/git-goa.tsv",
+        "SCHPO/tim10": "genes/SCHPO/Tim10/Tim10-goa.tsv",
+    }
+    for relative_path in overrides.values():
+        assert module.frozen_goa_ids(relative_path, baseline)
+
+
 def test_frozen_go_checksum_and_release_sentinels() -> None:
     path = ensure_frozen_go()
     assert frozen_go_sha256(path) == GO_RELEASE_SHA256
@@ -195,7 +228,15 @@ def test_generated_quality_sidecar_has_expected_denominators() -> None:
     assert sum(row["input_quality"] != "FULL_LENGTH_MATCH" for row in rows) == 8
     assert sum(row["interpro_input_present"] == "true" for row in rows) == 136
     assert sum(row["gogpt_input_present"] == "true" for row in rows) == 139
-    assert all(row["goa_latest_annotation_date"] for row in rows)
+    assert all(row["current_goa_latest_annotation_date"] for row in rows)
+    assert all(row["frozen_goa_latest_annotation_date"] for row in rows)
+    assert all(row["frozen_goa_path"] for row in rows)
+    assert all(row["current_goa_sha256"] for row in rows)
+    assert all(row["frozen_goa_sha256"] for row in rows)
+
+    slyd = next(row for row in rows if row["organism"] == "ECOLI" and row["gene"] == "SlyD")
+    assert slyd["frozen_goa_path"] == "genes/ECOLI/SlyD/SlyD-goa.tsv"
+    assert slyd["frozen_goa_sha256"] != slyd["current_goa_sha256"]
 
 
 def test_all_narrative_reviews_have_two_in_range_scores() -> None:
@@ -230,7 +271,46 @@ def test_publication_headlines_match_generated_metrics() -> None:
     manuscript = (PROJECT_DIR / "article" / "manuscript.tex").read_text()
     supplement = (PROJECT_DIR / "article" / "supplemental-benchmark-details.md").read_text()
     slides = (PROJECT_DIR / "article" / "slides.md").read_text()
+    slides_html = (PROJECT_DIR / "article" / "slides.html").read_text()
+    published_slides_html = (
+        REPO_ROOT
+        / "pages"
+        / "projects"
+        / "BIOREASON_COMPARISON"
+        / "article"
+        / "slides.html"
+    ).read_text()
     manuscript_flat = " ".join(manuscript.split())
+
+    statuses = rl["reference_status_distribution"]
+    complete = statuses["COMPLETE"]
+    draft = statuses["DRAFT"]
+    in_progress = statuses["IN_PROGRESS"]
+    initialized = statuses["INITIALIZED"]
+    assert (
+        f"{complete} are `COMPLETE`, {draft} `DRAFT`, {in_progress} `IN_PROGRESS`, "
+        f"and {initialized} `INITIALIZED`"
+    ) in project
+    assert (
+        f"{complete} are `COMPLETE`, {draft} `DRAFT`, {in_progress} `IN_PROGRESS`, "
+        f"and {initialized} `INITIALIZED`"
+    ) in supplement
+    assert (
+        f"{complete} `COMPLETE`, {draft} `DRAFT`, {in_progress} `IN_PROGRESS`, "
+        f"{initialized} `INITIALIZED`"
+    ) in slides
+    rendered_statuses = (
+        f"{complete} <code>COMPLETE</code>, {draft} <code>DRAFT</code>, "
+        f"{in_progress} <code>IN_PROGRESS</code>, {initialized} "
+        "<code>INITIALIZED</code>"
+    )
+    assert rendered_statuses in slides_html
+    assert published_slides_html == slides_html
+    assert (
+        f"{complete}/139 were \\texttt{{COMPLETE}}, {draft} \\texttt{{DRAFT}}, "
+        f"{in_progress} \\texttt{{IN\\_PROGRESS}}, and {initialized} "
+        "\\texttt{INITIALIZED}."
+    ) in manuscript_flat
 
     assert (
         f"**Overall correctness: {rl['mean_correctness']:.1f}/5** | "
@@ -261,7 +341,7 @@ def test_publication_headlines_match_generated_metrics() -> None:
             gogpt["assessment_distribution"]["UNC"],
         )
     )
-    assert sft["cnn_exact_frozen_goa"] == 631
+    assert sft["cnn_exact_frozen_goa"] == 634
     assert sft["cnn_other_established_basis"] == 47
     assert sft["cor_exact_frozen_goa"] == 0
     assert sft["ontology_pair_adjudication"] == {
@@ -315,9 +395,9 @@ def test_publication_headlines_match_generated_metrics() -> None:
         f"{overlap['core']['n_reference_terms']:,} | "
         f"{overlap['core']['n_overlap']:,} | {core_percent:.1f} |"
     ) in supplement
-    assert "**71.0% CNN**" in slides
-    assert "**15.9% NPI/PLI/REP**" in slides
-    assert "**2.5% COR**" in slides
+    assert "**71.3% CNN**" in slides
+    assert "**15.6% NPI/PLI/REP**" in slides
+    assert "**2.4% COR**" in slides
 
     with (PROJECT_DIR / "cafa-style" / "argo139_prediction_goa_overlap.csv").open() as handle:
         incorrect_hf = [
@@ -331,7 +411,7 @@ def test_publication_headlines_match_generated_metrics() -> None:
     n_propagated = sum(
         row["closure_intersects_goa_all"] == "True" for row in incorrect_hf
     )
-    assert (n_incorrect, n_exact, n_propagated) == (152, 53, 124)
+    assert (n_incorrect, n_exact, n_propagated) == (149, 50, 121)
     assert f"{n_exact}/{n_incorrect} HF terms labelled NPI, PLI, or REP" in manuscript_flat
     assert (
         f"{n_propagated}/{n_incorrect} had propagated overlap with current GOA"

@@ -182,12 +182,17 @@ def fetch_gene(
                 if (
                     result["annotations_added"] > 0
                     or result.get("references_added", 0) > 0
+                    or result.get("qualifiers_backfilled", 0) > 0
                 ):
                     parts = []
                     if result["annotations_added"] > 0:
                         parts.append(f"{result['annotations_added']} annotations")
                     if result.get("references_added", 0) > 0:
                         parts.append(f"{result.get('references_added', 0)} references")
+                    if result.get("qualifiers_backfilled", 0) > 0:
+                        parts.append(
+                            f"qualifiers on {result.get('qualifiers_backfilled', 0)} annotations"
+                        )
                     typer.echo(
                         f"  - {file_prefix}-ai-review.yaml (added {' and '.join(parts)})"
                     )
@@ -1309,16 +1314,20 @@ def seed_goa(
 
     # Perform the seeding
     try:
-        added_count, output_path, refs_added = validator.seed_missing_annotations(
-            yaml_file, goa_file, output, fetch_titles=fetch_titles
+        added_count, output_path, refs_added, qualifiers_backfilled = (
+            validator.seed_missing_annotations(
+                yaml_file, goa_file, output, fetch_titles=fetch_titles
+            )
         )
 
-        if added_count > 0 or refs_added > 0:
+        if added_count > 0 or refs_added > 0 or qualifiers_backfilled > 0:
             parts = []
             if added_count > 0:
                 parts.append(f"{added_count} annotations")
             if refs_added > 0:
                 parts.append(f"{refs_added} references")
+            if qualifiers_backfilled > 0:
+                parts.append(f"qualifiers on {qualifiers_backfilled} annotations")
             typer.echo(f"\n✓ Successfully added {' and '.join(parts)} to {output_path}")
             typer.echo("\nNote: Review sections left empty for AI to complete")
         else:
@@ -3066,9 +3075,22 @@ def render_modules(
         typer.echo(f"\nRendered {len(output_paths)} module page(s) to {output_dir}")
     elif files:
         total_warnings = []
-        for module_file in files:
+        had_errors = False
+        for requested_file in files:
+            module_file = requested_file
+            if not module_file.exists() and module_file.parent == Path("."):
+                filename = (
+                    module_file.name
+                    if module_file.suffix == ".yaml"
+                    else f"{module_file.name}.yaml"
+                )
+                candidate = modules_dir / filename
+                if candidate.exists():
+                    module_file = candidate
+
             if not module_file.exists():
-                typer.echo(f"Error: File not found: {module_file}", err=True)
+                typer.echo(f"Error: File not found: {requested_file}", err=True)
+                had_errors = True
                 continue
 
             try:
@@ -3087,9 +3109,12 @@ def render_modules(
                     typer.echo(f"Rendered {module_file} -> {output_path}")
             except Exception as error:
                 typer.echo(f"Error rendering {module_file}: {error}", err=True)
+                had_errors = True
 
         if total_warnings and not verbose:
             typer.echo(f"\n{len(total_warnings)} warnings total (use --verbose to see all)")
+        if had_errors:
+            raise typer.Exit(code=1)
     else:
         typer.echo("Please specify file(s) or use --all to render all modules", err=True)
         raise typer.Exit(code=1)
@@ -3462,7 +3487,7 @@ def fetch_panther_paint(
             "Resolving PTN nodes for ALL cached families (single leaf-GAF pass; "
             "this downloads/caches PAINT GAFs)..."
         )
-        counts = fetch_all_family_paint(
+        counts, removed = fetch_all_family_paint(
             panther_root, cache_dir=cache, force_download=force_download
         )
         total = sum(counts.values())
@@ -3470,6 +3495,10 @@ def fetch_panther_paint(
             f"✓ Wrote PAINT slices for {len(counts)} family/families "
             f"({total} node-level annotations total)."
         )
+        if removed:
+            typer.echo(
+                f"  Removed {len(removed)} stale slice(s): {', '.join(removed)}"
+            )
         return
 
     if not family:
@@ -3494,6 +3523,10 @@ def fetch_panther_paint(
         extra_uniprot=extra_uniprot,
         force_download=force_download,
     )
+    if tsv_path is None:
+        typer.echo(f"✓ {family}: {len(nodes)} node(s), no node-level annotations")
+        typer.echo("  No PAINT slice retained; any stale slice was removed.")
+        return
     n_annotations = sum(1 for _ in tsv_path.read_text().splitlines()) - 1
     typer.echo(
         f"✓ {family}: {len(nodes)} node(s), {n_annotations} node-level annotation(s)"
@@ -4055,6 +4088,32 @@ def refresh_panther_members(
         f"{len(accessions)} accessions cited in modules/ "
         f"({len(prose)} of them appearing in prose)"
     )
+
+    # Family reviews name proteins under a declared subfamily -- representative
+    # members and the positive/negative controls that make a residue site
+    # falsifiable. Those are exactly the assertions the member index exists to
+    # check, so they must be indexed too or the check reports UNRESOLVED forever.
+    family_accessions: set[str] = set()
+    for path in sorted((repo_root / "interpro" / "panther").glob("PTHR*/PTHR*-review.yaml")):
+        doc = yaml.safe_load(path.read_text()) or {}
+        for sub in doc.get("subfamilies") or []:
+            for member in sub.get("representative_members") or []:
+                if isinstance(member, dict) and member.get("id"):
+                    family_accessions.add(member["id"].split(":")[-1])
+        for site in doc.get("residue_sites") or []:
+            for key in ("positive_controls", "negative_controls"):
+                for ctl in site.get(key) or []:
+                    if isinstance(ctl, dict) and ctl.get("id"):
+                        family_accessions.add(ctl["id"].split(":")[-1])
+            anchor = site.get("anchor")
+            if isinstance(anchor, dict) and anchor.get("id"):
+                family_accessions.add(anchor["id"].split(":")[-1])
+    if family_accessions:
+        typer.echo(
+            f"{len(family_accessions)} accessions cited in family reviews "
+            f"({len(family_accessions - accessions)} not already covered)"
+        )
+    accessions.update(family_accessions)
 
     paths = []
     for slug in organisms:

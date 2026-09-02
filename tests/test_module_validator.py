@@ -708,7 +708,7 @@ def test_validate_supporting_text_fetch_exception_is_warning(monkeypatch):
             raise RuntimeError("transient fetch failure")
 
     monkeypatch.setattr(
-        "ai_gene_review.validation.module_validator._build_supporting_text_validator",
+        "ai_gene_review.validation.module_validator.build_supporting_text_validator",
         lambda publications_dir: (RaisingValidator(), None),
     )
     doc = {
@@ -805,7 +805,7 @@ def test_validate_reference_titles_fetch_exception_is_warning(monkeypatch):
             raise RuntimeError("transient fetch failure")
 
     monkeypatch.setattr(
-        "ai_gene_review.validation.module_validator._build_supporting_text_validator",
+        "ai_gene_review.validation.module_validator.build_supporting_text_validator",
         lambda publications_dir: (RaisingValidator(), None),
     )
     errors, warnings = validate_reference_titles(

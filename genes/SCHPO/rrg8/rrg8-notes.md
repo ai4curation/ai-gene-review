@@ -80,15 +80,19 @@ The budding-yeast ortholog is functionally characterised:
 | GO:0005739 mitochondrion (is_active_in, ISO from SGD) | ISO | ACCEPT (core CC) | Ortholog mitochondrial (inner membrane); PomBase curated this as the sole CC. |
 | GO:0097745 mitochondrial tRNA 5'-end processing (involved_in, ISO) | ISO | ACCEPT (core BP) | Well-supported by ortholog genetics/biochemistry (PMID:30759361, 19751518). |
 | GO:0003674 molecular_function (ND) | ND | ACCEPT | Honest "no data" for MF — matches the true knowledge gap; keep. |
-| GO:0005737 cytoplasm (located_in, IEA GO_REF:0000044 / SubCell) | IEA | MARK_AS_OVER_ANNOTATED | From a C-terminally YFP-tagged high-throughput screen (PMID:16823372); a mitochondrial matrix-side inner-membrane protein. PomBase does not annotate cytoplasm. Broad/likely-artefactual for this protein. |
-| GO:0005634 nucleus (located_in, IEA GO_REF:0000044 / SubCell) | IEA | MARK_AS_OVER_ANNOTATED | Same high-throughput dual cyto/nuclear call; inconsistent with orthology-based mitochondrial localization and not curated by PomBase. |
+| GO:0005737 cytoplasm (located_in, IEA GO_REF:0000044 / SubCell) | IEA | MARK_AS_OVER_ANNOTATED | A mitochondrion is part of the cytoplasm in GO, so this is a true but uninformative parent of the specific mitochondrial location. |
+| GO:0005634 nucleus (located_in, IEA GO_REF:0000044 / SubCell) | IEA | UNDECIDED | Same unresolved conflict between a direct high-throughput localization result and orthology-based mitochondrial localization. |
 
 Note on the cytoplasm/nucleus calls: UniProt SubCellular Location cites the Matsuyama YFP ORFeome
-screen (PMID:16823372). C-terminal fluorescent tags can disrupt or mask C-terminal / cleavable
-mitochondrial targeting information, and high-throughput screens frequently produce cytosolic/nuclear
-"leftover" signal for low-abundance organellar proteins. Per CLAUDE.md, IEA electronic inferences may
-be argued against on biological grounds; these are not experimental annotations. I therefore flag them
-as over-annotations rather than REMOVE.
+screen (PMID:16823372). Although GO records the mapped annotations as IEA, their ultimate source is a
+direct S. pombe localization experiment. The protein-specific image/table is absent from the cached
+abstract, so it would be inappropriate to dismiss the result solely because it conflicts with the
+S. cerevisiae-based mitochondrial ISO transfer. The nucleus call is therefore UNDECIDED until the
+primary image can be inspected or native/endogenous localization can replicate it. Cytoplasm is
+handled separately as a true but overly broad parent because mitochondrion is part of cytoplasm in
+GO. The earlier claim
+that a C-terminal tag could mask a cleavable mitochondrial targeting signal was removed: canonical
+mitochondrial presequences are N-terminal, so that was not a valid artifact mechanism.
 
 ## Deep research provenance note
 
@@ -98,3 +102,37 @@ Per project policy I did NOT fabricate a `-deep-research-*.md`. All assertions a
 the cached UniProt record, GOA TSV, PomBase and SGD REST APIs (authoritative ortholog annotation), and
 cached primary publications (PMID:30759361, 19751518, 20473289, 23697806, 16823372, 39367033,
 23101633), with verbatim quotes recorded inline.
+
+## Re-review journal — 2026-09-01
+
+- Refreshed the five-row GOA through `just fetch-gene SCHPO rrg8 --force`; no annotation tuple was
+  added or removed, only source dates advanced.
+- Refreshed PMID:30759361 and PMID:16823372 through `just fetch-pmid ... --force`; neither has a PMC
+  record, so both remain abstract-only. Replaced abbreviated support fragments with complete,
+  assay-relevant sentences from PMID:30759361 and the full-text PMID:19751518 cache.
+- Corrected the earlier claim that a C-terminal YFP tag could mask a cleavable mitochondrial
+  targeting signal. Canonical mitochondrial presequences are N-terminal, and the abstract-only
+  cache gives no protein-specific basis for declaring the direct YFP result artifactual. The
+  nucleus annotation is now UNDECIDED because it conflicts with, but is not disproved by, the
+  mitochondrial ISO transfer; cytoplasm is MARK_AS_OVER_ANNOTATED because it is an entailed but
+  uninformative parent of mitochondrion [PMID:16823372 "Next, we determined the localization
+  of 4,431 proteins, corresponding to approximately 90% of the fission yeast proteome, by tagging
+  each ORF with the yellow fluorescent protein"].
+- Confirmed that UniProt preserves protein-specific ECO:0000269 cytoplasm and nucleus assertions
+  for O14106 from PMID:16823372, while the refreshed PomBase GOA contains only mitochondrion as the
+  manually curated specific organellar location. Searches of current PomBase and publication
+  resources did not expose the rrg8-specific YFP image/table, so the nuclear conflict remains
+  genuinely unresolved rather than rejected.
+- Launched a focused OpenScientist run through `just gene-hypothesis-research`. It judged the
+  mitochondrial tRNA-processing hypothesis partially supported by manual orthology but unverified
+  in S. pombe, and identified transfer-risk caveats: about 23% pairwise identity, no O14106 match
+  to the donor's Pfam family, and a low-confidence O14106 AlphaFold model
+  [file:SCHPO/rrg8/rrg8-hypotheses/free-text-schizosaccharomyces-pombe-rrg8-is-a-conserved-mitochondrial-rnase-p-associated-accesso/openscientist.md
+  "Verdict: Partially supported (orthology-based; unverified in S. pombe)"]. These observations do
+  not overrule PomBase's manual 1:1 ortholog judgment or the ISO terms; they strengthen the case for
+  cross-species complementation and direct S. pombe localization/tRNA-processing assays.
+- Corrected the overly broad statement that no Rrg8-family signature exists in any ortholog. The
+  budding-yeast donor Q06109 carries PF17068/IPR031415; the meaningful transfer-risk observation is
+  that O14106 itself does not match that signature and has no assigned molecular activity.
+- Checked project/module impact. rrg8 occurs in the Function Knowledge Gaps register and in no
+  pathway module or PANTHER family review; the knowledge-gap boundary now records the transfer risk.

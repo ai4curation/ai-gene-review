@@ -22,6 +22,14 @@ import duckdb
 import yaml
 
 from ai_gene_review.bioreason_ontology import FROZEN_GO_ADAPTER, get_go_adapter
+from ai_gene_review.sft_prediction_evidence import (
+    NEGATIVE_ACTIONS,
+    POSITIVE_ACTIONS,
+    PROVENANCE_LIMITED_NEGATIVE,
+    load_aigr_term_actions,
+    load_positive_goa_terms,
+    split_action_evidence,
+)
 
 
 DB_PATH = Path("data/bioreason-hf/protein_catalogue.ddb")
@@ -32,8 +40,6 @@ HF_PARQUET_URLS = [
 ]
 SOURCE_REFERENCE_ID = "doi:10.64898/2026.03.19.712954"
 DEFAULT_ONTOLOGY_ADAPTER = FROZEN_GO_ADAPTER
-POSITIVE_ACTIONS = {"ACCEPT", "KEEP_AS_NON_CORE"}
-NEGATIVE_ACTIONS = {"REMOVE", "MARK_AS_OVER_ANNOTATED"}
 ONTOLOGY_NOTE_MARKER = "[ONTOLOGY_LABEL_AUDIT]"
 
 
@@ -105,33 +111,19 @@ def extract_go_terms(generation: str) -> list[tuple[str, str, str]]:
 
 
 def load_goa_terms(goa_file: Path) -> set[str]:
-    terms: set[str] = set()
-    if not goa_file.exists():
-        return terms
-    with goa_file.open() as handle:
-        for line in handle:
-            parts = line.rstrip("\n").split("\t")
-            if len(parts) > 4 and re.fullmatch(r"GO:\d{7}", parts[4]):
-                terms.add(parts[4])
-    return terms
+    """Return positive exact GO identifiers in a local GOA TSV."""
+    return load_positive_goa_terms(goa_file)
 
 
 def load_aigr_review(review_file: Path) -> tuple[dict[str, set[str]], set[str]]:
     """Load all exact AIGR actions and authored core-function GO terms."""
-    actions: dict[str, set[str]] = {}
+    actions = load_aigr_term_actions(review_file)
     core_terms: set[str] = set()
     if not review_file.exists():
         return actions, core_terms
 
     with review_file.open() as handle:
         doc = yaml.safe_load(handle) or {}
-
-    for ann in doc.get("existing_annotations", []):
-        go_id = ann.get("term", {}).get("id", "")
-        action = ann.get("review", {}).get("action", "")
-        if not go_id.startswith("GO:") or not action:
-            continue
-        actions.setdefault(go_id, set()).add(action)
 
     def add_term_values(value: Any) -> None:
         values = value if isinstance(value, list) else [value]
@@ -160,31 +152,66 @@ def assess_prediction(
     core_terms: set[str],
 ) -> dict[str, Any]:
     exact_actions = actions.get(go_id, set())
+    biological_actions, accepted_negations = split_action_evidence(exact_actions)
+    positive_actions = biological_actions & POSITIVE_ACTIONS
 
-    if exact_actions and exact_actions <= NEGATIVE_ACTIONS:
+    if positive_actions and accepted_negations:
+        return {
+            "assessment": "UNC",
+            "confidence_score": 1,
+            "summary": (
+                "The current AIGR contains both retained positive and retained NOT "
+                "annotations for this exact GO term; context or isoform-specific "
+                "manual adjudication is required."
+            ),
+        }
+
+    if biological_actions and biological_actions <= NEGATIVE_ACTIONS:
         return {
             "assessment": "NPI",
             "confidence_score": 0,
             "summary": (
                 "The exact AIGR actions are "
-                f"{', '.join(sorted(exact_actions))}. The SFT model is reproducing "
+                f"{', '.join(sorted(biological_actions))}. The SFT model is reproducing "
                 "an annotation that the current review rejects or flags as "
                 "over-annotated."
             ),
         }
 
-    if exact_actions & POSITIVE_ACTIONS:
+    if positive_actions:
         return {
             "assessment": "CNN",
             "confidence_score": 2,
             "summary": (
                 "The exact term is already present in AIGR with a positive action "
-                f"({', '.join(sorted(exact_actions & POSITIVE_ACTIONS))}). Correct "
+                f"({', '.join(sorted(positive_actions))}). Correct "
                 "but not novel."
             ),
         }
 
-    if go_id in goa_terms and exact_actions == {"MODIFY"}:
+    if accepted_negations:
+        return {
+            "assessment": "NPI",
+            "confidence_score": 0,
+            "summary": (
+                "The current AIGR retains an explicit NOT annotation for this exact "
+                "GO term, which directly contradicts the positive SFT prediction."
+            ),
+        }
+
+    if not biological_actions and PROVENANCE_LIMITED_NEGATIVE in exact_actions:
+        return {
+            "assessment": "UNC",
+            "confidence_score": 1,
+            "summary": (
+                "The exact AIGR annotation has a negative action tied to a reference "
+                "adjudicated as miscited or wrongly identified. That decision rejects "
+                "the cited evidence but does not by itself validate or refute the "
+                "biological prediction."
+            ),
+        }
+
+    if go_id in goa_terms and biological_actions == {"MODIFY"}:
         return {
             "assessment": "LSP",
             "confidence_score": 2,

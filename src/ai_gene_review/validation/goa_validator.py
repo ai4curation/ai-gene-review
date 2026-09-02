@@ -615,7 +615,7 @@ class GOAValidator:
         goa_file: Optional[Path] = None,
         output_file: Optional[Path] = None,
         fetch_titles: bool = False,
-    ) -> Tuple[int, Path, int]:
+    ) -> Tuple[int, Path, int, int]:
         """Seed missing annotations from GOA file into YAML.
 
         This function adds any annotations present in the GOA file but missing
@@ -629,7 +629,8 @@ class GOAValidator:
             fetch_titles: If True, fetch actual titles from PubMed (may be slow)
 
         Returns:
-            Tuple of (number of annotations added, output file path, number of references added)
+            Tuple of (annotations added, output file path, references added,
+            qualifiers backfilled)
         """
         # Derive GOA file path if not provided
         if goa_file is None:
@@ -648,7 +649,8 @@ class GOAValidator:
         goa_annotations = self.parse_goa_file(goa_file)
 
         # Load the full YAML data (not just annotations)
-        if yaml_file.exists():
+        yaml_existed = yaml_file.exists()
+        if yaml_existed:
             with open(yaml_file, "r") as f:
                 yaml_data = yaml.safe_load(f) or {}
         else:
@@ -686,6 +688,7 @@ class GOAValidator:
 
         # Add missing annotations from GOA
         added_count = 0
+        qualifiers_backfilled = 0
         seen_tuples = set()  # Track which tuples we've already added
         pmids_to_add = set()  # Collect PMIDs and GO_REFs to add to references
 
@@ -728,6 +731,7 @@ class GOAValidator:
                     existing_ann = existing_without_qualifier.pop(0)
                     existing_ann["qualifier"] = parsed_qualifier
                     existing_tuples.add(tuple_key)
+                    qualifiers_backfilled += 1
                     continue
 
             # Create new annotation entry (stub for review)
@@ -845,17 +849,27 @@ class GOAValidator:
         if output_file is None:
             output_file = yaml_file
 
-        # Write the updated YAML
-        with open(output_file, "w") as f:
-            yaml.dump(
-                yaml_data,
-                f,
-                default_flow_style=False,
-                sort_keys=False,
-                allow_unicode=True,
-            )
+        # Preserve curated comments and formatting on a true no-op. PyYAML cannot
+        # round-trip those details, so only serialize when the document changed or
+        # the caller explicitly requested a separate output file.
+        should_write = (
+            not yaml_existed
+            or output_file != yaml_file
+            or added_count > 0
+            or refs_added > 0
+            or qualifiers_backfilled > 0
+        )
+        if should_write:
+            with open(output_file, "w") as f:
+                yaml.dump(
+                    yaml_data,
+                    f,
+                    default_flow_style=False,
+                    sort_keys=False,
+                    allow_unicode=True,
+                )
 
-        return added_count, output_file, refs_added
+        return added_count, output_file, refs_added, qualifiers_backfilled
 
     def _get_go_ref_title(self, go_ref_id: str, cache: Dict[str, str]) -> str:
         """Fetch GO_REF title from GO site YAML file.
