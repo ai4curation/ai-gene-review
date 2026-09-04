@@ -106,3 +106,44 @@ silently delete an experimental annotation while citing the contradicting eviden
 ## Upstream issue link
 
 geneontology/go-annotation#6450
+
+## 2026-09-04 — finishing pass (PAINT no-IBA project)
+
+Deep quality pass over the draft review; validated to zero warnings and promoted to COMPLETE.
+
+Changes made:
+
+- **Fixed a non-verbatim quote** for PMID:25416956 (Rolland 2014 interactome): the draft
+  quoted an invented sentence ("GPATCH11 (Q8N954) is included in the IntAct-curated
+  interactions..."); replaced with the verbatim abstract text [PMID:25416956 "we describe a
+  systematic map of ?14,000 high-quality human binary protein-protein interactions"] and
+  noted that GPATCH11 appears only in the supplementary interaction data.
+- **Softened the Prp43 claim.** The Sap34 abstract does not demonstrate activation; it shows
+  a G-patch-dependent interaction [PMID:42260140 "of its G-patch domain for interaction with
+  ATP-dependent RNA helicase Prp43, suggesting that G-patch domain of Sap34 may contribute
+  to the regulation of Prp43 activity in early spliceosomes"]. Description and core_functions
+  now say "interacts with ... suggesting regulation of Prp43 activity" rather than "activates".
+- **IEA GO:0003676 nucleic acid binding: KEEP_AS_NON_CORE → MODIFY**, proposed replacement
+  GO:0003723 RNA binding. The G-patch module's ligand is RNA; GPATCH proteins carry
+  "multiple RNA-binding motifs" [PMID:39572588]; no evidence for DNA binding. GO:0003723
+  is now the core-function MF (replacing the over-broad GO:0003676).
+- **Added structured `propagation_review` to the IBA kinetochore entry** (root_cause
+  SOURCE_STALE_OR_MISSING, failure_mode SOURCE_EVIDENCE_WEAK). Key new finding: the current
+  PAINT curation of PTHR21032 (snapshot 2026-02-25, interpro/panther/PTHR21032-paint.tsv)
+  **no longer asserts kinetochore at PTN000471210** — it now carries IBDs for nucleoplasm
+  (GO:0005654, seed Q8N954), centrosome (GO:0005813, seed Q8N954) and RNA splicing
+  (GO:0008380, seed mouse Gpatch11 MGI:1858435), plus visual perception (GO:0007601) at the
+  Euteleostomi node PTN002720678 and a taxon-aware negative IRD pruning centrosome for fungi
+  (PTN001077735, replaced by GO:0005815 MTOC). So the 2017 IBA kinetochore row in GOA is a
+  stale propagation: PAINT has already done what go-annotation#6450 asked for (issue verified
+  live on GitHub today — reporter ValWood, recommends replacing the kinetochore annotation
+  with the splicing role so it can propagate through PAINT).
+- **Merged the two core_functions into one** (RNA binding / mRNA splicing via spliceosome /
+  nucleoplasm + centrosome), since the "centrosome-cilium" second entry had no distinct
+  supportable MF; the cilium link stays in the description text and suggested_questions.
+- MARK_AS_OVER_ANNOTATED retained (not REMOVE) for both kinetochore annotations, per
+  CLAUDE.md guidance on experimental annotations; the contradicting evidence and the
+  upstream flag are recorded.
+
+Family review written: interpro/panther/PTHR21032/PTHR21032-review.yaml (see there for
+node-by-node adjudication of the 2026-02-25 IBDs).
