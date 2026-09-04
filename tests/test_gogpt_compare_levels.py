@@ -163,8 +163,13 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
         # entry keyed on the obsolete term was dropped for the same reason, removing
         # one GO-valued core term. Both overlaps are unchanged -- GO:0009249 was
         # already the predicted match at both levels.
-        "post_review": {"overlap": 849, "total": 2760, "pred": 8871},
-        "core": {"overlap": 350, "total": 1229, "pred": 8871},
+        # The AT1G06680 (PSBP1) re-review synthesizes a core_functions block for
+        # the first time: four GO-valued core slots, one of which (GO:0019684)
+        # is a predicted overlap (+4 core total, +1 core overlap). The same
+        # re-review stops retaining GO:0009535 post-review, dropping one
+        # predicted post-review overlap without changing the post-review total.
+        "post_review": {"overlap": 848, "total": 2760, "pred": 8871},
+        "core": {"overlap": 351, "total": 1233, "pred": 8871},
     }
 
 
