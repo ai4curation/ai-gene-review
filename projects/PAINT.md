@@ -88,24 +88,63 @@ Supplementary files in `projects/PAINT/`:
 
 # STATUS
 
-**Project Statistics (2026-02-04):**
+**Project Statistics (2026-09-04):**
 - Total genes in project: 7,594
-- **PAINT genes completed: 207** (2.7%)
-- Total comprehensive reviews: 328
-- Genes with gene folders: 424
-- Genes with deep research: 339
-- Ready for review (have deep research but not complete): 22
+- **PAINT genes completed: 635** (8.4%)
+- Ready for review (have deep research but not complete): 6
+  (ERVMER34-1, PEX11A, SUMF2, TAX1BP1, TMEM67, TMF1)
+- Structured PANTHER FamilyReviews written for reviewed genes' families: 16
+  (`interpro/panther/<PTHR>/<PTHR>-review.yaml`)
 
 ## Progress
 - [x] Infrastructure setup (batch processing, parallel deep research)
-- [x] 207 PAINT gene reviews completed
-- [ ] Complete reviews for remaining 22 genes with deep research
+- [x] 635 PAINT gene reviews completed
+- [x] Family-level review dimension added: paired FamilyReview per reviewed gene
+- [ ] Complete reviews for remaining 6 genes with deep research
+- [ ] FamilyReviews for PTHR11494 (CD28/CTLA4), PTHR48482 (IL10), PTHR15414
+      (ERLEC1) — deferred by a 2026-09-04 InterPro API outage
+- [ ] Re-derive the no-IBA source list against current GOA (see 2026-09-04 note)
 - [ ] Scale deep research to all genes
 - [ ] Full project completion (7,594 genes)
 
-Last updated: 2026-02-04
+Last updated: 2026-09-04
 
 # NOTES
+
+## 2026-09-04
+
+**20-gene batch with paired PANTHER family reviews**
+
+Completed finishing reviews (all validate with zero warnings, status COMPLETE)
+for 20 genes: BCKDHA, BCKDHB, CD28, CTLA4, NDUFS2, NDUFV1, PEX2, PEX10,
+PEX11B, PEX13, PEX16, ORMDL3, MBL2, MTCH2, IL10, ERLEC1, CFAP61, LOXHD1,
+GPATCH11, NAALADL2 — and, new for this project, wrote structured FamilyReviews
+(node-level PAINT/IBD adjudication) for 16 of their 19 PANTHER families
+(CD28/CTLA4 share PTHR11494; that one plus PTHR48482 and PTHR15414 await an
+InterPro API recovery).
+
+Key findings:
+- **The no-IBA source list is stale.** Most of the 20 "no-IBA" genes now
+  receive IBAs (PAINT IBDs dated 2022–2026): PEX11B, ORMDL3, CFAP61, LOXHD1,
+  BCKDHA/B, PEX13, PEX16, MTCH2, MBL2 among them. The recurring *real* gap is
+  narrower and invisible to a has-IBA test: **families lacking any
+  molecular-function IBD** (BCKDH E1, PEX13, PEX16, NDUFV1's eukaryotic node),
+  leaving human genes with only uninformative protein-binding IPI rows as MFs.
+- **PTHR48178 (PEX2)**: the Cdc73/Paf1-complex IBD is a homonym confusion
+  (PEX2 synonym PAF1 vs the PAF1 elongation factor), seeded by the target's
+  own miscited IDA — WRONG_NODE, retraction recommended.
+- **IL10**: four GO_REF:0000024 ISS rows trace to mouse TNF (P06804), not
+  mouse IL-10 — a wrong-accession entry set argued from fold non-homology.
+- **PTHR10404 (NAALADL2)**: human NAALADL2 descends from the carboxypeptidase
+  IBD node yet receives no IBA (silent pruning); recommended an explicit IRD,
+  with a machine-checked residue site proving loss of the catalytic Glu pair.
+- **GPATCH11**: PAINT's 2026-02-25 snapshot already withdrew the kinetochore
+  IBD (go-annotation#6450); the 2017 GOA kinetochore IBA is stale propagation.
+- **BCKDHA**: draft carried a systematic 45-residue precursor-vs-mature
+  numbering error, now corrected against the UniProt SQ block.
+
+Provenance: history records under `history/genes/human/<GENE>/` and
+`history/other/<PTHR>/` (one per gene and per family review).
 
 ## 2026-02-04
 
