@@ -93,7 +93,7 @@ Supplementary files in `projects/PAINT/`:
 - **PAINT genes completed: 635** (8.4%)
 - Ready for review (have deep research but not complete): 6
   (ERVMER34-1, PEX11A, SUMF2, TAX1BP1, TMEM67, TMF1)
-- Structured PANTHER FamilyReviews written for reviewed genes' families: 16
+- Structured PANTHER FamilyReviews written for reviewed genes' families: 17
   (`interpro/panther/<PTHR>/<PTHR>-review.yaml`)
 
 ## Progress
@@ -101,8 +101,8 @@ Supplementary files in `projects/PAINT/`:
 - [x] 635 PAINT gene reviews completed
 - [x] Family-level review dimension added: paired FamilyReview per reviewed gene
 - [ ] Complete reviews for remaining 6 genes with deep research
-- [ ] FamilyReviews for PTHR11494 (CD28/CTLA4), PTHR48482 (IL10), PTHR15414
-      (ERLEC1) — deferred by a 2026-09-04 InterPro API outage
+- [ ] FamilyReviews for PTHR48482 (IL10) and PTHR15414 (ERLEC1) — deferred by
+      a 2026-09-04 InterPro API outage (PTHR11494 recovered and completed)
 - [ ] Re-derive the no-IBA source list against current GOA (see 2026-09-04 note)
 - [ ] Scale deep research to all genes
 - [ ] Full project completion (7,594 genes)
@@ -119,9 +119,9 @@ Completed finishing reviews (all validate with zero warnings, status COMPLETE)
 for 20 genes: BCKDHA, BCKDHB, CD28, CTLA4, NDUFS2, NDUFV1, PEX2, PEX10,
 PEX11B, PEX13, PEX16, ORMDL3, MBL2, MTCH2, IL10, ERLEC1, CFAP61, LOXHD1,
 GPATCH11, NAALADL2 — and, new for this project, wrote structured FamilyReviews
-(node-level PAINT/IBD adjudication) for 16 of their 19 PANTHER families
-(CD28/CTLA4 share PTHR11494; that one plus PTHR48482 and PTHR15414 await an
-InterPro API recovery).
+(node-level PAINT/IBD adjudication) for 17 of their 19 PANTHER families
+(CD28/CTLA4 share PTHR11494, completed after the API recovered mid-session;
+PTHR48482 and PTHR15414 still await an InterPro API recovery).
 
 Key findings:
 - **The no-IBA source list is stale.** Most of the 20 "no-IBA" genes now
