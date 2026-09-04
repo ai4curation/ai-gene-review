@@ -94,13 +94,34 @@ Enzyme specificity is crucial for accurate functional annotation. Misannotated s
 - `5-phosphooxy-L-lysine phospho-lyase activity` - specific MF for PHYKPL
 - `5-phosphohydroxy-L-lysine catabolic process` - specific BP
 
-### GND1 (Candida albicans)
+### GND1 (Candida albicans) — cofactor-specificity control
 
 **UniProt**: A0A1D8PFS4
 **Species**: CANAL
-**Status**: INITIALIZED (annotations pending review)
+**Status**: COMPLETE
 
-**Notes**: 6-phosphogluconate dehydrogenase with interesting dual localization (cytosol and peroxisome via alternative splicing). Review needed for specificity annotations.
+**Specificity check (category 3, cofactor)**: `GO:0004616` (phosphogluconate
+dehydrogenase (decarboxylating) activity) is defined as the **NADP+**-dependent
+reaction (EC 1.1.1.44), but 6PGDHs also occur as NAD+-specific and dual-specificity
+forms (EC 1.1.1.343) in bacteria (PMID:35234135). The C. albicans sequence carries
+both NADP+-specificity determinants described from the sheep structure and by
+mutagenesis — the Gly-X-Ala-X-Met-Gly fingerprint (residues 13-18) and the
+Asn-Arg-Thr 2'-phosphate-binding turn (residues 36-38), coinciding with the UniProt
+NADP(+) binding features — and lacks the Asp-Arg-Asp motif of NAD+-preferring
+enzymes (`genes/CANAL/GND1/GND1-bioinformatics/RESULTS.md`). Oxidative-PPP NADPH
+production with NADP+ as acceptor has been measured in C. albicans lysates
+(PMID:40183578). **Verdict: annotation is at the correct cofactor specificity — no error.**
+A negative control for the project: the specific term was checked, not assumed.
+
+**Specificity error caught (category 1, substrate)**: `GO:0019521` D-gluconate
+metabolic process (IEA, keyword "Gluconate utilization"). The keyword encodes the
+bacterial gluconate → gluconokinase → 6-phosphogluconate → Gnd catabolic route; the
+fungal enzyme's substrate is **6-phospho-D-gluconate** supplied by Zwf1/6-PGL from
+glucose 6-phosphate, and no C. albicans evidence for free-gluconate assimilation via
+Gnd1 was found. **Action: MARK_AS_OVER_ANNOTATED.**
+
+**Also**: minor peroxisomal PTS2 splice isoform (~5% of protein) kept as non-core;
+biofilm-matrix proteomic detection kept as non-core.
 
 ### Mitochondrial fatty acid β-oxidation (acyl-chain-length specificity)
 
@@ -158,6 +179,7 @@ chemistry is correct; the gap is in the **GO:0004300 → RHEA** mapping. See
 | LPL1 | CANAL | Substrate specificity too narrow | COMPLETE |
 | PHYKPL | human | Wrong reaction mechanism | COMPLETE |
 | eryCIII | SACEN | Wrong donor: `GO:0008194` UDP-glycosyltransferase, but uses **TDP**-D-desosamine | COMPLETE |
+| GND1 | CANAL | Cofactor specificity verified (NADP+-specific `GO:0004616`, no error); keyword-derived `GO:0019521` D-gluconate over-annotation flagged | COMPLETE |
 
 **eryCIII (cofactor/donor specificity error, BGC project):** the desosaminyl transferase
 EryCIII (EC 2.4.1.278) was IEA-annotated `GO:0008194` UDP-glycosyltransferase activity, but it
@@ -181,7 +203,7 @@ accurate, IDA-supported `GO:0016758` hexosyltransferase activity. See `genes/SAC
 ### Priority 2: Pending
 | Gene | Species | Issue | Status |
 |------|---------|-------|--------|
-| GND1 | CANAL | Review pending | INITIALIZED |
+| _none_ | | All listed genes reviewed | |
 
 ## Curation Principles
 
@@ -198,13 +220,45 @@ accurate, IDA-supported `GO:0016758` hexosyltransferase activity. See `genes/SAC
 - [x] CANAL/LPL1 - Phospholipase B specificity
 - [x] human/PHYKPL - Phospho-lyase vs transaminase
 - [x] human β-oxidation acyl-chain-length set (ACADVL, ACAD9, ACADM, ACADS, HADHA, HADHB, ECHS1, HADH, ACAT1, ACAA2)
+- [x] CANAL/GND1 - 6-phosphogluconate dehydrogenase (cofactor-specificity control; D-gluconate keyword over-annotation)
 
 ## Pending Reviews
-- [ ] CANAL/GND1 - 6-phosphogluconate dehydrogenase
+- (none)
 
-Last updated: 2026-06-30
+Last updated: 2026-09-04
 
 # NOTES
+
+## 2026-09-04
+
+**Revisited the project; closed out the last pending gene, CANAL/GND1.**
+
+GND1 was framed as a **cofactor-specificity (category 3) control**: `GO:0004616`
+is NADP+-specific by definition, and NAD+-specific / dual-specificity 6PGDHs exist
+(EC 1.1.1.343). Rather than accept the term on family membership, added a small
+reproducible check (`GND1-bioinformatics/check_coenzyme_motifs.py`) that locates
+the coenzyme-specificity determinants from Hanau & Helliwell 2022 (PMID:35234135)
+in the C. albicans sequence: the Gly-X-Ala-X-Met-Gly fingerprint and the
+Asn-Arg-Thr 2'-phosphate turn are both present (13-18, 36-38, matching UniProt
+NADP(+) binding features) and the NAD+-type Asp-Arg-Asp is absent. Together with
+the NADP+-acceptor lysate assay in Garg et al. 2025 (PMID:40183578), the
+NADP+-specific term stands. Outcome: no cofactor error — a useful negative
+control showing the specific term was verified rather than assumed.
+
+One substrate-level over-annotation was flagged: `GO:0019521` D-gluconate
+metabolic process, mapped from the keyword "Gluconate utilization", names free
+D-gluconate whereas the enzyme acts on 6-phospho-D-gluconate supplied from
+glucose 6-phosphate in the fungal oxPPP; the keyword carries bacterial
+gluconate-catabolism context. Changed KEEP_AS_NON_CORE → MARK_AS_OVER_ANNOTATED.
+This is the same "keyword mapping imports a substrate class the enzyme does not
+use" pattern seen elsewhere in the project.
+
+Added two PubMed-verified references (PMID:34065948 yeast PPP review; PMID:35234135
+6PGDH structural review), populated `supported_by` quotes throughout, wrote
+`GND1-notes.md`, set status COMPLETE. No pending genes remain; project maturity
+stays COMPLETE. Candidate follow-ups if the project is extended: other keyword-
+derived substrate-class terms on PPP enzymes (e.g. ZWF1), and NAD/NADP-specific
+dehydrogenase pairs where GO has both cofactor-specific terms.
 
 ## 2026-01-22
 
