@@ -60,3 +60,58 @@ phrasing is verbatim within the deep-research file itself.
 Both `ai-gene-review validate --verbose --terms` and `ai-gene-review validate-goa`
 pass after these changes (validate passes with pre-existing, unrelated warnings about
 abstract-only PMIDs, which are out of scope for this fix).
+
+## 2026-09-04 - Review follow-up: applied the GO:0051082 edit and finished the verbatim cleanup
+
+PR review found that the GO:0051082 change described in the section above had been
+written up in these notes but never applied to `NAP1-ai-review.yaml` - the YAML block
+was still byte-identical to `main` (`action: MODIFY`, `proposed_replacement_terms:
+GO:0000511`, Falcon deep-research `supporting_text`). The notes and the YAML therefore
+contradicted each other. The diagnosis was re-checked and confirmed, and the edit has
+now been applied:
+
+- `GO:0051082 unfolded protein binding` (IDA, PMID:31062022): `MODIFY` ->
+  `KEEP_AS_NON_CORE`, `proposed_replacement_terms` (GO:0000511) removed, and the
+  Falcon deep-research justification replaced with two verbatim abstract quotes from
+  PMID:31062022 itself:
+  - "We report the identification of Nap1 and Tsr4 as direct binding partners of Rps6
+    and Rps2, respectively. Both factors promote the solubility of their r-protein
+    clients in vitro." [PMID:31062022, Abstract]
+  - "Nap1 interacts with a large, mostly eukaryote-specific binding surface of Rps6"
+    [PMID:31062022, Abstract]
+
+  The core H2A-H2B chaperone activity is unaffected: `GO:0000511` is independently held
+  by two IDA annotations (PMID:39601790 and PMID:27225933), so nothing is lost by not
+  re-terming the Rps6-linked annotation.
+
+The verbatim cleanup of the top-level `references:` block, which the earlier commit
+only did for PMID:39601790, was also finished for PMID:37177996 (same defect class:
+markdown-bolded deep-research paraphrase used as a publication quote). That cache is
+`abstract_only`, so these were WARNINGs rather than ERRORs, but the quotes were not
+publication text:
+
+- finding 0: replaced with "partial unwrapping of a nucleosome by an RNA polymerase
+  dramatically facilitates an H2A/H2B dimer dismantling from the nucleosome by
+  Nucleosome Assembly Protein 1 (Nap1)" [PMID:37177996, Abstract]
+- finding 1: replaced with "the highly acidic C-terminal flexible tails of Nap1
+  contribute to the H2A/H2B binding by associating with the binding interface buried
+  and not accessible to Nap1 globular domains, supporting the penetrating fuzzy binding
+  mechanism seemingly shared across various histone chaperones" [PMID:37177996, Abstract]
+- finding 2 (the "Nagae et al. describe Nap1 as a **~48 kDa monomer** ... **nanomolar
+  affinity**" entry) was **removed** rather than re-quoted: that assertion appears
+  nowhere in the cached abstract, and the text is a deep-research summary sentence
+  ("Nagae et al. describe...") rather than anything the paper says. The same content is
+  retained elsewhere in the file where it is correctly attributed to
+  `file:yeast/NAP1/NAP1-deep-research-falcon.md` (supporting the `GO:0042393 histone
+  binding` review), so no evidence is lost - only a mis-sourced quote.
+
+Finally, the two PMID:39601790 findings were tagged `reference_section_type: RESULTS`
+but come from the Introduction (`publications/PMID_39601790.md:78`) and the Abstract
+(`:53`) respectively, as the section above itself notes; corrected to `INTRODUCTION`
+and `ABSTRACT`.
+
+`just validate yeast NAP1` passes; warnings dropped from 12 to 9 (the three removed
+were exactly the PMID:37177996 abstract-only quote warnings). The remaining 9 are
+pre-existing and unrelated (PMID:12788058 / PMID:38571760 abstract-only quotes,
+nucleus locations not mirrored in `existing_annotations`, and three ACCEPT annotations
+lacking `supported_by`).
