@@ -14,19 +14,36 @@ Non-core calls are important here. Falcon found weak support for cytoplasmic HDA
 
 The GO:0005737 (cytoplasm, is_active_in, IBA) row was previously marked `action: REMOVE`
 on the grounds that HDA1's documented function is nuclear. That reasoning does not meet
-the project's bar for overturning an IBA: per CLAUDE.md, an IBA reflects a PAINT
-curator's phylogenetic judgment and "short WITH/FROM is NOT weak" and "only overturn an
-IBA with target-specific divergence/loss evidence" (see `.claude` project instructions
-and `projects/IBA_REVIEW.md`). The WITH/FROM for this row includes several human class
-IIa/IIb HDAC orthologs (e.g. HDAC4/5/7/9, HDAC6), and nucleocytoplasmic shuttling is a
-well-established, phylogenetically conserved property of this HDAC subfamily -- HDAC6 in
-particular is a predominantly cytoplasmic tubulin deacetylase, and class IIa HDACs
-shuttle between nucleus and cytoplasm in a phosphorylation-dependent manner. There is no
-HDA1-specific evidence contradicting this ancestral capacity: the only relevant note in
-the falcon deep-research report is that cytosolic relocalization has been reported for
-HDA1's partners HDA2/HDA3 under hypoxia but not tested directly for HDA1
-[file:yeast/HDA1/HDA1-deep-research-falcon.md "No direct evidence for Hda1; cytosolic
-relocalization reported for Hda2/Hda3 under hypoxia, not Hda1"] -- an absence of positive
-evidence, not evidence of divergence or loss. The action was changed from `REMOVE` to
-`KEEP_AS_NON_CORE`: the term is retained (not removed) but marked non-core, since HDA1's
-established, core function remains nuclear chromatin deacetylation.
+the project's bar for overturning an IBA. Per the project IBA policy (see
+`projects/IBA_REVIEW.md` and the IBA section of CLAUDE.md), an IBA encodes a PAINT
+curator's judgment about where in the tree a function arose; the length of the WITH/FROM
+donor list is not a proxy for evidential strength, and an IBA should be challenged only
+with target-specific evidence of divergence or loss, not because other studies emphasize
+a different compartment. Here the donor list is in any case broad -- 19 gene-product
+donors spanning fly, mouse, rat and Arabidopsis plus human class II HDAC orthologs
+(P56524/HDAC4 and Q9UBN7/HDAC6 among them), together with the ancestral node
+PANTHER:PTN000065904 [file:yeast/HDA1/HDA1-goa.tsv]. Nucleocytoplasmic distribution is a
+conserved property of this subfamily, and there is no HDA1-specific evidence
+contradicting that ancestral capacity: the falcon report notes only that cytosolic
+relocalization has been reported for the partners HDA2/HDA3 under hypoxia rather than
+for HDA1 [file:yeast/HDA1/HDA1-deep-research-falcon.md "No direct evidence for Hda1;
+cytosolic relocalization reported for Hda2/Hda3 under hypoxia, not Hda1"] -- an absence
+of positive evidence, not evidence of loss. So `REMOVE` is not warranted.
+
+The qualifier, however, is `is_active_in`, not `located_in`, and that distinction was
+missed in the first pass. `is_active_in` asserts that HDA1 carries out its molecular
+function in the cytoplasm, which is a stronger claim than the donor evidence supports.
+The cytoplasmic activity anchoring this node in the donors is HDAC6 alpha-tubulin
+deacetylation, executed by a class IIb-specific architecture (tandem catalytic domains
+plus a ZnF-UBP domain) that HDA1 lacks; class IIa shuttling is driven by 14-3-3-binding
+phosphosites that are likewise not an evident HDA1 feature. HDA1's only established
+molecular function is chromatin-associated histone deacetylation, which is nuclear. The
+falcon synthesis reaches the same conclusion in its own verdict line
+[file:yeast/HDA1/HDA1-deep-research-falcon.md "Cytoplasm (CC): likely weak/incorrect for
+Hda1 itself."], and flags such claims as weak or conditional
+[file:yeast/HDA1/HDA1-deep-research-falcon.md "should be treated as **weak/conditional**"].
+
+The action is therefore `MARK_AS_OVER_ANNOTATED` rather than `KEEP_AS_NON_CORE`: the
+compartment is retained (the IBA-overturn bar is not met) while the activity claim
+embedded in the qualifier is flagged as unestablished. `located_in GO:0005737` would be
+the accurate form of this annotation.
