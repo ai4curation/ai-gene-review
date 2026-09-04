@@ -26,6 +26,7 @@ autolink_gene_symbols: false
 - [x] Complete initial module and gene validation.
 - [x] Render module, gene, and project pages after research integration.
 - [x] Open one draft PR for this module/pathway: [#2176](https://github.com/ai4curation/ai-gene-review/pull/2176).
+- [x] Re-audit family grounding, PAINT nodes, module graph semantics, and non-core location evidence after merge.
 - [ ] Shepherd the PR through review, CI, and merge readiness.
 
 ## Satisfiability
@@ -70,9 +71,11 @@ terminal transamination for all three products.
   `contributes_to_molecular_function` because the complete activity requires
   the LeuC-LeuD assembly; complex membership is accepted for LeuD and proposed
   for LeuC.
-- IlvA-I and IlvA-II are exact PSEPK exemplars of InterPro:IPR005787. Either can
-  satisfy the reaction at first-pass resolution; direct genetics or expression
-  data are needed to partition their physiological roles.
+- IlvA-I and IlvA-II are exact PSEPK exemplars of
+  `PANTHER:PTHR48078:SF11`. Either can satisfy the reaction at first-pass
+  resolution; direct genetics or expression data are needed to partition their
+  physiological roles. The official mitochondrial wording of the PANTHER label
+  is not treated as a bacterial localization claim.
 - Molecular functions occur only on leaf annotons, and each leaf has exact
   PSEPK UniProt exemplars.
 - No module-level cytoplasm/cytosol assertions are made.
@@ -111,3 +114,27 @@ validations pass after research integration. A full `just validate-all` run
 also passed with 3693/3693 gene reviews valid, zero invalid files, zero errors,
 and all 53 pathway markdown files with PMID references valid. Repository-wide
 advisory warnings remain non-blocking and are unrelated to this batch.
+
+## 2026-09-01 Repair Checkpoint
+
+- Added reviewed non-KT2440 exemplars across the pathway so the reusable
+  module is not grounded only by the PSEPK instance.
+- Added five activity-specific PAINT IBD nodes whose experimental seed lists
+  support the corresponding leaf functions. The IlvH catalytic PAINT
+  assertion, the GO:0009099 process assertion at the same node, and the broad
+  IlvD lyase node were inspected but deliberately not promoted. For
+  PTN000767018, the local export does not establish Q88DY9 descent, and its
+  catalytic assertion is inappropriate for the non-catalytic small subunit.
+- Replaced affected legacy selectors with exact PANTHER subfamilies where
+  local member containment is confirmed. IlvI retains the more precise
+  `NCBIfam:TIGR00118`; IlvE records two exact PANTHER subfamilies because its
+  reviewed bacterial exemplars occupy distinct lineages.
+- Changed the IlvA-to-IlvIH relationship to `PROVIDES_INPUT_FOR`: IlvA supplies
+  the isoleucine-specific 2-oxobutanoate input, while valine synthesis enters
+  IlvI-IlvH from pyruvate without an IlvA prerequisite.
+- Restored explicit supporting evidence for retained non-core localization
+  annotations in ilvH, leuA, and leuB. The ilvD cytosol call remains non-core,
+  with its reason explicitly limited to TreeGrafter propagation because no
+  independent UniProt localization statement is available.
+- Re-ran the PANTHER member refresh. It confirms the actual second IlvA
+  accession, Q88CN1, in `PTHR48078:SF11`; no Q88CJ4 module member exists.
