@@ -22,6 +22,31 @@ import yaml
 import re
 
 
+# Official UniProtKB accession syntax (6 or 10 characters). Used to decide
+# whether a value is an accession or a gene symbol, so that all-uppercase gene
+# symbols 6-10 chars long (e.g. ATP6AP1, ATP6V1H, CCDC47) are not misclassified.
+# https://www.uniprot.org/help/accession_numbers
+_UNIPROT_ACCESSION_RE = re.compile(
+    r"^([OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2})$"
+)
+
+
+def is_uniprot_accession(value: str) -> bool:
+    """Return whether ``value`` has the shape of a UniProtKB accession.
+
+    Examples:
+        >>> is_uniprot_accession("Q9H2V7")
+        True
+        >>> is_uniprot_accession("A0A024R161")
+        True
+        >>> is_uniprot_accession("ATP6AP1")
+        False
+        >>> is_uniprot_accession("SPNS1")
+        False
+    """
+    return bool(_UNIPROT_ACCESSION_RE.fullmatch(value))
+
+
 def _extract_alternative_products(uniprot_data: str, uniprot_id: str) -> List[Dict[str, str]]:
     """Extract alternative products (isoforms) from UniProt data.
 
@@ -206,6 +231,35 @@ def _compare_file_content(file_path: Path, new_content: str) -> bool:
         return True
 
 
+def _report_seed_updates(
+    file_prefix: str,
+    added_count: int,
+    refs_added: int,
+    qualifiers_backfilled: int,
+    yaml_existed: bool,
+) -> None:
+    """Report every mutation performed while seeding a gene review."""
+    if added_count > 0:
+        print(
+            f"  ✓ Seeded {added_count} GOA annotations in "
+            f"{file_prefix}-ai-review.yaml"
+        )
+    if qualifiers_backfilled > 0:
+        print(
+            f"  ✓ Backfilled qualifiers on {qualifiers_backfilled} annotations "
+            f"in {file_prefix}-ai-review.yaml"
+        )
+    if (
+        added_count == 0
+        and refs_added == 0
+        and qualifiers_backfilled == 0
+        and yaml_existed
+    ):
+        print(
+            f"  - {file_prefix}-ai-review.yaml already contains all GOA annotations"
+        )
+
+
 def fetch_gene_data(
     gene_info: Tuple[str, str],
     uniprot_id: Optional[str] = None,
@@ -222,7 +276,8 @@ def fetch_gene_data(
 
     Args:
         gene_info: Tuple of (organism, gene_name) e.g. ("human", "CFAP300")
-        uniprot_id: Optional UniProt accession ID. If not provided, will attempt to resolve.
+        uniprot_id: Optional UniProt accession ID. Precedence is explicit ID, then the
+            accession in an existing review, then gene-symbol resolution.
         base_path: Base directory for output files. Defaults to current directory.
         seed_annotations: If True, creates/seeds ai-review.yaml with GOA annotations.
         fetch_titles: If True, fetch actual titles from PubMed when seeding (default: True).
@@ -235,6 +290,7 @@ def fetch_gene_data(
             - yaml_existed: bool - True if ai-review.yaml already existed
             - annotations_added: int - Number of annotations added
             - references_added: int - Number of references added
+            - qualifiers_backfilled: int - Number of existing annotations enriched
             - uniprot_updated: bool - True if UniProt file was updated
             - goa_updated: bool - True if GOA file was updated
             - uniprot_differences: bool - True if UniProt content differs from existing
@@ -266,16 +322,62 @@ def fetch_gene_data(
     gene_dir = base_path / "genes" / organism / dir_name
     gene_dir.mkdir(parents=True, exist_ok=True)
 
-    # Resolve UniProt ID if not provided
+    # Existing reviews already record the accession that owns their machine-derived
+    # UniProt and GOA snapshots. Reuse it before querying by symbol: MOD-standard
+    # symbols are not always present in UniProt's gene_exact index (for example,
+    # S. pombe dca7 is stored under systematic locus SPBC17D11.08).
+    reused_review_accession: Optional[str] = None
     if uniprot_id is None:
-        uniprot_id = resolve_gene_to_uniprot(gene_name, organism)
+        yaml_file = gene_dir / f"{file_prefix}-ai-review.yaml"
+        reused_review_accession = _existing_review_uniprot_id(yaml_file)
+        if reused_review_accession:
+            uniprot_id = reused_review_accession
+            print(
+                f"  - Reusing UniProt ID {uniprot_id} from "
+                f"{file_prefix}-ai-review.yaml"
+            )
+        else:
+            uniprot_id = resolve_gene_to_uniprot(gene_name, organism)
 
     # Determine file paths
     uniprot_file = gene_dir / f"{file_prefix}-uniprot.txt"
     goa_file = gene_dir / f"{file_prefix}-goa.tsv"
 
-    # Fetch UniProt and GOA data
-    uniprot_data = fetch_uniprot_data(uniprot_id)
+    # Fetch UniProt data first so a reused secondary/demerged accession cannot be
+    # sent to QuickGO, which returns a header-only response for such accessions.
+    try:
+        uniprot_data = fetch_uniprot_data(uniprot_id)
+    except ValueError:
+        if not reused_review_accession:
+            raise
+        print(
+            f"  ⚠ Review accession {reused_review_accession} no longer resolves; "
+            f"resolving {gene_name} again"
+        )
+        uniprot_id = resolve_gene_to_uniprot(gene_name, organism)
+        uniprot_data = fetch_uniprot_data(uniprot_id)
+
+    primary_accession = _primary_uniprot_accession(uniprot_data)
+    if reused_review_accession and primary_accession != reused_review_accession:
+        if primary_accession:
+            print(
+                f"  ⚠ Review accession {reused_review_accession} resolves to UniProt "
+                f"primary accession {primary_accession}; using the primary accession "
+                "for GOA"
+            )
+            uniprot_id = primary_accession
+        else:
+            print(
+                f"  ⚠ Could not confirm review accession {reused_review_accession} "
+                f"against the fetched UniProt entry; resolving {gene_name} again "
+                "before fetching GOA"
+            )
+            uniprot_id = resolve_gene_to_uniprot(gene_name, organism)
+            uniprot_data = fetch_uniprot_data(uniprot_id)
+            resolved_primary = _primary_uniprot_accession(uniprot_data)
+            if resolved_primary:
+                uniprot_id = resolved_primary
+
     goa_data = fetch_goa_data(uniprot_id)
 
     # Check for differences
@@ -288,6 +390,7 @@ def fetch_gene_data(
         "yaml_existed": False,
         "annotations_added": 0,
         "references_added": 0,
+        "qualifiers_backfilled": 0,
         "uniprot_updated": False,
         "goa_updated": False,
         "uniprot_differences": uniprot_differs,
@@ -393,21 +496,22 @@ def fetch_gene_data(
 
         # Now seed missing GOA annotations
         validator = GOAValidator()
-        added_count, _, refs_added = validator.seed_missing_annotations(
-            yaml_file, goa_file, fetch_titles=fetch_titles
+        added_count, _, refs_added, qualifiers_backfilled = (
+            validator.seed_missing_annotations(
+                yaml_file, goa_file, fetch_titles=fetch_titles
+            )
         )
         result["annotations_added"] = added_count
         result["references_added"] = refs_added
+        result["qualifiers_backfilled"] = qualifiers_backfilled
 
-        if added_count > 0:
-            print(
-                f"  ✓ Seeded {added_count} GOA annotations in {file_prefix}-ai-review.yaml"
-            )
-        else:
-            if yaml_existed:
-                print(
-                    f"  - {file_prefix}-ai-review.yaml already contains all GOA annotations"
-                )
+        _report_seed_updates(
+            file_prefix,
+            added_count,
+            refs_added,
+            qualifiers_backfilled,
+            yaml_existed,
+        )
 
         # Add alternative_products to existing files if missing
         if yaml_existed:
@@ -452,6 +556,42 @@ def fetch_gene_data(
         result["panther_family_id"] = None
 
     return result
+
+
+def _existing_review_uniprot_id(review_file: Path) -> Optional[str]:
+    """Return the accession recorded by an existing gene review, if present.
+
+    The review ID is the repository's grounding for an already-seeded gene. It is
+    preferable to a fresh symbol lookup when a model-organism database symbol is
+    absent from UniProt's gene_exact index. The fetched UniProt request still
+    validates that the accession resolves.
+    """
+    if not review_file.exists():
+        return None
+
+    try:
+        review = yaml.safe_load(review_file.read_text()) or {}
+    except (OSError, yaml.YAMLError):
+        return None
+
+    accession = review.get("id")
+    if not isinstance(accession, str) or not accession.strip():
+        return None
+
+    accession = accession.strip()
+    if accession.startswith("UniProtKB:"):
+        accession = accession.split(":", 1)[1]
+    return accession if is_uniprot_accession(accession) else None
+
+
+def _primary_uniprot_accession(uniprot_data: str) -> Optional[str]:
+    """Extract the primary accession from a UniProt flat-file entry."""
+    for line in uniprot_data.splitlines():
+        if not line.startswith("AC   "):
+            continue
+        accession = line[5:].split(";", 1)[0].strip()
+        return accession if is_uniprot_accession(accession) else None
+    return None
 
 
 def expand_organism_name(organism: str) -> str:
@@ -823,7 +963,9 @@ def fetch_uniprot_data(uniprot_id: str) -> str:
 def fetch_goa_data(uniprot_id: str) -> str:
     """Fetch Gene Ontology Annotation (GOA) data from QuickGO API.
 
-    Fetches ALL annotations using pagination if necessary.
+    Fetches ALL annotations using pagination if necessary. Byte-identical TSV rows
+    are deduplicated after projection, so annotations that differ only in fields the
+    TSV does not represent (such as annotation extensions) collapse to one row.
 
     Args:
         uniprot_id: UniProt accession ID
@@ -922,6 +1064,9 @@ def fetch_goa_data(uniprot_id: str) -> str:
     tsv_lines = [
         "GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\tGO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\tTAXON NAME\tASSIGNED BY\tGENE NAME\tDATE"
     ]
+    # Extensions are not represented in the TSV; collapse rows that become identical
+    # after projection while retaining annotations that differ in any exported field.
+    seen_tsv_rows: set[str] = set()
 
     for result in sorted_results:
         # Extract database and ID from geneProductId
@@ -962,7 +1107,11 @@ def fetch_goa_data(uniprot_id: str) -> str:
             result.get("date", ""),  # DATE
         ]
 
-        tsv_lines.append("\t".join(row))
+        tsv_row = "\t".join(row)
+        if tsv_row in seen_tsv_rows:
+            continue
+        seen_tsv_rows.add(tsv_row)
+        tsv_lines.append(tsv_row)
 
     return "\n".join(tsv_lines) + "\n"
 
@@ -1375,6 +1524,7 @@ def fetch_gene_data_ncRNA(
         "yaml_existed": False,
         "annotations_added": 0,
         "references_added": 0,
+        "qualifiers_backfilled": 0,
         "rnacentral_updated": False,
         "goa_updated": False,
         "rnacentral_differences": rnacentral_differs,
@@ -1471,20 +1621,21 @@ def fetch_gene_data_ncRNA(
         # Now seed missing GOA annotations (same as for protein-coding genes)
         from ai_gene_review.validation.goa_validator import GOAValidator
         validator = GOAValidator()
-        added_count, _, refs_added = validator.seed_missing_annotations(
-            yaml_file, goa_file, fetch_titles=True
+        added_count, _, refs_added, qualifiers_backfilled = (
+            validator.seed_missing_annotations(
+                yaml_file, goa_file, fetch_titles=True
+            )
         )
         result["annotations_added"] = added_count
         result["references_added"] = refs_added
+        result["qualifiers_backfilled"] = qualifiers_backfilled
 
-        if added_count > 0:
-            print(
-                f"  ✓ Seeded {added_count} GOA annotations in {file_prefix}-ai-review.yaml"
-            )
-        else:
-            if yaml_existed:
-                print(
-                    f"  - {file_prefix}-ai-review.yaml already contains all GOA annotations"
-                )
+        _report_seed_updates(
+            file_prefix,
+            added_count,
+            refs_added,
+            qualifiers_backfilled,
+            yaml_existed,
+        )
 
     return result

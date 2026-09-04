@@ -39,6 +39,21 @@ gocams/
     MODEL-src.yaml <- cached gocam-py model (activities/annotons; DO NOT EDIT)
     MODEL-review.yaml <- optional reviewer assessment
   index.tsv <- gene_product -> GO-CAM activity (annoton) index; join key to reviews/modules
+history/
+  genes/<ORGANISM>/<GENE>/ <- append-only curation session records (see docs/history.md)
+  modules/<SLUG>/, gocams/<MODEL>/, projects/<SLUG>/, schema/, other/
+
+## History records
+
+`history/` holds append-only curation session provenance, one YAML per session
+per target, kept outside the curated files themselves (mechanism ported from
+dismech). When a PR creates or edits curated content (a gene review, module,
+GO-CAM review, or project page), add a matching record — scaffold it with
+`just new-history` (never hand-write the filename/session id), edit the
+emitted `details`, then check it with `just validate-history <path>`. Records
+are append-only: never rewrite an existing record's `target.slug`/`target.path`;
+use `target.superseded_by` for renames. See `docs/history.md` for the format
+and `just backfill-history` for retrospectively generating records from PRs.
 
 You can regenerate the derived files by running commands like:
 

@@ -132,7 +132,7 @@ A two-stage agentic predictor (Fallahpour *et al.* 2026):
 - **139 proteins**, 14 species labels
 - Spanning model-organism genes **and** non-MOD / less-specialized contexts: pseudoenzymes, sigma-factor paralogs, organism-specific regulators, moonlighting proteins, venom enzymes
 - For each gene: BioReason-Pro RL summary + trace, ARGO95 SFT GO terms for the HF subset, **agent-adjudicated local AIGR reference**
-- References are not independent expert ground truth: 75 `COMPLETE`, 46 `DRAFT`, 14 `IN_PROGRESS`, 4 `INITIALIZED`
+- References are not independent expert ground truth: 78 `COMPLETE`, 46 `DRAFT`, 11 `IN_PROGRESS`, 4 `INITIALIZED`
 - ARGO139 is the collected cohort; performance excludes the wrong-input `csr-1` case (n=138) and flags seven 2,000-aa truncations
 - A dedicated **comparison agent** scores two axes (1–5), each with required supporting quotes:
   - **Correctness** — are the claims accurate?
@@ -217,7 +217,7 @@ GO-GPT run directly on 299 canonical genes; overlap measured against three progr
 
 ![h:380](figures/three_level_overlap.png)
 
-The **3-fold gap** between raw-GOA agreement (11.7%) and agent-adjudicated core-function agreement (3.9%) illustrates the difference between snapshot agreement and coverage of the local core-function reference.
+The **3-fold gap** between raw-GOA agreement (11.7%) and agent-adjudicated core-function agreement (4.0%) illustrates the difference between snapshot agreement and coverage of the local core-function reference.
 
 ---
 
@@ -227,9 +227,9 @@ The **3-fold gap** between raw-GOA agreement (11.7%) and agent-adjudicated core-
 
 ![h:360](figures/sft_assessment_distribution.png)
 
-**71.3% CNN** (correct/non-novel; 634 exact GOA) · **15.6% NPI/PLI/REP** · **2.5% COR** · 4.6% LSP · 6.0% UNC
+**71.3% CNN** (correct/non-novel; 634 exact GOA) · **15.6% NPI/PLI/REP** · **2.4% COR** · 4.5% LSP · 6.2% UNC
 
-The 2.5% COR are known-literature gaps, not discoveries of previously unknown biology.
+The 2.4% COR are known-literature gaps, not discoveries of previously unknown biology.
 
 ---
 
@@ -305,7 +305,7 @@ A separate literature/bioinformatics-assisted run excluded the de Crécy-Lagard 
 **BioReason-Pro** mostly tells you what you already know, occasionally something correct GOA has not recorded, and assigns **15.9% of ARGO95 terms to incorrect classes** in predictable, diagnosable ways.
 
 - Narratives restate InterPro labels; **eight recurrent model-output failure modes**
-- GO terms: 71.1% not novel, 15.8% NPI/PLI/REP, 2.5% correct and absent from frozen GOA in ARGO95
+- GO terms: 71.3% not novel, 15.6% NPI/PLI/REP, 2.4% correct and absent from frozen GOA in ARGO95
 - Narrative and term arms **fail independently** → not ready for unsupervised import
 
 **The most valuable thing a foundation model can produce is a well-reasoned *narrative*** — it can be reviewed, corrected, combined. Naked GO terms cannot.
