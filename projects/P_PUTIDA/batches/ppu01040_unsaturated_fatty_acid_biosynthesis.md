@@ -23,7 +23,9 @@ autolink_gene_symbols: false
 - [x] Reuse and audit the curated `fabA`, `fabB`, and `fabF` reviews.
 - [x] Represent distinct FabA dehydration and isomerization reactions as separate parts.
 - [x] Keep molecular functions on leaf annotons and use exact UniProt exemplars.
-- [x] Start OpenScientist module/pathway/taxon and focused-gene research.
+- [x] Narrow FabA, FabB, and FabF to their verified PANTHER subfamilies and add reviewed E. coli exemplars.
+- [x] Complete an independent annotation-reviewer audit and incorporate all actionable findings.
+- [x] Complete OpenScientist module/pathway/taxon and focused-gene research.
 - [x] Validate and render the module, genes, and project page.
 - [ ] Shepherd review and CI.
 
@@ -85,15 +87,25 @@ reviewed UniProt/HAMAP assignments for both exact reactions. FabB and FabF are
 grounded by ARBA/PIRNR rule-derived exact Rhea reactions in their local UniProt
 records; their current GOA rows also carry PAINT nodes PTN002270989 and
 PTN004296092 respectively.
-No molecular function or redundant cytoplasm/cytosol term is placed at module
-level.
+FabA is grounded on `PTHR30272:SF8` with reviewed E. coli P0A6Q3 and the
+dehydratase-specific PAINT node PTN008624492. FabB is grounded on
+`PTHR11712:SF306` with reviewed E. coli P0A953, while FabF is grounded on
+`PTHR11712:SF336` with reviewed E. coli P0AAI5. The official SF336 label
+contains "mitochondrial" despite including bacterial FabF proteins; it is
+retained verbatim as required and is not interpreted as localization evidence.
+The target TreeGrafter PTNs are not promoted to ancestral-node claims because
+they are absent from the local PAINT IBD export. No molecular function or
+redundant cytoplasm/cytosol term is placed at module level, and electronic
+cellular locations are retained only as non-core gene annotations.
 
 ## Research Status
 
-OpenScientist module/pathway/taxon and focused-gene retrieval was started. The
-biological boundary above is independently supported by the checked local
-UniProt, GOA, UniPathway, PANTHER, and project-partition records, so the work
-does not depend on waiting for long provider jobs to finish.
+OpenScientist module and module/pathway/taxon retrieval completed. Both reports
+independently recover the FabA/FabB branch, conditional FabF extension, and the
+mis-scoped `ppu01040` thioesterase set. Their stronger paralog and literature
+claims were not imported automatically; the curated boundary remains grounded
+in the checked local UniProt, GOA, UniPathway, PANTHER, publication, and
+project-partition records.
 
 ## Validation
 
