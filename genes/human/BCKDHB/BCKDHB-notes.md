@@ -68,3 +68,67 @@
 
 ## Deep research
 - falcon deep research file polled; see final report for whether it landed within the 8-min window.
+
+---
+
+## 2026-09-04 — PAINT no-IBA project finishing pass
+
+Reviewed every `existing_annotations` entry against the cached publications, UniProt
+P21953 and `BCKDHB-deep-research-falcon.md`. Status moved `INITIALIZED` → `COMPLETE`;
+validation clean (`✓ Valid`, zero warnings, `--terms` included).
+
+**Structural change to `core_functions`.** The single core function used
+`molecular_function: GO:0003863`. But every *manual* GOA annotation of that term on
+BCKDHB carries `contributes_to` (IDA PMID:10745006, IDA PMID:9582350, IMP PMID:2022752),
+because the E1 active sites lie at the α/β′ interfaces and the β chain has no active site
+of its own. The schema is explicit about this case: put the complex-level activity in
+`contributes_to_molecular_function` and a subunit-specific activity in
+`molecular_function`. Restructured accordingly — `molecular_function: GO:0030976`
+(thiamine pyrophosphate binding, the concrete thing the β subunit does on its own) and
+`contributes_to_molecular_function: GO:0003863`. Also added GO:0120552 to
+`directly_involved_in` alongside GO:0009083, since the more precise process term is
+annotated on this gene with IDA and IMP evidence.
+
+**Additions**
+
+- `action: NEW` **GO:0030976 thiamine pyrophosphate binding** (IDA, PMID:10745006).
+  UniProt BINDING 152 on P21953 is a ThDP contact flagged "ligand shared with alpha
+  subunit" with `ECO:0000269|PubMed:10745006`; verified as Tyr152 against the SQ block.
+- `action: NEW` **GO:0030955 potassium ion binding** (IDA, PMID:10745006). Six structural
+  K+ BINDING sites on P21953 (178 G, 180 L, 181 T, 228 C, 231 D, 233 N — all verified
+  against the sequence), and the structure paper places the second of the two located K+
+  ions in this subunit [PMID:10745006 "The second is located in the beta subunit near the
+  interface with the small C-terminal domain of the alpha subunit."]. Kept non-core:
+  structural, not catalytic.
+- `suggested_questions` and `suggested_experiments` sections, which were absent.
+- The deep-research file now carries a `findings` entry and a `reference_review`
+  (`relevance: MEDIUM`, `correctness: UNVERIFIED` — LLM synthesis, used only where
+  UniProt or PMID:10745006 corroborate). It is also now cited as `supported_by` on the
+  `response to nutrient` IBA, where it genuinely does support the claim
+  [file "BCKDK is upregulated under nutrient-excess conditions and suppressed during
+  nutrient scarcity or catabolic stress"].
+
+**GO:0007584 response to nutrient (IBA)** — kept `KEEP_AS_NON_CORE`, but the reasoning is
+now grounded in the PAINT data rather than assertion: the IBD sits at
+`PANTHER:PTN000178891` in PTHR42980, is seeded by a *single* rat descendant (RGD:2197) and
+dates from **2017**, while the same node's GO:0009083 was refreshed in 2026 from five
+seeds across plants, insects and mammals. In the family review this node/term pair is
+assessed `TOO_DEEP`: the node is ancestral to bacterial and plant members for which a
+whole-organism dietary response is untestable. For human BCKDHB itself the term is
+harmless and defensible, so it stays rather than being removed — pruning belongs at the
+family level.
+
+**Not changed after re-checking** — the five bare `protein binding` IPIs stay
+`MARK_AS_OVER_ANNOTATED` (all WITH/FROM P12694); GO:0032991 stays `MODIFY`→GO:0160157;
+the three granular Leu/Ile/Val catabolic-process IEAs stay `ACCEPT` (RHEA:13457/84639/84643
+cover all three branched-chain 2-oxo acids). Nothing was downgraded on the strength of an
+abstract-only cache — PMID:10745006, PMID:9582350 and PMID:3593587 are all abstract-only
+here and their curator annotations were deferred to.
+
+**Family context** — `interpro/panther/PTHR42980/PTHR42980-review.yaml`. BCKDHB is *not*
+IBA-free in the fetched GOA: it receives all three of the family's PAINT assertions
+(GO:0009083 20260530, GO:0160157 20250214-node, GO:0007584 2017). Note that P21953 appears
+in its own WITH/FROM for two of them — that is the expected marker of a node seeded on the
+target's own experimental annotation, not circularity. The real gap is that PTHR42980 has
+**no molecular-function IBD at all**, so GO:0003863 — the term with three independent
+experimental annotations on this gene — does not propagate to any ortholog.
