@@ -89,3 +89,22 @@ pending its primary attachment assay. This supersedes the earlier notes entry
 saying ACCEPT. The term concerns physical spindle attachment to a meiosis-I
 kinetochore; it is not simply synonymous with cohesion protection or with
 kinetochore orientation [QuickGO GO:0051455 definition, checked 2026-09-05].
+
+## OpenScientist result assessment — 2026-09-05
+
+The [focused report](sgo1-hypotheses/mitotic-evidence-provenance/openscientist.md)
+completed successfully through the wrapper, with citation and provenance artifacts.
+Its recommendation to remove or re-scope GO:1990758 is not adopted. The report
+explicitly lacked the main article body and could not extract the freely available
+supplement. Figure-caption names, absence of Sgo1 from the accessible subset, and
+absence of an exported allele/FYPO record do not establish that the curator's IMP
+has no supporting experiment. The report's low residual-uncertainty estimate and
+proposed author-curation carry-over mechanism are not demonstrated results.
+
+The independent annotation-reviewer audit did read the supplement and identified
+Sgo2 and human SGO1/SGO2 assays there, but likewise did not recover the complete
+main-text provenance for this pombe Sgo1 annotation. The appropriate current
+outcome remains UNDECIDED pending its exact primary assay, rather than REMOVE
+or a confident assertion of paralog misattribution. The report is preserved as
+provider output, including its limitations; it is not treated as verified evidence
+for the proposed rejection [PMID:20739936; OpenScientist report, Limitations].
