@@ -124,16 +124,37 @@ def reactome_decision(row: dict[str, str]) -> dict:
     )
 
 
-def y2h_decision(row: dict[str, str], resolved: dict[str, dict[str, str]]) -> dict:
+def load_partner_locations() -> dict[str, str]:
+    """UniProt subcellular locations per IPI partner, from y2h_partners.py output."""
+    path = HERE / "y2h_partners.tsv"
+    with path.open() as fh:
+        return {r["partner"]: r["locations"] for r in csv.DictReader(fh, delimiter="\t")}
+
+
+def y2h_decision(row: dict[str, str], resolved: dict[str, dict[str, str]],
+                 locations: dict[str, str]) -> dict:
     tok = norm_entities(row["WITH/FROM"])[0]
     r = resolved[tok]
-    locs = r.get("protein", "")
+    acc = tok.split(":", 1)[1]
+    loc = locations[acc]
+    # Two of the ten partners have no curated location at all. Saying UniProt "places them
+    # outside" AGT's compartment would be a claim the record does not make, so say what is
+    # actually there.
+    if loc == "(none annotated)":
+        where = (
+            "for which UniProt annotates no subcellular location at all, so the pairing "
+            "cannot even be assessed for compartment plausibility"
+        )
+    else:
+        where = (
+            f"which UniProt places in {loc.rstrip('.')} - an intracellular compartment, not "
+            f"the secreted one AGT occupies"
+        )
     return dict(
         summary=(
             D.Y2H_INTRO
-            + f"{tok} ({r['gene'] or 'no gene symbol'}, {locs}), which UniProt places "
-            f"outside the secreted compartment AGT occupies. No functional consequence of "
-            f"this pairing has been reported for either protein."
+            + f"{tok} ({r['gene'] or 'no gene symbol'}, {r['protein']}), {where}. No "
+            f"functional consequence of this pairing has been reported for either protein."
         ),
         action="MARK_AS_OVER_ANNOTATED",
         reason=D.Y2H_REASON,
@@ -220,6 +241,7 @@ def main() -> None:
     with GOA.open() as fh:
         rows = list(csv.DictReader(fh, delimiter="\t"))
     resolved = load_resolved()
+    partner_locations = load_partner_locations()
 
     entries: list[dict] = []
     seen: set[tuple] = set()
@@ -236,7 +258,7 @@ def main() -> None:
         elif i in REACTOME_ROWS:
             dec = reactome_decision(row)
         elif i in Y2H_ROWS:
-            dec = y2h_decision(row, resolved)
+            dec = y2h_decision(row, resolved, partner_locations)
         else:
             raise SystemExit(f"no decision for GOA row {i}: {key}")
         entries.append(build_entry(row, dec, resolved))
