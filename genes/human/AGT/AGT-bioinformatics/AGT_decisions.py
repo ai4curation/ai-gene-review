@@ -353,8 +353,10 @@ DECISIONS[4] = dict(
         "level rather than a granularity failure: angiotensin II is pro-apoptotic through "
         "AGTR2 (PMID:10406457, and AGT already carries GO:2001238 positive regulation of "
         "extrinsic apoptotic signaling pathway) and anti-apoptotic/proliferative through "
-        "AGTR1, so the donors do not agree in sign and the neutral parent is the correct "
-        "least common ancestor. GO's own comment on the term endorses this use."
+        "AGTR1, so the effect has no single sign to inherit - not because the donor "
+        "angiotensinogens disagree with one another, but because the biology itself is "
+        "bidirectional and receptor-dependent. The neutral parent is therefore the "
+        "correct least common ancestor. GO's own comment on the term endorses this use."
     ),
     action="KEEP_AS_NON_CORE",
     reason=(

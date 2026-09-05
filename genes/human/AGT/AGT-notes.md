@@ -259,7 +259,7 @@ across the GOA file, 0 unresolved.
 - **`GO:0042981 regulation of apoptotic process` / PTN008518321 / mouse Agt +
   rat Agt + human AGT** — kept as non-core, `NO_FAILURE_NON_CORE`, **no failure
   mode**. It is tempting to call the bare parent a `GRANULARITY_MISMATCH`, but
-  that only applies when the donors agree and a more specific term was
+  that only applies when a single direction is inherited and a more specific term was
   available. Angiotensin II is pro-apoptotic through AT2 (PMID:10406457, and AGT
   already carries `GO:2001238`) and anti-apoptotic/proliferative through AT1, so
   the neutral parent is the correct least common ancestor, not a defect. GO's own
