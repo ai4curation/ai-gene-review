@@ -147,3 +147,32 @@ GOA WITH/FROM cites PANTHER:PTN001225435, a node in PTHR24381's cached PAINT
 slice, so the annotations under review descend from PTHR24381's tree as of the
 annotation release, and the node assessments stand. This gene review's text
 never claimed SF440 membership, so no gene-review wording needed softening.
+
+## PR-review housekeeping pass (2026-09-05)
+
+Response to a PR review-bot suggestion on `A0A8J0SCI2-ai-review.yaml`:
+
+1. **`gene_symbol` fixed**: was the accession `A0A8J0SCI2`; now `LOC101732730`,
+   verified independently against the GOA tsv (SYMBOL column, all 5 rows) and
+   the UniProt GN line (`Name=LOC101732730`, RefSeq XP_012810399.1 / Xenbase
+   XB-GENE-29086363). Matches the sibling convention (A0A8J1IYX6 uses
+   `LOC101732819`). The `description` and `core_functions` description, which
+   led with the bare accession, were updated to lead with the LOC symbol
+   (accession kept in parentheses in the description).
+2. **`references:` entries added** for the two `file:` sources cited in
+   `supported_by` but previously missing from the list:
+   `file:XENTR/A0A8J0SCI2/A0A8J0SCI2-deep-research-falcon.md` and
+   `file:XENTR/A0A8J0SCI2/A0A8J0SCI2-uniprot.txt`, following the pattern in
+   `genes/XENTR/A0A8J1IYX6/A0A8J1IYX6-ai-review.yaml` (findings lists on both).
+3. **`reference_review` added for the falcon deep-research file** (the one
+   source genuinely adjudicable here): relevance MEDIUM, correctness
+   LOW_QUALITY. Rationale: the report targets the correct gene and is candid
+   that no direct experimental literature exists; its general C2H2-ZF mechanism
+   claims (the only parts quoted as supporting_text) are sound; but its
+   developmental-role sections are built on Klf-family analogies that are
+   family-mismatched for this PTHR24381 classical-KZNF protein - the same issue
+   that forced the 2026-08-29 re-review to strip a Klf attribution from the
+   GO:0006357 summary. No reference_review added for the GO_REF entries
+   (method descriptors, nothing to adjudicate).
+
+Validation (`just validate XENTR A0A8J0SCI2`) passes after edits.
