@@ -46,7 +46,7 @@ Note I initially wrote PMID:8634266's title from memory and the reference valida
 it (I had invented "the amide I mode of type III and IV..."). Titles came from the cached
 front matter afterwards. Worth remembering: the title check is real and it works.
 
-## The hydrogenase annotation — real, but pointed backwards
+## The hydrogenase annotation — real, and I initially misjudged it
 
 `GO:0033748 hydrogenase (acceptor) activity` and `GO:0030613 oxidoreductase activity,
 acting on phosphorus or arsenic in donors`, both IDA from PMID:15148399.
@@ -55,26 +55,35 @@ The biology is genuine and remarkable: BAP is the phn-independent phosphite oxid
 the reaction evolves H2 [PMID:15148399, "Surprisingly, BAP catalyzes the oxidation of Pt to
 phosphate and molecular H2."]. Purified enzyme, N-terminally sequenced.
 
-But GO:0033748 is defined as `H2 + A = AH2` — H2 *consumed*. BAP *evolves* H2. So the term
-is directionally inverted. → MODIFY to GO:0030613, which describes the reaction in the
-direction it runs (phosphite as the electron donor) and is already annotated from the same
-experiment. EC treats hydrogenases as reversible, which is probably how the term was
-picked; GO's definition is not written reversibly.
+My first draft marked GO:0033748 MODIFY on the grounds that its definition `H2 + A = AH2`
+is written H2-*consuming* while BAP *evolves* H2. That was wrong, and the self-review before
+the PR caught it. The correct basis is the definition itself read under GO's convention:
+catalytic-activity definitions are undirected reactions (the Rhea master-reaction
+convention), so `H2 + A = AH2` covers `AH2 = A + H2`, and with phosphite as AH2 and phosphate
+as A that is the reaction reported. (I briefly leaned on the term's synonym list to reach
+this; that was the wrong basis — synonyms are lookup aids, definitions decide.) Corrected to
+KEEP_AS_NON_CORE. GO:0030613 remains the more informative of the pair because its definition
+— a phosphorus-containing group acting as the hydrogen/electron donor — fits the observed
+reaction literally, with no convention needed, and it names the donor.
 
-Both rows are KEEP_AS_NON_CORE / MODIFY rather than core because the paper's own numbers
+Both rows are KEEP_AS_NON_CORE rather than core because the paper's own numbers
 put the side activity 2–3 orders of magnitude below the phosphatase reaction:
 [PMID:15148399, "Highly purified BAP catalyzed Pt oxidation with specific activities of
 62-242 milliunits/mg and phosphate ester hydrolysis with specific activities of 41-61
 units/mg."] I considered adding GO:1902422 hydrogen biosynthetic process and decided
 against it — a BP term would overstate the physiological weight of a reaction that slow.
 
-## One NEW
+## Two NEW
 
-`GO:0042803 protein homodimerization activity` (ISS), for consistency with the family
-review, which records the dimer as functionally load-bearing family-wide. UniProt: isozymes
-1 and 3 are dimers of identical chains. ISS rather than IDA because I asserted it from the
-UniProt subunit record plus the family argument rather than from a cached paper
-demonstrating it specifically for phoA.
+`GO:0042803 protein homodimerization activity` (IDA, PMID:3910843), for consistency with the
+family review, which records the dimer as functionally load-bearing family-wide. I first
+wrote this as ISS for want of a cached paper; the self-review found the refined crystal
+structure states it outright [PMID:3910843, "Alkaline phosphatase-phosphomonoester hydrolase
+(EC 3.1.3.1) is a metalloenzyme that forms an isologous dimer with two reactive centers 32 A
+apart."], so it was upgraded to IDA. The same abstract also gave verbatim support for the
+zinc and magnesium IDA rows, which had none.
+
+The second NEW is the phosphate-starvation term, described below.
 
 ## The second NEW — added after deep research returned
 
