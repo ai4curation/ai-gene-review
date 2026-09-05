@@ -215,24 +215,43 @@ MOD_PREFIXES = SPECIES_SCOPED_PREFIXES  # historical name, kept for readability 
 #   the general rule for figures in these two scripts, not a licence local to this block.
 #
 #   The sweep covers *-goa.tsv, and PAINT is the other source these blocks read seeds from.
-#   That costs nothing: the namespaces in interpro/panther/*/*-paint.tsv are AGI_LocusCode,
-#   CGD, FB, JaponicusDB, MGI, PomBase, RGD, SGD, UniProtKB, WB, Xenbase, ZFIN and
-#   dictyBase (plus the GO, PANTHER and taxon columns), a strict subset of what is already
-#   rostered or mapped.
+#   PAINT's seed column carries AGI_LocusCode, CGD, FB, JaponicusDB, MGI, PomBase, RGD,
+#   SGD, UniProtKB, WB, Xenbase, ZFIN and dictyBase, plus PANTHER (590 times as a seed
+#   VALUE, e.g. PANTHER:PTN000000113, not only as the family/node column) and the GO and
+#   taxon columns. It surfaces no namespace the GOA sweep had not already accounted for,
+#   which is the substantive point -- but not "a strict subset of what is rostered or
+#   mapped", which is false of two of them: UniProtKB and PANTHER are both DECLINED, and
+#   correctly so, being entity ids that pin no species without a lookup.
 #
-#   Xenbase is the asymmetric one and the asymmetry is deliberate: it is watchlist-only,
-#   never mapped, because an earlier commit removed its MOD_ORGANISM entry for asserting a
-#   genes/XENLA directory that does not exist. So a Xenbase seed enumerated into a block
-#   would FIRE rather than resolve, unlike the other twelve here. It is not hypothetical --
-#   PTHR45836-paint.tsv:6 carries Xenbase:XB-GENE-479318 as an IBD seed of PTN001933897,
-#   two rows above the PTN002911625 row genes/mouse/Notch1 already enumerates.
+#   Two of the thirteen are watchlist-only rather than mapped, so a seed from either would
+#   FIRE rather than resolve. That is deliberate, and neither is hypothetical:
+#     JaponicusDB  17 families. PTHR24055-paint.tsv lines 2-3 are PTN000622075 GO:0005634
+#                  and GO:0005737, both carrying JaponicusDB:SJAG_04551 -- the exact two
+#                  rows the Mapk1/Mapk3 GO:0035556 blocks name when arguing that the node's
+#                  plant seeds sit in the GO:0004674, GO:0005634 and GO:0005737 rows and
+#                  not in the reviewed one. Same file, same node, rows already enumerated.
+#     Xenbase       7 families, never mapped because an earlier commit removed its
+#                  MOD_ORGANISM entry for asserting a genes/XENLA directory that does not
+#                  exist. PTHR45836-paint.tsv:6 carries Xenbase:XB-GENE-479318 as an IBD
+#                  seed of PTN001933897, two rows above the PTN002911625 row
+#                  genes/mouse/Notch1 enumerates -- adjacent to a block rather than in one.
 #
-#   A method note, because this enumeration was wrong once in exactly the way the rest of
-#   this comment warns about: the first PAINT census anchored the prefix to a preceding TAB
-#   and so saw only the first namespace of each pipe-delimited seed set, returning twelve
-#   and missing Xenbase -- in a sentence whose own qualifier was "checked rather than
-#   assumed". Anchoring is how these sweeps fail, in both directions: the same mistake in
-#   the GOA sweep returned no AspGD at all. Census unanchored, then filter.
+#   A method note, because this passage has now been wrong twice in the way the rest of the
+#   comment warns about. First the PAINT census anchored the prefix to a preceding TAB, so
+#   it saw only the first namespace of each pipe-delimited seed set, returned twelve and
+#   missed Xenbase -- in a sentence whose own qualifier was "checked rather than assumed".
+#   Then the correction named Xenbase as the sole asymmetric member and called the other
+#   twelve alike, when JaponicusDB is equally watchlist-only and the stronger instance:
+#   an enumeration error inside the fix for an enumeration error.
+#
+#   Anchoring is how these sweeps fail, and it fails in BOTH directions. Over-anchored
+#   under-collects: the same TAB mistake in the GOA sweep returned no AspGD at all, and a
+#   single-line grep made a verbatim Slc5a1 quote look fabricated. Under-anchored
+#   over-collects just as confidently: a -B30 window over Mapk1 returned 30 propagation
+#   terms where the file has 18 blocks, sweeping up neighbouring ACCEPT rows. All the
+#   over-anchored cases fail toward a false negative, which can leave the impression that
+#   widening is the safe direction. It is not. Census unanchored, THEN filter -- and the
+#   second half is the half that carries the rule.
 #
 # NOTHING ENFORCES THE WATCHLIST SPELLINGS, and that is the class both real defects were
 # in. A watchlist entry is supposed to have zero corpus uses, so "matches nothing because
