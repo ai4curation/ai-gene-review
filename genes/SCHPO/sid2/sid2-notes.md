@@ -137,3 +137,22 @@ Reproducible PAINT provenance: `interpro/panther/PTHR24356/PTHR24356-paint.tsv`
 family/subfamily membership), and `interpro/panther/panther.obo` (official labels).
 The independent reviewer checked the final gene/family diff and found no remaining
 scientific blocker after clarifying the late-mitotic timing in the description.
+
+### Falcon literature refresh assessment
+
+The supported Falcon wrapper completed a 477-second literature refresh and saved
+its report and one artifact. The report corroborates Sid2's SIN kinase,
+Cdc11-feedback and Mid1/cytokinesis functions, but repeatedly misnames Sog2 as Sog1
+(compare PMID:23394829). Its limited retrieval for Clp1, Klp2, Fin1 and Nak1 does
+not supersede the available primary evidence. Fin1 activation occurs through a
+cytoplasmic G2 Sid2-Mob1 pool independently of other known SIN components
+(PMID:22684255); Klp2 phosphorylation supports anaphase spindle elongation and
+nuclear positioning during delayed cytokinesis (PMID:23087209). The report's broad
+mitotic-exit phrasing is not additional support for the disputed IBA process.
+An independent reviewer checked the report against the cached primary sources.
+No additional GO terms were adopted solely from this report; provider output is
+preserved unmodified, with these corrections recorded here.
+
+Final validation passes with one advisory: annotation decisions cite primary studies
+rather than the available generated research file. Status is DRAFT to reflect this
+warning; all48annotations are reviewed.
