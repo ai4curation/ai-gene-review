@@ -293,9 +293,9 @@ class GOAValidator:
         """Validate complete annotation tuples, preserving GOA WITH/FROM rows.
 
         ``supporting_entities`` was added after many reviews were seeded.  An
-        older YAML row without that field therefore acts as a wildcard for one
-        GOA row with the same term/evidence/reference/polarity.  It must not
-        hide a second GOA row with a different WITH/FROM value.  Explicitly
+        older YAML row without that field therefore acts as a wildcard for all
+        GOA rows with the same term/evidence/reference/polarity. Seeding expands
+        these legacy rows without requiring a corpus-wide migration. Explicitly
         populated YAML rows, by contrast, require an exact support match.
         """
         goa_keys: List[Tuple[str, str, str, bool, Tuple[str, ...]]] = []
@@ -333,7 +333,7 @@ class GOAValidator:
             Tuple[Dict, Tuple[str, str, str, bool], Tuple[str, ...]]
         ] = []
 
-        # Check NEW assertions first and collect ordinary rows for one-to-one
+        # Check NEW assertions first and collect ordinary rows for source-aware
         # matching below.
         for yaml_ann in yaml_annotations:
             if not isinstance(yaml_ann, dict):
@@ -423,38 +423,19 @@ class GOAValidator:
 
         unmatched_goa = set(range(len(goa_annotations)))
 
-        # Claim exact supported rows first.  This prevents a legacy wildcard
-        # from consuming a GOA row needed by an explicit YAML assertion.
-        explicit_yaml = [row for row in ordinary_yaml if row[2]]
-        legacy_yaml = [row for row in ordinary_yaml if not row[2]]
+        # Legacy reviews predate WITH/FROM identity and may intentionally contain
+        # one row for several sources. Preserve that validation compatibility;
+        # seeding still expands each distinct source into its own review row.
         unmatched_yaml: List[Dict] = []
-
-        for yaml_ann, base_key, support_key in explicit_yaml:
-            full_key = (*base_key, support_key)
-            match = next(
-                (index for index in unmatched_goa if goa_keys[index] == full_key),
-                None,
-            )
-            if match is None:
-                unmatched_yaml.append(yaml_ann)
+        for yaml_ann, base_key, support_key in ordinary_yaml:
+            matches = {
+                index for index, key in enumerate(goa_keys)
+                if key[:4] == base_key and (not support_key or key[4] == support_key)
+            }
+            if matches:
+                unmatched_goa.difference_update(matches)
             else:
-                unmatched_goa.remove(match)
-
-        # A support-less legacy row may represent exactly one remaining GOA row
-        # with the same base assertion.
-        for yaml_ann, base_key, _ in legacy_yaml:
-            match = next(
-                (
-                    index
-                    for index in unmatched_goa
-                    if goa_keys[index][:4] == base_key
-                ),
-                None,
-            )
-            if match is None:
                 unmatched_yaml.append(yaml_ann)
-            else:
-                unmatched_goa.remove(match)
 
         for yaml_ann in unmatched_yaml:
             result.missing_in_goa.append(yaml_ann)

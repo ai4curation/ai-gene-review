@@ -675,10 +675,10 @@ def test_seed_missing_annotations_backfills_and_splits_supporting_entities(tmp_p
     )
 
     before = validator.validate_against_goa(yaml_path, goa_path)
-    assert not before.is_valid
-    # The legacy support-less row represents one GOA assertion, but it cannot
-    # hide the second row with a distinct WITH/FROM value.
-    assert len(before.missing_in_yaml) == 1
+    # Validation preserves legacy collapsed-row compatibility. Seeding must
+    # nevertheless expand every distinct source, even when validation passes.
+    assert before.is_valid
+    assert not before.missing_in_yaml
     assert not before.missing_in_goa
 
     added, _, references_added, qualifiers_backfilled, supporting_backfilled = (
