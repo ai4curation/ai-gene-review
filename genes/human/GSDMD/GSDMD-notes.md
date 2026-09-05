@@ -119,3 +119,26 @@ MF where a real partner is known).
 - PMID:33883744 — Nature 2021: GSDMD pore cryo-EM structure, IL-1 release. (full text)
 - PMID:35794369 — allergen protease p40 fragment, IL-33 release. (full text)
 - PMID:38530158 — palmitoylation directs membrane translocation. (full text)
+
+## Chimeric trans-fusion: GSDMD:TMEM106A (Gsdmd-Tmem106a)
+
+A 2026 study identified a functional, protein-coding **chimeric mRNA fusing GSDMD to an
+out-of-frame C-terminal peptide from Tmem106a**, formed by **RNA-level trans-splicing of
+transcripts from two genes on different chromosomes** (not a DNA translocation). This is
+the flagship example of a newly described class of >30,000 chimeric mRNAs in mammalian
+immunity [PMID:42686912, Venezia/Kane et al., Nature 2026].
+
+- "we identify a protein-coding chimeric mRNA representing a fusion between the
+  pore-forming protein gasdermin D (GSDMD)... and a C-terminal domain translated out of
+  frame from Tmem106a (Gsdmd-Tmem106a) in mice" [PMID:42686912].
+- Inflammation induces **interchromosomal chromatin interactions** (Hi-C) that bring the
+  parent loci into proximity to enable fusion [PMID:42686912].
+- **Function:** inflammasome priming upregulates the chimera; the protein localizes to the
+  plasma membrane and, after inflammasome activation, "GSDMD-TMEM106A directly interacts
+  with canonical GSDMD N termini to accelerate and enhance pore formation and IL-1β
+  release" [PMID:42686912]. In vivo it balances host defense vs. immunopathology (loss
+  protects against lethal sepsis but compromises antibacterial defense).
+- **Caveat / gap:** characterized in **mouse**; whether an orthologous human GSDMD:TMEM106A
+  chimera exists and acts as a GSDMD-NT pore cofactor is not yet established. The chimera is
+  a distinct gene product and is NOT an annotation of canonical GSDMD, so it is captured
+  here and in knowledge_gaps rather than in existing_annotations/core_functions.

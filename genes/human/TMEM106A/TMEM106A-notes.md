@@ -72,3 +72,21 @@ SPECIFICITY; PMID:29131025, PMID:30456879].
 - PMID:33961781 — Huttlin et al., Cell 2021 (BioPlex). Interactome IPI.
 - Mouse ortholog UniProtKB:Q8VC04 — source of the "by similarity" macrophage-activation
   and localization curation.
+
+## Chimeric trans-fusion: GSDMD:TMEM106A (Gsdmd-Tmem106a)
+
+A 2026 study identified a functional, protein-coding **chimeric mRNA fusing GSDMD to an
+out-of-frame C-terminal peptide encoded by Tmem106a**, formed by **RNA-level trans-splicing
+of transcripts from two genes on different chromosomes** [PMID:42686912, Venezia/Kane et
+al., Nature 2026]. Importantly, the TMEM106A contribution is an **alternative (out-of-frame)
+reading of the Tmem106a mRNA**, i.e. NOT the canonical TMEM106A protein reviewed here.
+
+- "a C-terminal domain translated out of frame from Tmem106a (Gsdmd-Tmem106a) in mice"
+  [PMID:42686912].
+- The chimeric protein localizes to the plasma membrane and acts as a **cofactor for
+  canonical GSDMD-NT**, accelerating pore formation and IL-1β release during pyroptosis
+  [PMID:42686912].
+- **Relevance to this review:** this does not change the annotation review of canonical
+  TMEM106A (macrophage activation, plasma membrane), but it is a striking piece of biology
+  connecting the Tmem106a locus to the pyroptosis pathway via a cryptic reading frame.
+  Characterized in **mouse**; the human orthologous chimera is not yet established.
