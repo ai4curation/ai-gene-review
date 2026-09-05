@@ -697,8 +697,9 @@ DECISIONS[85] = dict(
         "monocyte-macrophages and ACAT1 expression measured; it contains no localisation "
         "experiment on angiotensinogen. AGT's extracellular location is abundantly evidenced "
         "elsewhere in this record - by direct plasma protein chemistry (PMID:4300938), by "
-        "four independent HDA proteomics datasets, by the curated UniProt SUBCELLULAR "
-        "LOCATION, and by the IBA and ISS rows."
+        "five independent HDA proteomics datasets (two of which assign GO:0005576 itself "
+        "and three a more specific extracellular compartment), by the curated UniProt "
+        "SUBCELLULAR LOCATION, and by the IBA and ISS rows."
     ),
     action="ACCEPT",
     reason=(
@@ -1323,7 +1324,7 @@ DECISIONS[98] = dict(
 DECISIONS[99] = dict(
     summary=_IC_NOTE + "Equally sound and equally redundant: binding a cell-surface receptor "
                        "implies being extracellular. The record already carries GO:0005576 "
-                       "more than thirty times, including by direct assay, four HDA proteomics "
+                       "thirty-six times, including by direct assay, two HDA proteomics "
                        "datasets, IBA, ISS and the curated UniProt location.",
     action="ACCEPT",
     reason=(
@@ -1635,7 +1636,7 @@ DECISIONS[66] = dict(
     reason=(
         "AGT is a liver-secreted plasma protein and the extracellular compartment is where it "
         "is cleaved by renin and where its peptides meet their receptors, so 'is_active_in' "
-        "is the right qualifier. Corroborated by four HDA proteomics datasets, the curated "
+        "is the right qualifier. Corroborated by five HDA proteomics datasets, the curated "
         "UniProt location, the IBA and the ISS."
     ),
     supported_by=[Q_SECRETED, Q_LIVER],
@@ -2212,9 +2213,11 @@ REFERENCES = [
             notes=(
                 "An unusually well-justified IGI source: dTGR rats carry both the human renin "
                 "and the human angiotensinogen transgenes, and neither alone produces the "
-                "phenotype, which is exactly what IGI encodes. Three of its four rows are "
-                "sound. The fourth has the sign inverted - GOA reads it as POSITIVE regulation "
-                "of gap junction assembly, while the abstract states that connexin 43 was "
+                "phenotype, which is exactly what IGI encodes. Two of its four rows stand as "
+                "annotated. A third understates the paper, which determines the direction of "
+                "the matrix effect, so the neutral parent is replaced by the positive child. "
+                "The fourth has the sign inverted - GOA reads it as POSITIVE regulation of "
+                "gap junction assembly, while the abstract states that connexin 43 was "
                 "significantly REDUCED in dTGR. Verified against the cached abstract."
             ),
         ),
@@ -2908,11 +2911,12 @@ KNOWLEDGE_GAPS = [
         boundary=(
             "Established: the renin interaction is structurally solved, and UniProt records a "
             "disulfide-linked 2:2 heterotetramer with the proform of PRG2 and a probable "
-            "2:2:2 complex with pro-PRG2 and C3dg during pregnancy. Beyond those, all sixteen "
-            "GO:0005515 IPI rows are either angiotensin receptors, a Drosophila enzyme "
-            "co-crystallised with the peptide, or the ten partners of one interactome screen, "
-            "none of which shares a compartment with a secreted protein and none of which has "
-            "functional follow-up."
+            "2:2:2 complex with pro-PRG2 and C3dg during pregnancy. Beyond those, the sixteen "
+            "IPI rows - fourteen of them bare GO:0005515, two of them receptor-binding - "
+            "resolve to the two angiotensin receptors, renin, a Drosophila enzyme "
+            "co-crystallised with the peptide, a hepatitis C virus protein, and the ten "
+            "partners of one interactome screen. Only renin and the Drosophila enzyme are "
+            "themselves extracellular, and only renin has functional follow-up."
         ),
         gap_kind=["BIOLOGY", "CURATION"],
         dark_aspect="MF_DARK",
@@ -3018,9 +3022,9 @@ SUGGESTED_QUESTIONS = [
         "PRO_0000032459 rather than to P01019.")),
     dict(question=(
         "Is the eleven-row dependence of this gene's record on PMID:17159080, a two-page "
-        "editorial with no primary data and no abstract, intentional? Four of those rows are "
+        "editorial with no primary data and no abstract, intentional? Three of those rows are "
         "coded TAS, which implies traceability to a primary source that the commentary itself "
-        "would have to supply.")),
+        "would have to supply, and the other eight are NAS.")),
 ]
 
 SUGGESTED_EXPERIMENTS = [
