@@ -273,23 +273,24 @@ directions, so the instruction comes before the criterion rather than after it:
   rather than a pair: read the comment's content, not just its key.
 
 The criterion itself is a property, not a list of the prefixes anyone has happened to see:
-**a seed is an index lookup iff it is a `UniProtKB:` accession.** Nothing else is — MOD
-identifiers (`MGI:`, `SGD:`, `FB:`, `RGD:`, `PomBase:`, `ZFIN:`, `CGD:`, `TAIR:`, `WB:`,
-`dictyBase:`, `AGI_LocusCode:` and whatever else a `WITH/FROM` carries) are not keys in an
-accession-keyed file, so running the widened `grep` on one returns nothing for a reason
-that says nothing about the seed. No count or per-directory scope is given for those
-prefixes on purpose: an earlier revision said which seven `genes/mouse` used and was wrong
-by one (`Cftr` cites a `TAIR:` id) — a list offered as illustration, read back as the set
-to match against, which is the failure this whole passage exists to prevent. Match on the
-property. `ensembl:` reaches
-the same dead end by a different route worth stating, because an Ensembl protein accession
-*looks* like something an accession-keyed index might carry: it is not excluded by being a
-MOD id, but by the fact that no `ENS…P…` identifier is a key in any `*-entries.csv`. For
-anything that is not a `UniProtKB:` accession the routes are instead the name match
-described above and the target's own UniProt `DR` cross-reference line. The consequence
-for re-checking: such a comment is correct under the widening without being re-run, while
-an accession-cited one is exactly what the widened grep can move. `Ccnt1`'s are the
-accession-cited ones this sweep found, and they still resolve nowhere.
+**a seed is an index lookup iff it is a `UniProtKB:` accession.** Nothing else is a key in
+an accession-keyed file, so running the widened `grep` on anything else returns nothing
+for a reason that says nothing about the seed — MOD identifiers (`MGI:`, `SGD:`, `FB:`,
+`RGD:`, `PomBase:`, `ZFIN:`, `CGD:`, `TAIR:`, `WB:`, `dictyBase:`, `AGI_LocusCode:`) and
+the non-MOD namespaces a `WITH/FROM` also carries (`PANTHER:`, `InterPro:`, `ensembl:`)
+alike. No count or per-directory scope is given for those prefixes on purpose: an earlier
+revision said which seven `genes/mouse` used and was wrong by one (`Cftr` cites a `TAIR:`
+id) — a list offered as illustration, read back as the set to match against, which is the
+failure this whole passage exists to prevent. Match on the property. `ensembl:` is the one
+worth a second sentence, not as an exception but because it is the case a reader cannot
+settle from the prefix: an Ensembl protein accession *looks* like something an
+accession-keyed index might carry, and what actually excludes it is that no `ENS…P…`
+identifier is a key in any `*-entries.csv`. For anything that is not a `UniProtKB:`
+accession the routes are instead the name match described above and the target's own
+UniProt `DR` cross-reference line. The consequence for re-checking: such a comment is
+correct under the widening without being re-run, while an accession-cited one is exactly
+what the widened grep can move. `Ccnt1`'s are the accession-cited ones this sweep found,
+and they still resolve nowhere.
 
 That is what separates `Gulo` (`P9WIT3` resolves to *M. tuberculosis* Rv1771) from `Bcl2`
 (`PTHR11256`) and `Ednra` (`PTHR46099`), whose accessions resolve in **no** family's
