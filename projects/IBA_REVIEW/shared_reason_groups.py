@@ -102,10 +102,14 @@ def collect(paths, action=None):
 MOD_ORGANISM = {'MGI': 'mouse', 'RGD': 'rat', 'SGD': 'yeast', 'FB': 'DROME',
                 'WB': 'worm', 'ZFIN': 'DANRE', 'PomBase': 'SCHPO',
                 'dictyBase': 'DICDI', 'CGD': 'CANAL',
-                # Both spellings of the Arabidopsis locus: PAINT writes
-                # AGI_LocusCode:AT2G17800 where GOA writes TAIR:locus:2827916. Same
-                # both-written-forms problem as the binomials, one field over.
-                'TAIR': 'ARATH', 'AGI_LocusCode': 'ARATH'}
+                # THREE spellings of the Arabidopsis locus, not two: PAINT writes
+                # AGI_LocusCode:AT2G17800, GOA writes TAIR:locus:2827916, and the
+                # genome-annotation release writes araport11:ATCG00150.1 (ATCG… is the
+                # chloroplast genome, so these are AGI locus codes in a third dress).
+                # Same both-written-forms problem as the binomials, one field over -- and
+                # it recurred here after being documented, which is why the roster below
+                # no longer carries a spelling the corpus does not write.
+                'TAIR': 'ARATH', 'AGI_LocusCode': 'ARATH', 'araport11': 'ARATH'}
 # Namespaces where the species is not in the PREFIX but in the accession itself. Every
 # ensembl: source in the corpus is ENSMUSP (216) or ENSRNOP (96), so the species is
 # readable from the string -- more than UniProtKB offers, where the species is real but
@@ -128,8 +132,10 @@ MOD_PREFIXES = SPECIES_SCOPED_PREFIXES  # historical name, kept for readability 
 # Protein Ontology term rather than a MOD gene id. The rest are not gene identifiers at
 # all -- UniProtKB-SubCell is a location, ARBA an annotation rule, PMID a paper, ChEBI a
 # chemical, GO_REF a reference, Reactome and UniPathway pathways, ComplexPortal a complex,
-# tfclass a TF class, araport11 a genome annotation release, gomodel a GO-CAM. None of the
-# second kind could name a gene in any species, so none is a candidate for the gate.
+# tfclass a TF class, gomodel a GO-CAM. None of the second kind could name a gene in any
+# species, so none is a candidate for the gate. araport11 was filed in that second kind
+# and did not belong: it names one Arabidopsis gene, and it is now mapped rather than
+# declined.
 #
 # No count is given, and this comment is not the authoritative list: the run prints what it
 # actually declines, and that is the list to read. An earlier revision did say "all sixteen
@@ -137,16 +143,24 @@ MOD_PREFIXES = SPECIES_SCOPED_PREFIXES  # historical name, kept for readability 
 # PR arriving with genes/rat/Tp53 from main -- which is the whole argument for printing the
 # live list rather than describing it here.
 #
-# Six entries here are in NEITHER map nor the corpus: Xenbase, FlyBase, WormBase, Araport,
-# ASPGD, PseudoCAP. That is deliberate and is the safe direction -- if one ever appears in
-# a review it becomes a reported finding rather than a silent decline. In particular
-# Xenbase belongs here even though the previous commit removed it from MOD_ORGANISM as
+# Five entries here are in NEITHER map nor the corpus: Xenbase, FlyBase, WormBase, ASPGD,
+# PseudoCAP. That is deliberate and is the safe direction -- if one ever appears in a
+# review it becomes a reported finding rather than a silent decline. In particular
+# Xenbase belongs here even though an earlier commit removed it from MOD_ORGANISM as
 # invented-from-a-roster: there it asserted a genes/XENLA directory that does not exist,
 # here it only says "if this shows up, tell me".
+#
+# A sixth, 'Araport', used to sit alongside them and was worse than useless: the corpus
+# writes 'araport11', so the entry matched nothing, and the prefix it was meant to catch
+# was declined in silence by the very roster written to report it. A defensive entry
+# spelled differently from what anyone writes is not defensive -- it reads as coverage
+# while providing none. araport11 is now resolved in MOD_ORGANISM, so it needs no roster
+# entry at all; the lesson is that these strings are only worth adding in a spelling
+# lifted from the corpus or from the source that will emit them.
 _SPECIES_SCOPED_SHAPED = frozenset({'MGI', 'RGD', 'SGD', 'FB', 'WB', 'ZFIN', 'TAIR',
                                     'PomBase', 'dictyBase', 'CGD', 'Xenbase',
                                     'AGI_LocusCode', 'ensembl', 'FlyBase', 'WormBase',
-                                    'Araport', 'ASPGD', 'PseudoCAP'})
+                                    'ASPGD', 'PseudoCAP'})
 SELF_MARKER = re.compile(r"this gene|the review target itself|the target's own", re.I)
 NEGATION = re.compile(r'\bnot\s+(?:the\s+target|[a-z-]+\s+\S)', re.I)
 # Every species word the corpus uses in a source_label. The TARGET organism's own words
