@@ -44,6 +44,7 @@ import datetime
 import json
 import os
 import random
+import re
 import urllib.parse
 import urllib.request
 from collections import Counter, defaultdict
@@ -337,7 +338,15 @@ def main() -> None:
     add(
         f"GOA snapshot: **{snapshot}** "
         "([`data/global_iep_annotations.tsv`](data/global_iep_annotations.tsv), committed so the "
-        "figures below stay reproducible as GOA moves; delete it to re-download)."
+        "figures below stay reproducible as GOA moves; delete it to re-download). "
+        f"GO closure computed against GO release **{go_release()}**."
+    )
+    add("")
+    add(
+        "One set of figures is **not** frozen by that snapshot: the "
+        "[IEP-dependence shares](#how-dependent-is-each-term-on-iep) divide the "
+        "snapshot's IEP count for a term by a *live* QuickGO count of all "
+        "annotations to that term, so they drift as GOA grows."
     )
     add("")
 
@@ -504,6 +513,22 @@ def main() -> None:
     print(
         f"Wrote {CANDIDATES_TSV.relative_to(REPO_ROOT)} ({len(candidates)} candidates)"
     )
+
+
+def go_release() -> str:
+    """The GO release the closure was computed against, for provenance."""
+    from oaklib import get_adapter
+
+    try:
+        meta = get_adapter(GO_ADAPTER).ontology_metadata_map("go")
+    except Exception:
+        return "unknown"
+    for values in meta.values():
+        for value in values if isinstance(values, list) else [values]:
+            match = re.search(r"\d{4}-\d{2}-\d{2}", str(value))
+            if match:
+                return match.group(0)
+    return "unknown"
 
 
 def label_map(terms: Counter, ancestors) -> dict[str, str]:

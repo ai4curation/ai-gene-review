@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import csv
 import os
+import re
 import statistics
 from collections import Counter, defaultdict
 from math import ceil, comb
@@ -353,6 +354,26 @@ def collect_core_terms(review: dict) -> set[str]:
     return out
 
 
+def go_release() -> str:
+    """The GO release the closure was computed against, for provenance.
+
+    Recorded instead of the adapter string, which may be a machine-local path
+    when ``IEP_GO_ADAPTER`` is used and would be meaningless to a reader.
+    """
+    from oaklib import get_adapter
+
+    try:
+        meta = get_adapter(GO_ADAPTER).ontology_metadata_map("go")
+    except Exception:
+        return "unknown"
+    for values in meta.values():
+        for value in values if isinstance(values, list) else [values]:
+            match = re.search(r"\d{4}-\d{2}-\d{2}", str(value))
+            if match:
+                return match.group(0)
+    return "unknown"
+
+
 def pct(n: int, d: int) -> str:
     return f"{100.0 * n / d:.1f}%" if d else "n/a"
 
@@ -409,10 +430,11 @@ def main() -> None:
     )
     add("")
     add(
-        f"GO closure computed with the OAK adapter `{GO_ADAPTER}` "
-        "(override with `IEP_GO_ADAPTER`). The coarse branch tallies can move "
-        "by a row or two between GO releases, as terms are obsoleted or "
-        "reparented; everything else is release-independent."
+        f"GO closure computed against GO release **{go_release()}** (OAK "
+        "adapter `sqlite:obo:go` by default; override with `IEP_GO_ADAPTER`). "
+        "The coarse branch tallies can move by a row or two between GO "
+        "releases, as terms are obsoleted or reparented; everything else is "
+        "release-independent."
     )
     add("")
     add(

@@ -974,8 +974,13 @@ them.
   one GOA cache that spells the aspect `P`; the atlas snapshot date is recorded
   in `data/global_iep_snapshot.json` instead of being read from file mtime,
   which a fresh clone resets (it was showing 2026-08-08 for a 2026-07-27
-  download); and both scripts take an `IEP_GO_ADAPTER` override for environments
-  where the default `sqlite:obo:go` build is unreachable.
+  download); both outputs record the GO release the closure was computed
+  against (2026-07-26), since the coarse branch tallies move by a row or two
+  between releases; the atlas now says which of its figures the committed
+  snapshot does *not* freeze (the per-term IEP-dependence shares, whose
+  denominator is a live QuickGO count — `response to ethanol` had drifted from
+  13.4% to 15.5%); and both scripts take an `IEP_GO_ADAPTER` override for
+  environments where the default `sqlite:obo:go` build is unreachable.
 
 ### 2026-08-02 (third pass — the first batch cohort reviewed)
 
