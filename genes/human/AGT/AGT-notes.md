@@ -191,12 +191,15 @@ already carried by `GO:0002019` and `GO:0035813`.
 
 **`GO:0005515 protein binding` with the HCV F protein (IPI, PMID:16237761,
 assigned by AgBase) could not be verified.** The cached full text runs from
-abstract through the complete discussion, enumerates all 36 positive colonies by
-identity, discusses each hit in turn, and never mentions angiotensinogen — the
-word appears zero times. The serpin it *does* report is C1 inhibitor (SERPING1).
-I have marked this over-annotated rather than removed and raised it as a
-question for the assigning group, since a table that did not survive text
-extraction cannot be ruled out.
+abstract through the complete discussion, discusses each named hit in turn, and
+never mentions angiotensinogen — the word appears zero times. The serpin it
+*does* report is C1 inhibitor (SERPING1). The limit of that argument is worth
+stating, because I first overstated it: the Results identify only **25 of the 36**
+positive colonies, and the Discussion names a handful more, so roughly a third of
+the colonies are never identified anywhere in the text. Angiotensinogen cannot be
+found in the paper, but neither can it be positively excluded. That is precisely
+why this is marked over-annotated rather than removed, and raised as a question
+for the assigning group.
 
 ## 4. The bulk: what 63 rows of layer 3 are made of
 

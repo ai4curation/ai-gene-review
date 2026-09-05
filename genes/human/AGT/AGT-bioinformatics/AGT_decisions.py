@@ -157,7 +157,7 @@ Q_Y2H = (
 )
 Q_Y2H_COMPART = (
     "file:human/AGT/AGT-bioinformatics/RESULTS.md",
-    "All ten PMID:32814053 partners are intracellular",
+    "None of the ten PMID:32814053 partners is annotated as secreted or extracellular.",
 )
 Q_SERPIN_SIM = (
     "file:human/AGT/AGT-uniprot.txt",
@@ -592,8 +592,12 @@ DECISIONS[71] = dict(
         "cDNA library, and was assigned by AgBase. The cached full text of that paper is "
         "complete - abstract, introduction, results and the whole discussion, in which every "
         "hit is discussed in turn - and the word 'angiotensinogen' does not appear anywhere "
-        "in it. The paper enumerates all 36 positive colonies by identity and angiotensinogen "
-        "is not among them; the serpin it does report is C1 inhibitor. Independently, the "
+        "in it. That is weaker evidence than it first appears, and the limit is worth "
+        "stating plainly: the Results identify only 25 of the 36 positive colonies, and the "
+        "Discussion names a handful more, so roughly a third of the colonies are never "
+        "identified anywhere in the text. Angiotensinogen therefore cannot be positively "
+        "excluded from the screen; it simply cannot be found in it. The serpin the paper "
+        "does report is C1 inhibitor. Independently, the "
         "assay is a poor fit: AGT is a secreted, signal-peptide-cleaved, disulfide-bonded, "
         "four-site N-glycosylated plasma protein and yeast two-hybrid reconstitutes a "
         "transcription factor in the yeast nucleus, while UniProt places the F protein in "
@@ -1976,7 +1980,7 @@ NEW_ROWS = [
     dict(
         term=("GO:0002003", "angiotensin maturation"),
         evidence_type="IMP",
-        reference="PMID:7989296",
+        reference="PMID:16116425",
         qualifier="involved_in",
         summary=(
             "The GO term whose definition names angiotensinogen does not annotate "
@@ -1990,9 +1994,15 @@ NEW_ROWS = [
             "together returns zero annotations to this term - not one angiotensinogen in "
             "any of the three species. Every enzyme that acts on angiotensinogen is "
             "annotated to the process; the protein they act on is invisible. The evidence runs in both "
-            "directions: deleting angiotensinogen in mouse abolishes plasma angiotensin I, "
-            "and re-expressing it by AAV in hepatocyte-specific Agt-null mice restores plasma "
-            "angiotensin II and suppresses the compensatory renin rise."
+            "directions. The evidence of record is human: biallelic loss-of-function "
+            "mutations in AGT cause renal tubular dysgenesis, which the authors attribute to "
+            "renin-angiotensin system inactivity - the absence of mature angiotensin in a "
+            "person lacking functional angiotensinogen. Mouse genetics corroborates in both "
+            "directions: deleting angiotensinogen abolishes plasma angiotensin I, and "
+            "re-expressing it by AAV in hepatocyte-specific Agt-null mice restores plasma "
+            "angiotensin II and suppresses the compensatory renin rise. The row is coded IMP "
+            "against the human phenotype rather than the mouse one, because the annotation "
+            "is on the human gene."
         ),
         reason=(
             "A pathway-completeness gap rather than a doubtful inference. AGT is not merely "
@@ -2001,12 +2011,22 @@ NEW_ROWS = [
             "Adding it makes the renin-angiotensin cascade traversable in GO from its source "
             "protein rather than only from its enzymes."
         ),
-        supported_by=[Q_KO, Q_RESCUE, Q_BURIED],
+        supported_by=[
+            ("PMID:16116425",
+             "We studied 11 individuals with renal tubular dysgenesis, belonging to nine "
+             "families, and found that they had homozygous or compound heterozygous "
+             "mutations in the genes encoding renin, angiotensinogen, angiotensin converting "
+             "enzyme or angiotensin II receptor type 1."),
+            ("PMID:16116425",
+             "We propose that renal lesions and early anuria result from chronic low "
+             "perfusion pressure of the fetal kidney, a consequence of renin-angiotensin "
+             "system inactivity."),
+            Q_KO, Q_RESCUE, Q_BURIED],
     ),
     dict(
         term=("GO:0002002", "regulation of angiotensin levels in blood"),
         evidence_type="IMP",
-        reference="PMID:25691624",
+        reference="PMID:16116425",
         qualifier="involved_in",
         summary=(
             "The companion gap. GO:0002002 is defined as modulating 'the level of any of the "
@@ -2025,9 +2045,19 @@ NEW_ROWS = [
             "Distinct from GO:0002003: maturation is the conversion process, whereas this term "
             "is about setting how much product there is. Both are absent, both are supported "
             "by the same bidirectional perturbation data, and the concentration-dependence is "
-            "the specific reason angiotensinogen is a therapeutic target in its own right."
+            "the specific reason angiotensinogen is a therapeutic target in its own right. "
+            "Like the maturation row, it is coded IMP against the human loss-of-function "
+            "phenotype - patients with biallelic AGT mutations have an inactive "
+            "renin-angiotensin system - with the mouse knockout and AAV-rescue data and the "
+            "M235T concentration effect as corroboration rather than as the evidence of "
+            "record."
         ),
-        supported_by=[Q_RESCUE, Q_RESCUE_BP,
+        supported_by=[
+            ("PMID:16116425",
+             "We propose that renal lesions and early anuria result from chronic low "
+             "perfusion pressure of the fetal kidney, a consequence of renin-angiotensin "
+             "system inactivity."),
+            Q_RESCUE, Q_RESCUE_BP,
                       ("PMID:20927107",
                        "This strengthens previous deductions5,6 that the predisposition to "
                        "hypertension results from the small increase in concentration of the "
@@ -2266,10 +2296,12 @@ REFERENCES = [
                 "GOA cites this (via AgBase) for an AGT-HCV F protein interaction. The cached "
                 "full text is complete - abstract through the full discussion, in which each "
                 "hit is treated in turn - and the word 'angiotensinogen' does not appear in "
-                "it. The paper enumerates its 36 positive colonies by identity and "
-                "angiotensinogen is not among them; the serpin it does report is C1 "
-                "inhibitor. Left UNVERIFIED rather than WRONG_IDENTIFIER because a table lost "
-                "in text extraction cannot be excluded."
+                "it. But the paper identifies only 25 of its 36 positive colonies in the "
+                "Results, naming a few more in the Discussion, so about a third are never "
+                "identified and angiotensinogen cannot be positively excluded from them. The "
+                "serpin it does report is C1 inhibitor. Left UNVERIFIED rather than "
+                "WRONG_IDENTIFIER: the claim cannot be traced in the text, and it also "
+                "cannot be refuted there."
             ),
         ),
     ),
@@ -2938,7 +2970,9 @@ KNOWLEDGE_GAPS = [
                  supporting_text=(
                      "heterotetramer with the proform of PRG2 and as a complex (probably a")),
             dict(reference_id="file:human/AGT/AGT-bioinformatics/RESULTS.md",
-                 supporting_text="All ten PMID:32814053 partners are intracellular"),
+                 supporting_text=(
+                     "None of the ten PMID:32814053 partners is annotated as secreted or "
+                     "extracellular.")),
         ],
     ),
     dict(
@@ -3005,10 +3039,10 @@ SUGGESTED_QUESTIONS = [
         "of gap junction assembly?")),
     dict(question=(
         "For AgBase: can the AGT-HCV F protein interaction annotated from PMID:16237761 be "
-        "traced? The full text of that paper enumerates its 36 positive colonies by identity "
-        "and does not mention angiotensinogen anywhere; the serpin it reports is C1 inhibitor. "
-        "If the supporting data are in a table not present in the retrievable text, a pointer "
-        "would settle it.")),
+        "traced? Angiotensinogen is not mentioned anywhere in the retrievable full text, and "
+        "the serpin the paper does report is C1 inhibitor - but the Results identify only 25 "
+        "of the 36 positive colonies, so the claim may rest on one of the unnamed ones. A "
+        "pointer to the supporting colony would settle it either way.")),
     dict(question=(
         "For UniProt and GOA jointly: the pregnancy-specific disulfide-linked 2:2 "
         "heterotetramer of angiotensinogen with pro-PRG2, and the probable 2:2:2 complex with "

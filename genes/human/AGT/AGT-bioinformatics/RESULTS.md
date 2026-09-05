@@ -122,10 +122,13 @@ GOA WITH/FROM fields and their UniProt subcellular locations fetched:
 | PMID:23082758 (*Drosophila* AnCE, crystal structure) | 1 | 1 |
 | PMID:18202720 / PMID:1378723 / PMID:10406457 (angiotensin receptors) | 3 | 0 (cell membrane) |
 
-All ten PMID:32814053 partners are intracellular — mitochondrial intermembrane
+None of the ten PMID:32814053 partners is annotated as secreted or extracellular.
+Eight of them carry a curated intracellular location — mitochondrial intermembrane
 space and matrix (NME4), cytosol (EIF2B4), nucleus/cytoplasm (PRMT5, SLFN12), ER
 membrane (VKORC1L1), trans-Golgi network (TGOLN2), dendrite/membrane (TMEM185A),
-membrane (SNX12) — plus two with no annotated location (NPHP1, PRRG2). A yeast
+membrane (SNX12) — and the remaining two, NPHP1 and PRRG2, have no annotated
+subcellular location at all, so for those two the compartment question cannot be
+asked rather than answered against them. A yeast
 two-hybrid assay reconstitutes a transcription factor in the yeast nucleus, so a
 secreted, disulfide-bonded, four-site N-glycosylated plasma protein is being
 tested in a compartment it never occupies. None of the ten has functional
