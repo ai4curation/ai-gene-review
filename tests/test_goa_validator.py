@@ -641,7 +641,8 @@ UniProtKB	Q12345	TEST	part_of	GO:0008888	test complex	CC	ECO:0000314	IDA	PMID:88
         yaml_path.unlink()
 
 
-def test_seed_missing_annotations_backfills_and_splits_supporting_entities(tmp_path):
+@pytest.mark.parametrize("reverse_sources", [False, True])
+def test_seed_missing_annotations_backfills_and_splits_supporting_entities(tmp_path, reverse_sources):
     """WITH/FROM-distinct rows must remain distinct in seeded review YAML."""
     validator = GOAValidator()
     goa_path = tmp_path / "TEST-goa.tsv"
@@ -674,6 +675,10 @@ def test_seed_missing_annotations_backfills_and_splits_supporting_entities(tmp_p
         "  findings: []\n"
     )
 
+    if reverse_sources:
+        header, *rows = goa_path.read_text().splitlines()
+        goa_path.write_text("\n".join([header, *reversed(rows)]) + "\n")
+
     before = validator.validate_against_goa(yaml_path, goa_path)
     # Validation preserves legacy collapsed-row compatibility. Seeding must
     # nevertheless expand every distinct source, even when validation passes.
@@ -702,6 +707,29 @@ def test_seed_missing_annotations_backfills_and_splits_supporting_entities(tmp_p
     ]
     assert annotations[1]["review"]["action"] == "PENDING"
     assert validator.validate_against_goa(yaml_path, goa_path).is_valid
+
+    seeded = yaml_path.read_bytes()
+    assert validator.seed_missing_annotations(yaml_path, goa_path)[::2] == (0, 0, 0)
+    assert yaml_path.read_bytes() == seeded
+
+    # Once sources are explicit, a missing source must be detected and seeded
+    # without changing the other source's curated review.
+    document["existing_annotations"] = annotations[:1]
+    yaml_path.write_text(yaml.safe_dump(document))
+    missing = validator.validate_against_goa(yaml_path, goa_path)
+    assert not missing.is_valid
+    assert len(missing.missing_in_yaml) == 1
+    assert validator.seed_missing_annotations(yaml_path, goa_path)[0] == 1
+    assert yaml.safe_load(yaml_path.read_text())["existing_annotations"][0] == annotations[0]
+
+    # A populated but incorrect source is never rescued by legacy compatibility.
+    annotations[0]["supporting_entities"] = ["UniProtKB:P99999"]
+    document["existing_annotations"] = annotations
+    yaml_path.write_text(yaml.safe_dump(document))
+    wrong = validator.validate_against_goa(yaml_path, goa_path)
+    assert not wrong.is_valid
+    assert len(wrong.missing_in_yaml) == 1
+    assert len(wrong.missing_in_goa) == 1
 
 
 def test_seed_missing_annotations_reports_backfilled_qualifiers(tmp_path):
