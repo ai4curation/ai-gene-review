@@ -251,20 +251,39 @@ resolves the accession** — the widened `grep -l` above, not the node's own fam
 reason that paragraph gives — so check that before choosing the wording, not after. The
 narrower question (does the node's family have a directory under `interpro/panther/`?)
 settles it only when the answer is yes; a no leaves the seed still possibly resolvable
-elsewhere, which is exactly the case `Acadl`'s `Q47146` turned out to be. The test applies
-to **UniProt accessions only** — `entries.csv` is accession-keyed, so a `MOD:` seed is not
-a lookup in it under either the narrow or the widened form, and running the widened `grep`
-on one returns nothing for a reason that says nothing about the seed. For a MOD id the
-routes are the name match described above and the target's own UniProt `DR`
-cross-reference line, not any index. So the two kinds of existing "the local index does
-not resolve it" comment need different treatment when re-checking one: those citing a
-`SGD:`/`PomBase:`/`FB:`/`CGD:`/`MGI:`/`RGD:`/`ZFIN:` id are correct under the widening
-without re-checking, because no index of either scope could ever reach them, while those
-citing a `UniProtKB:` accession are exactly the ones the widened grep can move and should
-be re-run. The accession-cited ones this sweep found are `Ccnt1`'s, and they still resolve
-nowhere. **No count is given here on purpose**: which comments are of this kind depends on
-the phrasing you grep for — three reasonable patterns return three different sets — so
-enumerate against `source_id`, not prose, and scope the claim to what you enumerated.
+elsewhere, which is exactly the case `Acadl`'s `Q47146` turned out to be.
+
+**Before re-checking any existing "the local index does not resolve it" comment, work out
+which seed it is about, and scope whatever you then claim to the comments you actually
+identified.** Two ways of assembling that set have already failed here, in opposite
+directions, so the instruction comes before the criterion rather than after it:
+
+- **Grepping the prose under-counts and mis-classifies.** The wording varies ("could not be
+  resolved to a named gene product", "do not resolve against the local caches", "not
+  resolved to a protein"), and three reasonable patterns return three different sets. That
+  is how a claim that every such comment cites a MOD id got written here, when two of them
+  cite accessions.
+- **Keying on the comment's own `source_id` misses the node-level ones.** A comment can
+  make an unresolvability claim about seeds it is *not* attached to: `Gulo`'s self-seed
+  comment sits under an `MGI:` id while naming `UniProtKB:Q57ZU1` among donors that "do not
+  resolve against the local caches", and `Ghr`'s sits under a `PANTHER:PTN…` id while
+  saying "several" of the row's further accessions could not be resolved. Read the
+  comment's content, not just its key.
+
+The criterion itself is a property, not a list of the prefixes anyone has happened to see:
+**a seed is an index lookup iff it is a `UniProtKB:` accession.** Nothing else is, so do
+not read the prefixes below as the set to match against — MOD identifiers (`SGD:`,
+`PomBase:`, `FB:`, `CGD:`, `MGI:`, `RGD:` and `ZFIN:` are the ones `genes/mouse` uses, but
+`WB:`, `TAIR:`, `dictyBase:` and `AGI_LocusCode:` are all in the wider corpus and `Notch1`
+already cites a `WB:` donor this way) and the other namespaces the corpus carries in a
+`WITH/FROM`, `ensembl:` among them, are alike unreachable by an index of either scope, so
+running the widened `grep` on one returns nothing for a reason that says nothing about the
+seed. For a MOD id the routes are instead the name match described above and the target's
+own UniProt `DR` cross-reference line. The consequence for re-checking: a comment citing
+anything but an accession is correct under the widening without being re-run, while an
+accession-cited one is exactly what the widened grep can move. `Ccnt1`'s are the
+accession-cited ones this sweep found, and they still resolve nowhere.
+
 That is what separates `Gulo` (`P9WIT3` resolves to *M. tuberculosis* Rv1771) from `Bcl2`
 (`PTHR11256`) and `Ednra` (`PTHR46099`), whose accessions resolve in **no** family's
 index, so no amount of grepping can corroborate the MOD-id-to-accession step. A bare `grep`
