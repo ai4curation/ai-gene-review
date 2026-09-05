@@ -1453,7 +1453,11 @@ DECISIONS[75] = dict(
         "- the ventricular gap-junction protein - was significantly REDUCED in dTGR relative "
         "to both losartan-treated dTGR and normal controls. More angiotensinogen-derived "
         "angiotensin II means less connexin 43, and that gap-junction loss is part of the "
-        "electrical remodelling that makes these animals arrhythmic."
+        "electrical remodelling that makes these animals arrhythmic. One caveat that does "
+        "not change the verdict: what was measured is left-ventricular connexin 43 mRNA "
+        "abundance, not gap-junction assembly itself, so the term is a step removed from the "
+        "readout in both its original and its corrected form. The direction, which is what "
+        "this row gets wrong, is unambiguous either way."
     ),
     action="MODIFY",
     reason=(
@@ -2279,9 +2283,11 @@ REFERENCES = [
                 "A competent large-scale study whose output is unsuitable for functional "
                 "annotation of this gene. It yields ten bare protein-binding rows on AGT, a "
                 "protein unrelated to neurodegeneration; the paper itself calls the results "
-                "candidate interactions. All ten partners are intracellular while AGT is "
-                "secreted (0/10 shared compartment, computed in AGT-bioinformatics), and "
-                "UniProt's NbExp=3 on each is replicates within this study."
+                "candidate interactions. None of the ten partners shares AGT's secreted "
+                "compartment (0/10, computed in AGT-bioinformatics), and eight of them carry "
+                "a curated intracellular location, while AGT is secreted; the remaining two, "
+                "NPHP1 and PRRG2, have no annotated location at all. UniProt's NbExp=3 on "
+                "each is replicates within this study."
             ),
         ),
     ),
@@ -3004,9 +3010,8 @@ KNOWLEDGE_GAPS = [
             "Annotation against PRO identifiers, which already exist for these chains "
             "(PRO_0000032456 for the chain, PRO_0000032457-032459 and "
             "PRO_0000420659-420663 for the eight angiotensin peptides) and which UniProt "
-            "already uses for the receptor interactions. No new ontology "
-            "receptor interactions. No new ontology term is needed; what is needed is for GOA "
-            "to accept the finer-grained entity."
+            "already uses for the receptor interactions. No new ontology term is needed; what "
+            "is needed is for GOA to accept the finer-grained entity."
         ),
         provenance=[
             dict(reference_id="file:human/AGT/AGT-uniprot.txt",
