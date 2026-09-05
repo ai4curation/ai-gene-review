@@ -601,7 +601,8 @@ review's verdict
 is precise: "the IEP evidence code is technically appropriate... However,
 annotating a gene to 'response to iron(III) ion' based solely on transcriptional
 induction conflates regulation with function. ArnF is a flippase that
-translocates undecaprenyl phosphate-alpha-L-Ara4N." The iron-responsiveness
+translocates undecaprenyl phosphate-alpha-L-Ara4N; it does not participate in
+iron sensing, binding, or detoxification." The iron-responsiveness
 belongs to the operon's promoter; the flippase does not sense or handle iron.
 (This case also appears in the [IBA project](IBA_REVIEW.md#arnf-pthr30561-functional-divergence-within-smr-superfamily),
 where the same gene's IBA rows are analysed.)
@@ -621,7 +622,8 @@ The circularity has to be judged case by case, and this corpus contains both
 verdicts. DICDI/cotB is a prespore marker: the review flags
 `slug development involved in sorocarp development` because "there is no
 evidence that the SP70 protein participates causally in slug development... the
-gene's core function lies in spore coat structure, not in the morphogenesis."
+gene's core function lies in spore coat structure, not in the morphogenesis of
+the slug."
 DICDI/mhcA gets the same treatment for `aggregation involved in sorocarp
 development`. But DICDI/ecmB was **accepted as core** for `culmination involved
 in sorocarp development` — ecmB is a prestalk extracellular-matrix protein, so
