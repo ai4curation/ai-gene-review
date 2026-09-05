@@ -34,7 +34,7 @@ The key availability issue is simple: the HuggingFace `wanglab/protein_catalogue
 
 | Benchmark | Genes | Terms | CNN | NPI | PLI | COR | LSP | REP | UNC |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| ARGO95 (HF catalogue) | 95 | 955 | 681 (71.3%) | 115 (12.0%) | 5 (0.5%) | 23 (2.4%) | 43 (4.5%) | 29 (3.0%) | 59 (6.2%) |
+| ARGO95 (HF catalogue) | 95 | 955 | 682 (71.4%) | 114 (11.9%) | 5 (0.5%) | 23 (2.4%) | 43 (4.5%) | 29 (3.0%) | 59 (6.2%) |
 
 For comparison, the mixed-source ARGO139 view is retained as a source-diagnostic table, not as a primary SFT benchmark.
 
@@ -42,9 +42,9 @@ For comparison, the mixed-source ARGO139 view is retained as a source-diagnostic
 
 | Source | Genes | Terms | CNN | NPI | PLI | COR | LSP | REP | UNC |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| HF catalogue / ARGO95 | 95 | 955 | 681 (71.3%) | 115 (12.0%) | 5 (0.5%) | 23 (2.4%) | 43 (4.5%) | 29 (3.0%) | 59 (6.2%) |
+| HF catalogue / ARGO95 | 95 | 955 | 682 (71.4%) | 114 (11.9%) | 5 (0.5%) | 23 (2.4%) | 43 (4.5%) | 29 (3.0%) | 59 (6.2%) |
 | Web export | 44 | 9,742 | 2,321 (23.8%) | 42 (0.4%) | 0 (0.0%) | 7 (0.1%) | 388 (4.0%) | 1 (0.0%) | 6,983 (71.7%) |
-| Mixed-source ARGO139 total | 139 | 10,697 | 3,002 (28.1%) | 157 (1.5%) | 5 (0.0%) | 30 (0.3%) | 431 (4.0%) | 30 (0.3%) | 7,042 (65.8%) |
+| Mixed-source ARGO139 total | 139 | 10,697 | 3,003 (28.1%) | 156 (1.5%) | 5 (0.0%) | 30 (0.3%) | 431 (4.0%) | 30 (0.3%) | 7,042 (65.8%) |
 
 The DnaK comprehensive review moved zinc ion binding (`GO:0008270`) from
 `NPI` to `CNN`: PMID:11985624 directly identifies DnaK in a radioactive
@@ -66,8 +66,8 @@ The all-HF view is still useful as the broadest single-source HF view, but it is
 
 | Assessment | Count | % |
 |---|---:|---:|
-| CNN | 920 | 67.7 |
-| NPI | 169 | 12.4 |
+| CNN | 921 | 67.8 |
+| NPI | 168 | 12.4 |
 | UNC | 145 | 10.7 |
 | LSP | 56 | 4.1 |
 | COR | 30 | 2.2 |
@@ -81,9 +81,9 @@ The all-source union is the broadest source-availability view, but it combines A
 | Assessment | Count | % |
 |---|---:|---:|
 | UNC | 7,128 | 64.2 |
-| CNN | 3,241 | 29.2 |
+| CNN | 3,242 | 29.2 |
 | LSP | 444 | 4.0 |
-| NPI | 211 | 1.9 |
+| NPI | 210 | 1.9 |
 | COR | 37 | 0.3 |
 | REP | 34 | 0.3 |
 | PLI | 5 | 0.0 |

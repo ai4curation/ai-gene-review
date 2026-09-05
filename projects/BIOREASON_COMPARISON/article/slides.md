@@ -227,7 +227,7 @@ The **3-fold gap** between raw-GOA agreement (11.7%) and agent-adjudicated core-
 
 ![h:360](figures/sft_assessment_distribution.png)
 
-**71.3% CNN** (correct/non-novel; 634 exact GOA) · **15.6% NPI/PLI/REP** · **2.4% COR** · 4.5% LSP · 6.2% UNC
+**71.4% CNN** (correct/non-novel; 635 exact GOA) · **15.5% NPI/PLI/REP** · **2.4% COR** · 4.5% LSP · 6.2% UNC
 
 The 2.4% COR are known-literature gaps, not discoveries of previously unknown biology.
 
@@ -302,10 +302,10 @@ A separate literature/bioinformatics-assisted run excluded the de Crécy-Lagard 
 
 ## Conclusions
 
-**BioReason-Pro** mostly tells you what you already know, occasionally something correct GOA has not recorded, and assigns **15.9% of ARGO95 terms to incorrect classes** in predictable, diagnosable ways.
+**BioReason-Pro** mostly tells you what you already know, occasionally something correct GOA has not recorded, and assigns **15.5% of ARGO95 terms to incorrect classes** in predictable, diagnosable ways.
 
 - Narratives restate InterPro labels; **eight recurrent model-output failure modes**
-- GO terms: 71.3% not novel, 15.6% NPI/PLI/REP, 2.4% correct and absent from frozen GOA in ARGO95
+- GO terms: 71.4% not novel, 15.5% NPI/PLI/REP, 2.4% correct and absent from frozen GOA in ARGO95
 - Narrative and term arms **fail independently** → not ready for unsupervised import
 
 **The most valuable thing a foundation model can produce is a well-reasoned *narrative*** — it can be reviewed, corrected, combined. Naked GO terms cannot.
