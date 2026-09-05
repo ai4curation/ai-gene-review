@@ -43,7 +43,7 @@ Q_LOST_SR = (
 )
 Q_MEROPS = (
     "file:human/AGT/AGT-bioinformatics/RESULTS.md",
-    "All 7 resolvable seed proteins of IBD node `PTN008970140` are MEROPS",
+    "All 7 resolvable seed proteins of IBD node `PTN008970140` are MEROPS inhibitors (7/7).",
 )
 Q_SECRETED = ("file:human/AGT/AGT-uniprot.txt", "SUBCELLULAR LOCATION: Secreted")
 Q_LIVER = (
@@ -1984,9 +1984,11 @@ NEW_ROWS = [
             "into mature angiotensin in the blood.' Querying QuickGO for it across human, "
             "mouse and rat returns 110 annotations covering essentially every other "
             "participant in the cascade - REN, ACE, ACE2, ENPEP, ANPEP, MME, PREP, PRCP, "
-            "CTSG, LVRN, Ace3, and even ATP6AP2, the (pro)renin receptor - and AGT is not "
-            "among them. Every enzyme that acts on angiotensinogen is annotated to the "
-            "process; the protein they act on is invisible. The evidence runs in both "
+            "CTSG, LVRN, Ace3, and even ATP6AP2, the (pro)renin receptor. Querying the same "
+            "endpoint for human AGT (P01019), rat Agt (P01015) and mouse Agt (P11859) "
+            "together returns zero annotations to this term - not one angiotensinogen in "
+            "any of the three species. Every enzyme that acts on angiotensinogen is "
+            "annotated to the process; the protein they act on is invisible. The evidence runs in both "
             "directions: deleting angiotensinogen in mouse abolishes plasma angiotensin I, "
             "and re-expressing it by AAV in hepatocyte-specific Agt-null mice restores plasma "
             "angiotensin II and suppresses the compensatory renin rise."
@@ -2010,7 +2012,8 @@ NEW_ROWS = [
             "various angiotensinogen proteolytic products in the blood... by the proteolytic "
             "cleavage of angiotensinogen, and its proteolytic products'. Like GO:0002003 it "
             "is annotated to the cascade's enzymes and receptors (117 annotations across "
-            "human, mouse and rat) and not to angiotensinogen. Angiotensinogen concentration "
+            "human, mouse and rat) and to no angiotensinogen in any of those three "
+            "species - the same zero-hit query result as for GO:0002003. Angiotensinogen concentration "
             "is rate-influencing rather than merely permissive: plasma AGT sits near the Km "
             "for renin, the hypertension-associated M235T variant acts by raising "
             "angiotensinogen concentration rather than by changing its function, and graded "
@@ -2691,20 +2694,6 @@ REFERENCES = [
                 "Behind the GO:0005576 IEA row. One of its two inputs, UniProtKB-SubCell "
                 "SL-0243, is AGT's own curated 'Secreted' location, so this row is not "
                 "independent of the UniProt record - but it is correct."
-            ),
-        ),
-    ),
-    dict(
-        id="GO_REF:0000108",
-        title="Automatic assignment of GO terms using logical inference, based on on GO logical definitions",
-        review=dict(
-            relevance="LOW",
-            correctness="UNVERIFIED",
-            notes=(
-                "Not used by any existing annotation on this gene; listed only because the "
-                "two NEW rows need a reference identifier and are curator inferences rather "
-                "than new experiments. The experimental grounding for both NEW rows is given "
-                "in their supported_by, from PMID:7989296 and PMID:25691624."
             ),
         ),
     ),
