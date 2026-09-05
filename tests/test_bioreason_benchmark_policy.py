@@ -115,7 +115,7 @@ def test_argo95_exact_goa_reads_the_declared_baseline_commit(monkeypatch) -> Non
         set(module.read_rl_gene_list()), policy
     )
     assert summary == {
-        "cnn_exact_frozen_goa": 634,
+        "cnn_exact_frozen_goa": 635,
         "cnn_other_established_basis": 47,
         "cor_exact_frozen_goa": 0,
     }
@@ -341,7 +341,7 @@ def test_publication_headlines_match_generated_metrics() -> None:
             gogpt["assessment_distribution"]["UNC"],
         )
     )
-    assert sft["cnn_exact_frozen_goa"] == 634
+    assert sft["cnn_exact_frozen_goa"] == 635
     assert sft["cnn_other_established_basis"] == 47
     assert sft["cor_exact_frozen_goa"] == 0
     assert sft["ontology_pair_adjudication"] == {
