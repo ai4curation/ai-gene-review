@@ -76,10 +76,25 @@ review, which records the dimer as functionally load-bearing family-wide. UniPro
 UniProt subunit record plus the family argument rather than from a cached paper
 demonstrating it specifically for phoA.
 
-## Not proposed
+## The second NEW — added after deep research returned
 
-`GO:0016036 cellular response to phosphate starvation` would be the physiologically
-informative BP for this gene — phoA is the canonical pho-regulon member and the term is
-used in E. coli for appA, phoR and psiE. I did not propose it because no cached publication
-in this gene's reference set demonstrates the induction, and deep research had not returned
-by the time the review was written. It is the obvious next addition if a source is cached.
+`GO:0016036 cellular response to phosphate starvation` (IEP, PMID:2241934). I had initially
+held this back because no cached publication supported it and the deep research had not
+returned. It returned on a later attempt, and the gap is now closed properly rather than by
+citing the synthesis alone: I traced its claim to Torriani's Pi regulon review and cached
+it, which states the induction directly [PMID:2241934, "The repression of phoA (the gene
+encoding alkaline phosphatase) by high Pi concentrations in the medium requires the presence
+of an intact Pst operon (pstS, pstC, pstA, pstB and phoU) and phoR."]. The modern PhoBR
+review (PMID:31520469) is cached and cited as a secondary reference.
+
+This matters because it was the only substantive biological process missing from the gene.
+GOA gave phoA nothing but `GO:0016311 dephosphorylation`, which restates the chemistry and
+explains nothing about why the cell makes the enzyme.
+
+One thing the deep research is useful for is keeping the claim narrow: phoA is a regulon
+*effector*, not a phosphate *sensor* — sensing is PhoR's job
+[file:ECOLI/phoA/phoA-deep-research-falcon.md, "PhoA is an **effector enzyme of the Pho
+phosphate-starvation regulon**."]. The annotation says phoA participates in the cell's
+response, not that it detects phosphate. IEP is the right code: the evidence is the
+expression response, not a direct assay of the protein. Precedent in the same organism is
+good — phoR carries GO:0016036 with IEP, appA with IDA.
