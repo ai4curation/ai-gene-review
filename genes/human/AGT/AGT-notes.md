@@ -119,21 +119,82 @@ only as bare `protein binding`. **`GO:0002020 protease binding`** is the
 informative replacement, and it is what the `GO:0005515` IPI against renin
 (PMID:20927107) has been MODIFIED to.
 
-**The pathway term that names angiotensinogen does not annotate angiotensinogen.**
-`GO:0002003 angiotensin maturation` is defined as *"The process leading to the
-attainment of the full functional capacity of angiotensin by conversion of
-angiotensinogen into mature angiotensin in the blood."* Querying QuickGO for it
-across human/mouse/rat returns 110 annotations covering essentially every other
-participant in the cascade — REN, ACE, ACE2, ENPEP, ANPEP, MME, PREP, PRCP,
-CTSG, LVRN, Ace3, and even ATP6AP2, the (pro)renin receptor — and **angiotensinogen
-is not among them**. The same is true of `GO:0002002 regulation of angiotensin
-levels in blood` (117 annotations, no AGT).
+**Why angiotensinogen is absent from `GO:0002003` — and why that absence is
+correct.** `GO:0002003 angiotensin maturation` is defined as *"The process
+leading to the attainment of the full functional capacity of angiotensin by
+conversion of angiotensinogen into mature angiotensin in the blood."* Querying
+QuickGO for it across human/mouse/rat returns 110 annotations covering
+essentially every other participant in the cascade — REN, ACE, ACE2, ENPEP,
+ANPEP, MME, PREP, PRCP, CTSG, LVRN, Ace3, and even ATP6AP2, the (pro)renin
+receptor — and angiotensinogen is not among them. The same is true of
+`GO:0002002 regulation of angiotensin levels in blood` (117 annotations, no
+AGT).
 
-Both are added as `NEW`. The evidence runs in both directions from the same
-models: knockout removes the product,
+An earlier draft of this review read that as a pathway-completeness gap and
+proposed both terms as `NEW`. **That was wrong.** The absence is deliberate GO
+practice, on four counts.
+
+*The term is a proteolysis term.* `GO:0002003 is_a GO:0016486` peptide hormone
+processing, which sits under `GO:0016485` protein processing, `GO:0051604`
+protein maturation and `GO:0006508` proteolysis. What the term describes is the
+cleaving. Renin and ACE do the cleaving; angiotensinogen is what is cleaved, and
+contributes no chemistry to its own conversion.
+
+*GO applies the same rule to every comparable prohormone.* Checked live in
+QuickGO: insulin (P01308) is absent from `GO:0030070` insulin processing, whose
+annotations are PCSK1, PCSK2, P4HB, ERO1B, SLC30A8 and YIPF5. POMC (P01189),
+pro-glucagon (P01275), proenkephalin-A (P01210) and pro-ANP (P01160) are all absent
+from `GO:0016486` peptide hormone processing, whose 132 human annotations are
+convertases and peptidases — CORIN, which cleaves pro-ANP, is on it; pro-ANP is
+not. APP (P05067) is absent from `GO:0034205` amyloid-beta formation, whose 182
+annotations include BACE1, PSEN1/2, NCSTN and APH1A/B but not the substrate.
+Angiotensinogen's absence is the same absence, six times over.
+
+*GO's own causal model of this pathway makes the distinction explicitly.* GO-CAM
+`6246724f00000549` "Renin-angiotensin pathway (Human)" (cached at
+`gocams/6246724f00000549/`) types REN as `GO:0004190` aspartic-type endopeptidase
+activity `part_of GO:0002003`, and ACE as `GO:0008241` peptidyl-dipeptidase
+activity `part_of GO:0002003`. It contains AGT too — as `GO:0005179` hormone
+activity `part_of GO:0002034` maintenance of blood vessel diameter homeostasis by
+renin-angiotensin, and separately as three `molecules:` instances of
+UniProtKB:P01019, i.e. as the proteases' input and output. A curator built that
+model, put angiotensinogen in it, and chose not to give it `GO:0002003`. So the
+claim that "the protein they act on is invisible" is false: AGT is in the
+pathway model, and in GOA it already carries `GO:0003081` regulation of systemic
+arterial blood pressure by renin-angiotensin (IEA) and `GO:0002034` (IDA, TAS).
+`GO:0003081` is an *ancestor* of both `GO:0002003` and `GO:0002002`, so AGT is
+already inside this branch of GO at the level that describes what it does. The
+proposal would have moved it further down a branch whose added specificity is
+exactly the part it does not do.
+
+*The two proposed rows were parent and child.* `GO:0002003 part_of GO:0002002`,
+so proposing both would have been redundant even on its own terms.
+
+The perturbation data cited in support — knockout removing the product,
 [PMID:7989296 "These mice do not produce angiotensinogen in the liver, resulting in the complete loss of plasma immunoreactive angiotensin I."]
-and re-expression restores it,
+and AAV re-expression restoring it,
 [PMID:25691624 "High plasma renin concentrations in hepAGT-/- mice were suppressed equally by both forms of AGT, which were accompanied by comparable increases of plasma AngII concentrations similar to hepAGT+/+ mice."]
+— is real, but it establishes that angiotensinogen is *necessary* for angiotensin
+production, which is what being the substrate means. Necessity is not
+participation; every one of the prohormones above would pass the same test.
+
+There is one partial counterexample worth recording rather than explaining away:
+thyroglobulin (P01266) *is* annotated to `GO:0006590` thyroid hormone generation
+by IDA, IBA and ISS. Thyroglobulin is not a passive substrate — the hormone's
+covalent structure is built inside the thyroglobulin chain by iodination and
+intramolecular coupling of its own tyrosyl residues, which is why GO's comment on
+that term notes the hormone "can only be formed by the proteolysis of a larger
+molecule". Angiotensinogen has no equivalent chemical role. Fibrinogen on
+`GO:0042730` fibrinolysis and C3 on `GO:0006956` complement activation are
+similar cases: substrates that are also active participants after cleavage. The
+distinction is doing chemistry or structure versus merely being consumed.
+
+If AGT's substrate role should be machine-readable at all, the GO mechanism for
+it already exists and belongs on the enzymes: `has_input` on REN's and ACE's
+`GO:0002003` annotations, or the molecule instances in the GO-CAM above. Nothing
+needs to be added to AGT.
+
+**No `NEW` rows are proposed in this review.**
 
 **The redox switch — and the negative that keeps it out of the review's claims.**
 UniProt records `DISULFID 42..162` (mature Cys18–Cys138) and Zhou et al. built a
