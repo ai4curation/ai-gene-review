@@ -11,6 +11,7 @@ import yaml
 from scripts.auto_review_sft_predictions import (
     EXPECTED_CONFIDENCE,
     MANUAL_OVERRIDES,
+    ManualOverride,
     ONTOLOGY_ADJUDICATION_MARKER,
     ONTOLOGY_PAIR_DECISIONS,
     LabelCheck,
@@ -652,3 +653,44 @@ def test_scoped_adjudications_keep_conflict_checks(gene, actions, change, expect
         'GO:0051082', {'assessment': 'CNN', 'confidence_score': 2, 'summary': override.summary},
         {'GO:0051082'}, {'MARK_AS_OVER_ANNOTATED'},
     ))
+
+
+@pytest.mark.parametrize('actions', [
+    {'REMOVE'},
+    {'MARK_AS_OVER_ANNOTATED', 'REMOVE'},
+    {f'{NEGATED_ACTION_PREFIX}ACCEPT'},
+])
+def test_repair_does_not_write_an_out_of_scope_manual_override(actions):
+    """A stronger reference action must not be overwritten by a scoped CNN call."""
+    go_id = 'GO:0051082'
+    document = {'predictions': [{
+        'source_version': 'wanglab/protein_catalogue',
+        'predicted_term': {'id': go_id, 'label': 'unfolded protein binding'},
+        'review': {'assessment': 'CNN', 'confidence_score': 2,
+                   'summary': 'Original current review'},
+    }]}
+    stats = RepairStats()
+    assert repair_document(
+        document, species='rat', gene='Uggt1', goa_terms={go_id},
+        aigr_actions={go_id: actions}, aigr_core=set(),
+        source_version='wanglab/protein_catalogue', label_checker=None, stats=stats,
+    )
+    review = document['predictions'][0]['review']
+    assert review['assessment'] == 'NPI'
+    assert review['confidence_score'] == 0
+    assert review['summary'] != MANUAL_OVERRIDES[('rat', 'Uggt1', go_id)].summary
+    assert not stats.remaining_conflicts
+    assert not repair_document(
+        document, species='rat', gene='Uggt1', goa_terms={go_id},
+        aigr_actions={go_id: actions}, aigr_core=set(),
+        source_version='wanglab/protein_catalogue', label_checker=None, stats=RepairStats(),
+    )
+
+
+@pytest.mark.parametrize('fields', [
+    {'assessment': 'CNN'},
+    {'summary': 'A rationale without a category'},
+])
+def test_scoped_registry_entries_require_category_and_rationale(fields):
+    with pytest.raises(ValueError, match='assessment and rationale'):
+        ManualOverride(annotation_action_exceptions=frozenset({'MARK_AS_OVER_ANNOTATED'}), **fields)

@@ -74,6 +74,11 @@ class ManualOverride:
     replace_category_mentions: bool = False
     annotation_action_exceptions: frozenset[str] = frozenset()
 
+    def __post_init__(self) -> None:
+        """Reject incomplete scoped adjudications when the registry is loaded."""
+        if self.annotation_action_exceptions and (not self.assessment or not self.summary):
+            raise ValueError("Annotation-action exceptions require an assessment and rationale")
+
 
 @dataclass(frozen=True)
 class OntologyPairDecision:
@@ -98,6 +103,8 @@ MANUAL_OVERRIDES: dict[tuple[str, str, str], ManualOverride] = {
             "GO:0051082 over-annotated as a standalone molecular-function annotation. "
             "That annotation-suitability judgment does not refute substrate binding, "
             "and the prediction does not claim a separate folding-chaperone mechanism. "
+            "LSP was not used because glucosyltransferase activity is a different "
+            "catalytic concept, not a refinement of the predicted binding specificity. "
             "Ontology obsoletion or a preference for the glucosyltransferase activity "
             "term is recorded separately from biological correctness under the "
             "benchmark ontology-status rule. The main gene review is unchanged."
@@ -814,10 +821,17 @@ def apply_manual_override(
     gene: str,
     go_id: str,
     review: MutableMapping[str, Any],
+    *,
+    actions: set[str] | None = None,
 ) -> tuple[bool, bool]:
-    """Apply one explicit override and return review/error-type change flags."""
+    """Apply an override only within its declared annotation-action scope."""
     override = MANUAL_OVERRIDES.get((species, gene, go_id))
     if override is None:
+        return False, False
+    if override.annotation_action_exceptions and (
+        actions is None
+        or annotation_action_adjudication(species, gene, go_id, actions) is None
+    ):
         return False, False
 
     assessment_changed = False
@@ -955,8 +969,6 @@ def annotation_action_adjudication(
     override = MANUAL_OVERRIDES.get((species, gene, go_id))
     if override is None or not override.annotation_action_exceptions:
         return None
-    if not override.assessment or not override.summary:
-        raise ValueError("Annotation-action exceptions require an assessment and rationale")
     biological_actions, accepted_negations = split_action_evidence(actions)
     if (accepted_negations or not biological_actions
             or not biological_actions <= override.annotation_action_exceptions):
@@ -1084,7 +1096,7 @@ def repair_document(
             )
         else:
             assessment_changed, error_changed = apply_manual_override(
-                species, gene, go_id, review
+                species, gene, go_id, review, actions=aigr_actions.get(go_id, set())
             )
         prediction_changed |= assessment_changed or error_changed
         if error_changed:
