@@ -1,0 +1,1889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_2800 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_2800</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88J49" target="_blank" class="term-link">
+                        Q88J49
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_2800";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88J49" data-a="DESCRIPTION: PP_2800 encodes a predicted class III pyridoxal-ph..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PP_2800 encodes a predicted class III pyridoxal-phosphate-dependent aminotransferase. Sequence-family assignments are consistent with a diaminobutyrate:2-oxoglutarate-type enzyme, but PP_2800 has not been characterized experimentally and its preferred physiological substrate and pathway remain unresolved. The canonical ectoine interpretation is not supported by the KT2440 pathway inventory, which lacks the downstream EctA, EctC, and EctD enzymes; PP_2800 instead lies in a GABA/diamine-metabolism neighborhood. It is distinct from the close PvdH ortholog PP_4223 that lies in the KT2440 pyoverdine biosynthetic locus.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008483" target="_blank" class="term-link">
+                                    GO:0008483
+                                </a>
+                            </span>
+                            <span class="term-label">transaminase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88J49" data-a="GO:0008483" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A broad transaminase activity is supported by the class III aminotransferase fold, conserved family assignments, and the submitted UniProt product name.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IPR004637, TIGR00709, and PANTHER PTHR43552:SF2 predict a diaminobutyrate-type transaminase, but no direct PP_2800 assay establishes its preferred in-vivo substrate. KT2440 lacks the downstream ectoine enzymes EctA/EctC/EctD, and PP_2800 lies in a GABA/diamine-metabolism neighborhood rather than the pyoverdine locus. Retain the experimentally safer broad activity until its physiological reaction is resolved.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2800/PP_2800-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Belongs to the class-III pyridoxal-phosphate-dependent</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2800/PP_2800-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">No direct experimental data exist for PP_2800</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2800/PP_2800-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">The ectoine pathway is therefore **genetically incomplete**</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                                    GO:0030170
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxal phosphate binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88J49" data-a="GO:0030170" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PLP binding is expected for this class III aminotransferase and is supported by the UniProt cofactor and family records.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cofactor binding supports the enzyme mechanism but is not the most informative statement of the protein&#39;s function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_2800/PP_2800-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Name=pyridoxal 5&#39;-phosphate</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Predicted class III PLP-dependent aminotransferase; its physiological substrate and pathway are not yet established.</h3>
+                <span class="vote-buttons" data-g="Q88J49" data-a="FUNCTION: Predicted class III PLP-dependent aminotransferase..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008483" target="_blank" class="term-link">
+                            transaminase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_2800/PP_2800-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Belongs to the class-III pyridoxal-phosphate-dependent</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_2800/PP_2800-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PP_2800</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"SubName: Full=Diaminobutyrate-2-oxoglutarate transaminase"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Belongs to the class-III pyridoxal-phosphate-dependent"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Name=pyridoxal 5&#39;-phosphate"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_2800/PP_2800-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research report for PP_2800 in Pseudomonas putida KT2440</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PP_2800 has no direct experimental characterization.</div>
+
+                        <div class="finding-text">"No direct experimental data exist for PP_2800"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The exact physiological substrate remains unresolved.</div>
+
+                        <div class="finding-text">"the exact preferred substrate and metabolic direction in vivo remain undetermined"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The close pyoverdine-locus PvdH ortholog is PP_4223 rather than PP_2800.</div>
+
+                        <div class="finding-text">"PP_4223 is 85.7 % identical to PvdH"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">KT2440 lacks the downstream ectoine pathway needed to use this reaction for ectoine synthesis.</div>
+
+                        <div class="finding-text">"The ectoine pathway is therefore **genetically incomplete**"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the preferred physiological amino donor and acceptor of PP_2800, and what C4 amino-compound pathway recruits it in KT2440?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88J49" data-a="Q: What is the preferred physiological amino donor an..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare purified PP_2800 and PvdH kinetics across L-aspartate-4-semialdehyde, L-2,4-diaminobutyrate, GABA, glutamate, and 2-oxoglutarate, and pair the assay with targeted metabolomics of a clean PP_2800 deletion.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: PP_2800 is a C4 omega-amino-compound aminotransferase with substrate preferences distinct from the pyoverdine enzyme PvdH.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: comparative enzymology and metabolomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88J49" data-a="EXPERIMENT: Compare purified PP_2800 and PvdH kinetics across ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_2800-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88J49" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: PP_2800 (UniProt Q88J49)</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-31T08:45:11.370098</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_2800-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_2800-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-pp_2800-uniprot-q88j49">Functional Annotation Report: PP_2800 (UniProt Q88J49)</h1>
+<p><strong>Organism:</strong> <em>Pseudomonas putida</em> KT2440 (strain ATCC 47054 / DSM 6125 / NCIMB 11950)<br />
+<strong>Locus:</strong> PP_2800 · <strong>Gene product:</strong> Diaminobutyrate–2-oxoglutarate transaminase (putative)<br />
+<strong>Protein:</strong> 417 aa, ~45.25 kDa · <strong>UniProt:</strong> Q88J49 (unreviewed, TrEMBL) · <strong>RefSeq:</strong> WP_010953709.1<br />
+<strong>EC / KO:</strong> EC 2.6.1.76 / KEGG K00836</p>
+<hr />
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (answer to the research question)</h2>
+<p>PP_2800 encodes a <strong>soluble, cytoplasmic, pyridoxal-5′-phosphate (PLP)-dependent class-III (ω-)aminotransferase of the DAT/EctB family</strong> (diaminobutyrate–2-oxoglutarate transaminase, EC 2.6.1.76). Enzymes of this family catalyze the <strong>reversible transfer of an amino group between the distal (ω) position of a C4 amino-acid semialdehyde and 2-oxoglutarate/glutamate</strong>, interconverting <strong>L-aspartate-β-semialdehyde + L-glutamate ⇌ L-2,4-diaminobutyrate (DABA) + 2-oxoglutarate</strong>. This assignment is based on <strong>sequence homology and conserved-domain signatures only</strong> — there is no direct experimental characterization of the PP_2800 protein. Importantly, although the DAT/EctB reaction is the canonical first, rate-limiting step of <strong>ectoine</strong> biosynthesis, <em>P. putida</em> KT2440 <strong>lacks the downstream ectoine genes (ectA, ectC, ectD)</strong> and therefore cannot make ectoine. The genome encodes <strong>two K00836 paralogs (PP_2800 and PP_4223, ~51 % identical) that are functionally partitioned</strong>: <strong>PP_4223</strong> lies inside the pyoverdine (ferribactin-synthase) NRPS cluster and is the parsimonious supplier of L-2,4-diaminobutyrate (L-Dab) for the pyoverdine siderophore, whereas <strong>PP_2800</strong> sits in a separate GABA/diamine metabolism cluster. Thus the physiological role of PP_2800 is best interpreted as <strong>cytoplasmic metabolism/interconversion of C4 amino compounds (aspartate-β-semialdehyde/DABA-, and possibly GABA-type ω-amino substrates)</strong>, rather than siderophore or compatible-solute synthesis.</p>
+<h2 id="2-molecular-identity-and-evidence">2. Molecular identity and evidence</h2>
+<p><strong>Domain/family evidence (bioinformatic).</strong> UniProt and InterPro assign PP_2800 to:<br />
+- Pfam <strong>PF00202 Aminotran_3</strong> (class-III aminotransferase); PROSITE <strong>PS00600</strong> (class-III PLP AA-transferase active-site motif).<br />
+- TIGRFAM <strong>TIGR00709 "dat"</strong> and NCBIfam <strong>NF006733 / PRK09264</strong>, both specific to 2,4-diaminobutyrate:2-oxoglutarate 4-aminotransferases.<br />
+- PANTHER <strong>PTHR43552:SF2 "diaminobutyrate–2-oxoglutarate transaminase."</strong><br />
+- InterPro: IPR004637 (Dat), IPR005814/IPR049704 (Aminotrans_3), IPR015421/15424 (PLP-dependent transferase, major/fold).<br />
+- eggNOG <strong>COG0160</strong> (4-aminobutyrate aminotransferase and related aminotransferases).<br />
+- Cofactor: <strong>pyridoxal-5′-phosphate</strong> (GO:0030170, PLP binding).</p>
+<p>Confidence level in UniProt is <strong>PE 3 "Inferred from homology"</strong> — i.e., predicted, not experimentally verified for this protein.</p>
+<p><strong>The catalyzed reaction (from characterized family members).</strong> The founding biochemical study of the <em>Acinetobacter baumannii</em> Dat enzyme purified the protein and demonstrated the reversible reaction <em>"L-2,4-diaminobutyric acid + 2-ketoglutaric acid ⇌ L-glutamic acid + L-aspartic beta-semialdehyde"</em> (Ikai &amp; Yamamoto, 1997, PMID 9260954). Recent structural/biochemical work on EctB confirms the physiological direction <em>"converts aspartate-β-semialdehyde (ASA) to DABA"</em> and that this is <em>"the rate-limiting step of ectoine biosynthesis"</em> (Skogvold et al., 2026, PMID 41652856).</p>
+<p><strong>Substrate specificity.</strong> DABA aminotransferases are <strong>ω-transaminases that aminate the distal ω-position</strong> of their substrate. Structural work on <em>Chromohalobacter salexigens</em> EctB provided <em>"the first description of two binding pockets in the active site that may account for the catalytic character of DABA aminotransferases"</em> (Hillier et al., 2020, PMID 32112674), explaining the characteristic <strong>dual-substrate specificity</strong> (one pocket for the amino donor/glutamate, one for the C4 amino-acceptor). Consistent with broad specificity, the <em>Marinobacter</em> EctB showed <em>"activity was highest using DABA and GABA as substrates"</em> (PMID 41652856). Such promiscuity means the exact in-vivo substrate of PP_2800 cannot be fixed from homology alone.</p>
+<h2 id="3-cellular-localization">3. Cellular localization</h2>
+<p>PP_2800 is predicted to be a <strong>cytoplasmic (cytosolic) soluble enzyme</strong>. This is inferred from: (i) it is a PLP-dependent central-metabolism aminotransferase, a class that is universally cytosolic; (ii) the sequence begins <code>MNKIETFERL…</code> with <strong>no Sec/Tat signal peptide and no transmembrane segment</strong>; and (iii) characterized homologs (EctB, Dat) are soluble oligomeric proteins purified from the cytosol. Family members assemble as <strong>homotetramers built from two functional dimers</strong>, with a "gating loop" from the neighboring monomer helping to shape each active site (PMID 32112674).</p>
+<h2 id="4-pathway-context-and-the-kt2440-specific-interpretation">4. Pathway context and the KT2440-specific interpretation</h2>
+<p><strong>Canonical pathway (in ectoine producers).</strong> DABA aminotransferase (EctB) performs the first committed step of ectoine biosynthesis: ASA → DABA; DABA is then N-acetylated by <strong>EctA</strong> and cyclized by <strong>EctC (ectoine synthase)</strong> to ectoine, optionally hydroxylated by <strong>EctD</strong> to 5-hydroxyectoine (PMID 32112674; PMID 38960226). The same Dat reaction also feeds, together with a DABA <strong>decarboxylase (Ddc)</strong>, the <strong>1,3-diaminopropane</strong> pathway in <em>Acinetobacter</em> and <em>Haemophilus</em> (PMID 9260954; PMID 9514614), and can participate in promiscuous routes such as a <em>"β-alanine biosynthetic pathway consisting of promiscuous metabolic enzymes … including 2,4-diaminobutyrate aminotransferase (Dat) and 2,4-diaminobutyrate decarboxylase (Ddc)"</em> (Perchat et al., 2022, PMID 35623386).</p>
+<p><strong>Why the canonical roles do not apply directly to KT2440.</strong> A KEGG genome-wide orthology check shows <em>P. putida</em> KT2440 encodes the DABA-aminotransferase ortholog K00836 <strong>as two paralogs (PP_2800 and PP_4223)</strong> but has <strong>no ectA (K06718), no ectC (K06720), and no ectD (K10674)</strong>. The ectoine pathway is therefore <strong>genetically incomplete</strong>, and PP_2800 cannot support ectoine synthesis. No DABA decarboxylase (ddc) is present adjacent to PP_2800 either, arguing against a dedicated 1,3-diaminopropane operon at this locus.</p>
+<p><strong>Genomic-neighborhood evidence.</strong> PP_2800 sits (complement strand, ~3.190–3.192 Mb) within a tight cluster of <strong>C4-amino/ω-amino-compound metabolism</strong> genes:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Product</th>
+<th>KO / EC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_2799</td>
+<td>4-aminobutyrate(GABA)–pyruvate transaminase (class III)</td>
+<td>K16871 / 2.6.1.96</td>
+</tr>
+<tr>
+<td><strong>PP_2800</strong></td>
+<td><strong>DABA–2-oxoglutarate transaminase</strong></td>
+<td><strong>K00836 / 2.6.1.76</strong></td>
+</tr>
+<tr>
+<td>PP_2801</td>
+<td>4-aminobutyraldehyde dehydrogenase</td>
+<td>K00137 / 1.2.1.19</td>
+</tr>
+<tr>
+<td>PP_2802</td>
+<td>amino-acid permease</td>
+<td>–</td>
+</tr>
+<tr>
+<td>PP_2806</td>
+<td>TetR-family transcriptional regulator</td>
+<td>–</td>
+</tr>
+</tbody>
+</table>
+<p>The co-occurrence of a <strong>GABA aminotransferase</strong>, an <strong>aminobutyraldehyde dehydrogenase</strong> (an enzyme of putrescine/polyamine→GABA catabolism), an <strong>amino-acid permease</strong> and a local <strong>TetR regulator</strong> indicates a locus dedicated to <strong>uptake and catabolic interconversion of 4-carbon amino compounds</strong> (GABA/polyamine-derived intermediates). Given the broad ω-transaminase specificity of the family, the most defensible interpretation is that PP_2800 supplies <strong>transamination of aspartate-β-semialdehyde/DABA (and possibly related ω-amino substrates such as GABA)</strong> feeding cytoplasmic amino-acid/polyamine metabolism, rather than a compatible-solute pathway.</p>
+<h3 id="4a-the-two-paralogs-are-functionally-partitioned-pp_4223-not-pp_2800-is-the-pyoverdine-siderophore-enzyme">4a. The two paralogs are functionally partitioned: PP_4223 (not PP_2800) is the pyoverdine-siderophore enzyme</h3>
+<p><em>P. putida</em> KT2440 carries <strong>two K00836 DABA-aminotransferase paralogs, PP_2800 and PP_4223</strong>, which share <strong>50.9 % amino-acid identity</strong> (global alignment, 201/395 aligned positions) and both retain the conserved class-III catalytic-lysine motif (PP_2800 <code>…ICDEIQAGCGRTGD…TCAK…</code>; PP_4223 <code>…IVDEIQSGFARTGR…TLSK…</code>). Crucially, their <strong>genomic contexts differ completely</strong>:</p>
+<ul>
+<li><strong>PP_4223</strong> is embedded <strong>within the pyoverdine (ferribactin) biosynthetic locus</strong> — flanked by PP_4219–PP_4221, the <strong>non-ribosomal peptide synthetase (NRPS) subunits of ferribactin synthase</strong> (ferribactin is the pyoverdine precursor), and PP_4222 (SyrP-like). <strong>L-2,4-diaminobutyrate (L-Dab) is a documented pyoverdine building block</strong>: the fluorophore is generated <em>"by periplasmic oxidation and cyclization reactions of d-tyrosine and l-diaminobutyric acid"</em> (Ringel et al., 2018, PMID 29208656), and the <em>P. putida</em> pyoverdine peptide contains an L-Dab residue arising <em>"from the condensation of 2,4-diaminobutyric acid and glutamine"</em> (Gwose &amp; Taraz, 1992, PMID 1388514). PP_4223 is therefore the parsimonious source of L-Dab for pyoverdine and the physiological basis of the KEGG "biosynthesis of various siderophores" (ppu00975) mapping of the K00836 orthology.</li>
+<li><strong>PP_2800</strong>, by contrast, lies <strong>outside any NRPS/siderophore locus</strong>, within the GABA/diamine metabolism cluster described above.</li>
+</ul>
+<p>This partition means the siderophore role attributed to the orthology should be assigned primarily to <strong>PP_4223</strong>, whereas <strong>PP_2800 most likely serves general cytoplasmic amino-acid/diamine (C4 ω-amino) metabolism</strong>. The two enzymes may retain overlapping DABA-transaminase activity (potential partial redundancy), but their distinct genomic niches argue for distinct primary roles.</p>
+<p><strong>Orthology test (decisive).</strong> <em>P. aeruginosa</em> PAO1 carries a <strong>single</strong> K00836 gene, <strong>PA2413 = PvdH</strong> ("diaminobutyrate--2-oxoglutarate aminotransferase"), located within its pyoverdine locus and experimentally required to supply L-Dab for pyoverdine. Global pairwise identity shows <strong>PP_4223 is 85.7 % identical to PvdH</strong> (382/446), i.e. its clear ortholog, while <strong>PP_2800 is only 54.4 % identical to PvdH</strong> (211/388). This confirms with high confidence that <strong>the pyoverdine DABA-transaminase function in <em>P. putida</em> is carried by PP_4223 (the PvdH ortholog), and PP_2800 is a lineage-specific duplication</strong> whose primary role lies outside siderophore biosynthesis, consistent with its GABA/diamine-cluster context.</p>
+<h2 id="5-supported-and-refuted-hypotheses">5. Supported and refuted hypotheses</h2>
+<ul>
+<li><strong>Supported:</strong> PP_2800 is a PLP-dependent class-III DABA-type ω-aminotransferase (EC 2.6.1.76) — strong, converging domain/orthology evidence.</li>
+<li><strong>Supported:</strong> The protein is cytoplasmic and soluble (no signal peptide/TM; family biochemistry).</li>
+<li><strong>Refuted (for KT2440):</strong> PP_2800 acts as the EctB step of an ectoine biosynthetic pathway — refuted because ectA/ectC/ectD are absent from the genome.</li>
+<li><strong>Not supported by local context:</strong> A dedicated 1,3-diaminopropane (dat–ddc) operon at this locus — no adjacent ddc.</li>
+<li><strong>Reassigned:</strong> The siderophore/pyoverdine role of the K00836 orthology belongs primarily to the paralog <strong>PP_4223</strong> (embedded in the ferribactin-synthase NRPS cluster), not PP_2800.</li>
+<li><strong>Best current inference:</strong> PP_2800 performs cytoplasmic transamination of C4 amino-semialdehydes (ASA/DABA, and possibly GABA) within an amino-acid/polyamine catabolic/interconversion cluster.</li>
+</ul>
+<h2 id="6-limitations-and-future-directions">6. Limitations and future directions</h2>
+<ul>
+<li><strong>No direct experimental data exist for PP_2800</strong>; all functional statements are homology/context inferences (UniProt PE3; GO terms IEA only).</li>
+<li>Class-III ω-transaminases are <strong>catalytically promiscuous</strong>, so the exact preferred substrate and metabolic direction in vivo remain undetermined.</li>
+<li>The KT2440 genome carries a <strong>paralog, PP_4223 (also K00836, 50.9 % identical)</strong> that is the <strong>PvdH ortholog (85.7 % identical to <em>P. aeruginosa</em> PvdH/PA2413)</strong> and supplies pyoverdine L-Dab; whether the two paralogs are functionally redundant under any condition remains to be tested directly.</li>
+<li><strong>Recommended experiments:</strong> (i) recombinant expression and steady-state kinetics against ASA, DABA, GABA and putrescine-derived aldehydes; (ii) transcriptional/operon mapping and regulation by the local TetR regulator (PP_2806); (iii) metabolomics of a ΔPP_2800 mutant to detect DABA/GABA/1,3-diaminopropane changes; (iv) an AlphaFold model (available: AlphaFoldDB Q88J49) to confirm the two-pocket active-site architecture and predicted PLP-Lys Schiff-base residue.</li>
+</ul>
+<hr />
+<h3 id="key-references">Key references</h3>
+<ul>
+<li>Ikai &amp; Yamamoto, 1997, <em>J Bacteriol</em> — PMID <strong>9260954</strong> (Dat reaction, EC 2.6.1.76).</li>
+<li>Ikai &amp; Yamamoto, 1998, <em>J Bacteriol</em> — PMID <strong>9514614</strong> (dat/ddc, 1,3-diaminopropane).</li>
+<li>Hillier, Altermark &amp; Leiros, 2020, — PMID <strong>32112674</strong> (EctB crystal structure, tetramer, dual active-site pockets).</li>
+<li>Skogvold et al., 2026 — PMID <strong>41652856</strong> (EctB biochemistry; DABA/GABA substrate range).</li>
+<li>Su et al., 2024 — PMID <strong>38960226</strong> (EctB as rate-limiting step; ectABC).</li>
+<li>Perchat et al., 2022 — PMID <strong>35623386</strong> (Dat promiscuity in alternative pathways).</li>
+<li>Ringel, Dräger &amp; Brüser, 2018 — PMID <strong>29208656</strong> (pyoverdine fluorophore formed from D-Tyr + L-Dab; PvdH-type DABA-AT supplies L-Dab).</li>
+<li>Gwose &amp; Taraz, 1992 — PMID <strong>1388514</strong> (<em>P. putida</em> pyoverdine structure contains L-Dab).</li>
+<li>Nelson et al., 2002, <em>Environ Microbiol</em> — PMID <strong>12534463</strong> (KT2440 genome).</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="PP_2800-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="PP_2800-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_2800-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88J49" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pp_2800-curation-notes">PP_2800 curation notes</h1>
+<p>PP_2800 (<code>Q88J49</code>) is an unreviewed class III PLP-dependent aminotransferase.<br />
+UniProt supplies the submitted product name <code>Diaminobutyrate-2-oxoglutarate
+transaminase</code>, but no experimental reference, gene name, or EC number<br />
+[file:PSEPK/PP_2800/PP_2800-uniprot.txt, "SubName:<br />
+Full=Diaminobutyrate-2-oxoglutarate transaminase"]. Its two GOA rows are broad<br />
+family-derived annotations for transaminase activity and PLP binding.</p>
+<p>The pyoverdine-cluster enzyme PvdH is a distinct paralog at PP_4223. UniProt<br />
+places PP_2800 in <code>PTHR43552:SF2</code> and PvdH in <code>PTHR43552:SF1</code>; PP_2800 is also<br />
+located in a separate locus containing several predicted aminotransferase,<br />
+redox, transport, and catabolic proteins. KEGG membership in <code>ppu00975</code> is<br />
+therefore a candidate EC/family mapping, not evidence that PP_2800 supplies the<br />
+pyoverdine precursor.</p>
+<h2 id="curation-boundary">Curation boundary</h2>
+<ul>
+<li>Retain only activities supported by the class III PLP-aminotransferase<br />
+  architecture.</li>
+<li>Do not assign pyoverdine biosynthesis or the exact PvdH reaction without<br />
+  target-specific substrate, genetic, or strong orthology evidence.</li>
+<li>Treat the physiological substrate and pathway as unresolved.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88J49
+gene_symbol: PP_2800
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  PP_2800 encodes a predicted class III pyridoxal-phosphate-dependent
+  aminotransferase. Sequence-family assignments are consistent with a
+  diaminobutyrate:2-oxoglutarate-type enzyme, but PP_2800 has not been
+  characterized experimentally and its preferred physiological substrate and
+  pathway remain unresolved. The canonical ectoine interpretation is not
+  supported by the KT2440 pathway inventory, which lacks the downstream EctA,
+  EctC, and EctD enzymes; PP_2800 instead lies in a GABA/diamine-metabolism
+  neighborhood. It is distinct from the close PvdH ortholog PP_4223 that lies
+  in the KT2440 pyoverdine biosynthetic locus.
+existing_annotations:
+- term:
+    id: GO:0008483
+    label: transaminase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      A broad transaminase activity is supported by the class III
+      aminotransferase fold, conserved family assignments, and the submitted
+      UniProt product name.
+    action: ACCEPT
+    reason: &gt;-
+      IPR004637, TIGR00709, and PANTHER PTHR43552:SF2 predict a
+      diaminobutyrate-type transaminase, but no direct PP_2800 assay establishes
+      its preferred in-vivo substrate. KT2440 lacks the downstream ectoine
+      enzymes EctA/EctC/EctD, and PP_2800 lies in a GABA/diamine-metabolism
+      neighborhood rather than the pyoverdine locus. Retain the experimentally
+      safer broad activity until its physiological reaction is resolved.
+    supported_by:
+    - reference_id: file:PSEPK/PP_2800/PP_2800-uniprot.txt
+      supporting_text: &#34;Belongs to the class-III pyridoxal-phosphate-dependent&#34;
+    - reference_id: file:PSEPK/PP_2800/PP_2800-deep-research-openscientist.md
+      supporting_text: &#34;No direct experimental data exist for PP_2800&#34;
+    - reference_id: file:PSEPK/PP_2800/PP_2800-deep-research-openscientist.md
+      supporting_text: &#34;The ectoine pathway is therefore **genetically incomplete**&#34;
+- term:
+    id: GO:0030170
+    label: pyridoxal phosphate binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: &gt;-
+      PLP binding is expected for this class III aminotransferase and is
+      supported by the UniProt cofactor and family records.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Cofactor binding supports the enzyme mechanism but is not the most
+      informative statement of the protein&#39;s function.
+    supported_by:
+    - reference_id: file:PSEPK/PP_2800/PP_2800-uniprot.txt
+      supporting_text: &#34;Name=pyridoxal 5&#39;-phosphate&#34;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: file:PSEPK/PP_2800/PP_2800-uniprot.txt
+  title: UniProtKB entry for PP_2800
+  findings:
+  - supporting_text: &#34;SubName: Full=Diaminobutyrate-2-oxoglutarate transaminase&#34;
+  - supporting_text: &#34;Belongs to the class-III pyridoxal-phosphate-dependent&#34;
+  - supporting_text: &#34;Name=pyridoxal 5&#39;-phosphate&#34;
+- id: file:PSEPK/PP_2800/PP_2800-deep-research-openscientist.md
+  title: OpenScientist deep research report for PP_2800 in Pseudomonas putida KT2440
+  findings:
+  - statement: PP_2800 has no direct experimental characterization.
+    supporting_text: &#34;No direct experimental data exist for PP_2800&#34;
+  - statement: The exact physiological substrate remains unresolved.
+    supporting_text: &#34;the exact preferred substrate and metabolic direction in vivo remain undetermined&#34;
+  - statement: The close pyoverdine-locus PvdH ortholog is PP_4223 rather than PP_2800.
+    supporting_text: &#34;PP_4223 is 85.7 % identical to PvdH&#34;
+  - statement: KT2440 lacks the downstream ectoine pathway needed to use this reaction for ectoine synthesis.
+    supporting_text: &#34;The ectoine pathway is therefore **genetically incomplete**&#34;
+core_functions:
+- description: &gt;-
+    Predicted class III PLP-dependent aminotransferase; its physiological
+    substrate and pathway are not yet established.
+  molecular_function:
+    id: GO:0008483
+    label: transaminase activity
+  supported_by:
+  - reference_id: file:PSEPK/PP_2800/PP_2800-uniprot.txt
+    supporting_text: &#34;Belongs to the class-III pyridoxal-phosphate-dependent&#34;
+suggested_questions:
+- question: &gt;-
+    What is the preferred physiological amino donor and acceptor of PP_2800,
+    and what C4 amino-compound pathway recruits it in KT2440?
+suggested_experiments:
+- hypothesis: &gt;-
+    PP_2800 is a C4 omega-amino-compound aminotransferase with substrate
+    preferences distinct from the pyoverdine enzyme PvdH.
+  description: &gt;-
+    Compare purified PP_2800 and PvdH kinetics across
+    L-aspartate-4-semialdehyde, L-2,4-diaminobutyrate, GABA, glutamate, and
+    2-oxoglutarate, and pair the assay with targeted metabolomics of a clean
+    PP_2800 deletion.
+  experiment_type: comparative enzymology and metabolomics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

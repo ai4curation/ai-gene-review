@@ -28,11 +28,11 @@ import yaml
 
 from ai_gene_review.bioreason_ontology import FROZEN_GO_ADAPTER, get_go_adapter
 from ai_gene_review.sft_prediction_evidence import (
-    NEGATED_ACTION_PREFIX,
     NEGATIVE_ACTIONS,
     POSITIVE_ACTIONS,
     PROVENANCE_LIMITED_NEGATIVE,
     load_aigr_term_actions,
+    split_action_evidence,
 )
 
 
@@ -158,7 +158,7 @@ def extract_accession(uniprot_file: Path) -> str:
 
 def load_review_decisions(review_file: Path) -> dict[str, set[str]]:
     """Load exact GO ID to AIGR action mappings from existing annotations."""
-    return dict(load_aigr_term_actions(review_file, preserve_negated=True))
+    return dict(load_aigr_term_actions(review_file))
 
 
 def load_review_terms(review_file: Path) -> dict[str, set[str]]:
@@ -296,12 +296,19 @@ def deterministic_assessment(
 ) -> tuple[str, str]:
     """Classify only exact, unambiguous current AIGR action matches."""
     actions = set((review_decisions or {}).get(go_id, set()))
-    biological_actions = actions - {PROVENANCE_LIMITED_NEGATIVE}
+    biological_actions, accepted_negations = split_action_evidence(actions)
     action_text = ", ".join(sorted(biological_actions))
 
     # A retained annotation is sufficient evidence that the exact prediction is
     # correct-not-novel, even if another evidence line has a different action.
     positive = sorted(biological_actions & POSITIVE_ACTIONS)
+    if positive and accepted_negations:
+        return (
+            "UNC",
+            "Deterministic exact-match comparison: current AIGR retains both "
+            "positive and NOT annotations for this exact GO term; context or "
+            f"isoform-specific manual adjudication is required. {MANUAL_ASSESSMENT_MARKER}.",
+        )
     if positive:
         return (
             "CNN",
@@ -310,17 +317,11 @@ def deterministic_assessment(
             "not novel.",
         )
 
-    accepted_negations = sorted(
-        action.removeprefix(NEGATED_ACTION_PREFIX)
-        for action in biological_actions
-        if action.startswith(NEGATED_ACTION_PREFIX)
-        and action.removeprefix(NEGATED_ACTION_PREFIX) in POSITIVE_ACTIONS
-    )
     if accepted_negations:
         return (
             "NPI",
             "Deterministic exact-match comparison: current AIGR retains a NOT "
-            f"annotation with action(s) {', '.join(accepted_negations)}, which "
+            f"annotation with action(s) {', '.join(sorted(accepted_negations))}, which "
             "directly contradicts this positive GO-GPT prediction; classified as "
             "nonparalog incorrect.",
         )

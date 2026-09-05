@@ -6,6 +6,8 @@ oak_config := "conf/oak_config.yaml"
 ref_validator_config := "conf/reference_validator_config.yaml"
 term_validator := "scripts/run_term_validator.sh"
 ref_validator := "scripts/run_reference_validator.sh"
+history_schema_path := "src/ai_gene_review/schema/history.yaml"
+history_dir := "history"
 
 all: validate-all test
 
@@ -91,6 +93,7 @@ sync-codex-skills:
 # Fetch gene data from UniProt and GOA
 # Use --alias to specify a custom directory name and file prefix
 # Use --force to overwrite existing UniProt and GOA files
+# Accession precedence: --uniprot-id, existing review id, then symbol resolution
 # Example: just fetch-gene 9BACT F0JBF1 --alias HgcB
 # Example: just fetch-gene human TP53 --force
 [positional-arguments]
@@ -188,6 +191,23 @@ fetch-panther-paint family *args="":
 fetch-panther-paint-all *args="":
     uv run ai-gene-review fetch-panther-paint --all --output-dir . {{args}}
 
+# Regenerate the PANTHER IBA project tables through public wrapper recipes.
+# These may download cached PAINT source data on the first run.
+[group('QC')]
+refresh-panther-iba-propagation:
+    uv run python projects/PANTHER_IBA_REVIEW/extract_iba_propagation.py
+
+[group('QC')]
+refresh-panther-iba-node-annotations:
+    uv run python projects/PANTHER_IBA_REVIEW/extract_node_annotations.py
+
+[group('QC')]
+refresh-panther-iba-function-losses:
+    uv run python projects/PANTHER_IBA_REVIEW/extract_function_losses.py
+
+[group('QC')]
+refresh-panther-iba-project: refresh-panther-iba-propagation refresh-panther-iba-node-annotations refresh-panther-iba-function-losses
+
 # Rebuild interpro/panther/panther.obo from PANTHER's HMM classifications.
 # This is the authority behind PANTHER family/subfamily id + label validation
 # (conf/oak_config.yaml routes the PANTHER prefix at it). Re-run after a PANTHER
@@ -261,6 +281,12 @@ descriptions-status organism *args="":
 litscan-module-member *args="":
     uv run ai-gene-review litscan module-member {{args}}
 
+# Generic provider-selecting entry point documented in AGENTS.md and automation prompts.
+# Supports --provider, --alias, --fallback, --timeout, and --extra-args (which must come last).
+# Example: just deep-research human TP53 --provider perplexity
+deep-research organism gene_id *args="":
+    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} {{args}}
+
 # Deep research using OpenAI (GPT models)
 # Gene symbol automatically looked up from UniProt file if --alias not provided
 # Supports --fallback PROVIDER [PROVIDER ...] and --timeout SECONDS
@@ -329,7 +355,7 @@ deep-research-asta organism gene_id *args="":
 #   just deep-research-codex human TP53
 #   just deep-research-codex METEA C5B1I4 --alias mllA
 deep-research-codex organism gene_id *args="":
-    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} cyberian --extra-args --param agent_type=codex {{args}}
+    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} codex {{args}}
 
 # Deep research on an InterPro entry (family/domain) behind InterPro2GO annotations.
 # Metadata is auto-fetched and cached under interpro/<database>/<ID>/ if absent.
@@ -747,7 +773,7 @@ term-deep-research-cyberian concept *args="":
     uv run python scripts/concept_deep_research_wrapper.py "{{concept}}" cyberian {{args}}
 
 term-deep-research-codex concept *args="":
-    uv run python scripts/concept_deep_research_wrapper.py "{{concept}}" cyberian --extra-args --param agent_type=codex {{args}}
+    uv run python scripts/concept_deep_research_wrapper.py "{{concept}}" codex {{args}}
 
 # Module deep research (targets module YAMLs and writes beside the YAML by default)
 # Examples:
@@ -2743,6 +2769,58 @@ scan-prose-panther *args="":
 [group('QC')]
 panther-report-stats *args="":
     uv run ai-gene-review panther-report-stats --output-dir . {{args}}
+
+# ============ History records (ported from dismech) ============
+# Append-only curation session history under history/. See docs/history.md.
+
+# Scaffold a new append-only history record (pass-through to scripts/new_history.py).
+# Run `just new-history --help` for all options. Prints the created path.
+# Example:
+#   just new-history --kind gene --organism human --slug CFAP300 --event CREATE \
+#     --outcome changed --summary "Create review: CFAP300" --agent-tool claude-code \
+#     --pr 2500 --details "..."
+# `[positional-arguments]` + "$@" is required, not stylistic: interpolating
+# {{ARGS}} joins the variadic args into one space-separated string and loses
+# shell quoting, so a multi-word --summary/--details would reach argparse as
+# separate tokens ("unrecognized arguments").
+[group('QC')]
+[positional-arguments]
+new-history *ARGS:
+    uv run python scripts/new_history.py "$@"
+
+# Validate a single history record
+[group('QC')]
+validate-history file:
+    uv run linkml-validate --schema {{history_schema_path}} --target-class HistoryRecord {{file}}
+
+# Validate all history records
+[group('QC')]
+validate-history-all:
+    #!/usr/bin/env bash
+    set -e
+    if [[ ! -d "{{history_dir}}" ]]; then
+        echo "No history directory found."
+        exit 0
+    fi
+    files=()
+    while IFS= read -r f; do
+        files+=("$f")
+    done < <(find "{{history_dir}}" -type f -name '*.yaml' | sort)
+    if [ ${#files[@]} -eq 0 ]; then
+        echo "No history YAML files found in {{history_dir}}."
+        exit 0
+    fi
+    printf 'Validating %s history record(s).\n' "${#files[@]}"
+    uv run linkml-validate --schema {{history_schema_path}} --target-class HistoryRecord "${files[@]}"
+
+# Retrospectively backfill history records from PR metadata (needs `gh`).
+# Prefer --state merged: an open PR's new targets are not on this checkout,
+# so its records get skipped as missing (see docs/history.md).
+# Example: just backfill-history --state merged --dry-run
+[group('QC')]
+[positional-arguments]
+backfill-history *ARGS:
+    uv run python scripts/backfill_history_from_prs.py "$@"
 
 # ============== PANTHER Family Reviews ==============
 

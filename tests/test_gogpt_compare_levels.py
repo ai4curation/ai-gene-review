@@ -117,7 +117,7 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
     assert committed == details
     assert len(details) == 299
     assert stats == {
-        "goa": {"overlap": 1037, "total": 2957, "pred": 8871},
+        "goa": {"overlap": 1035, "total": 2954, "pred": 8871},
         # Upstream reviews moved these levels. The HdeB re-review retains
         # GO:0051082 as an explicit interim post-review/core term (+1 to both
         # post_review and core). Separately, surA now retains GO:0005515
@@ -149,8 +149,27 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
         # parents GO:0016853 and GO:0046872, reducing raw and post-review
         # totals/overlaps by three. Its term-less holdase core removes GO:0051082
         # from the GO-valued core set.
-        "post_review": {"overlap": 850, "total": 2762, "pred": 8871},
-        "core": {"overlap": 349, "total": 1230, "pred": 8871},
+        # CnoX's refreshed GOA removes obsolete GO:0051082 and two stale process
+        # rows, reducing raw totals by three and predicted overlaps by two. Its
+        # completed review plus follow-up adds evidence-backed GO:0009408 to the
+        # post-review set while removing general redox homeostasis from the core;
+        # GO:0051087 remains an evidence-backed core activity, but is the one CnoX
+        # core term GO-GPT did not predict: the report's core_overlap_terms are
+        # GO:0005829, GO:0034599 and GO:0042026, which is why core_terms is 4 and
+        # core_overlap 3.
+        # BACSU/lipA follows GO:0009107's obsoletion: its two lipoate-biosynthesis
+        # rows become MODIFY to the replacement GO:0009249, which the review already
+        # carries, so the post-review set loses one distinct term. The core_functions
+        # entry keyed on the obsolete term was dropped for the same reason, removing
+        # one GO-valued core term. Both overlaps are unchanged -- GO:0009249 was
+        # already the predicted match at both levels.
+        # The AT1G06680 (PSBP1) re-review synthesizes a core_functions block for
+        # the first time: four GO-valued core slots, one of which (GO:0019684)
+        # is a predicted overlap (+4 core total, +1 core overlap). The same
+        # re-review stops retaining GO:0009535 post-review, dropping one
+        # predicted post-review overlap without changing the post-review total.
+        "post_review": {"overlap": 848, "total": 2760, "pred": 8871},
+        "core": {"overlap": 351, "total": 1233, "pred": 8871},
     }
 
 
