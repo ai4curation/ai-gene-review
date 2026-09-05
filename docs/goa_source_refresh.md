@@ -42,3 +42,7 @@ Use the same explicit retirement path when a complete term/evidence/reference
 assertion disappears. The seeder does not automatically retire curator-authored
 records, because a transient or incomplete upstream snapshot must not silently
 withdraw them.
+
+`fix-goa-retired` does not implement donor replacement: it matches at a broader
+term/evidence level and skips several inference codes. Use the explicit review
+and retirement steps above for a WITH/FROM change.
