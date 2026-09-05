@@ -221,10 +221,14 @@ MOD_PREFIXES = SPECIES_SCOPED_PREFIXES  # historical name, kept for readability 
 #   PANTHER:PTN000000113; the family and node columns carry the same kind of id
 #   UNPREFIXED (bare PTHR24055, PTN000622075), so there is no "PANTHER column" in the
 #   prefixed sense -- besides the seed column itself, GO and taxon are the only other
-#   prefixed ones (3, 7 and 8 carry a prefix on all 18822 rows; 1, 2, 4, 5, 6 and 9
-#   carry none). That correction matters here because the sentence this replaced
-#   invented such a column, and the first attempt to fix it kept the framing while
-#   denying it.
+#   prefixed ones (columns 3, 7 and 8 are prefixed; 1, 2, 4, 5, 6 and 9 are not).
+#   Count VALUES, not rows: the seed column holds 78949 pipe-separated values, 0 of
+#   them unprefixed, and those sum exactly to the fourteen namespace counts. A per-row
+#   count cannot show this -- every row's FIRST seed is prefixed whether you split the
+#   pipes or not, so 18822 comes out the same under the broken TAB-anchored sweep as
+#   under the fixed one, and would have been evidence for nothing. That correction
+#   matters here because the sentence this replaced invented such a column, and the
+#   first attempt to fix it kept the framing while denying it.
 #
 #   The seed column surfaces no namespace the GOA sweep had not already accounted for,
 #   which is the substantive point -- but it is NOT "a strict subset of what is rostered or
@@ -256,7 +260,10 @@ MOD_PREFIXES = SPECIES_SCOPED_PREFIXES  # historical name, kept for readability 
 #   Anchoring is how these sweeps fail, and it fails in BOTH directions. Over-anchored
 #   under-collects: the same TAB mistake in the GOA sweep returned no AspGD at all, and a
 #   single-line grep made a verbatim Slc5a1 quote look fabricated. Under-anchored
-#   over-collects just as confidently: a -B30 window over Mapk1 returns about thirty
+#   over-collects just as confidently. Two instances, both while checking this very
+#   paragraph: an awk census with NR>1 instead of FNR>1 skips only the FIRST file's header
+#   and admits the other 2888, which showed up as 2888 "unprefixed" seed values that were
+#   all the literal string "seeds" -- and a -B30 window over Mapk1 returns about thirty
 #   propagation terms where the file has 18 blocks, sweeping up neighbouring ACCEPT rows.
 #   (30 or 31 depending on whether proposed_replacement_terms ids are counted -- the exact
 #   figure is provenance, and the demonstration is the same either way.) All the
