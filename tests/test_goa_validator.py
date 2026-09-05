@@ -686,6 +686,23 @@ def test_seed_missing_annotations_backfills_and_splits_supporting_entities(tmp_p
     assert not before.missing_in_yaml
     assert not before.missing_in_goa
 
+    from typer.testing import CliRunner
+    from ai_gene_review.cli import app
+
+    original = yaml_path.read_bytes()
+    runner = CliRunner()
+    preview = runner.invoke(app, ["seed-goa", str(yaml_path), "--goa", str(goa_path), "--dry-run", "--no-fetch-titles"])
+    assert preview.exit_code == 0, preview.output
+    assert "Would add 1 annotations" in preview.output
+    assert "1 supporting-entity lists" in preview.output
+    assert yaml_path.read_bytes() == original
+    seeded_output = tmp_path / "cli-seeded.yaml"
+    seeded_cli = runner.invoke(app, ["seed-goa", str(yaml_path), "--goa", str(goa_path), "--output", str(seeded_output), "--no-fetch-titles"])
+    assert seeded_cli.exit_code == 0, seeded_cli.output
+    assert seeded_output.exists(), seeded_cli.output
+    assert len(yaml.safe_load(seeded_output.read_text())["existing_annotations"]) == 2
+    assert yaml_path.read_bytes() == original
+
     added, _, references_added, qualifiers_backfilled, supporting_backfilled = (
         validator.seed_missing_annotations(yaml_path, goa_path)
     )
