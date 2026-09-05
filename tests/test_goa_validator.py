@@ -748,6 +748,22 @@ def test_seed_missing_annotations_backfills_and_splits_supporting_entities(tmp_p
     assert len(wrong.missing_in_yaml) == 1
     assert len(wrong.missing_in_goa) == 1
 
+    # When a source changes, retain its historical review and explicitly retire
+    # it. The current source gets a fresh pending row rather than inheriting it.
+    annotations[0]["retired"] = True
+    yaml_path.write_text(yaml.safe_dump(document))
+    assert validator.seed_missing_annotations(yaml_path, goa_path)[0] == 1
+    refreshed = yaml.safe_load(yaml_path.read_text())
+    assert refreshed["existing_annotations"][0] == annotations[0]
+    assert refreshed["existing_annotations"][-1]["review"]["action"] == "PENDING"
+    assert validator.validate_against_goa(yaml_path, goa_path).is_valid
+
+    # Reappearance of a retired source must also seed a fresh active review.
+    refreshed["existing_annotations"][-1]["retired"] = True
+    yaml_path.write_text(yaml.safe_dump(refreshed))
+    assert validator.seed_missing_annotations(yaml_path, goa_path)[0] == 1
+    assert validator.validate_against_goa(yaml_path, goa_path).is_valid
+
 
 def test_seed_missing_annotations_reports_backfilled_qualifiers(tmp_path):
     """Report qualifier enrichments separately from newly seeded annotations."""

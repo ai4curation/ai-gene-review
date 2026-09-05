@@ -1,0 +1,36 @@
+# Refreshing GOA source records
+
+`just fetch-gene ORGANISM GENE --force` and `just seed-goa ORGANISM GENE`
+preserve distinct WITH/FROM sources in `supporting_entities`. They retain an
+existing review while backfilling its missing source metadata and create PENDING
+rows for additional sources. Source ordering is deterministic.
+
+Legacy rows without source metadata remain valid, including historically collapsed
+rows. Validation compatibility does not imply that seeding is unnecessary:
+`uv run ai-gene-review seed-goa PATH --dry-run` previews source expansion and
+metadata backfills without changing the input.
+
+## When a source changes
+
+An explicitly recorded source that no longer occurs in refreshed GOA fails source
+validation. A new donor or PAINT node can change the evidence behind an assertion;
+the old judgment must not automatically transfer to the new source.
+
+1. Refresh through `just fetch-gene ORGANISM GENE --force`. The new source is
+   seeded as a PENDING annotation. The old record and its review are preserved.
+2. Compare the old and current source evidence. If the old source has been
+   withdrawn or replaced, set `retired: true` on its annotation record. Retain its
+   original source and review, and explain the retirement in the gene notes.
+   Do not delete the historical record or guess an equivalent replacement node.
+3. Review the new record against its actual evidence, then run
+   `just validate ORGANISM GENE`.
+
+Retirement records disappearance from the current annotation snapshot; it is not
+a biological REMOVE judgment. Retired rows are excluded from current GOA matching
+and seeding. If a retired source later reappears, the seeder creates a new PENDING
+record rather than silently reactivating the historical judgment.
+
+Use the same explicit retirement path when a complete term/evidence/reference
+assertion disappears. The seeder does not automatically retire curator-authored
+records, because a transient or incomplete upstream snapshot must not silently
+withdraw them.

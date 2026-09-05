@@ -674,6 +674,10 @@ class GOAValidator:
         existing_by_tuple = {}
         existing_by_base: Dict[Tuple[str, str, str, bool], List[Dict[str, Any]]] = {}
         for ann in existing_annotations:
+            # Historical records must not suppress a fresh review if their GOA
+            # source reappears, or be enriched into a different current source.
+            if isinstance(ann, dict) and ann.get("retired", False):
+                continue
             if isinstance(ann, dict) and "term" in ann:
                 term = ann["term"]
                 if isinstance(term, dict) and "id" in term:
