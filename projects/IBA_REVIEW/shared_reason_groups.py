@@ -215,16 +215,23 @@ MOD_PREFIXES = SPECIES_SCOPED_PREFIXES  # historical name, kept for readability 
 #   the general rule for figures in these two scripts, not a licence local to this block.
 #
 #   The sweep covers *-goa.tsv, and PAINT is the other source these blocks read seeds from.
-#   PAINT's seed column carries AGI_LocusCode, CGD, FB, JaponicusDB, MGI, PomBase, RGD,
-#   SGD, UniProtKB, WB, Xenbase, ZFIN and dictyBase, plus PANTHER (590 times as a seed
-#   VALUE, e.g. PANTHER:PTN000000113, not only as the family/node column) and the GO and
-#   taxon columns. It surfaces no namespace the GOA sweep had not already accounted for,
-#   which is the substantive point -- but not "a strict subset of what is rostered or
-#   mapped", which is false of two of them: UniProtKB and PANTHER are both DECLINED, and
-#   correctly so, being entity ids that pin no species without a lookup.
+#   PAINT's seed column carries FOURTEEN namespaces: AGI_LocusCode, CGD, FB, JaponicusDB,
+#   MGI, PANTHER, PomBase, RGD, SGD, UniProtKB, WB, Xenbase, ZFIN and dictyBase. PANTHER is
+#   an ordinary member of that list, 590 seed values of the form PANTHER:PTN000000113; the
+#   family and node columns carry the same kind of id UNPREFIXED (bare PTHR24055,
+#   PTN000622075), so there is no "PANTHER column" in the prefixed sense -- GO and taxon
+#   are the two genuinely prefixed columns. That correction matters here because the
+#   sentence this replaced invented such a column, and the first attempt to fix it kept
+#   the framing while denying it.
 #
-#   Two of the thirteen are watchlist-only rather than mapped, so a seed from either would
-#   FIRE rather than resolve. That is deliberate, and neither is hypothetical:
+#   The seed column surfaces no namespace the GOA sweep had not already accounted for,
+#   which is the substantive point -- but it is NOT "a strict subset of what is rostered or
+#   mapped", which is false of two members: UniProtKB and PANTHER are both DECLINED, and
+#   correctly so, being entity ids that pin no species without a lookup. Of the fourteen:
+#   ten mapped, two watchlist-only, two declined.
+#
+#   The two watchlist-only ones would FIRE rather than resolve if a seed from either were
+#   enumerated into a block. That is deliberate, and neither is hypothetical:
 #     JaponicusDB  17 families. PTHR24055-paint.tsv lines 2-3 are PTN000622075 GO:0005634
 #                  and GO:0005737, both carrying JaponicusDB:SJAG_04551 -- the exact two
 #                  rows the Mapk1/Mapk3 GO:0035556 blocks name when arguing that the node's
@@ -247,8 +254,10 @@ MOD_PREFIXES = SPECIES_SCOPED_PREFIXES  # historical name, kept for readability 
 #   Anchoring is how these sweeps fail, and it fails in BOTH directions. Over-anchored
 #   under-collects: the same TAB mistake in the GOA sweep returned no AspGD at all, and a
 #   single-line grep made a verbatim Slc5a1 quote look fabricated. Under-anchored
-#   over-collects just as confidently: a -B30 window over Mapk1 returned 30 propagation
-#   terms where the file has 18 blocks, sweeping up neighbouring ACCEPT rows. All the
+#   over-collects just as confidently: a -B30 window over Mapk1 returns about thirty
+#   propagation terms where the file has 18 blocks, sweeping up neighbouring ACCEPT rows.
+#   (30 or 31 depending on whether proposed_replacement_terms ids are counted -- the exact
+#   figure is provenance, and the demonstration is the same either way.) All the
 #   over-anchored cases fail toward a false negative, which can leave the impression that
 #   widening is the safe direction. It is not. Census unanchored, THEN filter -- and the
 #   second half is the half that carries the rule.
