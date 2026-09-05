@@ -688,7 +688,10 @@ class GOAValidator:
         # and/or supporting_entities, so keep a base-tuple index that lets us enrich
         # one legacy annotation before adding rows that differ only by WITH/FROM.
         existing_tuples = set()
-        existing_by_tuple = {}
+        existing_by_tuple: Dict[
+            Tuple[str, str, str, bool, str, Tuple[str, ...]],
+            List[Dict[str, Any]],
+        ] = {}
         existing_by_base: Dict[Tuple[str, str, str, bool], List[Dict[str, Any]]] = {}
         for ann in existing_annotations:
             # Historical records must not suppress a fresh review if their GOA
@@ -703,15 +706,15 @@ class GOAValidator:
                     ref = ann.get("original_reference_id", "")
                     negated = ann.get("negated", False)
                     parsed_qualifier = self._parse_qualifier(ann.get("qualifier"))
-                    supporting_entities = self._supporting_entities_key(
+                    existing_sources_key = self._supporting_entities_key(
                         ann.get("supporting_entities")
                     )
                     base_tuple = (go_id, evidence, ref, negated)
                     existing_tuples.add(
-                        (*base_tuple, parsed_qualifier or "", supporting_entities)
+                        (*base_tuple, parsed_qualifier or "", existing_sources_key)
                     )
                     existing_by_tuple.setdefault(
-                        (*base_tuple, parsed_qualifier or "", supporting_entities), []
+                        (*base_tuple, parsed_qualifier or "", existing_sources_key), []
                     ).append(ann)
                     existing_by_base.setdefault(base_tuple, []).append(ann)
 
