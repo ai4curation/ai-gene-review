@@ -95,7 +95,7 @@ Findings that bear on the review:
   `PTN008518321`, are the entire evidence base of the `GO:0038166` and
   `GO:0042981` IBAs — an angiotensinogen-specific node seeded by
   angiotensinogens, which is exactly what a well-placed IBD looks like.
-- The `GO:0005576` IBA node `PTN000156123` is seeded by 49 proteins spanning the
+- The `GO:0005576` IBA node `PTN000156123` is seeded by 51 proteins spanning the
   whole secreted-serpin range, **including non-inhibitory ones** (SERPINF1/PEDF,
   SERPINA6/CBG, SERPINA7/TBG, ovalbumin). Secretion is the property they
   genuinely share, so this node is correctly placed and correctly broad.

@@ -202,7 +202,7 @@ DECISIONS: dict[int, dict] = {}
 DECISIONS[1] = dict(
     summary=(
         "Correct family inference. PANTHER node PTN000156123 is the secreted-serpin node "
-        "of PTHR11461, and its 49 seeds span the whole functional range of the family - "
+        "of PTHR11461, and its 51 seeds span the whole functional range of the family - "
         "inhibitory members (SERPINA1, SERPINC1, SERPINE1, SERPINF2) alongside "
         "non-inhibitory ones (SERPINF1/PEDF, SERPINA6/corticosteroid-binding globulin, "
         "SERPINA7/thyroxine-binding globulin, chicken ovalbumin-related protein Y). What "
@@ -224,7 +224,7 @@ DECISIONS[1] = dict(
         status={
             "PANTHER:PTN000156123": (
                 "SUPPORTS_TRANSFER",
-                "Secreted-serpin IBD node of PTHR11461, seeded by 49 extant serpins across "
+                "Secreted-serpin IBD node of PTHR11461, seeded by 51 extant serpins across "
                 "plants, insects and vertebrates. Its seeds include non-inhibitory serpins, "
                 "so the node captures secretion rather than inhibition and transfers "
                 "correctly to AGT.",
@@ -2964,7 +2964,9 @@ KNOWLEDGE_GAPS = [
         ),
         resolution=(
             "Annotation against PRO identifiers, which already exist for these chains "
-            "(PRO_0000032456 through PRO_0000032463) and which UniProt already uses for the "
+            "(PRO_0000032456 for the chain, PRO_0000032457-032459 and "
+            "PRO_0000420659-420663 for the eight angiotensin peptides) and which UniProt "
+            "already uses for the receptor interactions. No new ontology "
             "receptor interactions. No new ontology term is needed; what is needed is for GOA "
             "to accept the finer-grained entity."
         ),

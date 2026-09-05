@@ -242,7 +242,7 @@ and detection is not localisation of function.
 All four resolved through `resolve_withfrom.py`; 80 distinct WITH/FROM tokens
 across the GOA file, 0 unresolved.
 
-- **`GO:0005576` / PTN000156123 / 49 donors** — accepted, `NO_FAILURE_CORE`. The
+- **`GO:0005576` / PTN000156123 / 51 donors** — accepted, `NO_FAILURE_CORE`. The
   node is broad on purpose: its seeds include non-inhibitory serpins
   (SERPINF1/PEDF, SERPINA6/CBG, SERPINA7/TBG, ovalbumin) alongside inhibitory
   ones, because secretion is what they actually share. Correctly placed.
