@@ -266,22 +266,29 @@ directions, so the instruction comes before the criterion rather than after it:
 - **Keying on the comment's own `source_id` misses the node-level ones.** A comment can
   make an unresolvability claim about seeds it is *not* attached to: `Gulo`'s self-seed
   comment sits under an `MGI:` id while naming `UniProtKB:Q57ZU1` among donors that "do not
-  resolve against the local caches", and `Ghr`'s sits under a `PANTHER:PTN…` id while
-  saying "several" of the row's further accessions could not be resolved. Read the
-  comment's content, not just its key.
+  resolve against the local caches", `Ghr`'s sits under a `PANTHER:PTN…` id while saying
+  "several" of the row's further accessions could not be resolved, and `Notch1`'s sits
+  under a `PANTHER:PTN…` id while naming four donors — a `WB:`, a `FB:` and two `ZFIN:`
+  ids — that "resolve nowhere in the local caches". Three blocks, so this is the pattern
+  rather than a pair: read the comment's content, not just its key.
 
 The criterion itself is a property, not a list of the prefixes anyone has happened to see:
-**a seed is an index lookup iff it is a `UniProtKB:` accession.** Nothing else is, so do
-not read the prefixes below as the set to match against — MOD identifiers (`SGD:`,
-`PomBase:`, `FB:`, `CGD:`, `MGI:`, `RGD:` and `ZFIN:` are the ones `genes/mouse` uses, but
-`WB:`, `TAIR:`, `dictyBase:` and `AGI_LocusCode:` are all in the wider corpus and `Notch1`
-already cites a `WB:` donor this way) and the other namespaces the corpus carries in a
-`WITH/FROM`, `ensembl:` among them, are alike unreachable by an index of either scope, so
-running the widened `grep` on one returns nothing for a reason that says nothing about the
-seed. For a MOD id the routes are instead the name match described above and the target's
-own UniProt `DR` cross-reference line. The consequence for re-checking: a comment citing
-anything but an accession is correct under the widening without being re-run, while an
-accession-cited one is exactly what the widened grep can move. `Ccnt1`'s are the
+**a seed is an index lookup iff it is a `UniProtKB:` accession.** Nothing else is — MOD
+identifiers (`MGI:`, `SGD:`, `FB:`, `RGD:`, `PomBase:`, `ZFIN:`, `CGD:`, `TAIR:`, `WB:`,
+`dictyBase:`, `AGI_LocusCode:` and whatever else a `WITH/FROM` carries) are not keys in an
+accession-keyed file, so running the widened `grep` on one returns nothing for a reason
+that says nothing about the seed. No count or per-directory scope is given for those
+prefixes on purpose: an earlier revision said which seven `genes/mouse` used and was wrong
+by one (`Cftr` cites a `TAIR:` id) — a list offered as illustration, read back as the set
+to match against, which is the failure this whole passage exists to prevent. Match on the
+property. `ensembl:` reaches
+the same dead end by a different route worth stating, because an Ensembl protein accession
+*looks* like something an accession-keyed index might carry: it is not excluded by being a
+MOD id, but by the fact that no `ENS…P…` identifier is a key in any `*-entries.csv`. For
+anything that is not a `UniProtKB:` accession the routes are instead the name match
+described above and the target's own UniProt `DR` cross-reference line. The consequence
+for re-checking: such a comment is correct under the widening without being re-run, while
+an accession-cited one is exactly what the widened grep can move. `Ccnt1`'s are the
 accession-cited ones this sweep found, and they still resolve nowhere.
 
 That is what separates `Gulo` (`P9WIT3` resolves to *M. tuberculosis* Rv1771) from `Bcl2`
