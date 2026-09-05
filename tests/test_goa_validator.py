@@ -1555,3 +1555,67 @@ def test_seed_mixed_empty_support_is_one_to_one(tmp_path, donors, qualifier):
     seeded = yaml_path.read_bytes()
     assert validator.seed_missing_annotations(yaml_path, goa_path)[0] == 0
     assert yaml_path.read_bytes() == seeded
+
+@pytest.mark.parametrize(
+    'sources, valid, missing',
+    [
+        (['UniProtKB:P11111', 'UniProtKB:P22222', 'UniProtKB:P33333'], True, 0),
+        (['UniProtKB:P11111', 'UniProtKB:P22222'], False, 2),
+        (['UniProtKB:P11111', 'UniProtKB:P22222', 'UniProtKB:P33333', 'UniProtKB:P99999'], False, 2),
+        (['UniProtKB:P11111'], False, 1),
+    ],
+)
+def test_legacy_combined_support_requires_union_of_complete_sources(sources, valid, missing):
+    """Legacy unions are valid, but cannot invent IDs or truncate source groups."""
+    from ai_gene_review.validation.goa_validator import GOAValidationResult
+
+    goa = [GOAAnnotation.from_tsv_row([
+        'UniProtKB', 'Q12345', 'TEST', 'enables', 'GO:0005515',
+        'protein binding', 'MF', '', 'IPI', 'PMID:12345', support,
+    ]) for support in ['UniProtKB:P11111', 'UniProtKB:P22222|UniProtKB:P33333']]
+    annotations = [{
+        'term': {'id': 'GO:0005515', 'label': 'protein binding'},
+        'evidence_type': 'IPI', 'original_reference_id': 'PMID:12345',
+        'supporting_entities': sources, 'review': {'action': 'ACCEPT'},
+    }]
+    validator = GOAValidator()
+    result = validator._validate_strict_tuples(goa, annotations, GOAValidationResult(is_valid=True))
+    assert result.is_valid is valid
+    assert len(result.missing_in_yaml) == missing
+
+
+def test_seeding_preserves_combined_historical_review(tmp_path):
+    """Expanding combined support must not copy its judgment into each source."""
+    import csv
+
+    goa_path = tmp_path / 'TEST-goa.tsv'
+    with goa_path.open('w') as handle:
+        writer = csv.writer(handle, delimiter='\t')
+        writer.writerow(['GENE PRODUCT DB', 'GENE PRODUCT ID', 'SYMBOL', 'QUALIFIER',
+                         'GO TERM', 'GO NAME', 'GO ASPECT', 'ECO ID',
+                         'GO EVIDENCE CODE', 'REFERENCE', 'WITH/FROM'])
+        for source in ['UniProtKB:P11111', 'UniProtKB:P22222']:
+            writer.writerow(['UniProtKB', 'Q12345', 'TEST', 'enables', 'GO:0005515',
+                             'protein binding', 'MF', '', 'IPI', 'PMID:12345', source])
+    yaml_path = tmp_path / 'TEST-ai-review.yaml'
+    historical = {
+        'term': {'id': 'GO:0005515', 'label': 'protein binding'},
+        'evidence_type': 'IPI', 'original_reference_id': 'PMID:12345',
+        'qualifier': 'enables',
+        'supporting_entities': ['UniProtKB:P11111', 'UniProtKB:P22222'],
+        'review': {'action': 'ACCEPT', 'summary': 'Combined historical judgment'},
+    }
+    yaml_path.write_text(yaml.safe_dump({
+        'id': 'Q12345', 'gene_symbol': 'TEST',
+        'existing_annotations': [historical],
+        'references': [{'id': 'PMID:12345', 'title': 'Existing title'}],
+    }))
+    validator = GOAValidator()
+    added, *_ = validator.seed_missing_annotations(yaml_path, goa_path, fetch_titles=False)
+    assert added == 2
+    rows = yaml.safe_load(yaml_path.read_text())['existing_annotations']
+    assert rows[0] == historical
+    assert [row['review']['action'] for row in rows[1:]] == ['PENDING', 'PENDING']
+    assert validator.validate_against_goa(yaml_path, goa_path).is_valid
+    added, *_ = validator.seed_missing_annotations(yaml_path, goa_path, fetch_titles=False)
+    assert added == 0

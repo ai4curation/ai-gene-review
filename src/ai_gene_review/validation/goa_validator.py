@@ -296,7 +296,9 @@ class GOAValidator:
         older YAML row without that field therefore acts as a wildcard for all
         GOA rows with the same term/evidence/reference/polarity. Seeding expands
         these legacy rows without requiring a corpus-wide migration. Explicitly
-        populated YAML rows, by contrast, require an exact support match.
+        populated YAML rows require an exact support match or an exact union
+        of complete GOA source lists for the same base tuple (older combined
+        reviews). Partial source lists and unsupported IDs remain errors.
         """
         goa_keys: List[Tuple[str, str, str, bool, Tuple[str, ...]]] = []
         goa_by_go_id: Dict[str, List[GOAAnnotation]] = {}
@@ -432,6 +434,21 @@ class GOAValidator:
                 index for index, key in enumerate(goa_keys)
                 if key[:4] == base_key and (not support_key or key[4] == support_key)
             }
+            if not matches and support_key:
+                # Older hand-authored reviews combined several source rows. Accept
+                # only a lossless union of whole matching lists, never a partial
+                # donor group or a list containing an unsupported entity.
+                support_set = set(support_key)
+                combined_matches = {
+                    index for index, key in enumerate(goa_keys)
+                    if key[:4] == base_key and key[4]
+                    and set(key[4]) <= support_set
+                }
+                combined_support = {
+                    entity for index in combined_matches for entity in goa_keys[index][4]
+                }
+                if combined_support == support_set:
+                    matches = combined_matches
             if matches:
                 unmatched_goa.difference_update(matches)
             else:

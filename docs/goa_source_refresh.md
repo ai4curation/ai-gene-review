@@ -10,6 +10,14 @@ rows. Validation compatibility does not imply that seeding is unnecessary:
 `uv run ai-gene-review seed-goa PATH --dry-run` previews source expansion and
 metadata backfills without changing the input.
 
+Older reviews also combined multiple source lists into one `supporting_entities`
+list. Such a row remains valid when it is exactly the union of complete GOA
+source lists for the same term, evidence, reference, and polarity. Unsupported
+IDs and truncated source groups still fail. Only the represented source rows
+are covered; other GOA sources still need review records. Seeding preserves the
+combined historical review and adds distinct source rows as PENDING, without
+transferring its judgment to each source.
+
 ## When a source changes
 
 An explicitly recorded source that no longer occurs in refreshed GOA fails source
