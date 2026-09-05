@@ -193,8 +193,28 @@ MOD_PREFIXES = SPECIES_SCOPED_PREFIXES  # historical name, kept for readability 
 #                                    the WITH/FROM of genes/PICST and genes/CANAL rows.
 #                                    Enumerated rather than case-folded: FB and fb would be
 #                                    different namespaces, so matching stays exact.
+#     ENSEMBL_GeneID:ENSG00000124762  3 uses, all genes/human/CALR/CALR-goa.tsv (:161,
+#                                    :173, :175). Species-scoped the way ACCESSION_ORGANISM
+#                                    defines it -- ENSG is human as ENSMUSP is mouse -- and
+#                                    the same class that comment records getting wrong once,
+#                                    when ensembl was filed as naming no gene in one
+#                                    species. Latent: CALR carries no propagation_review.
 #   RNAcentral (64) and Rfam (13) also appear there and are correctly absent -- an RNA
-#   sequence or family names no gene in one species.
+#   sequence or family names no gene in one species. So are RefSeq, GenBank, NCBI_gi
+#   (accessions needing a lookup), SGD_PWY (a pathway), Pfam (a family), DOI and
+#   PubChem_Compound.
+#
+#   These counts are PROVENANCE, not measurements, which is why they are given here while
+#   the declined-prefix paragraph above refuses to give one. They record what the sweep saw
+#   when the entry was added, so a reader can retrace the decision; the entry stays correct
+#   at any count, and none is re-derived by anything. A count that goes stale there would
+#   make a live claim false; here it would only date a footnote.
+#
+#   The sweep covers *-goa.tsv, and PAINT is the other source these blocks read seeds from.
+#   That costs nothing, checked rather than assumed: the namespaces in
+#   interpro/panther/*/*-paint.tsv are AGI_LocusCode, CGD, FB, JaponicusDB, MGI, PomBase,
+#   RGD, SGD, UniProtKB, WB, ZFIN and dictyBase (plus the GO, PANTHER and taxon columns),
+#   a strict subset of what is already rostered or mapped.
 #
 # NOTHING ENFORCES THE WATCHLIST SPELLINGS, and that is the class both real defects were
 # in. A watchlist entry is supposed to have zero corpus uses, so "matches nothing because
@@ -224,7 +244,7 @@ _SPECIES_SCOPED_SHAPED = frozenset({'MGI', 'RGD', 'SGD', 'sgd', 'FB', 'WB', 'ZFI
                                     'TAIR', 'PomBase', 'dictyBase', 'CGD', 'Xenbase',
                                     'AGI_LocusCode', 'araport11', 'ensembl', 'FlyBase',
                                     'WormBase', 'AspGD', 'PseudoCAP', 'JaponicusDB',
-                                    'RAP2022-09-01', 'EcoliWiki'})
+                                    'RAP2022-09-01', 'EcoliWiki', 'ENSEMBL_GeneID'})
 SELF_MARKER = re.compile(r"this gene|the review target itself|the target's own", re.I)
 NEGATION = re.compile(r'\bnot\s+(?:the\s+target|[a-z-]+\s+\S)', re.I)
 # Every species word the corpus uses in a source_label. The TARGET organism's own words
