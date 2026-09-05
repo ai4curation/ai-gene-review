@@ -41,10 +41,20 @@
 - **Clarified**: Metal ion binding specificity
 
 ## Experimental Evidence
-- [PMID:31992591] - Crystal structure with zinc bound
-- [PMID:29695862] - MAP1 activation mechanism
-- [PMID:23595998] - GTPase cycle and zinc transfer
-- [PMID:26369868] - Family-wide functional analysis
+- The core experimental evidence for yeast Zng1p (GTP-dependent zinc transfer to
+  apo-Map1p, GTP-hydrolysis dependence, Zn-deficiency growth/genetic-interaction
+  phenotypes) is PMID:35584675 [Pasquini et al., "Zng1 is a GTP-dependent zinc
+  transferase needed for activation of methionine aminopeptidase"], already cited
+  throughout `ZNG1-ai-review.yaml`.
+- See Update 2026-09-02 below: four previously listed PMIDs in this section
+  (31992591, 29695862, 23595998, 26369868) were checked against PubMed and found
+  to be unrelated papers (glycine riboswitch structure, acupuncture analgesia
+  mechanism, an E. coli nitrile reductase enzyme-engineering study, and a growth
+  hormone receptor antibody study, respectively). They did not describe COG0523,
+  ZNG1, zinc chaperones, or Map1/MetAP1, and have been removed as incorrect
+  citations. None of them were used as `original_reference_id` or
+  `supported_by.reference_id` anywhere in the ai-review.yaml, so no annotation
+  action changes as a result of this correction.
 
 ## Bioinformatics Analysis
 - BLAST revealed >1000 misannotated COG0523 proteins
@@ -69,3 +79,36 @@
 - Shows importance of experimental validation
 - Highlights need for family-wide curation
 - Example for teaching annotation best practices
+
+## Update 2026-09-02
+
+Audited this file as part of a batch oversight review. `ZNG1-ai-review.yaml`
+itself (existing_annotations, core_functions, description) is well-supported:
+its cited PMIDs (35584675, 14562095, 16429126, 19536198) all resolve to the
+correct papers and every `supporting_text` verified as a verbatim substring of
+the cached publication (confirmed via
+`ai-gene-review validate --verbose --terms` and `validate-goa`, both pass with
+no changes). No action changes were made to any GO annotation.
+
+The previous "Experimental Evidence" section of this notes file, however,
+listed four PMIDs (31992591, 29695862, 23595998, 26369868) that do not
+correspond to the claims made next to them. Direct lookup confirms:
+- PMID:31992591 = "The asymmetry and cooperativity of tandem glycine
+  riboswitch aptamers" (Torgerson et al., RNA, 2020) — glycine riboswitch
+  structural biology, unrelated to ZNG1/COG0523.
+- PMID:29695862 = "Critical roles of TRPV2 channels, histamine H1 and
+  adenosine A1 receptors in the initiation of acupoint signals for
+  acupuncture analgesia" (Sci Rep, 2018) — acupuncture pharmacology,
+  unrelated.
+- PMID:23595998 = "Targeting the substrate binding site of E. coli nitrile
+  reductase QueF by modeling, substrate and enzyme engineering" (Wilding et
+  al., Chemistry, 2013) — a QueF nitrile reductase enzyme-engineering study,
+  unrelated.
+- PMID:26369868 = an anti-idiotypic-antibody growth-hormone-receptor
+  antagonist study — unrelated.
+
+These citations were fabricated/mis-attributed and have been removed (see the
+"Experimental Evidence" section above) per the project rule to never fabricate
+identifiers or provenance. They were not used anywhere in the ai-review.yaml,
+so this is a notes-file-only correction with no effect on any curated
+annotation action.
