@@ -26,7 +26,7 @@ autolink_gene_symbols: false
 - [x] Complete initial module and gene validation.
 - [x] Render module, gene, and project pages after research integration.
 - [x] Open one draft PR for this module/pathway: [#2175](https://github.com/ai4curation/ai-gene-review/pull/2175).
-- [ ] Shepherd the PR through review, CI, and merge readiness.
+- [x] Merge the initial curation PR after review and CI (2026-07-25).
 
 ## Satisfiability
 
@@ -95,3 +95,39 @@ not configured for label lookup. All six gene pages, the module page, and this
 project page render successfully after research integration. Repository-wide
 validation passes with 3,689/3,689 gene reviews valid, zero errors, and all 53
 pathway files containing PMID references valid.
+
+## Wave 112 Repair Audit (2026-09-01)
+
+This repair retained the reusable six-enzyme BioC-BioH route and tightened its
+comparative grounding. Generic type II fatty-acid elongation remains an explicit
+dependency between BioC and BioH rather than a dedicated module part. Biotin
+attachment, transport, and BirA-mediated regulation remain outside the de novo
+biosynthesis boundary. The module has no generic localization assertion, and
+molecular-function terms occur only on the six leaf annotons.
+
+The generic OpenScientist module review completed in 965.7 seconds with a
+7,200-second client allowance. It independently supported the six pathway-
+specific reactions, the two shared fatty-acid-synthesis elongation cycles, and
+the exclusion of BirA from this module. The earlier PSEPK taxon/pathway report
+was retained for strain-specific satisfiability and knowledge-gap evidence.
+
+Reviewed, experimentally characterized *Escherichia coli* proteins P12999,
+P13001, P12998, P12995, P13000, and P12996 now provide cross-species exemplars
+for BioC, BioH, BioF, BioA, BioD, and BioB, respectively. Exact local PANTHER
+subfamilies and PAINT nodes are asserted only where both labels and membership
+were verified. BioC remains grounded by NCBIfam:TIGR02072 because its current
+PANTHER subfamily label is functionally misleading. BioB uses the valid
+function-named PTHR22976 parent plus PTN000540961 while omitting the misleading
+mitochondrial SF2 label.
+
+The required annotation-reviewer pass covered every existing GOA row for bioC,
+bioH, bioF, bioA, bioD, and bioB. No gene-review YAML changes were required.
+For bioC, GO:0102130 keeps its machine-sourced identifier and official
+`malonyl-CoA methyltransferase activity` label; the current GO definition and
+RHEA:17105 specify the physiological malonyl-ACP chemistry, which is recorded
+as a naming mismatch rather than rewritten locally.
+
+Targeted LinkML and semantic module validation, all six gene validations, all
+scoped renders, and `git diff --check` were rerun after the repair. The only
+module advisory is that NCBIfam is not configured for automated label lookup.
+The repair is tracked in [PR #2885](https://github.com/ai4curation/ai-gene-review/pull/2885).

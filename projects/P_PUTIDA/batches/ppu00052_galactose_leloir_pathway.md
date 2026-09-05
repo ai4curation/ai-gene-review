@@ -73,3 +73,20 @@ main KT2440 role is biosynthetic UDP-galactose supply for surface glycans.
 
 The broad candidate inventory and its exact metadata are retained in
 [`ppu00052_galactose_leloir_pathway.tsv`](ppu00052_galactose_leloir_pathway.tsv).
+
+## 2026-09-01 GALM family repair
+
+The reusable module's mutarotase leaf is now grounded on
+`PANTHER:PTHR10091:SF0` (`GALACTOSE MUTAROTASE`) rather than the heterogeneous
+parent aldose-1-epimerase family. Reviewed E. coli GalM P0A9C3 and human GALM
+Q96C23 both belong to that subfamily. The module also records the verified
+PAINT node PTN000009552, which supports GO:0004034 and GO:0033499 from those
+bacterial and human seeds. The unresolved KT2440 aldose 1-epimerase candidate
+PP_1165 is not used as a galactose-specific representative, so this refinement
+does not fill the absent PSEPK Leloir route.
+
+The broad GALE parent family remains intentional: human GALE resolves to
+PTHR43725:SF47, while current PSEPK metadata assigns Q88I72 to the heterogeneous
+SF53 grouping labelled `UDP-ARABINOSE 4-EPIMERASE 1`. The exact reaction and
+protein records support both exemplars, but that subfamily label does not
+justify narrowing the reusable GalE selector.
