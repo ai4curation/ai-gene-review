@@ -166,22 +166,26 @@ findings rest on, badly skewed by organism and annotation group.
 
 Every disposition on this page — every ACCEPT rate, every flag rate, the
 cross-code comparison in the next section — is read out of this repository's own
-`*-ai-review.yaml` files. Those are **AI-generated reviews**, produced under the
-guidance in `CLAUDE.md`, which explicitly instructs reviewers to be sceptical of
-weak evidence and to prefer `KEEP_AS_NON_CORE` for sound-but-peripheral
-annotations. Three consequences follow, and they apply to the recommendations at
-the foot of this page as much as to the tables:
+`*-ai-review.yaml` files. Those are **AI-generated reviews**, written under the
+project's reviewing guidance, which tells reviewers that "many GO terms are
+over-annotations" and that they should "not take existing annotations as gospel,
+whether experimental or bioinformatic". Three consequences follow, and they
+apply to the recommendations at the foot of this page as much as to the tables:
 
 - **This is not independent adjudication of GO curators.** It is one reviewer
-  population's opinion, and that population was primed. A cross-code ACCEPT-rate
-  table is therefore partly a measurement of reviewer priors, not only of the
-  codes.
-- **The priors plausibly disfavour IEP specifically.** IEP is named in the
-  reviewing guidance as an evidence type warranting caution, so some of the gap
-  between IEP and IDA/IMP is expected by construction. The comparison is still
-  worth making — the codes were all reviewed under the same priors, so the
-  *ordering* is more trustworthy than any single rate — but a 16.7% flag rate
-  should not be read as "16.7% of IEP annotations in GOA are wrong".
+  population's opinion, and that population was primed to look for
+  over-annotation. A cross-code ACCEPT-rate table is therefore partly a
+  measurement of reviewer priors, not only of the codes.
+- **The priors do not single IEP out, but the vocabulary favours the finding.**
+  The guidance is evidence-code-agnostic — it names experimental and
+  computational codes alike as fallible — which is why the cross-code
+  *ordering* is more trustworthy than any single rate: every code was judged
+  under the same instructions. What is not neutral is that the action
+  vocabulary offers `KEEP_AS_NON_CORE` and `MARK_AS_OVER_ANNOTATED` as
+  first-class verdicts, making "true but peripheral" an easy call to reach —
+  and "true but peripheral" is exactly this page's headline conclusion about
+  IEP. A 16.7% flag rate should not be read as "16.7% of IEP annotations in GOA
+  are wrong".
 - **The qualitative claims are the load-bearing ones.** The failure patterns
   below are argued from named genes, named papers and quoted reviewer reasons,
   each of which can be checked against the source. The statistics describe how
@@ -323,13 +327,14 @@ picture of IEP:
 
 | Stratum | Global | Repo | Ratio |
 |---|---:|---:|---:|
-| *Homo sapiens* | 3.7% | 16.8% | **4.58x** |
-| *Dictyostelium discoideum* | 0.7% | 4.3% | **6.34x** |
-| *Arabidopsis* / TAIR | 19.7% | 29.1% | 1.47x |
-| *Rattus norvegicus* / RGD | 47.5% | 35.8% | 0.76x |
-| *Mus musculus* | 8.0% | 2.6% | **0.33x** |
-| MGI as annotation group | 3.4% | 0.2% | **0.05x** |
-| *Drosophila* / FlyBase | 4.4% | 1.3% | **0.30x** |
+| *Homo sapiens* | 3.7% | 18.2% | **4.96x** |
+| *Dictyostelium discoideum* | 0.7% | 4.1% | **6.05x** |
+| *Arabidopsis* / TAIR | 19.7% | 27.7% | 1.41x |
+| *Rattus norvegicus* / RGD | 47.5% | 34.2% | 0.72x |
+| *Mus musculus* | 8.0% | 4.9% | 0.60x |
+| MGI as annotation group | 3.4% | 2.5% | 0.73x |
+| *Drosophila* / FlyBase | 4.4% | 1.3% | **0.29x** |
+| EcoCyc | 1.6% | 0.4% | **0.22x** |
 
 Entirely absent from the repo: **AgBase** (785 rows), **ZFIN** (326),
 **CollecTF** (211); *Gossypium hirsutum* (395), *Danio rerio* (335),
@@ -337,11 +342,19 @@ Entirely absent from the repo: **AgBase** (785 rows), **ZFIN** (326),
 
 The human over-sampling is expected — the repo is human-centric — and it is
 benign for the term-type findings, because human IEP looks like everyone else's
-IEP. The **MGI gap is not benign**, for a specific reason: the largest
+IEP.
+
+The MGI row is the one that has moved, and it is worth saying why, because it
+shows what targeted sampling buys. MGI matters disproportionately: the largest
 single-screen IEP batches in all of GOA are MGI's (see
 [pattern 3](#3-differential-expression-screen-batch-one-screen-one-term-n-genes)),
-so the stratum the repo samples at 0.05x is precisely where the most extreme
-instance of a pattern this page documents actually lives.
+so the stratum was exactly where the most extreme instance of a pattern this
+page documents actually lives. Before [the miRNA cohort](#cohort-review-130-mirnas-one-term-one-paper),
+the repo sampled MGI at **0.05x** — 1 row against a 3.4% global share. Five
+targeted reviews took it to 0.73x, close to proportional at the row level. At
+the *product* level the gap is barely dented: 5 reviewed of the 437 RNAcentral
+gene products, and 3 of 294, 5 of 139 and 2 of 103 rows for the three batch
+terms those reviews touched. Row-share parity is not cohort coverage.
 
 **A slice the repo under-samples but can represent.** 840 global IEP rows
 (3.3%), on 437 gene products, are **RNAcentral** entries rather than proteins —
@@ -360,14 +373,17 @@ restating:
    the repo sample was proportionally *accurate* (1.01x for BP, 0.80x for CC) all
    along. The mechanism proposed from 20 rows holds at scale: see
    [below](#gorule0000006-violations-are-an-eco-mapping-artifact).
-2. *No GO term is majority-IEP.* Within a gene, 72% of IEP rows are the sole
-   carrier of their term. But measured per term across the whole ontology, IEP is
-   never the dominant support: the most IEP-dependent frequent term is
-   `seed trichome elongation` at **19.6%** of its annotations, then
-   `cellular response to leukemia inhibitory factor` (13.7%) and
-   `response to ethanol` (13.4%); most sit below 2%. Both statements are true and
-   they answer different questions — IEP is load-bearing *for the gene it sits
-   on*, never *for the term it points at*.
+2. *No GO term is majority-IEP.* Within a gene, 72.4% of IEP rows are the sole
+   carrier of their exact term (53.5% with closure). But measured per term across
+   the whole ontology, IEP is never the dominant support: the most IEP-dependent
+   frequent term is `seed trichome elongation` at **19.6%** of its annotations,
+   then `response to ethanol` (15.5%) and
+   `cellular response to leukemia inhibitory factor` (13.7%); most sit below 2%.
+   (These shares alone among the atlas figures are not frozen by the committed
+   snapshot — the per-term totals come from a live QuickGO count — so they drift
+   by a point or two between runs.) Both statements are true and they answer
+   different questions — IEP is load-bearing *for the gene it sits on*, never
+   *for the term it points at*.
 
 ## Failure Patterns
 
@@ -380,7 +396,7 @@ restating:
 | **Regulon membership ≠ function** | Being a transcriptional target of a stimulus-responsive regulator is a property of the promoter, not of the protein. | ECOLI/arnF, yeast/THI22 | MARK_AS_OVER_ANNOTATED |
 | **Marker-gene circularity** | A cell-type marker's expression is *definitionally* correlated with the stage it marks. | DICDI/cotB, DICDI/mhcA | MARK_AS_OVER_ANNOTATED |
 | **Wrong-granularity term** | The term sits at the wrong level for what the experiment showed — too specific (against GO's "use high-level terms" advice) or too broad for a gene whose stimulus is known precisely. | too specific: ARATH/PIF3 `response to water-immersion restraint stress`, DICDI/acaA `response to imidacloprid`; too broad: ARATH/CRY1, ARATH/CRY2 `response to light stimulus`, ARATH/SOC1 | MODIFY / MARK_AS_OVER_ANNOTATED |
-| **Aspect violation** | CC or MF terms carrying IEP, contrary to GORULE:0000006. | 1,223 rows globally, 91% of the CC ones from one ECO class | see [below](#gorule0000006-violations-are-an-eco-mapping-artifact) |
+| **Aspect violation** | CC or MF terms carrying IEP, contrary to GORULE:0000006. | 1,223 rows globally, 97% of the CC ones from one ECO class | see [below](#gorule0000006-violations-are-an-eco-mapping-artifact) |
 
 ### 1. Inducible bystander — the "response to X" cloud
 
@@ -491,9 +507,10 @@ times from one experiment.
 
 Two review consequences follow. A batch-sourced IEP row should be judged against
 its cohort, not on its own, because the cohort reveals the annotation rule that
-produced it. And because these batches are concentrated in MGI — the group the
-repo samples at 0.05x — the reviewed corpus systematically under-represents the
-most extreme form of the pattern.
+produced it. And because these batches are concentrated in MGI, which the repo
+sampled at 0.05x before this project touched it, the reviewed corpus was blind
+to the most extreme form of the pattern; the cohort below is the start of fixing
+that, and it moved the MGI row share to 0.73x on five reviews.
 
 #### Cohort review: 130 miRNAs, one term, one paper
 
@@ -652,8 +669,9 @@ ECO class localises the problem almost perfectly:
 | all other descendant classes | 237 | 202 | 18 | 17 |
 
 The generic parent class is 99.8% BP — essentially rule-compliant. One descendant
-class, ECO:0000279, contributes **91% of every CC violation in GOA** while being
-6% of IEP.
+class, ECO:0000279, contributes **1,110 of the 1,147 CC violations in GOA
+(96.8%)**, and 1,132 of all 1,223 aspect violations (92.6%), while being 5.6% of
+IEP.
 
 The repo's 23 examples are that global picture in miniature (its aspect mix is
 proportional to global at 1.01x for BP and 0.80x for CC). Twenty are SynGO
@@ -769,7 +787,7 @@ Before accepting or flagging an IEP row.
 - Check whether the term already has non-IEP support in the same gene, and check
   the parents and children too, not just the exact term. If something in that
   lineage is covered by IDA/IMP, the IEP row is cheap corroboration; if nothing
-  is (54% of rows), the IEP row is load-bearing and deserves the full agency
+  is (53.5% of rows), the IEP row is load-bearing and deserves the full agency
   question.
 
 ### Prefer the right action
@@ -858,10 +876,11 @@ correct answer is "true, keep it, but it is not what this gene is for."
       response`), the cleanest test of the regulon-membership pattern, in an
       organism this repo already covers well. The tiering is available there too:
       the paper distinguishes SOS-regulon members from the wider induced set.
-- [ ] Continue closing the MGI gap (still sampled well below its 3.4% global
-      share). `cellular response to leukemia inhibitory factor` now has 3 rows
-      reviewed of 294; `long-term synaptic potentiation` 5 of 139;
-      `sensory perception of sound` 1 of 100.
+- [ ] Continue closing the MGI gap at the *product* level. The five miRNA
+      reviews took MGI's row share from 0.05x to 0.73x of its 3.4% global share,
+      which flatters the coverage: `cellular response to leukemia inhibitory
+      factor` has 3 rows reviewed of 294, `long-term synaptic potentiation` 5 of
+      139, `sensory perception of sound` 2 of 103.
 - [ ] Review the IEP-heaviest gene products, none of which are in the repo: rat
       Ppargc1a (50 IEP rows), Il6 (48), Nos3 (45), Serpine1 (44), Tnf (43), Star
       (43), Hif1a (41), Ccl2 (40), Il1b (39). These are the extreme form of the
@@ -912,10 +931,13 @@ them.
 - **Added a limitations section**,
   [What "flagged" means](#what-flagged-means-and-does-not-mean). Every
   disposition on the page comes from this project's own AI-generated reviews,
-  produced under guidance that primes scepticism of weak evidence codes. The
-  cross-code ACCEPT-rate table is therefore partly a measurement of reviewer
-  priors, and IEP is named in that guidance, so part of the gap is expected by
-  construction.
+  produced under guidance that primes reviewers to look for over-annotation, so
+  the cross-code ACCEPT-rate table is partly a measurement of reviewer priors.
+  The guidance does not single IEP out — it names experimental and computational
+  codes alike — which is why the cross-code *ordering* survives better than any
+  single rate; what is not neutral is that `KEEP_AS_NON_CORE` and
+  `MARK_AS_OVER_ANNOTATED` are first-class verdicts, and "true but peripheral"
+  is precisely this page's conclusion about IEP.
 - **Closed the reproducibility gaps.** The survey script now emits the per-gene
   concentration statistics, the ACCEPT∩core count, and an `UNREVIEWED` column so
   the disposition columns sum to the stated total instead of silently dropping
