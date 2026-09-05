@@ -47,9 +47,12 @@ taken as crediting TNAP. Enpp1 and Ank, the other arms of the same study, hold G
 legitimately. A `proposed_new_terms` entry for the promoting direction is included here as
 well as in the human review, since GO has no term for it.
 
-The two IMP rows carry `MGI:MGI:1856651` and `MGI:MGI:2385534` in WITH/FROM. Neither
-resolved through MGI, Alliance or QuickGO during this review, so I have not asserted what
-they are; the paper's genetic arms are the Enpp1-null and ank/ank strains.
+The two IMP rows carry `MGI:MGI:1856651` and `MGI:MGI:2385534` in WITH/FROM. These are
+*allele* ids, which is why gene-level lookups failed at first; the Alliance allele endpoint
+resolves them to **Ank<ank>** and **Enpp1<tm1Gdg>** — the ank/ank and Enpp1-null strains of
+the same paper. So the IMP on Alpl rests on mutant phenotypes of *other* genes, the ones that
+genuinely make or export PPi and legitimately hold this term. That is an independent second
+reason the row is wrong, now stated in the review and recorded as `supporting_entities`.
 
 ## Citation problems found
 

@@ -46,7 +46,7 @@ Note I initially wrote PMID:8634266's title from memory and the reference valida
 it (I had invented "the amide I mode of type III and IV..."). Titles came from the cached
 front matter afterwards. Worth remembering: the title check is real and it works.
 
-## The hydrogenase annotation — real, and I initially misjudged it
+## The hydrogenase annotation — real chemistry, loose term
 
 `GO:0033748 hydrogenase (acceptor) activity` and `GO:0030613 oxidoreductase activity,
 acting on phosphorus or arsenic in donors`, both IDA from PMID:15148399.
@@ -55,19 +55,19 @@ The biology is genuine and remarkable: BAP is the phn-independent phosphite oxid
 the reaction evolves H2 [PMID:15148399, "Surprisingly, BAP catalyzes the oxidation of Pt to
 phosphate and molecular H2."]. Purified enzyme, N-terminally sequenced.
 
-My first draft marked GO:0033748 MODIFY on the grounds that its definition `H2 + A = AH2`
-is written H2-*consuming* while BAP *evolves* H2. That was wrong, and the self-review before
-the PR caught it. The correct basis is the definition itself read under GO's convention:
-catalytic-activity definitions are undirected reactions (the Rhea master-reaction
-convention), so `H2 + A = AH2` covers `AH2 = A + H2`, and with phosphite as AH2 and phosphate
-as A that is the reaction reported. (I briefly leaned on the term's synonym list to reach
-this; that was the wrong basis — synonyms are lookup aids, definitions decide.) Corrected to
-KEEP_AS_NON_CORE. GO:0030613 remains the more informative of the pair because its definition
-— a phosphorus-containing group acting as the hydrogen/electron donor — fits the observed
-reaction literally, with no convention needed, and it names the donor.
+This row was reassessed three times, which is worth recording honestly. First draft: MODIFY,
+"directionally wrong" (definition written H2-consuming). Self-review: KEEP_AS_NON_CORE, on
+the grounds that GO catalytic definitions are undirected — briefly and wrongly justified via
+a synonym rather than the definition. PR review then made the decisive point: the observed
+reaction is phosphite + H2O → phosphate + H2, with **water as a co-substrate**, so it is not
+a clean reverse of `H2 + A = AH2` in either direction — AH2 would have to be two molecules.
+Compared against the definitions, GO:0030613 fits literally (a P-containing group donates
+hydride and reduces protons) while GO:0033748 is a loose fit → **MARK_AS_OVER_ANNOTATED**.
+Lesson taken: settle term applicability by reading the definition against the reaction as
+written in the paper; not by synonyms, and not by a convention argument when the
+stoichiometry does not actually match.
 
-Both rows are KEEP_AS_NON_CORE rather than core because the paper's own numbers
-put the side activity 2–3 orders of magnitude below the phosphatase reaction:
+Both rows are non-core because the paper's own numbers put the side activity 2–3 orders of magnitude below the phosphatase reaction:
 [PMID:15148399, "Highly purified BAP catalyzed Pt oxidation with specific activities of
 62-242 milliunits/mg and phosphate ester hydrolysis with specific activities of 41-61
 units/mg."] I considered adding GO:1902422 hydrogen biosynthetic process and decided
