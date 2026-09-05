@@ -72,6 +72,12 @@ class ManualOverride:
     set_error_type: bool = False
     summary: str | None = None
     replace_category_mentions: bool = False
+    annotation_action_exceptions: frozenset[str] = frozenset()
+
+    def __post_init__(self) -> None:
+        """Reject incomplete scoped adjudications when the registry is loaded."""
+        if self.annotation_action_exceptions and (not self.assessment or not self.summary):
+            raise ValueError("Annotation-action exceptions require an assessment and rationale")
 
 
 @dataclass(frozen=True)
@@ -85,6 +91,41 @@ class OntologyPairDecision:
 
 
 MANUAL_OVERRIDES: dict[tuple[str, str, str], ManualOverride] = {
+    ("rat", "Uggt1", "GO:0051082"): ManualOverride(
+        assessment="CNN",
+        annotation_action_exceptions=frozenset({"MARK_AS_OVER_ANNOTATED"}),
+        summary=(
+            "Correct but not novel for the predicted biological binding concept. "
+            "Rat UGGT1 preferentially recognizes non-native glycoprotein substrates: "
+            "PMID:10764828 characterizes recombinant rat liver UGGT and its preference "
+            "for unfolded glycoprotein substrates, and GOA carries the exact term with IDA. "
+            "The current AIGR review explicitly affirms this recognition while marking "
+            "GO:0051082 over-annotated as a standalone molecular-function annotation. "
+            "That annotation-suitability judgment does not refute substrate binding, "
+            "and the prediction does not claim a separate folding-chaperone mechanism. "
+            "LSP was not used because glucosyltransferase activity is a different "
+            "catalytic concept, not a refinement of the predicted binding specificity. "
+            "Ontology obsoletion or a preference for the glucosyltransferase activity "
+            "term is recorded separately from biological correctness under the "
+            "benchmark ontology-status rule. The main gene review is unchanged."
+        ),
+    ),
+    ("rat", "Casp3", "GO:0005123"): ManualOverride(
+        assessment="UNC",
+        annotation_action_exceptions=frozenset({"MARK_AS_OVER_ANNOTATED"}),
+        summary=(
+            "Uncertain whether caspase-3 itself directly binds the death receptor. "
+            "GOA contains an IPI annotation from PMID:17518537. Its accessible abstract "
+            "reports Fas association with FADD, caspase-8, cFLIP and caspase-3 in a "
+            "death-inducing signaling complex after rat spinal cord injury. The "
+            "current AIGR review marks death receptor binding over-annotated because "
+            "complex association does not establish a direct receptor contact. The "
+            "cached publication is abstract-only and publisher full text is restricted; "
+            "the available evidence neither establishes nor refutes direct binding. "
+            "Use UNC rather than converting this evidential gap into NPI. Complex "
+            "association and the main gene review are unchanged."
+        ),
+    ),
     # cts2 is a GH18 pseudoenzyme: the catalytic glutamate is replaced by Asn.
     ("SCHPO", "cts2", "GO:0004568"): ManualOverride(
         assessment="NPI",
@@ -780,10 +821,17 @@ def apply_manual_override(
     gene: str,
     go_id: str,
     review: MutableMapping[str, Any],
+    *,
+    actions: set[str] | None = None,
 ) -> tuple[bool, bool]:
-    """Apply one explicit override and return review/error-type change flags."""
+    """Apply an override only within its declared annotation-action scope."""
     override = MANUAL_OVERRIDES.get((species, gene, go_id))
     if override is None:
+        return False, False
+    if override.annotation_action_exceptions and (
+        actions is None
+        or annotation_action_adjudication(species, gene, go_id, actions) is None
+    ):
         return False, False
 
     assessment_changed = False
@@ -908,13 +956,42 @@ def apply_ontology_pair_decision(
     return assessment_changed, error_changed
 
 
+def annotation_action_adjudication(
+    species: str | None, gene: str | None, go_id: str, actions: set[str]
+) -> ManualOverride | None:
+    """Resolve an explicit, scoped exception to annotation-action inference.
+
+    An exception applies only to its registered gene/term and listed actions.
+    Accepted negations and other rejection actions still require a fresh review.
+    """
+    if species is None or gene is None:
+        return None
+    override = MANUAL_OVERRIDES.get((species, gene, go_id))
+    if override is None or not override.annotation_action_exceptions:
+        return None
+    biological_actions, accepted_negations = split_action_evidence(actions)
+    if (accepted_negations or not biological_actions
+            or not biological_actions <= override.annotation_action_exceptions):
+        return None
+    return override
+
+
 def remaining_conflicts(
     go_id: str,
     review: MutableMapping[str, Any],
     goa_terms: set[str],
     actions: set[str],
+    *,
+    species: str | None = None,
+    gene: str | None = None,
 ) -> Iterable[str]:
     assessment = review.get("assessment", "")
+    adjudication = annotation_action_adjudication(species, gene, go_id, actions)
+    if adjudication is not None:
+        if assessment != adjudication.assessment:
+            yield "manual_adjudication_category"
+        if _without_ontology_note(review.get("summary", "")) != adjudication.summary:
+            yield "manual_adjudication_rationale"
     biological_actions, accepted_negations = split_action_evidence(actions)
     positive_actions = biological_actions & POSITIVE_ACTIONS
     confidence = review.get("confidence_score")
@@ -939,7 +1016,7 @@ def remaining_conflicts(
     if positive_actions and accepted_negations:
         if assessment != "UNC":
             yield "nonuncertain_assessment_vs_mixed_positive_and_negated_AIGR"
-    else:
+    elif adjudication is None:
         if biological_actions and biological_actions <= NEGATIVE_ACTIONS and assessment in {"COR", "CNN", "LSP", "UNC"}:
             yield "nonnegative_assessment_vs_negative_AIGR"
         if positive_actions and assessment in {"NPI", "UNC"}:
@@ -994,7 +1071,10 @@ def repair_document(
             prediction_changed = True
 
         current_assessment = review.get("assessment", "")
-        decision = deterministic_reclassification(
+        adjudication = annotation_action_adjudication(
+            species, gene, go_id, aigr_actions.get(go_id, set())
+        )
+        decision = None if adjudication else deterministic_reclassification(
             go_id,
             current_assessment,
             goa_terms,
@@ -1016,7 +1096,7 @@ def repair_document(
             )
         else:
             assessment_changed, error_changed = apply_manual_override(
-                species, gene, go_id, review
+                species, gene, go_id, review, actions=aigr_actions.get(go_id, set())
             )
         prediction_changed |= assessment_changed or error_changed
         if error_changed:
@@ -1054,7 +1134,8 @@ def repair_document(
 
         stats.assessment_after[review.get("assessment", "")] += 1
         for conflict in remaining_conflicts(
-            go_id, review, goa_terms, aigr_actions.get(go_id, set())
+            go_id, review, goa_terms, aigr_actions.get(go_id, set()),
+            species=species, gene=gene,
         ):
             stats.remaining_conflicts[conflict] += 1
 
