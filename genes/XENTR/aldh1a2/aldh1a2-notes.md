@@ -205,3 +205,69 @@ the residue-claim machinery exists to catch.
 (schema; GO id/label; residue sites vs UniProt sequences — 0 fail; family/gene
 cross-check — 0 conflicts; the only UNRESOLVED rows are another family's
 membership gaps). `just validate XENTR aldh1a2`: pass (see below).
+
+## PR #2958 review follow-up (2026-09-05)
+
+Changes made in response to the review-bot findings on PR #2958.
+
+### Finding 1 (required): PMC:PMC8555986 resolved, fetched, verified
+
+- Resolved `PMC:PMC8555986` via the NCBI ID converter
+  (`pmc.ncbi.nlm.nih.gov/tools/idconv`): **PMID:34643182**, DOI
+  10.7554/eLife.69288. Cached with `just fetch-pmid 34643182` →
+  `publications/PMID_34643182.md` (full text from PMC,
+  `full_text_available: true`).
+- The title previously listed in `references` ("Retinoic acid signaling is a
+  critical component of the Tbx5 dependent forelimb initiation and
+  cardiopulmonary morphogenesis programs") was **wrong for this PMC id**. The
+  actual paper is Rankin SA *et al.*, eLife 2021: "Tbx5 drives Aldh1a2
+  expression to regulate a RA-Hedgehog-Wnt gene regulatory network
+  coordinating cardiopulmonary development." The reference entry was replaced
+  (id, verbatim fetched title, `reference_review` → VERIFIED with notes).
+- Full text read and it **does** support both Xenopus claims, directly:
+  - Tbx5 LOF in both *X. laevis* (MO) and *X. tropicalis* (CRISPR) causes
+    "a loss or strong reduction of aldh1a2 transcripts and Aldh1a2 protein in
+    the foregut lpm at NF34"; Tbx5 directly maintains aldh1a2 via a conserved
+    first-intron enhancer (enh1), whose single perfectly conserved T-box motif
+    was functionally tested in the *X. tropicalis* enhancer.
+  - **Heart (GO:0003007)**: Aldh1a2-MO and DEAB phenocopy Tbx5 LOF with loss
+    of pSHF markers and expansion of aSHF gene expression; exogenous 25 nM RA
+    partially rescues Tbx5-MO, Aldh1a2-MO and DEAB phenotypes.
+  - **Lung (GO:0030324)**: "Aldh1a2-MO injection or DEAB treatment disrupts
+    the RA>Tbx5>Aldh1a2>RA positive feedback loop ... and results in failed
+    induction of Nkx2-1+ pulmonary progenitors"; Tbx5/Aldh1a2-dependent RA
+    directly activates shh via the MACS1 enhancer, upstream of Wnt2/2b-driven
+    pulmonary induction.
+- Both NEW rows now cite `original_reference_id: PMID:34643182` with verbatim
+  `supporting_text` quotes from the cached full text. The truncated quote
+  ("Tbx5 directly binds an intronic enhancer in") was replaced with the
+  complete verbatim sentence "Specifically, Tbx5 directly maintains expression
+  of Aldh1a2 in pSHF via an evolutionarily conserved intronic enhancer".
+  All deep-research-only support on these two rows was removed.
+- This closes the "Known weaknesses" item from 2026-08-29 that flagged
+  fetching this paper as the highest-value next step.
+
+### Finding 2 (suggestion): parent+child CC redundancy removed
+
+- Dropped the `NEW` proposal for GO:0005737 (cytoplasm); kept the informative
+  child GO:0005829 (cytosol) — the same redundancy argument used earlier to
+  drop GO:0042573 in favour of GO:0002138. The cytosol row's reason records
+  the decision. `core_functions[*].locations` de-duplicated to cytosol only.
+
+### Finding 3 (judgment call): core_functions collapsed to one entry
+
+All three previous entries shared `molecular_function` GO:0001758 and
+identical (cytosolic) localization; the 2026-08-29 notes already conceded
+that entries 2 and 3 were "process/context groupings rather than distinct
+activities". The gene has exactly one catalytic activity deployed from one
+compartment; splitting it three ways implied distinct activities that do not
+exist. **Collapsed to a single core_function** carrying the full
+`directly_involved_in` list (GO:0002138, GO:0009952, GO:0030902, GO:0021915,
+GO:0003007, GO:0060173, GO:0030324), with a description that preserves the
+spatial-context narrative (organizer → trunk mesoderm; Tbx5-dependent foregut
+lpm/pSHF; limb-flanking somites) and a merged, verbatim `supported_by` set
+including two PMID:34643182 quotes. This is the more honest structure.
+
+### Validation
+
+`just validate XENTR aldh1a2` → ✓ Valid, all validations passed.
