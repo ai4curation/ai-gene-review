@@ -12,7 +12,7 @@ Le Du et al. 2001 (PMID:11124260) solved PLAP at 1.8 Å. It is the source UniPro
 ALPP's catalytic metals and homodimer, yet it appears nowhere in ALPP's GOA. Consequences
 for this review:
 
-- The zinc and magnesium rows carry ISS codes transferred from mouse Akp3 (P15693), even
+- The zinc and magnesium rows carry ISS codes transferred from rat Alpi (P15693), even
   though the human enzyme's own structure resolves the metals. I ACCEPTed the terms and
   noted in each `reason` that a curator could upgrade the evidence to IDA. I did not
   change the codes — the review action set has no "upgrade evidence" action, and the term

@@ -78,7 +78,7 @@ undetectable in the deficient patient. Four of the five NEW annotations rest on 
   all four reviews.
 - Zinc and magnesium ISS rows → ACCEPT. The metal ligands are the most conserved positions
   in the family and the human paralogues have crystallographically resolved sites, so the
-  transfer from mouse Akp3 is safe.
+  transfer from rat Alpi is safe.
 
 ## Isozyme non-equivalence
 
