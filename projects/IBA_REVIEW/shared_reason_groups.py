@@ -154,13 +154,16 @@ MOD_PREFIXES = SPECIES_SCOPED_PREFIXES  # historical name, kept for readability 
 # writes 'araport11', so the entry matched nothing, and the prefix it was meant to catch
 # was declined in silence by the very roster written to report it. A defensive entry
 # spelled differently from what anyone writes is not defensive -- it reads as coverage
-# while providing none. araport11 is now resolved in MOD_ORGANISM, so it needs no roster
-# entry at all; the lesson is that these strings are only worth adding in a spelling
-# lifted from the corpus or from the source that will emit them.
+# while providing none. It is replaced by the real spelling rather than dropped: a first
+# attempt at this fix deleted it on the ground that araport11 is now resolved in
+# MOD_ORGANISM and so needs no roster entry, which is true only WHILE that mapping
+# survives -- exactly the conditional every other entry here is kept against, and on the
+# one prefix with a demonstrated history of silent decline. The arm below now enforces
+# what was until then only a convention.
 _SPECIES_SCOPED_SHAPED = frozenset({'MGI', 'RGD', 'SGD', 'FB', 'WB', 'ZFIN', 'TAIR',
                                     'PomBase', 'dictyBase', 'CGD', 'Xenbase',
-                                    'AGI_LocusCode', 'ensembl', 'FlyBase', 'WormBase',
-                                    'ASPGD', 'PseudoCAP'})
+                                    'AGI_LocusCode', 'araport11', 'ensembl', 'FlyBase',
+                                    'WormBase', 'ASPGD', 'PseudoCAP'})
 SELF_MARKER = re.compile(r"this gene|the review target itself|the target's own", re.I)
 NEGATION = re.compile(r'\bnot\s+(?:the\s+target|[a-z-]+\s+\S)', re.I)
 # Every species word the corpus uses in a source_label. The TARGET organism's own words
@@ -584,6 +587,18 @@ def _self_test():
         if missing:
             return ("ORGANISM_WORDS keys / MOD_ORGANISM values that are not directories "
                     "under genes/: " + ", ".join(missing))
+
+    # Every prefix the maps resolve must ALSO be in _SPECIES_SCOPED_SHAPED. The roster is
+    # belt-and-braces: check_coverage short-circuits on `prefix in resolved`, so the entry
+    # is inert while the mapping stands and becomes the fail-safe the moment it is dropped
+    # -- a prefix in neither is DECLINED in silence rather than reported. That was a
+    # convention 12 entries kept and nothing enforced, so removing one mapping could
+    # silently reopen the hole; araport11 is the prefix it happened to, twice.
+    unguarded = sorted((set(MOD_ORGANISM) | set(ACCESSION_ORGANISM)) - _SPECIES_SCOPED_SHAPED)
+    if unguarded:
+        return ("every resolved prefix must also be in _SPECIES_SCOPED_SHAPED, so dropping "
+                "its mapping reports a gap instead of declining in silence; missing: "
+                + ", ".join(unguarded))
 
     # ensembl: the species is in the ACCESSION, not the prefix. All 312 in the corpus
     # are ENSMUSP or ENSRNOP; an unrecognised tag must fall through to the label.
