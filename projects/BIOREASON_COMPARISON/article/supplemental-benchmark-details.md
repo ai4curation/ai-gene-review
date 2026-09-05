@@ -96,13 +96,15 @@ We computed a retrospective CAFA-style agreement score for ARGO95 SFT GO-term pr
 
 | Source | Genes | Scored direct predictions | Direct GOA terms | Precision | Recall | F1 |
 |---|---:|---:|---:|---:|---:|---:|
-| ARGO95 / HF catalogue | 95 | 952 | 2,382 | 0.865 | 0.479 | 0.617 |
+| ARGO95 / HF catalogue | 95 | 952 | 2,369 | 0.862 | 0.479 | 0.615 |
 | Web export | 44 | 9,730 | 3,885 | 0.780 | 0.533 | 0.633 |
-| Mixed-source ARGO139 total | 139 | 10,682 | 6,267 | 0.810 | 0.511 | 0.627 |
+| Mixed-source ARGO139 total | 139 | 10,682 | 6,254 | 0.809 | 0.511 | 0.626 |
 
-The score shows why aggregate GOA agreement is useful but incomplete. In the HF catalogue subset, 50/149 terms classified by AI-AUGR as NPI, PLI, or REP are exact matches to current GOA, and 121/149 have propagated overlap with current GOA. A GOA-agreement metric would reward some of these predictions despite evidence-grounded review classifying them as wrong or frequency-biased.
+The score shows why aggregate GOA agreement is useful but incomplete. In the HF catalogue subset, 48/148 terms classified by AI-AUGR as NPI, PLI, or REP are exact matches to current GOA, and 120/148 have propagated overlap with current GOA. A GOA-agreement metric would reward some of these predictions despite evidence-grounded review classifying them as wrong or frequency-biased.
 
 ![CAFA-style propagated F1 by aspect for ARGO95 SFT terms, with mixed-source diagnostics.](figures/cafa_style_argo139_sft.png)
+
+This diagnostic uses current local GOA, whereas the primary non-novelty counts use the frozen baseline. Consequently, 630 CNN terms are exact current-GOA matches here, compared with 635 exact frozen-GOA matches in the primary benchmark. Regeneration incorporates GOA refreshes already present in the repository as well as assessment changes.
 
 Full derived tables are in `../cafa-style/`.
 

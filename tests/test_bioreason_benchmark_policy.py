@@ -411,9 +411,29 @@ def test_publication_headlines_match_generated_metrics() -> None:
     n_propagated = sum(
         row["closure_intersects_goa_all"] == "True" for row in incorrect_hf
     )
-    assert (n_incorrect, n_exact, n_propagated) == (149, 50, 121)
+    assert (n_incorrect, n_exact, n_propagated) == (148, 48, 120)
     assert f"{n_exact}/{n_incorrect} HF terms labelled NPI, PLI, or REP" in manuscript_flat
     assert (
         f"{n_propagated}/{n_incorrect} had propagated overlap with current GOA"
         in manuscript_flat
     )
+
+
+def test_cafa_overlap_assessments_match_current_prediction_sources() -> None:
+    """A stale CSV and matching stale manuscript must not validate each other."""
+    from collections import Counter
+
+    module = _load_cafa_module()
+    predictions = module.read_predictions(set(module.read_argo139()))
+    expected = Counter(
+        (module.source_group(p), p.organism, p.gene, p.aspect, p.term_id, p.assessment)
+        for p in predictions
+    )
+    with (PROJECT_DIR / "cafa-style" / "argo139_prediction_goa_overlap.csv").open() as handle:
+        observed = Counter(
+            tuple(row[key] for key in (
+                "source_group", "organism", "gene", "aspect", "term_id", "assessment"
+            ))
+            for row in csv.DictReader(handle)
+        )
+    assert observed == expected
