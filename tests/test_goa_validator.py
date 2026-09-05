@@ -1606,13 +1606,14 @@ def test_seeding_preserves_combined_historical_review(tmp_path):
         'review': {'action': 'ACCEPT', 'summary': 'Combined historical judgment'},
     }
     yaml_path.write_text(yaml.safe_dump({
-        'id': 'Q12345', 'gene_symbol': 'TEST',
+        'id': 'Q12345', 'gene_symbol': 'TEST', 'status': 'COMPLETE',
         'existing_annotations': [historical],
         'references': [{'id': 'PMID:12345', 'title': 'Existing title'}],
     }))
     validator = GOAValidator()
     added, *_ = validator.seed_missing_annotations(yaml_path, goa_path, fetch_titles=False)
     assert added == 2
+    assert yaml.safe_load(yaml_path.read_text())['status'] == 'IN_PROGRESS'
     rows = yaml.safe_load(yaml_path.read_text())['existing_annotations']
     assert rows[0] == historical
     assert [row['review']['action'] for row in rows[1:]] == ['PENDING', 'PENDING']

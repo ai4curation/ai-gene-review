@@ -10,6 +10,13 @@ rows. Validation compatibility does not imply that seeding is unnecessary:
 `uv run ai-gene-review seed-goa PATH --dry-run` previews source expansion and
 metadata backfills without changing the input.
 
+When seeding adds pending rows, it recomputes status using the shared status
+rules. A previously finished review with new pending work becomes `IN_PROGRESS`;
+a review containing only pending work is `INITIALIZED`. Metadata-only backfills
+do not change status. After completing curation and validation, check status with
+`uv run ai-gene-review update-status PATH --verbose`. That helper fills a missing
+status but only reports an existing mismatch, which the curator must reconcile.
+
 Older reviews also combined multiple source lists into one `supporting_entities`
 list. Such a row remains valid when it is exactly the union of complete GOA
 source lists for the same term, evidence, reference, and polarity. Unsupported

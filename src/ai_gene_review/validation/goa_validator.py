@@ -929,6 +929,13 @@ class GOAValidator:
             yaml_data["references"] = existing_refs
             print(f"    Also seeded {refs_added} references from GOA")
 
+        if added_count > 0:
+            # New PENDING work invalidates an old completion status. Use the
+            # shared status rules rather than copying stale workflow metadata.
+            from ai_gene_review.status_manager import compute_status_from_data
+
+            yaml_data["status"] = compute_status_from_data(yaml_data)
+
         # Determine output path
         if output_file is None:
             output_file = yaml_file
