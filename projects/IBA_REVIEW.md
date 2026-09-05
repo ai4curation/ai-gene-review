@@ -216,7 +216,10 @@ IBD while PANTHER classifies the protein into a *different* family, so the node'
 `entries.csv` will not contain it and a family-scoped lookup files it unresolvable when it
 is in fact resolvable. `Acadl`'s bacterial seeds are the worked case: both are seeds of
 `PTN002535634` in `PTHR43884`, but only `P60584` (*caiA*) is in `PTHR43884-entries.csv` —
-`Q47146` (*fadE*) resolves in `PTHR48083-entries.csv`. So the lookup is
+`Q47146` (*fadE*) resolves in `PTHR48083-entries.csv`. The reason is one column away in
+that row: `Q47146` is classified into `PTHR48083:SF18` ("ACYL-COENZYME A DEHYDROGENASE"),
+so PANTHER's classification and the node it seeds simply are not the same family. So the
+lookup is
 
 ```
 grep -l '<ACC>' interpro/panther/*/*-entries.csv
@@ -243,11 +246,15 @@ and the accession appears nowhere, so **nothing corroborates it either**. Say th
 explicitly — "asserted from external knowledge, not corroborable here" — rather than
 reaching for the weaker verb, which still implies a check that did not happen.
 
-The mechanical test for which of the three verbs applies is **whether the family has a
-directory under `interpro/panther/`** — check that before choosing the wording, not after.
-That is what separates `Gulo` (index present, `P9WIT3` resolves to *M. tuberculosis*
-Rv1771) from `Bcl2` (`PTHR11256`) and `Ednra` (`PTHR46099`), where no index exists at all
-and so no amount of grepping can corroborate the MOD-id-to-accession step. A bare `grep`
+The mechanical test for which of the three verbs applies is **whether any family's index
+resolves the accession** — the widened `grep -l` above, not the node's own family, for the
+reason that paragraph gives — so check that before choosing the wording, not after. The
+narrower question (does the node's family have a directory under `interpro/panther/`?)
+settles it only when the answer is yes; a no leaves the seed still possibly resolvable
+elsewhere, which is exactly the case `Acadl`'s `Q47146` turned out to be.
+That is what separates `Gulo` (`P9WIT3` resolves to *M. tuberculosis* Rv1771) from `Bcl2`
+(`PTHR11256`) and `Ednra` (`PTHR46099`), whose accessions resolve in **no** family's
+index, so no amount of grepping can corroborate the MOD-id-to-accession step. A bare `grep`
 for the accession is not a substitute: a hit may be an unnamed `ECO:0000250` or `WITH/FROM`
 reference, or a substring collision with an EMBL id (`AAP97287.1` matches `P97287`), and a
 miss tells you only that the repository is silent. Check the route, not the grep.
