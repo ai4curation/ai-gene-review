@@ -1499,6 +1499,14 @@ render-organism organism:
 render-all:
     uv run python -m ai_gene_review.render --all genes/
 
+# Assemble the already-rendered public site without changing the active Pages source.
+# This transitional artifact preserves the URLs currently served from main:/.
+stage-pages:
+    uv run python -m ai_gene_review.tools.stage_pages --output-dir _site --manifest _site-manifest.json
+
+# Build the complete disposable publication tree used by the Pages migration.
+build-pages: render-all render-projects validate-modules render-modules deploy-browser stage-pages
+
 # Render prediction evaluation table from *-predictions-review.yaml files
 render-prediction-eval pattern='genes/*/*/*-protnlm-predictions-review.yaml' output='pages/projects/PROTNLM_EVALUATION/protnlm-eval.html' title='ProtNLM-50 Prediction Evaluation':
     uv run python -m ai_gene_review.render_prediction_eval '{{pattern}}' -o '{{output}}' --title '{{title}}'

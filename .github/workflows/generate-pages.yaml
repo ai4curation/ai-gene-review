@@ -14,6 +14,7 @@ on:
       - 'src/ai_gene_review/export/**'
       - 'src/ai_gene_review/browser/**'
       - 'src/ai_gene_review/tools/minify_linkml_browser_data.py'
+      - 'src/ai_gene_review/tools/stage_pages.py'
       - 'projects/*.md'
       - 'projects/**/*.md'
       - 'projects/**/*.csv'
@@ -121,6 +122,38 @@ jobs:
 
       - name: Deploy browser app (data.js + index.html)
         run: just deploy-browser
+
+      # Shadow-build the candidate artifact that will replace the current main:/
+      # publishing source.  It is uploaded for inspection but not deployed yet,
+      # so this migration cannot disturb the live site or legacy regeneration
+      # PRs.  The staging command reports the uncompressed 1 GiB Pages budget.
+      - name: Stage GitHub Pages artifact
+        run: just stage-pages
+
+      - name: Summarize staged Pages site
+        shell: bash
+        run: |
+          {
+            echo "## Shadow GitHub Pages artifact"
+            echo
+            echo "This artifact is not deployed; Pages still publishes from \`main:/\`."
+            echo
+            echo "| Metric | Value |"
+            echo "|---|---:|"
+            echo "| Files | $(jq -r .total_files _site-manifest.json) |"
+            echo "| Uncompressed MiB | $(jq -r '.total_bytes / 1048576 | round' _site-manifest.json) |"
+            echo "| Gene pages | $(jq -r .gene_pages _site-manifest.json) |"
+            echo "| Project pages | $(jq -r .project_pages _site-manifest.json) |"
+            echo "| Module pages | $(jq -r .module_pages _site-manifest.json) |"
+            echo "| Linked source files not staged | $(jq -r .linked_source_files_not_staged _site-manifest.json) |"
+            echo "| Linked source MiB not staged | $(jq -r '.linked_source_bytes_not_staged / 1048576 | round' _site-manifest.json) |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload shadow GitHub Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+          retention-days: 3
 
       - name: Check for changes
         id: check-changes
