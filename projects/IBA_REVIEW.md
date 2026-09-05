@@ -251,7 +251,15 @@ resolves the accession** — the widened `grep -l` above, not the node's own fam
 reason that paragraph gives — so check that before choosing the wording, not after. The
 narrower question (does the node's family have a directory under `interpro/panther/`?)
 settles it only when the answer is yes; a no leaves the seed still possibly resolvable
-elsewhere, which is exactly the case `Acadl`'s `Q47146` turned out to be.
+elsewhere, which is exactly the case `Acadl`'s `Q47146` turned out to be. The test applies
+to **UniProt accessions only** — `entries.csv` is accession-keyed, so a `MOD:` seed is not
+a lookup in it under either the narrow or the widened form, and running the widened `grep`
+on one returns nothing for a reason that says nothing about the seed. Every surviving "the
+local index does not resolve it" comment in `genes/mouse` is of that kind — eight of them,
+across `Ccnb1` ×2, `Ccnt1` ×2, `Cdc42`, `Cftr` ×2 and `Cyp1a1`, citing `SGD:`, `PomBase:`,
+`FB:`, `CGD:`, `MGI:` and `ZFIN:` ids — so the widening leaves them correct rather than
+stale. For a MOD id the routes are the name match described above and the target's own
+UniProt `DR` cross-reference line, not any index.
 That is what separates `Gulo` (`P9WIT3` resolves to *M. tuberculosis* Rv1771) from `Bcl2`
 (`PTHR11256`) and `Ednra` (`PTHR46099`), whose accessions resolve in **no** family's
 index, so no amount of grepping can corroborate the MOD-id-to-accession step. A bare `grep`
