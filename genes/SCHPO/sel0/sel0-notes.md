@@ -209,3 +209,18 @@ the Glud1-specific site and activity experiments must not be attributed to PdhB.
 Both are mammalian results, so their pombe substrate assertions remain orthology
 inferences [PMID:40849408, Figure 6/results, "Among our top candidates is Glud1";
 "β subunit of pyruvate dehydrogenase E1 complex"].
+
+## Source migration and completed row assessment — 2026-09-05
+
+After wrapper PR #2926 merged, this branch was rebased onto main and
+`just fetch-gene SCHPO sel0 --force` fetched 11 GOA assertions, restored one
+missing source row, and backfilled supporting entities on ten prior rows.
+All 11 source assertions and the pre-existing proposed protein-adenylylation
+annotation now have explicit review decisions; none remains PENDING.
+
+The P26443 and Q9D051 PMID:40849408 rows were reviewed separately with their
+PomBase substrate contexts and the unequal depth of mammalian follow-up noted.
+Both retain ISO and ACCEPT; neither claims a direct pombe assay. The
+PMID:9700395 substrate assertion remains UNDECIDED despite independent support
+for the broad AMPylase function. The workflow status remains DRAFT because
+advisory validation issues remain, not because a source was left unreviewed.
