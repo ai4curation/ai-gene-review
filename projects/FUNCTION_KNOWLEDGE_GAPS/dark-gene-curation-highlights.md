@@ -30,9 +30,17 @@ the wrong biology. Grounding every review in the actual UniProt/PomBase record (
 or a prior assumption) caught several outright misassignments *before* they could drive wrong
 annotations:
 
-- **`sel0` (pombe, SPAC20G4.05c)** — not a Sel1-repeat / SEL1L ERAD protein as the name suggests,
-  but **Selenoprotein O**, a mitochondrial protein AMPylase / adenylyltransferase (SELO family,
-  pseudokinase fold). Entire review reframed around AMPylation.
+- **`sel0` (pombe, SPAC20G4.05c)** — an earlier task brief confused it with a
+  Sel1-repeat / SEL1L ERAD protein. It is **Selenoprotein O**, an inferred
+  mitochondrial protein AMPylase / adenylyltransferase (SELO family,
+  pseudokinase fold). Its molecular function has a supported family-level
+  assignment; direct pombe catalysis and endogenous substrates remain unresolved.
+  PomBase records deletion phenotypes including diamide sensitivity, resistance
+  under other oxidant assay conditions, and stationary-phase viability loss
+  (PMID:37787768, PMID:34984977, PMID:34250083). The remaining gap is the causal
+  mechanism linking these condition-dependent phenotypes to AMPylation, rather
+  than an absence of phenotype data. A pseudokinase fold does not itself imply
+  an inactive enzyme (PMID:30270044).
 - **`mtl3` (pombe, SPBC215.13)** — not the Mtr4-like MTREC RNA helicase (that is `mtl1`), but a
   **Mid2-like GPI-anchored plasma-membrane cell-wall stress sensor** with no catalytic domain.
 - **`spa1` (pombe, SPBC577.14c)** — not the mammalian Rap-GAP SIPA1/SPA1 despite the shared
