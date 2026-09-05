@@ -388,8 +388,15 @@ uv run ai-gene-review batch-fetch <input-file>  # Process multiple genes
 ```bash
 just render human BRCA1        # Render single gene to HTML
 just render-all                # Render all gene reviews to HTML
+just stage-pages               # Assemble existing generated output in _site/
+just build-pages               # Render and assemble the complete publication tree
 python -m ai_gene_review.render --all genes/    # Alternative rendering command
 ```
+
+`stage-pages` is the shadow build for the GitHub Pages artifact migration. It
+preserves current public URL paths, writes an ignored `_site/` directory, and
+reports the uncompressed publication size. The live site continues to publish
+from `main:/` until the shadow artifact has been verified.
 
 ## Contributing
 
