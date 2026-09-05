@@ -290,15 +290,15 @@ class GOAValidator:
         yaml_annotations: List[Dict],
         result: GOAValidationResult,
     ) -> GOAValidationResult:
-        """Validate using strict tuple matching (go_id, evidence_code, reference, negated)."""
-        # Create lookup structure for GOA using complete tuples.
-        # WITH/FROM is part of annotation identity: otherwise distinct partner,
-        # donor, or inference-source rows collapse into one review entry.
-        # Key: (go_id, evidence_code, reference, negated, supporting_entities)
-        goa_tuples = set()
-        goa_by_tuple: Dict[
-            Tuple[str, str, str, bool, Tuple[str, ...]], GOAAnnotation
-        ] = {}
+        """Validate complete annotation tuples, preserving GOA WITH/FROM rows.
+
+        ``supporting_entities`` was added after many reviews were seeded.  An
+        older YAML row without that field therefore acts as a wildcard for one
+        GOA row with the same term/evidence/reference/polarity.  It must not
+        hide a second GOA row with a different WITH/FROM value.  Explicitly
+        populated YAML rows, by contrast, require an exact support match.
+        """
+        goa_keys: List[Tuple[str, str, str, bool, Tuple[str, ...]]] = []
         goa_by_go_id: Dict[str, List[GOAAnnotation]] = {}
         goa_by_annotation_identity: Dict[
             Tuple[str, str, bool], List[GOAAnnotation]
@@ -315,8 +315,7 @@ class GOAValidator:
                 is_negated,
                 supporting_entities,
             )
-            goa_tuples.add(tuple_key)
-            goa_by_tuple[tuple_key] = ann
+            goa_keys.append(tuple_key)
             goa_by_go_id.setdefault(ann.go_id, []).append(ann)
             identity = (ann.go_id, parsed_qualifier, is_negated)
             goa_by_annotation_identity.setdefault(identity, []).append(ann)
@@ -330,7 +329,12 @@ class GOAValidator:
             and isinstance((term := yaml_ann.get("term", {})), dict)
         }
 
-        # Check each YAML annotation against GOA
+        ordinary_yaml: List[
+            Tuple[Dict, Tuple[str, str, str, bool], Tuple[str, ...]]
+        ] = []
+
+        # Check NEW assertions first and collect ordinary rows for one-to-one
+        # matching below.
         for yaml_ann in yaml_annotations:
             if not isinstance(yaml_ann, dict):
                 continue
@@ -405,90 +409,75 @@ class GOAValidator:
             if not go_id:
                 continue
 
-            # Create the tuple to check (includes negation)
-            yaml_tuple = (
-                go_id,
-                evidence_type,
-                original_ref,
-                negated,
-                supporting_entities,
+            ordinary_yaml.append(
+                (
+                    yaml_ann,
+                    (go_id, evidence_type, original_ref, bool(negated)),
+                    supporting_entities,
+                )
             )
-
-            # Check if this exact tuple exists in GOA
-            if yaml_tuple not in goa_tuples:
-                # This exact annotation is not in GOA
-                result.missing_in_goa.append(yaml_ann)
-                result.is_valid = False
-
-                # Check if it's a partial match (same GO term but different evidence/ref)
-                partial_matches = [
-                    goa_ann for key, goa_ann in goa_by_tuple.items() if key[0] == go_id
-                ]
-
-                if partial_matches:
-                    # There are annotations for this GO term, but with different evidence/ref
-                    # Check for evidence mismatch
-                    goa_evidence_for_term = {
-                        ann.evidence_code for ann in partial_matches
-                    }
-                    if evidence_type and evidence_type not in goa_evidence_for_term:
-                        result.mismatched_evidence.append(
-                            (
-                                go_id,
-                                evidence_type,
-                                ", ".join(sorted(goa_evidence_for_term)),
-                            )
-                        )
-
-                    # Check for reference mismatch
-                    goa_refs_for_term = {ann.reference for ann in partial_matches}
-                    if original_ref and original_ref not in goa_refs_for_term:
-                        # This is a reference mismatch - add to result if we track it
-                        pass  # We could add a mismatched_references list if needed
 
             # Skip label consistency check - we validate against ontology, not GOA
             # GOA files may use synonyms instead of primary labels
             # Label validation is handled by term_validator.py against the ontology
 
-        # Check for annotations in GOA but not in YAML
-        # Build set of YAML annotations, excluding NEW and retired annotations
-        yaml_tuples = set()
-        for yaml_ann in yaml_annotations:
-            if isinstance(yaml_ann, dict):
-                # Skip retired annotations - they don't need to be in GOA
-                if yaml_ann.get("retired", False):
-                    continue
-                # Skip NEW annotations - they should NOT be in GOA
-                review = yaml_ann.get("review", {})
-                if isinstance(review, dict) and review.get("action") == "NEW":
-                    continue
+        unmatched_goa = set(range(len(goa_annotations)))
 
-                term = yaml_ann.get("term", {})
-                if isinstance(term, dict):
-                    go_id = term.get("id", "")
-                    evidence_type = yaml_ann.get("evidence_type", "")
-                    original_ref = yaml_ann.get("original_reference_id", "")
-                    negated = yaml_ann.get("negated", False)
-                    supporting_entities = self._supporting_entities_key(
-                        yaml_ann.get("supporting_entities")
-                    )
-                    if go_id:
-                        yaml_tuples.add(
-                            (
-                                go_id,
-                                evidence_type,
-                                original_ref,
-                                negated,
-                                supporting_entities,
-                            )
+        # Claim exact supported rows first.  This prevents a legacy wildcard
+        # from consuming a GOA row needed by an explicit YAML assertion.
+        explicit_yaml = [row for row in ordinary_yaml if row[2]]
+        legacy_yaml = [row for row in ordinary_yaml if not row[2]]
+        unmatched_yaml: List[Dict] = []
+
+        for yaml_ann, base_key, support_key in explicit_yaml:
+            full_key = (*base_key, support_key)
+            match = next(
+                (index for index in unmatched_goa if goa_keys[index] == full_key),
+                None,
+            )
+            if match is None:
+                unmatched_yaml.append(yaml_ann)
+            else:
+                unmatched_goa.remove(match)
+
+        # A support-less legacy row may represent exactly one remaining GOA row
+        # with the same base assertion.
+        for yaml_ann, base_key, _ in legacy_yaml:
+            match = next(
+                (
+                    index
+                    for index in unmatched_goa
+                    if goa_keys[index][:4] == base_key
+                ),
+                None,
+            )
+            if match is None:
+                unmatched_yaml.append(yaml_ann)
+            else:
+                unmatched_goa.remove(match)
+
+        for yaml_ann in unmatched_yaml:
+            result.missing_in_goa.append(yaml_ann)
+            result.is_valid = False
+            go_id = yaml_ann.get("term", {}).get("id", "")
+            evidence_type = yaml_ann.get("evidence_type", "")
+            partial_matches = goa_by_go_id.get(go_id, [])
+            if partial_matches:
+                goa_evidence_for_term = {
+                    ann.evidence_code for ann in partial_matches
+                }
+                if evidence_type and evidence_type not in goa_evidence_for_term:
+                    result.mismatched_evidence.append(
+                        (
+                            go_id,
+                            evidence_type,
+                            ", ".join(sorted(goa_evidence_for_term)),
                         )
+                    )
 
-        for goa_tuple in goa_tuples:
-            if goa_tuple not in yaml_tuples:
-                goa_ann = goa_by_tuple[goa_tuple]
-                result.missing_in_yaml.append(goa_ann)
-                # Missing GOA annotations in YAML is always a validation failure
-                result.is_valid = False
+        for index in sorted(unmatched_goa):
+            result.missing_in_yaml.append(goa_annotations[index])
+            result.is_valid = False
 
         return result
 
@@ -701,6 +690,7 @@ class GOAValidator:
         # and/or supporting_entities, so keep a base-tuple index that lets us enrich
         # one legacy annotation before adding rows that differ only by WITH/FROM.
         existing_tuples = set()
+        existing_by_tuple = {}
         existing_by_base: Dict[Tuple[str, str, str, bool], List[Dict[str, Any]]] = {}
         for ann in existing_annotations:
             if isinstance(ann, dict) and "term" in ann:
@@ -718,6 +708,9 @@ class GOAValidator:
                     existing_tuples.add(
                         (*base_tuple, parsed_qualifier or "", supporting_entities)
                     )
+                    existing_by_tuple.setdefault(
+                        (*base_tuple, parsed_qualifier or "", supporting_entities), []
+                    ).append(ann)
                     existing_by_base.setdefault(base_tuple, []).append(ann)
 
         # Add missing annotations from GOA
@@ -736,8 +729,24 @@ class GOAValidator:
             ):
                 pmids_to_add.add(goa_ann.reference)
 
-        # Second pass - add missing annotations based on complete tuple
-        for goa_ann in goa_annotations:
+        def seeding_key(ann: GOAAnnotation) -> tuple:
+            """Stable source order; reserve exact matches before legacy backfills."""
+            return (
+                ann.go_id, ann.evidence_code, ann.reference,
+                self._qualifier_is_negated(ann.qualifier),
+                self._parse_qualifier(ann.qualifier) or "",
+                self._supporting_entities_key(ann.with_from),
+            )
+
+        claimed_existing = {
+            id(ann)
+            for goa_ann in goa_annotations
+            for ann in existing_by_tuple.get(seeding_key(goa_ann), [])
+        }
+
+        # Stable ordering prevents a refresh from assigning a legacy review to a
+        # different donor merely because QuickGO changed its response order.
+        for goa_ann in sorted(goa_annotations, key=seeding_key):
             go_id = goa_ann.go_id
             evidence = goa_ann.evidence_code
             reference = goa_ann.reference
@@ -771,6 +780,8 @@ class GOAValidator:
             # longer match the enriched annotation and will therefore be added.
             enriched_existing = False
             for existing_ann in existing_by_base.get(base_tuple, []):
+                if id(existing_ann) in claimed_existing:
+                    continue
                 existing_qualifier = self._parse_qualifier(
                     existing_ann.get("qualifier")
                 )
@@ -784,7 +795,6 @@ class GOAValidator:
                 supporting_compatible = (
                     existing_supporting_key == supporting_entities_key
                     or (not existing_supporting_key and bool(supporting_entities_key))
-                    or not supporting_entities_key
                 )
                 if not qualifier_compatible or not supporting_compatible:
                     continue
@@ -796,6 +806,7 @@ class GOAValidator:
                     existing_ann["supporting_entities"] = supporting_entities
                     supporting_entities_backfilled += 1
                 existing_tuples.add(tuple_key)
+                claimed_existing.add(id(existing_ann))
                 enriched_existing = True
                 break
 

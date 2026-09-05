@@ -676,7 +676,10 @@ def test_seed_missing_annotations_backfills_and_splits_supporting_entities(tmp_p
 
     before = validator.validate_against_goa(yaml_path, goa_path)
     assert not before.is_valid
-    assert len(before.missing_in_yaml) == 2
+    # The legacy support-less row represents one GOA assertion, but it cannot
+    # hide the second row with a distinct WITH/FROM value.
+    assert len(before.missing_in_yaml) == 1
+    assert not before.missing_in_goa
 
     added, _, references_added, qualifiers_backfilled, supporting_backfilled = (
         validator.seed_missing_annotations(yaml_path, goa_path)
@@ -1459,3 +1462,35 @@ UniProtKB	Q12345	TEST	enables	GO:0001234	test function	MF	ECO:0000353	IPI	PMID:1
         goa_path.unlink()
         if yaml_path.exists():
             yaml_path.unlink()
+
+
+@pytest.mark.parametrize('donors', [('', 'UniProtKB:P11111'), ('UniProtKB:P11111', '')])
+@pytest.mark.parametrize('qualifier', ['', 'enables'])
+def test_seed_mixed_empty_support_is_one_to_one(tmp_path, donors, qualifier):
+    """Empty support cannot steal a curated row already assigned to another source."""
+    goa_path = tmp_path / 'TEST-goa.tsv'
+    header = 'GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\tGO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\tTAXON NAME\tASSIGNED BY\tGENE NAME\tDATE\n'
+    goa_path.write_text(header + ''.join(
+        f'UniProtKB\tQ12345\tTEST\tenables\tGO:0001234\ttest function\tMF\tECO:0000266\tISO\tPMID:12345\t{donor}\tNCBITaxon:9606\tHomo sapiens\tUniProt\tTest\t20180515\n'
+        for donor in donors
+    ))
+    yaml_path = tmp_path / 'TEST-ai-review.yaml'
+    yaml_path.write_text(yaml.safe_dump({'existing_annotations': [{
+        'term': {'id': 'GO:0001234', 'label': 'test function'},
+        'evidence_type': 'ISO', 'original_reference_id': 'PMID:12345',
+        'qualifier': qualifier,
+        'review': {'summary': 'Curated legacy assertion', 'action': 'ACCEPT'},
+    }]}))
+    validator = GOAValidator()
+    added, *_ = validator.seed_missing_annotations(yaml_path, goa_path)
+    assert added == 1
+    rows = yaml.safe_load(yaml_path.read_text())['existing_annotations']
+    assert len(rows) == 2
+    assert {tuple(row.get('supporting_entities', [])) for row in rows} == {(), ('UniProtKB:P11111',)}
+    assert rows[0].get('supporting_entities', []) == []
+    assert rows[0]['review']['summary'] == 'Curated legacy assertion'
+    assert rows[1]['review']['action'] == 'PENDING'
+    assert validator.validate_against_goa(yaml_path, goa_path).is_valid
+    seeded = yaml_path.read_bytes()
+    assert validator.seed_missing_annotations(yaml_path, goa_path)[0] == 0
+    assert yaml_path.read_bytes() == seeded
