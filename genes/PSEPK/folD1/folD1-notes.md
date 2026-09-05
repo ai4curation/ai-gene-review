@@ -7,8 +7,8 @@ the NADP-linked dehydrogenase reaction RHEA:22812 and cyclohydrolase reaction
 RHEA:23700 [file:PSEPK/folD1/folD1-uniprot.txt
 "DE   RecName: Full=Bifunctional protein FolD 1"; "Xref=Rhea:RHEA:22812";
 "Xref=Rhea:RHEA:23700"]. The local PANTHER member table places both KT2440 FolD
-paralogs in PTHR48099:SF5, and canonical PAINT assigns GO:0004488 and
-GO:0004477 at PTN000002250
+paralogs in PTHR48099:SF5. Canonical PAINT assigns GO:0004488 at the bacterial
+PTN000002429 node and GO:0004477 at the broader PTN000002250 node
 [file:interpro/panther/PTHR48099/PTHR48099-paint.tsv].
 
 The max3 OpenScientist gene report independently recapitulates both activities
