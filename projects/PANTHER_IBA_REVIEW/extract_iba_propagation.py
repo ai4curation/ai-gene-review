@@ -47,6 +47,8 @@ GENES = [
     "plo1", "ark1", "cut7", "ase1", "mid1", "cdc12", "sid2", "cdc7", "rad21",
     "sgo1", "bub1", "mad2", "mph1", "slp1", "cut1", "cut2", "cdc18", "rhp51",
     "mus81", "rqh1",
+    # batch 3
+    "ral2",
 ]
 
 IBA_REF = "GO_REF:0000033"
@@ -209,7 +211,7 @@ def main() -> None:
                 "node_evidence": node_evidence,
                 "node_loss": "true" if node_loss else "false",
                 "our_action": actions.get(go_id, "?"),
-                "flags": ";".join(flags),
+                "flags": ";".join(flags) or "NONE",
             })
 
     if not rows:
@@ -218,7 +220,7 @@ def main() -> None:
     out = REPO / "projects" / "PANTHER_IBA_REVIEW" / "iba_propagation.tsv"
     cols = list(rows[0].keys())
     with out.open("w", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=cols, delimiter="\t")
+        w = csv.DictWriter(fh, fieldnames=cols, delimiter="\t", lineterminator="\n")
         w.writeheader()
         w.writerows(rows)
 

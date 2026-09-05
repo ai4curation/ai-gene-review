@@ -1,6 +1,6 @@
 ---
 title: "Lipoate Biosynthetic Process — Obsoletion & Merge into Protein Lipoylation"
-maturity: SCOPING
+maturity: IN_PROGRESS
 tags: [OBSOLETION]
 species: [BACSU, PSEPK, POPTR, METEA, human, mouse, yeast]
 ---
@@ -43,7 +43,14 @@ re-review queue rather than a pure documentation exercise.
 |---|---|---|
 | lipoate biosynthetic process | GO:0009107 | GO:0009249 protein lipoylation (merge; definition to be broadened) |
 
-Term status verified via OLS on 2026-08-15 — both terms are currently **live**:
+**Update 2026-08-30: the obsoletion has landed.** Live QuickGO
+(`/ontology/go/terms/GO:0009107/complete`, checked 2026-08-30 during the POPTR
+re-review) returns `isObsolete: true` with `replaced_by GO:0009249`, the comment
+"The reason for obsoletion is that the term usage has been inconsistent", and
+ontology edits timestamped 2026-08-22. The paragraph below records the pre-obsoletion
+state for history.
+
+Term status verified via OLS on 2026-08-15 — both terms were then **live**:
 
 - `GO:0009107` (`lipoate biosynthetic process`) — "The chemical reactions and
   pathways resulting in the formation of lipoate, 1,2-dithiolane-3-pentanoate,
@@ -136,30 +143,34 @@ already separately mapped.
 
 Five gene reviews carry `GO:0009107` and ten carry `GO:0009249`. Because
 `existing_annotations[].term.id` values are GOA-sourced and deliberately **not**
-hard-validated (see CLAUDE.md), the obsoletion will not break validation there —
-but `core_functions` term ids **are** strictly validated, and four reviews use
-`GO:0009107` inside `core_functions.directly_involved_in`.
+hard-validated (see CLAUDE.md), the obsoletion does not break validation there —
+but `core_functions` term ids **are** strictly validated. Four reviews used
+`GO:0009107` inside `core_functions.directly_involved_in`; **as of 2026-08-30,
+zero do** — the migration below was applied in the POPTR knowledge-base
+re-review (PR #2784), exactly as prescribed by this tracker.
 
 ### Reviews containing `GO:0009107`
 
 | Review | Where | Detail |
 |---|---|---|
-| POPTR/LIP1 | `existing_annotations` ×2 + `core_functions` | IBA (GO_REF:0000033, PANTHER:PTN000101947) and IEA (GO_REF:0000120, via IPR003698/IPR027527/UR000375959); both ACCEPT |
-| POPTR/LIP1P-1 | `existing_annotations` ×2 + `core_functions` | same IBA + IEA pattern; both ACCEPT |
-| POPTR/LIP1P-2 | `existing_annotations` ×2 + `core_functions` | same IBA + IEA pattern; both ACCEPT |
-| BACSU/lipA | `existing_annotations` ×2 + `core_functions` | IEA (GO_REF:0000120, via IPR003698/UR000080080) **and the IGI on PMID:19820084 that is item #2 on the upstream experimental list** |
-| PSEPK/lipA | `existing_annotations` ×1 | IEA (GO_REF:0000120, via IPR003698/UR000080080); ACCEPT |
+| POPTR/LIP1 | `existing_annotations` ×2 + `core_functions` | IBA (GO_REF:0000033, PANTHER:PTN000101947) and IEA (GO_REF:0000120, via IPR003698/IPR027527/UR000375959); both **MODIFY → GO:0009249** (were ACCEPT); `core_functions` entry dropped |
+| POPTR/LIP1P-1 | `existing_annotations` ×2 + `core_functions` | same IBA + IEA pattern; both **MODIFY → GO:0009249**; `core_functions` entry dropped |
+| POPTR/LIP1P-2 | `existing_annotations` ×2 + `core_functions` | same IBA + IEA pattern; both **MODIFY → GO:0009249**; `core_functions` entry dropped |
+| BACSU/lipA | `existing_annotations` ×2 + `core_functions` | IEA (GO_REF:0000120, via IPR003698/UR000080080) **and the IGI on PMID:19820084 that is item #2 on the upstream experimental list**; both **MODIFY → GO:0009249**; `core_functions` entry dropped |
+| PSEPK/lipA | `existing_annotations` ×1 | IEA (GO_REF:0000120, via IPR003698/UR000080080); **MODIFY → GO:0009249** (was ACCEPT) |
 
-**The merge is a clean deletion in every one of the four `core_functions`
-blocks**: each already lists `GO:0009249 protein lipoylation` alongside
-`GO:0009107`, so the fix is to drop the `GO:0009107` entry rather than to
-re-point it. Example (`genes/POPTR/LIP1/LIP1-ai-review.yaml`):
+**The merge was a clean deletion in every one of the four `core_functions`
+blocks**: each already listed `GO:0009249 protein lipoylation` alongside
+`GO:0009107`, so the fix was to drop the `GO:0009107` entry rather than to
+re-point it — applied 2026-08-30; `GO:0009249` is now the sole
+`directly_involved_in` BP in all four. Example of the pre-migration state
+(`genes/POPTR/LIP1/LIP1-ai-review.yaml`):
 
 ```yaml
   directly_involved_in:
-  - id: GO:0009107          # <- remove when merged
+  - id: GO:0009107          # <- removed 2026-08-30
     label: lipoate biosynthetic process
-  - id: GO:0009249          # <- already present; becomes the sole BP
+  - id: GO:0009249          # <- already present; now the sole BP
     label: protein lipoylation
 ```
 
@@ -226,19 +237,24 @@ Listed in priority order.
 
 ## Proposed approach
 
-1. **Wait for the merge to land before editing gene reviews.** go-ontology#32418
-   is open and the definition wording is still under discussion; editing
-   `core_functions` now would create churn and temporarily desynchronise the
-   reviews from GOA.
+1. ~~**Wait for the merge to land before editing gene reviews.**~~ **Done** —
+   the obsoletion landed upstream on 2026-08-22 (verified via live QuickGO on
+   2026-08-30), so the wait ended.
 2. **Comment upstream on the `GO:0016992 part_of GO:0009107` edge**, which is
-   the one structural detail neither issue mentions.
-3. **When the merge lands**, drop the redundant `GO:0009107` entry from the four
-   `core_functions` blocks (POPTR/LIP1, POPTR/LIP1P-1, POPTR/LIP1P-2,
-   BACSU/lipA) and re-run `just validate` for each; then re-fetch GOA for the
-   five affected genes so `existing_annotations` picks up the merged term.
+   the one structural detail neither issue mentions. Still open — `GO:0016992`
+   remains live and is still the `core_functions` MF in POPTR/LIP1 and
+   LIP1P-1, unaffected by the BP obsoletion.
+3. ~~**When the merge lands**, drop the redundant `GO:0009107` entry from the
+   four `core_functions` blocks and re-run `just validate`.~~ **Done
+   2026-08-30** (PR #2784): all four `core_functions` entries dropped, the
+   `existing_annotations` rows switched to MODIFY → `GO:0009249`, and the
+   `cache/ontologies/go.tsv` row refreshed to the obsolete state; all five
+   reviews validate with 0 errors and 0 warnings. **Remaining sub-step:**
+   re-fetch GOA for the five affected genes once GOA itself catches up with the
+   merge, so `existing_annotations` picks up the replacement term.
 4. **Optionally extend coverage** to the *B. subtilis* GcvH-relay trio
    (`lipM`, `lipL`, `gcvH`), which is the most instructive untouched cluster on the
-   upstream list.
+   upstream list. Still open.
 
 ## Priority
 
@@ -249,6 +265,20 @@ and only MGI has marked its annotations done upstream.
 
 ## Status
 
+- 2026-08-30 — **Obsoletion confirmed landed; in-repo migration applied**
+  (PR #2784, POPTR knowledge-base re-review). Live QuickGO returns
+  `isObsolete: true` and `replaced_by GO:0009249` for `GO:0009107`, with the
+  comment "The reason for obsoletion is that the term usage has been
+  inconsistent" and ontology edits timestamped 2026-08-22. All five affected
+  reviews migrated: the redundant `GO:0009107` entries dropped from the four
+  `core_functions` blocks (POPTR/LIP1, LIP1P-1, LIP1P-2, BACSU/lipA), and every
+  `existing_annotations` row carrying the term (including the BACSU/lipA IGI,
+  upstream experimental item #2) switched to MODIFY → `GO:0009249` with reasons
+  recording the obsoletion; the `cache/ontologies/go.tsv` row refreshed to
+  `obsolete lipoate biosynthetic process` / `True`. Remaining: the upstream
+  `GO:0016992 part_of` edge comment (approach step 2), a GOA re-fetch for the
+  five genes once GOA catches up, and the optional GcvH-relay trio reviews
+  (step 4).
 - 2026-08-15 — Project file created. Tracking go-annotation#6505 (opened
   2026-08-14) and go-ontology#32418 (opened 2026-08-06, open). Obsoletion not
   yet applied. `GO:0009107` and `GO:0009249` both confirmed live in OLS; the 12

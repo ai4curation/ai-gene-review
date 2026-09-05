@@ -27,7 +27,8 @@ The Ras1 signaling pathway in S. pombe:
 - **Morphology branch**: Ras1 -> Scd1 (GEF for Cdc42) -> Cdc42 -> Shk1 (PAK kinase) -> cell polarity
 - **Mating branch**: Ras1 -> Byr2 -> MAPK cascade -> mating gene expression
 - Ral2 acts upstream of Ras1, likely facilitating Ras1 activation
-- The Kelch repeats in ral2 mediate protein-protein interactions with pathway components
+- Ral2's Kelch repeats suggest a protein-interaction role, but its direct partners
+  and biochemical mechanism in this pathway remain unresolved.
 
 ### Protein Interactions (from BioGRID)
 - Interacts with Gef1 (Cdc42 GEF) and Skp1 (SCF ubiquitin ligase component)
@@ -35,18 +36,24 @@ The Ras1 signaling pathway in S. pombe:
 
 ## Localization
 
-- Endoplasmic reticulum by high-throughput assay [PMID:16823372 - HDA evidence, global ORFeome localization study]
-- Cytosol by phylogenetic inference (IBA) - but this is from the peroxiredoxin family assignment, likely incorrect
+- PomBase records endoplasmic-reticulum `is_active_in` from the proteome-wide YFP
+  screen, but the accessible PMID:16823372 record contains only the study-level abstract,
+  not the Ral2-specific image or classification. No independent Ral2 localization
+  study was recovered, so this annotation is UNDECIDED and ER is not used as a core
+  location. [PMID:16823372 "we determined the localization of 4,431 proteins, corresponding
+  to approximately 90% of the fission yeast proteome, by tagging each ORF with the
+  yellow fluorescent protein."]
 
-## Critical Issue: PANTHER Family Assignment
+## PANTHER family interpretation
 
-Ral2 is assigned to PANTHER family PTHR43503 (Peroxiredoxin family, Prx6 subfamily). This appears to be an INCORRECT family assignment:
-
-1. Ral2 is 611 AA with Kelch repeats - peroxiredoxins are typically ~200 AA with thioredoxin folds
-2. Ral2 has no catalytic cysteine residues characteristic of peroxiredoxins
-3. Ral2's InterPro domain annotations are Kelch-type beta propeller (IPR015915) and SKP1/BTB/POZ superfamily (IPR011333) - not thioredoxin/peroxiredoxin domains
-4. All IBA annotations (peroxidase activity GO:0004601, cytosol GO:0005829, cell redox homeostasis GO:0045454) derive from this likely incorrect PANTHER family grouping
-5. The IEA annotation for cellular oxidant detoxification (GO:0098869) also derives from GO_REF:0000108 logical inference, likely downstream of the same incorrect family
+PTHR43503 is a heterogeneous family whose broad ancestral node contains peroxiredoxins,
+but Ral2 is correctly classified in subfamily PTHR43503:SF2, "NEGATIVE REGULATOR OF
+SPORULATION MDS3-RELATED," together with fungal Mds3/Pmd1-like Kelch proteins. PAINT
+records explicit IRD function-loss edges from the peroxiredoxin ancestor to the
+Ral2/Mds3 node PTN005166285 for peroxidase activity, cytosol, and cell redox homeostasis.
+Those obsolete redox-related GOA rows have now disappeared. The current IBA to regulation
+of conjugation is placed directly on PTN005166285 and is grounded by Ral2's own
+experimental phenotype; it is accepted rather than treated as a bad family transfer.
 
 ## Molecular Function
 
@@ -58,3 +65,34 @@ The specific molecular function of ral2 is not well characterized at the biochem
 ## Vegetative Growth
 
 ral2 deletion does NOT affect vegetative growth - only mating and cell morphology are impaired [PMID:2586528].
+
+## 2026-09-01 re-review journal
+
+- Refreshed Ral2 through `just fetch-gene SCHPO ral2 --force`. Current GOA contains
+  five unique review tuples. Removed four stale redox/peroxiredoxin-derived annotations
+  that are no longer present in GOA, consistent with the PAINT IRD loss edges at the
+  Ral2/Mds3 node. The refresh also removed the experimental GO:0032005 IGI from
+  PMID:2586528 (with PomBase:SPAC17H9.09c) while adding the GO:2000784 IMP on
+  2026-01-18, consistent with a PomBase re-curation of the paper. GO:0032005 is
+  retained in `core_functions` because activated ras1Val-17 rescue still supports
+  the more specific positive conjugation signal-transduction synthesis.
+- Accepted the new GO:0031137 IBA because the node is grounded by Ral2's direct mating
+  phenotype; Ral2 appearing in its own source set is expected experimental grounding,
+  not circularity. [PMID:2586528 "The disruptants showed the same phenotype as the
+  original ral2 isolates, i.e., they had spherical cells, had no detectable mating
+  activity, and exhibited no response to the mating pheromone, but their vegetative
+  growth was apparently normal."]
+- Accepted GO:2000784 because activated ras1Val-17 restores rod-like morphology to
+  ral2 mutants, directly placing Ral2 upstream of Ras1 in cell-polarity control.
+  [PMID:2586528 "Either multiple copies or even a single copy of the ras1Val-17 allele,
+  which is an activated form of ras1, restored rodlike cell morphology and ability
+  to respond to the mating factor to ral2 mutants."]
+- Refreshed PMID:2586528 and PMID:2038319 through the publication wrapper. PMC exposes
+  only abstract and document furniture for these scanned-era articles, so their
+  records remain abstract-only and no unavailable full-text claims are made.
+- Launched a focused OpenScientist job for the GO:0005783 ER HDA through
+  `just gene-hypothesis-research`. The external provider produced no output or
+  artifact after more than one hour and the polling process was stopped. With no
+  gene-specific image available from PMID:16823372 and no independent localization
+  study recovered, the annotation remains UNDECIDED rather than being accepted,
+  rejected, or used as a core location.

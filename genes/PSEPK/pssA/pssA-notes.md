@@ -70,3 +70,11 @@ PMID:39693441.
 Normalized curation statement used as exact YAML support:
 
 - `"The OpenScientist report supports the phosphatidylserine-synthase reaction and PLD architecture of Q88GQ4, while primary literature establishes that this bacterial architecture is type I."`
+
+## 2026-09-01 annotation-reviewer pass
+
+The refreshed GOA has six rows. The former ARBA `GO:0006793` row is no
+longer present, and the broad `GO:0003824` row is now sourced from
+InterPro/`GO_REF:0000002`. The review was synchronized to those current rows;
+the broad catalytic term remains over-annotated relative to `GO:0003882`.
+All current GOA rows have explicit non-PENDING decisions.

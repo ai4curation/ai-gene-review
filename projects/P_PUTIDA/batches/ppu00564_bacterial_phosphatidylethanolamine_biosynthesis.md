@@ -15,7 +15,7 @@ autolink_gene_symbols: false
 - Curated review files: 4
 - Selected module genes: 3
 - Selected gene reviews curated: 3
-- Selected OpenScientist reports: 2/3 complete
+- Selected OpenScientist reports: 3/3 complete
 
 ## Curated Boundary
 
@@ -29,13 +29,29 @@ autolink_gene_symbols: false
   acyl-chain remodeling, and alternative Kennedy-type routes are outside the
   two-reaction module.
 
+## 2026-09-01 Repair Decisions
+
+- The reusable module retains two ordered reactions and models type-I and
+  type-II PssA as alternatives within the phosphatidylserine-forming step.
+  Molecular functions remain on the three leaf annotons.
+- The KT2440-specific question about the relative flux through Q88GQ4 and
+  Q88DZ1 belongs here, not in the reusable module's knowledge gaps.
+- The heterogeneous PTHR12586 family is constrained by the verified
+  `PTN001758495` phosphatidylserine-synthase node. The type-II role uses the
+  serine-specific InterPro family because no functionally equivalent PAINT
+  node was established. The Psd role uses the verified PTHR10067 parent family
+  rather than its misleading mitochondria-named subfamily label.
+- Current GOA coverage is complete: `pssA` 6/6, `PP_4677` 4/4, and `psd` 4/4,
+  with no PENDING actions. The broad `PP_4677` membrane row is `MODIFY` to
+  plasma membrane rather than being retained alongside a redundant NEW row.
+
 ## Required Workflow
 
 - [x] Curate or update the species-neutral module.
-- [ ] Run module-level OpenScientist deep research.
+- [x] Run module-level OpenScientist deep research.
 - [x] Run module + pathway + PSEPK OpenScientist deep research.
 - [x] Fetch all selected genes with `just fetch-gene PSEPK <gene>`.
-- [ ] Run OpenScientist deep research for selected genes.
+- [x] Run OpenScientist deep research for selected genes.
 - [x] Curate each selected gene review.
 - [x] Validate module and gene reviews.
 - [x] Open one PR for this module/pathway: [#2323](https://github.com/ai4curation/ai-gene-review/pull/2323).
@@ -46,6 +62,13 @@ The `PP_4677` request timed out after 7200s without producing a report.
 
 2026-07-26: The generic module-level OpenScientist run timed out after 7200s
 without producing a report.
+
+2026-09-01: The repair pass completed the missing generic module report in
+1153.78s and the missing `PP_4677` gene report in 1508.52s. Earlier attempts
+remained queued after client-side DNS polling failures and were not cancelled.
+The completed reports were reviewed as retrieval support; family class-I
+terminology in the gene report was reconciled with bacterial PssA type-II
+nomenclature rather than copied into the curated model.
 
 ## Candidate Genes
 
@@ -69,7 +92,7 @@ without producing a report.
 | [x] | `pssA` | PP_3664 | Q88GQ4 | kegg:ppu00564 | PRESENT | CURATED | PRESENT | CDP-diacylglycerol--serine O-phosphatidyltransferase (EC 2.7.8.8) |
 | [ ] | `pgsA` | PP_4097 | Q88FJ8 | kegg:ppu00564 | MISSING | MISSING | MISSING | CDP-diacylglycerol--glycerol-3-phosphate 3-phosphatidyltransferase (EC 2.7.8.5) |
 | [ ] | `gpsA` | PP_4169 | Q88FC9 | kegg:ppu00564 | PRESENT | CURATED | MISSING | Glycerol-3-phosphate dehydrogenase [NAD(P)+] (EC 1.1.1.94) (NAD(P)(+)-dependent glycerol-3-phosphate dehydrogenase) (NAD |
-| [x] | `PP_4677` | PP_4677 | Q88DZ1 | kegg:ppu00564 | PRESENT | CURATED | MISSING | CDP-diacylglycerol--serine O-phosphatidyltransferase (EC 2.7.8.8) (Phosphatidylserine synthase) |
+| [x] | `PP_4677` | PP_4677 | Q88DZ1 | kegg:ppu00564 | PRESENT | CURATED | PRESENT | CDP-diacylglycerol--serine O-phosphatidyltransferase (EC 2.7.8.8) (Phosphatidylserine synthase) |
 | [x] | `psd` | PP_4908 | Q88DB9 | kegg:ppu00564 | PRESENT | CURATED | PRESENT | Phosphatidylserine decarboxylase proenzyme (EC 4.1.1.65) [Cleaved into: Phosphatidylserine decarboxylase alpha chain; Ph |
 | [ ] | `pchP` | PP_5130 | Q88CQ0 | kegg:ppu00564 | MISSING | MISSING | MISSING | Phosphoethanolamine/phosphocholine phosphatase (EC 3.1.3.75) |
 | [ ] | `PP_5276` | PP_5276 | Q88CA5 | kegg:ppu00564 | MISSING | MISSING | MISSING | Phospholipase D family protein |

@@ -2,6 +2,8 @@
 
 import csv
 
+import pytest
+
 from pathlib import Path
 
 import yaml
@@ -9,6 +11,7 @@ import yaml
 from scripts.auto_review_sft_predictions import (
     EXPECTED_CONFIDENCE,
     MANUAL_OVERRIDES,
+    ManualOverride,
     ONTOLOGY_ADJUDICATION_MARKER,
     ONTOLOGY_PAIR_DECISIONS,
     LabelCheck,
@@ -27,10 +30,15 @@ from scripts.auto_review_sft_predictions import (
 from scripts.hf_to_sft_predictions import (
     assess_prediction,
     load_aigr_review,
+    load_goa_terms as load_hf_goa_terms,
     ontology_label_note,
 )
 from scripts.gogpt_predict import deterministic_assessment, load_review_decisions
-from ai_gene_review.sft_prediction_evidence import PROVENANCE_LIMITED_NEGATIVE
+from ai_gene_review.sft_prediction_evidence import (
+    NEGATED_ACTION_PREFIX,
+    PROVENANCE_LIMITED_NEGATIVE,
+    split_action_evidence,
+)
 
 
 def test_load_aigr_actions_preserves_mixed_decisions(tmp_path):
@@ -48,6 +56,100 @@ existing_annotations:
     assert load_aigr_term_actions(review_file) == {
         "GO:0000001": {"ACCEPT", "REMOVE"}
     }
+
+
+def test_load_aigr_actions_preserves_negated_annotations(tmp_path):
+    review_file = tmp_path / "review.yaml"
+    review_file.write_text(
+        """
+existing_annotations:
+  - term: {id: "GO:0000001", label: absent activity}
+    negated: true
+    review: {action: ACCEPT}
+"""
+    )
+
+    assert load_aigr_term_actions(review_file) == {
+        "GO:0000001": {f"{NEGATED_ACTION_PREFIX}ACCEPT"}
+    }
+
+
+def test_negated_goa_and_aigr_do_not_count_as_positive_support(tmp_path):
+    goa_file = tmp_path / "gene-goa.tsv"
+    goa_file.write_text(
+        "DB\tID\tSYMBOL\tNOT|enables\tGO:0000001\tPMID:1\tIDA\n"
+    )
+    actions = {"GO:0000001": {f"{NEGATED_ACTION_PREFIX}ACCEPT"}}
+
+    assert load_goa_terms(goa_file) == set()
+    assert auto_assess("GO:0000001", set(), actions, set())[:2] == ("NPI", 0)
+    assert deterministic_reclassification(
+        "GO:0000001", "NPI", set(), actions
+    ) is None
+    review = {"assessment": "NPI", "confidence_score": 0}
+    assert list(remaining_conflicts("GO:0000001", review, set(), actions)) == []
+
+
+def test_split_action_evidence_separates_accepted_negations():
+    actions = {
+        "REMOVE",
+        "ACCEPT",
+        f"{NEGATED_ACTION_PREFIX}ACCEPT",
+        f"{NEGATED_ACTION_PREFIX}REMOVE",
+        PROVENANCE_LIMITED_NEGATIVE,
+    }
+
+    assert split_action_evidence(actions) == (
+        {"REMOVE", "ACCEPT"},
+        {"ACCEPT"},
+    )
+
+
+def test_positive_and_negated_goa_rows_keep_positive_term(tmp_path):
+    goa_file = tmp_path / "gene-goa.tsv"
+    goa_file.write_text(
+        "DB\tID\tSYMBOL\tenables\tGO:0000001\tPMID:1\tIDA\n"
+        "DB\tID\tSYMBOL\tNOT|enables\tGO:0000001\tPMID:2\tIDA\n"
+    )
+
+    assert load_goa_terms(goa_file) == {"GO:0000001"}
+    assert load_hf_goa_terms(goa_file) == {"GO:0000001"}
+
+
+def test_negated_aigr_drives_all_sft_assessment_paths_to_npi():
+    actions = {"GO:0000001": {f"{NEGATED_ACTION_PREFIX}ACCEPT"}}
+
+    assert assess_prediction("GO:0000001", set(), actions, set())["assessment"] == "NPI"
+    assert deterministic_reclassification(
+        "GO:0000001", "CNN", set(), actions["GO:0000001"]
+    )[0] == "NPI"
+    review = {"assessment": "CNN", "confidence_score": 2}
+    assert "nonnegative_assessment_vs_negated_AIGR" in list(
+        remaining_conflicts(
+            "GO:0000001", review, set(), actions["GO:0000001"]
+        )
+    )
+
+
+def test_mixed_positive_and_negated_evidence_is_stably_uncertain():
+    exact_actions = {"ACCEPT", f"{NEGATED_ACTION_PREFIX}ACCEPT"}
+    actions = {"GO:0000001": exact_actions}
+
+    assert auto_assess("GO:0000001", {"GO:0000001"}, actions, set())[:2] == (
+        "UNC",
+        1,
+    )
+    assert assess_prediction("GO:0000001", {"GO:0000001"}, actions, set())[
+        "assessment"
+    ] == "UNC"
+    assert deterministic_assessment("GO:0000001", actions)[0] == "UNC"
+    assert deterministic_reclassification(
+        "GO:0000001", "UNC", {"GO:0000001"}, exact_actions
+    ) is None
+    review = {"assessment": "UNC", "confidence_score": 1}
+    assert list(
+        remaining_conflicts("GO:0000001", review, {"GO:0000001"}, exact_actions)
+    ) == []
 
 
 def test_load_aigr_actions_marks_only_negative_miscitation_decisions(tmp_path):
@@ -409,6 +511,8 @@ def test_committed_argo95_has_no_deterministic_category_conflicts():
                     prediction["review"],
                     goa_terms,
                     actions.get(go_id, set()),
+                    species=species,
+                    gene=gene,
                 )
             )
             conflicts.extend((species, gene, go_id, conflict) for conflict in found)
@@ -495,3 +599,98 @@ def test_frequency_bias_is_reserved_for_repetition_in_argo95():
             review = prediction["review"]
             if review.get("error_type") == "FREQUENCY_BIAS":
                 assert review["assessment"] == "REP", (species, gene, prediction)
+
+
+@pytest.mark.parametrize('gene,go_id,label,expected', [
+    ('Uggt1', 'GO:0051082', 'unfolded protein binding', 'CNN'),
+    ('Casp3', 'GO:0005123', 'death receptor binding', 'UNC'),
+])
+def test_explicit_biological_judgments_survive_annotation_suitability_rejections(
+    gene, go_id, label, expected
+):
+    """An over-annotation call cannot erase a documented biological adjudication."""
+    document = {'predictions': [{
+        'source_version': 'wanglab/protein_catalogue',
+        'predicted_term': {'id': go_id, 'label': label},
+        'review': {'assessment': 'CNN', 'confidence_score': 2,
+                   'summary': 'Term is in GOA — already a known curated annotation.'},
+    }]}
+    stats = RepairStats()
+    assert repair_document(
+        document, species='rat', gene=gene, goa_terms={go_id},
+        aigr_actions={go_id: {'MARK_AS_OVER_ANNOTATED'}}, aigr_core=set(),
+        source_version='wanglab/protein_catalogue', label_checker=None, stats=stats,
+    )
+    review = document['predictions'][0]['review']
+    assert review['assessment'] == expected
+    assert review['confidence_score'] == EXPECTED_CONFIDENCE[expected]
+    assert not stats.remaining_conflicts
+    assert not repair_document(
+        document, species='rat', gene=gene, goa_terms={go_id},
+        aigr_actions={go_id: {'MARK_AS_OVER_ANNOTATED'}}, aigr_core=set(),
+        source_version='wanglab/protein_catalogue', label_checker=None, stats=RepairStats(),
+    )
+
+
+@pytest.mark.parametrize('gene,actions,change,expected_conflict', [
+    ('Uggt1', {'MARK_AS_OVER_ANNOTATED'}, {'summary': 'Unreviewed text'}, 'manual_adjudication_rationale'),
+    ('Uggt1', {'MARK_AS_OVER_ANNOTATED'}, {'assessment': 'NPI'}, 'manual_adjudication_category'),
+    ('Uggt1', {'MARK_AS_OVER_ANNOTATED'}, {'confidence_score': 0}, 'assessment_confidence'),
+    ('Uggt1', {'REMOVE'}, {}, 'nonnegative_assessment_vs_negative_AIGR'),
+    ('Uggt1', {f'{NEGATED_ACTION_PREFIX}ACCEPT'}, {}, 'nonnegative_assessment_vs_negated_AIGR'),
+    ('Casp3', {'MARK_AS_OVER_ANNOTATED'}, {}, 'nonnegative_assessment_vs_negative_AIGR'),
+])
+def test_scoped_adjudications_keep_conflict_checks(gene, actions, change, expected_conflict):
+    """Registered rationale, identity, action scope, and confidence remain checked."""
+    override = MANUAL_OVERRIDES[('rat', 'Uggt1', 'GO:0051082')]
+    review = {'assessment': 'CNN', 'confidence_score': 2, 'summary': override.summary}
+    review.update(change)
+    assert expected_conflict in set(remaining_conflicts(
+        'GO:0051082', review, {'GO:0051082'}, actions, species='rat', gene=gene,
+    ))
+    # Supplying the rationale alone cannot opt an unknown context out of checks.
+    assert 'nonnegative_assessment_vs_negative_AIGR' in set(remaining_conflicts(
+        'GO:0051082', {'assessment': 'CNN', 'confidence_score': 2, 'summary': override.summary},
+        {'GO:0051082'}, {'MARK_AS_OVER_ANNOTATED'},
+    ))
+
+
+@pytest.mark.parametrize('actions', [
+    {'REMOVE'},
+    {'MARK_AS_OVER_ANNOTATED', 'REMOVE'},
+    {f'{NEGATED_ACTION_PREFIX}ACCEPT'},
+])
+def test_repair_does_not_write_an_out_of_scope_manual_override(actions):
+    """A stronger reference action must not be overwritten by a scoped CNN call."""
+    go_id = 'GO:0051082'
+    document = {'predictions': [{
+        'source_version': 'wanglab/protein_catalogue',
+        'predicted_term': {'id': go_id, 'label': 'unfolded protein binding'},
+        'review': {'assessment': 'CNN', 'confidence_score': 2,
+                   'summary': 'Original current review'},
+    }]}
+    stats = RepairStats()
+    assert repair_document(
+        document, species='rat', gene='Uggt1', goa_terms={go_id},
+        aigr_actions={go_id: actions}, aigr_core=set(),
+        source_version='wanglab/protein_catalogue', label_checker=None, stats=stats,
+    )
+    review = document['predictions'][0]['review']
+    assert review['assessment'] == 'NPI'
+    assert review['confidence_score'] == 0
+    assert review['summary'] != MANUAL_OVERRIDES[('rat', 'Uggt1', go_id)].summary
+    assert not stats.remaining_conflicts
+    assert not repair_document(
+        document, species='rat', gene='Uggt1', goa_terms={go_id},
+        aigr_actions={go_id: actions}, aigr_core=set(),
+        source_version='wanglab/protein_catalogue', label_checker=None, stats=RepairStats(),
+    )
+
+
+@pytest.mark.parametrize('fields', [
+    {'assessment': 'CNN'},
+    {'summary': 'A rationale without a category'},
+])
+def test_scoped_registry_entries_require_category_and_rationale(fields):
+    with pytest.raises(ValueError, match='assessment and rationale'):
+        ManualOverride(annotation_action_exceptions=frozenset({'MARK_AS_OVER_ANNOTATED'}), **fields)
