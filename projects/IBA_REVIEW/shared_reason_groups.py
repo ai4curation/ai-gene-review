@@ -157,12 +157,31 @@ MOD_PREFIXES = SPECIES_SCOPED_PREFIXES  # historical name, kept for readability 
 # PR arriving with genes/rat/Tp53 from main -- which is the whole argument for printing the
 # live list rather than describing it here.
 #
-# Five entries here are in NEITHER map nor the corpus: Xenbase, FlyBase, WormBase, ASPGD,
-# PseudoCAP. That is deliberate and is the safe direction -- if one ever appears in a
-# review it becomes a reported finding rather than a silent decline. In particular
-# Xenbase belongs here even though an earlier commit removed it from MOD_ORGANISM as
-# invented-from-a-roster: there it asserted a genes/XENLA directory that does not exist,
-# here it only says "if this shows up, tell me".
+# The roster holds two kinds of entry, and only one of them is enforced. Know which you
+# are adding:
+#
+#   BELT-AND-BRACES, for every prefix the maps resolve. Inert while the mapping stands
+#   (check_coverage short-circuits on `prefix in resolved` before consulting this set) and
+#   the fail-safe the moment it is dropped, promoting the prefix from a silent decline to
+#   a reported finding. The self-test arm below REQUIRES all of these, so a misspelling
+#   here cannot survive: the entry would not match its own map key.
+#
+#   WATCHLIST, for prefixes in neither map nor the corpus: Xenbase, FlyBase, WormBase,
+#   AspGD, PseudoCAP. If one ever appears in a review it becomes a reported finding rather
+#   than a silent decline. Xenbase belongs here even though an earlier commit removed it
+#   from MOD_ORGANISM as invented-from-a-roster: there it asserted a genes/XENLA directory
+#   that does not exist, here it only says "if this shows up, tell me".
+#
+# NOTHING ENFORCES THE WATCHLIST SPELLINGS, and that is the class both real defects were
+# in. A watchlist entry is supposed to have zero corpus uses, so "matches nothing because
+# it is waiting" and "matches nothing because it is misspelled" are indistinguishable to
+# any check that reads only what the corpus currently writes -- which is why 'Araport'
+# (corpus: araport11) and 'ASPGD' (corpus: AspGD) both sat here inert, each undetectable
+# by the arm below, since neither was a map key. Both were found by eye, and the only
+# defence is to lift the spelling from the data that will emit it rather than from a
+# roster: AspGD is written that way in 44 files under genes/, as the assigning database in
+# GOA and as AspGD:ASPL0000058076 in the WITH/FROM of genes/EMENI/ rows that have no
+# propagation_review yet.
 #
 # 'Araport' used to sit alongside them, and was worse than useless: the corpus
 # writes 'araport11', so the entry matched nothing, and the prefix it was meant to catch
@@ -180,7 +199,7 @@ MOD_PREFIXES = SPECIES_SCOPED_PREFIXES  # historical name, kept for readability 
 _SPECIES_SCOPED_SHAPED = frozenset({'MGI', 'RGD', 'SGD', 'FB', 'WB', 'ZFIN', 'TAIR',
                                     'PomBase', 'dictyBase', 'CGD', 'Xenbase',
                                     'AGI_LocusCode', 'araport11', 'ensembl', 'FlyBase',
-                                    'WormBase', 'ASPGD', 'PseudoCAP'})
+                                    'WormBase', 'AspGD', 'PseudoCAP'})
 SELF_MARKER = re.compile(r"this gene|the review target itself|the target's own", re.I)
 NEGATION = re.compile(r'\bnot\s+(?:the\s+target|[a-z-]+\s+\S)', re.I)
 # Every species word the corpus uses in a source_label. The TARGET organism's own words
