@@ -274,10 +274,16 @@ MOD_PREFIXES = SPECIES_SCOPED_PREFIXES  # historical name, kept for readability 
 #   appears in neither cache/go/terms.csv nor cache/ontologies/go.tsv, so a sweep of the
 #   label caches returns nothing and reads as "this id is fabricated"; it is real, and
 #   sits in cache/enums/goproteincontainingcomplexenum. Both a reviewer and I hit that one
-#   while checking this very passage, each stopping only because a second route was tried.
-#   Widening the pattern does not help here -- the corpus was wrong, not the regex -- so
-#   the rule needs a companion: before concluding something is ABSENT, establish that the
-#   file you swept is the file that would carry it.
+#   while checking this very passage, each stopping only because a second route was tried
+#   -- but the anecdotes are the weaker half of the warrant. cache/ontologies/README.md
+#   states the design outright: "Sparse caching: Only cache terms actually used in our
+#   annotations (~1,000s not ~100,000s)." So absence from a label cache means NOT USED IN
+#   AN ANNOTATION, never NOT A REAL TERM, and GO:0140535 -- which appears only as an
+#   intermediate ancestor inside a review comment -- is exactly the shape those caches are
+#   built not to hold. The failure mode is structural, not bad luck. Widening the pattern
+#   does not help here -- the corpus was wrong, not the regex -- so the rule needs a
+#   companion: before concluding something is ABSENT, establish that the file you swept is
+#   the file that would carry it.
 #
 # NOTHING ENFORCES THE WATCHLIST SPELLINGS, and that is the class both real defects were
 # in. A watchlist entry is supposed to have zero corpus uses, so "matches nothing because
