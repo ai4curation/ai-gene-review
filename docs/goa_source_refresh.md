@@ -18,6 +18,13 @@ are covered; other GOA sources still need review records. Seeding preserves the
 combined historical review and adds distinct source rows as PENDING, without
 transferring its judgment to each source.
 
+Expansion temporarily leaves the combined row alongside its new source rows.
+After assessing every new row, preserve the combined historical rationale and
+its source list in the gene notes, then remove the combined annotation row to
+avoid counting the same evidence twice. Do not mark it `retired`: its sources
+have not disappeared. This cleanup is a curator decision; the seeder neither
+copies the old judgment to every source nor deletes the historical row.
+
 ## When a source changes
 
 An explicitly recorded source that no longer occurs in refreshed GOA fails source
