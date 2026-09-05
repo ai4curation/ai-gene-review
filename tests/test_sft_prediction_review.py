@@ -2,6 +2,8 @@
 
 import csv
 
+import pytest
+
 from pathlib import Path
 
 import yaml
@@ -508,6 +510,8 @@ def test_committed_argo95_has_no_deterministic_category_conflicts():
                     prediction["review"],
                     goa_terms,
                     actions.get(go_id, set()),
+                    species=species,
+                    gene=gene,
                 )
             )
             conflicts.extend((species, gene, go_id, conflict) for conflict in found)
@@ -594,3 +598,57 @@ def test_frequency_bias_is_reserved_for_repetition_in_argo95():
             review = prediction["review"]
             if review.get("error_type") == "FREQUENCY_BIAS":
                 assert review["assessment"] == "REP", (species, gene, prediction)
+
+
+@pytest.mark.parametrize('gene,go_id,label,expected', [
+    ('Uggt1', 'GO:0051082', 'unfolded protein binding', 'CNN'),
+    ('Casp3', 'GO:0005123', 'death receptor binding', 'UNC'),
+])
+def test_explicit_biological_judgments_survive_annotation_suitability_rejections(
+    gene, go_id, label, expected
+):
+    """An over-annotation call cannot erase a documented biological adjudication."""
+    document = {'predictions': [{
+        'source_version': 'wanglab/protein_catalogue',
+        'predicted_term': {'id': go_id, 'label': label},
+        'review': {'assessment': 'CNN', 'confidence_score': 2,
+                   'summary': 'Term is in GOA — already a known curated annotation.'},
+    }]}
+    stats = RepairStats()
+    assert repair_document(
+        document, species='rat', gene=gene, goa_terms={go_id},
+        aigr_actions={go_id: {'MARK_AS_OVER_ANNOTATED'}}, aigr_core=set(),
+        source_version='wanglab/protein_catalogue', label_checker=None, stats=stats,
+    )
+    review = document['predictions'][0]['review']
+    assert review['assessment'] == expected
+    assert review['confidence_score'] == EXPECTED_CONFIDENCE[expected]
+    assert not stats.remaining_conflicts
+    assert not repair_document(
+        document, species='rat', gene=gene, goa_terms={go_id},
+        aigr_actions={go_id: {'MARK_AS_OVER_ANNOTATED'}}, aigr_core=set(),
+        source_version='wanglab/protein_catalogue', label_checker=None, stats=RepairStats(),
+    )
+
+
+@pytest.mark.parametrize('gene,actions,change,expected_conflict', [
+    ('Uggt1', {'MARK_AS_OVER_ANNOTATED'}, {'summary': 'Unreviewed text'}, 'manual_adjudication_rationale'),
+    ('Uggt1', {'MARK_AS_OVER_ANNOTATED'}, {'assessment': 'NPI'}, 'manual_adjudication_category'),
+    ('Uggt1', {'MARK_AS_OVER_ANNOTATED'}, {'confidence_score': 0}, 'assessment_confidence'),
+    ('Uggt1', {'REMOVE'}, {}, 'nonnegative_assessment_vs_negative_AIGR'),
+    ('Uggt1', {f'{NEGATED_ACTION_PREFIX}ACCEPT'}, {}, 'nonnegative_assessment_vs_negated_AIGR'),
+    ('Casp3', {'MARK_AS_OVER_ANNOTATED'}, {}, 'nonnegative_assessment_vs_negative_AIGR'),
+])
+def test_scoped_adjudications_keep_conflict_checks(gene, actions, change, expected_conflict):
+    """Registered rationale, identity, action scope, and confidence remain checked."""
+    override = MANUAL_OVERRIDES[('rat', 'Uggt1', 'GO:0051082')]
+    review = {'assessment': 'CNN', 'confidence_score': 2, 'summary': override.summary}
+    review.update(change)
+    assert expected_conflict in set(remaining_conflicts(
+        'GO:0051082', review, {'GO:0051082'}, actions, species='rat', gene=gene,
+    ))
+    # Supplying the rationale alone cannot opt an unknown context out of checks.
+    assert 'nonnegative_assessment_vs_negative_AIGR' in set(remaining_conflicts(
+        'GO:0051082', {'assessment': 'CNN', 'confidence_score': 2, 'summary': override.summary},
+        {'GO:0051082'}, {'MARK_AS_OVER_ANNOTATED'},
+    ))
