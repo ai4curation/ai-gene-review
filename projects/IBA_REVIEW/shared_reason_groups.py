@@ -166,11 +166,35 @@ MOD_PREFIXES = SPECIES_SCOPED_PREFIXES  # historical name, kept for readability 
 #   a reported finding. The self-test arm below REQUIRES all of these, so a misspelling
 #   here cannot survive: the entry would not match its own map key.
 #
-#   WATCHLIST, for prefixes in neither map nor the corpus: Xenbase, FlyBase, WormBase,
-#   AspGD, PseudoCAP. If one ever appears in a review it becomes a reported finding rather
-#   than a silent decline. Xenbase belongs here even though an earlier commit removed it
-#   from MOD_ORGANISM as invented-from-a-roster: there it asserted a genes/XENLA directory
-#   that does not exist, here it only says "if this shows up, tell me".
+#   WATCHLIST, for species-scoped prefixes that no review writes as a source_id YET. If one
+#   ever appears it becomes a reported finding rather than a silent decline. Xenbase
+#   belongs here even though an earlier commit removed it from MOD_ORGANISM as
+#   invented-from-a-roster: there it asserted a genes/XENLA directory that does not exist,
+#   here it only says "if this shows up, tell me".
+#
+#   These are deliberately NOT in MOD_ORGANISM even where the target directory exists.
+#   Mapping one would resolve it silently AND would fire the maps-carry-an-unused-entry
+#   arm today, and the mapping is a judgement better made by whoever first writes such a
+#   source_id, with the row in front of them. A finding says "decide this"; a mapping
+#   decides it in advance on no evidence.
+#
+#   The last four were found by sweeping the WITH/FROM columns of *-goa.tsv rather than by
+#   listing MODs -- the method this comment recommends, applied to itself. Each is already
+#   in the data this corpus is curated from, with the species read off the target
+#   directory's own taxon.label:
+#     JaponicusDB:SJAG_04551         66 uses; S. japonicus, genes/SCHJY -- and it is in the
+#                                    WITH/FROM of genes/mouse/Mapk1-goa.tsv and
+#                                    Mapk3-goa.tsv, on IBA rows of a node those two files
+#                                    already reason about, so this is the likeliest of the
+#                                    four to be written next
+#     RAP2022-09-01:Os06t0275500-01   9 uses; Oryza sativa subsp. japonica, genes/ORYSJ
+#     EcoliWiki:sucA                  3 uses; E. coli K12, genes/ECOLI
+#     sgd:YHR104W                    16 uses; a lowercase spelling of the mapped SGD, in
+#                                    the WITH/FROM of genes/PICST and genes/CANAL rows.
+#                                    Enumerated rather than case-folded: FB and fb would be
+#                                    different namespaces, so matching stays exact.
+#   RNAcentral (64) and Rfam (13) also appear there and are correctly absent -- an RNA
+#   sequence or family names no gene in one species.
 #
 # NOTHING ENFORCES THE WATCHLIST SPELLINGS, and that is the class both real defects were
 # in. A watchlist entry is supposed to have zero corpus uses, so "matches nothing because
@@ -196,10 +220,11 @@ MOD_PREFIXES = SPECIES_SCOPED_PREFIXES  # historical name, kept for readability 
 # survives -- exactly the conditional every other entry here is kept against, and on the
 # one prefix with a demonstrated history of silent decline. The arm below now enforces
 # what was until then only a convention.
-_SPECIES_SCOPED_SHAPED = frozenset({'MGI', 'RGD', 'SGD', 'FB', 'WB', 'ZFIN', 'TAIR',
-                                    'PomBase', 'dictyBase', 'CGD', 'Xenbase',
+_SPECIES_SCOPED_SHAPED = frozenset({'MGI', 'RGD', 'SGD', 'sgd', 'FB', 'WB', 'ZFIN',
+                                    'TAIR', 'PomBase', 'dictyBase', 'CGD', 'Xenbase',
                                     'AGI_LocusCode', 'araport11', 'ensembl', 'FlyBase',
-                                    'WormBase', 'AspGD', 'PseudoCAP'})
+                                    'WormBase', 'AspGD', 'PseudoCAP', 'JaponicusDB',
+                                    'RAP2022-09-01', 'EcoliWiki'})
 SELF_MARKER = re.compile(r"this gene|the review target itself|the target's own", re.I)
 NEGATION = re.compile(r'\bnot\s+(?:the\s+target|[a-z-]+\s+\S)', re.I)
 # Every species word the corpus uses in a source_label. The TARGET organism's own words
