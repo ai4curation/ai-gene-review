@@ -290,11 +290,17 @@ class GOAValidator:
         yaml_annotations: List[Dict],
         result: GOAValidationResult,
     ) -> GOAValidationResult:
-        """Validate using strict tuple matching (go_id, evidence_code, reference, negated)."""
-        # Create lookup structure for GOA using complete tuples
-        # Key: (go_id, evidence_code, reference, negated)
-        goa_tuples = set()
-        goa_by_tuple: Dict[Tuple[str, str, str, bool], GOAAnnotation] = {}
+        """Validate complete annotation tuples, preserving GOA WITH/FROM rows.
+
+        ``supporting_entities`` was added after many reviews were seeded.  An
+        older YAML row without that field therefore acts as a wildcard for all
+        GOA rows with the same term/evidence/reference/polarity. Seeding expands
+        these legacy rows without requiring a corpus-wide migration. Explicitly
+        populated YAML rows require an exact support match or an exact union
+        of complete GOA source lists for the same base tuple (older combined
+        reviews). Partial source lists and unsupported IDs remain errors.
+        """
+        goa_keys: List[Tuple[str, str, str, bool, Tuple[str, ...]]] = []
         goa_by_go_id: Dict[str, List[GOAAnnotation]] = {}
         goa_by_annotation_identity: Dict[
             Tuple[str, str, bool], List[GOAAnnotation]
@@ -303,9 +309,15 @@ class GOAValidator:
             qualifier = getattr(ann, "qualifier", "")
             is_negated = self._qualifier_is_negated(qualifier)
             parsed_qualifier = self._parse_qualifier(qualifier) or ""
-            tuple_key = (ann.go_id, ann.evidence_code, ann.reference, is_negated)
-            goa_tuples.add(tuple_key)
-            goa_by_tuple[tuple_key] = ann
+            supporting_entities = self._supporting_entities_key(ann.with_from)
+            tuple_key = (
+                ann.go_id,
+                ann.evidence_code,
+                ann.reference,
+                is_negated,
+                supporting_entities,
+            )
+            goa_keys.append(tuple_key)
             goa_by_go_id.setdefault(ann.go_id, []).append(ann)
             identity = (ann.go_id, parsed_qualifier, is_negated)
             goa_by_annotation_identity.setdefault(identity, []).append(ann)
@@ -319,7 +331,12 @@ class GOAValidator:
             and isinstance((term := yaml_ann.get("term", {})), dict)
         }
 
-        # Check each YAML annotation against GOA
+        ordinary_yaml: List[
+            Tuple[Dict, Tuple[str, str, str, bool], Tuple[str, ...]]
+        ] = []
+
+        # Check NEW assertions first and collect ordinary rows for source-aware
+        # matching below.
         for yaml_ann in yaml_annotations:
             if not isinstance(yaml_ann, dict):
                 continue
@@ -387,77 +404,78 @@ class GOAValidator:
             evidence_type = yaml_ann.get("evidence_type", "")
             original_ref = yaml_ann.get("original_reference_id", "")
             negated = yaml_ann.get("negated", False)
+            supporting_entities = self._supporting_entities_key(
+                yaml_ann.get("supporting_entities")
+            )
 
             if not go_id:
                 continue
 
-            # Create the tuple to check (includes negation)
-            yaml_tuple = (go_id, evidence_type, original_ref, negated)
-
-            # Check if this exact tuple exists in GOA
-            if yaml_tuple not in goa_tuples:
-                # This exact annotation is not in GOA
-                result.missing_in_goa.append(yaml_ann)
-                result.is_valid = False
-
-                # Check if it's a partial match (same GO term but different evidence/ref)
-                partial_matches = [
-                    goa_ann for key, goa_ann in goa_by_tuple.items() if key[0] == go_id
-                ]
-
-                if partial_matches:
-                    # There are annotations for this GO term, but with different evidence/ref
-                    # Check for evidence mismatch
-                    goa_evidence_for_term = {
-                        ann.evidence_code for ann in partial_matches
-                    }
-                    if evidence_type and evidence_type not in goa_evidence_for_term:
-                        result.mismatched_evidence.append(
-                            (
-                                go_id,
-                                evidence_type,
-                                ", ".join(sorted(goa_evidence_for_term)),
-                            )
-                        )
-
-                    # Check for reference mismatch
-                    goa_refs_for_term = {ann.reference for ann in partial_matches}
-                    if original_ref and original_ref not in goa_refs_for_term:
-                        # This is a reference mismatch - add to result if we track it
-                        pass  # We could add a mismatched_references list if needed
+            ordinary_yaml.append(
+                (
+                    yaml_ann,
+                    (go_id, evidence_type, original_ref, bool(negated)),
+                    supporting_entities,
+                )
+            )
 
             # Skip label consistency check - we validate against ontology, not GOA
             # GOA files may use synonyms instead of primary labels
             # Label validation is handled by term_validator.py against the ontology
 
-        # Check for annotations in GOA but not in YAML
-        # Build set of YAML annotations, excluding NEW and retired annotations
-        yaml_tuples = set()
-        for yaml_ann in yaml_annotations:
-            if isinstance(yaml_ann, dict):
-                # Skip retired annotations - they don't need to be in GOA
-                if yaml_ann.get("retired", False):
-                    continue
-                # Skip NEW annotations - they should NOT be in GOA
-                review = yaml_ann.get("review", {})
-                if isinstance(review, dict) and review.get("action") == "NEW":
-                    continue
+        unmatched_goa = set(range(len(goa_annotations)))
 
-                term = yaml_ann.get("term", {})
-                if isinstance(term, dict):
-                    go_id = term.get("id", "")
-                    evidence_type = yaml_ann.get("evidence_type", "")
-                    original_ref = yaml_ann.get("original_reference_id", "")
-                    negated = yaml_ann.get("negated", False)
-                    if go_id:
-                        yaml_tuples.add((go_id, evidence_type, original_ref, negated))
+        # Legacy reviews predate WITH/FROM identity and may intentionally contain
+        # one row for several sources. Preserve that validation compatibility;
+        # seeding still expands each distinct source into its own review row.
+        unmatched_yaml: List[Dict] = []
+        for yaml_ann, base_key, support_key in ordinary_yaml:
+            matches = {
+                index for index, key in enumerate(goa_keys)
+                if key[:4] == base_key and (not support_key or key[4] == support_key)
+            }
+            if not matches and support_key:
+                # Older hand-authored reviews combined several source rows. Accept
+                # only a lossless union of whole matching lists, never a partial
+                # donor group or a list containing an unsupported entity.
+                support_set = set(support_key)
+                combined_matches = {
+                    index for index, key in enumerate(goa_keys)
+                    if key[:4] == base_key and key[4]
+                    and set(key[4]) <= support_set
+                }
+                combined_support = {
+                    entity for index in combined_matches for entity in goa_keys[index][4]
+                }
+                if combined_support == support_set:
+                    matches = combined_matches
+            if matches:
+                unmatched_goa.difference_update(matches)
+            else:
+                unmatched_yaml.append(yaml_ann)
 
-        for goa_tuple in goa_tuples:
-            if goa_tuple not in yaml_tuples:
-                goa_ann = goa_by_tuple[goa_tuple]
-                result.missing_in_yaml.append(goa_ann)
-                # Missing GOA annotations in YAML is always a validation failure
-                result.is_valid = False
+        for yaml_ann in unmatched_yaml:
+            result.missing_in_goa.append(yaml_ann)
+            result.is_valid = False
+            go_id = yaml_ann.get("term", {}).get("id", "")
+            evidence_type = yaml_ann.get("evidence_type", "")
+            partial_matches = goa_by_go_id.get(go_id, [])
+            if partial_matches:
+                goa_evidence_for_term = {
+                    ann.evidence_code for ann in partial_matches
+                }
+                if evidence_type and evidence_type not in goa_evidence_for_term:
+                    result.mismatched_evidence.append(
+                        (
+                            go_id,
+                            evidence_type,
+                            ", ".join(sorted(goa_evidence_for_term)),
+                        )
+                    )
+
+        for index in sorted(unmatched_goa):
+            result.missing_in_yaml.append(goa_annotations[index])
+            result.is_valid = False
 
         return result
 
@@ -615,7 +633,7 @@ class GOAValidator:
         goa_file: Optional[Path] = None,
         output_file: Optional[Path] = None,
         fetch_titles: bool = False,
-    ) -> Tuple[int, Path, int, int]:
+    ) -> Tuple[int, Path, int, int, int]:
         """Seed missing annotations from GOA file into YAML.
 
         This function adds any annotations present in the GOA file but missing
@@ -630,7 +648,7 @@ class GOAValidator:
 
         Returns:
             Tuple of (annotations added, output file path, references added,
-            qualifiers backfilled)
+            qualifiers backfilled, supporting-entity lists backfilled)
         """
         # Derive GOA file path if not provided
         if goa_file is None:
@@ -666,13 +684,20 @@ class GOAValidator:
         existing_annotations = yaml_data.get("existing_annotations", [])
 
         # Build set of existing tuples (GO ID, evidence_type, reference, negated,
-        # qualifier). Older seeded files may lack qualifier, so keep a base-tuple
-        # index that lets us backfill the qualifier without adding duplicates.
+        # qualifier, supporting entities). Older seeded files may lack qualifier
+        # and/or supporting_entities, so keep a base-tuple index that lets us enrich
+        # one legacy annotation before adding rows that differ only by WITH/FROM.
         existing_tuples = set()
-        existing_missing_qualifier_by_base: Dict[
-            Tuple[str, str, str, bool], List[Dict[str, Any]]
+        existing_by_tuple: Dict[
+            Tuple[str, str, str, bool, str, Tuple[str, ...]],
+            List[Dict[str, Any]],
         ] = {}
+        existing_by_base: Dict[Tuple[str, str, str, bool], List[Dict[str, Any]]] = {}
         for ann in existing_annotations:
+            # Historical records must not suppress a fresh review if their GOA
+            # source reappears, or be enriched into a different current source.
+            if isinstance(ann, dict) and ann.get("retired", False):
+                continue
             if isinstance(ann, dict) and "term" in ann:
                 term = ann["term"]
                 if isinstance(term, dict) and "id" in term:
@@ -681,14 +706,22 @@ class GOAValidator:
                     ref = ann.get("original_reference_id", "")
                     negated = ann.get("negated", False)
                     parsed_qualifier = self._parse_qualifier(ann.get("qualifier"))
+                    existing_sources_key = self._supporting_entities_key(
+                        ann.get("supporting_entities")
+                    )
                     base_tuple = (go_id, evidence, ref, negated)
-                    existing_tuples.add((*base_tuple, parsed_qualifier or ""))
-                    if not parsed_qualifier:
-                        existing_missing_qualifier_by_base.setdefault(base_tuple, []).append(ann)
+                    existing_tuples.add(
+                        (*base_tuple, parsed_qualifier or "", existing_sources_key)
+                    )
+                    existing_by_tuple.setdefault(
+                        (*base_tuple, parsed_qualifier or "", existing_sources_key), []
+                    ).append(ann)
+                    existing_by_base.setdefault(base_tuple, []).append(ann)
 
         # Add missing annotations from GOA
         added_count = 0
         qualifiers_backfilled = 0
+        supporting_entities_backfilled = 0
         seen_tuples = set()  # Track which tuples we've already added
         pmids_to_add = set()  # Collect PMIDs and GO_REFs to add to references
 
@@ -701,8 +734,24 @@ class GOAValidator:
             ):
                 pmids_to_add.add(goa_ann.reference)
 
-        # Second pass - add missing annotations based on complete tuple
-        for goa_ann in goa_annotations:
+        def seeding_key(ann: GOAAnnotation) -> tuple:
+            """Stable source order; reserve exact matches before legacy backfills."""
+            return (
+                ann.go_id, ann.evidence_code, ann.reference,
+                self._qualifier_is_negated(ann.qualifier),
+                self._parse_qualifier(ann.qualifier) or "",
+                self._supporting_entities_key(ann.with_from),
+            )
+
+        claimed_existing = {
+            id(ann)
+            for goa_ann in goa_annotations
+            for ann in existing_by_tuple.get(seeding_key(goa_ann), [])
+        }
+
+        # Stable ordering prevents a refresh from assigning a legacy review to a
+        # different donor merely because QuickGO changed its response order.
+        for goa_ann in sorted(goa_annotations, key=seeding_key):
             go_id = goa_ann.go_id
             evidence = goa_ann.evidence_code
             reference = goa_ann.reference
@@ -711,28 +760,63 @@ class GOAValidator:
             qualifier = getattr(goa_ann, "qualifier", "")
             is_negated = self._qualifier_is_negated(qualifier)
             parsed_qualifier = self._parse_qualifier(qualifier)
+            supporting_entities = self._normalize_supporting_entities(
+                goa_ann.with_from
+            )
+            supporting_entities_key = self._supporting_entities_key(
+                supporting_entities
+            )
 
             # Include negation and qualifier in tuple key since NOT annotations and
             # relation-specific GOA assertions are distinct.
             base_tuple = (go_id, evidence, reference, is_negated)
-            tuple_key = (*base_tuple, parsed_qualifier or "")
+            tuple_key = (
+                *base_tuple,
+                parsed_qualifier or "",
+                supporting_entities_key,
+            )
 
             # Skip if this exact tuple already exists in YAML or was already added
             if tuple_key in existing_tuples or tuple_key in seen_tuples:
                 continue
 
-            # Backfill missing qualifiers on older seeded annotations instead of
-            # adding a duplicate annotation for the same GO/evidence/reference tuple.
-            if parsed_qualifier:
-                existing_without_qualifier = existing_missing_qualifier_by_base.get(
-                    base_tuple, []
-                )
-                if existing_without_qualifier:
-                    existing_ann = existing_without_qualifier.pop(0)
-                    existing_ann["qualifier"] = parsed_qualifier
-                    existing_tuples.add(tuple_key)
-                    qualifiers_backfilled += 1
+            # Enrich one compatible legacy annotation rather than duplicating it.
+            # A second GOA row with a different non-empty WITH/FROM value will no
+            # longer match the enriched annotation and will therefore be added.
+            enriched_existing = False
+            for existing_ann in existing_by_base.get(base_tuple, []):
+                if id(existing_ann) in claimed_existing:
                     continue
+                existing_qualifier = self._parse_qualifier(
+                    existing_ann.get("qualifier")
+                )
+                existing_supporting_key = self._supporting_entities_key(
+                    existing_ann.get("supporting_entities")
+                )
+                qualifier_compatible = (
+                    existing_qualifier == parsed_qualifier
+                    or (not existing_qualifier and bool(parsed_qualifier))
+                )
+                supporting_compatible = (
+                    existing_supporting_key == supporting_entities_key
+                    or (not existing_supporting_key and bool(supporting_entities_key))
+                )
+                if not qualifier_compatible or not supporting_compatible:
+                    continue
+
+                if parsed_qualifier and not existing_qualifier:
+                    existing_ann["qualifier"] = parsed_qualifier
+                    qualifiers_backfilled += 1
+                if supporting_entities and not existing_supporting_key:
+                    existing_ann["supporting_entities"] = supporting_entities
+                    supporting_entities_backfilled += 1
+                existing_tuples.add(tuple_key)
+                claimed_existing.add(id(existing_ann))
+                enriched_existing = True
+                break
+
+            if enriched_existing:
+                continue
 
             # Create new annotation entry (stub for review)
             new_annotation: Dict[str, Any] = {
@@ -747,6 +831,9 @@ class GOAValidator:
             # things biologically.
             if parsed_qualifier:
                 new_annotation["qualifier"] = parsed_qualifier
+
+            if supporting_entities:
+                new_annotation["supporting_entities"] = supporting_entities
 
             # Add negated field if this is a NOT annotation
             if is_negated:
@@ -845,6 +932,13 @@ class GOAValidator:
             yaml_data["references"] = existing_refs
             print(f"    Also seeded {refs_added} references from GOA")
 
+        if added_count > 0:
+            # New PENDING work invalidates an old completion status. Use the
+            # shared status rules rather than copying stale workflow metadata.
+            from ai_gene_review.status_manager import compute_status_from_data
+
+            yaml_data["status"] = compute_status_from_data(yaml_data)
+
         # Determine output path
         if output_file is None:
             output_file = yaml_file
@@ -858,6 +952,7 @@ class GOAValidator:
             or added_count > 0
             or refs_added > 0
             or qualifiers_backfilled > 0
+            or supporting_entities_backfilled > 0
         )
         if should_write:
             with open(output_file, "w") as f:
@@ -869,7 +964,13 @@ class GOAValidator:
                     allow_unicode=True,
                 )
 
-        return added_count, output_file, refs_added, qualifiers_backfilled
+        return (
+            added_count,
+            output_file,
+            refs_added,
+            qualifiers_backfilled,
+            supporting_entities_backfilled,
+        )
 
     def _get_go_ref_title(self, go_ref_id: str, cache: Dict[str, str]) -> str:
         """Fetch GO_REF title from GO site YAML file.
@@ -922,6 +1023,30 @@ class GOAValidator:
         if not isinstance(qualifier, str):
             return False
         return "NOT" in qualifier.upper()
+
+    @staticmethod
+    def _normalize_supporting_entities(value: Any) -> List[str]:
+        """Normalize GOA WITH/FROM or YAML supporting_entities to an ID list."""
+        if isinstance(value, str):
+            values = value.split("|")
+        elif isinstance(value, list):
+            values = value
+        else:
+            return []
+
+        normalized: List[str] = []
+        for item in values:
+            if not isinstance(item, str):
+                continue
+            item = item.strip()
+            if item and item not in normalized:
+                normalized.append(item)
+        return normalized
+
+    @classmethod
+    def _supporting_entities_key(cls, value: Any) -> Tuple[str, ...]:
+        """Return an order-insensitive identity key for supporting entities."""
+        return tuple(sorted(cls._normalize_supporting_entities(value)))
 
     # Valid GO annotation qualifiers from GAF/GPAD spec
     VALID_QUALIFIERS = {
