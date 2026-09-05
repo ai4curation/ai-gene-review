@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import time
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import List, Optional
 
 import typer
@@ -183,6 +184,7 @@ def fetch_gene(
                     result["annotations_added"] > 0
                     or result.get("references_added", 0) > 0
                     or result.get("qualifiers_backfilled", 0) > 0
+                    or result.get("supporting_entities_backfilled", 0) > 0
                 ):
                     parts = []
                     if result["annotations_added"] > 0:
@@ -192,6 +194,11 @@ def fetch_gene(
                     if result.get("qualifiers_backfilled", 0) > 0:
                         parts.append(
                             f"qualifiers on {result.get('qualifiers_backfilled', 0)} annotations"
+                        )
+                    if result.get("supporting_entities_backfilled", 0) > 0:
+                        parts.append(
+                            "supporting entities on "
+                            f"{result.get('supporting_entities_backfilled', 0)} annotations"
                         )
                     typer.echo(
                         f"  - {file_prefix}-ai-review.yaml (added {' and '.join(parts)})"
@@ -1289,38 +1296,43 @@ def seed_goa(
     # Initialize validator
     validator = GOAValidator()
 
-    # First check what's missing
-    if yaml_file.exists():
-        typer.echo(f"Checking {yaml_file.name} for missing annotations...")
-        result = validator.validate_against_goa(yaml_file, goa_file)
-
-        if not result.missing_in_yaml:
-            typer.echo(
-                "✓ No missing annotations to seed - YAML already contains all GOA annotations"
-            )
-            return
-
-        typer.echo(f"Found {len(result.missing_in_yaml)} missing annotations to seed:")
-        for ann in result.missing_in_yaml[:5]:  # Show first 5
-            typer.echo(f"  - {ann.go_id} ({ann.go_term})")
-        if len(result.missing_in_yaml) > 5:
-            typer.echo(f"  ... and {len(result.missing_in_yaml) - 5} more")
-    else:
-        typer.echo("Creating new YAML file with all GOA annotations...")
-
-    if dry_run:
-        typer.echo("\n--dry-run specified, no changes will be made")
-        return
+    # Validation permits historical source collapse. Always ask the seeder what
+    # needs expansion/backfill instead of treating validation success as a no-op.
+    typer.echo(f"Checking {yaml_file.name} for missing annotations and source metadata...")
 
     # Perform the seeding
     try:
-        added_count, output_path, refs_added, qualifiers_backfilled = (
+        if dry_run:
+            with TemporaryDirectory(prefix="aigr-seed-preview-") as preview_dir:
+                added, _, refs, qualifiers, sources = validator.seed_missing_annotations(
+                    yaml_file, goa_file, Path(preview_dir) / "preview.yaml",
+                    fetch_titles=False,
+                )
+            typer.echo(
+                f"Would add {added} annotations and {refs} references; "
+                f"backfill {qualifiers} qualifiers and {sources} supporting-entity lists."
+            )
+            typer.echo("--dry-run specified, no changes will be made")
+            return
+
+        (
+            added_count,
+            output_path,
+            refs_added,
+            qualifiers_backfilled,
+            supporting_entities_backfilled,
+        ) = (
             validator.seed_missing_annotations(
                 yaml_file, goa_file, output, fetch_titles=fetch_titles
             )
         )
 
-        if added_count > 0 or refs_added > 0 or qualifiers_backfilled > 0:
+        if (
+            added_count > 0
+            or refs_added > 0
+            or qualifiers_backfilled > 0
+            or supporting_entities_backfilled > 0
+        ):
             parts = []
             if added_count > 0:
                 parts.append(f"{added_count} annotations")
@@ -1328,6 +1340,11 @@ def seed_goa(
                 parts.append(f"{refs_added} references")
             if qualifiers_backfilled > 0:
                 parts.append(f"qualifiers on {qualifiers_backfilled} annotations")
+            if supporting_entities_backfilled > 0:
+                parts.append(
+                    "supporting entities on "
+                    f"{supporting_entities_backfilled} annotations"
+                )
             typer.echo(f"\n✓ Successfully added {' and '.join(parts)} to {output_path}")
             typer.echo("\nNote: Review sections left empty for AI to complete")
         else:
