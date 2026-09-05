@@ -25,7 +25,10 @@ Defaults to genes/mouse/*/*-ai-review.yaml.
   --action REMOVE   restrict to rows whose review.action is REMOVE (the scoped figure)
   --list            print each qualifying group: rows, genes, and the reason's first line
   --check-coverage  check MOD_ORGANISM / ORGANISM_WORDS / SPECIES_WORDS against the
-                    corpus and report gaps in both directions; exit 1 if any.
+                    corpus and report gaps in both directions; exit 1 if any. Its scan
+                    is always the whole corpus, not the glob -- see check_coverage. (A
+                    glob that matches nothing is still an error, as it is for every mode:
+                    that catches the typo, it does not scope the audit.)
   --classify-labels ignore the grouping entirely and print the propagation_review
                     source_label split instead (self / third-party, provenanced or not),
                     which projects/IBA_REVIEW.md quotes. It lives here because the
@@ -50,6 +53,9 @@ from collections import Counter, defaultdict
 import yaml
 
 DEFAULT_GLOB = "genes/mouse/*/*-ai-review.yaml"
+# What --check-coverage scans, regardless of the measurement glob. The maps it audits are
+# global objects, so auditing them against a subset is not an audit -- see check_coverage.
+CORPUS_GLOB = "genes/*/*/*-ai-review.yaml"
 SCHEMA = "src/ai_gene_review/schema/gene_review.yaml"
 MIN_TERMS = 3
 
@@ -194,12 +200,15 @@ SPECIES_WORDS = ('mouse', 'rat', 'human', 'Drosophila', 'zebrafish', 'budding-ye
 # have more than one: genes/yeast labels say "budding-yeast" and "S. cerevisiae" as well
 # as "yeast", and treating only the directory name as its own word filed those foreign.
 #
-# Scope is the directories that CARRY a source_label, not all 181 under genes/:
+# Scope is the directories that CARRY a source_label, not every directory under genes/:
 #     grep -rl 'source_label:' genes/ --include='*-ai-review.yaml' | cut -d/ -f2 | sort -u
-# gives 16, all of which are keys here. CHICK and DANRE are keys with no labels yet, kept
-# because the directories exist. An earlier revision also had PIG and XENLA, which are NOT
-# directories in this repo at all -- invented from a taxonomy rather than read off the
-# corpus, which is the failure the arm below now catches.
+# Every directory that sweep returns must be a key here, and `--check-coverage` enforces
+# that on every run rather than a count in this comment doing it -- the count went stale
+# the first time a new organism gained a labelled source (POPTR), which is why there
+# isn't one. Keys with no labels yet (CHICK) are kept because the directories exist. An
+# earlier revision also had PIG and XENLA, which are NOT directories in this repo at all
+# -- invented from a taxonomy rather than read off the corpus, which is the failure the
+# arm below now catches.
 ORGANISM_WORDS = {
     'mouse': ('mouse', 'Mus musculus', r'M\. musculus'),
     'rat': ('rat', 'Rattus norvegicus', r'R\. norvegicus'),
@@ -217,6 +226,7 @@ ORGANISM_WORDS = {
     # Species names taken from each directory's own taxon.label, not from memory.
     'VIBCH': ('Vibrio cholerae',), 'PSEPK': ('Pseudomonas putida',),
     'NEUCR': ('Neurospora crassa',), 'ANOGA': ('Anopheles gambiae',),
+    'POPTR': ('Populus trichocarpa',),
 }
 PROVENANCE_VERBS = re.compile(
     r'\bresolv|\bcorroborat|asserted from external knowledge', re.I)
@@ -335,11 +345,19 @@ def classify_labels(paths):
     return selfs, prov, bare
 
 
-def check_coverage(paths):
+def check_coverage():
     """Report where the species maps and SPECIES_WORDS miss the corpus.
 
-    Returns (findings, declined): findings are gaps, declined are prefixes the roster
-    says are not species-scoped, printed so the roster is auditable rather than trusted.
+    Returns (findings, declined, scanned): findings are gaps, declined are prefixes the
+    roster says are not species-scoped, printed so the roster is auditable rather than
+    trusted, and scanned is how many files were read.
+
+    Scans CORPUS_GLOB and ignores the measurement glob, because the maps are global and
+    one of the two directions -- "the roster carries an entry the corpus never uses" --
+    is simply FALSE over a subset. Under the default mouse glob this reported four such
+    gaps for AGI_LocusCode, WB, dictyBase and ensembl, every one of which genes/ARATH,
+    genes/worm, genes/DICDI or genes/human does use. An audit whose answer depends on
+    which files you happened to pass is not an audit of the roster.
 
     Both maps were written from rosters -- a list of MODs, a taxonomy -- rather than from
     what the reviews actually write, and each was wrong in both directions: a namespace
@@ -350,6 +368,7 @@ def check_coverage(paths):
 
     Scanned as text, not parsed: this walks the whole corpus and only needs the shapes.
     """
+    paths = sorted(glob.glob(CORPUS_GLOB))
     sid_re = re.compile(r"source_id:\s*([A-Za-z0-9_.-]+):")
     label_re = re.compile(r"source_label:\s*(.+)")
     abbrev_re = re.compile(r"(?<!\w)([A-Z]\. [a-z]+)")
@@ -389,7 +408,7 @@ def check_coverage(paths):
     # That is how ensembl -- 312 uses, species readable from every accession -- stayed
     # outside the gate while the checker reported zero gaps. Showing the declined list
     # puts the roster's own coverage in front of the reader on every run.
-    return findings, declined
+    return findings, declined, len(paths)
 
 
 def _known_actions():
@@ -652,13 +671,16 @@ def main(argv):
         return 2
 
     if coverage:
-        findings, declined = check_coverage(paths)
+        findings, declined, scanned = check_coverage()
+        if not scanned:
+            print(f"no files matched the corpus glob: {CORPUS_GLOB}")
+            return 2
         for finding in findings:
             print(f"  {finding}")
         if declined:
             print("  declined as not species-scoped (check these by eye, they are NOT "
                   "gaps): " + ", ".join(declined))
-        print(f"{len(paths)} files: {len(findings)} coverage gap(s)")
+        print(f"whole corpus, {scanned} files: {len(findings)} coverage gap(s)")
         return 1 if findings else 0
 
     if classify:

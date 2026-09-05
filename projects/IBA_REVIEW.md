@@ -211,6 +211,21 @@ mere bookkeeping. Note the limits: it is accession-keyed, so `FB:`/`SGD:`/`RGD:`
 identifiers are **not** lookups in it, and a family whose directory is absent from
 `interpro/panther/` resolves nothing.
 
+**Search every family's index, not just the node's own.** A seed can sit in one family's
+IBD while PANTHER classifies the protein into a *different* family, so the node's own
+`entries.csv` will not contain it and a family-scoped lookup files it unresolvable when it
+is in fact resolvable. `Acadl`'s bacterial seeds are the worked case: both are seeds of
+`PTN002535634` in `PTHR43884`, but only `P60584` (*caiA*) is in `PTHR43884-entries.csv` —
+`Q47146` (*fadE*) resolves in `PTHR48083-entries.csv`. So the lookup is
+
+```
+grep -l '<ACC>' interpro/panther/*/*-entries.csv
+```
+
+rather than a single family's file. This is the same widening the WITH/FROM route already
+gets below: "the family has no index" and "the node's family has no index" are both
+weaker than "no index has it".
+
 **A MOD-id seed can therefore only be name-matched, and a name match returns every
 species' ortholog — so check the taxon column.** `PTHR10836` carries `Gapdh2` for
 *D. melanogaster* (`P07487`), *D. pseudoobscura* (`O44104`) and *D. subobscura*
@@ -565,27 +580,38 @@ directions, so "the list matches the corpus" is something to run rather than som
 trust:
 
 ```
-python3 projects/IBA_REVIEW/shared_reason_groups.py 'genes/*/*/*-ai-review.yaml' --check-coverage
+python3 projects/IBA_REVIEW/shared_reason_groups.py --check-coverage
 ```
 
-It reports 0 gaps over 4466 files, and re-introducing any of the four original defects
-makes either it or the self-test fail.
+It reports 0 gaps, and re-introducing any of the four original defects makes either it or
+the self-test fail.
+
+**Its scan is always the whole corpus, not the glob**, unlike every other mode here.
+The maps it audits are global objects, and one of its two directions — "the roster carries
+an entry the corpus never uses" — is simply false over a subset: under this script's default
+mouse glob it reported four such gaps for `AGI_LocusCode`, `WB`, `dictyBase` and `ensembl`,
+every one of which `genes/ARATH`, `genes/worm`, `genes/DICDI` or `genes/human` does use. A
+roster audit whose answer depends on which files you happened to pass is not an audit, so
+this mode does not scope its scan by the glob. (A glob matching nothing is still an error,
+as in every mode — that catches the typo, it does not narrow the audit.)
 
 `ORGANISM_WORDS` is keyed by directory, and its scope is the directories that carry a
-`source_label` — 16 of the 181 under `genes/`, enumerable with
+`source_label`, enumerable with
 
 ```
 grep -rl 'source_label:' genes/ --include='*-ai-review.yaml' | cut -d/ -f2 | sort -u
 ```
 
-— all 16 of which are now keys. A first pass at that list was assembled from a taxonomy
-rather than from the corpus and got it wrong in both directions: it omitted `VIBCH`,
-`PSEPK`, `NEUCR` and `ANOGA`, which do carry labels (`PSEPK` is the second-largest gene
-directory in the repo), while adding `PIG` and `XENLA`, which are **not directories in this
-repository at all**. A self-test arm now requires every key to name a real `genes/<key>`
+— every one of which must be a key, which `--check-coverage` enforces on each run. The
+count is deliberately not written down here: it was, and it went stale the first time a
+new organism gained a labelled source (`POPTR`, added as a key for exactly that reason). A
+first pass at that list was assembled from a taxonomy rather than from the corpus and got
+it wrong in both directions: it omitted `VIBCH`, `PSEPK`, `NEUCR` and `ANOGA`, which do
+carry labels (`PSEPK` is the second-largest gene directory in the repo), while adding
+`PIG` and `XENLA`, which are **not directories in this repository at all**. A self-test arm now requires every key to name a real `genes/<key>`
 directory, which is what catches the invented half; the species names for the four real ones
-are read off each directory's own `taxon.label`. `CHICK` and `DANRE` are kept as keys with
-no labels yet, because those directories do exist.
+are read off each directory's own `taxon.label`. `CHICK` is kept as a key with no labels
+yet, because that directory does exist.
 
 **None of this moves mouse.** Every mouse self-label is MGI-sourced — mouse's own MOD — so
 the gate is a no-op there and the 27 / 62 / 31 / 31 figures above are unaffected. The
