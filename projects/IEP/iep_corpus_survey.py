@@ -22,13 +22,20 @@ Run::
 
     uv run python projects/IEP/iep_corpus_survey.py
 
+The GO closure is computed with OAK against ``sqlite:obo:go`` by default. Set
+``IEP_GO_ADAPTER`` to any other OAK selector (e.g.
+``pronto:/path/to/go-basic.obo``) if the SQLite build is unreachable.
+
 Writes ``projects/IEP/iep-corpus-survey.md`` and prints a summary.
 """
 
 from __future__ import annotations
 
 import csv
+import os
+import statistics
 from collections import Counter, defaultdict
+from math import ceil, comb
 from pathlib import Path
 
 import yaml
@@ -37,10 +44,23 @@ from ai_gene_review.analysis.subtraction_report import make_go_ancestor_fn
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 OUT_PATH = Path(__file__).resolve().parent / "iep-corpus-survey.md"
+GO_ADAPTER = os.environ.get("IEP_GO_ADAPTER", "sqlite:obo:go")
+
+# GOA caches do not all use the same aspect vocabulary: most spell the aspect
+# out, a few use the single-letter GAF convention. Normalise so the aspect
+# tallies (and the GORULE:0000006 check that reads them) are not split across
+# two spellings of the same value.
+ASPECTS = {
+    "P": "biological_process",
+    "F": "molecular_function",
+    "C": "cellular_component",
+}
 
 # Coarse GO branches used to characterise what IEP is actually used to say.
 # Order matters: the first matching branch wins, so the more specific
 # stimulus-response branch is tested before the generic development branch.
+# Terms parented under both (e.g. a defence-response term that is also a
+# developmental one) are therefore counted as stimulus-response.
 BRANCHES = [
     ("GO:0050896", "response to stimulus"),
     ("GO:0032502", "developmental process"),
@@ -55,6 +75,9 @@ BRANCHES = [
 # the experimental codes IEP sits alongside plus the two big inferred codes.
 BASELINE_CODES = ["IDA", "IMP", "IGI", "IPI", "IEP", "IBA", "ISO", "IEA", "TAS", "NAS"]
 
+# Disposition columns. ``UNREVIEWED`` is the bucket for annotations carrying no
+# ``review.action`` at all; it is listed so the action columns sum to the
+# reviewed total rather than silently dropping rows out of the table.
 ACTIONS = [
     "ACCEPT",
     "KEEP_AS_NON_CORE",
@@ -63,6 +86,7 @@ ACTIONS = [
     "REMOVE",
     "UNDECIDED",
     "PENDING",
+    "UNREVIEWED",
 ]
 # Actions that say "this annotation, as written, is not a keeper".
 NEGATIVE_ACTIONS = {"REMOVE", "MARK_AS_OVER_ANNOTATED", "MODIFY"}
@@ -90,7 +114,8 @@ def survey_goa() -> dict:
                 if code != "IEP":
                     continue
                 genes_with_iep.add(str(path.parent.relative_to(REPO_ROOT / "genes")))
-                aspects[(row.get("GO ASPECT") or "?").strip()] += 1
+                aspect = (row.get("GO ASPECT") or "?").strip()
+                aspects[ASPECTS.get(aspect, aspect)] += 1
                 qualifiers[(row.get("QUALIFIER") or "?").strip()] += 1
                 assigned_by[(row.get("ASSIGNED BY") or "?").strip()] += 1
                 taxa[(row.get("TAXON NAME") or "?").strip()] += 1
@@ -130,16 +155,30 @@ def survey_reviews(ancestors) -> dict:
     core_grounding: dict[str, list[int]] = defaultdict(lambda: [0, 0])
     branches: Counter[str] = Counter()
     branch_negative: Counter[str] = Counter()
+    # (species, branch) -> rows / flagged rows, so the branch flag rates can be
+    # checked for species confounding rather than pooled across the corpus.
+    branch_by_species: Counter[tuple[str, str]] = Counter()
+    branch_by_species_negative: Counter[tuple[str, str]] = Counter()
+    # branch -> distinct gene directories contributing rows / flagged rows.
+    branch_genes: defaultdict[str, set[str]] = defaultdict(set)
+    branch_negative_genes: defaultdict[str, set[str]] = defaultdict(set)
     iep_terms: Counter[tuple[str, str]] = Counter()
     iep_negative_terms: Counter[tuple[str, str]] = Counter()
     iep_files: set[str] = set()
     iep_by_species: Counter[str] = Counter()
+    iep_by_gene: Counter[str] = Counter()
     # (species, gene, term, label, action, reason)
     iep_rows: list[tuple[str, str, str, str, str, str]] = []
     corroborated = 0
     sole_support = 0
     sole_support_negative = 0
+    # Closure-aware variant of the same measurement: an IEP row also counts as
+    # corroborated when a non-IEP row in the same review carries an ancestor or
+    # descendant of its term (an IDA ``cellular response to heat`` corroborates
+    # an IEP ``response to heat``).
+    corroborated_closure = 0
     core_grounded = 0
+    core_grounded_accept = 0
 
     for path in sorted(REPO_ROOT.glob("genes/*/*/*-ai-review.yaml")):
         with open(path) as fh:
@@ -186,8 +225,10 @@ def survey_reviews(ancestors) -> dict:
                 else None
             ) or ""
 
+            gene_key = f"{species}/{path.parent.name}"
             iep_files.add(str(path.relative_to(REPO_ROOT)))
             iep_by_species[species] += 1
+            iep_by_gene[gene_key] += 1
             iep_terms[(term_id, term_label)] += 1
             iep_rows.append(
                 (
@@ -201,32 +242,84 @@ def survey_reviews(ancestors) -> dict:
             )
             branch = classify_branch(term_id, ancestors)
             branches[branch] += 1
+            branch_by_species[(species, branch)] += 1
+            branch_genes[branch].add(gene_key)
             if action in NEGATIVE_ACTIONS:
                 iep_negative_terms[(term_id, term_label)] += 1
                 branch_negative[branch] += 1
+                branch_by_species_negative[(species, branch)] += 1
+                branch_negative_genes[branch].add(gene_key)
             if term_id in non_iep_terms:
                 corroborated += 1
+                corroborated_closure += 1
             else:
                 sole_support += 1
                 if action in NEGATIVE_ACTIONS:
                     sole_support_negative += 1
+                if related_by_closure(term_id, non_iep_terms, ancestors):
+                    corroborated_closure += 1
             if term_id in core_terms:
                 core_grounded += 1
+                if action == "ACCEPT":
+                    core_grounded_accept += 1
 
     return {
         "disposition": disposition,
         "core_grounding": core_grounding,
         "branches": branches,
         "branch_negative": branch_negative,
+        "branch_by_species": branch_by_species,
+        "branch_by_species_negative": branch_by_species_negative,
+        "branch_genes": branch_genes,
+        "branch_negative_genes": branch_negative_genes,
         "iep_terms": iep_terms,
         "iep_negative_terms": iep_negative_terms,
         "iep_files": iep_files,
         "iep_by_species": iep_by_species,
+        "iep_by_gene": iep_by_gene,
         "iep_rows": iep_rows,
         "corroborated": corroborated,
+        "corroborated_closure": corroborated_closure,
         "sole_support": sole_support,
         "sole_support_negative": sole_support_negative,
         "core_grounded": core_grounded,
+        "core_grounded_accept": core_grounded_accept,
+    }
+
+
+def related_by_closure(term_id: str, other_terms, ancestors) -> bool:
+    """True if any of ``other_terms`` is an ancestor or descendant of ``term_id``.
+
+    Used for the closure-aware corroboration count: exact term-id equality
+    misses the common case where the corroborating evidence sits on a
+    neighbouring term in the same lineage.
+    """
+    anc = ancestors(term_id)
+    for other in other_terms:
+        if not other or other == term_id:
+            continue
+        if other in anc or term_id in ancestors(other):
+            return True
+    return False
+
+
+def concentration(counts: Counter[str]) -> dict:
+    """Summarise how unevenly IEP rows are spread over the genes carrying them."""
+    values = sorted(counts.values(), reverse=True)
+    total = sum(values)
+    if not values:
+        return {"genes": 0, "rows": 0, "median": 0, "top_decile_genes": 0}
+    top_n = max(1, ceil(0.10 * len(values)))
+    heavy = [v for v in values if v >= 5]
+    return {
+        "genes": len(values),
+        "rows": total,
+        "median": statistics.median(values),
+        "max": values[0],
+        "top_decile_genes": top_n,
+        "top_decile_rows": sum(values[:top_n]),
+        "heavy_genes": len(heavy),
+        "heavy_rows": sum(heavy),
     }
 
 
@@ -264,8 +357,35 @@ def pct(n: int, d: int) -> str:
     return f"{100.0 * n / d:.1f}%" if d else "n/a"
 
 
+def fisher_exact_two_sided(a: int, b: int, c: int, d: int) -> float:
+    """Two-sided Fisher exact p for the 2x2 table ``[[a, b], [c, d]]``.
+
+    Computed by summing hypergeometric probabilities no larger than the
+    observed one. Written out rather than pulling in SciPy so the survey has no
+    dependency beyond what the reviews themselves need; verified against
+    ``scipy.stats.fisher_exact``.
+    """
+    n = a + b + c + d
+    if not n or not (a + b) or not (c + d) or not (a + c) or not (b + d):
+        return 1.0
+    row1, col1 = a + b, a + c
+    denom = comb(n, col1)
+
+    def prob(x: int) -> float:
+        return comb(row1, x) * comb(n - row1, col1 - x) / denom
+
+    observed = prob(a)
+    lo = max(0, col1 - (n - row1))
+    hi = min(row1, col1)
+    # Relative tolerance guards against summing away a tie lost to rounding.
+    total = sum(
+        p for x in range(lo, hi + 1) if (p := prob(x)) <= observed * 1e-7 + observed
+    )
+    return min(1.0, total)
+
+
 def main() -> None:
-    ancestors = make_go_ancestor_fn()
+    ancestors = make_go_ancestor_fn(GO_ADAPTER)
     goa = survey_goa()
     rev = survey_reviews(ancestors)
 
@@ -286,6 +406,21 @@ def main() -> None:
         "Generated by `projects/IEP/iep_corpus_survey.py`. Two views: raw GOA "
         "(`*-goa.tsv`, what GOA ships) and reviewed (`*-ai-review.yaml`, what "
         "reviewers concluded)."
+    )
+    add("")
+    add(
+        f"GO closure computed with the OAK adapter `{GO_ADAPTER}` "
+        "(override with `IEP_GO_ADAPTER`). The coarse branch tallies can move "
+        "by a row or two between GO releases, as terms are obsoleted or "
+        "reparented; everything else is release-independent."
+    )
+    add("")
+    add(
+        "**What the reviewer dispositions are.** Every `action` counted below "
+        "comes from this repository's own `*-ai-review.yaml` files, which are "
+        "AI-generated reviews produced under the guidance in `CLAUDE.md`. They "
+        "are not independent adjudication of GO curators. See the "
+        "[limitations note](../IEP.md#what-flagged-means-and-does-not-mean)."
     )
     add("")
 
@@ -363,9 +498,47 @@ def main() -> None:
         f"of which **{rev['sole_support_negative']:,}** were REMOVE/MARK_OVER/MODIFY"
     )
     add(
-        f"- IEP rows whose term also appears in the review's `core_functions`: "
-        f"**{rev['core_grounded']:,}** ({pct(rev['core_grounded'], iep_reviewed)})"
+        f"- Same measurement with is_a/part_of closure (an ancestor or "
+        f"descendant of the IEP term under a non-IEP code also counts as "
+        f"corroboration): **{rev['corroborated_closure']:,}** corroborated "
+        f"({pct(rev['corroborated_closure'], iep_reviewed)}), so the sole-carrier "
+        f"share falls to "
+        f"**{pct(iep_reviewed - rev['corroborated_closure'], iep_reviewed)}**. "
+        f"The exact-match figure above is therefore an upper bound on sole carriage."
     )
+    add(
+        f"- IEP rows whose term also appears in the review's `core_functions`: "
+        f"**{rev['core_grounded']:,}** ({pct(rev['core_grounded'], iep_reviewed)}), "
+        f"of which **{rev['core_grounded_accept']:,}** were also ACCEPTed "
+        f"(the rest reach `core_functions` on the strength of a co-annotated "
+        f"non-IEP row)"
+    )
+    add("")
+
+    conc = concentration(rev["iep_by_gene"])
+    add("### How concentrated IEP is over genes")
+    add("")
+    add(
+        f"- Gene directories carrying at least one reviewed IEP row: "
+        f"**{conc['genes']:,}**; median IEP rows per such gene: "
+        f"**{conc['median']:g}**; maximum: **{conc['max']:,}**"
+    )
+    add(
+        f"- The top 10% of IEP-carrying genes ({conc['top_decile_genes']:,} genes) "
+        f"carry **{conc['top_decile_rows']:,}** rows, "
+        f"**{pct(conc['top_decile_rows'], conc['rows'])}** of the total"
+    )
+    add(
+        f"- Genes with 5 or more IEP rows: **{conc['heavy_genes']:,}** "
+        f"({pct(conc['heavy_genes'], conc['genes'])} of IEP-carrying genes), "
+        f"carrying **{pct(conc['heavy_rows'], conc['rows'])}** of all IEP rows "
+        f"(this is the statistic comparable to the global atlas)"
+    )
+    add("")
+    add("| Gene | IEP rows |")
+    add("|---|---:|")
+    for gene_key, n in rev["iep_by_gene"].most_common(10):
+        add(f"| {gene_key} | {n:,} |")
     add("")
 
     add("### Disposition by evidence code")
@@ -384,7 +557,9 @@ def main() -> None:
     add("")
     add(
         "`% negative` = REMOVE + MARK_AS_OVER_ANNOTATED + MODIFY, i.e. rows a "
-        "reviewer judged not keepable as written."
+        "reviewer judged not keepable as written, over the `Reviewed` total. "
+        "That total is every annotation row carrying the code, including the "
+        "`PENDING` and `UNREVIEWED` ones, so the action columns sum to it."
     )
     add("")
 
@@ -404,15 +579,96 @@ def main() -> None:
             f"{in_core:,} | {pct(in_core, rows)} |"
         )
     add("")
+    add(
+        "`% core` credits a code whenever the term it carries also appears in "
+        "`core_functions`, even if the term got there on the strength of a "
+        "different code annotating it too. It is therefore generous to every "
+        "code, and most generous to codes that frequently co-annotate."
+    )
+    add("")
 
     add("### What IEP is used to say (GO branch, is_a + part_of closure)")
     add("")
-    add("| Branch | IEP rows | Share | Flagged | % flagged |")
-    add("|---|---:|---:|---:|---:|")
+    add("| Branch | IEP rows | Share | Genes | Flagged | % flagged | Genes flagged |")
+    add("|---|---:|---:|---:|---:|---:|---:|")
     total_branch = sum(rev["branches"].values())
     for branch, n in rev["branches"].most_common():
         neg = rev["branch_negative"][branch]
-        add(f"| {branch} | {n:,} | {pct(n, total_branch)} | {neg} | {pct(neg, n)} |")
+        add(
+            f"| {branch} | {n:,} | {pct(n, total_branch)} | "
+            f"{len(rev['branch_genes'][branch]):,} | {neg} | {pct(neg, n)} | "
+            f"{len(rev['branch_negative_genes'][branch]):,} |"
+        )
+    add("")
+    add(
+        "Branch assignment is **first match wins** in the order listed in "
+        "`BRANCHES`, with `response to stimulus` tested before "
+        "`developmental process`, so a term parented under both is counted as "
+        "stimulus-response."
+    )
+    add("")
+
+    add("### Branch flag rates, split by species")
+    add("")
+    add(
+        "The pooled branch comparison above can be confounded by review batch: "
+        "if one species dominates one branch, the branch flag rate may be "
+        "measuring that species' review batch instead. This table splits the "
+        "two largest branches by species and gives a two-sided Fisher exact "
+        "test of the developmental-versus-stimulus flag-rate difference within "
+        "each."
+    )
+    add("")
+    add(
+        "| Species | response to stimulus | flagged | % | "
+        "developmental process | flagged | % | Fisher p |"
+    )
+    add("|---|---:|---:|---:|---:|---:|---:|---:|")
+    species_seen = sorted(
+        {sp for sp, _ in rev["branch_by_species"]},
+        key=lambda sp: -rev["iep_by_species"][sp],
+    )
+    stim_total = rev["branches"]["response to stimulus"]
+    stim_total_neg = rev["branch_negative"]["response to stimulus"]
+    dev_total = rev["branches"]["developmental process"]
+    dev_total_neg = rev["branch_negative"]["developmental process"]
+    for sp in species_seen:
+        stim = rev["branch_by_species"][(sp, "response to stimulus")]
+        stim_neg = rev["branch_by_species_negative"][(sp, "response to stimulus")]
+        dev = rev["branch_by_species"][(sp, "developmental process")]
+        dev_neg = rev["branch_by_species_negative"][(sp, "developmental process")]
+        if not stim and not dev:
+            continue
+        p = fisher_exact_two_sided(dev_neg, dev - dev_neg, stim_neg, stim - stim_neg)
+        add(
+            f"| {sp} | {stim:,} | {stim_neg} | {pct(stim_neg, stim)} | "
+            f"{dev:,} | {dev_neg} | {pct(dev_neg, dev)} | "
+            f"{p:.3f} |"
+        )
+    p_pooled = fisher_exact_two_sided(
+        dev_total_neg,
+        dev_total - dev_total_neg,
+        stim_total_neg,
+        stim_total - stim_total_neg,
+    )
+    add(
+        f"| **all** | **{stim_total:,}** | **{stim_total_neg}** | "
+        f"**{pct(stim_total_neg, stim_total)}** | **{dev_total:,}** | "
+        f"**{dev_total_neg}** | **{pct(dev_total_neg, dev_total)}** | "
+        f"**{p_pooled:.3f}** |"
+    )
+    add("")
+    add(
+        f"Pooled, the developmental branch flags at "
+        f"{pct(dev_total_neg, dev_total)} against "
+        f"{pct(stim_total_neg, stim_total)} for stimulus-response, on "
+        f"{dev_total_neg}/{dev_total} versus {stim_total_neg}/{stim_total} — "
+        f"**not separable from noise** (two-sided Fisher p = {p_pooled:.2f}). "
+        f"The developmental rows are at least not a single review batch: they "
+        f"span {len(rev['branch_genes']['developmental process']):,} gene "
+        f"directories. Treat the gap as suggestive of the mechanism argued "
+        f"from the worked examples, not as evidence for it."
+    )
     add("")
 
     add("### Reviewed IEP rows by species (top 15)")
