@@ -1481,7 +1481,7 @@ _EDITORIAL = (
     "Sourced from PMID:17159080, which PubMed types as Comment / Editorial / Review. It is a "
     "two-page commentary on another paper and the cached record contains no abstract text at "
     "all - only the citation line. It is the sole source for eleven GOA rows on this gene, "
-    "four of them coded TAS. "
+    "three of them coded TAS and eight NAS. "
 )
 
 for _row, _term, _act, _extra, _reason in [
@@ -2178,8 +2178,8 @@ REFERENCES = [
             notes=(
                 "PubMed types this Comment / Editorial / Review; it is a two-page commentary "
                 "on another paper, and the cached record contains no abstract text at all. It "
-                "is nonetheless the sole source of eleven GOA rows on this gene, four of them "
-                "coded TAS. Several of the terms it supports are correct RAS physiology and "
+                "is nonetheless the sole source of eleven GOA rows on this gene, three of them "
+                "coded TAS and eight NAS. Several of the terms it supports are correct RAS physiology and "
                 "are accepted here on the biology rather than on this citation; the generic "
                 "ones are marked over-annotated. Flagged so the weight of eleven rows is not "
                 "mistaken for eleven findings."

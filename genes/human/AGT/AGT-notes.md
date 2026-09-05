@@ -210,8 +210,8 @@ The term is right, so each is accepted, but no one should read 27 as 27 findings
 **11 rows rest on a two-page editorial.** PMID:17159080 is typed
 `Comment / Editorial / Review` in PubMed, is a comment on another paper, and the
 cached record contains no abstract text at all — only the citation line. It is
-the sole source for 11 GOA rows, four of them coded TAS (traceable author
-statement) and seven NAS. Several of the terms are perfectly correct RAS
+the sole source for 11 GOA rows, three of them coded TAS (traceable author
+statement) and eight NAS. Several of the terms are perfectly correct RAS
 physiology (`GO:0002016`, `GO:0002018`, `GO:0002019`, `GO:0019229`,
 `GO:0035813`) and those are accepted on the biology while the citation is flagged
 in `reference_review`. The generic ones (`GO:0001558 regulation of cell growth`,
