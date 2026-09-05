@@ -19,6 +19,8 @@ from pathlib import Path
 import re
 from typing import Any
 
+from ai_gene_review.utils.research_process import run_research_process
+
 # Default timeout for deep research subprocess (seconds)
 DEFAULT_TIMEOUT = 600
 DEFAULT_OPENSCIENTIST_TIMEOUT = 7200
@@ -320,7 +322,7 @@ def run_deep_research(
         print(f"{label}Timeout: {timeout}s")
 
         try:
-            result = subprocess.run(cmd, timeout=timeout)
+            result = run_research_process(cmd, timeout=timeout)
             if result.returncode == 0:
                 return 0
             print(f"Provider {prov} exited with code {result.returncode}", file=sys.stderr)
