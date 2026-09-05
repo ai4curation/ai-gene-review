@@ -108,3 +108,57 @@ documented in the family review's notes: none of the cited proteins are in
 `panther-members.tsv` yet (`just refresh-panther-members` deliberately not run — shared
 file), and the cross-check cannot place F6WPT1 inside the `SUBFAMILY_ONLY` set for
 GO:0005802 because its UniProt record carries no `:SF` cross-reference.
+
+## 2026-09-05: PR-review response — grounding claims in primary literature
+
+A PR review flagged that every substantive claim in the ai-review (ARL5-GARP
+recruitment, ARFRP1-SYS1 dependence, ARMH3-PI4KB axis, Ragulator interaction,
+TGN46 colocalization, Q70L/T30N mutant behaviour) was sourced only to the
+falcon deep-research file, with no PMIDs anywhere in the review and no
+`reference_review` on the deep-research reference.
+
+Response: identified and confirmed the primary papers behind each claim via
+NCBI E-utilities (DOI-to-PMID esearch, then esummary title cross-checks — no
+PMIDs guessed), cached them with `just fetch-pmid`, and cited them with
+verbatim quotes:
+
+- **PMID:25795912** Rosa-Ferreira, Christis, Torres & Munro, Biol Open 2015 —
+  "The small G protein Arl5 contributes to endosome-to-Golgi traffic by aiding
+  the recruitment of the GARP complex to the Golgi." Primary ARL5-GARP paper
+  (fly + HeLa). Full text cached.
+- **PMID:22245584** Houghton et al., Exp Cell Res 2012 — "Arl5b is a
+  Golgi-localised small G protein involved in the regulation of retrograde
+  transport." Trans-Golgi localization of Arl5a/Arl5b; Q70L/T30N mutant
+  behaviour; M6PR/TGN38/Shiga toxin retrograde phenotypes. Abstract-only cache
+  (no PMC record), flagged `full_text_unavailable`.
+- **PMID:31575603** Ishida & Bonifacino, J Cell Biol 2019 — "ARFRP1 functions
+  upstream of ARL1 and ARL5..." SYS1/ARFRP1-dependent recruitment; GARP
+  association requires GTP-bound ARL5; TGN46 dispersal on ARL5 KO. Full text
+  cached.
+- **PMID:39580461** Ishida, Golding et al., Nat Commun 2024 — "ARMH3 is an
+  ARL5 effector that promotes PI4KB-catalyzed PI4P synthesis at the
+  trans-Golgi network." Full text cached.
+- **PMID:30478271** Shi et al., Nat Commun 2018 — "Amino acids stimulate the
+  endosome-to-Golgi trafficking through Ragulator and small GTPase Arl5."
+  Rag/mTORC1-independent, amino acid-regulated Arl5-Ragulator interaction.
+  Full text cached.
+
+All five were added to `references:` with `reference_review` blocks
+(HIGH/VERIFIED, with E-utilities verification noted) and cited as
+`supported_by` entries with verbatim abstract/full-text quotes on the
+annotations and on the core function. The falcon deep-research reference now
+carries a `reference_review`: its key claims were spot-checked against the
+cached primaries and match (its bibliography DOIs resolve to these same
+papers), so relevance HIGH / correctness VERIFIED — with the explicit caveat,
+which the file itself states, that no Xenopus tropicalis functional data
+exist and all F6WPT1 claims are orthology-based inferences from
+mammalian/Drosophila work.
+
+One wording caveat noted: the review/falcon text says ARL5A "colocalizes with
+TGN46"; Houghton 2012 (the localization paper) assayed transport of TGN38
+(the rat orthologue of human TGN46) and localization to the trans-Golgi,
+while TGN46 itself appears as a retrograde cargo in Ishida 2019/2024. The
+quotes chosen reflect what each paper actually shows.
+
+`just validate XENTR F6WPT1` passes clean after the changes; verbatim
+substring status of every new quote also independently re-checked.
