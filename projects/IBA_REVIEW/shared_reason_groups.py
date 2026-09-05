@@ -122,13 +122,20 @@ MOD_PREFIXES = SPECIES_SCOPED_PREFIXES  # historical name, kept for readability 
 # declines rather than skipping silently, so this roster cannot quietly narrow what the
 # checker is allowed to find -- the failure that put ensembl outside it.
 #
-# What gets declined, for a reader checking that printed list by eye: UniProtKB, PANTHER,
-# InterPro, GO, RHEA and EC are gene- or entity-identifiers that pin no species without a
-# lookup. The rest are not gene identifiers at all -- UniProtKB-SubCell is a location,
-# ARBA an annotation rule, PMID a paper, ChEBI a chemical, GO_REF a reference, Reactome
-# and UniPathway pathways, ComplexPortal a complex, tfclass a TF class, gomodel a GO-CAM.
-# That is all sixteen the checker currently prints, and none of the ten could name a gene
-# in any species, so none is a candidate for the gate.
+# What gets declined falls in two kinds, for a reader checking that printed list by eye.
+# Some are gene- or entity-identifiers that pin no species without a lookup: UniProtKB,
+# PANTHER, InterPro, GO, RHEA, EC, and PR, which names one species' protein but is a
+# Protein Ontology term rather than a MOD gene id. The rest are not gene identifiers at
+# all -- UniProtKB-SubCell is a location, ARBA an annotation rule, PMID a paper, ChEBI a
+# chemical, GO_REF a reference, Reactome and UniPathway pathways, ComplexPortal a complex,
+# tfclass a TF class, araport11 a genome annotation release, gomodel a GO-CAM. None of the
+# second kind could name a gene in any species, so none is a candidate for the gate.
+#
+# No count is given, and this comment is not the authoritative list: the run prints what it
+# actually declines, and that is the list to read. An earlier revision did say "all sixteen
+# the checker currently prints" and went stale twice as the corpus grew -- araport11, then
+# PR arriving with genes/rat/Tp53 from main -- which is the whole argument for printing the
+# live list rather than describing it here.
 #
 # Six entries here are in NEITHER map nor the corpus: Xenbase, FlyBase, WormBase, Araport,
 # ASPGD, PseudoCAP. That is deliberate and is the safe direction -- if one ever appears in

@@ -277,8 +277,8 @@ The criterion itself is a property, not a list of the prefixes anyone has happen
 an accession-keyed file, so running the widened `grep` on anything else returns nothing
 for a reason that says nothing about the seed — MOD identifiers (`MGI:`, `SGD:`, `FB:`,
 `RGD:`, `PomBase:`, `ZFIN:`, `CGD:`, `TAIR:`, `WB:`, `dictyBase:`, `AGI_LocusCode:`) and
-the non-MOD namespaces a `WITH/FROM` also carries (`PANTHER:`, `InterPro:`, `ensembl:`)
-alike. No count or per-directory scope is given for those prefixes on purpose: an earlier
+the non-MOD namespaces a `WITH/FROM` also carries (`PANTHER:`, `InterPro:` and `ensembl:`
+among many more) alike. No count or per-directory scope is given for those prefixes on purpose: an earlier
 revision said which seven `genes/mouse` used and was wrong by one (`Cftr` cites a `TAIR:`
 id) — a list offered as illustration, read back as the set to match against, which is the
 failure this whole passage exists to prevent. Match on the property. `ensembl:` is the one
