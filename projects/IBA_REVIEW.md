@@ -254,12 +254,17 @@ settles it only when the answer is yes; a no leaves the seed still possibly reso
 elsewhere, which is exactly the case `Acadl`'s `Q47146` turned out to be. The test applies
 to **UniProt accessions only** — `entries.csv` is accession-keyed, so a `MOD:` seed is not
 a lookup in it under either the narrow or the widened form, and running the widened `grep`
-on one returns nothing for a reason that says nothing about the seed. Every surviving "the
-local index does not resolve it" comment in `genes/mouse` is of that kind — eight of them,
-across `Ccnb1` ×2, `Ccnt1` ×2, `Cdc42`, `Cftr` ×2 and `Cyp1a1`, citing `SGD:`, `PomBase:`,
-`FB:`, `CGD:`, `MGI:` and `ZFIN:` ids — so the widening leaves them correct rather than
-stale. For a MOD id the routes are the name match described above and the target's own
-UniProt `DR` cross-reference line, not any index.
+on one returns nothing for a reason that says nothing about the seed. For a MOD id the
+routes are the name match described above and the target's own UniProt `DR`
+cross-reference line, not any index. So the two kinds of existing "the local index does
+not resolve it" comment need different treatment when re-checking one: those citing a
+`SGD:`/`PomBase:`/`FB:`/`CGD:`/`MGI:`/`RGD:`/`ZFIN:` id are correct under the widening
+without re-checking, because no index of either scope could ever reach them, while those
+citing a `UniProtKB:` accession are exactly the ones the widened grep can move and should
+be re-run. The accession-cited ones this sweep found are `Ccnt1`'s, and they still resolve
+nowhere. **No count is given here on purpose**: which comments are of this kind depends on
+the phrasing you grep for — three reasonable patterns return three different sets — so
+enumerate against `source_id`, not prose, and scope the claim to what you enumerated.
 That is what separates `Gulo` (`P9WIT3` resolves to *M. tuberculosis* Rv1771) from `Bcl2`
 (`PTHR11256`) and `Ednra` (`PTHR46099`), whose accessions resolve in **no** family's
 index, so no amount of grepping can corroborate the MOD-id-to-accession step. A bare `grep`
