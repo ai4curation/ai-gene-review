@@ -1,0 +1,1897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>pyrF - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>pyrF</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88LW2" target="_blank" class="term-link">
+                        Q88LW2
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "pyrF";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88LW2" data-a="DESCRIPTION: pyrF encodes orotidine 5&#39;-phosphate decarboxylase,..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>pyrF encodes orotidine 5&#39;-phosphate decarboxylase, a homodimeric enzyme that decarboxylates OMP to UMP in the final reaction of de novo UMP biosynthesis.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004590" target="_blank" class="term-link">
+                                    GO:0004590
+                                </a>
+                            </span>
+                            <span class="term-label">orotidine-5&#39;-phosphate decarboxylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LW2" data-a="GO:0004590" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PyrF decarboxylates OMP to UMP and carbon dioxide.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reviewed entry assigns EC 4.1.1.23 and Rhea 11596.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pyrF/pyrF-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Reaction=orotidine 5&#39;-phosphate + H(+) = UMP + CO2;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pyrF/pyrF-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">pyrF (Q88LW2) is **orotidine 5′-monophosphate decarboxylase (OMPDC, EC 4.1.1.23)**</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LW2" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PyrF is a soluble biosynthetic enzyme expected in the bacterial cytosol.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Plausible and useful localization, but secondary to the catalytic and pathway annotations.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006207" target="_blank" class="term-link">
+                                    GO:0006207
+                                </a>
+                            </span>
+                            <span class="term-label">&#39;de novo&#39; pyrimidine nucleobase biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LW2" data-a="GO:0006207" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PyrF acts in de novo pyrimidine synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retain the more specific de novo UMP process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pyrF/pyrF-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">PATHWAY: Pyrimidine metabolism; UMP biosynthesis via de novo pathway;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044205" target="_blank" class="term-link">
+                                    GO:0044205
+                                </a>
+                            </span>
+                            <span class="term-label">&#39;de novo&#39; UMP biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LW2" data-a="GO:0044205" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PyrF performs the final reaction of de novo UMP biosynthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The reviewed record identifies step 2 of 2 from orotate to UMP.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/pyrF/pyrF-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">UMP from orotate: step 2/2.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>PyrF decarboxylates OMP to UMP in the final reaction of de novo UMP biosynthesis.</h3>
+                <span class="vote-buttons" data-g="Q88LW2" data-a="FUNCTION: PyrF decarboxylates OMP to UMP in the final reacti..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004590" target="_blank" class="term-link">
+                            orotidine-5&#39;-phosphate decarboxylase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044205" target="_blank" class="term-link">
+                                &#39;de novo&#39; UMP biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/pyrF/pyrF-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Reaction=orotidine 5&#39;-phosphate + H(+) = UMP + CO2;</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/pyrF/pyrF-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB reviewed entry for Pseudomonas putida KT2440 PyrF</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt defines OMP decarboxylation to UMP as the final reaction of de novo UMP biosynthesis.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/pyrF/pyrF-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research report on pyrF (Q88LW2)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report corroborates the Type 1 OMP decarboxylase assignment and final de novo UMP step.</div>
+
+                        <div class="finding-text">"pyrF (Q88LW2) is **orotidine 5′-monophosphate decarboxylase (OMPDC, EC 4.1.1.23)**"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(pyrF-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88LW2" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: pyrF (Q88LW2) — Orotidine 5′-Monophosphate Decarboxylase in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-31T20:28:54.665065</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="pyrF-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="pyrF-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-pyrf-q88lw2-orotidine-5-monophosphate-decarboxylase-in-pseudomonas-putida-kt2440">Functional Annotation Report: pyrF (Q88LW2) — Orotidine 5′-Monophosphate Decarboxylase in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UniProt accession</td>
+<td>Q88LW2</td>
+</tr>
+<tr>
+<td>Gene name</td>
+<td><em>pyrF</em> (OrderedLocusName PP_1815)</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / KT2440), PSEPK</td>
+</tr>
+<tr>
+<td>Protein</td>
+<td>Orotidine 5′-phosphate decarboxylase (OMP decarboxylase; OMPDCase)</td>
+</tr>
+<tr>
+<td>EC number</td>
+<td>4.1.1.23</td>
+</tr>
+<tr>
+<td>Family</td>
+<td>OMP decarboxylase family, <strong>Type 1 subfamily</strong> (bacterial)</td>
+</tr>
+<tr>
+<td>Fold/domains</td>
+<td>(β/α)₈ TIM barrel; Aldolase_TIM (IPR013785); OMPdecase (IPR014732, IPR001754); OMPdecase_AS (IPR018089); OMPdecase_bac (IPR047596)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Identity is unambiguous.</strong> The gene symbol <em>pyrF</em>, the EC number, the OMP-decarboxylase family assignment, and the TIM-barrel/OMPdecase domain architecture are mutually consistent and standard for this enzyme across all domains of life. There is no gene-symbol ambiguity: <em>pyrF</em> denotes OMP decarboxylase in bacteria (the eukaryotic ortholog is often fused with orotate phosphoribosyltransferase as <em>URA3</em>/UMPS). The findings below are drawn from primary and review literature on OMP decarboxylase (OMPDC/ODCase), with the <em>P. putida</em>-specific role inferred from the enzyme's conserved biochemistry and from genetics in the same organism.</p>
+<hr />
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (Answer to the Research Question)</h2>
+<p>pyrF (Q88LW2) is <strong>orotidine 5′-monophosphate decarboxylase (OMPDC, EC 4.1.1.23)</strong>, a cytoplasmic metabolic enzyme that catalyzes the <strong>cofactor-independent decarboxylation of orotidine 5′-monophosphate (OMP) to uridine 5′-monophosphate (UMP)</strong> — the sixth and final step of the <em>de novo</em> pyrimidine nucleotide biosynthesis pathway. It is a highly substrate-specific enzyme (its natural substrate is OMP) and is renowned as one of the most catalytically proficient enzymes known. In <em>P. putida</em> KT2440 it supplies UMP, the common precursor of all pyrimidine nucleotides required for RNA, DNA, and activated-sugar metabolism.</p>
+<hr />
+<h2 id="2-primary-function-the-catalyzed-reaction-and-substrate-specificity">2. Primary Function: The Catalyzed Reaction and Substrate Specificity</h2>
+<p><strong>Reaction:</strong> orotidine 5′-monophosphate (OMP) → uridine 5′-monophosphate (UMP) + CO₂.</p>
+<p>OMPDC removes the carboxylate at C6 of the orotate ring of OMP, generating UMP. This is the terminal reaction of <em>de novo</em> pyrimidine biosynthesis, immediately downstream of orotate phosphoribosyltransferase (PyrE), which forms OMP from orotate and PRPP [PMID 21898650]. The reaction requires <strong>no metal ion and no organic cofactor</strong> — a defining and unusual feature for a decarboxylase [PMID 21870810].</p>
+<p><strong>Substrate specificity.</strong> The physiological substrate is OMP; catalysis is exquisitely tuned to the orotidine-monophosphate scaffold. The 5′-phosphate and ribosyl moieties provide most of the binding energy (used for conformational activation, see §4), while chemistry occurs at the orotate C6. The enzyme also acts on close analogs — e.g., it decarboxylates 5-fluoro-OMP (FOMP) faster than OMP, and binds transition-state analogs such as 6-hydroxy-UMP (BMP) and 6-aza-UMP extremely tightly — properties widely used to probe the mechanism [PMID 24559040]. This analog activity is biologically important: OMPDC converts <strong>5-fluoroorotate-derived FOMP into toxic 5-fluoro-UMP</strong>, the basis of 5-FOA counterselection (§6).</p>
+<p><strong>Catalytic proficiency.</strong> OMPDC is a benchmark for enzymatic power, with a rate acceleration k_cat/k_non = 7.1 × 10¹⁶ and catalytic proficiency (k_cat/K_M)/k_non = 4.8 × 10²² M⁻¹ — a rate enhancement exceeding 17 orders of magnitude over the uncatalyzed reaction [PMID 21870810; PMID 21898650]. For the natural substrate, decarboxylation is fully rate-determining [PMID 19435313].</p>
+<hr />
+<h2 id="3-catalytic-mechanism">3. Catalytic Mechanism</h2>
+<p>Despite the absence of cofactors, OMPDC achieves enormous rate enhancement through a combination of <strong>ground-state destabilization</strong> and <strong>transition-state stabilization</strong>:</p>
+<ul>
+<li><strong>Carbanion intermediate.</strong> Decarboxylation proceeds through a stabilized vinyl carbanion/carbene intermediate at C6, which is subsequently protonated to give UMP [PMID 21870810; PMID 19435313].</li>
+<li><strong>Substrate (electrostatic) destabilization.</strong> A conserved active-site aspartate is positioned next to the substrate carboxylate, creating unfavorable electrostatic repulsion that raises the ground-state energy and lowers the activation barrier; mutating this Asp (e.g., D70N/D70G in the <em>Methanothermobacter</em> enzyme, D91 in yeast) impairs decarboxylation while leaving product-exchange chemistry largely intact [PMID 19435314].</li>
+<li><strong>Conserved charged tetrad.</strong> Catalysis depends on a conserved quartet of alternating charged residues (Lys–Asp–Lys–Asp; e.g., Lys44–Asp71–Lys73–Asp76 in <em>E. coli</em> pyrF numbering). Several of these positions are absolutely intolerant of substitution; the catalytic lysine serves as the general acid that protonates the C6 carbanion [PMID 21898650].</li>
+<li><strong>Non-classical chemistry via the catalytic Lys.</strong> The active-site lysine can act as a nucleophile toward C6-substituted UMP derivatives, explaining alternate reactions and enabling mechanism-based inhibitor design [PMID 19472232].</li>
+</ul>
+<hr />
+<h3 id="3a-strain-specific-sequence-evidence-pp_1815-q88lw2">3a. Strain-specific sequence evidence (PP_1815 / Q88LW2)</h3>
+<p>Direct analysis of the KT2440 protein sequence (233 aa) confirms it is a bona fide, active OMPDC. All hallmark catalytic elements are present and correctly positioned:</p>
+<ul>
+<li><strong>Catalytic charged tetrad:</strong> Lys35 – Asp62 – Lys64 – Asp67 (a DxKxxD-type active-site signature; InterPro OMPdecase_AS, IPR018089), the ortholog of the experimentally validated E. coli Lys44–Asp71–Lys73–Asp76 quartet [PMID 21898650].</li>
+<li><strong>Proton donor:</strong> UniProt annotates <strong>Lys64</strong> as the catalytic proton donor (general acid that protonates the C6 carbanion).</li>
+<li><strong>Substrate-anchoring residues</strong> at positions 13, 35, 62–71, 122, 182, 191, 211, 212 coordinate the 5′-phosphate/ribose moiety.</li>
+<li><strong>Reaction (UniProt):</strong> orotidine 5′-phosphate + H⁺ = UMP + CO₂; pathway assignment "UMP biosynthesis via de novo pathway; UMP from orotate: step 2/2."</li>
+<li><strong>No signal peptide or transmembrane segments</strong> → consistent with a soluble cytoplasmic enzyme.</li>
+</ul>
+<h2 id="4-structure-and-the-role-of-substrate-binding-energy">4. Structure and the Role of Substrate Binding Energy</h2>
+<p>OMPDC adopts the classic <strong>(β/α)₈ TIM-barrel fold</strong> (Aldolase_TIM, IPR013785) and functions as a <strong>homodimer</strong>, with each active site completed at the subunit interface. A key catalytic principle is that the enzyme uses the <strong>intrinsic binding energy of the substrate's 5′-phosphate group</strong> — remote from the site of chemistry — to drive loop-closure/conformational changes that move catalytic side chains into positions complementary to the reaction transition state [PMID 41115254]. Because unliganded active sites are not pre-organized for the transition state, this substrate-driven "phosphate-gripper" activation is essential for the full rate enhancement [PMID 41115254; PMID 29595949]. Extensive mutagenesis, MD simulation, and X-ray structures of substrate/inhibitor complexes support this model [PMID 24559040; PMID 21870810].</p>
+<hr />
+<h2 id="5-pathway-context-and-biological-process">5. Pathway Context and Biological Process</h2>
+<p>pyrF catalyzes the last of the six committed steps of <strong>de novo pyrimidine biosynthesis</strong> (carbamoyl-phosphate → carbamoyl-aspartate → dihydroorotate → orotate → OMP → <strong>UMP</strong>). UMP is the universal precursor from which all pyrimidine nucleotides are derived (UMP → UDP → UTP → CTP; and via reduction/methylation to dCTP and dTTP). Thus pyrF activity is required for RNA and DNA synthesis, phospholipid and cell-wall precursor synthesis (UDP-sugars), and general growth whenever exogenous pyrimidines are not available for salvage [PMID 21898650, PMID 24361203]. Loss-of-function in pyrF produces <strong>uracil/pyrimidine auxotrophy</strong>. In <em>P. putida</em> KT2440, an aerobic soil bacterium of major biotechnological interest, this pathway provides the pyrimidine building blocks that support its robust growth and metabolic versatility.</p>
+<hr />
+<h3 id="5a-genomic-organization-in-kt2440">5a. Genomic organization in KT2440</h3>
+<p>In the KT2440 chromosome, <em>pyrF</em> (PP_1815) is <strong>not</strong> embedded in a <em>pyr</em> operon. Its immediate neighbors are functionally unrelated genes — PP_1813 (ComEA-related protein), PP_1814 (DUF2897 family protein), PP_1816 (zinc-containing alcohol dehydrogenase), PP_1817 (short-chain dehydrogenase/reductase) — and no other <em>de novo</em> pyrimidine genes (<em>pyrB, pyrC, pyrD, pyrE</em>) are adjacent. This indicates <em>pyrF</em> is a dispersed, apparently monocistronic gene, consistent with the scattered, individually regulated arrangement of pyrimidine-biosynthesis genes typical of <em>Pseudomonas</em> and most Gram-negative bacteria.</p>
+<h2 id="6-localization-and-biotechnological-relevance">6. Localization and Biotechnological Relevance</h2>
+<p><strong>Subcellular localization: cytoplasm.</strong> OMPDC is a soluble metabolic enzyme with no signal peptide or transmembrane segments; it carries out its function in the cytosol as part of the nucleotide-biosynthetic machinery (consistent with HAMAP-Rule MF_01200 and the OMP decarboxylase family).</p>
+<p><strong>Essentiality and druggability.</strong> OMPDC is an essential "choke-point" enzyme of <em>de novo</em> pyrimidine biosynthesis: when pyrimidine salvage substrates are unavailable, it provides the sole route to UMP, so loss of <em>pyrF</em> forces pyrimidine auxotrophy. Metabolic-network analyses prioritize OMPDC as a validated antimicrobial drug target because in pathogens (e.g., <em>Plasmodium falciparum</em> PfODCase) it is sequentially and structurally distinct from the human enzyme [PMID 23859267]. Its narrow specificity for the phosphoribosyl-pyrimidine core is reflected in the exceptionally tight binding of transition-state/product analogs such as 6-hydroxy-UMP (BMP) and 6-aza-UMP.</p>
+<p><strong>pyrF as a genetic tool.</strong> Because a functional pyrF also converts 5-fluoroorotic acid (5-FOA, via FOMP) into cytotoxic 5-fluoro-UMP, pyrF is a classic <strong>counterselectable marker</strong>: pyrF⁺ cells die on 5-FOA whereas pyrF-deletion mutants survive, enabling scarless/markerless genome editing. The same pyrimidine-metabolism counterselection principle (using <em>upp</em>/5-fluorouracil) has been implemented in <em>P. putida</em> KT2440 for genome reduction and pathway engineering [PMID 25828098], underscoring the practical importance of this enzyme class in <em>Pseudomonas</em> synthetic biology.</p>
+<hr />
+<h2 id="7-supported-and-refuted-hypotheses">7. Supported and Refuted Hypotheses</h2>
+<p><strong>Supported:</strong><br />
+- pyrF/Q88LW2 = OMP decarboxylase (EC 4.1.1.23) catalyzing OMP → UMP (final de novo pyrimidine step). ✔ (family, domains, EC, literature all concordant)<br />
+- Cofactor-independent, extremely proficient catalysis via a stabilized carbanion intermediate. ✔ [PMID 21870810, 19435313]<br />
+- Conserved Lys–Asp–Lys–Asp catalytic tetrad in a TIM-barrel; substrate-binding-energy-driven conformational activation. ✔ [PMID 21898650, 41115254]<br />
+- Cytoplasmic localization; usable as a 5-FOA counterselection marker. ✔</p>
+<p><strong>Refuted / ruled out:</strong><br />
+- Gene-symbol ambiguity was considered and <strong>rejected</strong>: <em>pyrF</em> consistently denotes bacterial OMP decarboxylase; no conflicting gene shares this symbol/family for this protein.<br />
+- A cofactor- or metal-dependent mechanism is <strong>refuted</strong> by the established cofactor-free chemistry [PMID 21870810].</p>
+<hr />
+<h2 id="8-limitations-and-future-directions">8. Limitations and Future Directions</h2>
+<ul>
+<li>No <em>P. putida</em> KT2440–specific enzymological or structural study of PP_1815 was located; the mechanistic and structural conclusions are inferred from highly conserved orthologs (E. coli, yeast, <em>Methanothermobacter</em>, human) and from the strong sequence/domain conservation captured by HAMAP MF_01200. Direct kinetic characterization of the KT2440 enzyme and an experimental structure would strengthen strain-specific claims.</li>
+<li>Because <em>pyrF</em> (PP_1815) is a dispersed, apparently monocistronic gene rather than part of a <em>pyr</em> operon, its precise transcriptional regulation and flux control in KT2440 remain uncharacterized and merit follow-up (e.g., promoter mapping, response to pyrimidine availability).</li>
+</ul>
+<hr />
+<p><em>Prepared from primary and review literature (PubMed) and UniProt/InterPro annotation. Key references: PMID 21870810, 21898650, 29595949, 19435314, 19435313, 19472232, 24559040, 41115254, 24361203, 25828098, 23859267.</em></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="pyrF-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="pyrF-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88LW2
+gene_symbol: pyrF
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: pyrF encodes orotidine 5&#39;-phosphate decarboxylase, a homodimeric enzyme that decarboxylates OMP to UMP in the final reaction of de novo UMP biosynthesis.
+existing_annotations:
+- term:
+    id: GO:0004590
+    label: orotidine-5&#39;-phosphate decarboxylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: PyrF decarboxylates OMP to UMP and carbon dioxide.
+    action: ACCEPT
+    reason: The reviewed entry assigns EC 4.1.1.23 and Rhea 11596.
+    supported_by:
+    - reference_id: file:PSEPK/pyrF/pyrF-uniprot.txt
+      supporting_text: Reaction=orotidine 5&#39;-phosphate + H(+) = UMP + CO2;
+    - reference_id: file:PSEPK/pyrF/pyrF-deep-research-openscientist.md
+      supporting_text: pyrF (Q88LW2) is **orotidine 5′-monophosphate decarboxylase (OMPDC, EC 4.1.1.23)**
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: PyrF is a soluble biosynthetic enzyme expected in the bacterial cytosol.
+    action: KEEP_AS_NON_CORE
+    reason: Plausible and useful localization, but secondary to the catalytic and pathway annotations.
+- term:
+    id: GO:0006207
+    label: &#34;&#39;de novo&#39; pyrimidine nucleobase biosynthetic process&#34;
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: PyrF acts in de novo pyrimidine synthesis.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: Retain the more specific de novo UMP process.
+    supported_by:
+    - reference_id: file:PSEPK/pyrF/pyrF-uniprot.txt
+      supporting_text: &#39;PATHWAY: Pyrimidine metabolism; UMP biosynthesis via de novo pathway;&#39;
+- term:
+    id: GO:0044205
+    label: &#34;&#39;de novo&#39; UMP biosynthetic process&#34;
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: PyrF performs the final reaction of de novo UMP biosynthesis.
+    action: ACCEPT
+    reason: The reviewed record identifies step 2 of 2 from orotate to UMP.
+    supported_by:
+    - reference_id: file:PSEPK/pyrF/pyrF-uniprot.txt
+      supporting_text: &#39;UMP from orotate: step 2/2.&#39;
+references:
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/pyrF/pyrF-uniprot.txt
+  title: UniProtKB reviewed entry for Pseudomonas putida KT2440 PyrF
+  findings:
+  - statement: UniProt defines OMP decarboxylation to UMP as the final reaction of de novo UMP biosynthesis.
+- id: file:PSEPK/pyrF/pyrF-deep-research-openscientist.md
+  title: OpenScientist deep research report on pyrF (Q88LW2)
+  findings:
+  - statement: The report corroborates the Type 1 OMP decarboxylase assignment and final de novo UMP step.
+    supporting_text: pyrF (Q88LW2) is **orotidine 5′-monophosphate decarboxylase (OMPDC, EC 4.1.1.23)**
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The core assignment agrees with the reviewed UniProt record. Mechanistic,
+      essentiality, counterselection, and regulatory claims extrapolated from
+      orthologs were not imported as KT2440-specific evidence.
+core_functions:
+- description: PyrF decarboxylates OMP to UMP in the final reaction of de novo UMP biosynthesis.
+  molecular_function:
+    id: GO:0004590
+    label: orotidine-5&#39;-phosphate decarboxylase activity
+  directly_involved_in:
+  - id: GO:0044205
+    label: &#34;&#39;de novo&#39; UMP biosynthetic process&#34;
+  supported_by:
+  - reference_id: file:PSEPK/pyrF/pyrF-uniprot.txt
+    supporting_text: Reaction=orotidine 5&#39;-phosphate + H(+) = UMP + CO2;
+proposed_new_terms: []
+suggested_questions: []
+suggested_experiments: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
