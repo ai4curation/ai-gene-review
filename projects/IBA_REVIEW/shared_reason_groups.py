@@ -215,14 +215,16 @@ MOD_PREFIXES = SPECIES_SCOPED_PREFIXES  # historical name, kept for readability 
 #   the general rule for figures in these two scripts, not a licence local to this block.
 #
 #   The sweep covers *-goa.tsv, and PAINT is the other source these blocks read seeds from.
-#   PAINT's seed column carries FOURTEEN namespaces: AGI_LocusCode, CGD, FB, JaponicusDB,
-#   MGI, PANTHER, PomBase, RGD, SGD, UniProtKB, WB, Xenbase, ZFIN and dictyBase. PANTHER is
-#   an ordinary member of that list, 590 seed values of the form PANTHER:PTN000000113; the
-#   family and node columns carry the same kind of id UNPREFIXED (bare PTHR24055,
-#   PTN000622075), so there is no "PANTHER column" in the prefixed sense -- GO and taxon
-#   are the two genuinely prefixed columns. That correction matters here because the
-#   sentence this replaced invented such a column, and the first attempt to fix it kept
-#   the framing while denying it.
+#   PAINT's seed column carries FOURTEEN namespaces: AGI_LocusCode, CGD, FB,
+#   JaponicusDB, MGI, PANTHER, PomBase, RGD, SGD, UniProtKB, WB, Xenbase, ZFIN and
+#   dictyBase. PANTHER is an ordinary member of that list, 590 seed values of the form
+#   PANTHER:PTN000000113; the family and node columns carry the same kind of id
+#   UNPREFIXED (bare PTHR24055, PTN000622075), so there is no "PANTHER column" in the
+#   prefixed sense -- besides the seed column itself, GO and taxon are the only other
+#   prefixed ones (3, 7 and 8 carry a prefix on all 18822 rows; 1, 2, 4, 5, 6 and 9
+#   carry none). That correction matters here because the sentence this replaced
+#   invented such a column, and the first attempt to fix it kept the framing while
+#   denying it.
 #
 #   The seed column surfaces no namespace the GOA sweep had not already accounted for,
 #   which is the substantive point -- but it is NOT "a strict subset of what is rostered or
