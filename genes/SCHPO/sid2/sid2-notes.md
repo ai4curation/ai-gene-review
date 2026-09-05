@@ -94,3 +94,46 @@ ring at the end of anaphase to trigger ring constriction and septum formation.
   binding is uninformative MF; the Mob1 interaction is better captured by the Sid2-Mob1 complex CC term.
 - PMID:23087209 full text not cached (title not fetched); it is McLean et al. or similar SIN paper assayed
   Sid2 kinase activity and spindle elongation / nuclear migration in telophase (PomBase IDA/IMP). Accept/defer.
+
+## 2026-09-05 evidence re-review (supersedes earlier cache/localization caveats)
+
+The source-aware wrapper refresh retained 48 review entries from 59 GOA rows and
+backfilled 16 source-entity fields. All 22 cited publications were available through
+`just fetch-gene-pmids SCHPO sid2`. The earlier claim that PMID:23087209 was uncached
+is incorrect: its full text establishes Sid2 phosphorylation of Klp2 and associated
+phenotypes. The original study reports slower spindle elongation in sid2-250 cells
+and connects SIN inhibition of Klp2 to nuclear positioning when cytokinesis is delayed
+[PMID:23087209 "Klp2 was specifically phosphorylated by Sid2 (Figure 2A)"]
+[PMID:23087209 "confirming our hypothesis that SIN inhibition of Klp2 contributes to maintaining proper nuclear positioning when cytokinesis is delayed."].
+Klp2 S113/S123 phosphorylation inhibits its Mal3-dependent microtubule association;
+postanaphase-array microtubules provide an additional positioning mechanism. The
+nuclear-positioning dependence should not be generalized to every normal division.
+Both formerly UNDECIDED process annotations are now ACCEPT.
+
+Localization requires reporter and cell-cycle context. The original Sid2-GFP SPB
+observations do not establish constitutive SPB residence of untagged Sid2:
+[PMID:22684255 "Unlike the Sid2.GFP fusion protein, wild type, untagged, Sid2 did not associate with interphase SPBs"]
+[PMID:22684255 "Thus, it is a cytoplasmic population of Sid2 that is activated mid-way through G2 to regulate a cytoplasmic population of Fin1."].
+The core summary now includes the cytoplasmic G2 Sid2-Fin1 mechanism and the
+Klp2 mechanism. The high-throughput localization study used YFP, not GFP.
+
+The serine-kinase annotation now cites the substrate-specific original assay:
+[PMID:18951025 "Phosphoamino acid analysis of in vitro phosphorylated Clp1 showed that it was phosphorylated exclusively on serine residues (Figure 1C)."].
+The Mob1 and Pab1 IPI interactions remain biologically supported and are now
+KEEP_AS_NON_CORE rather than REMOVE merely because protein binding is uninformative.
+The broad regulation-of-cell-cycle-process annotation is ACCEPT; its breadth alone
+does not make it false. For PMID:25501814, the abstract's SPB statement names Cdc7,
+so it is no longer presented as a Sid2 imaging experiment; retain the curated Sid2
+locations with independent localization evidence and explicit assay-level limits.
+
+The associated PTHR24356 review now records five IBA assertions, removes donor-count
+and UniProt-namespace arguments, and retains only the target-specific SIN/mitotic-exit
+functional concern. The GO:0007096 ancestral assertion cites CGD:CAL0000197161, not a
+verified S. cerevisiae Dbf2 source. Cached PAINT assertion identities were checked by
+an independent reviewer; the tree/MSA placement was not independently reassessed.
+
+Reproducible PAINT provenance: `interpro/panther/PTHR24356/PTHR24356-paint.tsv`
+(IBD assertions/sources), `PTHR24356-entries.csv` in the same folder (Q09898
+family/subfamily membership), and `interpro/panther/panther.obo` (official labels).
+The independent reviewer checked the final gene/family diff and found no remaining
+scientific blocker after clarifying the late-mitotic timing in the description.
