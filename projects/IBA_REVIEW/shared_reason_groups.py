@@ -118,8 +118,16 @@ MOD_ORGANISM = {'MGI': 'mouse', 'RGD': 'rat', 'SGD': 'yeast', 'FB': 'DROME',
 # this one, and left 96 labelled sources outside the gate. An unrecognised ENS tag
 # resolves to nothing and falls through to the label, same as an unmapped prefix.
 ACCESSION_ORGANISM = {'ensembl': {'ENSMUSP': 'mouse', 'ENSRNOP': 'rat'}}
-SPECIES_SCOPED_PREFIXES = tuple(f'{prefix}:' for prefix in
-                                tuple(MOD_ORGANISM) + tuple(ACCESSION_ORGANISM))
+# The prefixes the species maps resolve, defined ONCE. Three sites need this set --
+# SPECIES_SCOPED_PREFIXES below, check_coverage's short-circuit, and the self-test arm
+# asserting every one of them is also in _SPECIES_SCOPED_SHAPED -- and the arm's
+# correctness is a claim about what check_coverage does, so it holds only while the two
+# agree. Hand-copied, they agreed by inspection; when ACCESSION_ORGANISM was added as a
+# second map both existing sites had to change, and a third map would have left the arm
+# passing on a stale union while the checker used the new one. Same reason action_error()
+# and parse_argv() are extracted: a guard that can drift from what it guards is not one.
+RESOLVED_PREFIXES = frozenset(MOD_ORGANISM) | frozenset(ACCESSION_ORGANISM)
+SPECIES_SCOPED_PREFIXES = tuple(f'{prefix}:' for prefix in sorted(RESOLVED_PREFIXES))
 MOD_PREFIXES = SPECIES_SCOPED_PREFIXES  # historical name, kept for readability at callers
 # Prefixes that COULD be species-scoped, so one the corpus writes and neither map
 # resolves is a real gap rather than an uninteresting one. check_coverage PRINTS what it
@@ -138,7 +146,13 @@ MOD_PREFIXES = SPECIES_SCOPED_PREFIXES  # historical name, kept for readability 
 # declined.
 #
 # No count is given, and this comment is not the authoritative list: the run prints what it
-# actually declines, and that is the list to read. An earlier revision did say "all sixteen
+# actually declines, and that is the list to read. Compare it against the corpus with
+# CORPUS_GLOB, not a bare `grep -r genes/`: the latter returns GeneID (118 uses), which
+# lives entirely in *-descriptions.yaml, where source_id is the provenance of an NCBI gene
+# blurb rather than a propagation seed -- no -descriptions.yaml carries a propagation_review
+# at all. A prefix this checker never sees is out of scope by design, which is a different
+# thing from one it declines in silence, and a `grep -r` cannot tell the two apart. (It also
+# double-counts the .html renders.) An earlier revision did say "all sixteen
 # the checker currently prints" and went stale twice as the corpus grew -- araport11, then
 # PR arriving with genes/rat/Tp53 from main -- which is the whole argument for printing the
 # live list rather than describing it here.
@@ -150,11 +164,14 @@ MOD_PREFIXES = SPECIES_SCOPED_PREFIXES  # historical name, kept for readability 
 # invented-from-a-roster: there it asserted a genes/XENLA directory that does not exist,
 # here it only says "if this shows up, tell me".
 #
-# A sixth, 'Araport', used to sit alongside them and was worse than useless: the corpus
+# 'Araport' used to sit alongside them, and was worse than useless: the corpus
 # writes 'araport11', so the entry matched nothing, and the prefix it was meant to catch
 # was declined in silence by the very roster written to report it. A defensive entry
 # spelled differently from what anyone writes is not defensive -- it reads as coverage
-# while providing none. It is replaced by the real spelling rather than dropped: a first
+# while providing none. Its real spelling, araport11, is in the roster now but is NOT a
+# sixth member of the five above -- it is mapped and used, so it is the belt-and-braces
+# case the arm below requires of every resolved prefix. It was replaced rather than
+# dropped because a first
 # attempt at this fix deleted it on the ground that araport11 is now resolved in
 # MOD_ORGANISM and so needs no roster entry, which is true only WHILE that mapping
 # survives -- exactly the conditional every other entry here is kept against, and on the
@@ -410,7 +427,7 @@ def check_coverage():
                                                     for w in v)}
     findings, declined = [], []
     # A prefix neither map resolves is invisible to the gate AND to the measurement.
-    resolved = set(MOD_ORGANISM) | set(ACCESSION_ORGANISM)
+    resolved = RESOLVED_PREFIXES
     for prefix, n in sorted(prefixes.items(), key=lambda kv: -kv[1]):
         if prefix in resolved:
             continue
@@ -594,7 +611,7 @@ def _self_test():
     # -- a prefix in neither is DECLINED in silence rather than reported. That was a
     # convention 12 entries kept and nothing enforced, so removing one mapping could
     # silently reopen the hole; araport11 is the prefix it happened to, twice.
-    unguarded = sorted((set(MOD_ORGANISM) | set(ACCESSION_ORGANISM)) - _SPECIES_SCOPED_SHAPED)
+    unguarded = sorted(RESOLVED_PREFIXES - _SPECIES_SCOPED_SHAPED)
     if unguarded:
         return ("every resolved prefix must also be in _SPECIES_SCOPED_SHAPED, so dropping "
                 "its mapping reports a gap instead of declining in silence; missing: "
