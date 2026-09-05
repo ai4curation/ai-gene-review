@@ -257,19 +257,27 @@ MOD_PREFIXES = SPECIES_SCOPED_PREFIXES  # historical name, kept for readability 
 #   twelve alike, when JaponicusDB is equally watchlist-only and the stronger instance:
 #   an enumeration error inside the fix for an enumeration error.
 #
-#   Anchoring is how these sweeps fail, and it fails in BOTH directions. Over-anchored
-#   under-collects: the same TAB mistake in the GOA sweep returned no AspGD at all, and a
-#   single-line grep made a verbatim Slc5a1 quote look fabricated. Under-anchored
-#   over-collects just as confidently. Two instances, both while checking this very
-#   paragraph: an awk census with NR>1 instead of FNR>1 skips only the FIRST file's header
-#   and admits the other 2888, which showed up as 2888 "unprefixed" seed values that were
-#   all the literal string "seeds" -- and a -B30 window over Mapk1 returns about thirty
-#   propagation terms where the file has 18 blocks, sweeping up neighbouring ACCEPT rows.
-#   (30 or 31 depending on whether proposed_replacement_terms ids are counted -- the exact
-#   figure is provenance, and the demonstration is the same either way.) All the
-#   over-anchored cases fail toward a false negative, which can leave the impression that
-#   widening is the safe direction. It is not. Census unanchored, THEN filter -- and the
-#   second half is the half that carries the rule.
+#   Anchoring is how these sweeps fail most often, and it fails in BOTH directions.
+#   Over-anchored under-collects: the same TAB mistake in the GOA sweep returned no AspGD
+#   at all, and a single-line grep made a verbatim Slc5a1 quote look fabricated.
+#   Under-anchored over-collects just as confidently. Two instances, both while checking
+#   this very paragraph: an awk census with NR>1 instead of FNR>1 skips only the FIRST
+#   file's header and admits the other 2888, which showed up as 2888 "unprefixed" seed
+#   values that were all the literal string "seeds" -- and a -B30 window over Mapk1
+#   returns about thirty propagation terms where the file has 18 blocks, sweeping up
+#   neighbouring ACCEPT rows. (30 or 31 depending on whether proposed_replacement_terms
+#   ids are counted -- the exact figure is provenance, and the demonstration is the same
+#   either way.) All the over-anchored cases fail toward a false negative, which can leave
+#   the impression that widening is the safe direction. It is not. Census unanchored, THEN
+#   filter -- and the second half is the half that carries the rule. A third mode is not
+#   an anchoring fault at all: a correctly anchored sweep over the WRONG FILE. GO:0140535
+#   appears in neither cache/go/terms.csv nor cache/ontologies/go.tsv, so a sweep of the
+#   label caches returns nothing and reads as "this id is fabricated"; it is real, and
+#   sits in cache/enums/goproteincontainingcomplexenum. Both a reviewer and I hit that one
+#   while checking this very passage, each stopping only because a second route was tried.
+#   Widening the pattern does not help here -- the corpus was wrong, not the regex -- so
+#   the rule needs a companion: before concluding something is ABSENT, establish that the
+#   file you swept is the file that would carry it.
 #
 # NOTHING ENFORCES THE WATCHLIST SPELLINGS, and that is the class both real defects were
 # in. A watchlist entry is supposed to have zero corpus uses, so "matches nothing because
