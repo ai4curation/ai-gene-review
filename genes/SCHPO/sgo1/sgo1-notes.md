@@ -40,3 +40,52 @@ Sgo1 is the fission-yeast meiosis-specific shugoshin that protects centromeric s
 - spindle attachment to meiosis I kinetochore (GO:0051455) IMP PMID:14972679 — mono-orientation in meiosis I; supported (sgo1 mutants affect MI kinetochore orientation). Accept.
 - meiotic spindle (GO:0072687) IDA PMID:19965387 — localization; defer/accept.
 - nuclear envelope (GO:0005635) HDA PMID:16823372 — high-throughput; keep non-core.
+
+## Reassessment — 2026-09-05
+
+The annotation-reviewer consultation rechecked the primary sources and live
+QuickGO records. These corrections supersede the earlier statements where they
+conflict:
+
+- Sgo1-associated fission-yeast PP2A is the Paa1–Par1–Ppa2 combination. The
+  primary paper distinguishes the severe segregation phenotype of par1 deletion
+  from the substantially faithful segregation of par2 deletion; the description,
+  core function and proposed imaging experiment should not assert interchangeable
+  Par1/Par2 complexes [PMID:16541024, p. 54, full primary paper:
+  https://publications.mpi-cbg.de/Riedel_2006_1292.pdf].
+- GO:0140463 chromatin-protein adaptor activity is explicitly `part_of`
+  GO:0006325 chromatin organization. The latter is broader than chromatin
+  remodeling, so this automated process inference is accepted. The earlier
+  rejection rested on an incorrectly narrow reading of chromatin organization
+  [QuickGO GO:0140463 relationships, checked 2026-09-05].
+- The PMID:20739936 IPI record is assigned by IntAct with WITH/FROM
+  UniProtKB:Q10428 (Par1). It is not a Survivin interaction record. Independent
+  PP2A evidence supports retaining this as a non-core interaction, while the
+  original paper-specific assay remains to be traced; the broad abstract does
+  not justify a CPC-adaptor claim for this row [QuickGO annotations for
+  UniProtKB:Q9P7A0, checked 2026-09-05; PMID:16541024].
+- The current record of APC-mediated ubiquitination in UniProt is an inference
+  (ECO:0000305). Declining abundance after meiosis I and proven APC causality
+  should not be conflated, so the standalone description now states only the
+  abundance change [UniProt:Q9P7A0; PMID:14972679].
+
+The mitotic biorientation assertion from PMID:20739936 remains under focused
+investigation. Its full main text was not recovered in the evidence audit. The
+open supplement contains Sgo2 experiments and human SGO1/SGO2 experiments;
+this is not grounds for alleging that PomBase misattributed the Sgo1 annotation.
+An OpenScientist request was launched through `just gene-hypothesis-research`
+to recover exact species, genotype, expression regime and assay provenance.
+No outcome from that request is assumed here.
+
+The nuclear-envelope HDA (PMID:16823372) and meiotic-spindle IDA
+(PMID:19965387) are now UNDECIDED because the accessible abstracts do not expose
+the gene-specific observations. This does not dispute the experimental records;
+absence of a known compartment-specific function is not evidence that observed
+localization is wrong. The earlier nuclear-envelope over-annotation claim and
+assertion of a secondary spindle pool were unsupported.
+
+The existing UNDECIDED review for GO:0051455 (PMID:14972679) remains appropriate
+pending its primary attachment assay. This supersedes the earlier notes entry
+saying ACCEPT. The term concerns physical spindle attachment to a meiosis-I
+kinetochore; it is not simply synonymous with cohesion protection or with
+kinetochore orientation [QuickGO GO:0051455 definition, checked 2026-09-05].
