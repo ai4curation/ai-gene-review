@@ -125,8 +125,8 @@ A distinct supplemental analysis, `supplement_gogpt_overlap_300`, contains 8,871
 | Reference level | Terms in reference | Predictions overlapping | % of 8,871 predictions |
 |---|---:|---:|---:|
 | Raw GOA | 2,954 | 1,035 | 11.7 |
-| Retained/replacement/proposed-new AIGR annotations | 2,761 | 849 | 9.6 |
-| All GO-valued AIGR core-function slots | 1,230 | 350 | 3.9 |
+| Retained/replacement/proposed-new AIGR annotations | 2,760 | 848 | 9.6 |
+| All GO-valued AIGR core-function slots | 1,233 | 351 | 4.0 |
 
 The core-function comparison includes HdeB's GO:0051082 match as an explicitly
 interim representation of in-situ holdase activity pending creation of the general
@@ -162,13 +162,31 @@ by these curation-only updates. SlyD is the exception: its committed GOA snapsho
 refetched, removing exact matches to obsolete `GO:0051082` and the active broad parents
 `GO:0016853` and `GO:0046872`. This reduced the raw and post-review reference totals and
 overlaps by three, while its term-less holdase core reduced the GO-valued core total and
-overlap by one. Thus the recorded denominator changes combine upstream reference
-curation with one explicit committed-snapshot refresh; the GO-GPT prediction set itself
+overlap by one. The CnoX comprehensive review likewise refetched its committed GOA
+snapshot, removing obsolete `GO:0051082` and two stale process rows, which reduced the
+raw reference total by three and the exact overlaps by two; its completed review added
+evidence-backed `GO:0009408` to the post-review set and dropped general redox homeostasis
+from the core, leaving `GO:0051087` as an evidence-backed core activity that GO-GPT did
+not predict.
+`BACSU/lipA` then followed the obsoletion of `GO:0009107`: both lipoate
+biosynthesis rows now resolve to the replacement `GO:0009249`, which the review already
+carried, so the post-review reference total fell by one distinct term, and the
+core-function slot keyed on the obsolete term was dropped, reducing the GO-valued core
+total by one. Neither exact-overlap count moved, because `GO:0009107` was never in the
+GO-GPT prediction set.
+
+Most recently, the `ARATH/AT1G06680` (PSBP1) re-review synthesized a core_functions
+block for the first time, adding four GO-valued core slots of which one
+(`GO:0019684`) is a predicted overlap, and stopped retaining `GO:0009535`
+post-review in favour of the narrower thylakoid-lumen term, dropping one predicted
+post-review overlap without changing the post-review total. Thus the recorded
+denominator changes combine upstream reference
+curation with two explicit committed-snapshot refreshes; the GO-GPT prediction set itself
 did not change.
 
 ![GO-GPT prediction overlap at three reference levels.](figures/three_level_overlap.png)
 
-GO-GPT emitted 8,871 predictions across 299 canonical genes (mean 29.7 per gene). Raw GOA agreement was 11.7%; exact agreement with all GO-valued AIGR core-function slots was 3.9%. The post-review layer retains `ACCEPT`, `KEEP_AS_NON_CORE`, `UNDECIDED`, and pending annotations, includes proposed annotations marked `NEW` (including annotations supported by nonexperimental evidence such as NAS or IEA), substitutes proposed replacements for `MODIFY`, excludes negated and rejected annotations, and unions in the core-function terms. Four of the 10 additional exact matches introduced by including `NEW` are broad localization terms (`GO:0016020` twice, `GO:0005829`, and `GO:0005576`), so the 9.6% agreement rate should not be read as independent experimental validation. This is a useful illustration of the CAFA-style scoring gap, but it is not used as a main BioReason-Pro benchmark result.
+GO-GPT emitted 8,871 predictions across 299 canonical genes (mean 29.7 per gene). Raw GOA agreement was 11.7%; exact agreement with all GO-valued AIGR core-function slots was 4.0%. The post-review layer retains `ACCEPT`, `KEEP_AS_NON_CORE`, `UNDECIDED`, and pending annotations, includes proposed annotations marked `NEW` (including annotations supported by nonexperimental evidence such as NAS or IEA), substitutes proposed replacements for `MODIFY`, excludes negated and rejected annotations, and unions in the core-function terms. Four of the 10 additional exact matches introduced by including `NEW` are broad localization terms (`GO:0016020` twice, `GO:0005829`, and `GO:0005576`), so the 9.6% agreement rate should not be read as independent experimental validation. This is a useful illustration of the CAFA-style scoring gap, but it is not used as a main BioReason-Pro benchmark result.
 
 ## S7. Reproducibility files
 

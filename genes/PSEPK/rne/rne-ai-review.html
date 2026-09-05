@@ -1,0 +1,3219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rne - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>rne</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88LM4" target="_blank" class="term-link">
+                        Q88LM4
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "rne";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88LM4" data-a="DESCRIPTION: RNase E is the membrane-associated endoribonucleas..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>RNase E is the membrane-associated endoribonuclease and organizing scaffold of the bacterial RNA degradosome. It cleaves single-stranded RNA, initiates decay of most mRNAs, and participates in maturation of 5S and 16S rRNA and many tRNAs. The catalytic N-terminal region binds RNA and Mg2+, whereas the extended C-terminal region organizes a degradosome that recruits RNA-decay partners. The exact helicase and exonuclease partners recruited by the KT2440 scaffold have not been resolved experimentally.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000287" target="_blank" class="term-link">
+                                    GO:0000287
+                                </a>
+                            </span>
+                            <span class="term-label">magnesium ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LM4" data-a="GO:0000287" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RNase E requires Mg2+ for endonucleolytic RNA cleavage.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt records one Mg2+ ion per subunit as a catalytic cofactor.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rne/rne-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Binds 1 Mg(2+) ion per subunit.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003676" target="_blank" class="term-link">
+                                    GO:0003676
+                                </a>
+                            </span>
+                            <span class="term-label">nucleic acid binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LM4" data-a="GO:0003676" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nucleic acid binding is true but less informative than the RNA-binding annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The broad binding term is correct but less informative than GO:0003723 RNA binding.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                                    GO:0003723
+                                </a>
+                            </span>
+                            <span class="term-label">RNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LM4" data-a="GO:0003723" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RNase E binds RNA substrates for processing and decay.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> RNA binding is intrinsic to its endoribonuclease activity and supported by RNase E/G and S1 RNA-binding domains.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004521" target="_blank" class="term-link">
+                                    GO:0004521
+                                </a>
+                            </span>
+                            <span class="term-label">RNA endonuclease activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LM4" data-a="GO:0004521" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RNase E performs endonucleolytic cleavage of single-stranded RNA.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This correctly describes the catalytic mode, although GO:0008995 is the more specific defining activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rne/rne-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Endonucleolytic cleavage of single-stranded RNA in A- and U-</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004540" target="_blank" class="term-link">
+                                    GO:0004540
+                                </a>
+                            </span>
+                            <span class="term-label">RNA nuclease activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LM4" data-a="GO:0004540" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RNase E is an RNA nuclease, but this term is broader than its specific activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The annotation is correct as a parent function; GO:0008995 captures the core catalytic identity.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LM4" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RNase E occupies the cytoplasm and associates peripherally with the inner membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cytoplasm is correct but less informative than the cytoplasmic side of plasma membrane annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LM4" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RNase E is peripherally associated with the cytoplasmic face of the bacterial inner membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The broad plasma-membrane term is valid, while GO:0009898 gives the more informative sided localization.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006364" target="_blank" class="term-link">
+                                    GO:0006364
+                                </a>
+                            </span>
+                            <span class="term-label">rRNA processing</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LM4" data-a="GO:0006364" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RNase E participates in maturation of 5S and 16S rRNAs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is a conserved RNase E processing role recorded by UniProt/HAMAP.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rne/rne-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Required for the maturation of 5S and 16S rRNAs and the</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006396" target="_blank" class="term-link">
+                                    GO:0006396
+                                </a>
+                            </span>
+                            <span class="term-label">RNA processing</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LM4" data-a="GO:0006396" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RNase E has broad roles in RNA processing and decay.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but broad; the rRNA- and tRNA-processing and mRNA-catabolic annotations are more informative.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006402" target="_blank" class="term-link">
+                                    GO:0006402
+                                </a>
+                            </span>
+                            <span class="term-label">mRNA catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LM4" data-a="GO:0006402" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RNase E initiates degradation of most bacterial mRNAs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> mRNA decay is a central RNase E and degradosome function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rne/rne-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Also involved in the degradation of most mRNAs.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008033" target="_blank" class="term-link">
+                                    GO:0008033
+                                </a>
+                            </span>
+                            <span class="term-label">tRNA processing</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LM4" data-a="GO:0008033" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RNase E contributes to maturation of the majority of tRNAs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This conserved processing role is explicitly recorded by UniProt/HAMAP.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rne/rne-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">majority of tRNAs.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008270" target="_blank" class="term-link">
+                                    GO:0008270
+                                </a>
+                            </span>
+                            <span class="term-label">zinc ion binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LM4" data-a="GO:0008270" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RNase E binds structural Zn2+ in its oligomeric catalytic assembly.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt records two Zn2+ ions per RNase E homotetramer.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rne/rne-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Binds 2 Zn(2+) ions per homotetramer.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008995" target="_blank" class="term-link">
+                                    GO:0008995
+                                </a>
+                            </span>
+                            <span class="term-label">ribonuclease E activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LM4" data-a="GO:0008995" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This is the defining molecular function of RNase E (EC 3.1.26.12).
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The sequence is assigned to the RNase E subfamily and carries the conserved endoribonuclease architecture.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rne/rne-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">PP_1905 is **RNase E**</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009898" target="_blank" class="term-link">
+                                    GO:0009898
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasmic side of plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88LM4" data-a="GO:0009898" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RNase E is a peripheral protein on the cytoplasmic face of the inner membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the most precise available localization and matches the UniProt/HAMAP record.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/rne/rne-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Peripheral membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Provides both the RNase E endoribonuclease activity that initiates RNA cleavage and the organizing scaffold of the membrane-associated RNA degradosome, supporting mRNA decay and rRNA/tRNA maturation.</h3>
+                <span class="vote-buttons" data-g="Q88LM4" data-a="FUNCTION: Provides both the RNase E endoribonuclease activit..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008995" target="_blank" class="term-link">
+                            ribonuclease E activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006402" target="_blank" class="term-link">
+                                mRNA catabolic process
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006364" target="_blank" class="term-link">
+                                rRNA processing
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008033" target="_blank" class="term-link">
+                                tRNA processing
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009898" target="_blank" class="term-link">
+                                cytoplasmic side of plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/rne/rne-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Endoribonuclease that plays a central role in RNA processing</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/rne/rne-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Component of the RNA degradosome, which is a multiprotein</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16275923" target="_blank" class="term-link">
+                                PMID:16275923
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">the C-terminal &#34;scaffold&#34; region of RNase E to form a complex termed the RNA degradosome.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/40096066" target="_blank" class="term-link">
+                                PMID:40096066
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">We identified the SLiMs crucial for membrane attachment, RNA binding and complex clustering, as well as for direct binding to the core components PNPase and RhlB.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/rne/rne-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PSEPK rne</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Endoribonuclease that plays a central role in RNA processing"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Component of the RNA degradosome, which is a multiprotein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16275923" target="_blank" class="term-link">
+                            PMID:16275923
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">RhlB helicase rather than enolase is the beta-subunit of the Escherichia coli polynucleotide phosphorylase (PNPase)-exoribonucleolytic complex</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"the C-terminal &#34;scaffold&#34; region of RNase E to form a complex termed the RNA degradosome."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40096066" target="_blank" class="term-link">
+                            PMID:40096066
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Critical functions and key interactions mediated by the RNase E scaffolding domain in Pseudomonas aeruginosa.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"We identified the SLiMs crucial for membrane attachment, RNA binding and complex clustering, as well as for direct binding to the core components PNPase and RhlB."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33089610" target="_blank" class="term-link">
+                            PMID:33089610
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Ribonucleases control distinct traits of Pseudomonas putida lifestyle.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Each mutant lacked either one exoribonuclease (PNPase, RNase R) or one endoribonuclease (RNase E, RNase III, RNase G)."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"the physiological responses of P. putida to the absence of each enzyme diverged significantly from those known previously in Escherichia coli."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/rne/rne-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist gene research for PSEPK rne (Q88LM4)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"PP_1905 is **RNase E**"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Mechanistic evidence is largely extrapolated from *E. coli*."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Degradosome composition in *P. putida* is inferred, not directly mapped."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which proteins bind the KT2440 RNase E C-terminal scaffold under normal and stress growth conditions?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88LM4" data-a="Q: Which proteins bind the KT2440 RNase E C-terminal ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Test whether the RNase E scaffold motifs mapped in P. aeruginosa conserve PNPase and RhlB recruitment in KT2440, and separately determine whether enolase is a KT2440 partner.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88LM4" data-a="EXPERIMENT: Test whether the RNase E scaffold motifs mapped in..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rne-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88LM4" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Ribonuclease E (rne / PP_1905, UniProt Q88LM4) in *Pseudomonas putida* KT2440: A Functional Annotation Report</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">30 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-31T20:08:10.101851</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="rne-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="rne-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="ribonuclease-e-rne-pp_1905-uniprot-q88lm4-in-pseudomonas-putida-kt2440-a-functional-annotation-report">Ribonuclease E (rne / PP_1905, UniProt Q88LM4) in <em>Pseudomonas putida</em> KT2440: A Functional Annotation Report</h1>
+<p><strong>UniProt:</strong> Q88LM4 · <strong>Gene:</strong> <em>rne</em> · <strong>Locus:</strong> PP_1905 · <strong>EC:</strong> 3.1.26.12<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</p>
+<h2 id="summary">Summary</h2>
+<p>The <strong>rne</strong> gene of <em>Pseudomonas putida</em> KT2440 (UniProt <strong>Q88LM4</strong>, ordered locus <strong>PP_1905</strong>) encodes <strong>Ribonuclease E (RNase E; EC 3.1.26.12)</strong>, a <strong>1,091-residue (≈120.9 kDa), Mg²⁺-dependent, single-strand-specific endoribonuclease</strong> that is the central enzyme of bacterial RNA metabolism. Its primary catalytic function is the <strong>endonucleolytic cleavage of single-stranded RNA in A- and U-rich regions</strong>. It performs two overarching biological tasks: (1) the <strong>maturation of stable RNA</strong> — the 5′ processing of 16S and 5S ribosomal RNAs and the majority of tRNAs — and (2) the <strong>initiation of messenger RNA decay</strong>, in which its cleavage of the monophosphorylated intermediate is typically the rate-limiting, committed step of mRNA turnover.</p>
+<p>A critical identification issue was resolved during this investigation. Although one automated UniProt annotation tag lists the "RNase G subfamily," the protein's length and domain architecture identify it <strong>unambiguously as full-length RNase E</strong>, not the shorter RNase G paralog. Q88LM4 comprises an N-terminal catalytic half (S1 RNA-binding domain, Mg²⁺ active site, and a zinc-linked tetramerization region) followed by a very large <strong>C-terminal intrinsically disordered region (~residues 506–1091)</strong> that is entirely absent from RNase G (~489 aa). This C-terminal domain (CTD) is the <strong>scaffold of the RNA degradosome</strong>, a multi-enzyme machine that recruits the exoribonuclease PNPase, the DEAD-box RNA helicase RhlB, and (in <em>E. coli</em>) enolase. The organism additionally encodes a <em>separate</em> RNase G (rng), confirming that PP_1905 is the RNase E ortholog.</p>
+<p>Functionally, the enzyme carries out its work on the <strong>cytoplasmic face of the inner membrane</strong>, to which it is tethered as a peripheral membrane protein via an amphipathic helix in its CTD. This localization spatially organizes RNA turnover within the cell. Substrate recognition is governed by a dedicated <strong>5′-monophosphate sensor pocket</strong> and a <strong>5′→3′ linear scanning mechanism</strong> whose progress is impeded by RNA secondary structure, bound ribosomes, and base-paired small RNAs — a mechanism that sets mRNA lifetimes. Direct experimental evidence in the exact target organism (<em>P. putida</em> KT2440) demonstrates that RNase E is a non-redundant determinant of environmental lifestyle and stress endurance, with species-specific physiological roles that diverge from <em>E. coli</em>.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-q88lm4-is-full-length-rnase-e-not-rnase-g">Finding 1 — Q88LM4 is full-length RNase E, not RNase G</h3>
+<p>The single most important interpretive result of this investigation is the correct sub-family assignment. UniProt Q88LM4 is <strong>1,091 amino acids / 120.9 kDa</strong>. Its domain architecture consists of: an N-terminal <strong>S1 RNA-binding motif</strong> (residues ~39–117); a <strong>catalytic core</strong> with Mg²⁺ active-site binding residues (positions ~300 and 343); a <strong>zinc-tetramerization region</strong> (residues 401–404) annotated as "required for zinc-mediated homotetramerization and catalytic activity"; and a <strong>very large C-terminal intrinsically disordered region</strong> (~506–1091) containing multiple low-complexity and charged segments.</p>
+<p>This architecture matches <em>E. coli</em> RNase E (~1,061 aa; a catalytic N-domain plus a C-terminal scaffold) and is fundamentally distinct from the short RNase G paralog (~489 aa; catalytic domain only, no C-terminal scaffold). The authoritative <strong>HAMAP-Rule MF_00970</strong> assigns the "RNase E subfamily"; a conflicting, lower-quality automated ARBA rule listing "RNase G subfamily" is an annotation artifact superseded by the unambiguous full-length architecture. Importantly, <em>P. putida</em> KT2440 encodes a <strong>separate RNase G</strong> (rng), which was studied independently (see Finding 8), removing any doubt that PP_1905 is the RNase E ortholog.</p>
+<h3 id="finding-2-primary-function-mg2-dependent-single-strand-specific-endoribonuclease-cleaving-au-rich-rna-ec-312612">Finding 2 — Primary function: Mg²⁺-dependent, single-strand-specific endoribonuclease cleaving A/U-rich RNA (EC 3.1.26.12)</h3>
+<p>The catalytic activity, per UniProt/HAMAP MF_00970, is: <strong>"Endonucleolytic cleavage of single-stranded RNA in A- and U-rich regions"</strong> (EC 3.1.26.12), with a cofactor requirement of <strong>1 Mg²⁺ per subunit</strong> at the active site. This is corroborated by mechanistic structural biology: Koslover et al. (2008) describe RNase E as <em>"an essential bacterial endoribonuclease involved in the turnover of messenger RNA and the maturation of structured RNA precursors in Escherichia coli"</em> and report a crystal structure revealing <em>"a mechanism of RNA recognition and cleavage that explains the enzyme's preference for substrates possessing a 5′-monophosphate"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/18682225/">PMID: 18682225</a>). The dual role — mRNA turnover plus structured-RNA maturation — is the defining functional signature of RNase E.</p>
+<h3 id="finding-3-5-monophosphate-sensing-and-53-scanning-govern-substrate-access-and-cleavage-site-selection">Finding 3 — 5′-monophosphate sensing and 5′→3′ scanning govern substrate access and cleavage-site selection</h3>
+<p>RNase E does not cleave RNA at random. It preferentially binds a <strong>5′-monophosphorylated end</strong> via a dedicated 5′-sensor pocket, which potentiates catalytic efficacy (Hui &amp; Belasco 2021, <a href="https://pubmed.ncbi.nlm.nih.gov/34643703/">PMID: 34643703</a>; Jourdan &amp; McDowall 2008). Richards &amp; Belasco (2019) demonstrated that the enzyme <em>"searches for cleavage sites by scanning linearly from the 5′-terminal monophosphate along single-stranded regions of RNA and that its progress is impeded by structural discontinuities"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/30852060/">PMID: 30852060</a>). These discontinuities — bound proteins, translating ribosomes, and small-RNA base-pairing — are the physical determinants that set individual mRNA lifetimes.</p>
+<p>A second, <strong>5′-end-independent "direct entry"</strong> mode also exists, in which RNase E <em>"can cleave certain RNAs rapidly without requiring a 5′-monophosphorylated end"</em> by simultaneously engaging multiple single-stranded segments (Kime et al. 2010, <a href="https://pubmed.ncbi.nlm.nih.gov/19889093/">PMID: 19889093</a>). The 5′-monophosphate sensing property is conserved across the RNase E/G family: for RNase G, <em>"the presence of a 5′ monophosphate can enhance the affinity of RNase G binding to RNA"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/18078441/">PMID: 18078441</a>).</p>
+<h3 id="finding-4-quaternary-structure-a-zinc-linked-homotetramer-dimer-of-dimers">Finding 4 — Quaternary structure: a zinc-linked homotetramer (dimer of dimers)</h3>
+<p>The catalytic domain assembles into a <strong>homotetramer</strong> whose integrity depends on a shared Zn²⁺ ion — the so-called <strong>"Zn-link."</strong> Callaghan et al. (2005) showed that <em>"two protomers share a single zinc ion"</em> and that <em>"catalytic activity does not require zinc directly but does require the quaternary structure, for which the metal is essential"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/15779893/">PMID: 15779893</a>). Mutation of the Zn-coordinating residues causes partial zinc loss, disruption of the tetramer into dimers, and effective catalytic inactivation.</p>
+<p>Q88LM4 preserves this architecture exactly: residues 401–404 are annotated as "required for zinc-mediated homotetramerization and catalytic activity," and UniProt records 2 Zn²⁺ per homotetramer with a "dimer of dimers" subunit state. Interestingly, a minimal ~395-residue catalytic peptide can retain scanning and cleavage even without the Zn-link (Caruthers et al. 2006, <a href="https://pubmed.ncbi.nlm.nih.gov/16854990/">PMID: 16854990</a>), which delimits the essential catalytic core and shows that the tetrameric quaternary structure, while physiologically important, is not strictly required for core enzymatic activity.</p>
+<h3 id="finding-5-biological-processes-5-maturation-of-16s5s-rrna-and-most-trnas-plus-initiation-of-mrna-decay">Finding 5 — Biological processes: 5′-maturation of 16S/5S rRNA and most tRNAs, plus initiation of mRNA decay</h3>
+<p>HAMAP MF_00970 assigns to Q88LM4: <em>"Required for the maturation of 5S and 16S rRNAs and the majority of tRNAs. Also involved in the degradation of most mRNAs."</em> Each arm is supported by direct experimental work in <em>E. coli</em>:</p>
+<ul>
+<li><strong>rRNA maturation:</strong> RNase E and RNase G together perform two-step 5′ maturation of 16S rRNA. Li et al. (1999) showed that <em>"when both RNase E and CafA are inactivated, 5′ maturation of 16S rRNA is completely blocked"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/10329633/">PMID: 10329633</a>).</li>
+<li><strong>tRNA maturation:</strong> RNase E generates the mature 3′ termini of the proline tRNAs by a single endonucleolytic cut immediately after the CCA determinant. Mohanty et al. (2016) reported that <em>"RNase E is primarily responsible for the endonucleolytic removal of the entire Rho-independent transcription terminator associated with the proK, proL and proM primary transcripts by cleaving immediately downstream of the CCA determinant"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/27288443/">PMID: 27288443</a>).</li>
+<li><strong>mRNA decay:</strong> RNase E cleavage of the monophosphorylated intermediate is frequently the committed, rate-limiting step of turnover. Luciano et al. (2012) found that for such transcripts <em>"their decay rate is limited by cleavage of the monophosphorylated intermediate, making RNase E critical for their rapid turnover"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/22984254/">PMID: 22984254</a>).</li>
+</ul>
+<h3 id="finding-6-degradosome-scaffold-the-c-terminal-disordered-domain-nucleates-a-multi-enzyme-rna-degradation-machine">Finding 6 — Degradosome scaffold: the C-terminal disordered domain nucleates a multi-enzyme RNA-degradation machine</h3>
+<p>The UniProt SUBUNIT annotation for Q88LM4 states that it is a <em>"Component of the RNA degradosome, which is a multiprotein complex involved in RNA processing and mRNA degradation."</em> In <em>E. coli</em>, the degradosome is <em>"typically composed of the endoribonuclease RNase E, which also serves as a scaffold for the other components, the exoribonuclease PNPase, the RNA helicase RhlB, and enolase"</em> (Regonesi et al. 2006, <a href="https://pubmed.ncbi.nlm.nih.gov/16139413/">PMID: 16139413</a>).</p>
+<p>Critically, the scaffolding role maps to the <strong>RNase E C-terminal half</strong>. Domínguez-Malfavón et al. (2013) found that degradosome interactions are <em>"absent in a mutant strain that lacks the C-terminal half, supporting the role of the carboxy-end domain as the scaffold for the degradosome"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/23927922/">PMID: 23927922</a>). Q88LM4 carries exactly this large C-terminal intrinsically disordered region (~506–1091), providing a direct structural basis for its scaffolding role.</p>
+<h3 id="finding-7-localization-cytoplasmic-face-of-the-inner-membrane-spatially-organizing-mrna-degradation">Finding 7 — Localization: cytoplasmic face of the inner membrane, spatially organizing mRNA degradation</h3>
+<p>The UniProt subcellular location for Q88LM4 is <strong>Cytoplasm and Cell inner membrane (peripheral, cytoplasmic side)</strong>. In <em>E. coli</em>, RNase E binds the inner membrane through an amphipathic "Segment A" helix in its CTD, and this tethering shapes where decay occurs. Kim et al. (2026) reported that co-transcriptional mRNA degradation <em>"is rare due to membrane localization of RNase E, except for transcripts encoding inner-membrane proteins"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/42174289/">PMID: 42174289</a>). Single-molecule imaging confirms that the membrane-binding motif and the C-terminal domain govern RNase E localization and diffusion (Troyer et al. 2025, <a href="https://pubmed.ncbi.nlm.nih.gov/40093181/">PMID: 40093181</a>).</p>
+<h3 id="finding-8-direct-p-putida-kt2440-evidence-rnase-e-is-a-distinct-non-redundant-determinant-of-lifestyle-and-stress-endurance">Finding 8 — Direct <em>P. putida</em> KT2440 evidence: RNase E is a distinct, non-redundant determinant of lifestyle and stress endurance</h3>
+<p>The most directly relevant experimental evidence comes from the exact target organism. Apura et al. (2021) constructed single-RNase deletion variants of <em>P. putida</em> KT2440 (PNPase, RNase R, RNase E, RNase III, RNase G) and analyzed growth, motility, morphology, and oxidative-stress responses, concluding that <em>"each ribonuclease is specifically related with different traits of the environmental lifestyle that distinctively characterizes this microorganism"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/33089610/">PMID: 33089610</a>). Critically, <em>"the physiological responses of P. putida to the absence of each enzyme diverged significantly from those known previously in Escherichia coli,"</em> revealing species-specific regulatory functions. This study confirms in vivo that RNase E (PP_1905) functions in post-transcriptional adaptation and is functionally distinguishable from its paralog RNase G (rng).</p>
+<h3 id="finding-9-pseudomonas-degradosome-assembles-on-the-rnase-e-ctd-via-short-linear-motifs-autoregulation-tunes-enzyme-level">Finding 9 — Pseudomonas degradosome assembles on the RNase E CTD via short linear motifs; autoregulation tunes enzyme level</h3>
+<p>In Pseudomonadota, the degradosome <em>"assembles on the C-terminal domain (CTD) of RNase E through short linear motifs (SLiMs) that determine its composition and functionality"</em> (Geslain et al. 2025, <a href="https://pubmed.ncbi.nlm.nih.gov/40096066/">PMID: 40096066</a>). In the closely related <em>P. aeruginosa</em>, the CTD's SLiMs mediate membrane attachment, RNA binding, complex clustering, and direct binding to PNPase and RhlB; CTD mutants are impaired in cold adaptation, pH response, and virulence.</p>
+<p>The RNase E–PNPase interaction is conserved but evolutionarily re-wired: Paris et al. (2025) found that <em>"a different recognition mode arose for Pseudomonas aeruginosa, illustrating the evolutionary drive to maintain physical association of the two ribonucleases"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/41036625/">PMID: 41036625</a>). Enzyme level is feedback-controlled: RNase E <em>"controls the decay of its own mRNA by cleaving it within the 5′-untranslated region (UTR), thereby autoregulating its synthesis"</em> (Sousa et al. 2001, <a href="https://pubmed.ncbi.nlm.nih.gov/11722748/">PMID: 11722748</a>), via an evolutionarily conserved 5′UTR stem-loop sensor (Diwa et al. 2000, <a href="https://pubmed.ncbi.nlm.nih.gov/10817759/">PMID: 10817759</a>). Notably, <em>P. aeruginosa</em> RhlB is a distinct "Type II" helicase that RNase E regulates by antagonizing its phase separation rather than allosterically activating it (Hausmann et al. 2026, <a href="https://pubmed.ncbi.nlm.nih.gov/42581758/">PMID: 42581758</a>).</p>
+<h3 id="finding-10-sequence-level-confirmation-n-terminus-and-zn-link-cxxc-signature-are-diagnostic-of-rnase-e">Finding 10 — Sequence-level confirmation: N-terminus and Zn-link CxxC signature are diagnostic of RNase E</h3>
+<p>Direct analysis of the Q88LM4 sequence (1,091 aa) seals the identification. The N-terminus is <strong>'MKRMLINATQPEELRVALVDGQRLYDL…'</strong>, essentially identical to the diagnostic N-terminal signature of <em>E. coli</em> RNase E ('MKRMLINATQ…') and distinct from RNase G. The <strong>Zn-link motif is intact</strong>: cysteines occur precisely at positions <strong>401 and 404 (a CxxC pair)</strong>, matching the UniProt-annotated "zinc-mediated homotetramerization and catalytic activity" region (401–404). Compositional analysis confirms the two-domain architecture: the N-terminal catalytic half (res 1–510) has a globular-like charged fraction (DEKR ≈ 0.30), whereas the C-terminal half (511–1091) is strongly enriched in charged residues (DEKR ≈ 0.38) and disorder-promoting residues (P/A/Q/S/G ≈ 0.44) — the compositional hallmark of the intrinsically disordered degradosome scaffold. RNase G (~489 aa) has no such C-terminal extension.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>The findings integrate into a coherent picture of a single, bifunctional, membrane-anchored enzyme that governs the flow of RNA through the bacterial cell.</p>
+<h3 id="domain-architecture-q88lm4-1091-aa">Domain architecture (Q88LM4, 1,091 aa)</h3>
+<div class="codehilite"><pre><span></span><code><span class="w"> </span><span class="n">N</span><span class="w"> </span><span class="err">────────────</span><span class="w"> </span><span class="n">CATALYTIC</span><span class="w"> </span><span class="n">HALF</span><span class="w"> </span><span class="p">(</span><span class="o">~</span><span class="mi">1</span><span class="err">–</span><span class="mi">510</span><span class="p">)</span><span class="w"> </span><span class="err">────────────</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="err">──</span><span class="w"> </span><span class="n">C</span><span class="o">-</span><span class="n">TERMINAL</span><span class="w"> </span><span class="n">DISORDERED</span><span class="w"> </span><span class="n">SCAFFOLD</span><span class="w"> </span><span class="p">(</span><span class="o">~</span><span class="mi">506</span><span class="err">–</span><span class="mi">1091</span><span class="p">)</span><span class="w"> </span><span class="err">──</span><span class="w"> </span><span class="n">C</span>
+<span class="w">   </span><span class="err">│</span><span class="w">        </span><span class="err">│</span><span class="w">           </span><span class="err">│</span><span class="w">          </span><span class="err">│</span><span class="w">                  </span><span class="err">│</span>
+<span class="w">  </span><span class="n">S1</span><span class="w"> </span><span class="n">RNA</span><span class="w">   </span><span class="n">Mg2</span><span class="o">+</span><span class="w">      </span><span class="n">Zn</span><span class="o">-</span><span class="n">link</span><span class="w">     </span><span class="mi">5</span><span class="err">&#39;</span><span class="o">-</span><span class="n">sensor</span><span class="w">            </span><span class="n">SLiMs</span><span class="o">:</span><span class="w"> </span><span class="n">membrane</span><span class="w"> </span><span class="n">helix</span><span class="p">,</span><span class="w"> </span><span class="n">RNA</span><span class="o">-</span><span class="n">binding</span><span class="p">,</span>
+<span class="w">  </span><span class="n">domain</span><span class="w">   </span><span class="n">active</span><span class="w">  </span><span class="n">CxxC</span><span class="w"> </span><span class="mi">@401</span><span class="o">/</span><span class="mi">404</span><span class="w">  </span><span class="n">pocket</span><span class="w">              </span><span class="n">PNPase</span><span class="o">-</span><span class="p">,</span><span class="w"> </span><span class="n">RhlB</span><span class="o">-</span><span class="n">binding</span><span class="p">,</span><span class="w"> </span><span class="n">clustering</span>
+<span class="w"> </span><span class="p">(</span><span class="mi">39</span><span class="err">–</span><span class="mi">117</span><span class="p">)</span><span class="w">  </span><span class="n">site</span><span class="w">                                       </span><span class="p">(</span><span class="n">intrinsically</span><span class="w"> </span><span class="n">disordered</span><span class="p">;</span><span class="w"> </span><span class="n">DEKR</span><span class="o">~</span><span class="mf">0.38</span><span class="p">)</span>
+<span class="w">  </span><span class="p">(</span><span class="o">~</span><span class="mi">300</span><span class="p">,</span><span class="mi">343</span><span class="p">)</span>
+<span class="w">   </span><span class="err">\</span><span class="n">______</span><span class="w"> </span><span class="n">homotetramer</span><span class="w"> </span><span class="p">(</span><span class="n">dimer</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">dimers</span><span class="p">)</span><span class="w"> </span><span class="n">______</span><span class="o">/</span><span class="w">      </span><span class="err">\</span><span class="n">___</span><span class="w"> </span><span class="n">nucleates</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">RNA</span><span class="w"> </span><span class="n">degradosome</span><span class="w"> </span><span class="n">___</span><span class="o">/</span>
+<span class="w"> </span><span class="p">(</span><span class="mi">2</span><span class="w"> </span><span class="n">Zn2</span><span class="o">+</span><span class="w"> </span><span class="n">per</span><span class="w"> </span><span class="n">tetramer</span><span class="p">)</span><span class="w">                       </span><span class="n">tethered</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">inner</span><span class="w"> </span><span class="n">membrane</span>
+</code></pre></div>
+
+<h3 id="catalytic-cycle-and-substrate-selection">Catalytic cycle and substrate selection</h3>
+<div class="codehilite"><pre><span></span><code><span class="w">   </span><span class="mi">5</span><span class="s1">&#39;-PPP-mRNA  ──(RppH pyrophosphohydrolase)──►  5&#39;</span><span class="o">-</span><span class="nv">P</span><span class="o">-</span><span class="nv">mRNA</span>
+<span class="w">                                     </span>│
+<span class="w">                                     </span>▼
+<span class="w">              </span><span class="nv">RNase</span><span class="w"> </span><span class="nv">E</span><span class="w"> </span><span class="mi">5</span><span class="s1">&#39;-sensor pocket binds 5&#39;</span><span class="o">-</span><span class="nv">monophosphate</span>
+<span class="w">                                     </span>│
+<span class="w">                     </span><span class="mi">5</span><span class="s1">&#39;→3&#39;</span><span class="w"> </span><span class="nv">linear</span><span class="w"> </span><span class="nv">scanning</span><span class="w"> </span><span class="nv">along</span><span class="w"> </span><span class="nv">ssRNA</span>
+<span class="w">                                     </span>│
+<span class="w">      </span>┌──────────────────────────────────────┴─────────────────────────────┐
+<span class="w">      </span>▼<span class="w">                                                                      </span>▼
+<span class="w">   </span><span class="nv">obstacle</span><span class="w"> </span><span class="ss">(</span><span class="nv">ribosome</span>,<span class="w"> </span><span class="nv">structure</span>,<span class="w">                                </span><span class="nv">A</span><span class="o">/</span><span class="nv">U</span><span class="o">-</span><span class="nv">rich</span><span class="w"> </span><span class="nv">single</span><span class="o">-</span><span class="nv">stranded</span><span class="w"> </span><span class="nv">site</span><span class="w"> </span><span class="nv">reached</span>
+<span class="w">   </span><span class="nv">sRNA</span><span class="w"> </span><span class="nv">duplex</span><span class="ss">)</span><span class="w"> </span>→<span class="w"> </span><span class="nv">scanning</span><span class="w"> </span><span class="nv">impeded</span><span class="w">                                              </span>│
+<span class="w">   </span>→<span class="w"> </span><span class="nv">longer</span><span class="w"> </span><span class="nv">mRNA</span><span class="w"> </span><span class="nv">lifetime</span><span class="w">                                                       </span>▼
+<span class="w">                                        </span><span class="nv">Mg2</span><span class="o">+-</span><span class="nv">dependent</span><span class="w"> </span><span class="nv">endonucleolytic</span><span class="w"> </span><span class="nv">cleavage</span>
+<span class="w">                                                               </span>│
+<span class="w">                                  </span>┌────────────────────────────┴──────────────┐
+<span class="w">                                  </span>▼<span class="w">                                            </span>▼
+<span class="w">                    </span><span class="nv">downstream</span><span class="w"> </span><span class="nv">fragments</span><span class="w"> </span><span class="nv">handed</span><span class="w"> </span><span class="nv">to</span><span class="w">               </span><span class="nv">upstream</span><span class="w"> </span><span class="nv">fragment</span><span class="w"> </span><span class="nv">recycled</span>
+<span class="w">                    </span><span class="nv">PNPase</span><span class="o">/</span><span class="nv">RhlB</span><span class="w"> </span><span class="nv">in</span><span class="w"> </span><span class="nv">the</span><span class="w"> </span><span class="nv">degradosome</span><span class="w">               </span><span class="ss">(</span><span class="nv">new</span><span class="w"> </span><span class="nv">monophosphorylated</span><span class="w"> </span><span class="mi">5</span><span class="err">&#39; end)</span>
+</code></pre></div>
+
+<p>An alternative <strong>"direct entry"</strong> pathway bypasses the 5′-sensor, engaging multiple single-stranded segments at once, allowing rapid cleavage of certain substrates independent of the 5′-phosphorylation state.</p>
+<h3 id="the-two-jobs-of-rnase-e">The two jobs of RNase E</h3>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Substrate</th>
+<th>Outcome</th>
+<th>Key evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Stable-RNA maturation</strong></td>
+<td>16S rRNA precursor</td>
+<td>Mature 5′ end (with RNase G)</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10329633/">PMID: 10329633</a></td>
+</tr>
+<tr>
+<td></td>
+<td>5S rRNA precursor</td>
+<td>Mature 5′ end</td>
+<td>HAMAP MF_00970</td>
+</tr>
+<tr>
+<td></td>
+<td>Majority of tRNA precursors; proK/proL/proM</td>
+<td>Mature 3′ end (cut after CCA)</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27288443/">PMID: 27288443</a></td>
+</tr>
+<tr>
+<td><strong>mRNA decay initiation</strong></td>
+<td>Most cellular mRNAs</td>
+<td>Rate-limiting first cut → degradosome</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22984254/">PMID: 22984254</a></td>
+</tr>
+<tr>
+<td><strong>Autoregulation</strong></td>
+<td>Own rne mRNA 5′UTR</td>
+<td>Feedback control of enzyme level</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11722748/">PMID: 11722748</a></td>
+</tr>
+</tbody>
+</table>
+<h3 id="spatial-organization">Spatial organization</h3>
+<p>The enzyme is a <strong>peripheral inner-membrane protein</strong> (cytoplasmic side). Because the degradosome is membrane-tethered while transcription/translation proceed in the nucleoid/cytoplasm, most mRNA degradation is spatially segregated from transcription — except for mRNAs encoding inner-membrane proteins, whose translation brings them to the membrane where RNase E resides. This membrane localization is a genuine regulatory layer, not an incidental property.</p>
+<h3 id="rnase-e-vs-rnase-g-resolving-the-annotation-conflict">RNase E vs. RNase G — resolving the annotation conflict</h3>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>RNase E (Q88LM4/PP_1905)</th>
+<th>RNase G (rng, separate gene)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Length</td>
+<td>1,091 aa (~121 kDa)</td>
+<td>~489 aa (~50 kDa)</td>
+</tr>
+<tr>
+<td>N-terminal catalytic domain</td>
+<td>Yes</td>
+<td>Yes (35% identity to RNase E N-domain)</td>
+</tr>
+<tr>
+<td>Zn-link CxxC (401/404)</td>
+<td>Yes</td>
+<td>Variable</td>
+</tr>
+<tr>
+<td>C-terminal disordered scaffold</td>
+<td><strong>Yes (~506–1091)</strong></td>
+<td><strong>No</strong></td>
+</tr>
+<tr>
+<td>Degradosome scaffold</td>
+<td><strong>Yes</strong></td>
+<td>No</td>
+</tr>
+<tr>
+<td>Membrane tether</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Essentiality</td>
+<td>Essential</td>
+<td>Non-essential</td>
+</tr>
+</tbody>
+</table>
+<p>The full-length architecture, the diagnostic N-terminal 'MKRMLINATQ' signature, the intact Zn-link, and the presence of a separate rng gene in the genome collectively establish that PP_1905 is <strong>RNase E</strong>, and that the automated "RNase G subfamily" tag is an annotation artifact.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Study (abbrev.)</th>
+<th>How it supports the findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18682225/">18682225</a></td>
+<td>Crystal structure of E. coli RNase E apoprotein</td>
+<td>Enzyme class, dual role, and 5′-monophosphate preference (F2)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30852060/">30852060</a></td>
+<td>Obstacles to scanning govern mRNA lifetimes</td>
+<td>Defines 5′→3′ linear scanning, obstacle-limited cleavage (F3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19889093/">19889093</a></td>
+<td>Rapid cleavage without 5′ monophosphate</td>
+<td>Documents the "direct entry" 5′-end-independent mode (F3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18078441/">18078441</a></td>
+<td>Sensing of 5′ monophosphate by RNase G</td>
+<td>5′-monophosphate sensing conserved in RNase E/G family (F3)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15779893/">15779893</a></td>
+<td>"Zn-link" metal-sharing interface</td>
+<td>Zn-linked tetramer; quaternary structure essential (F4)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16854990/">16854990</a></td>
+<td>Minimal RNase E peptide lacking tetramer domain</td>
+<td>Delimits minimal catalytic core (F4)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10329633/">10329633</a></td>
+<td>RNase G + RNase E in 16S rRNA 5′ maturation</td>
+<td>Essential role in 16S rRNA maturation (F5)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27288443/">27288443</a></td>
+<td>RNase E generates mature 3′ termini of Pro tRNAs</td>
+<td>Direct role in tRNA 3′-end maturation (F5)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/22984254/">22984254</a></td>
+<td>Control of 5′-end-dependent mRNA degradation</td>
+<td>RNase E as rate-limiting step in mRNA decay (F5)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16139413/">16139413</a></td>
+<td>Degradosome composition by proteomics</td>
+<td>Names RNase E scaffold; lists PNPase, RhlB, enolase (F6)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23927922/">23927922</a></td>
+<td>Assembly/distribution of E. coli degradosome</td>
+<td>Localizes scaffolding to C-terminal domain (F6)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/42174289/">42174289</a></td>
+<td>Spatial constraints on mRNA degradation</td>
+<td>Ties inner-membrane localization to decay pattern (F7)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/40093181/">40093181</a></td>
+<td>Single-molecule imaging of RNase E</td>
+<td>Membrane motif + CTD govern localization/diffusion (F7)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/33089610/">33089610</a></td>
+<td>Ribonucleases control traits of P. putida</td>
+<td><strong>Direct evidence in target organism</strong> (F8)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/40096066/">40096066</a></td>
+<td>RNase E scaffolding domain in P. aeruginosa</td>
+<td>Pseudomonas degradosome assembles on CTD via SLiMs (F9)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/41036625/">41036625</a></td>
+<td>Multi-dentate RNase E–PNPase interaction</td>
+<td>Association conserved but re-wired in Pseudomonas (F9)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11722748/">11722748</a></td>
+<td>Autoregulation of E. coli RNase E</td>
+<td>Autoregulation via 5′UTR self-cleavage (F9)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/10817759/">10817759</a></td>
+<td>Conserved RNA stem-loop sensor for rne</td>
+<td>Conserved 5′UTR stem-loop drives autoregulation (F9)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/42581758/">42581758</a></td>
+<td>RNase E counteracts RhlB phase separation</td>
+<td>Pseudomonas Type II RhlB regulation via condensate control (F9)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Supporting context papers:</strong> RNase G quaternary structure and dimerization (<a href="https://pubmed.ncbi.nlm.nih.gov/14622423/">PMID: 14622423</a>); RNase G in 16S/23S rRNA processing (<a href="https://pubmed.ncbi.nlm.nih.gov/10362534/">PMID: 10362534</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/21717341/">PMID: 21717341</a>); functional divergence of RNase E vs. RNase G (<a href="https://pubmed.ncbi.nlm.nih.gov/20507976/">PMID: 20507976</a>); <em>P. aeruginosa</em> RNase E variant, iron piracy and virulence (<a href="https://pubmed.ncbi.nlm.nih.gov/37027441/">PMID: 37027441</a>); phage-encoded Dip inhibitor of the Pseudomonas degradosome (<a href="https://pubmed.ncbi.nlm.nih.gov/27447594/">PMID: 27447594</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/27834591/">PMID: 27834591</a>); RraA modulator of RNase E (<a href="https://pubmed.ncbi.nlm.nih.gov/21063756/">PMID: 21063756</a>); RhlE helicase–RNase E interactions in Pseudomonas (<a href="https://pubmed.ncbi.nlm.nih.gov/34151378/">PMID: 34151378</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/38874491/">PMID: 38874491</a>).</p>
+<p><strong>Note on the RNase E/G family nuance:</strong> Several papers (<a href="https://pubmed.ncbi.nlm.nih.gov/20507976/">PMID: 20507976</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/14622423/">PMID: 14622423</a>) emphasize that RNase G and the RNase E catalytic domain share ~35% identity but have distinct in vivo activities — RNase G cannot substitute for RNase E under normal conditions. This underscores that even though Q88LM4's catalytic domain is homologous to RNase G, its full-length architecture and scaffold domain make it the functionally distinct RNase E.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>Mechanistic evidence is largely extrapolated from <em>E. coli</em>.</strong> The catalytic mechanism (5′-sensing, scanning, Zn-link tetramer, cleavage-site specificity) and the specific rRNA/tRNA maturation substrates are established in <em>E. coli</em>, not directly in <em>P. putida</em> KT2440. Apura et al. (2021, <a href="https://pubmed.ncbi.nlm.nih.gov/33089610/">PMID: 33089610</a>) explicitly caution that <em>P. putida</em> physiological responses diverge from <em>E. coli</em>, so extrapolation carries uncertainty.</p>
+</li>
+<li>
+<p><strong>No enzymatic characterization of Q88LM4 itself.</strong> There is no purified-protein biochemistry (kcat, Km, substrate profiling) reported specifically for the <em>P. putida</em> KT2440 RNase E. All catalytic parameters are inferred from orthologs.</p>
+</li>
+<li>
+<p><strong>Degradosome composition in <em>P. putida</em> is inferred, not directly mapped.</strong> The Pseudomonas degradosome has been characterized primarily in <em>P. aeruginosa</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/40096066/">PMID: 40096066</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/41036625/">PMID: 41036625</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/42581758/">PMID: 42581758</a>). The exact SLiM inventory, partner set (e.g., which RhlB/RhlE helicase, whether enolase associates), and CTD interaction interfaces of the KT2440 protein remain to be experimentally defined.</p>
+</li>
+<li>
+<p><strong>The specific mRNA regulon of <em>P. putida</em> RNase E is unknown.</strong> Which transcripts are direct RNase E substrates, and how this shapes KT2440's environmental adaptation and biotechnological phenotypes (e.g., solvent tolerance, aromatic-compound catabolism), has not been mapped transcriptome-wide.</p>
+</li>
+<li>
+<p><strong>Subcellular localization is annotation-based.</strong> The inner-membrane, cytoplasmic-side localization for Q88LM4 comes from UniProt/ortholog inference; direct imaging in <em>P. putida</em> has not been performed.</p>
+</li>
+<li>
+<p><strong>Essentiality and autoregulation of rne in KT2440</strong> are assumed from the family but not directly demonstrated in this organism.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Biochemical characterization of purified Q88LM4.</strong> Express and purify the <em>P. putida</em> RNase E catalytic domain; measure Mg²⁺ dependence, 5′-monophosphate stimulation, A/U-site specificity, and Zn-link tetramerization to confirm mechanism directly in this organism.</p>
+</li>
+<li>
+<p><strong>Transcriptome-wide substrate mapping.</strong> Apply RNA-seq/degradome-seq or TIER-seq to an rne conditional depletion strain of KT2440 to catalog direct cleavage sites and define the RNase E regulon, distinguishing it from the RNase G (rng) regulon.</p>
+</li>
+<li>
+<p><strong>Degradosome pull-down / interactomics.</strong> Co-immunoprecipitation or proximity labeling of tagged RNase E in KT2440 to establish the native degradosome composition (PNPase, RhlB/RhlE helicase, enolase or alternatives) and validate the SLiM-based CTD assembly inferred from <em>P. aeruginosa</em>.</p>
+</li>
+<li>
+<p><strong>CTD truncation genetics.</strong> Construct CTD-deletion and membrane-motif mutants to test their effects on growth, cold/oxidative-stress adaptation, motility, and degradosome assembly — paralleling the <em>P. aeruginosa</em> CTD-mutant phenotypes.</p>
+</li>
+<li>
+<p><strong>Localization imaging.</strong> Fluorescent-fusion single-molecule imaging in live <em>P. putida</em> to confirm inner-membrane localization and quantify how the membrane motif and CTD govern diffusion and clustering.</p>
+</li>
+<li>
+<p><strong>Autoregulation test.</strong> Assay whether the rne 5′UTR forms the conserved stem-loop sensor and mediates feedback control of RNase E levels in KT2440, as in <em>E. coli</em>.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>The gene <strong>rne / PP_1905 (Q88LM4)</strong> of <em>Pseudomonas putida</em> KT2440 encodes the <strong>full-length Ribonuclease E</strong>, the master endoribonuclease of bacterial RNA metabolism. It is a Mg²⁺-dependent, single-strand-specific endonuclease (EC 3.1.26.12) that cleaves A/U-rich RNA, preferentially at 5′-monophosphorylated substrates via a 5′→3′ scanning mechanism. It matures 16S/5S rRNA and most tRNAs and initiates (usually rate-limits) the decay of most mRNAs. Its zinc-linked catalytic domain forms a homotetramer, while its large C-terminal intrinsically disordered domain scaffolds the RNA degradosome and tethers the machine to the cytoplasmic face of the inner membrane. Direct evidence in the target organism confirms non-redundant, species-specific physiological roles, distinct from its separately encoded paralog RNase G. The UniProt "RNase G subfamily" tag is an automated-annotation artifact superseded by the protein's unambiguous full-length RNase E architecture.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="rne-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="rne-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:18682225</li>
+<li>PMID:34643703</li>
+<li>PMID:30852060</li>
+<li>PMID:19889093</li>
+<li>PMID:18078441</li>
+<li>PMID:15779893</li>
+<li>PMID:16854990</li>
+<li>PMID:10329633</li>
+<li>PMID:27288443</li>
+<li>PMID:22984254</li>
+<li>PMID:16139413</li>
+<li>PMID:23927922</li>
+<li>PMID:42174289</li>
+<li>PMID:40093181</li>
+<li>PMID:33089610</li>
+<li>PMID:40096066</li>
+<li>PMID:41036625</li>
+<li>PMID:11722748</li>
+<li>PMID:10817759</li>
+<li>PMID:42581758</li>
+<li>PMID:14622423</li>
+<li>PMID:10362534</li>
+<li>PMID:21717341</li>
+<li>PMID:20507976</li>
+<li>PMID:37027441</li>
+<li>PMID:27447594</li>
+<li>PMID:27834591</li>
+<li>PMID:21063756</li>
+<li>PMID:34151378</li>
+<li>PMID:38874491</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rne-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88LM4" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="rne-curation-notes">rne curation notes</h1>
+<h2 id="2026-08-31">2026-08-31</h2>
+<p>RNase E is retained as both the defining endoribonuclease and the organizing<br />
+scaffold of the RNase E-centered degradosome. The conserved scaffold claim is<br />
+supported by full-text work in <em>E. coli</em>, where PNPase, RhlB, and enolase bind<br />
+the C-terminal scaffold region [PMID:16275923 "the C-terminal \"scaffold\"<br />
+region of RNase E to form a complex termed the RNA degradosome."].<br />
+Same-genus PMID:40096066 directly maps PNPase and RhlB binding plus membrane<br />
+attachment motifs on the P. aeruginosa RNase E scaffold; these findings support<br />
+the architecture while leaving KT2440 partner composition to be tested.</p>
+<p>That paper does not establish the exact accessory composition in <em>P. putida</em>.<br />
+The existing KT2440 eno review explicitly says its degradosome role has not<br />
+been demonstrated. The species-aware OpenScientist report also identifies<br />
+unresolved RhlB-versus-RhlE and PNPase-versus-RNase R partner choices in<br />
+KT2440. The revised module therefore treats all three accessory choices as<br />
+variant or experimental questions rather than fixed species facts.</p>
+<p>OpenScientist also flagged the UniProt family-text conflict: Q88LM4 carries a<br />
+large C-terminal scaffold and intact RNase E architecture, while KT2440 encodes<br />
+a separate RNase G. The direct KT2440 deletion study analyzed RNase E and RNase<br />
+G as distinct endoribonucleases and found species-specific physiological effects<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/33089610" title="Each mutant lacked either one exoribonuclease (PNPase, RNase R) or one endoribonuclease (RNase E, RNase III, RNase G).">PMID:33089610</a>.</p>
+<h2 id="2026-09-01-wave134-annotation-reviewer-pass">2026-09-01 wave134 annotation-reviewer pass</h2>
+<p>All 14 seeded GOA rows were rechecked against the local UniProt record and the<br />
+cached literature. No action changes were required. Broad parent functions and<br />
+locations remain non-core, while RNase E activity, RNA binding, RNA processing,<br />
+mRNA catabolism, metal binding, and the cytoplasmic membrane-face localization<br />
+remain accepted. The direct KT2440 deletion paper supports biological relevance<br />
+but is not used to claim a purified KT2440 degradosome.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88LM4
+gene_symbol: rne
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  RNase E is the membrane-associated endoribonuclease and organizing scaffold
+  of the bacterial RNA degradosome. It cleaves single-stranded RNA, initiates
+  decay of most mRNAs, and participates in maturation of 5S and 16S rRNA and
+  many tRNAs. The catalytic N-terminal region binds RNA and Mg2+, whereas the
+  extended C-terminal region organizes a degradosome that recruits RNA-decay
+  partners. The exact helicase and exonuclease partners recruited by the KT2440
+  scaffold have not been resolved experimentally.
+existing_annotations:
+- term:
+    id: GO:0000287
+    label: magnesium ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: RNase E requires Mg2+ for endonucleolytic RNA cleavage.
+    action: ACCEPT
+    reason: UniProt records one Mg2+ ion per subunit as a catalytic cofactor.
+    supported_by:
+    - reference_id: file:PSEPK/rne/rne-uniprot.txt
+      supporting_text: Binds 1 Mg(2+) ion per subunit.
+- term:
+    id: GO:0003676
+    label: nucleic acid binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Nucleic acid binding is true but less informative than the RNA-binding annotation.
+    action: KEEP_AS_NON_CORE
+    reason: The broad binding term is correct but less informative than GO:0003723 RNA binding.
+- term:
+    id: GO:0003723
+    label: RNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: RNase E binds RNA substrates for processing and decay.
+    action: ACCEPT
+    reason: RNA binding is intrinsic to its endoribonuclease activity and supported by RNase E/G and S1 RNA-binding domains.
+- term:
+    id: GO:0004521
+    label: RNA endonuclease activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: RNase E performs endonucleolytic cleavage of single-stranded RNA.
+    action: KEEP_AS_NON_CORE
+    reason: This correctly describes the catalytic mode, although GO:0008995 is the more specific defining activity.
+    supported_by:
+    - reference_id: file:PSEPK/rne/rne-uniprot.txt
+      supporting_text: Endonucleolytic cleavage of single-stranded RNA in A- and U-
+- term:
+    id: GO:0004540
+    label: RNA nuclease activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: RNase E is an RNA nuclease, but this term is broader than its specific activity.
+    action: KEEP_AS_NON_CORE
+    reason: The annotation is correct as a parent function; GO:0008995 captures the core catalytic identity.
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: RNase E occupies the cytoplasm and associates peripherally with the inner membrane.
+    action: KEEP_AS_NON_CORE
+    reason: Cytoplasm is correct but less informative than the cytoplasmic side of plasma membrane annotation.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: RNase E is peripherally associated with the cytoplasmic face of the bacterial inner membrane.
+    action: KEEP_AS_NON_CORE
+    reason: The broad plasma-membrane term is valid, while GO:0009898 gives the more informative sided localization.
+- term:
+    id: GO:0006364
+    label: rRNA processing
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: RNase E participates in maturation of 5S and 16S rRNAs.
+    action: ACCEPT
+    reason: This is a conserved RNase E processing role recorded by UniProt/HAMAP.
+    supported_by:
+    - reference_id: file:PSEPK/rne/rne-uniprot.txt
+      supporting_text: Required for the maturation of 5S and 16S rRNAs and the
+- term:
+    id: GO:0006396
+    label: RNA processing
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: RNase E has broad roles in RNA processing and decay.
+    action: KEEP_AS_NON_CORE
+    reason: Correct but broad; the rRNA- and tRNA-processing and mRNA-catabolic annotations are more informative.
+- term:
+    id: GO:0006402
+    label: mRNA catabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: RNase E initiates degradation of most bacterial mRNAs.
+    action: ACCEPT
+    reason: mRNA decay is a central RNase E and degradosome function.
+    supported_by:
+    - reference_id: file:PSEPK/rne/rne-uniprot.txt
+      supporting_text: Also involved in the degradation of most mRNAs.
+- term:
+    id: GO:0008033
+    label: tRNA processing
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: RNase E contributes to maturation of the majority of tRNAs.
+    action: ACCEPT
+    reason: This conserved processing role is explicitly recorded by UniProt/HAMAP.
+    supported_by:
+    - reference_id: file:PSEPK/rne/rne-uniprot.txt
+      supporting_text: majority of tRNAs.
+- term:
+    id: GO:0008270
+    label: zinc ion binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  review:
+    summary: RNase E binds structural Zn2+ in its oligomeric catalytic assembly.
+    action: ACCEPT
+    reason: UniProt records two Zn2+ ions per RNase E homotetramer.
+    supported_by:
+    - reference_id: file:PSEPK/rne/rne-uniprot.txt
+      supporting_text: Binds 2 Zn(2+) ions per homotetramer.
+- term:
+    id: GO:0008995
+    label: ribonuclease E activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: This is the defining molecular function of RNase E (EC 3.1.26.12).
+    action: ACCEPT
+    reason: The sequence is assigned to the RNase E subfamily and carries the conserved endoribonuclease architecture.
+    supported_by:
+    - reference_id: file:PSEPK/rne/rne-deep-research-openscientist.md
+      supporting_text: PP_1905 is **RNase E**
+- term:
+    id: GO:0009898
+    label: cytoplasmic side of plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: located_in
+  review:
+    summary: RNase E is a peripheral protein on the cytoplasmic face of the inner membrane.
+    action: ACCEPT
+    reason: This is the most precise available localization and matches the UniProt/HAMAP record.
+    supported_by:
+    - reference_id: file:PSEPK/rne/rne-uniprot.txt
+      supporting_text: Peripheral membrane
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/rne/rne-uniprot.txt
+  title: UniProtKB entry for PSEPK rne
+  findings:
+  - supporting_text: Endoribonuclease that plays a central role in RNA processing
+  - supporting_text: Component of the RNA degradosome, which is a multiprotein
+- id: PMID:16275923
+  title: RhlB helicase rather than enolase is the beta-subunit of the Escherichia coli polynucleotide phosphorylase (PNPase)-exoribonucleolytic complex
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Full text verifies RNase E scaffold-dependent degradosome assembly in E.
+      coli and supports the conserved architecture without proving PSEPK
+      enolase recruitment.
+  findings:
+  - supporting_text: the C-terminal &#34;scaffold&#34; region of RNase E to form a complex termed the RNA degradosome.
+- id: PMID:40096066
+  title: Critical functions and key interactions mediated by the RNase E scaffolding domain in Pseudomonas aeruginosa.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Same-genus evidence maps RNase E scaffold motifs for membrane attachment
+      and direct PNPase/RhlB binding; KT2440 partner composition remains inferred.
+  findings:
+  - supporting_text: We identified the SLiMs crucial for membrane attachment, RNA binding and complex clustering, as well as for direct binding to the core components PNPase and RhlB.
+- id: PMID:33089610
+  title: Ribonucleases control distinct traits of Pseudomonas putida lifestyle.
+  full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Direct KT2440 deletion study that distinguishes RNase E from RNase G and
+      other RNases at the physiological level; it does not directly establish
+      catalytic mechanism or degradosome composition.
+  findings:
+  - supporting_text: Each mutant lacked either one exoribonuclease (PNPase, RNase R) or one endoribonuclease (RNase E, RNase III, RNase G).
+  - supporting_text: the physiological responses of P. putida to the absence of each enzyme diverged significantly from those known previously in Escherichia coli.
+- id: file:PSEPK/rne/rne-deep-research-openscientist.md
+  title: OpenScientist gene research for PSEPK rne (Q88LM4)
+  publication_type: DEEP_RESEARCH
+  findings:
+  - supporting_text: PP_1905 is **RNase E**
+  - supporting_text: Mechanistic evidence is largely extrapolated from *E. coli*.
+  - supporting_text: Degradosome composition in *P. putida* is inferred, not directly mapped.
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The report resolves the RNase E/RNase G family-tag conflict from target
+      architecture and clearly labels the catalytic mechanism and exact KT2440
+      degradosome composition as ortholog-based inference.
+core_functions:
+- description: &gt;-
+    Provides both the RNase E endoribonuclease activity that initiates RNA
+    cleavage and the organizing scaffold of the membrane-associated RNA
+    degradosome, supporting mRNA decay and rRNA/tRNA maturation.
+  molecular_function:
+    id: GO:0008995
+    label: ribonuclease E activity
+  directly_involved_in:
+  - id: GO:0006402
+    label: mRNA catabolic process
+  - id: GO:0006364
+    label: rRNA processing
+  - id: GO:0008033
+    label: tRNA processing
+  locations:
+  - id: GO:0009898
+    label: cytoplasmic side of plasma membrane
+  supported_by:
+  - reference_id: file:PSEPK/rne/rne-uniprot.txt
+    supporting_text: Endoribonuclease that plays a central role in RNA processing
+  - reference_id: file:PSEPK/rne/rne-uniprot.txt
+    supporting_text: Component of the RNA degradosome, which is a multiprotein
+  - reference_id: PMID:16275923
+    supporting_text: the C-terminal &#34;scaffold&#34; region of RNase E to form a complex termed the RNA degradosome.
+  - reference_id: PMID:40096066
+    supporting_text: We identified the SLiMs crucial for membrane attachment, RNA binding and complex clustering, as well as for direct binding to the core components PNPase and RhlB.
+suggested_questions:
+- question: &gt;-
+    Which proteins bind the KT2440 RNase E C-terminal scaffold under normal and
+    stress growth conditions?
+  experts: []
+suggested_experiments:
+- description: &gt;-
+    Test whether the RNase E scaffold motifs mapped in P. aeruginosa conserve
+    PNPase and RhlB recruitment in KT2440, and separately determine whether
+    enolase is a KT2440 partner.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

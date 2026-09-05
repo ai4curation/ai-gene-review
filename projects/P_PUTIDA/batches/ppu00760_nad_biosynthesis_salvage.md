@@ -209,3 +209,18 @@ specificity assay.
 - [x] Validate all selected reviews and the module.
 - [x] Render all touched gene, module, and project pages.
 - [x] Open the batch pull request.
+
+## 2026-09-01 NadD exemplar repair
+
+Repair PR: [#2864](https://github.com/ai4curation/ai-gene-review/pull/2864).
+
+The bacterial NadD leaf now retains exact reviewed *Escherichia coli* NadD
+P0A752 and adds experimentally characterized *Bacillus subtilis* P54455
+alongside PSEPK Q88DL5. P54455 was biochemically characterized and structurally
+determined in apo and product-bound forms (PMID:11704676). The pinned member
+index places P0A752 in PTHR12039:SF0 while P54455 and Q88DL5 are classified in
+PTHR39321; this discrepancy is retained as an intentional validator advisory,
+not interpreted as a distinct biological reaction. PTHR39321 is a broad,
+lumped nucleotidyltransferase grouping, so the exact NaMN-to-deamido-NAD
+reaction and direct exemplars constrain the leaf more precisely than the
+family or subfamily labels alone. Route logic is unchanged.
