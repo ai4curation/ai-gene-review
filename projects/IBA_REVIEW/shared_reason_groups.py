@@ -199,22 +199,40 @@ MOD_PREFIXES = SPECIES_SCOPED_PREFIXES  # historical name, kept for readability 
 #                                    the same class that comment records getting wrong once,
 #                                    when ensembl was filed as naming no gene in one
 #                                    species. Latent: CALR carries no propagation_review.
-#   RNAcentral (64) and Rfam (13) also appear there and are correctly absent -- an RNA
-#   sequence or family names no gene in one species. So are RefSeq, GenBank, NCBI_gi
-#   (accessions needing a lookup), SGD_PWY (a pathway), Pfam (a family), DOI and
-#   PubChem_Compound.
+#   RNAcentral (64) and Rfam (13) also appear in that column and are correctly absent -- an
+#   RNA sequence or family names no gene in one species. So are RefSeq, GenBank, NCBI_gi
+#   (accessions needing a lookup), SGD_PWY (a pathway) and Pfam (a family), and separately
+#   PubChem_Compound. DOI is not in that group: it is in the REFERENCE column, not the
+#   WITH/FROM the sweep reads, so it is out of scope by position rather than by kind (zero
+#   occurrences in column 11, checked). This paragraph is about why one thing is absent and
+#   another is not, so the difference is worth keeping straight.
 #
-#   These counts are PROVENANCE, not measurements, which is why they are given here while
-#   the declined-prefix paragraph above refuses to give one. They record what the sweep saw
-#   when the entry was added, so a reader can retrace the decision; the entry stays correct
-#   at any count, and none is re-derived by anything. A count that goes stale there would
-#   make a live claim false; here it would only date a footnote.
+#   Every count in this block is PROVENANCE, not a measurement -- which is why counts are
+#   given here while the declined-prefix paragraph above refuses to give one. They record
+#   what the sweep saw when an entry was added, so a reader can retrace the decision; the
+#   entry stays correct at any count, and nothing re-derives them. A count that goes stale
+#   there would make a live claim false; here it only dates a footnote. That distinction is
+#   the general rule for figures in these two scripts, not a licence local to this block.
 #
 #   The sweep covers *-goa.tsv, and PAINT is the other source these blocks read seeds from.
-#   That costs nothing, checked rather than assumed: the namespaces in
-#   interpro/panther/*/*-paint.tsv are AGI_LocusCode, CGD, FB, JaponicusDB, MGI, PomBase,
-#   RGD, SGD, UniProtKB, WB, ZFIN and dictyBase (plus the GO, PANTHER and taxon columns),
-#   a strict subset of what is already rostered or mapped.
+#   That costs nothing: the namespaces in interpro/panther/*/*-paint.tsv are AGI_LocusCode,
+#   CGD, FB, JaponicusDB, MGI, PomBase, RGD, SGD, UniProtKB, WB, Xenbase, ZFIN and
+#   dictyBase (plus the GO, PANTHER and taxon columns), a strict subset of what is already
+#   rostered or mapped.
+#
+#   Xenbase is the asymmetric one and the asymmetry is deliberate: it is watchlist-only,
+#   never mapped, because an earlier commit removed its MOD_ORGANISM entry for asserting a
+#   genes/XENLA directory that does not exist. So a Xenbase seed enumerated into a block
+#   would FIRE rather than resolve, unlike the other twelve here. It is not hypothetical --
+#   PTHR45836-paint.tsv:6 carries Xenbase:XB-GENE-479318 as an IBD seed of PTN001933897,
+#   two rows above the PTN002911625 row genes/mouse/Notch1 already enumerates.
+#
+#   A method note, because this enumeration was wrong once in exactly the way the rest of
+#   this comment warns about: the first PAINT census anchored the prefix to a preceding TAB
+#   and so saw only the first namespace of each pipe-delimited seed set, returning twelve
+#   and missing Xenbase -- in a sentence whose own qualifier was "checked rather than
+#   assumed". Anchoring is how these sweeps fail, in both directions: the same mistake in
+#   the GOA sweep returned no AspGD at all. Census unanchored, then filter.
 #
 # NOTHING ENFORCES THE WATCHLIST SPELLINGS, and that is the class both real defects were
 # in. A watchlist entry is supposed to have zero corpus uses, so "matches nothing because
