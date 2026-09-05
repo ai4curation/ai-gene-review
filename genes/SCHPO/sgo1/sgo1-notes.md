@@ -108,3 +108,27 @@ outcome remains UNDECIDED pending its exact primary assay, rather than REMOVE
 or a confident assertion of paralog misattribution. The report is preserved as
 provider output, including its limitations; it is not treated as verified evidence
 for the proposed rejection [PMID:20739936; OpenScientist report, Limitations].
+
+### 2026-09-05: source-aware refresh after wrapper fix
+
+`just fetch-gene SCHPO sgo1 --force` refreshed 35 GOA rows and restored three
+source-specific IPI review records, yielding 30 review entries. Reviewed all three
+individually; none remains PENDING. UniProt's live Q10428 record maps `par1` to
+`SPCC188.02` (https://rest.uniprot.org/uniprotkb/Q10428.json, accessed 2026-09-05).
+The existing PMID:18716626 / PomBase:SPCC188.02 row therefore incorrectly described
+Swi6; it now describes Par1. Both identifier namespaces are preserved as seeded.
+
+The Swi6/P40381 record is directly supported by the PMID:18716626 abstract. For
+Par1-source records from that paper, retain the curated interaction with explicit
+curator deference and independent PP2A evidence from PMID:16541024; the Swi6 abstract
+statement is not evidence for a Par1-specific assay. PMID:16541025 directly supports
+meiotic fission-yeast shugoshin association with PP2A, while its abstract alone does
+not identify individual subunit assays. These protein-binding records remain
+KEEP_AS_NON_CORE; the adaptor function remains the informative core function.
+
+Checked the linked author correction PMID:30275479 against PubMed and the publisher:
+https://www.nature.com/articles/s41586-018-0529-9. It replaces quantification graphs
+to match the tubulin-reporter status of representative cells and corrects the human
+HP1alpha blot. The authors state the conclusions are unchanged. This does not
+resolve the unavailable Par1-specific assay in the original full text and is not a
+reason to remove the curated interaction.
