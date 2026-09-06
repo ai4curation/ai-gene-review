@@ -47,3 +47,47 @@ over-annotation or over-general-but-true annotation:
 No changes were made to any `ACCEPT` rows, to the `description`, or to
 `core_functions`; those were sound. `validate --terms` and `validate-goa`
 both pass after the edit.
+
+## Review follow-up (PR #2948, 2026-09-06)
+
+Two blocking items from the `ai4c-reviewer` CHANGES_REQUESTED review were
+addressed.
+
+- **`description` stated the wrong catalytic class.** It read "cysteine-type
+  serine/threonine protease", which is self-contradictory. UniProt records only
+  the C19 family assignment [file:yeast/UBP3/UBP3-uniprot.txt line 121,
+  "SIMILARITY: Belongs to the peptidase C19 family."] — no serine/threonine
+  protease claim. Corrected to "papain-fold cysteine protease of the peptidase
+  C19 (USP) family". This matters here because the `GO:0006508` rationale rests
+  on Ubp3 being a cysteine peptidase.
+
+- **`GO:0006508` proteolysis rationale asserted a parent-child relation that
+  does not hold.** The earlier note above (and the YAML `reason`) described
+  proteolysis as a "parent of the more specific `GO:0016579` protein
+  deubiquitination". That is wrong, and the reviewer was right to flag it.
+  Verified against the QuickGO ontology service: the `is_a`/`part_of` ancestor
+  closure of `GO:0016579` is `GO:0016579`, `GO:0070646`, `GO:0070647`,
+  `GO:0043412`, `GO:0043687`, `GO:0036211`, `GO:0019538`, `GO:0043170`,
+  `GO:0044238`, `GO:0009987`, `GO:0008152`, `GO:0008150` — `GO:0006508` is
+  **not** among them. GO deliberately keeps the asymmetry: the MF
+  `GO:0004843` *is* under peptidase activity, but the BP for deubiquitination
+  sits under `GO:0070646` protein modification by small protein removal, not
+  under proteolysis.
+
+  Because the broad term is therefore not a true parent of the specific process
+  already annotated, `KEEP_AS_NON_CORE` (which frames it as a correct
+  general parent) is the wrong encoding. Changed to `MARK_AS_OVER_ANNOTATED`
+  — "not entirely wrong, but likely represents an over-annotation" fits
+  exactly, and it matches the in-project precedent for the same term on a
+  USP-family DUB (`genes/human/USP25/USP25-ai-review.yaml`, `GO:0006508`,
+  `MARK_AS_OVER_ANNOTATED`). This is still not a `REMOVE`, so it does not
+  reintroduce the error this PR set out to fix.
+
+The three non-blocking suggestions in the review (MODIFY-with-replacement for
+the Hog1 protein-binding row, adding `in_complex: GO:1990861` to
+`core_functions`, and removing the stale `UBP3-CURATION-*` /
+`UBP3-ai-review-CURATED.yaml` sidecars) are left for the PR author — the first
+two are curation judgment calls beyond the requested fixes, and the third
+deletes files outside this PR's diff.
+
+`just validate yeast UBP3` passes after the edit.
