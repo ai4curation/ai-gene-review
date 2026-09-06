@@ -6,7 +6,7 @@ autolink_gene_symbols: false
 
 [← back to TreeGrafter Inference Evaluation](../TREEGRAFTER.md)
 
-This sub-page drills into the **159 down-graded** TreeGrafter annotations
+This sub-page drills into the **306 down-graded** TreeGrafter annotations
 (`REMOVE` / `MARK_AS_OVER_ANNOTATED` / `MODIFY` from the
 [main evaluation](../TREEGRAFTER.md)) and asks the question directly: **does it
 make sense where TreeGrafter placed the protein on the PANTHER tree?**
@@ -21,8 +21,14 @@ recorded for every protein:
 
 The join (graft node + family + subfamily + propagated term + reviewer action)
 is computed by [`analyze_placement.py`](analyze_placement.py) into
-[`treegrafter_placement.tsv`](treegrafter_placement.tsv). All 159 cases recover
-a subfamily; 156 recover a graft node.
+[`treegrafter_placement.tsv`](treegrafter_placement.tsv). 305 of the 306 cases
+recover a subfamily; 303 recover a graft node.
+
+> **Snapshot note.** The worked examples and the four-mode classification
+> below were curated by hand on the earlier **159-case** snapshot. The corpus
+> has since roughly doubled (the added cases are dominated by the
+> *Pseudomonas putida* KT2440 batch); those additional rows are in the sidecar
+> but have not yet been assigned to a failure mode.
 
 ## Headline: placement is usually fine — the *term* is the problem
 
@@ -118,7 +124,7 @@ To test the graft-check conclusions independently, each propagated term was
 re-posed to OpenScientist as a **blinded** function-assignment hypothesis — the
 agent saw only *"GENE has \<propagated term\>"* (never the reviewer's action or
 the PANTHER subfamily name) using the dedicated
-[`treegrafter_function_hypothesis.md`](../../templates/treegrafter_function_hypothesis.md)
+[`treegrafter_function_hypothesis.md`](https://github.com/ai4curation/ai-gene-review/blob/main/templates/treegrafter_function_hypothesis.md)
 prompt, which asks it to actively test the three failure modes. Reports and
 provenance are committed under each gene's `*-hypotheses/` directory.
 

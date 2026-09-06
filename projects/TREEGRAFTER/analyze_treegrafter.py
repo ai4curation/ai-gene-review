@@ -38,6 +38,9 @@ from collections import Counter
 
 import yaml
 
+# The C loader is ~10x faster over the ~3k-file corpus; fall back to the pure-Python one.
+LOADER = getattr(yaml, "CSafeLoader", yaml.SafeLoader)
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 
@@ -57,7 +60,7 @@ def collect(files, ref: str, evidence: str):
     for path in files:
         try:
             with open(path) as fh:
-                doc = yaml.safe_load(fh)
+                doc = yaml.load(fh, Loader=LOADER)
         except Exception as exc:  # noqa: BLE001
             print(f"WARN: failed to parse {path}: {exc}")
             continue
@@ -81,6 +84,7 @@ def collect(files, ref: str, evidence: str):
                 "action": (review.get("action") or "UNREVIEWED").strip(),
                 "negated": bool(ann.get("negated", False)),
                 "has_replacement": bool(review.get("proposed_replacement_terms")),
+                "aspect": goa_aspect(rel, term.get("id", "")),
                 "file": rel,
             })
     return rows
@@ -88,6 +92,39 @@ def collect(files, ref: str, evidence: str):
 
 def action_counter(rows):
     return Counter(r["action"] for r in rows)
+
+
+_ASPECT_CACHE: dict = {}
+_ASPECT_NAMES = {"F": "molecular_function", "P": "biological_process",
+                 "C": "cellular_component"}
+
+
+def goa_aspect(review_rel_path: str, term_id: str) -> str:
+    """GO aspect (molecular_function / biological_process / cellular_component)
+    of ``term_id`` as recorded in the gene's cached GOA download (column
+    ``GO ASPECT``). Cached per gene directory; '' when not found."""
+    gene_dir = os.path.dirname(os.path.join(ROOT, review_rel_path))
+    if gene_dir not in _ASPECT_CACHE:
+        table = {}
+        try:
+            for name in os.listdir(gene_dir):
+                if name.endswith("-goa.tsv"):
+                    with open(os.path.join(gene_dir, name)) as fh:
+                        header = next(fh, "").rstrip("\n").split("\t")
+                        try:
+                            i_term, i_asp = header.index("GO TERM"), header.index("GO ASPECT")
+                        except ValueError:
+                            continue
+                        for line in fh:
+                            cols = line.rstrip("\n").split("\t")
+                            if len(cols) > max(i_term, i_asp):
+                                # Older downloads use the one-letter aspect codes.
+                                table.setdefault(cols[i_term],
+                                                 _ASPECT_NAMES.get(cols[i_asp], cols[i_asp]))
+        except FileNotFoundError:
+            pass
+        _ASPECT_CACHE[gene_dir] = table
+    return _ASPECT_CACHE[gene_dir].get(term_id, "")
 
 
 def main() -> None:
@@ -100,7 +137,7 @@ def main() -> None:
     # Per-annotation TSV for the TreeGrafter set.
     out_rows = os.path.join(HERE, "treegrafter_review.tsv")
     fields = ["gene", "taxon", "term_id", "term_label", "action", "negated",
-              "has_replacement", "file"]
+              "has_replacement", "aspect", "file"]
     with open(out_rows, "w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=fields, delimiter="\t")
         w.writeheader()
@@ -132,6 +169,21 @@ def main() -> None:
         for action, n in paint_actions.most_common():
             w.writerow([action, n])
         w.writerow([])
+        w.writerow(["TreeGrafter action by GO aspect", "aspect", "count", "pct_of_aspect"])
+        by_aspect = Counter(r["aspect"] or "unknown" for r in tg_rows)
+        for aspect, total in by_aspect.most_common():
+            for action, n in Counter(r["action"] for r in tg_rows
+                                     if (r["aspect"] or "unknown") == aspect).most_common():
+                w.writerow([action, aspect, n, f"{100 * n / total:.1f}"])
+        w.writerow([])
+        w.writerow(["TreeGrafter annotations by taxon", "count", "accept_pct",
+                    "downgraded_pct (REMOVE/MODIFY/OVER)"])
+        for taxon, total in Counter(r["taxon"] for r in tg_rows).most_common(15):
+            sub = [r for r in tg_rows if r["taxon"] == taxon]
+            acc = sum(1 for r in sub if r["action"] == "ACCEPT")
+            bad = sum(1 for r in sub if r["action"] in problem_actions)
+            w.writerow([taxon, total, f"{100 * acc / total:.1f}", f"{100 * bad / total:.1f}"])
+        w.writerow([])
         w.writerow(["top_problematic_treegrafter_terms (REMOVE/MODIFY/OVER)", "count"])
         for (tid, label), n in problem_terms.most_common(25):
             w.writerow([f"{tid} {label}", n])
@@ -148,6 +200,11 @@ def main() -> None:
     report("TreeGrafter (GO_REF:0000118, IEA)", tg_rows, tg_actions)
     report("PAINT/IBA (GO_REF:0000033, IBA) — contrast, NOT TreeGrafter",
            paint_rows, paint_actions)
+    print("\nTreeGrafter down-grade rate (REMOVE/MODIFY/OVER) by GO aspect:")
+    for aspect, total in Counter(r["aspect"] or "unknown" for r in tg_rows).most_common():
+        bad = sum(1 for r in tg_rows if (r["aspect"] or "unknown") == aspect
+                  and r["action"] in problem_actions)
+        print(f"  {aspect:22s} {bad:4d}/{total:<4d} ({100 * bad / total:5.1f}%)")
     print(f"\nWrote {os.path.relpath(out_rows, ROOT)}")
     print(f"Wrote {os.path.relpath(out_sum, ROOT)}")
 
