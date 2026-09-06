@@ -1482,6 +1482,33 @@ experimentally defined activity rather than as a finished call.
 - Process/location terms that are organism-agnostic
 - **Subfamilies with high sequence identity and same EC number**
 
+**Writing the `reason` field — three things nothing enforces**:
+- **A quotation inside `reason` is not validated.** The substring check runs over
+  `supporting_text` only (`linkml_reference_validator`'s supporting-text validator;
+  `grep '"reason"' src/ai_gene_review/validation/*.py` returns nothing). So a quote in a
+  `reason` can be paraphrased, mis-attributed or invented and still pass. Mirror it into
+  `supported_by` where it should be checked, or say in the text that it is not.
+- **Never state what an abstract-only paper "records".** Check
+  `full_text_available:` first. A reason on this project asserted that PMID:12492473
+  "records Casp3 proteolytically cleaving iPLA2"; that cache is abstract-only, contains no
+  cleavage assay (`grep -ic cleav` -> 0), and names the enzyme a *plasmalogen-selective
+  phospholipase A2*, never iPLA2 — both the mechanism and the enzyme identity were inferred
+  and shipped. The conclusion survived on grounds the abstract does support (inhibitor
+  epistasis placing the protein upstream, typed as an `enables` MF), which is the form to
+  reach for. A sentence that claims what a paper contains **and** claims to need no full
+  text is self-refuting; one half has to go.
+- **If a block's prose argues its own action may be under-strength, say so in the prose.**
+  `root_cause` and `failure_modes` are a fixed vocabulary and cannot carry "the objection
+  reaches further than the action I am leaving in place". A consumer reading the structured
+  fields alone gets only the coded story, so the tension belongs in the comment, with the
+  reason it is being left (e.g. re-typing an inherited action is a separate judgement).
+
+**Name the fault with its own action's vocabulary.** Calling a defect "the over-annotation"
+in a row whose action is `REMOVE` — beside a sibling row carrying
+`MARK_AS_OVER_ANNOTATED` — reads as an argument for the other action. The disjunctive
+reason class this project dismantled (Casp3, Ghr) failed the same way: the limb that made
+the text defensible was the limb arguing against the action it sat on.
+
 ---
 
 ## Project history & methodology
