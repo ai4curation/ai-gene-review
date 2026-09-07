@@ -1482,12 +1482,16 @@ experimentally defined activity rather than as a finished call.
 - Process/location terms that are organism-agnostic
 - **Subfamilies with high sequence identity and same EC number**
 
-**Writing the `reason` field — four things nothing enforces**:
-- **A quotation inside `reason` is not validated.** The substring check runs over
-  `supporting_text` only (`linkml_reference_validator`'s supporting-text validator;
-  `grep '"reason"' src/ai_gene_review/validation/*.py` returns nothing). So a quote in a
-  `reason` can be paraphrased, mis-attributed or invented and still pass. Mirror it into
-  `supported_by` where it should be checked, or say in the text that it is not.
+**Writing the `reason` field — things nothing enforces**:
+- **A quotation inside `reason` is not validated — nor inside `comment` or `summary`.** The
+  substring check runs over `supporting_text` only (`linkml_reference_validator`'s
+  supporting-text validator; `grep -rn reason src/ai_gene_review/validation/*.py` returns
+  one unrelated docstring). So a quote in any free-prose field — a `review.reason`, a
+  `propagation_review.source_entities[].comment`, a `summary` — can be paraphrased,
+  mis-attributed or invented and still pass. `comment` is the easiest to forget, because
+  it sits inside a structured block that looks validated and is not. Sweep all three
+  together; mirror the quote into `supported_by` where it will be checked, or say in the
+  text that it is not.
 - **Never state what an abstract-only paper "records".** Check
   `full_text_available:` first. A reason on this project asserted that PMID:12492473
   "records Casp3 proteolytically cleaving iPLA2"; that cache is abstract-only, contains no
@@ -1514,6 +1518,35 @@ experimentally defined activity rather than as a finished call.
   the line start. Strip `[*_`]` too, or match permissively
   (`predominantly[^A-Za-z]{0,40}nuclear`) before concluding anything.
 
+- **"Nothing local says this" is a claim about where you looked.** Before writing that an
+  assertion cannot be checked from the repository, enumerate the places the repository
+  keeps that kind of fact. A reason on this project stated that GO:0051082's obsoletion
+  was "not checkable from this repository" on the strength of two ontology caches —
+  while `projects/UNFOLDED_PROTEIN_BINDING.md` records it explicitly, verified live
+  against QuickGO and OLS, and the same review file asserted it plainly twelve lines
+  further down. `projects/` is where this repo records ontology decisions postdating a
+  cache snapshot, so a cache-only search will systematically miss them; `cache/ontologies/README.md`
+  says the caches are sparse by design, holding only terms used in annotations. Absence
+  from a cache means "not cached", never "not real" and never "not recorded here". Search
+  the gene directory, cited publications, the caches, `interpro/`, `projects/`, and the
+  file's own `origin/main` text before concluding anything is unprovable.
+- **A quoted-span sweep is only as good as its corpus — and a bad corpus fails toward
+  "fabricated".** Three rules, each learned by getting it wrong on this project's mouse
+  pass. (i) **Exclude the file under test.** A corpus that walks the gene directory picks up
+  `GENE-ai-review.yaml` itself, so every quote proves itself and the sweep reports a clean
+  pass it did not earn; dropping that one file turned a zero-miss run into a list of misses.
+  (ii) **Every miss that survived was a corpus gap, not a fabrication** — the *other* gene
+  directory named in the comment (a `DR   MGI; ...` line quoted from `Ccne1-uniprot.txt`
+  inside a `Ccnb1` review), the per-family `interpro/panther/PTHR*/*-entries.csv` rather
+  than just `panther.obo`, and a PMID cited only in `supported_by` rather than in the
+  top-level `references` list the extractor read. Widen the corpus before you widen the
+  accusation. (iii) **Strip prefixes on both sides, or neither.** A quote that itself
+  carries `DR   ` will not match a source you have stripped `DR   ` out of; test the raw
+  and stripped forms of each.
+- **A scare quote is not a quotation.** `"FB:FBgn0001091 is Gapdh1"` in a Gapdh comment is
+  a proposition the sentence goes on to call "an inference from organism and gene name
+  rather than a lookup", not a span lifted from a source. Read the surrounding prose
+  before treating an unmatched span as a citation defect.
 - **If a block's prose argues its own action may be under-strength, say so in the prose.**
   `root_cause` and `failure_modes` are a fixed vocabulary and cannot carry "the objection
   reaches further than the action I am leaving in place". A consumer reading the structured
