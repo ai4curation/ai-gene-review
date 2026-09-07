@@ -1605,7 +1605,7 @@ experimentally defined activity rather than as a finished call.
   subject, and the examples fail the test themselves. Every curation-act instance in this
   corpus is plural (`are treated as`, `are retained as`, `are curated as`), so the singular
   forms that come to mind first — `is treated as`, `is kept as` — match **zero** of the ten
-  occurrences, spread over ten sentences in eight files (`Calm3` alone carries three). One of
+  occurrences, spread over eight files (`Calm3` alone carries three). One of
   the ten is `are **best** treated as`, which no fixed phrase reaches at all. Say which unit a
   count is in: at *file* scope those same singular forms return over three hundred hits, all of
   them outside any `description`, so the figure inverts if the scope is left implicit. Object
