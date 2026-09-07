@@ -1501,9 +1501,9 @@ experimentally defined activity rather than as a finished call.
   epistasis placing the protein upstream, typed as an `enables` MF), which is the form to
   reach for. A sentence that claims what a paper contains **and** claims to need no full
   text is self-refuting; one half has to go.
-- **Normalize before you decide a quote is fabricated.** Every whitespace assumption
-  listed below has produced a confident false negative on this project, and every one
-  fails toward "this quote is invented" -- the most expensive wrong answer available here.
+- **Normalize before you decide a quote is fabricated.** Every layout assumption
+  listed below - whitespace and markup alike - has produced a confident false negative on
+  this project, and every one fails toward "this quote is invented" -- the most expensive wrong answer available here.
   A single-line `grep` misses any quote that wraps. A flat string match misses text inside a
   folded YAML scalar. `tr '\n' ' '` misses text whose source lines carry trailing spaces
   (squeeze with `tr -s` instead). And a match against a flat-file source misses text carrying
@@ -1518,6 +1518,18 @@ experimentally defined activity rather than as a finished call.
   the line start. Strip `[*_`]` too, or match permissively
   (`predominantly[^A-Za-z]{0,40}nuclear`) before concluding anything.
 
+- **Quoted spans in prose are content-verbatim; strictness lives in `supporting_text`.**
+  Terminal sentence punctuation may sit inside the closing quote (American convention),
+  and an elision may be marked with `...` - both are ordinary typography, not claims about
+  the source, and the corpus uses them: `Sox2` and `Dnaja3` close a quote on a period the
+  source writes as a comma, `Fbxo2` elides mid-quote. What is *not* allowed is dropping
+  source words silently: the same `Fbxo2` row quoted GO:1990756's definition with the
+  parenthetical "(including ubiquitin ligase and UFM1 ligase)" removed and no ellipsis,
+  which reads as the whole definition and is not - that one is a defect and was fixed. So
+  a sweep must strip a trailing `[.,]` and split on `...` before calling a span unmatched,
+  or it will report the convention as fabrication; and any span that must be
+  machine-checked belongs in `supporting_text`, where the substring validator applies the
+  strict reading.
 - **"Nothing local says this" is a claim about where you looked.** Before writing that an
   assertion cannot be checked from the repository, enumerate the places the repository
   keeps that kind of fact. A reason on this project stated that GO:0051082's obsoletion
@@ -1543,6 +1555,19 @@ experimentally defined activity rather than as a finished call.
   accusation. (iii) **Strip prefixes on both sides, or neither.** A quote that itself
   carries `DR   ` will not match a source you have stripped `DR   ` out of; test the raw
   and stripped forms of each.
+- **`origin/main` is not a source.** Listing "present in this file's own `origin/main`
+  text" among the places a span may be proven against silently exempts every pre-existing
+  quote, because that is where pre-existing quotes live. It answers *was this introduced by
+  this PR* and gets read as *is this verified* - two different questions, and the corpus
+  sweep on this branch reported one unmatched span with the clause and ten without it. Keep
+  the scope question if you need it, but keep it in a separate column. The exception is a
+  span the prose explicitly presents as the file's own superseded text ("the previous shared
+  reason offered a disjunction, ..."): there `origin/main` genuinely is the source.
+- **A minimum length on the quote regex mis-pairs quotation marks.** `"([^"]{12,400})"`
+  skips a short quoted phrase and then matches from *its* closing mark to the next opening
+  one, so the span reported is the prose between two quotations rather than either of them.
+  A sentence naming both a "Par complex" and a "Par3" produced exactly that. Match every
+  quoted span, then filter by length.
 - **A scare quote is not a quotation.** `"FB:FBgn0001091 is Gapdh1"` in a Gapdh comment is
   a proposition the sentence goes on to call "an inference from organism and gene name
   rather than a lookup", not a span lifted from a source. Read the surrounding prose
