@@ -1497,8 +1497,8 @@ experimentally defined activity rather than as a finished call.
   epistasis placing the protein upstream, typed as an `enables` MF), which is the form to
   reach for. A sentence that claims what a paper contains **and** claims to need no full
   text is self-refuting; one half has to go.
-- **Normalize before you decide a quote is fabricated.** Four different whitespace
-  assumptions have each produced a confident false negative on this project, and every one
+- **Normalize before you decide a quote is fabricated.** Every whitespace assumption
+  listed below has produced a confident false negative on this project, and every one
   fails toward "this quote is invented" -- the most expensive wrong answer available here.
   A single-line `grep` misses any quote that wraps. A flat string match misses text inside a
   folded YAML scalar. `tr '\n' ' '` misses text whose source lines carry trailing spaces
@@ -1507,7 +1507,7 @@ experimentally defined activity rather than as a finished call.
   (`re.sub(r'\s+', ' ', ...)`) AND strip the source's line prefixes before concluding
   anything is absent. Better still, put the quote in `supported_by` and let the substring
   validator answer.
-  Markdown emphasis is a sixth variant and the widest, because every
+  Markdown emphasis is the widest of them, because every
   `file:*-deep-research-*.md` citation in this corpus is markdown: `Predominantly
   **nuclear** transcription factor` will not match the quote `predominantly nuclear`
   under any prefix-stripping, because the markup sits INSIDE the phrase rather than at
