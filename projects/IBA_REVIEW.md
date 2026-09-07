@@ -1490,8 +1490,13 @@ experimentally defined activity rather than as a finished call.
   `propagation_review.source_entities[].comment`, a `summary` — can be paraphrased,
   mis-attributed or invented and still pass. `comment` is the easiest to forget, because
   it sits inside a structured block that looks validated and is not. Sweep all three
-  together; mirror the quote into `supported_by` where it will be checked, or say in the
-  text that it is not.
+  together, and take one of three paths for each span, saying which: mirror it into
+  `supported_by`, where the substring validator checks it; name its source with a locator in
+  the prose itself (`projects/FOO.md:14`, `Ccne1-uniprot.txt:96`), which is checkable by a
+  reader even though no tool enforces it; or state in the text that it is unchecked. The
+  middle path is the right one for a term label or a file this review does not cite as a
+  reference, and it is not the same as saying nothing - a source named without a locator is
+  the third path wearing the second one's clothes.
 - **Never state what an abstract-only paper "records".** Check
   `full_text_available:` first. A reason on this project asserted that PMID:12492473
   "records Casp3 proteolytically cleaving iPLA2"; that cache is abstract-only, contains no
