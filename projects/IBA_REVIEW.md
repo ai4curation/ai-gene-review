@@ -1583,6 +1583,22 @@ experimentally defined activity rather than as a finished call.
   one, so the span reported is the prose between two quotations rather than either of them.
   A sentence naming both a "Par complex" and a "Par3" produced exactly that. Match every
   quoted span, then filter by length.
+- **Sweep on the property, not on the phrasings you have seen.** A tell list is built from
+  the instances already found, so it cannot find the ones worded differently — and it reports
+  a clean pass when it runs out of tells, not when it runs out of instances. This project has
+  now shipped that mistake in six places (the abstract-only pass keyed on "The paper concerns"
+  and missed "This physiology belongs to"; a MOD-prefix list; the `Araport`/`araport11`
+  spelling; the PAINT namespace enumeration; a `-B30` extraction; and a `description` sweep
+  keyed on `Falcon` / `best curated with` / `retained as non-core`, which missed
+  `over-extensions`, `GOA rows`, `not treated here` and `conflate` — two of them in
+  descriptions the same commit had just rewritten). For `description` the property is one
+  sentence: **it must be readable by someone who does not know this repository exists**, so
+  any sentence whose grammatical subject is *an annotation* rather than *the gene* belongs in
+  `review.reason`, `core_functions` or the notes file. Operationalize that — split the field
+  into sentences, flag every one containing annotation-domain vocabulary (`annotat`, `GOA`,
+  `GO_REF`, an evidence code, `curat`, `term`, `non-core`, `over-`, `treated here`, a provider
+  name), then read each hit and judge — and the result is a set you can defend as complete,
+  because what it missed is a judgement you made rather than a word you had not thought of.
 - **A scare quote is not a quotation.** `"FB:FBgn0001091 is Gapdh1"` in a Gapdh comment is
   a proposition the sentence goes on to call "an inference from organism and gene name
   rather than a lookup", not a span lifted from a source. Read the surrounding prose
