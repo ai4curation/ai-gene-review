@@ -47,3 +47,44 @@ Replaced each with the verbatim string already validated in-file:
 No other changes: the rest of the review (annotation actions, core_functions, description)
 is well-supported by the cited evidence and was left untouched. The review now validates
 with zero warnings.
+
+## 2026-09-07 Update: review follow-up (non-verbatim `supported_by` quote, GO:0051082 action, `file:` provenance)
+
+Addressing the second round of PR review feedback.
+
+**1. Non-verbatim `supported_by` quote (blocking).** The earlier sweep covered
+`references[].findings[]` but missed `existing_annotations[].review.supported_by`. The quote
+backing the `REMOVE` of GO:0005515 read "we generated a high-quality proteome-wide
+inter-interactome network map", which occurs nowhere in `publications/PMID_27107014.md`
+(`full_text_available: true`; `grep -c` for both "proteome-wide" and "high-quality" returns 0).
+Replaced with the verbatim text [PMID:27107014 "systematically probed the yeast and human
+proteomes for interactions between...proteins from these two species"]. The substance of the
+REMOVE is unchanged and still sound: all five GOA rows are IPI/PMID:27107014 differing only in
+`WITH/FROM`, and every partner is a human accession.
+
+**2. GO:0051082 now `KEEP_AS_NON_CORE`, not `MODIFY`.** Both experimental unfolded-protein-binding
+annotations were being replaced by GO:0140777. That discards a well-grounded IDA and diverges
+from this repo's recorded gene-specific determination in `projects/UNFOLDED_PROTEIN_BINDING.md`
+(ATP11 listed as NON_CORE for UPB). The deciding evidence is that Atp11's chaperone activity is
+demonstrated on a *non-client* substrate: [PMID:12829692 "molecular chaperone function as
+determined in vitro with both a surrogate substrate (reduced insulin) and the natural substrate
+(F1 beta)"]. Suppressing aggregation of reduced insulin is the canonical unfolded-protein-binding
+assay and is not client-specific complex stabilization, so GO:0140777 does not subsume it. Both
+GO:0051082 entries were set to `KEEP_AS_NON_CORE` (setting only one triggers a validator warning
+about inconsistent actions for the same term). GO:0140777 remains the `core_functions` MF.
+
+**3. `file:` reference quotes made verbatim.** Five `supporting_text` values on `file:` references
+were paraphrases. These are never flagged (the `file:` prefix is in `skip_prefixes`), but the
+schema asks for exact substrings, so they were replaced with real substrings of their sources —
+`ATP11-deep-research-falcon.md` (three) and `PTHR13126-metadata.yaml` (two, now quoting
+`accession: PTHR13126...name: CHAPERONE ATP11` rather than a sentence the file does not contain).
+
+**4. Curation commentary removed from `description`.** The closing sentence compared annotation
+informativeness, which CLAUDE.md reserves for `review.reason`/notes. Replaced with the biological
+fact that motivates the GO:0051082 decision (in vitro holdase activity on reduced insulin).
+
+`just validate yeast ATP11` → ✓ Valid, zero warnings.
+
+Not addressed here (out of scope for this PR, flagged by the reviewer): `UNFOLDED_PROTEIN_BINDING.md:538`
+describes ATP11 as the "Atp12p assembly factor", but Atp11 handles F1 beta/Atp2 and Atp12 handles
+F1 alpha/Atp1. That page needs a separate fix.
