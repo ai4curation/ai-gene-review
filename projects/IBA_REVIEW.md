@@ -1497,6 +1497,17 @@ experimentally defined activity rather than as a finished call.
   epistasis placing the protein upstream, typed as an `enables` MF), which is the form to
   reach for. A sentence that claims what a paper contains **and** claims to need no full
   text is self-refuting; one half has to go.
+- **Normalize before you decide a quote is fabricated.** Four different whitespace
+  assumptions have each produced a confident false negative on this project, and every one
+  fails toward "this quote is invented" -- the most expensive wrong answer available here.
+  A single-line `grep` misses any quote that wraps. A flat string match misses text inside a
+  folded YAML scalar. `tr '\n' ' '` misses text whose source lines carry trailing spaces
+  (squeeze with `tr -s` instead). And a match against a flat-file source misses text carrying
+  structural line prefixes -- UniProt `CC`/`FT`, a `#` comment. Join and squeeze
+  (`re.sub(r'\s+', ' ', ...)`) AND strip the source's line prefixes before concluding
+  anything is absent. Better still, put the quote in `supported_by` and let the substring
+  validator answer.
+
 - **If a block's prose argues its own action may be under-strength, say so in the prose.**
   `root_cause` and `failure_modes` are a fixed vocabulary and cannot carry "the objection
   reaches further than the action I am leaving in place". A consumer reading the structured
