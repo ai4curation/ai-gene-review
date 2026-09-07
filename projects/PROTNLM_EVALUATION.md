@@ -35,16 +35,16 @@ Assessment categories follow [de Crécy-Lagard et al. 2025 (PMID:40703034)](http
 
 | Category | Code | CS | Count | Percentage |
 |----------|------|----|-------|------------|
-| Correct novel | COR | 2 | 19 | 24.7% |
+| Correct novel | COR | 2 | 18 | 23.4% |
 | Correct not novel | CNN | 2 | 8 | 10.4% |
 | Less precise | LSP | 2 | 13 | 16.9% |
-| Uncertain | UNC | 1 | 30 | 39.0% |
+| Uncertain | UNC | 1 | 31 | 40.3% |
 | Nonparalog incorrect | NPI | 0 | 7 | 9.1% |
 | Paralog incorrect | PLI | 0 | 0 | 0.0% |
 | Repetition | REP | 0 | 0 | 0.0% |
 | **Total** | | | **77** | **100%** |
 
-**Supported:** 40/77 (51.9%). **Uncertain:** 30/77 (39.0%). **Contradicted:** 7/77 (9.1%). The mean assessment score is **110/77 = 1.43 out of 2**. This ordinal score is not a calibrated estimate of model accuracy. The stratified sample is small, and many proteins lack direct experimental characterization.
+**Supported:** 39/77 (50.6%). **Uncertain:** 31/77 (40.3%). **Contradicted:** 7/77 (9.1%). The mean assessment score is **109/77 = 1.42 out of 2**. This ordinal score is not a calibrated estimate of model accuracy. The stratified sample is small, and many proteins lack direct experimental characterization.
 
 ### Results by GOA overlap category
 
@@ -56,7 +56,7 @@ The [closure-based GOA comparison](PROTNLM_EVALUATION/bench50_evaluation_results
 | MORE_SPECIFIC | 6 | COR: 2, UNC: 4 |
 | LESS_SPECIFIC | 1 | NPI: 1 |
 | NO_OVERLAP | 26 | COR: 10, UNC: 11, NPI: 5 |
-| NOT_IN_GOA | 23 | COR: 7, UNC: 15, NPI: 1 |
+| NOT_IN_GOA | 23 | COR: 6, UNC: 16, NPI: 1 |
 | Not in overlap snapshot | 2 | CNN: 2 |
 
 **Total: 77 predictions.** An exact match can still be less precise than another supported annotation on the same protein; no ontology overlap can still accompany a sound biological inference across GO aspects.
@@ -68,7 +68,7 @@ The [closure-based GOA comparison](PROTNLM_EVALUATION/bench50_evaluation_results
 | Neuronal localization in a plant | 2 | Neuronal cell body and neuron projection for WHEAT/F6LAX4 |
 | Intrinsic activity incompatible with the deposited sequence or domain architecture | 5 | Kinase activity for ARATH/F4JLB7; ligase activity for the short RCC1-like DROPS/A0A6I8W8A2 record; PI3P phosphatase activity for MYTGA/A0A8B6GS20; lipase activity for WHEAT/A0A3B6GK97; ligand-gated channel activity for XENNA/D3VIU4 |
 
-These seven predictions are assessed as NPI. The evidence identifies biological incompatibilities; frequency bias and training-data contamination are not established as their causes.
+These seven predictions are assessed as NPI. The table groups biological contradictions; it does not infer a model error mechanism where the optional `error_type` field is unset. The evidence identifies biological incompatibilities; frequency bias and training-data contamination are not established as their causes.
 
 ## Illustrative case studies
 
@@ -118,6 +118,8 @@ All 50 proteins have AIGR gene reviews and prediction-review YAMLs. The 41 recor
 The exploratory comparison against the 1,334-review AIGR collection found eight proteins in the ProtNLM2 dataset, all unreviewed/TrEMBL entries: C5AXM3, O94267, Q09490, Q21303, Q86WA8, Q9BZE2, Q9UNW9, and Q9XUS3. This is the comparison set used in the exploratory analysis, rather than a count of the expanding AIGR collection; ARGO-50 provides a broader dedicated evaluation sample.
 
 ## Evidence standards
+
+Prediction sidecars are checked with `just validate-predictions`, including publication titles, source excerpts, local paths, and assessment scores. The CI artifact `prediction-evidence-validation` records those checks.
 
 The [function-prediction review skill](https://github.com/ai4curation/ai-gene-review/blob/main/.claude/skills/review-function-prediction/SKILL.md) defines the review criteria. Assessments integrate primary literature, sequence and domain evidence, structural analyses, experimentally grounded curated annotations, and focused OpenScientist investigations. These investigations synthesize multiple lines of evidence and carry substantial weight when their findings address the prediction. Reviews cite the relevant analyses and their limitations, distinguishing computational inference from experimental validation. A well-supported family transfer can establish a reasonable function or localization inference without a new experiment on every target; the rationale identifies the characterized relative, the target's family evidence, and the limits of transfer.
 

@@ -954,6 +954,14 @@ audit-fulltext-flags *args="":
 validate-references file:
     {{ref_validator}} validate data {{file}} --schema {{schema_path}} --target-class GeneReview --config {{ref_validator_config}}
 
+# Schema and source-evidence validation for external prediction review sidecars.
+# Missing publication caches are fetched; unavailable sources fail rather than
+# silently certifying an unchecked quotation. Caches remain regenerable context.
+[group('QC')]
+validate-predictions +files:
+    uv run linkml-validate --schema {{schema_path}} --target-class PredictionReview {{files}}
+    uv run python -m ai_gene_review.validation.prediction_evidence --fetch --report reports/prediction-evidence.json {{files}}
+
 # Reference validation for all gene review files
 [group('QC')]
 validate-references-all:
