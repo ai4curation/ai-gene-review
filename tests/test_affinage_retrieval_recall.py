@@ -49,7 +49,14 @@ def by_gene(data: dict) -> dict[str, dict]:
 
 @pytest.fixture(scope="module")
 def writeup() -> str:
-    return WRITEUP.read_text()
+    """The write-up with whitespace collapsed.
+
+    The markdown is hard-wrapped, so a claim like "five of the seven" spans a
+    newline in the source. Matching against the raw text silently fails on line
+    breaks that carry no meaning; flattening first is the convention already used
+    for the manuscript in tests/test_bioreason_benchmark_policy.py.
+    """
+    return " ".join(WRITEUP.read_text().split())
 
 
 def test_goa_share_and_novel_partition_the_review_set(summary: dict) -> None:
@@ -104,9 +111,67 @@ def test_narrative_zero_recall_list_matches_generated_data(
     anchor is required to match — an unfindable anchor fails rather than passing
     on an empty set.
     """
-    named = genes_named(zero_recall_sentence(writeup)) & set(by_gene)
+    parsed = genes_named(zero_recall_sentence(writeup))
+    named = parsed & set(by_gene)
     assert named, "no known gene symbols parsed out of the 0%-recall sentence"
+    # Intersecting with by_gene keeps prose words from masquerading as symbols,
+    # but it would also silently drop a real symbol that is absent from the
+    # cohort — which is a drift worth failing on, not hiding.
+    assert parsed - named <= NON_SYMBOL_WORDS, (
+        f"unrecognised symbols in the 0%-recall sentence: {sorted(parsed - named)}"
+    )
     assert named <= set(summary["zero_recall_genes"])
+
+    # The sentence also asserts *how many* it names and that they have no GOA
+    # references. Both are hand-written numerals that drift as the cohort grows.
+    total_zero = len(summary["zero_recall_genes"])
+    assert f"{spell(len(named))} of the {spell(total_zero)}" in writeup
+    assert all(by_gene[g]["n_goa"] == 0 for g in named)
+
+
+# Ordinary words the symbol regex can pick up from surrounding prose.
+NON_SYMBOL_WORDS = {"GOA", "RAD51C", "RFWD3", "SLX4", "UBE2T", "XRCC2"}
+
+NUMBER_WORDS = {
+    2: "two",
+    3: "three",
+    4: "four",
+    5: "five",
+    6: "six",
+    7: "seven",
+    8: "eight",
+    9: "nine",
+}
+
+
+def spell(n: int) -> str:
+    """Small integers as the write-up spells them.
+
+    >>> spell(5), spell(7)
+    ('five', 'seven')
+    >>> spell(42)
+    '42'
+    """
+    return NUMBER_WORDS.get(n, str(n))
+
+
+def test_narrative_sole_non_empty_zero_recall_gene_is_pinned(
+    summary: dict, writeup: str
+) -> None:
+    """':111 only one further gene, ACTR1B' — one of the two claims AGFG1 broke."""
+    remainder = set(summary["zero_recall_genes"]) - set(summary["empty_reports"])
+    assert remainder == {"ACTR1B"}
+    assert f"one further gene, {sorted(remainder)[0]}," in writeup
+
+
+def test_narrative_empty_report_list_matches_generated_data(
+    summary: dict, writeup: str
+) -> None:
+    """The six zero-PMID reports are named individually in the write-up."""
+    match = re.search(r"Six reports returned zero PMIDs: ([^.]*)\.", writeup)
+    assert match, "could not locate the empty-report sentence"
+    named = {s.strip() for s in match.group(1).split(",")}
+    assert named == set(summary["empty_reports"])
 
 
 def zero_recall_sentence(writeup: str) -> str:
@@ -206,6 +271,18 @@ def test_script_doctests_are_executed() -> None:
     results = doctest.testmod(retrieval_recall, verbose=False)
     assert results.failed == 0, f"{results.failed} doctest failure(s)"
     assert results.attempted > 0, "no doctests ran — did the module move?"
+
+
+def test_this_modules_own_doctests_are_executed() -> None:
+    """Run this module's doctests too — otherwise it repeats the gap it just closed.
+
+    `genes_named` and `spell` carry doctests specifying the AADACL2/3/4 expansion
+    and the numeral spelling; without this they are documentation, exactly as the
+    script's were.
+    """
+    results = doctest.testmod(sys.modules[__name__], verbose=False)
+    assert results.failed == 0, f"{results.failed} doctest failure(s)"
+    assert results.attempted > 0, "no doctests ran in this module"
 
 
 @pytest.mark.parametrize(
