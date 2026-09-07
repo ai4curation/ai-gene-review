@@ -1482,7 +1482,7 @@ experimentally defined activity rather than as a finished call.
 - Process/location terms that are organism-agnostic
 - **Subfamilies with high sequence identity and same EC number**
 
-**Writing the `reason` field — three things nothing enforces**:
+**Writing the `reason` field — four things nothing enforces**:
 - **A quotation inside `reason` is not validated.** The substring check runs over
   `supporting_text` only (`linkml_reference_validator`'s supporting-text validator;
   `grep '"reason"' src/ai_gene_review/validation/*.py` returns nothing). So a quote in a
@@ -1507,6 +1507,12 @@ experimentally defined activity rather than as a finished call.
   (`re.sub(r'\s+', ' ', ...)`) AND strip the source's line prefixes before concluding
   anything is absent. Better still, put the quote in `supported_by` and let the substring
   validator answer.
+  Markdown emphasis is a sixth variant and the widest, because every
+  `file:*-deep-research-*.md` citation in this corpus is markdown: `Predominantly
+  **nuclear** transcription factor` will not match the quote `predominantly nuclear`
+  under any prefix-stripping, because the markup sits INSIDE the phrase rather than at
+  the line start. Strip `[*_`]` too, or match permissively
+  (`predominantly[^A-Za-z]{0,40}nuclear`) before concluding anything.
 
 - **If a block's prose argues its own action may be under-strength, say so in the prose.**
   `root_cause` and `failure_modes` are a fixed vocabulary and cannot carry "the objection
