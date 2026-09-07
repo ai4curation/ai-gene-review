@@ -1595,12 +1595,22 @@ experimentally defined activity rather than as a finished call.
   sentence: **it must be readable by someone who does not know this repository exists**, so
   any sentence whose grammatical subject is *an annotation* rather than *the gene* belongs in
   `review.reason`, `core_functions` or the notes file. Operationalize that **grammatically, not
-  lexically** — split the field into sentences and judge each one's subject and predicate,
-  flagging any whose *subject* is an annotation, an evidence record or a curation artifact,
-  **or** whose *predicate* is a curation act (`is treated as`, `is retained as`, `is
-  interpreted as`, `is curated as`, `is kept as`, `is not treated here as`). Read each hit and
-  judge; the result is a set you can defend, because what it missed is a judgement you made
+  lexically** — split the field into sentences and judge each one's subject, object and
+  predicate, flagging any where an annotation, an evidence record or a curation artifact
+  appears as *subject or object*, **or** where the *predicate* is a curation act. Read each hit
+  and judge; the result is a set you can defend, because what it missed is a judgement you made
   rather than a word you had not thought of.
+
+  **Do not read any example below as the set to match against** — that is this bullet's whole
+  subject, and the examples fail the test themselves. Every curation-act instance in this
+  corpus is plural (`are treated as`, `are retained as`, `are curated as`), so the singular
+  forms that come to mind first — `is treated as`, `is kept as` — match **zero** of the nine
+  occurrences across eight sentences; one of those eight is `are **best** treated as`, which no
+  fixed phrase reaches at all. Object position is the same trap one step further out: `Cdk5r1`
+  says the p35/p25 distribution explains *"the mixed cellular localization annotations"*, where
+  subject and predicate are both clean and the annotation sits in a trailing participial
+  clause. An outside reader still asks *what annotations?*, so it is an instance — which is why
+  the test is a judgement about roles, not a list of strings.
 
   This bullet got that wrong on its first writing, which is the sharpest case in the file: it
   diagnosed tell-list sweeping and then **specified the remedy as a tell list** (`annotat`,
