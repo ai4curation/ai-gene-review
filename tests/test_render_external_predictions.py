@@ -100,7 +100,9 @@ def test_inline_predictions_are_separate_and_attributed(
     assert section.select_one('a[href="https://www.ebi.ac.uk/QuickGO/term/GO:0031012"]')
     assert section.find("script") is None
     assert len(soup.select(".annotations-table tbody tr")) == 1
-    assert "GO:0031012" not in soup.select_one(".annotations-table").get_text()
+    annotations = soup.select_one(".annotations-table")
+    assert annotations is not None
+    assert "GO:0031012" not in annotations.get_text()
 
 
 def test_multiple_sidecars_and_custom_output_links(tmp_path: Path) -> None:
@@ -142,7 +144,10 @@ def test_external_local_evidence_links_resolve_from_output(tmp_path: Path) -> No
         render_gene_review(review, output_path=output).read_text(), "html.parser"
     )
     link = soup.select_one("#external-predictions .finding-item a")
-    assert (output.parent / link["href"]).resolve() == source.resolve()
+    assert link is not None
+    href = link["href"]
+    assert isinstance(href, str)
+    assert (output.parent / href).resolve() == source.resolve()
 
 
 @pytest.mark.parametrize("empty_sidecar", [False, True])

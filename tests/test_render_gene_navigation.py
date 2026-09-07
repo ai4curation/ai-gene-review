@@ -49,10 +49,13 @@ def test_navigation_counts_and_targets() -> None:
         "#review-raw-yaml": "Raw YAML",
     }
     for target in links:
+        assert isinstance(target, str)
         assert len(soup.select(target)) == 1
     assert len(soup.select("#review-annotations .annotations-table tbody tr")) == 3
     assert len(soup.select("#external-predictions .prediction-card")) == 3
-    assert soup.select_one(".header").find_next_sibling() == nav
+    header = soup.select_one(".header")
+    assert header is not None
+    assert header.find_next_sibling() == nav
 
 
 @pytest.mark.parametrize("value", [None, []])
@@ -70,6 +73,7 @@ def test_navigation_omits_empty_sections(value: object) -> None:
         data[key] = value
     soup = BeautifulSoup(render_html(data, TEMPLATE), "html.parser")
     nav = soup.select_one('nav[aria-label="Page sections"]')
+    assert nav is not None
     assert [a["href"] for a in nav.select("a")] == ["#review-raw-yaml"]
     assert soup.select_one("#review-raw-yaml details")
 
@@ -98,4 +102,5 @@ def test_navigation_includes_additional_review_sections() -> None:
         "#review-raw-yaml",
     }
     for target in targets:
+        assert isinstance(target, str)
         assert len(soup.select(target)) == 1
