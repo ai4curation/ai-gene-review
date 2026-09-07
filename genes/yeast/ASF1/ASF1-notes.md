@@ -11,8 +11,11 @@ with the label `"positive regulation of cation transport"` — alongside the cor
 The id and the label did not go together. `GO:0030515` is in fact **`snoRNA binding`**
 ("Binding to a small nucleolar RNA"), confirmed against the committed ontology cache
 (`cache/ontologies/go.tsv` → `GO:0030515<TAB>snoRNA binding`) and against OLS. The string
-"positive regulation of cation transport" is not a GO label at all; it does not occur
-anywhere in the ontology cache. So the entry was a hallucinated id+label pair, not a
+"positive regulation of cation transport" does not occur anywhere in the ontology cache
+either — though that cache is deliberately sparse (`go.meta.json`: 6820 terms, "Only terms
+used in annotations"), so its absence there does not by itself establish that no such GO
+label exists anywhere in the ontology. What is established is the part that matters: it is
+not the label of `GO:0030515`. So the entry was a mismatched id+label pair, not a
 copy/paste of a real term from another review — precisely the failure mode CLAUDE.md warns
 about, where a plausible-looking label conceals a wrong id. Note that
 `src/ai_gene_review/tools/fix_labels.py` deliberately skips `proposed_replacement_terms`
@@ -36,3 +39,48 @@ on that annotation is also the paper title rather than substantive evidence.
 
 No other changes made — the rest of the review (annotation actions, core_functions,
 description) is well-supported by the cited evidence and deep-research reports.
+
+## 2026-09-07 Update: resolved the retained histone-binding replacement, and corrected two misidentified interactors
+
+Follow-up to the review's blocking item on the section above. Two things were wrong, and
+they turn out to be the same mistake.
+
+**1. The interactors were misidentified.** Both the 2026-09-02 note and the review's own
+summaries described the WITH/FROM accessions on these IPI rows as CAF-1 subunits
+("Cac2", "Cac1"). Checked both against UniProt directly:
+
+- `UniProtKB:P32479` is **HIR1_YEAST / Hir1** (YBL008W), a subunit of the **HIR complex**,
+  not CAF-1. UniProt's own SUBUNIT annotation cites the very reference on this row: "The
+  HIR complex interacts with ASF1 (PubMed:11404324, PubMed:11412995)."
+- `UniProtKB:Q04003` is **SAS4_YEAST / Sas4** (YDR181C), a subunit of the **SAS
+  (something-about-silencing) complex**, not Cac1. UniProt records "Interacts with ASF1",
+  consistent with [PMID:11731480 "The silencing complex SAS-I links histone acetylation to
+  the assembly of repressed chromatin by CAF-I and Asf1 in Saccharomyces cerevisiae."] —
+  the paper title names CAF-I, but the accession actually recorded in WITH/FROM is the
+  SAS-I subunit.
+
+Neither the ASF1–Hir1 nor the ASF1–Sas4 interaction is a CAF-1 interaction. Corrected both
+summaries (`PMID:11404324` and `PMID:11731480` rows) accordingly. The genuine ASF1–Cac2
+CAF-1 link is real and is discussed elsewhere in the review (IBA row for
+replication-coupled nucleosome assembly); it is simply not what these two IPI rows record.
+
+**2. The retained `GO:0042393 histone binding` replacement was therefore unsupportable.**
+`proposed_replacement_terms` is a machine-readable instruction attached to a specific
+annotation row, so retaining it would have turned an ASF1–Hir1/Sas4 complex-subunit
+interaction into a histone-binding IPI. Hir1 and Sas4 are chromatin-regulatory complex
+subunits, not histones. Removed the entry. Nothing is lost by doing so: ASF1's histone
+binding is independently annotated (IEA from GO_REF:0000002, and IBA), and the sibling
+`GO:0005515` IPI rows carry no replacement terms either, so the row is now consistent with
+them. The `reason` text on the row stands on its own and now states why no replacement is
+proposed.
+
+Also softened the ontology-cache claim in the section above: `cache/ontologies/go.tsv` is
+restricted to terms used in annotations (6820 terms per `go.meta.json`), so a string's
+absence from it cannot show the string is "not a GO label at all". The conclusion that
+matters — that it is not the label of `GO:0030515` — is unaffected.
+
+Still open (pre-existing, non-blocking): the `supporting_text` on the `PMID:11404324` row
+is the paper title rather than substantive evidence. The cached publication is
+abstract-only, so a substantive verbatim quote establishing the Hir1 interaction is not
+available from the cache; left as-is rather than paraphrasing, since `supporting_text` must
+be verbatim.
