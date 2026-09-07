@@ -1526,15 +1526,25 @@ experimentally defined activity rather than as a finished call.
 - **Quoted spans in prose are content-verbatim; strictness lives in `supporting_text`.**
   Terminal sentence punctuation may sit inside the closing quote (American convention),
   and an elision may be marked with `...` - both are ordinary typography, not claims about
-  the source, and the corpus uses them: `Sox2` and `Dnaja3` close a quote on a period the
-  source writes as a comma, `Fbxo2` elides mid-quote. What is *not* allowed is dropping
+  the source, and the corpus uses them: `Dnaja3` closes a quote on a period where its
+  source writes a comma, `Sox2` closes one where the source sentence runs on past a
+  semicolon, `Fbxo2` elides mid-quote. What is *not* allowed is dropping
   source words silently: the same `Fbxo2` row quoted GO:1990756's definition with the
   parenthetical "(including ubiquitin ligase and UFM1 ligase)" removed and no ellipsis,
   which reads as the whole definition and is not - that one is a defect and was fixed. So
   a sweep must strip a trailing `[.,]` and split on `...` before calling a span unmatched,
   or it will report the convention as fabrication; and any span that must be
   machine-checked belongs in `supporting_text`, where the substring validator applies the
-  strict reading.
+  strict reading. This holds for `reason`, `summary` and `comment` alike — the surrounding
+  bullets are phrased around `reason` because that is where the first instances were found,
+  but the exemplars here are spread across all three, and the ISO backlog will write far
+  more `comment` and `summary` than `reason`. One span type has no local source at all: a
+  **GO term definition**. The only tracked `.obo` here is `interpro/panther/panther.obo`,
+  `cache/go/terms.csv` and `cache/ontologies/go.tsv` carry labels but no definitions, and
+  `cache/ontologies/*.obo` is gitignored - so a definition verified against a working-tree
+  obo is not reproducible from a fresh checkout. Quote it if it earns its place, but take
+  the third path explicitly and say the check needs a GO lookup.
+
 - **"Nothing local says this" is a claim about where you looked.** Before writing that an
   assertion cannot be checked from the repository, enumerate the places the repository
   keeps that kind of fact. A reason on this project stated that GO:0051082's obsoletion
