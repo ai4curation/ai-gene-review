@@ -151,6 +151,8 @@ Validate sidecars with `just validate-predictions <file> [<file> ...]`. This che
 the PredictionReview schema, score/category agreement, source paths, publication
 titles, and supporting excerpts, fetching missing PMID caches. CI runs the same
 check for changed sidecars and publishes `prediction-evidence-validation` results.
+The recipe requires excerpts for every supporting-source entry, and local-file
+excerpt segments must follow source order without reusing the same passage.
 Missing source text cannot be certified as verified. The check tests citation
 accuracy; biological relevance and inference quality still require review.
 

@@ -44,10 +44,18 @@ def local_quote_matches(quote: str, text: str) -> bool:
     """
     normalized = " ".join(text.split())
     parts = [" ".join(part.split()) for part in re.split(r"\.{3}|…", quote)]
-    return any(parts) and all(part in normalized for part in parts if part)
+    offset = 0
+    for part in filter(None, parts):
+        match = normalized.find(part, offset)
+        if match < 0:
+            return False
+        offset = match + len(part)
+    return any(parts)
 
 
-def validate_prediction_evidence(path: Path, project_root: Path) -> ValidationReport:
+def validate_prediction_evidence(
+    path: Path, project_root: Path, *, require_excerpts: bool = False,
+) -> ValidationReport:
     """Check sidecar evidence, cached publication titles, and assessment scores."""
     data = yaml.safe_load(path.read_text())
     report = ValidationReport(file_path=path, is_valid=True)
@@ -102,7 +110,8 @@ def validate_prediction_evidence(path: Path, project_root: Path) -> ValidationRe
                 continue
             quote = support.get("supporting_text")
             if not quote:
-                report.add_issue(ValidationSeverity.WARNING, f"No supporting excerpt: {ref_id}",
+                severity = ValidationSeverity.ERROR if require_excerpts else ValidationSeverity.WARNING
+                report.add_issue(severity, f"No supporting excerpt: {ref_id}",
                                  path=support_path)
                 continue
             if ref_id not in texts:
@@ -126,6 +135,8 @@ def main() -> int:
     parser.add_argument("files", type=Path, nargs="+")
     parser.add_argument("--project-root", type=Path, default=Path.cwd())
     parser.add_argument("--fetch", action="store_true", help="Fetch missing PMID caches")
+    parser.add_argument("--require-excerpts", action="store_true",
+                        help="Fail if a supporting source has no excerpt")
     parser.add_argument("--report", type=Path, help="Write detailed JSON validation results")
     args = parser.parse_args()
     if args.fetch:
@@ -140,7 +151,9 @@ def main() -> int:
             cache = source_path(pmid, args.project_root)
             if cache is not None and not cache.is_file():
                 cache_publication(pmid, args.project_root / "publications")
-    reports = [validate_prediction_evidence(path, args.project_root) for path in args.files]
+    reports = [validate_prediction_evidence(path, args.project_root,
+                                           require_excerpts=args.require_excerpts)
+               for path in args.files]
     for report in reports:
         print(f"{report.file_path}: {report.error_count} errors, {report.warning_count} warnings; "
               f"{report.metadata['verified_titles']} titles, "

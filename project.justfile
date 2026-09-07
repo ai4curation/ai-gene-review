@@ -960,7 +960,7 @@ validate-references file:
 [group('QC')]
 validate-predictions +files:
     uv run linkml-validate --schema {{schema_path}} --target-class PredictionReview {{files}}
-    uv run python -m ai_gene_review.validation.prediction_evidence --fetch --report reports/prediction-evidence.json {{files}}
+    uv run python -m ai_gene_review.validation.prediction_evidence --fetch --require-excerpts --report reports/prediction-evidence.json {{files}}
 
 # Reference validation for all gene review files
 [group('QC')]

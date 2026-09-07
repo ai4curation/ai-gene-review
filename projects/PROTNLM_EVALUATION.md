@@ -17,7 +17,7 @@ Evaluation of Google's ProtNLM2 GO term predictions using the ARGO-ProtNLM-50 be
 
 ## Key findings
 
-1. **Useful additional annotations can follow from established biology and mapping gaps.** Supported family transfers include chloroplastic EF4 localization for ARTAN/A0A2U1PS28 and a laterality role for MACFA/A0A2K5UJ34. The [InterPro2GO coverage analysis](PROTNLM_EVALUATION/interpro2go-coverage-gaps.md) identifies absent mappings, mappings on unassigned superfamily entries, and unintegrated Pfam signatures as routes by which plausible functions can be absent from GOA. A mapping gap alone does not establish the predicted function: matrix organization for 9PRIM/A0A8C9H4D2 and nuclear localization for the 74-residue CAEEL/A0A061AL94 record remain uncertain.
+1. **Useful additional annotations can follow from established biology and mapping gaps.** Supported family transfers include chloroplastic EF4 localization for ARTAN/A0A2U1PS28 and a laterality role for MACFA/A0A2K5UJ34. The [InterPro2GO coverage analysis](PROTNLM_EVALUATION/interpro2go-coverage-gaps.md) identifies absent mappings, mappings on unassigned superfamily entries, and unintegrated Pfam signatures as routes by which plausible functions can be absent from GOA. A mapping gap alone does not establish the predicted function: nuclear localization for the 74-residue CAEEL/A0A061AL94 record remains uncertain. Matrix organization for 9PRIM/A0A8C9H4D2 is supported by an experimentally grounded mouse OLFML2A annotation, providing a basis for ortholog transfer beyond localization alone.
 
 2. **Exact matches often lack specificity.** Of the 19 predictions classified as EXACT in the GOA comparison, 13 are LSP and six are CNN. The predicted term can already be present while a more informative, supported annotation is also available.
 
@@ -35,16 +35,16 @@ Assessment categories follow [de Crécy-Lagard et al. 2025 (PMID:40703034)](http
 
 | Category | Code | CS | Count | Percentage |
 |----------|------|----|-------|------------|
-| Correct novel | COR | 2 | 18 | 23.4% |
+| Correct novel | COR | 2 | 19 | 24.7% |
 | Correct not novel | CNN | 2 | 8 | 10.4% |
 | Less precise | LSP | 2 | 13 | 16.9% |
-| Uncertain | UNC | 1 | 31 | 40.3% |
+| Uncertain | UNC | 1 | 30 | 39.0% |
 | Nonparalog incorrect | NPI | 0 | 7 | 9.1% |
 | Paralog incorrect | PLI | 0 | 0 | 0.0% |
 | Repetition | REP | 0 | 0 | 0.0% |
 | **Total** | | | **77** | **100%** |
 
-**Supported:** 39/77 (50.6%). **Uncertain:** 31/77 (40.3%). **Contradicted:** 7/77 (9.1%). The mean assessment score is **109/77 = 1.42 out of 2**. This ordinal score is not a calibrated estimate of model accuracy. The stratified sample is small, and many proteins lack direct experimental characterization.
+**Supported:** 40/77 (51.9%). **Uncertain:** 30/77 (39.0%). **Contradicted:** 7/77 (9.1%). The mean assessment score is **110/77 = 1.43 out of 2**. This ordinal score is not a calibrated estimate of model accuracy. The stratified sample is small, and many proteins lack direct experimental characterization.
 
 ### Results by GOA overlap category
 
@@ -56,7 +56,7 @@ The [closure-based GOA comparison](PROTNLM_EVALUATION/bench50_evaluation_results
 | MORE_SPECIFIC | 6 | COR: 2, UNC: 4 |
 | LESS_SPECIFIC | 1 | NPI: 1 |
 | NO_OVERLAP | 26 | COR: 10, UNC: 11, NPI: 5 |
-| NOT_IN_GOA | 23 | COR: 6, UNC: 16, NPI: 1 |
+| NOT_IN_GOA | 23 | COR: 7, UNC: 15, NPI: 1 |
 | Not in overlap snapshot | 2 | CNN: 2 |
 
 **Total: 77 predictions.** An exact match can still be less precise than another supported annotation on the same protein; no ontology overlap can still accompany a sound biological inference across GO aspects.
@@ -88,7 +88,7 @@ ProtNLM2 predicts `kinase activity` and `phosphorylation` for ARATH/F4JLB7. The 
 
 ### Cross-kingdom error: F6LAX4 (wheat PP2A scaffold)
 
-ProtNLM2 predicts `neuron projection` and `neuronal cell body` for WHEAT/F6LAX4. Wheat has no neurons, so **both localizations are NPI**. The remaining predictions have different evidential standing: **protein heterodimerization is COR**, supported by the PP2A A-C core complex; **chromosome segregation, centromeric localization, and protein antigen binding are UNC**. Protein antigen binding is not an animal-specific function by definition: human PP2A A scaffolds bind viral small-t antigen, although that interaction is not established for this wheat protein. This example separates clear taxonomic errors from plausible but unverified transfers.
+ProtNLM2 predicts `neuron projection` and `neuronal cell body` for WHEAT/F6LAX4. Wheat has no neurons, so **both localizations are NPI**. The remaining predictions have different evidential standing: **protein heterodimerization is COR**, supported by the PP2A A-C core complex; **chromosome segregation, centromeric localization, and protein antigen binding are UNC**. Protein antigen binding is not an animal-specific function by definition, but binding of the viral small-t antigen inhibitor to human PP2A A scaffolds does not establish antigen-recognition activity. There is no positive evidence for that activity in this wheat protein. This example separates clear taxonomic errors from plausible but unverified transfers.
 
 ### Ontology gap: Q9KZ33 (S. coelicolor sigma factor)
 

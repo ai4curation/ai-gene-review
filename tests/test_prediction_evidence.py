@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from ai_gene_review.validation.prediction_evidence import validate_prediction_evidence
+from ai_gene_review.validation.prediction_evidence import local_quote_matches, validate_prediction_evidence
 
 
 def write_case(root: Path) -> Path:
@@ -58,6 +58,23 @@ def test_missing_quote_is_reported_without_changing_schema_optionality(tmp_path:
     assert report.is_valid
     assert report.warning_count == 1
     assert report.metadata["verified_quotes"] == 0
+
+
+def test_strict_excerpt_validation_rejects_missing_quotes(tmp_path: Path) -> None:
+    path = write_case(tmp_path)
+    data = yaml.safe_load(path.read_text())
+    del data["predictions"][0]["review"]["supported_by"][0]["supporting_text"]
+    path.write_text(yaml.safe_dump(data))
+    report = validate_prediction_evidence(path, tmp_path, require_excerpts=True)
+    assert not report.is_valid
+    assert report.error_count == 1
+
+
+def test_excerpt_segments_must_follow_source_order_without_reusing_text() -> None:
+    source = "First finding.\nIntervening detail.\nSecond finding."
+    assert local_quote_matches("First finding. ... Second finding.", source)
+    assert not local_quote_matches("Second finding. ... First finding.", source)
+    assert not local_quote_matches("First finding. ... First finding.", source)
 
 
 @pytest.mark.parametrize("fault", [None, "title", "quote", "cache"])
