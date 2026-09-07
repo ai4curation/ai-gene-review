@@ -24,11 +24,25 @@ is computed by [`analyze_placement.py`](analyze_placement.py) into
 [`treegrafter_placement.tsv`](treegrafter_placement.tsv). 305 of the 306 cases
 recover a subfamily; 303 recover a graft node.
 
-> **Snapshot note.** The worked examples and the four-mode classification
-> below were curated by hand on the earlier **159-case** snapshot. The corpus
-> has since roughly doubled (the added cases are dominated by the
-> *Pseudomonas putida* KT2440 batch); those additional rows are in the sidecar
-> but have not yet been assigned to a failure mode.
+Every one of the 306 is then assigned to one of the four failure modes below
+by [`classify_failure_modes.py`](classify_failure_modes.py) →
+[`treegrafter_failure_modes.tsv`](treegrafter_failure_modes.tsv). The
+assignment has two layers: a per-row curated table,
+[`failure_mode_curated.tsv`](failure_mode_curated.tsv) (163 rows, each with a
+one-line justification), which always wins; and a keyword heuristic over the
+GO aspect and the reviewer's `review.reason` for the rest (143 rows — 61 of
+them cellular-component terms, which are mode 3 by construction). The
+operational rule that separates modes 1 and 4: **if the PANTHER *subfamily*
+name already describes the protein correctly and the bad term came from a
+higher node, it is mode 1; if the subfamily itself is the wrong enzyme, it is
+mode 4.**
+
+| Mode | annotations | share | genes | MF | BP | CC |
+|---|---:|---:|---:|---:|---:|---:|
+| 1 Granularity (family / node-level or sibling term) | 128 | 42% | 95 | 67 | 61 | 0 |
+| 3 Generic / out-of-context localization, binding or process | 116 | 38% | 97 | 25 | 30 | 61 |
+| 4 Within-superfamily mis-placement | 58 | 19% | 41 | 30 | 27 | 1 |
+| 2 Pseudo-enzyme / co-opted fold | 4 | 1% | 2 | 1 | 3 | 0 |
 
 ## Headline: placement is usually fine — the *term* is the problem
 
@@ -65,9 +79,15 @@ co-opted to a non-enzymatic role — something a tree graft cannot detect.
 
 | Gene | Propagated term | Subfamily | Reality |
 |---|---|---|---|
-| OCTS1 | `glutathione transferase activity` (OVER) | GLUTATHIONE S-TRANSFERASE | Octopus **S-crystallin**: GST fold, ~1/700–1/6000 of authentic GST activity; a structural eye-lens protein (PMID:7639695, PMID:27499004, PMID:8587103) |
-| TFP | `enzyme regulator activity` (MODIFY) | EPITHIOSPECIFIER PROTEIN | — |
-| IRE1 (T. reesei) | `unfolded protein binding` (OVER) | NON-SPECIFIC SER/THR KINASE | UPR sensor kinase/RNase, not a general chaperone |
+| OCTS1 | `glutathione transferase activity`, `glutathione metabolic process` (OVER) | GLUTATHIONE S-TRANSFERASE | Octopus **S-crystallin**: GST fold, ~1/700–1/6000 of authentic GST activity; a structural eye-lens protein (PMID:7639695, PMID:27499004, PMID:8587103) |
+| A0A8B6GS20 (MTMR9) | `phosphatidylinositol dephosphorylation` (MODIFY), `negative regulation of autophagy` (OVER) | myotubularin-related | **Pseudophosphatase**: lacks the catalytic cysteine; regulates active MTMR partners |
+
+Genuine pseudo-enzymes turn out to be **rare** in this corpus — four
+annotations on two genes. Two cases listed here on the earlier snapshot have
+been re-filed: TFP's `enzyme regulator activity` is an *outdated node term*
+(specifier proteins are now known to be Fe(II)-dependent C–S lyases; mode 1),
+and IRE1's `unfolded protein binding` is a generic/obsolete binding term on a
+sensor (mode 3).
 
 ### 3. Generic / out-of-context localization and process
 
@@ -88,6 +108,21 @@ bioinformatic/structural check) would change the call.
 |---|---|---|---|
 | **aprA** (*Desulfovibrio*) | `succinate dehydrogenase activity` (REMOVE), `electron transfer activity`, `anaerobic respiration` | SUCCINATE DEHYDROGENASE [UBIQUINONE] FLAVOPROTEIN (PTHR11632:SF51) | **Adenylylsulfate (APS) reductase** α-subunit — shares the FAD fumarate-reductase/SDH flavoprotein fold but reduces APS, not succinate |
 | **fcs** (*P. putida*) | `medium-chain fatty acid-CoA ligase activity` (MODIFY), `fatty acid metabolic process` | 2-SUCCINYLBENZOATE–CoA LIGASE | **Feruloyl-CoA synthetase** — adjacent ANL adenylating-enzyme superfamily, wrong specific subfamily |
+| **mdh** (*P. putida*, ×2) | `L-lactate dehydrogenase (NAD+) activity`, `lactate metabolic process` (REMOVE) | L-LACTATE DEHYDROGENASE (PTHR43128) | **Malate dehydrogenase** — LDH/MDH superfamily node |
+| **mqo1 / mqo2 / mqo3** | `(S)-2-hydroxyglutarate dehydrogenase activity` (REMOVE) | L-2-HYDROXYGLUTARATE DEHYDROGENASE, MITOCHONDRIAL | **Malate:quinone oxidoreductase** |
+| **dapE**, **pepV** | `acetylornithine deacetylase activity`, `L-arginine biosynthetic process` (REMOVE) | N-ACETYL-L-CITRULLINE DEACETYLASE (PTHR43808, M20A) | **DapE** succinyl-DAP desuccinylase / **PepV** dipeptidase — ArgE branch of a mixed M20A family |
+| **Q53353, lsdB, Saro_0802, Saro_2809** | `carotenoid dioxygenase activity`, `carotene catabolic process` (REMOVE/MODIFY) | CAROTENOID 9,10(9',10')-CLEAVAGE DIOXYGENASE (PTHR10543) | **Lignostilbene / resveratrol dioxygenases** (EC 1.13.11.43) — no stilbene subfamily exists |
+| **ptxD** | `glyoxylate reductase (NADPH)`, `hydroxypyruvate reductase` (REMOVE) | GLYOXYLATE/HYDROXYPYRUVATE REDUCTASE B | **Phosphonate dehydrogenase** (D-2-hydroxyacid DH superfamily) |
+| **mupP** | `phosphoglycolate phosphatase activity`, `DNA repair` (REMOVE) | PHOSPHOGLYCOLATE PHOSPHATASE (PTHR43434) | **MurNAc-6-phosphate phosphatase** (HAD superfamily) |
+| **quiA** | `quinoprotein glucose dehydrogenase activity` (OVER) | QUINOPROTEIN GLUCOSE DEHYDROGENASE | **Quinate dehydrogenase (quinone)** |
+| **kdsC**, **acoA**, **lytN**, **ADAR2**, **pvdD**, **davD**, **davA**, **scpC** | see [`treegrafter_failure_modes.tsv`](treegrafter_failure_modes.tsv) | | KdsC in a mixed CMAS/KdsC family; acetoin-DH E1α in the PDH lineage; an amidase in a lytic-transglycosylase subfamily; ADAR on the ADAT branch; a pyoverdine NRPS module carrying EntF terms; … |
+
+Mis-placements are **19% of the down-grades (58 annotations, 41 genes)** —
+more than the "handful" the first snapshot suggested, but still the minority.
+Almost all of them are the *same* pattern: a **mixed PANTHER family whose
+subfamilies are labelled by the best-studied member**, so an uncharacterised
+paralog in a different substrate class inherits that member's terms
+(LDH/MDH, M20A, CCD/stilbene dioxygenase, SDH/FRD/AprA, PDH/AcoA).
 
 ## Lightweight graft check (PANTHER vs InterPro, no re-run)
 
@@ -200,20 +235,30 @@ PAINT.
 
 ## What this means for the "re-run TreeGrafter" question
 
-For the **bulk** of failures (modes 1–3, ~90% of the down-grades), re-running
-TreeGrafter would reproduce the *same, sensible* placement — the fix belongs at
-the **annotation** level (propagate the subfamily-specific term, gate
-catalysis-implying MF behind active-site checks, suppress generic CC), not at
-the placement level. For the **handful** in mode 4 (`aprA`, `fcs`, candidate
-`tyrB`), the placement itself is the suspect, and an independent check — a
-TreeGrafter re-run inspecting the graft branch, or a structural/active-site
-analysis via OpenScientist — would be decisive.
+For the **bulk** of failures (modes 1–3, **81%** of the down-grades),
+re-running TreeGrafter would reproduce the *same, sensible* placement — the fix
+belongs at the **annotation** level (propagate the subfamily-specific term,
+gate catalysis-implying MF behind active-site checks, suppress generic CC), not
+at the placement level. For the **19%** in mode 4 (`aprA`, `fcs`, `mdh`,
+`mqo1–3`, `dapE`/`pepV`, the stilbene dioxygenases, …), the placement itself is
+the suspect — and because they cluster in a dozen mixed families (see the
+[family hotspots](../TREEGRAFTER.md#family-hotspots-upstream-targets)), the
+durable fix is a subfamily split or subfamily-level annotation in PAINT rather
+than a per-protein re-run.
+
+The main page's [corroboration analysis](../TREEGRAFTER.md#corroboration-treegrafter-only-vs-multi-method-vs-interpro2go-only)
+adds the operational lever: every annotation on this page is by construction an
+*uncorroborated* TreeGrafter call (`GO_REF:0000118`); the TreeGrafter calls
+that another pipeline reproduced surface under `GO_REF:0000120` and are
+accepted 77% of the time.
 
 ## Suggested follow-ups
 
 - ✅ **Blinded OpenScientist deep-dives** on the exemplars (done — see above);
   the agent refuted every completed case and recovered the correct function and
   failure mode without being told the answer.
+- ✅ **Classify every down-grade** (done — `classify_failure_modes.py`; 163 of
+  306 rows hand-curated). Remaining: second-pass the ~80 heuristic MF/BP rows.
 - **Scale the blinded check** as a routine QC pass over `GO_REF:0000118`
   annotations — the per-gene runs reliably flag exactly the failures TreeGrafter
   produces. The `treegrafter_function_hypothesis.md` prompt is the reusable
