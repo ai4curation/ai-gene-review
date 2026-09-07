@@ -1,0 +1,3815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LRP3 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LRP3</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O75074" target="_blank" class="term-link">
+                        O75074
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "LRP3";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O75074" data-a="DESCRIPTION: LRP3 encodes a poorly characterized 770-amino-acid..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>LRP3 encodes a poorly characterized 770-amino-acid member of the low-density lipoprotein receptor family. Its type-I membrane architecture comprises a signal peptide, an extracellular ectodomain predicted to contain two CUB domains and four LDL-receptor class-A domains in the order CUB1–LDLRA1–LDLRA2–CUB2–LDLRA3–LDLRA4, one transmembrane helix, and a long proline-rich cytoplasmic region containing a tyrosine-based internalization signal. LRP3 transcript is broadly detected in human tissues. In immortalized human bone-marrow stromal cells, LRP3 expression and perturbation support a context-dependent role that favors osteoblast differentiation and opposes adipocyte differentiation, with LRP3 mRNA regulated by miR-4739. Its physiological ligand, transported cargo, proximal signaling mechanism, and general relevance outside this stromal-cell model remain unknown; transfected CHO cells did not bind beta-migrating VLDL or receptor-associated protein under the reported conditions.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75074" data-a="GO:0005886" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Phylogenetic inference places LRP3 at the plasma membrane, consistent with its type-I membrane topology and a family-supported coated-pit localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Plasma membrane is a coherent active location for an LDLR-family receptor with an extracellular ligand-binding region and cytoplasmic internalization motif. The IBA is retained without importing the ligands or cargo repertoires of the many paralogous source receptors.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">FB:FBgn0030706</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">FB:FBgn0051092</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">MGI:MGI:1340044</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">MGI:MGI:1860083</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">MGI:MGI:2138856</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">MGI:MGI:2442252</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">MGI:MGI:96765</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">MGI:MGI:96828</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN002557696</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">RGD:2998</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">RGD:619731</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">RGD:727887</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:E1BGJ0</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:P01130</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:P01131</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:P98155</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q07954</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q14114</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q86YD5</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q9NPF0</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q9Y561</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB:Q9Y5Q5</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">WB:WBGene00003071</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">WB:WBGene00015083</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">WB:WBGene00019811</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75074" data-a="GO:0016020" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Combined automated mapping assigns the broad membrane location from an ARBA rule and the UniProt membrane vocabulary term.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The term is correct for the experimentally cloned type-I membrane protein.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">ARBA:ARBA00028763</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">UniProtKB-SubCell:SL-0162</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016192" target="_blank" class="term-link">
+                                    GO:0016192
+                                </a>
+                            </span>
+                            <span class="term-label">vesicle-mediated transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O75074" data-a="GO:0016192" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA transfers a broad vesicle-mediated-transport process to LRP3, consistent with its cytoplasmic internalization motif and coated-pit family context.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Vesicular trafficking is plausible, but no cargo has been identified and direct LRP3 uptake was not shown in the cached primary evidence. Retain this broad secondary process without treating it as a defined core receptor mechanism.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE NON CORE</span>
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">ARBA:ARBA00028249</span>
+
+
+                                    <span class="badge">SUPPORTS TRANSFER</span>
+
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0150104" target="_blank" class="term-link">
+                                    GO:0150104
+                                </a>
+                            </span>
+                            <span class="term-label">transport across blood-brain barrier</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/30280653" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:30280653
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Blood-Brain Barrier: From Physiology to Disease and Back.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="O75074" data-a="GO:0150104" data-r="PMID:30280653" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The available cache is truncated after the introduction and does not expose enough of the cited review to verify or reject an LRP3-specific transport claim.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The NAS cannot be confirmed from the incomplete cached article, but curator deference precludes treating the missing accessible evidence as proof of a miscitation. Full-article verification is required before accepting or removing this annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010628" target="_blank" class="term-link">
+                                    GO:0010628
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of gene expression</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28340487" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28340487
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MicroRNA-4739 regulates osteogenic and adipocytic differenti...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O75074" data-a="GO:0010628" data-r="PMID:28340487" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LRP3 perturbation changed five osteogenic marker-expression readouts in immortalized human bone-marrow stromal cells.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> These transcript changes are downstream readouts of the osteoblast-differentiation phenotype; they do not establish that LRP3 directly or proximally regulates transcription of any marker gene. Treating each readout as a separate generic positive regulation of gene expression therefore overstates the mechanistic evidence. The exact occurs_in/has_input extensions are retained from the QuickGO annotation payload; the accessible abstract supports the lineage phenotype but does not enumerate these five marker entities.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28340487" target="_blank" class="term-link">
+                                        PMID:28340487
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Data from functional and gene expression assays demonstrated
+the role of LRP3 as a molecular switch promoting hBMSC lineage differentiation
+into osteoblasts and inhibiting differentiation into adipocytes.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010629" target="_blank" class="term-link">
+                                    GO:0010629
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of gene expression</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28340487" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28340487
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MicroRNA-4739 regulates osteogenic and adipocytic differenti...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="O75074" data-a="GO:0010629" data-r="PMID:28340487" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LRP3 perturbation changed four adipogenic marker-expression readouts in immortalized human bone-marrow stromal cells.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> These transcript changes are downstream readouts of the adipocyte-differentiation phenotype; they do not establish that LRP3 directly or proximally regulates transcription of any marker gene. Treating each readout as a separate generic negative regulation of gene expression therefore overstates the mechanistic evidence. The exact occurs_in/has_input extensions are retained from the QuickGO annotation payload; the accessible abstract supports the lineage phenotype but does not enumerate these four marker entities.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28340487" target="_blank" class="term-link">
+                                        PMID:28340487
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Data from functional and gene expression assays demonstrated
+the role of LRP3 as a molecular switch promoting hBMSC lineage differentiation
+into osteoblasts and inhibiting differentiation into adipocytes.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045599" target="_blank" class="term-link">
+                                    GO:0045599
+                                </a>
+                            </span>
+                            <span class="term-label">negative regulation of fat cell differentiation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28340487" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28340487
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MicroRNA-4739 regulates osteogenic and adipocytic differenti...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O75074" data-a="GO:0045599" data-r="PMID:28340487" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LRP3 knockdown promoted adipogenic differentiation of immortalized human bone-marrow stromal cells.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The direct perturbation phenotype supports negative regulation of fat-cell differentiation in the assayed stromal-cell context. It is retained as a lineage-specific downstream role rather than a defining receptor activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28340487" target="_blank" class="term-link">
+                                        PMID:28340487
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Over-expression of miR-4739 mimicked the effects of LRP3
+knockdown on promoting adipogenic and suppressing osteogenic differentiation of
+hBMSCs.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045669" target="_blank" class="term-link">
+                                    GO:0045669
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of osteoblast differentiation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/28340487" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:28340487
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    MicroRNA-4739 regulates osteogenic and adipocytic differenti...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O75074" data-a="GO:0045669" data-r="PMID:28340487" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> LRP3 knockdown suppressed osteogenic differentiation of immortalized human bone-marrow stromal cells.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The direct perturbation phenotype supports positive regulation of osteoblast differentiation in the assayed stromal-cell context. It is retained as a lineage-specific downstream role rather than a defined receptor activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/28340487" target="_blank" class="term-link">
+                                        PMID:28340487
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Over-expression of miR-4739 mimicked the effects of LRP3
+knockdown on promoting adipogenic and suppressing osteogenic differentiation of
+hBMSCs.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006898" target="_blank" class="term-link">
+                                    GO:0006898
+                                </a>
+                            </span>
+                            <span class="term-label">receptor-mediated endocytosis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9693042" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9693042
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    cDNA cloning of a new low-density lipoprotein receptor-relat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="O75074" data-a="GO:0006898" data-r="PMID:9693042" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The cloning paper identified a cytoplasmic tyrosine-based internalization signal, but the cached abstract reports no LRP3 ligand uptake experiment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Receptor-mediated endocytosis requires demonstrated cell-surface ligand binding and uptake. The abstract instead reports failure to bind beta-VLDL or LRPAP1; without the relevant full text, curator deference precludes rejecting the TAS, but the process cannot be accepted as established.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9693042" target="_blank" class="term-link">
+                                        PMID:9693042
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Despite
+the presence of the ligand-binding repeats, CHO cells transfected with LRP3 did
+not bind beta-migrating very-low-density lipoprotein or receptor-associated
+protein.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9693042" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:9693042
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    cDNA cloning of a new low-density lipoprotein receptor-relat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O75074" data-a="GO:0016020" data-r="PMID:9693042" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Human and rat LRP3 cDNAs encode a type-I membrane protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Membrane localization is directly supported by the cloned sequence architecture and agrees with the reviewed UniProt record and automated membrane annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9693042" target="_blank" class="term-link">
+                                        PMID:9693042
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Human
+and rat LRP3 cDNAs encode a 770-amino-acid type 1 membrane protein with the
+following regions: a putative signal sequence, two
+isoleucine/leucine/valine-rich regions with an RGD sequence, two ligand-binding
+repeat regions, a putative transmembrane region, and a proline-rich cytoplasmic
+region with a tyrosine-based internalization signal.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>LRP3 is a type-I single-pass LDLR-family membrane protein whose extracellular ectodomain is predicted to contain CUB1–LDLRA1–LDLRA2–CUB2–LDLRA3–LDLRA4 and whose cytoplasmic tyrosine-based internalization signal is compatible with receptor trafficking. Phylogenetic inference places LRP3 at the plasma membrane, whereas the reviewed UniProt record supports only generic membrane localization; plasma membrane is therefore an IBA-level location rather than a directly demonstrated human LRP3 location. No physiological ligand, cargo-uptake activity, or proximal signaling reaction has yet been established, so no specific molecular-function term is assigned.</h3>
+                <span class="vote-buttons" data-g="O75074" data-a="FUNCTION: LRP3 is a type-I single-pass LDLR-family membrane ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9693042" target="_blank" class="term-link">
+                                PMID:9693042
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Human
+and rat LRP3 cDNAs encode a 770-amino-acid type 1 membrane protein with the
+following regions: a putative signal sequence, two
+isoleucine/leucine/valine-rich regions with an RGD sequence, two ligand-binding
+repeat regions, a putative transmembrane region, and a proline-rich cytoplasmic
+region with a tyrosine-based internalization signal.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/LRP3/LRP3-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">FT   DOMAIN          43..159
+FT                   /note=&#34;CUB 1&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00059&#34;
+FT   DOMAIN          165..201
+FT                   /note=&#34;LDL-receptor class A 1&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+FT   DOMAIN          211..250
+FT                   /note=&#34;LDL-receptor class A 2&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+FT   DOMAIN          254..365
+FT                   /note=&#34;CUB 2&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00059&#34;
+FT   DOMAIN          415..453
+FT                   /note=&#34;LDL-receptor class A 3&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+FT   DOMAIN          454..490
+FT                   /note=&#34;LDL-receptor class A 4&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:human/LRP3/LRP3-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">CC   -!- SUBCELLULAR LOCATION: Membrane {ECO:0000305}; Single-pass type I
+CC       membrane protein {ECO:0000305}.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/LRP3/LRP3-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry O75074 (LRP3_HUMAN), low-density lipoprotein receptor-related protein 3</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt predicts two CUB domains and four LDL-receptor class-A domains in the extracellular region, ordered CUB1–LDLRA1–LDLRA2–CUB2–LDLRA3–LDLRA4.</div>
+
+                        <div class="finding-text">"FT   DOMAIN          43..159
+FT                   /note=&#34;CUB 1&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00059&#34;
+FT   DOMAIN          165..201
+FT                   /note=&#34;LDL-receptor class A 1&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+FT   DOMAIN          211..250
+FT                   /note=&#34;LDL-receptor class A 2&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+FT   DOMAIN          254..365
+FT                   /note=&#34;CUB 2&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00059&#34;
+FT   DOMAIN          415..453
+FT                   /note=&#34;LDL-receptor class A 3&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+FT   DOMAIN          454..490
+FT                   /note=&#34;LDL-receptor class A 4&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/LRP10/LRP10-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q7Z4F1 (LRP10_HUMAN), low-density lipoprotein receptor-related protein 10</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LRP10 is a compact LDLR-family comparator with two predicted CUB domains and four predicted LDL-receptor class-A domains.</div>
+
+                        <div class="finding-text">"FT   DOMAIN          28..136
+FT                   /note=&#34;CUB 1&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00059&#34;
+FT   DOMAIN          139..175
+FT                   /note=&#34;LDL-receptor class A 1&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+FT   DOMAIN          192..305
+FT                   /note=&#34;CUB 2&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00059&#34;
+FT   DOMAIN          307..354
+FT                   /note=&#34;LDL-receptor class A 2&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+FT   DOMAIN          355..397
+FT                   /note=&#34;LDL-receptor class A 3&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+FT   DOMAIN          398..434
+FT                   /note=&#34;LDL-receptor class A 4&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt predicts an internalization role for LRP10, a paralog-specific claim that does not establish the more tentative LRP3 mechanism.</div>
+
+                        <div class="finding-text">"CC   -!- FUNCTION: Probable receptor, which is involved in the internalization
+CC       of lipophilic molecules and/or signal transduction. May be involved in
+CC       the uptake of lipoprotein APOE in liver (By similarity). {ECO:0000250}."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28340487" target="_blank" class="term-link">
+                            PMID:28340487
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">MicroRNA-4739 regulates osteogenic and adipocytic differentiation of immortalized human bone marrow stromal cells via targeting LRP3.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LRP3 expression was higher in the more osteogenic immortalized human bone-marrow stromal-cell clone and increased during its osteogenic induction.</div>
+
+                        <div class="finding-text">"Gene expression profiling revealed significantly higher LRP3 levels in the
+highly osteogenic hBMSC clone imCL1 than in the less osteogenic clone imCL2, as
+well as a significant upregulation of LRP3 during the osteogenic induction of
+the imCL1 clone. Data from functional and gene expression assays demonstrated"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">LRP3 perturbation in this immortalized human stromal-cell system favored osteoblast differentiation and opposed adipocyte differentiation.</div>
+
+                        <div class="finding-text">"Data from functional and gene expression assays demonstrated
+the role of LRP3 as a molecular switch promoting hBMSC lineage differentiation
+into osteoblasts and inhibiting differentiation into adipocytes."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The study identified and experimentally confirmed LRP3 mRNA as a target of miR-4739 through a site in the LRP3 3&#39; UTR.</div>
+
+                        <div class="finding-text">"The TargetScan
+prediction algorithm, combined with functional and biochemical assays,
+identified LRP3 mRNA as a novel target of miR-4739, with a single potential
+binding site for miR-4739 located in the LRP3 3&#39; UTR. Regulation of LRP3
+expression by miR-4739 was subsequently confirmed by qRT-PCR, western blotting,
+and luciferase assays."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/30280653" target="_blank" class="term-link">
+                            PMID:30280653
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Blood-Brain Barrier: From Physiology to Disease and Back.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9693042" target="_blank" class="term-link">
+                            PMID:9693042
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">cDNA cloning of a new low-density lipoprotein receptor-related protein and mapping of its gene (LRP3) to chromosome bands 19q12-q13. 2.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human and rat LRP3 cDNAs encode a 770-aa type-I membrane protein with a signal sequence, ligand-binding repeats, one transmembrane region, and a cytoplasmic tyrosine-based internalization signal.</div>
+
+                        <div class="finding-text">"Human
+and rat LRP3 cDNAs encode a 770-amino-acid type 1 membrane protein with the
+following regions: a putative signal sequence, two
+isoleucine/leucine/valine-rich regions with an RGD sequence, two ligand-binding
+repeat regions, a putative transmembrane region, and a proline-rich cytoplasmic
+region with a tyrosine-based internalization signal."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human LRP3 transcript was broadly detected, with the highest reported expression in skeletal muscle and ovary.</div>
+
+                        <div class="finding-text">"LRP3 transcript was detected in a wide range of
+human tissues, with the highest expression in skeletal muscle and ovary."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Transfected CHO cells did not bind either beta-migrating VLDL or receptor-associated protein under the reported conditions.</div>
+
+                        <div class="finding-text">"Despite
+the presence of the ligand-binding repeats, CHO cells transfected with LRP3 did
+not bind beta-migrating very-low-density lipoprotein or receptor-associated
+protein."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What physiological ligand or extracellular partner, if any, engages human LRP3, given that beta-migrating VLDL and receptor-associated protein did not bind in the reported CHO-cell assay?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: H. Ishii, T. T. Yamamoto</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="O75074" data-a="Q: What physiological ligand or extracellular partner..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does the cytoplasmic tyrosine-based signal drive constitutive or ligand-induced LRP3 internalization, and what cargo and adaptor machinery are involved?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: H. Ishii, T. T. Yamamoto</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="O75074" data-a="Q: Does the cytoplasmic tyrosine-based signal drive c..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which proximal LRP3-dependent signaling event shifts immortalized human bone-marrow stromal cells between osteogenic and adipogenic differentiation, and does the same mechanism operate in primary human stromal cells?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: M. Elsafadi, A. Mahmood, M. Kassem</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="O75074" data-a="Q: Which proximal LRP3-dependent signaling event shif..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Use purified human LRP3 ectodomain for unbiased cell-surface and secreted-protein ligand capture, then test candidate binding and uptake in matched LRP3-null cells rescued with wild-type LRP3 or a tyrosine-signal mutant. Quantify surface loss, cargo internalization, endosomal delivery, and competition with soluble ectodomain.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Human LRP3 recognizes a ligand distinct from beta-migrating VLDL and LRPAP1 and internalizes it through the cytoplasmic tyrosine-based signal.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: ligand discovery and internalization-rescue assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O75074" data-a="EXPERIMENT: Use purified human LRP3 ectodomain for unbiased ce..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare endogenous or equivalently expressed wild-type and tyrosine-signal-mutant LRP3 by surface biotinylation pulse-chase and live-cell imaging, coupled to proximity labeling or immunoprecipitation of adaptor proteins. Include expression, topology, and plasma-membrane delivery controls so a trafficking defect is not confused with misfolding.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The cytoplasmic tyrosine-based signal recruits endocytic adaptors and is required for LRP3 movement from the plasma membrane into coated vesicles.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: motif separation-of-function trafficking assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O75074" data-a="EXPERIMENT: Compare endogenous or equivalently expressed wild-..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Generate independent LRP3 knockout clones in primary human bone-marrow stromal cells from multiple donors, rescue them with wild-type LRP3, and profile early phosphoproteomic and transcriptional responses before lineage markers diverge. Compare osteogenic and adipogenic differentiation with matched proliferation and viability controls, and test whether miR-4739 effects are rescued by an LRP3 cDNA lacking its 3&#39; UTR.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The stromal differentiation phenotype is caused by a proximal LRP3-dependent signaling pathway rather than nonspecific effects of the original knockdown.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: primary-cell knockout-rescue and pathway-identification study</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O75074" data-a="EXPERIMENT: Generate independent LRP3 knockout clones in prima..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The direct molecular activity and physiological extracellular ligand of LRP3 are unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> LRP3 has a predicted compact CUB/LDLRA ectodomain architecture that makes LRP10 a closer comparator than the larger LDLR-family receptors, but shared subfamily architecture does not identify an LRP3 ligand or license functional transfer. Transfected CHO cells did not bind beta-migrating VLDL or receptor-associated protein.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Without a direct ligand or activity, receptor-family terminology cannot be turned into an informative molecular-function annotation.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Direct biochemical ligand binding followed by LRP3-dependent cellular response or uptake, with knockout and rescue controls, would resolve this gap.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"FT   DOMAIN          43..159
+FT                   /note=&#34;CUB 1&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00059&#34;
+FT   DOMAIN          165..201
+FT                   /note=&#34;LDL-receptor class A 1&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+FT   DOMAIN          211..250
+FT                   /note=&#34;LDL-receptor class A 2&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+FT   DOMAIN          254..365
+FT                   /note=&#34;CUB 2&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00059&#34;
+FT   DOMAIN          415..453
+FT                   /note=&#34;LDL-receptor class A 3&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+FT   DOMAIN          454..490
+FT                   /note=&#34;LDL-receptor class A 4&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;"</em> — file:human/LRP3/LRP3-uniprot.txt</li>
+
+                <li><em>"FT   DOMAIN          28..136
+FT                   /note=&#34;CUB 1&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00059&#34;
+FT   DOMAIN          139..175
+FT                   /note=&#34;LDL-receptor class A 1&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+FT   DOMAIN          192..305
+FT                   /note=&#34;CUB 2&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00059&#34;
+FT   DOMAIN          307..354
+FT                   /note=&#34;LDL-receptor class A 2&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+FT   DOMAIN          355..397
+FT                   /note=&#34;LDL-receptor class A 3&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+FT   DOMAIN          398..434
+FT                   /note=&#34;LDL-receptor class A 4&#34;
+FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;"</em> — file:human/LRP10/LRP10-uniprot.txt</li>
+
+                <li><em>"Despite
+the presence of the ligand-binding repeats, CHO cells transfected with LRP3 did
+not bind beta-migrating very-low-density lipoprotein or receptor-associated
+protein."</em> — PMID:9693042</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> It is unknown whether the cytoplasmic tyrosine-based signal mediates LRP3 endocytosis, which adaptors it recruits, and whether any physiological cargo is internalized.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> The cloned sequence contains an internalization-compatible motif. UniProt asserts GGA1/GGA2 binding only by similarity (ECO:0000250), not from direct human LRP3 experiments, and the accessible primary abstract reports no cargo-uptake experiment.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Resolving this distinction determines whether LRP3 is an endocytic receptor, a signaling membrane protein, or both.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Quantitative internalization assays with wild-type and motif-mutant LRP3, an identified cargo, and adaptor perturbations would resolve the mechanism.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"region with a tyrosine-based internalization signal."</em> — PMID:9693042</li>
+
+                <li><em>"CC   -!- SUBUNIT: Binds GGA1 and GGA2. {ECO:0000250}."</em> — file:human/LRP3/LRP3-uniprot.txt</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The proximal pathway connecting LRP3 to osteogenic-versus-adipogenic fate and the generality of this phenotype beyond immortalized human stromal-cell clones are unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> LRP3 knockdown and miR-4739 perturbation alter lineage differentiation and marker expression in immortalized human bone-marrow stromal cells, but the abstract does not identify a ligand or early signaling event.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> A proximal mechanism is needed to distinguish an evolved LRP3 signaling role from a model-specific downstream phenotype and to assess relevance in primary cells.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Multi-donor primary-cell knockout-rescue experiments with early time-course signaling measurements would establish causality and generalizability.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Data from functional and gene expression assays demonstrated
+the role of LRP3 as a molecular switch promoting hBMSC lineage differentiation
+into osteoblasts and inhibiting differentiation into adipocytes."</em> — PMID:28340487</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(LRP3-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O75074" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="lrp3-evidence-notes">LRP3 evidence notes</h1>
+<h2 id="evidence-inventory-and-identity">Evidence inventory and identity</h2>
+<p>The reviewed human record is UniProtKB O75074, a 770-aa LRP3 precursor<br />
+[file:human/LRP3/LRP3-uniprot.txt "ID   LRP3_HUMAN              Reviewed;         770 AA."].<br />
+The cached record has no <code>ALTERNATIVE PRODUCTS</code> section, so this review has no<br />
+evidence for functionally distinct human isoforms. Isoform-specific claims should<br />
+not be inferred from transcript databases or sequence-accession cautions.</p>
+<p>The primary cloning paper covers both human and rat cDNAs. Its architecture claim<br />
+is explicitly cross-species—<a href="https://pubmed.ncbi.nlm.nih.gov/9693042" title="and rat LRP3 cDNAs encode a 770-amino-acid type 1 membrane protein with the">PMID:9693042</a>—whereas its tissue-expression<br />
+statement is explicitly human <a href="https://pubmed.ncbi.nlm.nih.gov/9693042" title="LRP3 transcript was detected in a wide range of">PMID:9693042</a>. The differentiation work is human and uses immortalized human<br />
+bone-marrow stromal-cell clones; it is not evidence from primary tissue or an<br />
+animal model <a href="https://pubmed.ncbi.nlm.nih.gov/28340487" title="The goal of the current study was to unravel the novel role of the low-density lipoprotein receptor-related protein 3 (LRP3) in regulating the osteogenic and adipogenic differentiation of immortalized hBMSCs.">PMID:28340487</a>.</p>
+<h2 id="stromal-differentiation-direct-phenotype-downstream-scope">Stromal differentiation: direct phenotype, downstream scope</h2>
+<p>In the assayed immortalized human stromal-cell system, LRP3 expression was higher<br />
+in the more osteogenic clone and increased during osteogenic induction<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/28340487" title="Gene expression profiling revealed significantly higher LRP3 levels in the">PMID:28340487</a>. Perturbation assays support a context-specific<br />
+role favoring osteoblast differentiation and opposing adipocyte differentiation<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/28340487" title="Data from functional and gene expression assays demonstrated the role of LRP3 as a molecular switch promoting hBMSC lineage differentiation into osteoblasts and inhibiting differentiation into adipocytes.">PMID:28340487</a>.</p>
+<p>The paper also supports miR-4739 regulation of LRP3 mRNA through the 3' UTR<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/28340487" title="expression by miR-4739 was subsequently confirmed by qRT-PCR, western blotting,">PMID:28340487</a>. These data do<br />
+not identify an extracellular ligand, transported cargo, proximal signaling<br />
+reaction, or biochemical receptor activity. The ALPL, SPP1, ITGA10, CDH11,<br />
+DKK2, ADIPOQ, FABP4, LPL, and PPARG expression changes are downstream lineage<br />
+readouts; they should not be generalized into nine independent direct regulatory<br />
+activities of LRP3 or into a role in every tissue where LRP3 transcript occurs.<br />
+Those nine entities and the bone-marrow-cell context are transcribed from the<br />
+current QuickGO annotation API extension payload; the accessible abstract supports<br />
+the lineage phenotype but does not itself enumerate the marker entities.</p>
+<h2 id="topology-motif-and-uptake-boundary">Topology, motif, and uptake boundary</h2>
+<p>The cloning paper describes a type-I membrane protein with extracellular repeat<br />
+regions, a transmembrane segment, and a proline-rich cytoplasmic region<br />
+<a href="https://pubmed.ncbi.nlm.nih.gov/9693042" title="region with a tyrosine-based internalization signal.">PMID:9693042</a>. UniProt's<br />
+predicted feature table (ECO:0000255/PROSITE-ProRule) assigns the extracellular<br />
+domains more specifically as CUB1–LDLRA1–LDLRA2–CUB2–LDLRA3–LDLRA4<br />
+[file:human/LRP3/LRP3-uniprot.txt "FT   DOMAIN          43..159<br />
+FT                   /note=\"CUB 1\"<br />
+FT                   /evidence=\"ECO:0000255|PROSITE-ProRule:PRU00059\"<br />
+FT   DOMAIN          165..201<br />
+FT                   /note=\"LDL-receptor class A 1\"<br />
+FT                   /evidence=\"ECO:0000255|PROSITE-ProRule:PRU00124\"<br />
+FT   DOMAIN          211..250<br />
+FT                   /note=\"LDL-receptor class A 2\"<br />
+FT                   /evidence=\"ECO:0000255|PROSITE-ProRule:PRU00124\"<br />
+FT   DOMAIN          254..365<br />
+FT                   /note=\"CUB 2\"<br />
+FT                   /evidence=\"ECO:0000255|PROSITE-ProRule:PRU00059\"<br />
+FT   DOMAIN          415..453<br />
+FT                   /note=\"LDL-receptor class A 3\"<br />
+FT                   /evidence=\"ECO:0000255|PROSITE-ProRule:PRU00124\"<br />
+FT   DOMAIN          454..490<br />
+FT                   /note=\"LDL-receptor class A 4\"<br />
+FT                   /evidence=\"ECO:0000255|PROSITE-ProRule:PRU00124\""]. The<br />
+reviewed database record independently represents LRP3 as a predicted single-pass<br />
+type-I membrane protein [file:human/LRP3/LRP3-uniprot.txt "CC   -!- SUBCELLULAR LOCATION: Membrane {ECO:0000305}; Single-pass type I"]. These are<br />
+sequence/topology statements, not an experimentally resolved three-dimensional<br />
+structure.</p>
+<p>The cytoplasmic tyrosine-based motif is compatible with internalization, but a<br />
+motif is not a cargo-uptake assay. Indeed, the available abstract reports a<br />
+negative binding result in transfected CHO cells <a href="https://pubmed.ncbi.nlm.nih.gov/9693042" title="not bind beta-migrating very-low-density lipoprotein or receptor-associated">PMID:9693042</a>. The abstract-only cache does not show uptake of another ligand or<br />
+cargo. Therefore membrane localization is supported, while receptor-mediated<br />
+endocytosis remains curator-deferred and mechanistically unresolved.</p>
+<p>UniProt additionally asserts GGA1/GGA2 binding only by similarity<br />
+[file:human/LRP3/LRP3-uniprot.txt "CC   -!- SUBUNIT: Binds GGA1 and GGA2. {ECO:0000250}."],<br />
+which is not direct experimental evidence for adaptor recruitment by human LRP3.<br />
+Its DR block also carries an IEA keyword mapping to clathrin-coated pit<br />
+[file:human/LRP3/LRP3-uniprot.txt "DR   GO; GO:0005905; C:clathrin-coated pit; IEA:UniProtKB-KW."],<br />
+but GO:0005905 is absent from the local LRP3 GOA snapshot and therefore is not an<br />
+existing-annotation row in this review. Neither database statement establishes a<br />
+directly demonstrated coated-pit mechanism for human LRP3.</p>
+<h2 id="bbb-citation-and-family-transfer-limits">BBB citation and family-transfer limits</h2>
+<p>PMID:30280653 is a broad BBB physiology review <a href="https://pubmed.ncbi.nlm.nih.gov/30280653" title="Blood-Brain Barrier: From Physiology to Disease and Back.">PMID:30280653</a>. An exact, case-insensitive search<br />
+of the local file finds no <code>LRP3</code> occurrence, but the cache ends after the introduction<br />
+despite being flagged as full text. That incomplete local copy cannot establish that<br />
+the curator miscited the review or that the inaccessible remainder lacks LRP3-specific<br />
+evidence. The transport-across-BBB annotation therefore remains UNDECIDED pending<br />
+verification of the complete article.</p>
+<p>The GO_REF/PANTHER/ARBA rows document propagation mechanisms. The local record<br />
+places LRP3 in the broad LDLR family [file:human/LRP3/LRP3-uniprot.txt "CC   -!- SIMILARITY: Belongs to the LDLR family. {ECO:0000305}."], but the plasma-membrane<br />
+IBA draws on many distant LDLR-family source proteins, and the vesicle-transport<br />
+IEA is an automated ARBA transfer. Family membership supports cautious topology<br />
+and trafficking plausibility; it does not license transferring the ligand,<br />
+cargo, signaling pathway, tissue role, or disease mechanism of another paralog to<br />
+LRP3. LRP10 is a more relevant compact comparator because its predicted ectodomain<br />
+also contains two CUB and four LDL-receptor class-A domains<br />
+[file:human/LRP10/LRP10-uniprot.txt "FT   DOMAIN          28..136<br />
+FT                   /note=\"CUB 1\"<br />
+FT                   /evidence=\"ECO:0000255|PROSITE-ProRule:PRU00059\"<br />
+FT   DOMAIN          139..175<br />
+FT                   /note=\"LDL-receptor class A 1\"<br />
+FT                   /evidence=\"ECO:0000255|PROSITE-ProRule:PRU00124\"<br />
+FT   DOMAIN          192..305<br />
+FT                   /note=\"CUB 2\"<br />
+FT                   /evidence=\"ECO:0000255|PROSITE-ProRule:PRU00059\"<br />
+FT   DOMAIN          307..354<br />
+FT                   /note=\"LDL-receptor class A 2\"<br />
+FT                   /evidence=\"ECO:0000255|PROSITE-ProRule:PRU00124\"<br />
+FT   DOMAIN          355..397<br />
+FT                   /note=\"LDL-receptor class A 3\"<br />
+FT                   /evidence=\"ECO:0000255|PROSITE-ProRule:PRU00124\"<br />
+FT   DOMAIN          398..434<br />
+FT                   /note=\"LDL-receptor class A 4\"<br />
+FT                   /evidence=\"ECO:0000255|PROSITE-ProRule:PRU00124\""]. Even so, LRP10's<br />
+predicted internalization role [file:human/LRP10/LRP10-uniprot.txt "CC   -!- FUNCTION: Probable receptor, which is involved in the internalization"]<br />
+cannot be transferred to LRP3, whose own record says only that it may participate in<br />
+internalization and whose reported VLDL/LRPAP1 binding test was negative. Functions of<br />
+the larger LDLR/LRP1/LRP2/LRP4/LRP8 receptors are still more distant.</p>
+<h2 id="cancer-and-disease-boundary">Cancer and disease boundary</h2>
+<p>None of the decisive cached sources establishes a normal LRP3 function in cancer,<br />
+a causal tumor mechanism, or a cancer-cell phenotype. Database cancer cross-links,<br />
+expression associations, and family-level disease knowledge are not functional<br />
+evidence. Any future cancer claim needs an LRP3-specific perturbation study with<br />
+mechanistic and rescue evidence and must be kept distinct from the immortalized<br />
+stromal differentiation phenotype above.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O75074
+gene_symbol: LRP3
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: &gt;-
+  LRP3 encodes a poorly characterized 770-amino-acid member of the low-density
+  lipoprotein receptor family. Its type-I membrane architecture comprises a signal
+  peptide, an extracellular ectodomain predicted to contain two CUB domains and four
+  LDL-receptor class-A domains in the order CUB1–LDLRA1–LDLRA2–CUB2–LDLRA3–LDLRA4,
+  one transmembrane helix, and a long proline-rich cytoplasmic region containing
+  a tyrosine-based internalization signal. LRP3 transcript is broadly detected in human
+  tissues. In immortalized human bone-marrow stromal cells, LRP3 expression and
+  perturbation support a context-dependent role that favors osteoblast differentiation
+  and opposes adipocyte differentiation, with LRP3 mRNA regulated by miR-4739. Its
+  physiological ligand, transported cargo, proximal signaling mechanism, and general
+  relevance outside this stromal-cell model remain unknown; transfected CHO cells did
+  not bind beta-migrating VLDL or receptor-associated protein under the reported
+  conditions.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  supporting_entities:
+  - FB:FBgn0030706
+  - FB:FBgn0051092
+  - MGI:MGI:1340044
+  - MGI:MGI:1860083
+  - MGI:MGI:2138856
+  - MGI:MGI:2442252
+  - MGI:MGI:96765
+  - MGI:MGI:96828
+  - PANTHER:PTN002557696
+  - RGD:2998
+  - RGD:619731
+  - RGD:727887
+  - UniProtKB:E1BGJ0
+  - UniProtKB:P01130
+  - UniProtKB:P01131
+  - UniProtKB:P98155
+  - UniProtKB:Q07954
+  - UniProtKB:Q14114
+  - UniProtKB:Q86YD5
+  - UniProtKB:Q9NPF0
+  - UniProtKB:Q9Y561
+  - UniProtKB:Q9Y5Q5
+  - WB:WBGene00003071
+  - WB:WBGene00015083
+  - WB:WBGene00019811
+  review:
+    summary: &gt;-
+      Phylogenetic inference places LRP3 at the plasma membrane, consistent with its
+      type-I membrane topology and a family-supported coated-pit localization.
+    action: ACCEPT
+    reason: &gt;-
+      Plasma membrane is a coherent active location for an LDLR-family receptor with
+      an extracellular ligand-binding region and cytoplasmic internalization motif.
+      The IBA is retained without importing the ligands or cargo repertoires of the
+      many paralogous source receptors.
+    propagation_review:
+      root_cause: NO_FAILURE_CORE
+      source_entities:
+      - source_id: FB:FBgn0030706
+        source_status: SUPPORTS_TRANSFER
+      - source_id: FB:FBgn0051092
+        source_status: SUPPORTS_TRANSFER
+      - source_id: MGI:MGI:1340044
+        source_status: SUPPORTS_TRANSFER
+      - source_id: MGI:MGI:1860083
+        source_status: SUPPORTS_TRANSFER
+      - source_id: MGI:MGI:2138856
+        source_status: SUPPORTS_TRANSFER
+      - source_id: MGI:MGI:2442252
+        source_status: SUPPORTS_TRANSFER
+      - source_id: MGI:MGI:96765
+        source_status: SUPPORTS_TRANSFER
+      - source_id: MGI:MGI:96828
+        source_status: SUPPORTS_TRANSFER
+      - source_id: PANTHER:PTN002557696
+        source_status: SUPPORTS_TRANSFER
+      - source_id: RGD:2998
+        source_status: SUPPORTS_TRANSFER
+      - source_id: RGD:619731
+        source_status: SUPPORTS_TRANSFER
+      - source_id: RGD:727887
+        source_status: SUPPORTS_TRANSFER
+      - source_id: UniProtKB:E1BGJ0
+        source_status: SUPPORTS_TRANSFER
+      - source_id: UniProtKB:P01130
+        source_status: SUPPORTS_TRANSFER
+      - source_id: UniProtKB:P01131
+        source_status: SUPPORTS_TRANSFER
+      - source_id: UniProtKB:P98155
+        source_status: SUPPORTS_TRANSFER
+      - source_id: UniProtKB:Q07954
+        source_status: SUPPORTS_TRANSFER
+      - source_id: UniProtKB:Q14114
+        source_status: SUPPORTS_TRANSFER
+      - source_id: UniProtKB:Q86YD5
+        source_status: SUPPORTS_TRANSFER
+      - source_id: UniProtKB:Q9NPF0
+        source_status: SUPPORTS_TRANSFER
+      - source_id: UniProtKB:Q9Y561
+        source_status: SUPPORTS_TRANSFER
+      - source_id: UniProtKB:Q9Y5Q5
+        source_status: SUPPORTS_TRANSFER
+      - source_id: WB:WBGene00003071
+        source_status: SUPPORTS_TRANSFER
+      - source_id: WB:WBGene00015083
+        source_status: SUPPORTS_TRANSFER
+      - source_id: WB:WBGene00019811
+        source_status: SUPPORTS_TRANSFER
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  supporting_entities:
+  - ARBA:ARBA00028763
+  - UniProtKB-SubCell:SL-0162
+  review:
+    summary: &gt;-
+      Combined automated mapping assigns the broad membrane location from an ARBA
+      rule and the UniProt membrane vocabulary term.
+    action: ACCEPT
+    reason: &gt;-
+      The term is correct for the experimentally cloned type-I membrane protein.
+    propagation_review:
+      root_cause: NO_FAILURE_CORE
+      source_entities:
+      - source_id: ARBA:ARBA00028763
+        source_status: SUPPORTS_TRANSFER
+      - source_id: UniProtKB-SubCell:SL-0162
+        source_status: SUPPORTS_TRANSFER
+- term:
+    id: GO:0016192
+    label: vesicle-mediated transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  supporting_entities:
+  - ARBA:ARBA00028249
+  review:
+    summary: &gt;-
+      ARBA transfers a broad vesicle-mediated-transport process to LRP3, consistent
+      with its cytoplasmic internalization motif and coated-pit family context.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Vesicular trafficking is plausible, but no cargo has been identified and direct
+      LRP3 uptake was not shown in the cached primary evidence. Retain this broad
+      secondary process without treating it as a defined core receptor mechanism.
+    propagation_review:
+      root_cause: NO_FAILURE_NON_CORE
+      source_entities:
+      - source_id: ARBA:ARBA00028249
+        source_status: SUPPORTS_TRANSFER
+- term:
+    id: GO:0150104
+    label: transport across blood-brain barrier
+  evidence_type: NAS
+  original_reference_id: PMID:30280653
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      The available cache is truncated after the introduction and does not expose
+      enough of the cited review to verify or reject an LRP3-specific transport claim.
+    action: UNDECIDED
+    reason: &gt;-
+      The NAS cannot be confirmed from the incomplete cached article, but curator
+      deference precludes treating the missing accessible evidence as proof of a
+      miscitation. Full-article verification is required before accepting or removing
+      this annotation.
+- term:
+    id: GO:0010628
+    label: positive regulation of gene expression
+  evidence_type: IMP
+  original_reference_id: PMID:28340487
+  qualifier: involved_in
+  extensions:
+  - predicate: BFO:0000066
+    term:
+      id: CL:0002092
+      label: bone marrow cell
+  - predicate: RO:0002233
+    term:
+      id: UniProtKB:P05186
+      label: ALPL
+  - predicate: BFO:0000066
+    term:
+      id: CL:0002092
+      label: bone marrow cell
+  - predicate: RO:0002233
+    term:
+      id: UniProtKB:P10451
+      label: SPP1
+  - predicate: BFO:0000066
+    term:
+      id: CL:0002092
+      label: bone marrow cell
+  - predicate: RO:0002233
+    term:
+      id: UniProtKB:O75578
+      label: ITGA10
+  - predicate: BFO:0000066
+    term:
+      id: CL:0002092
+      label: bone marrow cell
+  - predicate: RO:0002233
+    term:
+      id: UniProtKB:P55287
+      label: CDH11
+  - predicate: BFO:0000066
+    term:
+      id: CL:0002092
+      label: bone marrow cell
+  - predicate: RO:0002233
+    term:
+      id: UniProtKB:Q9UBU2
+      label: DKK2
+  review:
+    summary: &gt;-
+      LRP3 perturbation changed five osteogenic marker-expression readouts in
+      immortalized human bone-marrow stromal cells.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      These transcript changes are downstream readouts of the osteoblast-differentiation
+      phenotype; they do not establish that LRP3 directly or proximally regulates
+      transcription of any marker gene. Treating each readout as a separate generic
+      positive regulation of gene expression therefore overstates the mechanistic
+      evidence. The exact occurs_in/has_input extensions are retained from the QuickGO
+      annotation payload; the accessible abstract supports the lineage phenotype but
+      does not enumerate these five marker entities.
+    supported_by:
+    - reference_id: PMID:28340487
+      supporting_text: &#34;Data from functional and gene expression assays demonstrated\nthe role of LRP3 as a molecular switch promoting hBMSC lineage differentiation\ninto osteoblasts and inhibiting differentiation into adipocytes.&#34;
+- term:
+    id: GO:0010629
+    label: negative regulation of gene expression
+  evidence_type: IMP
+  original_reference_id: PMID:28340487
+  qualifier: involved_in
+  extensions:
+  - predicate: BFO:0000066
+    term:
+      id: CL:0002092
+      label: bone marrow cell
+  - predicate: RO:0002233
+    term:
+      id: UniProtKB:Q15848
+      label: ADIPOQ
+  - predicate: BFO:0000066
+    term:
+      id: CL:0002092
+      label: bone marrow cell
+  - predicate: RO:0002233
+    term:
+      id: UniProtKB:P15090
+      label: FABP4
+  - predicate: BFO:0000066
+    term:
+      id: CL:0002092
+      label: bone marrow cell
+  - predicate: RO:0002233
+    term:
+      id: UniProtKB:P06858
+      label: LPL
+  - predicate: BFO:0000066
+    term:
+      id: CL:0002092
+      label: bone marrow cell
+  - predicate: RO:0002233
+    term:
+      id: UniProtKB:P37231
+      label: PPARG
+  review:
+    summary: &gt;-
+      LRP3 perturbation changed four adipogenic marker-expression readouts in
+      immortalized human bone-marrow stromal cells.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      These transcript changes are downstream readouts of the adipocyte-differentiation
+      phenotype; they do not establish that LRP3 directly or proximally regulates
+      transcription of any marker gene. Treating each readout as a separate generic
+      negative regulation of gene expression therefore overstates the mechanistic
+      evidence. The exact occurs_in/has_input extensions are retained from the QuickGO
+      annotation payload; the accessible abstract supports the lineage phenotype but
+      does not enumerate these four marker entities.
+    supported_by:
+    - reference_id: PMID:28340487
+      supporting_text: &#34;Data from functional and gene expression assays demonstrated\nthe role of LRP3 as a molecular switch promoting hBMSC lineage differentiation\ninto osteoblasts and inhibiting differentiation into adipocytes.&#34;
+- term:
+    id: GO:0045599
+    label: negative regulation of fat cell differentiation
+  evidence_type: IMP
+  original_reference_id: PMID:28340487
+  qualifier: involved_in
+  extensions:
+  - predicate: BFO:0000066
+    term:
+      id: CL:0002092
+      label: bone marrow cell
+  review:
+    summary: &gt;-
+      LRP3 knockdown promoted adipogenic differentiation of immortalized human
+      bone-marrow stromal cells.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The direct perturbation phenotype supports negative regulation of fat-cell
+      differentiation in the assayed stromal-cell context. It is retained as a
+      lineage-specific downstream role rather than a defining receptor activity.
+    supported_by:
+    - reference_id: PMID:28340487
+      supporting_text: &#34;Over-expression of miR-4739 mimicked the effects of LRP3\nknockdown on promoting adipogenic and suppressing osteogenic differentiation of\nhBMSCs.&#34;
+- term:
+    id: GO:0045669
+    label: positive regulation of osteoblast differentiation
+  evidence_type: IMP
+  original_reference_id: PMID:28340487
+  qualifier: involved_in
+  extensions:
+  - predicate: BFO:0000066
+    term:
+      id: CL:0002092
+      label: bone marrow cell
+  review:
+    summary: &gt;-
+      LRP3 knockdown suppressed osteogenic differentiation of immortalized human
+      bone-marrow stromal cells.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      The direct perturbation phenotype supports positive regulation of osteoblast
+      differentiation in the assayed stromal-cell context. It is retained as a
+      lineage-specific downstream role rather than a defined receptor activity.
+    supported_by:
+    - reference_id: PMID:28340487
+      supporting_text: &#34;Over-expression of miR-4739 mimicked the effects of LRP3\nknockdown on promoting adipogenic and suppressing osteogenic differentiation of\nhBMSCs.&#34;
+- term:
+    id: GO:0006898
+    label: receptor-mediated endocytosis
+  evidence_type: TAS
+  original_reference_id: PMID:9693042
+  qualifier: involved_in
+  review:
+    summary: &gt;-
+      The cloning paper identified a cytoplasmic tyrosine-based internalization signal,
+      but the cached abstract reports no LRP3 ligand uptake experiment.
+    action: UNDECIDED
+    reason: &gt;-
+      Receptor-mediated endocytosis requires demonstrated cell-surface ligand binding
+      and uptake. The abstract instead reports failure to bind beta-VLDL or LRPAP1;
+      without the relevant full text, curator deference precludes rejecting the TAS,
+      but the process cannot be accepted as established.
+    supported_by:
+    - reference_id: PMID:9693042
+      supporting_text: &#34;Despite\nthe presence of the ligand-binding repeats, CHO cells transfected with LRP3 did\nnot bind beta-migrating very-low-density lipoprotein or receptor-associated\nprotein.&#34;
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: TAS
+  original_reference_id: PMID:9693042
+  qualifier: located_in
+  review:
+    summary: &gt;-
+      Human and rat LRP3 cDNAs encode a type-I membrane protein.
+    action: ACCEPT
+    reason: &gt;-
+      Membrane localization is directly supported by the cloned sequence architecture
+      and agrees with the reviewed UniProt record and automated membrane annotation.
+    supported_by:
+    - reference_id: PMID:9693042
+      supporting_text: &#34;Human\nand rat LRP3 cDNAs encode a 770-amino-acid type 1 membrane protein with the\nfollowing regions: a putative signal sequence, two\nisoleucine/leucine/valine-rich regions with an RGD sequence, two ligand-binding\nrepeat regions, a putative transmembrane region, and a proline-rich cytoplasmic\nregion with a tyrosine-based internalization signal.&#34;
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The identifier and title match the GOA provenance for the plasma-membrane
+      IBA. This method reference explains the phylogenetic transfer but is not
+      direct experimental evidence for an LRP3 ligand, cargo, or transport activity.
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The identifier and title match the GOA provenance for the ARBA
+      vesicle-mediated-transport IEA. It documents an automated family/model
+      transfer and supplies no LRP3-specific cargo-uptake experiment.
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      The identifier and title match the GOA provenance for the automated membrane
+      annotation. It is relevant to localization provenance, not primary evidence
+      for receptor activity.
+- id: file:human/LRP3/LRP3-uniprot.txt
+  title: UniProtKB entry O75074 (LRP3_HUMAN), low-density lipoprotein receptor-related
+    protein 3
+  findings:
+  - statement: &gt;-
+      UniProt predicts two CUB domains and four LDL-receptor class-A domains in the
+      extracellular region, ordered CUB1–LDLRA1–LDLRA2–CUB2–LDLRA3–LDLRA4.
+    supporting_text: |-
+      FT   DOMAIN          43..159
+      FT                   /note=&#34;CUB 1&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00059&#34;
+      FT   DOMAIN          165..201
+      FT                   /note=&#34;LDL-receptor class A 1&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+      FT   DOMAIN          211..250
+      FT                   /note=&#34;LDL-receptor class A 2&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+      FT   DOMAIN          254..365
+      FT                   /note=&#34;CUB 2&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00059&#34;
+      FT   DOMAIN          415..453
+      FT                   /note=&#34;LDL-receptor class A 3&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+      FT   DOMAIN          454..490
+      FT                   /note=&#34;LDL-receptor class A 4&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+    reference_section_type: DATABASE_ENTRY
+    full_text_unavailable: false
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reviewed human LRP3 record used to audit sequence length, predicted type-I
+      single-pass topology, LDLR-family membership, and the limits of its probable-
+      receptor wording. Its coated-pit localization and GGA-binding statements are
+      similarity-based rather than direct human LRP3 experiments.
+- id: file:human/LRP10/LRP10-uniprot.txt
+  title: UniProtKB entry Q7Z4F1 (LRP10_HUMAN), low-density lipoprotein receptor-related
+    protein 10
+  findings:
+  - statement: &gt;-
+      LRP10 is a compact LDLR-family comparator with two predicted CUB domains and four
+      predicted LDL-receptor class-A domains.
+    supporting_text: |-
+      FT   DOMAIN          28..136
+      FT                   /note=&#34;CUB 1&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00059&#34;
+      FT   DOMAIN          139..175
+      FT                   /note=&#34;LDL-receptor class A 1&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+      FT   DOMAIN          192..305
+      FT                   /note=&#34;CUB 2&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00059&#34;
+      FT   DOMAIN          307..354
+      FT                   /note=&#34;LDL-receptor class A 2&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+      FT   DOMAIN          355..397
+      FT                   /note=&#34;LDL-receptor class A 3&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+      FT   DOMAIN          398..434
+      FT                   /note=&#34;LDL-receptor class A 4&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+    reference_section_type: DATABASE_ENTRY
+    full_text_unavailable: false
+  - statement: &gt;-
+      UniProt predicts an internalization role for LRP10, a paralog-specific claim that
+      does not establish the more tentative LRP3 mechanism.
+    supporting_text: |-
+      CC   -!- FUNCTION: Probable receptor, which is involved in the internalization
+      CC       of lipophilic molecules and/or signal transduction. May be involved in
+      CC       the uptake of lipoprotein APOE in liver (By similarity). {ECO:0000250}.
+    reference_section_type: DATABASE_ENTRY
+    full_text_unavailable: false
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Reviewed human LRP10 record used only as a closer compact-LRP architecture and
+      annotation-boundary comparator; no LRP10 ligand, cargo, or process is transferred
+      to LRP3.
+- id: PMID:28340487
+  title: MicroRNA-4739 regulates osteogenic and adipocytic differentiation of immortalized
+    human bone marrow stromal cells via targeting LRP3.
+  findings:
+  - statement: &gt;-
+      LRP3 expression was higher in the more osteogenic immortalized human
+      bone-marrow stromal-cell clone and increased during its osteogenic induction.
+    supporting_text: |-
+      Gene expression profiling revealed significantly higher LRP3 levels in the
+      highly osteogenic hBMSC clone imCL1 than in the less osteogenic clone imCL2, as
+      well as a significant upregulation of LRP3 during the osteogenic induction of
+      the imCL1 clone. Data from functional and gene expression assays demonstrated
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: &gt;-
+      LRP3 perturbation in this immortalized human stromal-cell system favored
+      osteoblast differentiation and opposed adipocyte differentiation.
+    supporting_text: |-
+      Data from functional and gene expression assays demonstrated
+      the role of LRP3 as a molecular switch promoting hBMSC lineage differentiation
+      into osteoblasts and inhibiting differentiation into adipocytes.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: &gt;-
+      The study identified and experimentally confirmed LRP3 mRNA as a target of
+      miR-4739 through a site in the LRP3 3&#39; UTR.
+    supporting_text: |-
+      The TargetScan
+      prediction algorithm, combined with functional and biochemical assays,
+      identified LRP3 mRNA as a novel target of miR-4739, with a single potential
+      binding site for miR-4739 located in the LRP3 3&#39; UTR. Regulation of LRP3
+      expression by miR-4739 was subsequently confirmed by qRT-PCR, western blotting,
+      and luciferase assays.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed title and cached abstract verified. This is direct human LRP3
+      perturbation evidence in immortalized bone-marrow stromal cells, but it supports
+      context-specific downstream differentiation and marker-expression phenotypes;
+      it does not establish LRP3&#39;s ligand, cargo, biochemical receptor activity, or a
+      general role across tissues.
+- id: PMID:30280653
+  title: &#39;Blood-Brain Barrier: From Physiology to Disease and Back.&#39;
+  findings: []
+  full_text_unavailable: true
+  reference_review:
+    relevance: MEDIUM
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      The PMID and title resolve correctly, but the local file ends after the abstract
+      and introduction despite its full-text flag. The inaccessible remainder may
+      contain the curator&#39;s LRP3-specific basis, so citation relevance and correctness
+      remain unverified.
+- id: PMID:9693042
+  title: cDNA cloning of a new low-density lipoprotein receptor-related protein and
+    mapping of its gene (LRP3) to chromosome bands 19q12-q13. 2.
+  findings:
+  - statement: &gt;-
+      Human and rat LRP3 cDNAs encode a 770-aa type-I membrane protein with a signal
+      sequence, ligand-binding repeats, one transmembrane region, and a cytoplasmic
+      tyrosine-based internalization signal.
+    supporting_text: |-
+      Human
+      and rat LRP3 cDNAs encode a 770-amino-acid type 1 membrane protein with the
+      following regions: a putative signal sequence, two
+      isoleucine/leucine/valine-rich regions with an RGD sequence, two ligand-binding
+      repeat regions, a putative transmembrane region, and a proline-rich cytoplasmic
+      region with a tyrosine-based internalization signal.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: &gt;-
+      Human LRP3 transcript was broadly detected, with the highest reported expression
+      in skeletal muscle and ovary.
+    supporting_text: |-
+      LRP3 transcript was detected in a wide range of
+      human tissues, with the highest expression in skeletal muscle and ovary.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - statement: &gt;-
+      Transfected CHO cells did not bind either beta-migrating VLDL or
+      receptor-associated protein under the reported conditions.
+    supporting_text: |-
+      Despite
+      the presence of the ligand-binding repeats, CHO cells transfected with LRP3 did
+      not bind beta-migrating very-low-density lipoprotein or receptor-associated
+      protein.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed title and cached abstract verified. This primary cloning study supports
+      human/rat sequence architecture, human tissue expression, and negative binding
+      results in CHO cells. The tyrosine motif suggests internalization capacity, but
+      the available abstract does not demonstrate uptake of a cargo or define a
+      physiological ligand.
+core_functions:
+- description: &gt;-
+    LRP3 is a type-I single-pass LDLR-family membrane protein whose extracellular
+    ectodomain is predicted to contain CUB1–LDLRA1–LDLRA2–CUB2–LDLRA3–LDLRA4 and
+    whose cytoplasmic tyrosine-based internalization signal is compatible with receptor
+    trafficking. Phylogenetic inference places LRP3 at the plasma membrane, whereas the
+    reviewed UniProt record supports only generic membrane localization; plasma membrane
+    is therefore an IBA-level location rather than a directly demonstrated human LRP3
+    location. No physiological ligand, cargo-uptake activity, or proximal signaling
+    reaction has yet been established, so no specific molecular-function term is assigned.
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: PMID:9693042
+    supporting_text: |-
+      Human
+      and rat LRP3 cDNAs encode a 770-amino-acid type 1 membrane protein with the
+      following regions: a putative signal sequence, two
+      isoleucine/leucine/valine-rich regions with an RGD sequence, two ligand-binding
+      repeat regions, a putative transmembrane region, and a proline-rich cytoplasmic
+      region with a tyrosine-based internalization signal.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - reference_id: file:human/LRP3/LRP3-uniprot.txt
+    supporting_text: |-
+      FT   DOMAIN          43..159
+      FT                   /note=&#34;CUB 1&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00059&#34;
+      FT   DOMAIN          165..201
+      FT                   /note=&#34;LDL-receptor class A 1&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+      FT   DOMAIN          211..250
+      FT                   /note=&#34;LDL-receptor class A 2&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+      FT   DOMAIN          254..365
+      FT                   /note=&#34;CUB 2&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00059&#34;
+      FT   DOMAIN          415..453
+      FT                   /note=&#34;LDL-receptor class A 3&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+      FT   DOMAIN          454..490
+      FT                   /note=&#34;LDL-receptor class A 4&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+    reference_section_type: DATABASE_ENTRY
+    full_text_unavailable: false
+  - reference_id: file:human/LRP3/LRP3-uniprot.txt
+    supporting_text: |-
+      CC   -!- SUBCELLULAR LOCATION: Membrane {ECO:0000305}; Single-pass type I
+      CC       membrane protein {ECO:0000305}.
+    reference_section_type: DATABASE_ENTRY
+    full_text_unavailable: false
+proposed_new_terms: []
+suggested_questions:
+- question: &gt;-
+    What physiological ligand or extracellular partner, if any, engages human LRP3,
+    given that beta-migrating VLDL and receptor-associated protein did not bind in the
+    reported CHO-cell assay?
+  experts:
+  - H. Ishii
+  - T. T. Yamamoto
+- question: &gt;-
+    Does the cytoplasmic tyrosine-based signal drive constitutive or ligand-induced
+    LRP3 internalization, and what cargo and adaptor machinery are involved?
+  experts:
+  - H. Ishii
+  - T. T. Yamamoto
+- question: &gt;-
+    Which proximal LRP3-dependent signaling event shifts immortalized human
+    bone-marrow stromal cells between osteogenic and adipogenic differentiation, and
+    does the same mechanism operate in primary human stromal cells?
+  experts:
+  - M. Elsafadi
+  - A. Mahmood
+  - M. Kassem
+suggested_experiments:
+- hypothesis: &gt;-
+    Human LRP3 recognizes a ligand distinct from beta-migrating VLDL and LRPAP1 and
+    internalizes it through the cytoplasmic tyrosine-based signal.
+  description: &gt;-
+    Use purified human LRP3 ectodomain for unbiased cell-surface and secreted-protein
+    ligand capture, then test candidate binding and uptake in matched LRP3-null cells
+    rescued with wild-type LRP3 or a tyrosine-signal mutant. Quantify surface loss,
+    cargo internalization, endosomal delivery, and competition with soluble
+    ectodomain.
+  experiment_type: ligand discovery and internalization-rescue assay
+- hypothesis: &gt;-
+    The cytoplasmic tyrosine-based signal recruits endocytic adaptors and is required
+    for LRP3 movement from the plasma membrane into coated vesicles.
+  description: &gt;-
+    Compare endogenous or equivalently expressed wild-type and tyrosine-signal-mutant
+    LRP3 by surface biotinylation pulse-chase and live-cell imaging, coupled to
+    proximity labeling or immunoprecipitation of adaptor proteins. Include expression,
+    topology, and plasma-membrane delivery controls so a trafficking defect is not
+    confused with misfolding.
+  experiment_type: motif separation-of-function trafficking assay
+- hypothesis: &gt;-
+    The stromal differentiation phenotype is caused by a proximal LRP3-dependent
+    signaling pathway rather than nonspecific effects of the original knockdown.
+  description: &gt;-
+    Generate independent LRP3 knockout clones in primary human bone-marrow stromal
+    cells from multiple donors, rescue them with wild-type LRP3, and profile early
+    phosphoproteomic and transcriptional responses before lineage markers diverge.
+    Compare osteogenic and adipogenic differentiation with matched proliferation and
+    viability controls, and test whether miR-4739 effects are rescued by an LRP3 cDNA
+    lacking its 3&#39; UTR.
+  experiment_type: primary-cell knockout-rescue and pathway-identification study
+knowledge_gaps:
+- gap_statement: &gt;-
+    The direct molecular activity and physiological extracellular ligand of LRP3 are
+    unknown.
+  boundary: &gt;-
+    LRP3 has a predicted compact CUB/LDLRA ectodomain architecture that makes LRP10 a
+    closer comparator than the larger LDLR-family receptors, but shared subfamily
+    architecture does not identify an LRP3 ligand or license functional transfer.
+    Transfected CHO cells did not bind beta-migrating VLDL or receptor-associated protein.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Without a direct ligand or activity, receptor-family terminology cannot be turned
+    into an informative molecular-function annotation.
+  resolution: &gt;-
+    Direct biochemical ligand binding followed by LRP3-dependent cellular response or
+    uptake, with knockout and rescue controls, would resolve this gap.
+  provenance:
+  - reference_id: file:human/LRP3/LRP3-uniprot.txt
+    supporting_text: |-
+      FT   DOMAIN          43..159
+      FT                   /note=&#34;CUB 1&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00059&#34;
+      FT   DOMAIN          165..201
+      FT                   /note=&#34;LDL-receptor class A 1&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+      FT   DOMAIN          211..250
+      FT                   /note=&#34;LDL-receptor class A 2&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+      FT   DOMAIN          254..365
+      FT                   /note=&#34;CUB 2&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00059&#34;
+      FT   DOMAIN          415..453
+      FT                   /note=&#34;LDL-receptor class A 3&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+      FT   DOMAIN          454..490
+      FT                   /note=&#34;LDL-receptor class A 4&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+    reference_section_type: DATABASE_ENTRY
+    full_text_unavailable: false
+  - reference_id: file:human/LRP10/LRP10-uniprot.txt
+    supporting_text: |-
+      FT   DOMAIN          28..136
+      FT                   /note=&#34;CUB 1&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00059&#34;
+      FT   DOMAIN          139..175
+      FT                   /note=&#34;LDL-receptor class A 1&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+      FT   DOMAIN          192..305
+      FT                   /note=&#34;CUB 2&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00059&#34;
+      FT   DOMAIN          307..354
+      FT                   /note=&#34;LDL-receptor class A 2&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+      FT   DOMAIN          355..397
+      FT                   /note=&#34;LDL-receptor class A 3&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+      FT   DOMAIN          398..434
+      FT                   /note=&#34;LDL-receptor class A 4&#34;
+      FT                   /evidence=&#34;ECO:0000255|PROSITE-ProRule:PRU00124&#34;
+    reference_section_type: DATABASE_ENTRY
+    full_text_unavailable: false
+  - reference_id: PMID:9693042
+    supporting_text: |-
+      Despite
+      the presence of the ligand-binding repeats, CHO cells transfected with LRP3 did
+      not bind beta-migrating very-low-density lipoprotein or receptor-associated
+      protein.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+- gap_statement: &gt;-
+    It is unknown whether the cytoplasmic tyrosine-based signal mediates LRP3
+    endocytosis, which adaptors it recruits, and whether any physiological cargo is
+    internalized.
+  boundary: &gt;-
+    The cloned sequence contains an internalization-compatible motif. UniProt asserts
+    GGA1/GGA2 binding only by similarity (ECO:0000250), not from direct human LRP3
+    experiments, and the accessible primary abstract reports no cargo-uptake experiment.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  status: OPEN
+  significance: &gt;-
+    Resolving this distinction determines whether LRP3 is an endocytic receptor, a
+    signaling membrane protein, or both.
+  resolution: &gt;-
+    Quantitative internalization assays with wild-type and motif-mutant LRP3, an
+    identified cargo, and adaptor perturbations would resolve the mechanism.
+  provenance:
+  - reference_id: PMID:9693042
+    supporting_text: |-
+      region with a tyrosine-based internalization signal.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+  - reference_id: file:human/LRP3/LRP3-uniprot.txt
+    supporting_text: &#39;CC   -!- SUBUNIT: Binds GGA1 and GGA2. {ECO:0000250}.&#39;
+    reference_section_type: DATABASE_ENTRY
+    full_text_unavailable: false
+- gap_statement: &gt;-
+    The proximal pathway connecting LRP3 to osteogenic-versus-adipogenic fate and the
+    generality of this phenotype beyond immortalized human stromal-cell clones are
+    unknown.
+  boundary: &gt;-
+    LRP3 knockdown and miR-4739 perturbation alter lineage differentiation and marker
+    expression in immortalized human bone-marrow stromal cells, but the abstract does
+    not identify a ligand or early signaling event.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  status: OPEN
+  significance: &gt;-
+    A proximal mechanism is needed to distinguish an evolved LRP3 signaling role from
+    a model-specific downstream phenotype and to assess relevance in primary cells.
+  resolution: &gt;-
+    Multi-donor primary-cell knockout-rescue experiments with early time-course
+    signaling measurements would establish causality and generalizability.
+  provenance:
+  - reference_id: PMID:28340487
+    supporting_text: |-
+      Data from functional and gene expression assays demonstrated
+      the role of LRP3 as a molecular switch promoting hBMSC lineage differentiation
+      into osteoblasts and inhibiting differentiation into adipocytes.
+    reference_section_type: ABSTRACT
+    full_text_unavailable: true
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

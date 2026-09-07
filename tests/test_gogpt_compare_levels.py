@@ -153,9 +153,23 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
         # rows, reducing raw totals by three and predicted overlaps by two. Its
         # completed review plus follow-up adds evidence-backed GO:0009408 to the
         # post-review set while removing general redox homeostasis from the core;
-        # GO:0051087 remains an evidence-backed core activity and predicted overlap.
-        "post_review": {"overlap": 849, "total": 2761, "pred": 8871},
-        "core": {"overlap": 350, "total": 1230, "pred": 8871},
+        # GO:0051087 remains an evidence-backed core activity, but is the one CnoX
+        # core term GO-GPT did not predict: the report's core_overlap_terms are
+        # GO:0005829, GO:0034599 and GO:0042026, which is why core_terms is 4 and
+        # core_overlap 3.
+        # BACSU/lipA follows GO:0009107's obsoletion: its two lipoate-biosynthesis
+        # rows become MODIFY to the replacement GO:0009249, which the review already
+        # carries, so the post-review set loses one distinct term. The core_functions
+        # entry keyed on the obsolete term was dropped for the same reason, removing
+        # one GO-valued core term. Both overlaps are unchanged -- GO:0009249 was
+        # already the predicted match at both levels.
+        # The AT1G06680 (PSBP1) re-review synthesizes a core_functions block for
+        # the first time: four GO-valued core slots, one of which (GO:0019684)
+        # is a predicted overlap (+4 core total, +1 core overlap). The same
+        # re-review stops retaining GO:0009535 post-review, dropping one
+        # predicted post-review overlap without changing the post-review total.
+        "post_review": {"overlap": 848, "total": 2760, "pred": 8871},
+        "core": {"overlap": 351, "total": 1233, "pred": 8871},
     }
 
 

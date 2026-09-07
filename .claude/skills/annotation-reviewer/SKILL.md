@@ -70,6 +70,52 @@ Two things this implies, both easy to get backwards:
 See [projects/IBA_REVIEW.md](../../../projects/IBA_REVIEW.md) for the full propagation
 taxonomy and the fifteen catalogued failure patterns.
 
+**A `propagation_review` should not be a bare enum block.** When you add one
+(root_cause + failure_modes), also trace the annotation's proximate source(s) and
+record them under `source_entities`, each with a `source_status` and a short
+source-specific `comment` — that comment is where the block's explanation lives, since
+the schema keeps `PropagationReview` itself free-text-free (the full rationale stays in
+`review.reason`). For an ISO row the sources are the donor gene product(s) in the GOA
+WITH/FROM column (consulting the tsv for donor tracing is fine — just ignore its
+QUALIFIER column); for an IBA row use the PANTHER:PTN ancestral node, not the extant
+member list. If tracing cannot recover a donor, say so via
+`source_status: SOURCE_STALE_OR_MISSING` or `UNRESOLVED` rather than omitting the
+entry. Never invent gene symbols for `source_label` — omit it when unsure.
+
+**Do not second-guess what the deterministic pipeline provides.** The GOA tsv, the
+ontology caches, and the validators are produced by deterministic tooling; facts they
+assert or would have flagged are not yours to overrule from memory. In particular:
+
+- **Never claim a GO term is obsolete (or merged, or renamed) from memory.** The
+  validation pipeline checks term ids and labels against the ontology; if a term in the
+  GOA file were obsolete, tooling would surface it. Before writing any review whose
+  rationale depends on obsolescence or a label change, verify against OLS/QuickGO. A
+  MODIFY justified by a false obsolescence claim is worse than no action at all.
+- The same applies to GOA-provided fields generally (term ids, labels, evidence codes,
+  qualifiers, WITH/FROM): treat them as ground truth about what GOA asserts, and spend
+  your judgment on whether the *assertion* is biologically right, not on whether the
+  machine-provided record is what it says it is.
+
+**Work from the review YAML; you never need the GOA tsv.** The `existing_annotations`
+rows are seeded deterministically from the GOA tsv, so everything to review is already
+in the YAML. Review each annotation on one question: **does this gene product execute
+a function in this process** (or have this activity, or act in this location) — judged
+on the biology, from the literature and your synthesized understanding of the gene.
+If you do open the tsv, ignore the gene-product-to-term relationship type (the
+QUALIFIER column) — it plays no role in review reasoning, and any such value you
+encounter in a YAML row is likewise inert; never add, edit, or argue from it. The two
+annotation flags that DO matter are applied consistently and surfaced in the YAML
+rows: `negated: true` (a NOT annotation asserts the absence of the function — never
+review it as if it claimed the function) and `qualifier: contributes_to` (a complex
+subunit contributing to, not independently possessing, the activity — grade the
+annotation on that weaker claim).
+
+**Ortholog source reviews are in scope.** When an ISO/ISS row's defect is on the
+source side (the donor human/mouse annotation is itself wrong or misapplied) and the
+source gene has a review in this repository (e.g. `genes/human/<GENE>/`), you may — and
+should — update that review too, rather than only noting the source-side problem in the
+target's review.
+
 Always make use of the `original_reference_id`. If this refers to a PMID, then read the publication (in publications/ directory) and make use of the information there.
 
 3. **Holistic Assessment**: Base your decisions on a synthesized understanding of gene function derived from multiple sources.

@@ -38,6 +38,7 @@ salvage-or-GcvH-relay candidate.
 - [x] Validate and render all affected artifacts.
 - [x] Open draft pull request #2181 for this module.
 - [x] Finish checks and move pull request #2181 out of draft.
+- [x] Merge pull request #2181 after review and CI (2026-07-25).
 
 ## Pathway Satisfiability
 
@@ -52,9 +53,10 @@ two-step route, but module inclusion is grounded in the exact catalytic
 functions rather than neighborhood alone.
 
 `PP_0423` / Q88QR5 is assigned to the LipM/LipL family, but the same PANTHER
-subfamily contains both characterized LipM and LipL proteins. Gene-level
-research favors an LplA-type salvage hypothesis but explicitly retains
-ligase-versus-transferase ambiguity. PP_0423 therefore does not yet satisfy a
+subfamily contains both characterized LipM and LipL proteins. A gene-level
+report proposed an LplA-type salvage hypothesis, but exact InterPro and PANTHER
+classification does not distinguish the two relay-transfer directions or
+establish ATP-dependent ligation. PP_0423 therefore does not yet satisfy a
 relay implementation or establish salvage. The direct route remains covered
 independently of this unresolved candidate.
 
@@ -93,9 +95,15 @@ The machine-generated 19-gene source table is retained at
   Bacillus and human GcvH-relay variants.
 - Molecular functions occur only on leaf reaction annotons. The module has no
   redundant module-level cytoplasm/cytosol assertions.
-- LipL and LIPT1 use broad `acyltransferase activity` only because GO lacks a
-  precise term for their physiological GcvH-to-client amidotransfer reactions;
-  exact Rhea reactions and UniProt exemplars carry the specificity.
+- LipL and LIPT1 are not represented by broad `acyltransferase activity` in the
+  repaired module. Their exact RHEA:20213 and RHEA:16413 reactions plus reviewed
+  UniProt exemplars carry the physiological specificity. Current QuickGO has
+  GO:7770091 for the LIPT1 reaction, but that term is not yet available in the
+  repository's configured ontology and therefore is not asserted here.
+- The P39648 and Q9Y234 UniProt flat-file records are cached in-repo. They
+  independently confirm the current exemplar names and the RHEA:20213 and
+  RHEA:16413 catalytic-reaction assignments; PMID:23960015 and PMID:28757203
+  are cached as literature support for the two relay steps.
 - LipB is the physiological octanoyl-ACP:protein transferase in this route.
   The generic `acyltransferase activity` parent adds no information beside
   `lipoyl(octanoyl) transferase activity`.
@@ -106,9 +114,9 @@ The machine-generated 19-gene source table is retained at
   `PF03889`, both ArfA. It lacks the radical-SAM and LipA family architecture
   found in the 338-residue Q88DM5 protein.
 - `PP_0423` carries InterPro `IPR050664` and PANTHER `PTHR43679:SF2`, but those
-  identifiers group LipM and LipL activities together. OpenScientist favors a
-  salvage-ligase hypothesis but does not close the activity ambiguity. It
-  remains a candidate, not a second satisfied route.
+  identifiers group LipM and LipL activities together. The OpenScientist
+  salvage-ligase hypothesis does not override that unresolved exact-family
+  evidence. It remains a candidate, not a second satisfied route.
 - Client complexes are not counted as additional pathway steps simply because
   KEGG groups lipoate use and lipoate installation on the same map.
 
@@ -136,3 +144,45 @@ Checkpoint on 2026-07-18:
 - All four selected gene reviews validate without warnings and all affected
   gene, module, and project pages have been regenerated. The sole module
   warning is the documented OAK configuration gap for InterPro label lookup.
+
+## Wave 114 Repair Audit (2026-09-01)
+
+The reusable boundary remains endogenous protein lipoylation: the direct
+LipB-LipA route and the separately characterized *Bacillus subtilis* and human
+GcvH/GCSH relay routes are modeled as topological variants. Free-lipoate
+salvage, octanoyl-ACP production, and downstream lipoate-dependent client
+complexes remain outside. PSEPK-specific satisfiability and the unresolved
+PP_0423 candidate are documented in this batch rather than in generic variant
+descriptions.
+
+`ONE_OR_MORE` is retained as relaxed modeling, not as a coexistence claim. The
+cited work generally presents lineage-associated alternatives; neither strict
+route exclusivity nor coexistence in one genome is asserted without
+organism-specific evidence.
+
+All eight variant leaves now carry reviewed UniProt exemplars with current
+names. The PSEPK LipB and LipA reviews currently carry only electronic GO
+evidence, so they are not described as experimentally characterized. PANTHER
+and InterPro identifiers are kept
+only where labels and member containment were verified. PTN000107427 is used
+for bacterial LipB activity and PTN000101947 for eukaryotic lipoyl synthase
+activity because the local PAINT tables directly establish those IBD claims;
+uncertain relay-family PTNs are omitted. The human LIPT1 descriptor is narrowed
+from the broad PTHR12561 parent to exact PTHR12561:SF3.
+
+The mandatory annotation-reviewer pass covered every existing GOA row for
+lipA, lipB, PP_0423, and PP_4797. No gene-review YAML changes were required.
+The broad GO:0016746 annotation on PSEPK lipB is already correctly marked
+over-annotated beside GO:0033819. PP_0423 still has no GOA rows and no asserted
+MF, while PP_4797 remains an ArfA-family ribosome-rescue protein excluded from
+lipoylation.
+
+Fresh generic OpenScientist research completed with the configured 7200-second
+job allowance in 1236.73 seconds. It independently recovered the direct
+LipB-LipA ordering, the Bacillus octanoyl-GcvH relay before LipA sulfur
+insertion, and the human LIAS-before-LIPT1 mature-lipoyl relay. The report warns
+against generalizing these lineage examples and does not establish coexistence
+of the modeled routes in one organism; it also retains free-lipoate salvage and
+downstream client complexes outside this module.
+
+Wave 114 is submitted for review in pull request #2890.
