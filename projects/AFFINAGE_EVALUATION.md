@@ -27,6 +27,9 @@ sidecars:
 ---
 # Affinage Evaluation Project
 
+[Function prediction evaluation index](FUNCTION_PREDICTION_EVALUATION.md)
+
+
 Systematic evaluation of **Affinage** (Cheeseman Lab, Whitehead Institute/MIT;
 [affinage.wi.mit.edu](https://affinage.wi.mit.edu), [arXiv:2607.02217](https://arxiv.org/abs/2607.02217))
 against the agent-adjudicated local AIGR gene reviews.
