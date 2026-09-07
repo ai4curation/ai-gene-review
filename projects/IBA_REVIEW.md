@@ -1594,11 +1594,25 @@ experimentally defined activity rather than as a finished call.
   descriptions the same commit had just rewritten). For `description` the property is one
   sentence: **it must be readable by someone who does not know this repository exists**, so
   any sentence whose grammatical subject is *an annotation* rather than *the gene* belongs in
-  `review.reason`, `core_functions` or the notes file. Operationalize that — split the field
-  into sentences, flag every one containing annotation-domain vocabulary (`annotat`, `GOA`,
-  `GO_REF`, an evidence code, `curat`, `term`, `non-core`, `over-`, `treated here`, a provider
-  name), then read each hit and judge — and the result is a set you can defend as complete,
-  because what it missed is a judgement you made rather than a word you had not thought of.
+  `review.reason`, `core_functions` or the notes file. Operationalize that **grammatically, not
+  lexically** — split the field into sentences and judge each one's subject and predicate,
+  flagging any whose *subject* is an annotation, an evidence record or a curation artifact,
+  **or** whose *predicate* is a curation act (`is treated as`, `is retained as`, `is
+  interpreted as`, `is curated as`, `is kept as`, `is not treated here as`). Read each hit and
+  judge; the result is a set you can defend, because what it missed is a judgement you made
+  rather than a word you had not thought of.
+
+  This bullet got that wrong on its first writing, which is the sharpest case in the file: it
+  diagnosed tell-list sweeping and then **specified the remedy as a tell list** (`annotat`,
+  `GOA`, `GO_REF`, an evidence code, `curat`, `term`, `non-core`, `over-`, `treated here`, a
+  provider name). Run that vocabulary over `Dnajb11`'s *"The reported APOBEC1/apoB
+  mRNA-editing interaction **is treated as** unsupported"* and it returns **zero** hits —
+  `treated as` is not `treated here`, and none of the other nine appears. `Tert` (*"are
+  treated as context-dependent **non-canonical** activities"*) and `Syk` (*"rather than the
+  **core** molecular function"*) escape identically, on one word each. A vocabulary is always
+  built from the instances already found, so specifying one as the cure for that very failure
+  reproduces it at one remove. The grammar is what generalizes: a curation act has a doer, and
+  in a `description` the doer is always this review.
 - **A scare quote is not a quotation.** `"FB:FBgn0001091 is Gapdh1"` in a Gapdh comment is
   a proposition the sentence goes on to call "an inference from organism and gene name
   rather than a lookup", not a span lifted from a source. Read the surrounding prose
