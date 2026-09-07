@@ -1604,13 +1604,23 @@ experimentally defined activity rather than as a finished call.
   **Do not read any example below as the set to match against** — that is this bullet's whole
   subject, and the examples fail the test themselves. Every curation-act instance in this
   corpus is plural (`are treated as`, `are retained as`, `are curated as`), so the singular
-  forms that come to mind first — `is treated as`, `is kept as` — match **zero** of the nine
-  occurrences across eight sentences; one of those eight is `are **best** treated as`, which no
-  fixed phrase reaches at all. Object position is the same trap one step further out: `Cdk5r1`
-  says the p35/p25 distribution explains *"the mixed cellular localization annotations"*, where
-  subject and predicate are both clean and the annotation sits in a trailing participial
-  clause. An outside reader still asks *what annotations?*, so it is an instance — which is why
-  the test is a judgement about roles, not a list of strings.
+  forms that come to mind first — `is treated as`, `is kept as` — match **zero** of the ten
+  occurrences, spread over ten sentences in eight files (`Calm3` alone carries three). One of
+  the ten is `are **best** treated as`, which no fixed phrase reaches at all. Say which unit a
+  count is in: at *file* scope those same singular forms return over three hundred hits, all of
+  them outside any `description`, so the figure inverts if the scope is left implicit. Object
+  position is the same trap one step further out: `Cdk5r1` says the p35/p25 distribution explains
+  *"the mixed cellular localization annotations"*, where subject and predicate are both clean and
+  the annotation sits in a trailing participial clause. An outside reader still asks *what
+  annotations?*, so it is an instance — which is why the test is a judgement about roles, not a
+  list of strings.
+
+  **Expect the screen to produce hits that clear** — that is the `read each hit and judge` step
+  working, not a sign it is too wide. The Dnajb11 sentence written for this very bullet (*"the
+  **observation** used an N-terminally tagged construct…"*) is itself a hit, with an evidence
+  record as its subject, and it clears: a biologist who has never seen this repository reads it
+  as ordinary writing about a published experiment. Counting hits as defects is what pulls a
+  screen back toward being a tell list.
 
   This bullet got that wrong on its first writing, which is the sharpest case in the file: it
   diagnosed tell-list sweeping and then **specified the remedy as a tell list** (`annotat`,
