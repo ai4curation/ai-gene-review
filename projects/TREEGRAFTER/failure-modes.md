@@ -30,19 +30,40 @@ by [`classify_failure_modes.py`](classify_failure_modes.py) →
 assignment has two layers: a per-row curated table,
 [`failure_mode_curated.tsv`](failure_mode_curated.tsv) (163 rows, each with a
 one-line justification), which always wins; and a keyword heuristic over the
-GO aspect and the reviewer's `review.reason` for the rest (143 rows — 61 of
-them cellular-component terms, which are mode 3 by construction). The
+GO aspect and the reviewer's `review.reason` for the rest (134 rows). The
 operational rule that separates modes 1 and 4: **if the PANTHER *subfamily*
 name already describes the protein correctly and the bad term came from a
 higher node, it is mode 1; if the subfamily itself is the wrong enzyme, it is
 mode 4.**
 
+Both tables are joined on `(file, term_id)`, never on the gene symbol: symbols
+are not unique across the corpus (`mdh` in METEA and PSEPK, `ALB` in CANLF and
+FELCA, the two PSEPK `dapF` paralogs), and a symbol-keyed join silently pulled
+one organism's `review.reason` onto another's row.
+
+**Two of the 134 heuristic rows are decided by construction rather than by
+reading the reviewer:** 61 cellular-component terms (mode 3 by aspect alone)
+and 7 rows whose term is on an explicit low-information binding allowlist
+(`binding`, `protein binding`, `identical protein binding`, `small molecule
+binding` — mode 3 whatever the reason says). Terms that name a real ligand
+(`ubiquinone binding`, `double-stranded DNA binding`, `metal ion binding`) are
+*not* on that list and are decided from the reviewer's reason like any other
+row. That leaves 66 rows genuinely placed by keyword, which is the tier the
+second-pass curation below should target.
+
 | Mode | annotations | share | genes | MF | BP | CC |
 |---|---:|---:|---:|---:|---:|---:|
-| 1 Granularity (family / node-level or sibling term) | 128 | 42% | 95 | 67 | 61 | 0 |
-| 3 Generic / out-of-context localization, binding or process | 116 | 38% | 97 | 25 | 30 | 61 |
-| 4 Within-superfamily mis-placement | 58 | 19% | 41 | 30 | 27 | 1 |
+| 1 Granularity (family / node-level or sibling term) | 143 | 47% | 109 | 73 | 70 | 0 |
+| 3 Generic / out-of-context localization, binding or process | 109 | 36% | 92 | 18 | 30 | 61 |
+| 4 Within-superfamily mis-placement | 41 | 13% | 26 | 26 | 14 | 1 |
 | 2 Pseudo-enzyme / co-opted fold | 4 | 1% | 2 | 1 | 3 | 0 |
+| 0 Unclassified (heuristic declines; curation queue) | 9 | 3% | 8 | 5 | 4 | 0 |
+
+The 9 unclassified rows are deliberate: the reviewer's reason states a real
+problem but not in words the heuristic can safely map to a mode (`acoA`,
+`benB`, `davA`, `groES`, `nuoM`, `PP_0094`, `I7J3R9`, `NCGR_LOCUS1270` ×2).
+They are listed as mode 0 rather than pushed into the nearest bucket, and they
+are the next rows to hand-curate.
 
 ## Headline: placement is usually fine — the *term* is the problem
 
@@ -108,17 +129,21 @@ bioinformatic/structural check) would change the call.
 |---|---|---|---|
 | **aprA** (*Desulfovibrio*) | `succinate dehydrogenase activity` (REMOVE), `electron transfer activity`, `anaerobic respiration` | SUCCINATE DEHYDROGENASE [UBIQUINONE] FLAVOPROTEIN (PTHR11632:SF51) | **Adenylylsulfate (APS) reductase** α-subunit — shares the FAD fumarate-reductase/SDH flavoprotein fold but reduces APS, not succinate |
 | **fcs** (*P. putida*) | `medium-chain fatty acid-CoA ligase activity` (MODIFY), `fatty acid metabolic process` | 2-SUCCINYLBENZOATE–CoA LIGASE | **Feruloyl-CoA synthetase** — adjacent ANL adenylating-enzyme superfamily, wrong specific subfamily |
-| **mdh** (*P. putida*, ×2) | `L-lactate dehydrogenase (NAD+) activity`, `lactate metabolic process` (REMOVE) | L-LACTATE DEHYDROGENASE (PTHR43128) | **Malate dehydrogenase** — LDH/MDH superfamily node |
+| **mdh** (*P. putida* and *M. extorquens*, ×2 each) | `L-lactate dehydrogenase (NAD+) activity`, `lactate metabolic process` (REMOVE) | L-LACTATE DEHYDROGENASE (PTHR43128:**SF16**; the *family* PTHR43128 is `L-2-HYDROXYCARBOXYLATE DEHYDROGENASE (NAD(P)(+))`) | **Malate dehydrogenase** — LDH/MDH superfamily node |
 | **mqo1 / mqo2 / mqo3** | `(S)-2-hydroxyglutarate dehydrogenase activity` (REMOVE) | L-2-HYDROXYGLUTARATE DEHYDROGENASE, MITOCHONDRIAL | **Malate:quinone oxidoreductase** |
 | **dapE**, **pepV** | `acetylornithine deacetylase activity`, `L-arginine biosynthetic process` (REMOVE) | N-ACETYL-L-CITRULLINE DEACETYLASE (PTHR43808, M20A) | **DapE** succinyl-DAP desuccinylase / **PepV** dipeptidase — ArgE branch of a mixed M20A family |
 | **Q53353, lsdB, Saro_0802, Saro_2809** | `carotenoid dioxygenase activity`, `carotene catabolic process` (REMOVE/MODIFY) | CAROTENOID 9,10(9',10')-CLEAVAGE DIOXYGENASE (PTHR10543) | **Lignostilbene / resveratrol dioxygenases** (EC 1.13.11.43) — no stilbene subfamily exists |
 | **ptxD** | `glyoxylate reductase (NADPH)`, `hydroxypyruvate reductase` (REMOVE) | GLYOXYLATE/HYDROXYPYRUVATE REDUCTASE B | **Phosphonate dehydrogenase** (D-2-hydroxyacid DH superfamily) |
 | **mupP** | `phosphoglycolate phosphatase activity`, `DNA repair` (REMOVE) | PHOSPHOGLYCOLATE PHOSPHATASE (PTHR43434) | **MurNAc-6-phosphate phosphatase** (HAD superfamily) |
 | **quiA** | `quinoprotein glucose dehydrogenase activity` (OVER) | QUINOPROTEIN GLUCOSE DEHYDROGENASE | **Quinate dehydrogenase (quinone)** |
-| **kdsC**, **acoA**, **lytN**, **ADAR2**, **pvdD**, **davD**, **davA**, **scpC** | see [`treegrafter_failure_modes.tsv`](treegrafter_failure_modes.tsv) | | KdsC in a mixed CMAS/KdsC family; acetoin-DH E1α in the PDH lineage; an amidase in a lytic-transglycosylase subfamily; ADAR on the ADAT branch; a pyoverdine NRPS module carrying EntF terms; … |
+| **kdsC**, **lytN**, **ADAR2**, **pvdD**, **davD**, **lpdV**, **ech**, **galB**, **mdr**, **PP_1257**, **K9IMD0** | see [`treegrafter_failure_modes.tsv`](treegrafter_failure_modes.tsv) | | KdsC in a mixed CMAS/KdsC family; an amidase in a lytic-transglycosylase subfamily; ADAR on the ADAT branch; a pyoverdine NRPS module carrying EntF terms; LPD-val vs LPD-glc across *P. putida* E3 paralogs; … |
 
-Mis-placements are **19% of the down-grades (58 annotations, 41 genes)** —
-more than the "handful" the first snapshot suggested, but still the minority.
+Mis-placements are **13% of the down-grades (41 annotations, 26 genes)** —
+still the minority. This share was previously reported as 19% (58 annotations)
+from a looser heuristic that filed any reason containing `paralog` or `rather
+than` as mode 4; reasons that explicitly say *family-level propagation*
+(`zwf`, `scpC`, `paaF`/`paaH`/`paaJ`, the four `aroQ` rows) now correctly land
+in mode 1, which is what the operational rule above says they are.
 Almost all of them are the *same* pattern: a **mixed PANTHER family whose
 subfamilies are labelled by the best-studied member**, so an uncharacterised
 paralog in a different substrate class inherits that member's terms
@@ -235,11 +260,11 @@ PAINT.
 
 ## What this means for the "re-run TreeGrafter" question
 
-For the **bulk** of failures (modes 1–3, **81%** of the down-grades),
+For the **bulk** of failures (modes 1–3, **84%** of the down-grades),
 re-running TreeGrafter would reproduce the *same, sensible* placement — the fix
 belongs at the **annotation** level (propagate the subfamily-specific term,
 gate catalysis-implying MF behind active-site checks, suppress generic CC), not
-at the placement level. For the **19%** in mode 4 (`aprA`, `fcs`, `mdh`,
+at the placement level. For the **13%** in mode 4 (`aprA`, `fcs`, `mdh`,
 `mqo1–3`, `dapE`/`pepV`, the stilbene dioxygenases, …), the placement itself is
 the suspect — and because they cluster in a dozen mixed families (see the
 [family hotspots](../TREEGRAFTER.md#family-hotspots-upstream-targets)), the

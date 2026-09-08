@@ -53,8 +53,18 @@ def gene_dir_for(review_path: str) -> str:
     return os.path.dirname(os.path.join(ROOT, review_path))
 
 
+_NODE_CACHE: dict = {}
+
+
 def graft_node(gene_dir: str, term_id: str) -> str:
     """PANTHER PTN node that this term was propagated from (GOA WITH/FROM)."""
+    if (gene_dir, term_id) in _NODE_CACHE:
+        return _NODE_CACHE[(gene_dir, term_id)]
+    _NODE_CACHE[(gene_dir, term_id)] = node = _graft_node(gene_dir, term_id)
+    return node
+
+
+def _graft_node(gene_dir: str, term_id: str) -> str:
     goa = _first(gene_dir, "-goa.tsv")
     if not goa:
         return ""
@@ -155,6 +165,7 @@ def main() -> None:
             out_rows.append({
                 "action": r["action"],
                 "gene": r["gene"],
+                "file": r["file"],
                 "taxon": r["taxon"],
                 "propagated_term_id": r["term_id"],
                 "propagated_term_label": r["term_label"],
@@ -165,9 +176,9 @@ def main() -> None:
                 "panther_subfamily_name": sf_name,
             })
 
-    out_rows.sort(key=lambda x: (x["action"], x["gene"], x["propagated_term_id"]))
+    out_rows.sort(key=lambda x: (x["action"], x["gene"], x["file"], x["propagated_term_id"]))
     out = os.path.join(HERE, "treegrafter_placement.tsv")
-    fields = ["action", "gene", "taxon", "propagated_term_id",
+    fields = ["action", "gene", "file", "taxon", "propagated_term_id",
               "propagated_term_label", "graft_node", "panther_family",
               "panther_family_name", "panther_subfamily", "panther_subfamily_name"]
     with open(out, "w", newline="") as fh:

@@ -162,6 +162,18 @@ Three things follow:
    accepted at a higher rate than curated PAINT/IBA on the whole corpus (72%).
    UniProt's `GO_REF:0000120` merge is, in effect, already a QC gate, and the
    `GO_REF:0000118` residue is the part that failed it.
+
+   > **Caveat — the reviewers were not blind to the label.** `original_reference_id`
+   > is visible in the review YAML while the annotation is being adjudicated, and
+   > "combined multiple IEA methods" (`GO_REF:0000120`) reads as visibly stronger
+   > provenance than a lone `GO_REF:0000118`. So the 77%-vs-41% gap may be partly
+   > *caused by* the label rather than only *predicted* by it. The direction of the
+   > effect is very likely real — corroboration by an independent pipeline is
+   > genuine evidence, and this is the same reasoning the repo's IBA guidance
+   > applies to propagation provenance — but the magnitude should not be taken at
+   > face value from this corpus. Separating the two requires the held-out,
+   > provenance-blinded test in the next-steps list below; until that is run, treat
+   > 77% vs 41% as an upper bound on the true effect.
 2. **Uncorroborated InterPro2GO is worse than uncorroborated TreeGrafter**, not
    better: 53% down-graded, 58% for MF. Its rejected terms are dominated by
    coarse ancestors — `catalytic activity` (47), `oxidoreductase activity` (21),
@@ -180,18 +192,19 @@ Three things follow:
 > **Deep dive:** [Failure Modes & Tree Placement](TREEGRAFTER/failure-modes.md)
 > joins every down-graded annotation to the PANTHER family/subfamily it was
 > grafted onto (and the ancestral `PTN` graft node), and assigns each one a
-> failure mode. **Short answer: in four cases out of five the placement is
+> failure mode. **Short answer: in five cases out of six the placement is
 > fine and the inherited term is the problem** — too coarse or a sibling term
-> from the family node (42%), or a generic / out-of-context localization or
-> process (38%). About one in five (58 annotations on 41 genes, e.g. `aprA`,
+> from the family node (47%), or a generic / out-of-context localization or
+> process (36%). About one in eight (41 annotations on 26 genes, e.g. `aprA`,
 > `fcs`, `mdh`, `mqo1–3`, `dapE`) is a true within-superfamily mis-placement,
 > and genuine pseudo-enzymes are rare (4 annotations, 2 genes).
 
 | Failure mode | annotations | share | genes |
 |---|---:|---:|---:|
-| 1 Granularity — right subfamily, family/node-level or sibling term | 128 | 42% | 95 |
-| 3 Generic / out-of-context CC, binding or process term | 116 | 38% | 97 |
-| 4 Within-superfamily mis-placement | 58 | 19% | 41 |
+| 1 Granularity — right subfamily, family/node-level or sibling term | 143 | 47% | 109 |
+| 3 Generic / out-of-context CC, binding or process term | 109 | 36% | 92 |
+| 4 Within-superfamily mis-placement | 41 | 13% | 26 |
+| 0 Unclassified — heuristic declines to guess (curation queue) | 9 | 3% | 8 |
 | 2 Pseudo-enzyme / co-opted fold | 4 | 1% | 2 |
 
 The TreeGrafter terms most often down-graded (`REMOVE` / `MODIFY` /
@@ -299,8 +312,8 @@ fixes:
   rows (698, 26% accepted) on the same genes and added the Corroboration
   section. (2) Classified all 306 down-grades into the four failure modes
   (`classify_failure_modes.py` + `failure_mode_curated.tsv`, 163 rows curated
-  by hand, 143 by keyword heuristic): granularity 42%, generic/context 38%,
-  mis-placement 19%, pseudo-enzyme 1%. (3) Added per-family / subfamily /
+  by hand, 134 by keyword heuristic, 9 left unclassified): granularity 47%,
+  generic/context 36%, mis-placement 13%, pseudo-enzyme 1%. (3) Added per-family / subfamily /
   graft-node hotspot aggregation (`treegrafter_family_hotspots.tsv`) and the
   hotspot table. (4) Moved TFP and IRE1 out of the pseudo-enzyme table on the
   failure-modes page (they are node-term and generic-binding cases) and added
@@ -338,10 +351,19 @@ fixes:
   same holds on a non-*P. putida* gene set, and whether family heterogeneity
   (the Falcon family verdicts) predicts *which* TreeGrafter calls fail to be
   corroborated.
-- **Second-pass the heuristic failure-mode assignments.** 143 of the 306
-  down-grades carry a keyword-derived mode (mostly the 61 cellular-component
-  rows, which are safe); the 60-odd heuristic MF/BP rows deserve the same
-  per-row curation the other 163 received (`failure_mode_curated.tsv`).
+- **Second-pass the heuristic failure-mode assignments.** 134 of the 306
+  down-grades carry a keyword-derived mode. 68 of those are decided *by
+  construction* rather than by reading the reviewer — 61 cellular-component
+  rows (mode 3 by aspect) and 7 rows on the low-information binding allowlist —
+  leaving **66 genuinely keyword-placed MF/BP rows** that deserve the same
+  per-row curation the other 163 received (`failure_mode_curated.tsv`). The
+  9 mode-0 rows (`acoA`, `benB`, `davA`, `groES`, `nuoM`, `PP_0094`, `I7J3R9`,
+  `NCGR_LOCUS1270` ×2) are the head of that queue: the heuristic deliberately
+  declines them rather than guessing.
+- **Blind the corroboration test.** Re-adjudicate a sample of `GO_REF:0000118`
+  and `GO_REF:0000120` rows with `original_reference_id` withheld, to separate
+  the corroboration effect from the reviewer's visibility of the provenance
+  label (see the caveat in the Corroboration section).
 - **Broaden the taxon base.** ~70% of the reviewed TreeGrafter rows are
   *P. putida* KT2440; a batch of eukaryotic or archaeal non-model genes would
   tell whether the 41% accept rate travels.
