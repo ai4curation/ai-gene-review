@@ -2757,25 +2757,24 @@ CORE_FUNCTIONS = [
         ],
         locations=[dict(id="GO:0005576", label="extracellular region")],
     ),
+    # The two receptor-binding arms are kept as separate core functions rather than one
+    # entry generalised to GO:0031701: molecular_function is single-valued, and collapsing
+    # them would drop the AGTR2 limb, whose output is the opposite sign to AGTR1's.
     dict(
         description=(
-            "Receptor ligand for the two angiotensin receptors, with opposing outputs. The "
-            "released octapeptide binds AGTR1, the receptor through which the pressor, "
-            "aldosterone-releasing and growth-promoting actions run, and AGTR2, through which "
-            "it engages SHP-1, inhibits ERK and can promote apoptosis. UniProt records both "
-            "interactions on the peptide chains rather than on full-length angiotensinogen "
-            "(PRO_0000032458 with AGTR1, PRO_0000032459 with AGTR2), which is the correct "
-            "reading of what does the binding. Further processing generates "
-            "angiotensin-(1-7), which acts through MAS1 and opposes several angiotensin II "
-            "effects, so a single gene supplies ligands for both limbs of the system."
+            "Receptor ligand for AGTR1, the pressor limb of the system. The released "
+            "octapeptide binds the type 1 receptor with high affinity and couples it to "
+            "phospholipase C and inositol phosphate turnover, and it is through this receptor "
+            "that the vasoconstrictor, aldosterone-releasing and growth-promoting actions run. "
+            "UniProt records the interaction on the peptide chain rather than on full-length "
+            "angiotensinogen (PRO_0000032458 with AGTR1), which is the correct reading of what "
+            "does the binding."
         ),
         supported_by=[
             dict(reference_id=Q_AT1A[0], supporting_text=Q_AT1A[1]),
-            dict(reference_id=Q_AT2_APOP[0], supporting_text=Q_AT2_APOP[1]),
+            dict(reference_id=Q_AT1_CA[0], supporting_text=Q_AT1_CA[1]),
             dict(reference_id="file:human/AGT/AGT-uniprot.txt",
                  supporting_text="PRO_0000032458; P30556: AGTR1; NbExp=2"),
-            dict(reference_id="file:human/AGT/AGT-uniprot.txt",
-                 supporting_text="PRO_0000032459; P50052: AGTR2; NbExp=2"),
         ],
         molecular_function=dict(id="GO:0031702", label="type 1 angiotensin receptor binding"),
         directly_involved_in=[
@@ -2785,13 +2784,41 @@ CORE_FUNCTIONS = [
         ],
         locations=[dict(id="GO:0005576", label="extracellular region")],
     ),
+    dict(
+        description=(
+            "Receptor ligand for AGTR2, the limb that opposes the AGTR1 output. The same "
+            "octapeptide binds the type 2 receptor, which engages SHP-1 as its proximal "
+            "effector, inhibits ERK and can drive apoptosis - the opposite sign to the AGTR1 "
+            "arm, which is why the two binding functions are recorded separately rather than "
+            "collapsed into the common parent. UniProt again places the interaction on the "
+            "peptide chain (PRO_0000032459 with AGTR2) rather than on full-length "
+            "angiotensinogen. Further processing of the same precursor generates "
+            "angiotensin-(1-7), which acts through MAS1 and likewise opposes several "
+            "angiotensin II effects, so a single gene supplies the ligands for both limbs of "
+            "the system."
+        ),
+        supported_by=[
+            dict(reference_id=Q_AT2_APOP[0], supporting_text=Q_AT2_APOP[1]),
+            dict(reference_id=Q_AT2_SHP1[0], supporting_text=Q_AT2_SHP1[1]),
+            dict(reference_id="file:human/AGT/AGT-uniprot.txt",
+                 supporting_text="PRO_0000032459; P50052: AGTR2; NbExp=2"),
+        ],
+        molecular_function=dict(id="GO:0031703", label="type 2 angiotensin receptor binding"),
+        directly_involved_in=[
+            dict(id="GO:0038166", label="angiotensin-activated signaling pathway"),
+        ],
+        locations=[dict(id="GO:0005576", label="extracellular region")],
+    ),
 ]
 
 KNOWLEDGE_GAPS = [
     dict(
         gap_statement=(
-            "Whether the Cys42-Cys162 (mature Cys18-Cys138) redox switch has any "
-            "physiological role is unresolved, and the two decisive experiments disagree."
+            "Whether the Cys42-Cys162 redox switch has any physiological role is unresolved, "
+            "and the two decisive experiments disagree. The bridge is Cys18-Cys138 in human "
+            "mature numbering (UniProt DISULFID 42..162 on a chain beginning at residue 25) "
+            "and Cys18-Cys137 in the mouse, which is the numbering used by the knock-in study "
+            "below; the two names denote the same conserved bond."
         ),
         boundary=(
             "Firmly established: the disulfide exists and is the only cysteine pair conserved "
