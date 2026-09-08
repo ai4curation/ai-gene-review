@@ -84,3 +84,28 @@ is the paper title rather than substantive evidence. The cached publication is
 abstract-only, so a substantive verbatim quote establishing the Hir1 interaction is not
 available from the cache; left as-is rather than paraphrasing, since `supporting_text` must
 be verbatim.
+
+## 2026-09-08 Update: removed unsupported telomere-maintenance replacement; parity + quote fixes
+
+Follow-up to the review's remaining blocking item. The `GO:0006282 regulation of DNA
+repair` NAS row (PMID:27222517) was the file's only surviving `proposed_replacement_terms`,
+and it proposed `GO:0000723 telomere maintenance` — a real, non-obsolete id
+(`cache/ontologies/go.tsv` → `GO:0000723<TAB>telomere maintenance`) but unsupported by the
+row's own evidence. The row's `reason` and `supporting_text` are entirely about Rad53
+dephosphorylation and DNA-damage-checkpoint recovery; `grep -ci telomere` over the full
+text of `publications/PMID_27222517.md` (`full_text_available: true`) returns 0. This is
+the same artifact class removed earlier in this PR — a plausible id attached to a row whose
+evidence does not support it. Removed the replacement; the checkpoint-recovery biology is
+already captured by the sibling `GO:2000002` (negative regulation of DNA damage checkpoint)
+annotation from the same reference, which is ACCEPTed. Also replaced that row's
+`supporting_text` (previously the paper title) with a substantive verbatim quote from the
+full text about the Rad53 dephosphorylation role.
+
+Also (non-blocking parity fix): the `PMID:11731480` IPI summary now names both GOA
+WITH/FROM accessions — `UniProtKB:P40963` (Sas2, confirmed via `genes/yeast/SAS2/SAS2-uniprot.txt`
+`AC P40963` / `GN Name=SAS2`) and `UniProtKB:Q04003` (Sas4) — both SAS-I complex subunits,
+rather than Sas4 alone.
+
+Note: the 2026-09-02 "Left open" paragraph above (referring to "ASF1–Cac2/CAF-1") is
+superseded by the 2026-09-07 interactor correction — those accessions are Hir1 and Sas4,
+not CAF-1 subunits.
