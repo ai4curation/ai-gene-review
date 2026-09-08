@@ -94,3 +94,38 @@ PR instead.
 Both passes were targeted (the NHEJ decision, then the review's specific
 findings). The remaining annotation actions were not systematically
 re-adjudicated, so no blanket claim is made about them.
+
+## 2026-09-08 Update: round-3 review follow-up (PR #2942)
+
+Addressed the two in-scope self-consistency suggestions from the round-2 review:
+
+- GO:0006303 `summary` said the NHEJ requirement is "a secondary consequence of
+  its silencing/chromatin role". The `/chromatin` clause pointed back at the
+  direct-chromatin mechanism that the `reason` explicitly declines to assert, so
+  the two conflicted. Trimmed to "a secondary consequence of its silencing
+  function" - true under either candidate mechanism and now consistent with the
+  `reason`.
+- GO:0016740 `summary` called it a "Generic parent term". Whether GO:0016740 is
+  actually an ancestor of the NAD-dependent deacetylase terms is an unverified
+  ontology-ancestry claim (GO tends to classify protein deacetylase activity
+  under hydrolase). Dropped "parent"; "Generic term" says what is meant without
+  depending on the ontology placement.
+
+### Items NOT fixed here - outside this pass's permitted edit set
+
+This pass was permitted to edit only `SIR2-ai-review.yaml` and `SIR2-notes.md`.
+The two remaining blocking items both require editing other files and are left
+for a maintainer decision:
+
+- `generate_sir2_review.py` still hardcodes the retracted `REMOVE` decisions for
+  GO:0016740 (`:179-184`) and GO:0006303 (`:511-516`) and the title-only
+  PMID:9501103 quote, and writes `SIR2-ai-review.yaml` wholesale to a hardcoded
+  `/Users/cjm/...` path (`:822-823`). It is not wired into CI or any justfile
+  target, so there is no live break, but running it (as `README-CURATION.md:124-128`
+  advertises) would revert this PR. Recommended fix: delete the one-off scaffold
+  and drop the "can be run to regenerate" line, since the review file is now
+  hand-curated. Left untouched here per edit scope.
+- The four stale companion docs (`SIR2-ANNOTATION-ACTIONS.tsv`,
+  `SIR2-CURATION-SUMMARY.md`, `README-CURATION.md`, `CURATION-REVIEW-FINAL.md`)
+  remain as recorded above; the GO:0016740 change makes two of them stale on a
+  second count. Same maintainer call (delete vs. maintain).
