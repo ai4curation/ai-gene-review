@@ -22,16 +22,22 @@ argument):
   (P30101). Shared KOG0190 membership is therefore *consistent with* the
   assignment but is not confirmation of orthology, and the earlier
   "confirming direct orthology" wording has been removed.
-
-Evidence that does discriminate:
-
-- Shared domain architecture in the same arrangement. Yeast Pdi1p has
+- Shared a-b-b'-a' domain architecture. Yeast Pdi1p has
   `FT   DOMAIN          29..141` "Thioredoxin 1" and
   `FT   DOMAIN          356..485` "Thioredoxin 2"; human P4HB has
   `FT   DOMAIN          18..134` "Thioredoxin 1" and
-  `FT   DOMAIN          349..475` "Thioredoxin 2" — the a-b-b'-a' catalytic
-  layout of the canonical PDI, with the two active-site thioredoxin folds at
-  matching relative positions.
+  `FT   DOMAIN          349..475` "Thioredoxin 2" (FT lines verbatim from the
+  respective `-uniprot.txt` files). An earlier draft listed this as a
+  *discriminating* argument; that was wrong, because the same layout is shared
+  with PDIA3 [PMID:17507649 "In PDI, these domains have an a-b-b′-a′
+  organization. PDIp, ERp57, and PDILT share the same domain structure with
+  PDI"] — ERp57 *is* PDIA3. What the matched FT lines do establish is that
+  Pdi1p is a canonical **two-active-site** PDI, which rules out the b-type-only
+  and single-a-domain family members (ERp27, ERp29 and similar) but says
+  nothing about P4HB versus PDIA3.
+
+Evidence that does discriminate:
+
 - Equivalent position in the Ero1-driven oxidative-folding relay. Pdi1p
   activates Ero1p, which reoxidizes it; human P4HB likewise
   `Interacts with ERO1B (PubMed:11707400)` (`P4HB-uniprot.txt`). PDIA3 is not
@@ -44,7 +50,13 @@ Evidence that does discriminate:
   `Interacts with ERP27 and CANX` and is a "Core component of the major
   histocompatibility complex class I (MHC I) peptide loading complex"
   with CALR (P30101). Yeast has no such calnexin/calreticulin-partnered PDI
-  specialization for Pdi1p.
+  specialization for Pdi1p. This split is independently corroborated in the
+  literature [PMID:17507649 "ERp57 interacts with a specific set of
+  glycosylated proteins that are recruited via its interaction with the lectins
+  calnexin/calreticulin ( Oliver et al. , 1997 ; Jessop et al. , 2007 ) and is
+  a component of the major histocompatibility complex (MHC) class I loading
+  complex"], against PDI itself catalyzing "redox reactions in a wide variety
+  of substrates". This is the decisive argument in this audit.
 - Caveat on framing: the PDI family expanded independently in the fungal and
   metazoan lineages, so this is best stated as "closest human counterpart"
   rather than a clean 1:1 orthology relationship.
@@ -52,6 +64,40 @@ Evidence that does discriminate:
   comparison around PDIA1, not PDIA3: "Although much of this work is framed
   around mammalian PDIA1, the mechanistic concepts apply to canonical yeast
   PDI architecture and redox cycling."
+
+Repo-local data pointing the *other* way (recorded so this audit is not silent
+about the datapoints that disagree with its conclusion):
+
+- **PANTHER places yeast PDI1 in the same subfamily as PDIA3, not as P4HB.**
+  `PDI1-uniprot.txt:238` reads
+  `DR   PANTHER; PTHR18929:SF132; PROTEIN DISULFIDE-ISOMERASE A3; 1.`, and
+  `interpro/panther/PTHR18929/PTHR18929-entries.csv` assigns P30101 (PDIA3) to
+  `PTHR18929:SF132` as well, whereas P07237 (P4HB) sits in `PTHR18929:SF101`
+  (`P4HB-uniprot.txt:716`). This is the strongest contrary datapoint, and it is
+  on the same UniProt file quoted elsewhere in these notes.
+- **OrthoDB splits Pdi1p from P4HB.** `PDI1-uniprot.txt:206` is
+  `DR   OrthoDB; 427280at2759; -.` while `P4HB-uniprot.txt:627` is
+  `DR   OrthoDB; 72053at2759; -.` — different eukaryotic orthologous groups.
+
+Neither datapoint overturns the "closest human counterpart is PDIA1/P4HB"
+conclusion, but the reasons should be stated rather than assumed. The PANTHER
+call is an automated HMM subfamily assignment, not a curated orthology
+statement; given the lineage-independent expansion of the PDI family noted
+above, there is no metazoan subfamily that the single fungal canonical PDI fits
+cleanly, so a best-scoring-model assignment is weak evidence of orthology
+either way. The functional arguments — Ero1 relay partner and, decisively,
+general versus glycan/lectin-restricted substrate scope — run the other way and
+are what the conclusion rests on. The `description` wording ("closest human
+counterpart", not "ortholog of") is deliberately chosen to remain compatible
+with this unresolved family-level ambiguity.
+
+Possibly discriminating, **not yet checked**: Pdi1p and P4HB share an identical
+OMA group fingerprint — `DR   OMA; FFGMKKD; -.` at `PDI1-uniprot.txt:205` and
+`P4HB-uniprot.txt:626`. Unlike the family-level KOG0190 above, an OMA group is
+a real orthologous-group call, so this would be genuine evidence *if* P30101's
+fingerprint differs. P30101 is not cached in this repo (there is no
+`genes/human/PDIA3/`), so that comparison has not been run; recorded as a lead
+only, not as evidence.
 
 No GO term annotations were affected by this fix (the `existing_annotations`
 list does not reference cross-species orthology); only the standalone
