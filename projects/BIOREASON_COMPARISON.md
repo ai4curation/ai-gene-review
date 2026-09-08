@@ -17,6 +17,9 @@ sidecars:
 ---
 # BioReason-Pro Comparison Project
 
+[Function prediction evaluation index](FUNCTION_PREDICTION_EVALUATION.md)
+
+
 Systematic evaluation of BioReason-Pro functional summaries and reasoning traces (Fallahpour et al. 2026, [doi:10.64898/2026.03.19.712954](https://doi.org/10.64898/2026.03.19.712954)) against agent-adjudicated local AIGR gene reviews.
 
 **Bottom line:** across the ARGO139 collected cohort, BioReason-Pro's functional summaries mostly restate what InterPro domain labels already say. The model-performance denominator excludes the wrong-input `csr-1` case (n=138) and separately flags seven sequence-truncated cases. It adds real value mainly for proteins with distinctive multi-domain architectures, and fails systematically on localization, pseudoenzymes, paralogs, and organism-specific biology.
