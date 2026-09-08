@@ -42,4 +42,5 @@ sequence beyond what the matches demonstrate.
 The positive templates are the AT4G28556 RefSeq transcript and its matching cDNA;
 the distinct AT4G28560 transcript is the biological negative comparison. The
 matching function was also checked on synthetic inputs for forward/reverse
-orientation, 5′ tails, repeated hits, and no-hit behavior.
+orientation, 5′ tails, repeated hits, and no-hit behavior. Run `just test` in this
+directory to reproduce these checks from [test_analyze.py](test_analyze.py).

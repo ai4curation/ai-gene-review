@@ -50,8 +50,8 @@ in the second intron is consistent with the multi-exon AT4G28556 model.
 ### Review decisions
 
 All 14 seeded GOA annotations were reviewed. The root ND molecular-function
-annotation is better represented by small GTPase binding; nuclear localization
-and pollen-tube-growth inference are retained as non-core. The remaining
+annotation is better represented by small GTPase binding; nuclear localization,
+the broad light response and pollen-tube-growth inference are retained as non-core. The remaining
 localization and signaling annotations agree with the target evidence.
 Negative regulation of stomatal opening and regulation of stomatal closure are proposed as new IMP annotations.
 The molecular activity is ROP binding/effector function; RIC7 is not itself a
@@ -63,7 +63,7 @@ The 14 original GOA term/evidence/source records were retained unchanged.
 
 ### Generated research assessment
 
-The falcon report generated on 2026-09-07 usefully examines the 2001 pollen
+The [falcon report generated on 2026-09-07](Q1G3K8-deep-research-falcon.md) usefully examines the 2001 pollen
 experiments but misses Jeon et al. (2008), Hong et al. (2016), and Zhu et al. (2021). Its assertions
 that downstream partners, loss-of-function phenotypes and non-pollen roles are
 unknown are contradicted by those primary studies. It is retained as generated
@@ -83,3 +83,20 @@ not establish RIC7 as a ROS-producing enzyme, scavenger or DNA-binding
 transcription factor, and expression changes in other genes are downstream
 readouts. The shared closure phenotype with the independently characterized
 Hong lines supports the process assignment.
+
+### 2026-09-08 — ontology specificity check
+
+The live [QuickGO lookup for GO:0017048](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0017048)
+returns **GO:0031267, small GTPase binding**, with "Rho GTPase binding" as a narrow
+synonym. GO:0017048 is not a separate current child to use for the replacement or
+core molecular function. The review therefore uses the current GO:0031267 identifier
+and specifies activated ROP1/ROP2 binding in its biological description.
+
+[GO:0090333](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0090333)
+is the current biological-process term **regulation of stomatal closure**. Its
+[children query](https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/GO:0090333/children)
+returned no children, and a QuickGO search for "negative regulation of stomatal
+closure" found no term with that name. The review uses GO:0090333 and records the
+negative effect in prose; negative regulation of opening is a different process.
+The core process list contains the two specific stomatal-regulation terms, while
+the broader signal-transduction IBA remains accepted among existing annotations.

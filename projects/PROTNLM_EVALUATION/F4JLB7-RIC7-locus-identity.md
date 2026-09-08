@@ -48,11 +48,11 @@ Sources: [live QuickGO query for both accessions](https://www.ebi.ac.uk/QuickGO/
 
 ### Experimental evidence is distributed across both accessions
 
-The problem is not a simple pair of identical annotation sets. Different terms and evidence codes from the same RIC7 literature occur on the two proteins:
+The problem is not a simple pair of identical annotation sets. Different terms and evidence codes from the same RIC7 literature occur on the two proteins. The comparison below combines the nine-row experimental extract with the [full Q1G3K8 GOA file](https://github.com/ai4curation/ai-gene-review/blob/main/genes/ARATH/Q1G3K8/Q1G3K8-goa.tsv); its ND and IBA rows are present only in the full GOA file:
 
-| Source / observation | On F4JLB7 in the GOA snapshot | On Q1G3K8 in the GOA snapshot |
+| Source / observation | On F4JLB7 in the experimental extract | On Q1G3K8 in the full GOA file |
 |---|---|---|
-| Wu 2001: ROP interaction | Protein binding, IPI, TAIR | No corresponding experimental binding row; the snapshot contains an ND molecular-function root annotation. Our Q1G3K8 review proposes small GTPase binding as its replacement. |
+| Wu 2001: ROP interaction | Protein binding, IPI, TAIR | No corresponding experimental binding row; the full GOA file contains an ND molecular-function root annotation. Our Q1G3K8 review proposes small GTPase binding as its replacement. |
 | Wu 2001: pollen-tube phenotype | Pollen tube growth, IMP, TAIR | Pollen tube growth is present as **IBA**, a phylogenetic inference, not an experimental row from this paper. |
 | Wu 2001: membrane localization | Apical plasma membrane, IDA, TAIR | Plasma membrane, **EXP**, UniProt, dated 2023-11-05. |
 | Wu 2001: cytoplasmic localization | No corresponding experimental row | Cytoplasm, **EXP**, UniProt, dated 2023-11-05. |
@@ -70,7 +70,7 @@ This recommendation rests on target-specific sequence evidence, not an abstract 
 
 Correcting an evidence assignment does **not** assert that F4JLB7 cannot bind proteins, occur at a membrane, or influence growth. Those functions require evidence tied to F4JLB7 itself. Broad membrane compatibility cannot rescue a misassigned apical-localization experiment. The membrane TAS annotations from the Borner studies, general signal-transduction IC assertion, and PAINT IBA annotations have different provenance and need their own assessments. Trace any downstream inference seeded by the suspect experimental rows; do not assume every F4JLB7 IBA descends from them.
 
-The existing F4JLB7 YAML labels these three reviews **UNDECIDED**, with rationales predating the primer analysis. The report supports a stronger, specific assessment: **probable wrong-gene experimental attribution requiring source-level reconciliation**. This is a curation recommendation, not a claim that TAIR or GOA has already been corrected.
+The F4JLB7 YAML labels these three reviews **UNDECIDED** and cites the primer analysis and this report: **probable wrong-gene experimental attribution requiring source-level reconciliation**. The outstanding decision concerns correction of the curator/export mapping and reconstruction of the physical clone, rather than equally plausible primer targets. This is a curation recommendation, not a claim that TAIR or GOA has already been corrected.
 
 ## Genomic context: adjacent genes, not alternative isoforms
 
