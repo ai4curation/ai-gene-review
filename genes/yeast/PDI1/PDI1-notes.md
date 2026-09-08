@@ -40,8 +40,11 @@ Evidence that does discriminate:
 
 - Equivalent position in the Ero1-driven oxidative-folding relay. Pdi1p
   activates Ero1p, which reoxidizes it; human P4HB likewise
-  `Interacts with ERO1B (PubMed:11707400)` (`P4HB-uniprot.txt`). PDIA3 is not
-  the principal Ero1 relay partner.
+  `Interacts with ERO1B (PubMed:11707400)` (`P4HB-uniprot.txt`). The
+  discriminating weight of this bullet is carried by that verified positive
+  P4HB–ERO1B interaction; the corresponding negative — whether PDIA3 acts as a
+  comparable Ero1 relay partner — is **not checked** against data cached here
+  (P30101 is uncached; see below) and is therefore not relied on.
 - General versus glycan-restricted substrate scope. Yeast Pdi1p is
   "required for formation of disulfide bonds in secretory and cell-surface
   proteins and which unscrambles non-native disulfide bonds", partnering EPS1,
@@ -49,14 +52,15 @@ Evidence that does discriminate:
   N-glycosylated clients through the lectin chaperones — it
   `Interacts with ERP27 and CANX` and is a "Core component of the major
   histocompatibility complex class I (MHC I) peptide loading complex"
-  with CALR (P30101). Yeast has no such calnexin/calreticulin-partnered PDI
-  specialization for Pdi1p. This split is independently corroborated in the
+  with CALR (P30101; these P30101 lines are quoted from the same UniProt REST
+  record fetched on 2026-09-04 that the EC check above used). Yeast has no such
+  calnexin/calreticulin-partnered PDI specialization for Pdi1p. This split is independently corroborated in the
   literature [PMID:17507649 "ERp57 interacts with a specific set of
   glycosylated proteins that are recruited via its interaction with the lectins
   calnexin/calreticulin ( Oliver et al. , 1997 ; Jessop et al. , 2007 ) and is
   a component of the major histocompatibility complex (MHC) class I loading
-  complex"], against PDI itself catalyzing "redox reactions in a wide variety
-  of substrates". This is the decisive argument in this audit.
+  complex"], against PDI itself catalyzing "in vitro redox reactions in a wide
+  variety of substrates". This is the decisive argument in this audit.
 - Caveat on framing: the PDI family expanded independently in the fungal and
   metazoan lineages, so this is best stated as "closest human counterpart"
   rather than a clean 1:1 orthology relationship.
