@@ -129,3 +129,61 @@ for a maintainer decision:
   `SIR2-CURATION-SUMMARY.md`, `README-CURATION.md`, `CURATION-REVIEW-FINAL.md`)
   remain as recorded above; the GO:0016740 change makes two of them stale on a
   second count. Same maintainer call (delete vs. maintain).
+
+## 2026-09-09 Update: round-4 review follow-up (PR #2942)
+
+### GO:0006281 `DNA repair` -- rationale was falsified by this PR's own NHEJ fix
+
+The round-3 review flagged a contradiction introduced by this PR: GO:0006281 was
+`MARK_AS_OVER_ANNOTATED` on the grounds that "SIR2 is not a DNA repair enzyme...
+This is recombination suppression, not DNA repair", while the GO:0006303 block
+accepts IMP evidence that SIR2 *is* genuinely required for Ku-dependent
+end-joining repair.
+
+Checked the ancestry rather than assuming it. QuickGO
+(`/ontology/go/terms/GO:0006303/ancestors?relations=is_a,part_of`) returns both
+`GO:0006302` and `GO:0006281` among the ancestors of `GO:0006303`, so this is a
+true-path-rule problem and not merely a prose inconsistency: accepting the NHEJ
+child entails the DNA-repair parent.
+
+Rewrote the GO:0006281 block to argue *altitude* rather than *falsity*, and
+changed the action `MARK_AS_OVER_ANNOTATED` -> `KEEP_AS_NON_CORE`, matching how
+the other correct-but-generic IEA rows on this gene are handled (GO:0016740
+transferase activity, GO:0006974 DNA damage response). Added the PMID:9501103
+plasmid-rejoining quote to `supported_by` so the retained term is grounded in the
+same experimental row that grounds the child term. The existing PMID:12923057
+hyperrecombination quote is kept.
+
+Note the provenance symmetry the review pointed out: GO:0006281 is the same kind
+of keyword-derived row (IEA, GO_REF:0000043, UniProtKB-KW:KW-0234) that this
+review already accepted for GO:0016740 on the strength of its UniProt keyword
+chain, and it now additionally has experimental grounding on the target itself.
+
+### `generate_sir2_review.py` -- stale decisions synced
+
+The script writes `SIR2-ai-review.yaml` wholesale, so running it (as
+`README-CURATION.md` advertises) would have reverted this PR. It is not wired
+into CI and its output path is still hardcoded to `/Users/cjm/...`, so nothing
+was breaking today, but the documented regeneration path silently undid the fix.
+Updated the three now-stale dict entries in place so the script's decisions match
+the curated YAML:
+
+- GO:0006303 -- `REMOVE` -> `KEEP_AS_NON_CORE`, with the abstract-body quote
+  replacing the title-only one
+- GO:0016740 -- `REMOVE` -> `KEEP_AS_NON_CORE`, with the EC 2.3.1.286 rationale
+- GO:0006281 -- `MARK_AS_OVER_ANNOTATED` -> `KEEP_AS_NON_CORE`, per the change
+  above
+
+This is the narrower of the two fixes the review offered (update the dicts vs.
+delete the scaffold and drop the README claim). Deleting the script is still the
+better long-term answer -- a wholesale generator alongside a hand-curated YAML
+will drift again -- but that requires editing `README-CURATION.md`, which is
+outside this pass's permitted edit set. Flagged on the PR instead.
+
+### Still NOT fixed -- outside this pass's edit scope
+
+The four stale companion docs are unchanged, for the third round running. This
+pass was permitted to edit `*-ai-review.yaml`, `*-notes.md`, and tooling scripts
+only; `SIR2-ANNOTATION-ACTIONS.tsv`, `SIR2-CURATION-SUMMARY.md`,
+`README-CURATION.md`, and `CURATION-REVIEW-FINAL.md` are none of those. The
+maintainer call (delete vs. maintain) is still open.

@@ -130,10 +130,11 @@ annotations_data = [
         'label': 'DNA repair',
         'evidence': 'IEA',
         'reference': 'GO_REF:0000043',
-        'action': 'MARK_AS_OVER_ANNOTATED',
-        'summary': 'SIR2 suppresses recombination but does not catalyze direct DNA repair.',
-        'reason': 'SIR2 is not a DNA repair enzyme. It suppresses recombination by maintaining heterochromatin at rDNA and telomeres, which prevents aberrant recombination events. This is recombination suppression, not DNA repair. The annotation is over-inclusive and conflates genome stability with direct repair activities.',
+        'action': 'KEEP_AS_NON_CORE',
+        'summary': "Correct but uninformatively generic parent term; SIR2's experimentally grounded repair involvement is the specific child GO:0006303 (NHEJ), and it is a secondary consequence of silencing rather than a core function.",
+        'reason': 'Not an over-annotation. SIR2 carries an IMP annotation to GO:0006303 (double-strand break repair via nonhomologous end joining), and GO:0006303 is a descendant of GO:0006302 which is a descendant of this term (ancestry checked against QuickGO), so by the true-path rule DNA repair involvement follows from evidence already accepted in this review. What is wrong with the term is only its altitude: it is the generic parent and says far less than the NHEJ child, and SIR2 is not a repair enzyme - its requirement for end joining is a downstream consequence of its silencing function, whose mechanism is not established by the cached evidence and is not asserted here. Retained as non-core rather than removed or flagged as over-annotated.',
         'citations': [
+            ('PMID:9501103', 'using an in vivo plasmid rejoining assay, we demonstrate that SIR2, SIR3 and SIR4, three genes shown previously to function in TPE, are essential for Ku-dependent DSB repair'),
             ('PMID:12923057', 'Silencing within the yeast rDNA repeats inhibits hyperrecombination'),
         ]
     },
@@ -176,9 +177,9 @@ annotations_data = [
         'label': 'transferase activity',
         'evidence': 'IEA',
         'reference': 'GO_REF:0000043',
-        'action': 'REMOVE',
-        'summary': 'SIR2 is not a transferase; it is a deacetylase.',
-        'reason': 'This annotation is mechanistically incorrect. SIR2 catalyzes deacetylation (removing acetyl groups), not transfer reactions. While the reaction formally involves transfer of the acetyl group to ADP-ribose, the enzymatic classification is deacetylase, not transferase. This over-generalization should be removed in favor of specific deacetylase terms.',
+        'action': 'KEEP_AS_NON_CORE',
+        'summary': 'Generic term, but correctly applied - the sirtuin reaction is formally an acyl transfer, and UniProt classifies SIR2 under EC 2.3.1.286 (EC class 2.3, acyltransferases).',
+        'reason': 'Not an error. SIR2 does not simply hydrolyse the acetyl-lysine bond; it consumes NAD+ and transfers the acetyl group onto ADP-ribose, and the UniProt record for P06700 records this explicitly - EC 2.3.1.286 and the reaction "N(6)-acetyl-L-lysyl-[protein] + NAD(+) + H2O = 2\'\'-O-acetyl-ADP-D-ribose + nicotinamide + L-lysyl-[protein]". The GOA row derives from UniProt keyword KW-0808 (Transferase), which UniProt assigns on exactly that basis. The term is therefore correct but uninformatively generic, so it is kept as non-core in favour of the specific NAD-dependent deacetylase terms rather than removed.',
         'citations': [
             ('PMID:10811920', 'members of the SIR2 family catalyze an NAD-nicotinamide exchange reaction that requires the presence of acetylated lysines'),
         ]
@@ -508,11 +509,11 @@ annotations_data = [
         'label': 'double-strand break repair via nonhomologous end joining',
         'evidence': 'IMP',
         'reference': 'PMID:9501103',
-        'action': 'REMOVE',
-        'summary': 'SIR2 does not catalyze NHEJ; it prevents recombination through heterochromatin formation.',
-        'reason': 'SIR2 is not a component of the NHEJ repair machinery. This annotation conflates recombination suppression with NHEJ repair. SIR2 prevents recombination rather than facilitating NHEJ-mediated repair. This is mechanistically incorrect.',
+        'action': 'KEEP_AS_NON_CORE',
+        'summary': 'SIR2 is genetically required for Ku-dependent NHEJ-type DSB repair, demonstrated directly by an in vivo plasmid rejoining assay, though this is a secondary consequence of its silencing function rather than a catalytic NHEJ function.',
+        'reason': 'The cited paper directly assayed this: "using an in vivo plasmid rejoining assay, we demonstrate that SIR2, SIR3 and SIR4...are essential for Ku-dependent DSB repair" (PMID:9501103 abstract). SIR2 is not part of the core NHEJ catalytic machinery (Ku70/80, Lig4/Dnl4, Xrs2), but the IMP evidence shows it is genuinely required for efficient Ku-dependent end-joining repair in vivo. This is a real, experimentally demonstrated, secondary function - not one to remove. The mechanism by which loss of SIR2 impairs end-joining is not established by the cached abstract and is not asserted here.',
         'citations': [
-            ('PMID:9501103', 'Components of the Ku-dependent non-homologous end-joining pathway are involved in telomeric length maintenance and telomeric silencing'),
+            ('PMID:9501103', 'using an in vivo plasmid rejoining assay, we demonstrate that SIR2, SIR3 and SIR4, three genes shown previously to function in TPE, are essential for Ku-dependent DSB repair'),
         ]
     },
     {
