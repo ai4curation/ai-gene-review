@@ -45,9 +45,17 @@ of the gasdermin family"].
 
 ## Structure of the pore (channel activity)
 
-Cryo-EM shows GSDMD-NT forms a 27-33-mer ring-shaped transmembrane β-barrel pore ~215 Å
-outer / ~in the 10-15 nm inner-diameter range. The pore is a large, non-selective conduit
-("wide pore channel activity", GO:0022829).
+Cryo-EM shows GSDMD-NT forms a ring-shaped transmembrane β-barrel pore that is 31- to
+34-fold symmetric, with the 33-subunit pore measuring ~215 Å inner and ~310 Å outer
+diameter [PMID:33883744 "GSDMD assemblies are 31- to 34-fold symmetric ... The 33-subunit
+GSDMD pore has inner and outer diameters of around 215 Å and 310 Å, respectively"]. Note
+that the 26- to 28-fold / 27-subunit, 180 Å–inner pore in the same paper is **GSDMA3**,
+not GSDMD. UniProt's widely quoted "10-15 nm inner diameter" derives from the earlier
+liposome/AFM measurements of PMID:27281216 ("Most gasdermin pores had an inner diameter
+of 10–14 nm and contained 16 symmetric protomers"), which were made on gasdermin-N pores
+in artificial membranes; the cryo-EM value (21.5 nm) is the larger, structurally resolved
+GSDMD assembly. Both numbers are sourced; they are not the same measurement. The pore is a
+large, non-selective conduit ("wide pore channel activity", GO:0022829).
 - "Gasdermin D pore structure reveals preferential release of mature interleukin-1"
   [PMID:33883744, full text available] — cryo-EM structure; IDA support for wide pore
   channel activity (GO:0022829), pyroptotic cell death (GO:0141201), plasma membrane
@@ -125,8 +133,10 @@ MF where a real partner is known).
 A 2026 study identified a functional, protein-coding **chimeric mRNA fusing GSDMD to an
 out-of-frame C-terminal peptide from Tmem106a**, formed by **RNA-level trans-splicing of
 transcripts from two genes on different chromosomes** (not a DNA translocation). This is
-the flagship example of a newly described class of >30,000 chimeric mRNAs in mammalian
-immunity [PMID:42686912, Venezia/Kane et al., Nature 2026].
+the worked example from a long-read RNA-seq screen for chimeric transcripts in macrophages
+[PMID:42686912, Venezia/Kane et al., Nature 2026]. (An earlier draft of these notes put the
+catalogue at ">30,000 chimeric mRNAs"; that figure is not in the cached record, which is
+abstract-only, so it has been removed rather than left uncited.)
 
 - "we identify a protein-coding chimeric mRNA representing a fusion between the
   pore-forming protein gasdermin D (GSDMD)... and a C-terminal domain translated out of

@@ -45,12 +45,14 @@ inflammation, with a trans-spliced **GSDMD:TMEM106A** chimera as the worked exam
   frame from Tmem106a (Gsdmd-Tmem106a) in mice" [PMID:42686912]. The GSDMD contribution is
   its pore-forming portion; the TMEM106A contribution is an **out-of-frame** peptide, i.e.
   not the canonical TMEM106A protein.
-- **How it forms — literally "trans".** GSDMD (chromosome 8 in human) and TMEM106A
-  (chromosome 17) are on **different chromosomes**; the fusion is made by **spliceosomal
-  trans-splicing of the two transcripts**, not by a DNA translocation or a cis read-through.
-  "Chromatin conformation capture studies reveal that inflammation induces interchromosomal
-  DNA interactions, positioning parent genes proximally to facilitate the formation of
-  chimeric mRNA" [PMID:42686912].
+- **How it forms — literally "trans".** The two parent genes sit at **distinct, non-adjacent
+  loci** and the fusion is made at the RNA level by **trans-splicing**, not by a DNA
+  translocation or a cis read-through: "Chromatin conformation capture studies reveal that
+  inflammation induces **interchromosomal** DNA interactions, positioning parent genes
+  proximally to facilitate the formation of chimeric mRNA" [PMID:42686912]. The
+  characterized chimera is the **mouse** *Gsdmd*/*Tmem106a* pair; we have not verified the
+  mouse chromosome assignments, and the abstract does not state the splice-site chemistry,
+  so no more specific mechanism is asserted here.
 - **When/where.** Inflammasome priming upregulates the chimera in myeloid cells; the protein
   localizes to the plasma membrane [PMID:42686912].
 - **Function.** After inflammasome activation, "GSDMD-TMEM106A directly interacts with
@@ -60,21 +62,26 @@ inflammation, with a trans-spliced **GSDMD:TMEM106A** chimera as the worked exam
 - **In vivo.** "GSDMD-TMEM106A balances host defence and immunopathology in vivo: its loss
   protects against lethal sepsis but compromises antibacterial defence, whereas
   overexpression enhances host protection while increasing sepsis lethality" [PMID:42686912].
-- **Scale.** The chimera is one of >30,000 chimeric mRNAs the study catalogues — a proposed
-  "dark" layer of the transcriptome, agnostic to chromosomal origin.
+- **Scale.** The study runs a discovery pipeline — "long-read direct RNA sequencing with
+  non-targeted and targeted validation to identify chimeric transcripts in macrophages"
+  [PMID:42686912] — so GSDMD:TMEM106A is the worked example out of a larger catalogue. The
+  cached record for PMID:42686912 is **abstract-only** (`full_text_available: false`) and the
+  abstract gives no catalogue size, so no figure is quoted here. (An earlier draft of this
+  page asserted ">30,000 chimeric mRNAs"; that number is not in any source we hold and has
+  been removed.)
 
 ```mermaid
 flowchart TB
-    subgraph chr8["Chromosome 8"]
+    subgraph locusA["Gsdmd locus"]
       G["Gsdmd pre-mRNA<br/>(pore-forming N-terminus)"]
     end
-    subgraph chr17["Chromosome 17"]
+    subgraph locusB["Tmem106a locus (different chromosome)"]
       T["Tmem106a pre-mRNA<br/>(out-of-frame C-terminal reading)"]
     end
     INF["Inflammasome priming /<br/>inflammation"] --> LOOP["Interchromosomal<br/>chromatin looping (Hi-C)"]
     G --> LOOP
     T --> LOOP
-    LOOP --> TS["Spliceosomal trans-splicing<br/>at annotated exon boundaries"]
+    LOOP --> TS["RNA trans-splicing"]
     TS --> CHI["GSDMD:TMEM106A chimeric mRNA"]
     CHI --> PROT["Chimeric protein<br/>at plasma membrane"]
     PROT --> COOP["Binds canonical GSDMD-NT"]
@@ -86,9 +93,18 @@ flowchart TB
 
 | Phenomenon | DNA change? | Parent loci | Mechanism | Example |
 |---|---|---|---|---|
-| **Trans-spliced chimera** | No | Often different chromosomes | RNA trans-splicing (spliceosome) | GSDMD:TMEM106A [PMID:42686912]; CLEC12A-MIR223HG |
-| **cis read-through / conjoined gene** | No | Adjacent, same strand | Transcription past the stop of gene 1 into gene 2 | RBM6-RBM5; BC039389-GATM |
-| **DNA fusion gene** | Yes (translocation) | Any | Genomic rearrangement | BCR-ABL1; EML4-ALK |
+| **Trans-spliced chimera** | No | Often different chromosomes | RNA trans-splicing | GSDMD:TMEM106A [PMID:42686912] |
+| **cis read-through / conjoined gene** | No | Adjacent, same strand | Transcription past the stop of gene 1 into gene 2 | *(examples uncited — see note)* |
+| **DNA fusion gene** | Yes (translocation) | Any | Genomic rearrangement | *(examples uncited — see note)* |
+
+> **Note on the examples.** Only the GSDMD:TMEM106A row is sourced here. An earlier draft
+> listed **CLEC12A-MIR223HG** in the trans-spliced row; PR review flagged that the two loci
+> are neighbours on 12p13.31, which would make a **cis read-through** the more likely
+> reading. Since the entry carried no citation either way, it has been removed rather than
+> reclassified on an unsourced argument. The other illustrative pairs were likewise uncited
+> and have been dropped; the table now states the *criteria* that distinguish the three
+> phenomena, which is what it is for. Re-add examples only with a citation that establishes
+> the mechanism, not just the fusion.
 
 The GSDMD:TMEM106A case is notable for being a **physiologically functional immune effector**,
 whereas many catalogued chimeras are cancer-associated or of unproven function.
@@ -106,7 +122,7 @@ whereas many catalogued chimeras are cancer-associated or of unproven function.
 - Does a **human** GSDMD:TMEM106A chimera exist and function as in mouse?
 - What sequence/chromatin features specify which transcript pairs are trans-spliced during
   inflammation, and how is the process regulated?
-- How many of the >30,000 catalogued chimeras are translated and functional, and by what
+- How many of the catalogued chimeras are translated and functional, and by what
   criteria should any be curated as distinct gene products for GO?
 - Do other pyroptosis/inflammasome components participate in functional chimeras?
 

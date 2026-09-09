@@ -11,7 +11,7 @@ leukodystrophy) and TMEM106C.
 
 TMEM106A is a plasma-membrane type II transmembrane protein best characterized as a
 positive regulator of macrophage activation and as a candidate tumor suppressor that is
-epigenetically silenced (promoter hypermethylation) in several carcinomas.
+frequently inactivated in several carcinomas.
 
 1. **Macrophage activation / M1 polarization.** TMEM106A activates macrophages and
    polarizes them toward an M1-like phenotype via MAPK and NF-κB signaling. It up-regulates
@@ -21,9 +21,17 @@ epigenetically silenced (promoter hypermethylation) in several carcinomas.
    [UniProt FUNCTION, ECO:0000250|UniProtKB:Q8VC04]. This underlies the
    macrophage activation (GO:0042116) and innate-immunity annotations.
 
-2. **Tumor-suppressor / anti-proliferative activity.** TMEM106A is frequently silenced by
-   promoter methylation in gastric, renal and lung cancers; re-expression inhibits
-   proliferation, migration and invasion and induces apoptosis.
+2. **Tumor-suppressor / anti-proliferative activity.** TMEM106A is frequently inactivated
+   in gastric, renal and lung cancers; re-expression inhibits proliferation, migration and
+   invasion and induces apoptosis.
+   - **Caveat on mechanism:** an earlier draft of these notes attributed the inactivation to
+     *promoter hypermethylation*. That mechanism is **not supported by anything in our
+     cache** — neither PMID:29131025 nor PMID:30456879 mentions methylation (`grep -i
+     methylat` returns nothing in either), and the UniProt record does not either.
+     PMID:29131025 says only "Its inactivation in gastric cancer is frequently observed to
+     be associated with poor prognosis", which does not name a mechanism. The methylation
+     claim has therefore been dropped from the review `description` and should not be
+     reinstated without a citable source.
    - Renal cancer: "TMEM106a is a Novel Tumor Suppressor in Human Renal Cancer";
      TMEM106a overexpression suppresses growth and migration; described as "a conserved
      type II transmembrane protein which is a key factor to regulate macrophage
