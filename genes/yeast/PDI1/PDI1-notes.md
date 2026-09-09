@@ -35,16 +35,27 @@ argument):
   Pdi1p is a canonical **two-active-site** PDI, which rules out the b-type-only
   and single-a-domain family members (ERp27, ERp29 and similar) but says
   nothing about P4HB versus PDIA3.
+- Partnership in the Ero1-driven oxidative-folding relay. Pdi1p activates
+  Ero1p, which reoxidizes it, and human P4HB likewise
+  `Interacts with ERO1B (PubMed:11707400)` (`P4HB-uniprot.txt:418`). An earlier
+  draft listed this as a *discriminating* argument, with the PDIA3 half marked
+  "not checked" because P30101 is uncached. The interaction is symmetric,
+  however, and both human Ero1 paralogs *are* cached here — both list PDIA3,
+  with the P4HB and PDIA3 entries adjacent and at comparable evidence depth:
+  `ERO1A-uniprot.txt:352-353` reads
+  `Q96HE7; P07237: P4HB; NbExp=3; IntAct=EBI-2564539, EBI-395883;` then
+  `Q96HE7; P30101: PDIA3; NbExp=3; IntAct=EBI-2564539, EBI-979862;`, and
+  `ERO1B-uniprot.txt:198` reads
+  `Q86YB8; P30101: PDIA3; NbExp=2; IntAct=EBI-2806988, EBI-979862;` — ERO1B
+  being the exact partner cited for P4HB. Ero1 partnership therefore does not
+  separate P4HB from PDIA3 on any data cached here. Two caveats on how far this
+  goes: an IntAct binary interaction is not a statement about *preferential*
+  relay flux (a claim that an Ero1 paralog prefers PDI over ERp57 would need its
+  own citation and is not made here), and demoting this bullet does not touch
+  the conclusion — the substrate-scope contrast below remains decisive.
 
 Evidence that does discriminate:
 
-- Equivalent position in the Ero1-driven oxidative-folding relay. Pdi1p
-  activates Ero1p, which reoxidizes it; human P4HB likewise
-  `Interacts with ERO1B (PubMed:11707400)` (`P4HB-uniprot.txt`). The
-  discriminating weight of this bullet is carried by that verified positive
-  P4HB–ERO1B interaction; the corresponding negative — whether PDIA3 acts as a
-  comparable Ero1 relay partner — is **not checked** against data cached here
-  (P30101 is uncached; see below) and is therefore not relied on.
 - General versus glycan-restricted substrate scope. Yeast Pdi1p is
   "required for formation of disulfide bonds in secretory and cell-surface
   proteins and which unscrambles non-native disulfide bonds", partnering EPS1,
@@ -89,9 +100,9 @@ call is an automated HMM subfamily assignment, not a curated orthology
 statement; given the lineage-independent expansion of the PDI family noted
 above, there is no metazoan subfamily that the single fungal canonical PDI fits
 cleanly, so a best-scoring-model assignment is weak evidence of orthology
-either way. The functional arguments — Ero1 relay partner and, decisively,
-general versus glycan/lectin-restricted substrate scope — run the other way and
-are what the conclusion rests on. The `description` wording ("closest human
+either way. The functional argument that runs the other way is the decisive
+one, and it is the only one the conclusion rests on: general versus
+glycan/lectin-restricted substrate scope. The `description` wording ("closest human
 counterpart", not "ortholog of") is deliberately chosen to remain compatible
 with this unresolved family-level ambiguity.
 
