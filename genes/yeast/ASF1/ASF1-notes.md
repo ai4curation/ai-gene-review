@@ -150,3 +150,51 @@ Also in this pass (non-blocking items from the same review):
   is `PENDING` (28 ACCEPT, 18 KEEP_AS_NON_CORE, 1 MARK_AS_OVER_ANNOTATED) and validation is
   warning-free, which is the schema's definition of `COMPLETE`. The repo's own
   `status_manager.compute_status_from_file` independently returns `COMPLETE` for this file.
+
+## 2026-09-10 — IPI summaries realigned to their own WITH/FROM accessions
+
+Review round of 2026-09-10 flagged two IPI rows whose summaries named interactors that are
+not the accessions recorded on those rows — the same defect class as the `P32479`
+"Cac2"→Hir1 and `Q04003` "Cac1"→Sas4 corrections of 2026-09-07, and with the same origin:
+the paper's title supplied a protein name where the accession should have. Both are
+`KEEP_AS_NON_CORE` on a generic `GO:0005515`, so the actions are unaffected; only the
+identity claims were wrong.
+
+**`PMID:15755447` — "MCM2 helicase" → Rad53.** The row's only WITH/FROM is
+`UniProtKB:P22216` [`ASF1-goa.tsv`, ECO:0000353]. ASF1's own UniProt IntAct block names that
+accession RAD53 with `NbExp=11` [`ASF1-uniprot.txt:560`], and the block's seven partners
+(Hhf2, Hht2, Hir1, Rad53, Rtt106, Sas2, Sas4) include no MCM subunit at all
+[`ASF1-uniprot.txt:557-563`]. The previous `reason` had built a mechanism on the misreading
+("functionally relevant for histone delivery at replication forks"), which pointed the row
+at the wrong pathway: ASF1–Rad53 is real, but it is checkpoint biology, already handled by
+the `GO:2000002` and `GO:0006282` rows from `PMID:27222517`. The paper's title
+("…regulation of MCM helicase by Tof1/Mrc1/Csm3…") is the likely source of the error.
+
+**`PMID:16429126` — "DNA polymerase, MCM, and CAF-1 subunits" matched none of the three
+accessions.** The rows carry `P11484`, `P22216` and `P47171`. `P11484` is Ssb1, a
+ribosome-associated Hsp70 [`genes/yeast/SSB1/SSB1-uniprot.txt`]; `P22216` is Rad53, as
+above. **`P47171` is not identifiable from any record committed to this repository**, so the
+summary now names the accessions and asserts no identity for it — per CLAUDE.md, an omitted
+identification says "not established" where a guessed one would say something false.
+
+Non-blocking items from the same review, addressed in this pass:
+
+- **`PMID:19536198` — "multiple histone chaperone partners" was one Hsp70.** The single
+  WITH/FROM on that row is `P11484` (Ssb1), so the description overstated both the number
+  of partners and their nature. ASF1's histone binding is annotated independently and never
+  rested on this row.
+- **`GO:0005634` nucleus IDA — mismatched `supporting_text` replaced.** The quote attached was
+  about Rad53 dephosphorylation, which is checkpoint biology rather than localization
+  evidence. It now reads "Asf1 associates with the histone H3–H4 heterodimer"
+  [`publications/PMID_27222517.md:124`] — the chromatin complex that this Complex Portal IDA
+  actually records. Worth noting for future auditors: `grep -niE 'nuclear|nucleus|localiz'`
+  over that cache returns **nothing** despite `full_text_available: true`, so no direct
+  localization quote is extractable from this paper at all. `ACCEPT` stands regardless — the
+  Complex Portal curator worked from the full record, and GOA carries two further independent
+  nucleus IDAs (`PMID:11404324`, `PMID:22932476`). Deleting `supported_by` outright was tried
+  first and rejected: it raises a best-practice warning that flips the computed status back to
+  `DRAFT`, which would have been a worse outcome than the nit it fixed.
+- **`GO:0032968` — "directly demonstrates" softened.** `publications/PMID_22308335.md` is
+  abstract-only and `grep -ci asf1` returns 0, so that phrasing claimed more than is visible
+  here. Per CLAUDE.md the experimental annotation is not second-guessed on that basis;
+  `ACCEPT` is unchanged and only the phrasing was overstated.
