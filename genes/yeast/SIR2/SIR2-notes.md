@@ -187,3 +187,41 @@ pass was permitted to edit `*-ai-review.yaml`, `*-notes.md`, and tooling scripts
 only; `SIR2-ANNOTATION-ACTIONS.tsv`, `SIR2-CURATION-SUMMARY.md`,
 `README-CURATION.md`, and `CURATION-REVIEW-FINAL.md` are none of those. The
 maintainer call (delete vs. maintain) is still open.
+
+## 2026-09-10 Update: round-5 review follow-up (PR #2942)
+
+### `generate_sir2_review.py` -- deleted
+
+The round-4 review rejected the previous pass's narrower fix: syncing three dict
+entries left the script *looking* reconciled while remaining structurally
+divergent, which is worse than an obviously stale scaffold. Verified the
+divergence directly rather than taking the review's word for it -- the script
+holds **58** annotation dicts against **67** `existing_annotations` in the
+curated YAML, missing eight of the nine `GO:0005515` rows and one of the two
+`GO:0005634` rows. Re-running it would therefore have deleted nine GOA-backed
+annotations (and broken `validate-goa`), on top of restoring the title-only
+PMID:9501103 quotes, the superseded GO:0031509 IMP `reason`, and dropping the
+`reference_review` on PMID:23307867.
+
+A wholesale generator cannot be kept in sync by hand alongside a YAML that has
+now been hand-edited across five rounds, so the scaffold was deleted rather than
+patched again. `SIR2-ai-review.yaml` is maintained by hand and checked with
+`just validate yeast SIR2`. The "can be run to regenerate" claim in
+`README-CURATION.md` (the thing that made the stale script dangerous) was
+replaced with a note recording the removal and the reason.
+
+### GO:0006281 wording
+
+`summary` said "generic parent term". GO:0006281 is a *grand*parent of GO:0006303
+(via GO:0006302), as the block's own `reason` already states, so "parent" was
+imprecise. Changed to "generic term", matching how the GO:0016740 block already
+phrases the same point; the `reason` now says "generic ancestor".
+
+### Still NOT fixed -- maintainer decision
+
+`SIR2-ANNOTATION-ACTIONS.tsv`, `SIR2-CURATION-SUMMARY.md`, and
+`CURATION-REVIEW-FINAL.md` still record the retracted `REMOVE` decisions for
+GO:0016740 and GO:0006303, and `CURATION-REVIEW-FINAL.md:352` still lists the
+now-deleted generator. These are historical curation artifacts, not curation
+records the schema validates, so whether to delete them or keep them as a
+dated historical record is a maintainer call, not an automated one.
