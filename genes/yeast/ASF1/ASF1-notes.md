@@ -109,3 +109,44 @@ rather than Sas4 alone.
 Note: the 2026-09-02 "Left open" paragraph above (referring to "ASF1–Cac2/CAF-1") is
 superseded by the 2026-09-07 interactor correction — those accessions are Hir1 and Sas4,
 not CAF-1 subunits.
+
+## 2026-09-10 Update: removed fabricated `GO:0016585` label from free-text reason
+
+The 2026-09-08 review found one more instance of the artifact class this PR was opened to
+remove — a wrong GO id carried by a plausible-sounding label — this time in a free-text
+`reason` rather than in `proposed_replacement_terms`, which is why neither the term
+validator (which hard-checks only `core_functions`) nor the label-fixing tooling surfaced
+it.
+
+The `GO:0006351 DNA-templated transcription` IEA row (GO_REF:0000043) closed its `reason`
+by suggesting three more specific terms: "GO:0006357, GO:0032968, GO:0016585 polymerase II
+elongation". The first two are correct, but `GO:0016585` is not an elongation term at all:
+it is **obsolete**, and its label is "chromatin remodeling complex"
+(`cache/ontologies/go.tsv` → `GO:0016585<TAB>obsolete chromatin remodeling complex`;
+independently confirmed via OLS, which reports `is_obsolete: true` and the obsoletion
+reason "its definition no longer reflects and cannot be modified to be consistent with the
+current state of knowledge"). Beyond being obsolete, it is a **cellular-component** term
+being offered as a more specific alternative for a **biological-process** annotation.
+
+The fix is a deletion rather than a substitution. `GO:0032968` (positive regulation of
+transcription elongation by RNA polymerase II) is already named in the same sentence and is
+already annotated on this gene with IDA evidence, so the elongation point is covered;
+proposing a guessed replacement id would repeat the original mistake.
+
+Also in this pass (non-blocking items from the same review):
+
+- Documented here for the first time the `PMID:16554755` softening made on 2026-09-08 but
+  omitted from that day's journal entry: the IPI summary previously asserted interactions
+  with histones "H3, H4, H2A, H2B", but no H2A or H2B accession appears among the twelve
+  GOA WITH/FROM accessions for that reference, so the summary now says "histone proteins"
+  without enumerating types. That summary has additionally been rewritten to describe the
+  annotation itself rather than narrating what the review declines to assert.
+- The `GO:0006282` NAS row's `reason` no longer argues against telomere maintenance. That
+  argument was written to justify removing the `GO:0000723` replacement term on 2026-09-08;
+  with the term gone from the file, the rebuttal had no referent for a reader. The
+  substantive point that survives — that the checkpoint-recovery biology is captured by the
+  sibling `GO:2000002` annotation from the same reference — is retained.
+- `status` flipped `IN_PROGRESS` → `COMPLETE`. This is not a judgement call: no annotation
+  is `PENDING` (28 ACCEPT, 18 KEEP_AS_NON_CORE, 1 MARK_AS_OVER_ANNOTATED) and validation is
+  warning-free, which is the schema's definition of `COMPLETE`. The repo's own
+  `status_manager.compute_status_from_file` independently returns `COMPLETE` for this file.
