@@ -114,11 +114,17 @@ production with NADP+ as acceptor has been measured in C. albicans lysates
 A negative control for the project: the specific term was checked, not assumed.
 
 **Specificity error caught (category 1, substrate)**: `GO:0019521` D-gluconate
-metabolic process (IEA, keyword "Gluconate utilization"). The keyword encodes the
-bacterial gluconate → gluconokinase → 6-phosphogluconate → Gnd catabolic route; the
-fungal enzyme's substrate is **6-phospho-D-gluconate** supplied by Zwf1/6-PGL from
-glucose 6-phosphate, and no C. albicans evidence for free-gluconate assimilation via
-Gnd1 was found. **Action: MARK_AS_OVER_ANNOTATED.**
+metabolic process (IEA, keyword "Gluconate utilization"). UniProt applies this keyword
+to 6-phosphogluconate-metabolising enzymes irrespective of pathway context — human PGD
+carries it despite there being no human gluconate catabolic route — so it does not
+establish that free D-gluconate is metabolised. The fungal enzyme's substrate is
+**6-phospho-D-gluconate** supplied by Zwf1/6-PGL from glucose 6-phosphate, and no
+C. albicans evidence for free-gluconate assimilation via Gnd1 was found.
+**Action: MARK_AS_OVER_ANNOTATED.** Note this diverges from the human PGD review, which
+keeps the same annotation as KEEP_AS_NON_CORE; the same keyword on PSEPK/gntZ, in an
+organism that does catabolise gluconate, makes that trio of human, fungal and bacterial
+orthologs the discriminating case for whether keyword-derived substrate terms warrant
+this action.
 
 **Also**: minor peroxisomal PTS2 splice isoform (~5% of protein) kept as non-core;
 biofilm-matrix proteomic detection kept as non-core.
@@ -248,8 +254,9 @@ control showing the specific term was verified rather than assumed.
 One substrate-level over-annotation was flagged: `GO:0019521` D-gluconate
 metabolic process, mapped from the keyword "Gluconate utilization", names free
 D-gluconate whereas the enzyme acts on 6-phospho-D-gluconate supplied from
-glucose 6-phosphate in the fungal oxPPP; the keyword carries bacterial
-gluconate-catabolism context. Changed KEEP_AS_NON_CORE → MARK_AS_OVER_ANNOTATED.
+glucose 6-phosphate in the fungal oxPPP. The keyword itself is pathway-agnostic
+(human PGD carries it too), so the case rests on the substrate class alone.
+Changed KEEP_AS_NON_CORE → MARK_AS_OVER_ANNOTATED.
 This is the same "keyword mapping imports a substrate class the enzyme does not
 use" pattern seen elsewhere in the project.
 

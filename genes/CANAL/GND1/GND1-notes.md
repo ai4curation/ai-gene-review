@@ -35,12 +35,21 @@ while others can use both NAD+ and NADP+"].
 
 ### Substrate over-generalisation caught (project category 1)
 - `GO:0019521 D-gluconate metabolic process` (IEA, GO_REF:0000043) comes from the UniProt
-  keyword "Gluconate utilization" (ARBA00023064 / RuleBase RU000485). The keyword reflects
-  bacterial gluconate catabolism (gluconate -> gluconokinase -> 6-phosphogluconate -> Gnd),
-  but Gnd1's substrate is 6-phospho-D-gluconate, and in the yeast oxidative PPP it is
+  keyword "Gluconate utilization" (ARBA00023064 / RuleBase RU000485). The keyword is applied
+  by UniProt to 6-phosphogluconate-metabolising enzymes regardless of pathway context, so it
+  does not by itself imply that free D-gluconate is metabolised: human PGD carries the same
+  keyword [genes/human/PGD/PGD-uniprot.txt:307 "KW   Gluconate utilization"] although human
+  cells have no gluconate catabolic route. The substrate argument stands on its own: Gnd1's
+  substrate is 6-phospho-D-gluconate, and in the yeast oxidative PPP it is
   supplied by Zwf1/6-phosphogluconolactonase, not from free D-gluconate. No C. albicans
   evidence for gluconate assimilation via Gnd1 was retrieved. Changed from
   KEEP_AS_NON_CORE to MARK_AS_OVER_ANNOTATED.
+- Divergence noted: the human ortholog review keeps the identical keyword-derived annotation
+  as KEEP_AS_NON_CORE [genes/human/PGD/PGD-ai-review.yaml:217]. Both reviews call the term a
+  keyword-driven substrate generalisation; they differ on whether to record that as
+  acceptable-but-peripheral or as over-annotation. `genes/PSEPK/gntZ/gntZ-uniprot.txt:89`
+  carries the keyword in an organism that genuinely does catabolise gluconate, so the
+  human/fungal/bacterial trio is the discriminating case if this is revisited.
 
 ### Localization
 - Predominantly cytosolic, with a minor PTS2 splice isoform in peroxisomes (about 5%)

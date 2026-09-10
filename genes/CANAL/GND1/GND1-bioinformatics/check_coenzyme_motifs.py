@@ -58,10 +58,14 @@ def read_uniprot(path: Path) -> tuple[str, list[tuple[int, int]]]:
         if in_seq:
             seq_lines.append(line.replace(" ", ""))
             continue
-        if line.startswith("FT   BINDING"):
-            span = line.split()[2]
-            a, _, b = span.partition("..")
-            pending = (int(a), int(b) if b else int(a))
+        if line.startswith("FT   ") and not line[5:6].isspace():
+            # A new feature key ends any BINDING span still awaiting its ligand
+            # qualifier, so a later /ligand line cannot be mis-attributed to it.
+            pending = None
+            if line.startswith("FT   BINDING"):
+                span = line.split()[2]
+                a, _, b = span.partition("..")
+                pending = (int(a), int(b) if b else int(a))
         elif line.startswith("FT ") and pending and '/ligand="NADP(+)"' in line:
             binding.append(pending)
             pending = None

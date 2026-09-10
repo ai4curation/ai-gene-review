@@ -37,6 +37,17 @@ Gnd1 at a constant offset of +4 residues, and both coincide exactly with the
 PIRSR-derived NADP(+) binding features in the UniProt record (13..18 and 36..38).
 The Asp substitution that switches 6PGDH toward NAD+ is absent.
 
+Weight of the two halves of the test: the conclusion rests on the **positive**
+result — Asn-Arg-Thr at 36-38 coinciding with the PIRSR NADP(+) binding feature.
+The **negative** result carries much less weight than it appears to. Asp-Arg-Asp
+is documented in PMID:35234135 only for the short-chain, membrane-associated
+*G. diazotrophicus* enzyme, a distant relative of a long-chain fungal 6PGDH, and
+the check is an unanchored substring search over residues 1-60, which will
+essentially always be negative for a long-chain enzyme. A stronger test would
+interrogate the aligned position itself (the residue equivalent to sheep Asn32),
+since Asn-versus-Asp *at that position* is the discriminator the paper describes;
+that would require an alignment step this script does not perform.
+
 ## Interpretation
 
 The sequence supports the NADP+-specific term GO:0004616 (EC 1.1.1.44) as the
