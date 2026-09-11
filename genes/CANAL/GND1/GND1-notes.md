@@ -37,9 +37,13 @@ while others can use both NAD+ and NADP+"].
 - `GO:0019521 D-gluconate metabolic process` (IEA, GO_REF:0000043) comes from the UniProt
   keyword "Gluconate utilization" (ARBA00023064 / RuleBase RU000485). The keyword is applied
   by UniProt to 6-phosphogluconate-metabolising enzymes regardless of pathway context, so it
-  does not by itself imply that free D-gluconate is metabolised: human PGD carries the same
-  keyword [genes/human/PGD/PGD-uniprot.txt:307 "KW   Gluconate utilization"] although human
-  cells have no gluconate catabolic route. The substrate argument stands on its own: Gnd1's
+  does not by itself imply that free D-gluconate is metabolised. On this entry the keyword is
+  attached by an automated family rule [genes/CANAL/GND1/GND1-uniprot.txt:116 "KW   Gluconate
+  utilization {ECO:0000256|ARBA:ARBA00023064,"], i.e. it travels with 6PGDH sequence
+  membership rather than with pathway context; the same keyword is carried by human PGD
+  [genes/human/PGD/PGD-uniprot.txt:307 "KW   Gluconate utilization"] and by the bacterial
+  ortholog gntZ [genes/PSEPK/gntZ/gntZ-uniprot.txt:89 "KW   Gluconate utilization
+  {ECO:0000256|ARBA:ARBA00023064};"] alike. The substrate argument stands on its own: Gnd1's
   substrate is 6-phospho-D-gluconate, and in the yeast oxidative PPP it is
   supplied by Zwf1/6-phosphogluconolactonase, not from free D-gluconate. No C. albicans
   evidence for gluconate assimilation via Gnd1 was retrieved. Changed from

@@ -115,8 +115,10 @@ A negative control for the project: the specific term was checked, not assumed.
 
 **Specificity error caught (category 1, substrate)**: `GO:0019521` D-gluconate
 metabolic process (IEA, keyword "Gluconate utilization"). UniProt applies this keyword
-to 6-phosphogluconate-metabolising enzymes irrespective of pathway context — human PGD
-carries it despite there being no human gluconate catabolic route — so it does not
+to 6-phosphogluconate-metabolising enzymes irrespective of pathway context — on this entry
+it is attached by an automated family rule (`ECO:0000256|ARBA:ARBA00023064`, RuleBase
+RU000485) that travels with 6PGDH sequence membership, and human PGD and the bacterial
+ortholog PSEPK/gntZ carry it alike — so it does not
 establish that free D-gluconate is metabolised. The fungal enzyme's substrate is
 **6-phospho-D-gluconate** supplied by Zwf1/6-PGL from glucose 6-phosphate, and no
 C. albicans evidence for free-gluconate assimilation via Gnd1 was found.
