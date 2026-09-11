@@ -41,8 +41,8 @@ are not unique across the corpus (`mdh` in METEA and PSEPK, `ALB` in CANLF and
 FELCA, the two PSEPK `dapF` paralogs), and a symbol-keyed join silently pulled
 one organism's `review.reason` onto another's row.
 
-**Two of the 134 heuristic rows are decided by construction rather than by
-reading the reviewer:** 61 cellular-component terms (mode 3 by aspect alone)
+**Sixty-eight of the 134 heuristic rows are decided by construction rather than
+by reading the reviewer:** 61 cellular-component terms (mode 3 by aspect alone)
 and 7 rows whose term is on an explicit low-information binding allowlist
 (`binding`, `protein binding`, `identical protein binding`, `small molecule
 binding` — mode 3 whatever the reason says). Terms that name a real ligand
@@ -51,13 +51,19 @@ binding` — mode 3 whatever the reason says). Terms that name a real ligand
 row. That leaves 66 rows genuinely placed by keyword, which is the tier the
 second-pass curation below should target.
 
-| Mode | annotations | share | genes | MF | BP | CC |
+| Mode | annotations | share | proteins | MF | BP | CC |
 |---|---:|---:|---:|---:|---:|---:|
 | 1 Granularity (family / node-level or sibling term) | 143 | 47% | 109 | 73 | 70 | 0 |
-| 3 Generic / out-of-context localization, binding or process | 109 | 36% | 92 | 18 | 30 | 61 |
-| 4 Within-superfamily mis-placement | 41 | 13% | 26 | 26 | 14 | 1 |
+| 3 Generic / out-of-context localization, binding or process | 109 | 36% | 94 | 18 | 30 | 61 |
+| 4 Within-superfamily mis-placement | 41 | 13% | 27 | 26 | 14 | 1 |
 | 2 Pseudo-enzyme / co-opted fold | 4 | 1% | 2 | 1 | 3 | 0 |
 | 0 Unclassified (heuristic declines; curation queue) | 9 | 3% | 8 | 5 | 4 | 0 |
+
+The `proteins` column counts distinct **review files**, not gene symbols: the
+898-row corpus spans 510 files but only 493 symbols, so a symbol-keyed count
+merges the two `mdh` proteins, the two `ALB` proteins and eight other
+cross-organism or paralogous symbol collisions. Counted by symbol, modes 3 and
+4 read 92 and 26.
 
 The 9 unclassified rows are deliberate: the reviewer's reason states a real
 problem but not in words the heuristic can safely map to a mode (`acoA`,
@@ -115,8 +121,11 @@ sensor (mode 3).
 Low-information CC terms (`cytoplasm`, `cytosol`, `plasma membrane`, `nucleus`)
 or organism-context BP terms inherited from a distant ancestor, correct-ish but
 non-core or absent from the host. Examples: `relA` → `plasma membrane`, `dinB`
-→ `cytosol`, `zwf` → `pentose-phosphate shunt`, several *Pseudomonas putida*
-genes, and the `mcr` LPS-core process call above.
+→ `cytosol`, `fbp` → `sucrose biosynthetic process` (a pathway the host does
+not run), and several *Pseudomonas putida* genes. Note that `zwf` →
+`pentose-phosphate shunt` and the `mcr` LPS-core process call are **mode 1**,
+not mode 3 — both reasons state family/node-level propagation explicitly, and
+they appear in the mode-1 table above.
 
 ### 4. **True within-superfamily mis-placement** (the cases a re-run would change)
 
@@ -127,7 +136,7 @@ bioinformatic/structural check) would change the call.
 
 | Gene | Propagated term (down-graded) | Landed in subfamily | Should be |
 |---|---|---|---|
-| **aprA** (*Desulfovibrio*) | `succinate dehydrogenase activity` (REMOVE), `electron transfer activity`, `anaerobic respiration` | SUCCINATE DEHYDROGENASE [UBIQUINONE] FLAVOPROTEIN (PTHR11632:SF51) | **Adenylylsulfate (APS) reductase** α-subunit — shares the FAD fumarate-reductase/SDH flavoprotein fold but reduces APS, not succinate |
+| **aprA** (*Desulfovibrio*) | `succinate dehydrogenase activity` (REMOVE), `electron transfer activity` (its `anaerobic respiration` row is mode 1 — granularity, not mis-placement) | SUCCINATE DEHYDROGENASE [UBIQUINONE] FLAVOPROTEIN (PTHR11632:SF51) | **Adenylylsulfate (APS) reductase** α-subunit — shares the FAD fumarate-reductase/SDH flavoprotein fold but reduces APS, not succinate |
 | **fcs** (*P. putida*) | `medium-chain fatty acid-CoA ligase activity` (MODIFY), `fatty acid metabolic process` | 2-SUCCINYLBENZOATE–CoA LIGASE | **Feruloyl-CoA synthetase** — adjacent ANL adenylating-enzyme superfamily, wrong specific subfamily |
 | **mdh** (*P. putida* and *M. extorquens*, ×2 each) | `L-lactate dehydrogenase (NAD+) activity`, `lactate metabolic process` (REMOVE) | L-LACTATE DEHYDROGENASE (PTHR43128:**SF16**; the *family* PTHR43128 is `L-2-HYDROXYCARBOXYLATE DEHYDROGENASE (NAD(P)(+))`) | **Malate dehydrogenase** — LDH/MDH superfamily node |
 | **mqo1 / mqo2 / mqo3** | `(S)-2-hydroxyglutarate dehydrogenase activity` (REMOVE) | L-2-HYDROXYGLUTARATE DEHYDROGENASE, MITOCHONDRIAL | **Malate:quinone oxidoreductase** |
@@ -138,7 +147,7 @@ bioinformatic/structural check) would change the call.
 | **quiA** | `quinoprotein glucose dehydrogenase activity` (OVER) | QUINOPROTEIN GLUCOSE DEHYDROGENASE | **Quinate dehydrogenase (quinone)** |
 | **kdsC**, **lytN**, **ADAR2**, **pvdD**, **davD**, **lpdV**, **ech**, **galB**, **mdr**, **PP_1257**, **K9IMD0** | see [`treegrafter_failure_modes.tsv`](treegrafter_failure_modes.tsv) | | KdsC in a mixed CMAS/KdsC family; an amidase in a lytic-transglycosylase subfamily; ADAR on the ADAT branch; a pyoverdine NRPS module carrying EntF terms; LPD-val vs LPD-glc across *P. putida* E3 paralogs; … |
 
-Mis-placements are **13% of the down-grades (41 annotations, 26 genes)** —
+Mis-placements are **13% of the down-grades (41 annotations, 27 proteins)** —
 still the minority. This share was previously reported as 19% (58 annotations)
 from a looser heuristic that filed any reason containing `paralog` or `rather
 than` as mode 4; reasons that explicitly say *family-level propagation*

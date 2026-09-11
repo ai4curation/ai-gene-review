@@ -109,8 +109,22 @@ def _first(gene_dir: str, suffix: str) -> str:
     return ""
 
 
+def _species_of(review_path: str) -> str:
+    """`genes/PSEPK/mdh/mdh-ai-review.yaml` -> `PSEPK`."""
+    parts = review_path.split("/")
+    return parts[1] if len(parts) > 2 and parts[0] == "genes" else ""
+
+
 def hotspots(all_rows):
-    """Aggregate down-grade rates per family / subfamily / graft node."""
+    """Aggregate down-grade rates per family / subfamily / graft node.
+
+    Proteins are counted by review *file*, never by gene symbol: the corpus has
+    510 distinct review files but only 493 distinct symbols (``mdh`` in METEA
+    and PSEPK, ``ALB`` in CANLF and FELCA, the two PSEPK ``dapF`` paralogs, and
+    six more), so a symbol-keyed count collapses distinct proteins and
+    understates exactly the multi-organism cases the hotspot table exists to
+    surface.
+    """
     from collections import Counter, defaultdict
     groups = defaultdict(list)
     for r in all_rows:
@@ -127,17 +141,29 @@ def hotspots(all_rows):
         bad = [r for r in rows if r["action"] in DOWNGRADE]
         top_terms = Counter(f"{r['propagated_term_id']} {r['propagated_term_label']}"
                             for r in bad).most_common(3)
+        # Disambiguate the example list where one symbol covers several files
+        # within this group, so `mdh` does not read as a single protein.
+        files_per_symbol = defaultdict(set)
+        for r in rows:
+            files_per_symbol[r["gene"]].add(r["file"])
+
+        def label(r):
+            if len(files_per_symbol[r["gene"]]) < 2:
+                return r["gene"]
+            species = _species_of(r["file"])
+            return f"{species}/{r['gene']}" if species else r["gene"]
+
         out.append({
             "level": level,
             "id": gid,
             "name": name,
             "n_annotations": len(rows),
-            "n_genes": len({r["gene"] for r in rows}),
+            "n_genes": len({r["file"] for r in rows}),
             "n_downgraded": len(bad),
             "downgrade_pct": f"{100 * len(bad) / len(rows):.0f}",
             "n_accept": sum(r["action"] == "ACCEPT" for r in rows),
             "top_downgraded_terms": "; ".join(f"{t} ({n})" for t, n in top_terms),
-            "example_genes": ", ".join(sorted({r["gene"] for r in bad})[:6]),
+            "example_genes": ", ".join(sorted({label(r) for r in bad})[:6]),
         })
     out.sort(key=lambda x: (-x["n_downgraded"], -int(x["downgrade_pct"]), x["level"], x["id"]))
     return out
@@ -154,7 +180,7 @@ def main() -> None:
                 fam_cache[gd] = panther_family(gd)
             fam_id, fam_name, sf_id, sf_name = fam_cache[gd]
             all_rows.append({
-                "action": r["action"], "gene": r["gene"],
+                "action": r["action"], "gene": r["gene"], "file": r["file"],
                 "propagated_term_id": r["term_id"], "propagated_term_label": r["term_label"],
                 "graft_node": graft_node(gd, r["term_id"]),
                 "panther_family": fam_id, "panther_family_name": fam_name,

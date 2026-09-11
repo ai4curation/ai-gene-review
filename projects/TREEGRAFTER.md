@@ -195,17 +195,22 @@ Three things follow:
 > failure mode. **Short answer: in five cases out of six the placement is
 > fine and the inherited term is the problem** — too coarse or a sibling term
 > from the family node (47%), or a generic / out-of-context localization or
-> process (36%). About one in eight (41 annotations on 26 genes, e.g. `aprA`,
+> process (36%). About one in eight (41 annotations on 27 proteins, e.g. `aprA`,
 > `fcs`, `mdh`, `mqo1–3`, `dapE`) is a true within-superfamily mis-placement,
-> and genuine pseudo-enzymes are rare (4 annotations, 2 genes).
+> and genuine pseudo-enzymes are rare (4 annotations, 2 proteins).
 
-| Failure mode | annotations | share | genes |
+| Failure mode | annotations | share | proteins |
 |---|---:|---:|---:|
 | 1 Granularity — right subfamily, family/node-level or sibling term | 143 | 47% | 109 |
-| 3 Generic / out-of-context CC, binding or process term | 109 | 36% | 92 |
-| 4 Within-superfamily mis-placement | 41 | 13% | 26 |
+| 3 Generic / out-of-context CC, binding or process term | 109 | 36% | 94 |
+| 4 Within-superfamily mis-placement | 41 | 13% | 27 |
 | 0 Unclassified — heuristic declines to guess (curation queue) | 9 | 3% | 8 |
 | 2 Pseudo-enzyme / co-opted fold | 4 | 1% | 2 |
+
+Protein counts are distinct **review files**, not gene symbols — the corpus has
+510 files but only 493 symbols (`mdh`, `ALB`, `dapF` and seven other symbols
+span more than one file), so a symbol-keyed count under-reports modes 3 and 4
+as 92 and 26.
 
 The TreeGrafter terms most often down-graded (`REMOVE` / `MODIFY` /
 `MARK_AS_OVER_ANNOTATED`) cluster in two failure modes:
@@ -251,7 +256,7 @@ down-graded** and 19 have none — the errors are concentrated, not diffuse.
 The worst families are candidate PAINT subfamily-annotation or node-term
 fixes:
 
-| Family | n | genes | down-graded | Failure | Example genes |
+| Family | n | proteins | down-graded | Failure | Example genes |
 |---|---:|---:|---:|---|---|
 | PTHR10543 beta-carotene dioxygenase | 8 | 4 | 100% | stilbene/lignostilbene dioxygenases grafted onto the carotenoid-cleavage subfamily (mode 4) | Q53353, Saro_0802, Saro_2809, lsdB |
 | PTHR30443 "inner membrane protein" (EptA) | 8 | 4 | 100% | EptA node carries `LPS core` and `phosphotransferase` instead of pEtN transferase (mode 1) | mcr-1, mcr2, mcr-3, mcr-4 |
@@ -262,13 +267,14 @@ fixes:
 | PTHR21047 dTDP-sugar epimerase | 10 | 3 | 60% | generic polysaccharide / epimerase parents (mode 1) | eryBVII, rfbC, rmlC |
 | PTHR11632 SDH flavoprotein | 7 | 2 | 71% | SDH/FRD/APS-reductase heterogeneity (modes 1 and 4) | aprA, sdhA |
 | PTHR43775 fatty acid synthase | 4 | 4 | 100% | family-level FAS term on PKS subfamilies (mode 1) | eryAI–III, Pks1 |
-| PTHR43128 L-2-hydroxycarboxylate DH | 4 | 1 | 100% | MDH grafted onto the L-LDH subfamily (mode 4) | mdh |
+| PTHR43128 L-2-hydroxycarboxylate DH | 4 | 2 | 100% | MDH grafted onto the L-LDH subfamily (mode 4) | METEA/mdh, PSEPK/mdh |
 | PTHR21272 catabolic 3-dehydroquinase | 4 | 4 | 100% | catabolic process on biosynthetic type-II DHQases (mode 4) | aroQ, aroQ1, aroQ2, aroQ-III |
 | PTHR43808 acetylornithine deacetylase (M20A) | 5 | 3 | 80% | DapE / PepV grafted onto the ArgE branch (mode 4) | dapE, pepV |
 
 ## Caveats
 
-- **Corpus composition.** 898 TreeGrafter annotations across 510 genes, but
+- **Corpus composition.** 898 TreeGrafter annotations across 510 reviewed
+  proteins (510 review files; only 493 distinct gene symbols), but
   ~70% of them come from the *Pseudomonas putida* KT2440 batch (see the
   per-taxon table in the summary sidecar), so the rates are largely a
   *P. putida* result; the 95% Wald interval on the 41% accept rate is roughly
