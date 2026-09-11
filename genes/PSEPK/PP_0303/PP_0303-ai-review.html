@@ -1,0 +1,2221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_0303 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_0303</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88R31" target="_blank" class="term-link">
+                        Q88R31
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_0303";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88R31" data-a="DESCRIPTION: PP_0303 encodes the predicted CdhC 3-dehydrocarnit..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PP_0303 encodes the predicted CdhC 3-dehydrocarnitine:acetyl-CoA trimethylamine transferase of L-carnitine catabolism. It is expected to form betainyl-CoA and acetoacetate from 3-dehydrocarnitine and acetyl-CoA.</p>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>3-dehydrocarnitine:acetyl-CoA trimethylamine transferase activity</h3>
+                <span class="vote-buttons" data-g="Q88R31" data-a="3-dehydrocarnitine:acetyl-CoA trimethylamine transferase activity" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+
+            <p><strong>Definition:</strong> Catalysis of the reaction 3-dehydrocarnitine + acetyl-CoA = N,N,N-trimethylglycyl-CoA + acetoacetate.</p>
+
+
+
+            <p><strong>Justification:</strong> The exact EC 2.3.1.317/RHEA:47044 activity is experimentally established, while GO:0043720 describes another substrate in the diverse BKACE family.</p>
+
+
+
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016747" target="_blank" class="term-link">
+                    acyltransferase activity, transferring groups other than amino-acyl groups
+                </a>
+            </p>
+
+
+
+
+
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+
+                <li>
+
+                    UniProtKB:Q9HTH7
+
+
+                    : Catalyzes the condensation of dehydrocarnitine and acetyl-CoA
+
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043720" target="_blank" class="term-link">
+                                    GO:0043720
+                                </a>
+                            </span>
+                            <span class="term-label">3-keto-5-aminohexanoate cleavage activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R31" data-a="GO:0043720" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This beta-keto-acid family term assigns the wrong physiological substrate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PP_0303 is embedded beside lcdH and the predicted CdhB thioesterase and is the ortholog of experimentally characterized P. aeruginosa CdhC Q9HTH7. CdhC uses 3-dehydrocarnitine and acetyl-CoA (RHEA:47044), not 3-keto-5-aminohexanoate. The substrate-specific term is incorrect, but the broader acyltransferase activity remains valid.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016747" target="_blank" class="term-link">
+                                    acyltransferase activity, transferring groups other than amino-acyl groups
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_0303/PP_0303-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">It is 82% identical to the experimentally studied P. aeruginosa ortholog CdhC (PA5387)</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProtKB:Q9HTH7
+
+                                </span>
+
+                                <div class="support-text">Catalyzes the condensation of dehydrocarnitine and acetyl-CoA</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_0303/PP_0303-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0043720	3-keto-5-aminohexanoate cleavage activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042413" target="_blank" class="term-link">
+                                    GO:0042413
+                                </a>
+                            </span>
+                            <span class="term-label">carnitine catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19406895" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19406895
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Identification of genes required for Pseudomonas aeruginosa ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R31" data-a="GO:0042413" data-r="PMID:19406895" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Conserved-locus evidence supports a role in carnitine catabolism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PP_0303 is the KT2440 ortholog of CdhC in the experimentally defined Pseudomonas carnitine-catabolism locus.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    UniProtKB:Q9HTH7
+
+                                </span>
+
+                                <div class="support-text">Is involved in a L-carnitine degradation pathway</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Transfer of the trimethylamine-containing fragment of 3-dehydrocarnitine to acetyl-CoA, forming betainyl-CoA and acetoacetate.</h3>
+                <span class="vote-buttons" data-g="Q88R31" data-a="FUNCTION: Transfer of the trimethylamine-containing fragment..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016747" target="_blank" class="term-link">
+                            acyltransferase activity, transferring groups other than amino-acyl groups
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042413" target="_blank" class="term-link">
+                                carnitine catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_0303/PP_0303-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">The chief caveat is that PP_0303 *itself* has not been purified and assayed</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            UniProtKB:Q9HTH7
+
+                        </span>
+
+                        <div class="finding-text">Catalyzes the condensation of dehydrocarnitine and acetyl-CoA</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        UniProtKB:Q9HTH7
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Reviewed Pseudomonas aeruginosa CdhC entry</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Defines EC 2.3.1.317 and RHEA:47044 for 3-dehydrocarnitine cleavage.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24240508" target="_blank" class="term-link">
+                            PMID:24240508
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Revealing the hidden functional diversity of an enzyme family.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Provides experimental support for the CdhC reaction assigned to Q9HTH7.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19406895" target="_blank" class="term-link">
+                            PMID:19406895
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Identification of genes required for Pseudomonas aeruginosa carnitine catabolism.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Establishes the conserved locus as required for carnitine catabolism.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_0303/PP_0303-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB record for PP_0303</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Identifies Q88R31 as a dehydrocarnitine cleavage enzyme in the KT2440 locus.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_0303/PP_0303-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO annotations for PP_0303</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Contains the single annotation reviewed here.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_0303/PP_0303-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research report for PP_0303</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Supports the CdhC assignment through 82% identity to the studied P. aeruginosa ortholog, conserved catalytic residues, and locus context, while noting that PP_0303 itself has not been assayed directly.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does purified PP_0303 have the same substrate profile and zinc dependence as Q9HTH7?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88R31" data-a="Q: Does purified PP_0303 have the same substrate prof..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Reconstitute the PP_0303 reaction with 3-dehydrocarnitine and acetyl-CoA and quantify both products by LC-MS.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: in vitro enzyme assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88R31" data-a="EXPERIMENT: Reconstitute the PP_0303 reaction with 3-dehydroca..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_0303-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88R31" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of PP_0303 (Q88R31) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">4 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-13T07:06:09.234892</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_0303-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_0303-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-pp_0303-q88r31-in-pseudomonas-putida-kt2440">Functional Annotation of PP_0303 (Q88R31) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>PP_0303 (UniProt Q88R31) is CdhC — 3-dehydrocarnitine:acetyl-CoA trimethylamine transferase (EC 2.3.1.317) — a cytoplasmic, Zn²⁺-dependent β-keto acid cleavage enzyme (BKACE) that catalyzes the committed carbon–carbon cleavage step of L-carnitine catabolism in <em>Pseudomonas putida</em> strain KT2440.</strong> The enzyme performs a Claisen-type condensation/retro-Claisen reaction, <strong>3-dehydrocarnitine + acetyl-CoA → betainyl-CoA + acetoacetate</strong> (KEGG R13359), thereby channelling the carnitine-derived carbon skeleton into the glycine betaine → dimethylglycine → sarcosine → glycine catabolic route.</p>
+<p>This annotation resolves an important ambiguity. The name carried in UniProt — "Dehydrocarnitine cleavage enzyme" — originates solely from the original 2002 genome submission of <em>P. putida</em> KT2440 (EMBL AAN65934.1) and is an electronically imported, uncurated hypothesis (evidence code ECO:0000313). Our investigation confirms that this original genome-annotation guess was in fact essentially correct in substance, and we have upgraded it from an unverified label to a mechanistically and phylogenetically supported assignment. PP_0303 belongs to the DUF849 / Pfam PF05853 (BKACE) family, adopts a triose-phosphate-isomerase (TIM) barrel fold, and retains the complete catalytic Zn²⁺-binding triad (His47, His49, Glu248) characteristic of biochemically characterized family members. It is 82% identical to the experimentally studied <em>P. aeruginosa</em> ortholog CdhC (PA5387), and it sits within a dedicated, complete carnitine-catabolic gene cluster on the <em>P. putida</em> chromosome.</p>
+<p>As a soluble TIM-barrel metabolic enzyme with no signal peptide, PP_0303 acts in the <strong>cytoplasm</strong>, downstream of ABC-transporter-mediated carnitine uptake and downstream of the oxidation of L-carnitine to 3-dehydrocarnitine by its immediate genomic neighbor, carnitine 3-dehydrogenase (PP_0302, EC 1.1.1.108). The pathway is supported not only by comparative genomics and family biochemistry but by classic organism-specific biochemistry in <em>P. putida</em> itself, in which carnitine dehydrogenase was purified to homogeneity and L-carnitine/trimethylammonium catabolism was directly demonstrated.</p>
+<h3 id="verified-geneprotein-identity">Verified gene/protein identity</h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UniProt</td>
+<td>Q88R31 (Q88R31_PSEPK)</td>
+</tr>
+<tr>
+<td>Gene / locus</td>
+<td>PP_0303 (ortholog of <em>P. aeruginosa</em> <strong>cdhC</strong>, PA5387)</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> strain ATCC 47054 / DSM 6125 / KT2440</td>
+</tr>
+<tr>
+<td>Length</td>
+<td>294 aa</td>
+</tr>
+<tr>
+<td>EC / KO</td>
+<td>EC 2.3.1.317 (created 2024); KEGG Orthology K27837</td>
+</tr>
+<tr>
+<td>Cofactor</td>
+<td>Zn²⁺</td>
+</tr>
+<tr>
+<td>Family / fold</td>
+<td>BKACE (Pfam PF05853; InterPro IPR008567); TIM-barrel (IPR013785)</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Cytoplasm (no signal peptide, no transmembrane segments)</td>
+</tr>
+</tbody>
+</table>
+<p>The gene symbol, organism, EC class, Zn²⁺ cofactor, and BKACE/TIM-barrel domains are mutually consistent and match the characterized <em>P. aeruginosa</em> ortholog. This is unambiguously the KT2440 carnitine-catabolic enzyme.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="f001-pp_0303-belongs-to-the-bkace-duf849-keto-acid-cleavage-enzyme-family">F001 — PP_0303 belongs to the BKACE / DUF849 β-keto acid cleavage enzyme family</h3>
+<p>PP_0303 (Q88R31) is a 294-amino-acid protein that maps unambiguously to the <strong>BKACE (β-keto acid cleavage enzyme) family</strong>: Pfam <strong>PF05853 (BKACE)</strong> and InterPro <strong>IPR008567 (BKACE)</strong>, together with <strong>IPR013785 (Aldolase/TIM barrel)</strong>. UniProt records the enzyme class as EC 2.3.1.- (a CoA-dependent acyltransferase) and lists <strong>Zn(2+)</strong> as the cofactor. The associated Gene Ontology molecular-function annotation is F:3-keto-5-aminohexanoate cleavage activity (GO:0043720).</p>
+<p>This family was systematically re-annotated by Bastard and colleagues, who screened the DUF849 Pfam family and "unearthed 14 potential new enzymatic activities, leading to the designation of these proteins as β-keto acid cleavage enzymes" (<a href="https://pubmed.ncbi.nlm.nih.gov/24240508/">PMID: 24240508</a>). The founding, structurally characterized archetype of the family is <strong>Kce</strong> (3-keto-5-aminohexanoate cleavage enzyme) from <em>Fusobacterium nucleatum</em> (UniProt Q8RHX2), described as "the first representative of a large family of prokaryotic hypothetical proteins, currently annotated as the 'domain of unknown function' DUF849" (<a href="https://pubmed.ncbi.nlm.nih.gov/21632536/">PMID: 21632536</a>).</p>
+<p>To place PP_0303 quantitatively within this family, a pairwise global alignment (BLOSUM62) of PP_0303 against Kce (Q8RHX2) was performed. The two proteins are <strong>43% identical over 270 aligned positions</strong>, firmly establishing PP_0303 as a bona fide member of this catalytically defined family rather than a distant, uncertain homolog.</p>
+<h3 id="f002-pp_0303-retains-the-complete-catalytic-zn-binding-triad-of-bkace-enzymes">F002 — PP_0303 retains the complete catalytic Zn-binding triad of BKACE enzymes</h3>
+<p>The catalytic machinery of BKACE enzymes centers on a Zn²⁺ cation held within a TIM-barrel active site. In the Kce archetype, the structure "shows the ubiquitous triose phosphate isomerase (TIM) barrel fold and a Zn(2+) cation reminiscent of metal-dependent class II aldolases" (<a href="https://pubmed.ncbi.nlm.nih.gov/21632536/">PMID: 21632536</a>). Mapping the experimentally defined active-site residues of Kce onto PP_0303 by alignment shows that <strong>all three Zn²⁺ ligands are identical and positionally conserved</strong> in PP_0303:</p>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Kce (Q8RHX2) residue</th>
+<th>PP_0303 (Q88R31) residue</th>
+<th>Conservation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Zn²⁺ ligand</td>
+<td>His47</td>
+<td>His47</td>
+<td>Identical</td>
+</tr>
+<tr>
+<td>Zn²⁺ ligand</td>
+<td>His49</td>
+<td>His49</td>
+<td>Identical</td>
+</tr>
+<tr>
+<td>Zn²⁺ ligand</td>
+<td>Glu226</td>
+<td>Glu248</td>
+<td>Identical</td>
+</tr>
+<tr>
+<td>Substrate contact</td>
+<td>Glu15</td>
+<td>Gly15</td>
+<td><strong>Diverged</strong></td>
+</tr>
+<tr>
+<td>Substrate contact</td>
+<td>Ser83</td>
+<td>Ala85</td>
+<td><strong>Diverged</strong></td>
+</tr>
+<tr>
+<td>Substrate contact</td>
+<td>Gly86</td>
+<td>Gly89</td>
+<td>Conserved</td>
+</tr>
+<tr>
+<td>Substrate contact</td>
+<td>Thr107</td>
+<td>Thr127</td>
+<td>Conserved</td>
+</tr>
+</tbody>
+</table>
+<p>The complete conservation of the three zinc ligands (His47, His49, Glu248) — independently corroborated by UniProt listing Zn(2+) as the cofactor — indicates that PP_0303 is a <strong>catalytically competent</strong> metal-dependent enzyme. Critically, however, <strong>two of the four substrate-contacting residues diverge</strong> (Kce Glu15→Gly15; Ser83→Ala85). This is exactly the pattern expected for a family member that has retained the core chemistry but shifted its substrate specificity: as Bastard et al. noted, the goal of their family-wide analysis was to "suggest key residues for guiding further functional annotation" (<a href="https://pubmed.ncbi.nlm.nih.gov/24240508/">PMID: 24240508</a>).</p>
+<p>The catalytic mechanism these conserved residues support is a distinctive one, described for Kce as "an unprecedented mechanism that proceeds through deprotonation of the 3-keto-5-aminohexanoate substrate, nucleophilic addition onto an incoming acetyl-CoA, intramolecular transfer of the CoA moiety, and final retro-Claisen reaction leading to acetoacetate and 3-aminobutyryl-CoA" (<a href="https://pubmed.ncbi.nlm.nih.gov/21632536/">PMID: 21632536</a>). PP_0303 performs the same class of chemistry on its own β-keto acid substrate.</p>
+<h3 id="f003-pp_0303-catalyzes-cytoplasmic-keto-acid-cc-cleavage-the-original-dehydrocarnitine-cleavage-enzyme-name-was-an-unverified-genome-annotation-hypothesis">F003 — PP_0303 catalyzes cytoplasmic β-keto acid C–C cleavage; the original "dehydrocarnitine cleavage enzyme" name was an unverified genome-annotation hypothesis</h3>
+<p>An essential piece of scientific hygiene in this investigation was tracing the provenance of PP_0303's UniProt name. The label <strong>"Dehydrocarnitine cleavage enzyme" (EC 2.3.1.-) derives solely from the original 2002 <em>P. putida</em> KT2440 genome submission</strong> (EMBL AAN65934.1). Its evidence code is ECO:0000313 — an <em>imported</em>, not <em>curated</em>, annotation. Beyond the Zn²⁺ cofactor, UniProt records <strong>no catalytic-activity, pathway, or subcellular-location comment</strong>, and the only functional GO term (3-keto-5-aminohexanoate cleavage) is an IEA/InterPro electronic inference.</p>
+<p>Nonetheless, the annotation is chemically reasonable: <strong>3-dehydrocarnitine</strong> [(CH₃)₃N⁺–CH₂–CO–CH₂–COO⁻] is itself a β-keto acid, making it a plausible BKACE substrate. The appropriate scientific posture at this stage was caution: as Bastard et al. emphasize, "the functional diversity within a family may be largely underestimated" (<a href="https://pubmed.ncbi.nlm.nih.gov/24240508/">PMID: 24240508</a>), so a family member's true substrate may differ from its default annotation and requires confirmation.</p>
+<p>Regarding <strong>localization</strong>: PP_0303 is a soluble TIM-barrel metabolic enzyme with <strong>no signal peptide and no transmembrane segments</strong>, so it carries out its function in the <strong>cytoplasm</strong> — consistent with a role downstream of transporter-mediated import of the pathway's initial substrate.</p>
+<h3 id="f004-pp_0303-is-cdhc-3-dehydrocarnitineacetyl-coa-trimethylamine-transferase-ec-231317-in-the-l-carnitine-glycine-betaine-catabolic-pathway">F004 — PP_0303 is CdhC, 3-dehydrocarnitine:acetyl-CoA trimethylamine transferase (EC 2.3.1.317), in the L-carnitine → glycine betaine catabolic pathway</h3>
+<p>The decisive evidence for PP_0303's specific function comes from <strong>genomic-context (operon) analysis</strong> combined with <strong>orthology to a biochemically characterized enzyme</strong>. In the <em>P. putida</em> KT2440 chromosome, PP_0303 lies within a dedicated carnitine-catabolic gene cluster:</p>
+<table>
+<thead>
+<tr>
+<th>Gene</th>
+<th>Product</th>
+<th>EC / KO</th>
+<th>Reaction</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_0296, PP_0304</td>
+<td>Glycine betaine/carnitine ABC-transporter substrate-binding proteins</td>
+<td>K02002</td>
+<td>Quaternary-ammonium uptake</td>
+</tr>
+<tr>
+<td>PP_0298, PP_0305</td>
+<td>AraC-family carnitine/betaine-responsive activators</td>
+<td>K21826 / K17736</td>
+<td>Transcriptional regulation</td>
+</tr>
+<tr>
+<td>PP_0302</td>
+<td>Carnitine 3-dehydrogenase</td>
+<td>EC 1.1.1.108</td>
+<td>L-carnitine + NAD⁺ → 3-dehydrocarnitine + NADH</td>
+</tr>
+<tr>
+<td><strong>PP_0303</strong></td>
+<td><strong>CdhC — 3-dehydrocarnitine:acetyl-CoA trimethylamine transferase</strong></td>
+<td><strong>EC 2.3.1.317 / K27837</strong></td>
+<td><strong>3-dehydrocarnitine + acetyl-CoA → betainyl-CoA + acetoacetate</strong></td>
+</tr>
+<tr>
+<td>PP_0301</td>
+<td>Betainyl-CoA thioesterase</td>
+<td>EC 3.1.2.33</td>
+<td>betainyl-CoA + H₂O → glycine betaine + CoA</td>
+</tr>
+<tr>
+<td>PP_0310, PP_0311</td>
+<td>N,N-dimethylglycine / sarcosine dehydrogenases</td>
+<td>K21833 / K21834</td>
+<td>Downstream glycine betaine catabolism</td>
+</tr>
+</tbody>
+</table>
+<p>KEGG assigns PP_0303 to <strong>KO K27837 (cdhC)</strong> and <strong>EC 2.3.1.317</strong> (an EC number created in 2024), whose reaction (R13359) is <strong>3-dehydrocarnitine + acetyl-CoA = acetoacetate + betainyl-CoA</strong>, explicitly classified as a BKACE reaction. PP_0303 is <strong>82.0% identical (241/294 aa)</strong> to the characterized <em>P. aeruginosa</em> CdhC (PA5387), the enzyme that underlies this EC assignment.</p>
+<p>The experimental foundation for the pathway is the work of Wargo and Hogan, who showed in <em>P. aeruginosa</em> that "carnitine is converted to 3-dehydrocarnitine (3-dhc) which is in turn metabolized to glycine betaine (GB), an intermediate metabolite in the catabolism of carnitine to glycine" (<a href="https://pubmed.ncbi.nlm.nih.gov/19406895/">PMID: 19406895</a>). They further demonstrated genetically that "the PA5388-PA5384 region contains the predicted <em>P. aeruginosa</em> carnitine dehydrogenase homologue along with other genes required for growth on carnitine" (<a href="https://pubmed.ncbi.nlm.nih.gov/19406895/">PMID: 19406895</a>) — a region that contains PA5387/cdhC, the 82%-identical ortholog of PP_0303. The BKACE reaction class to which EC 2.3.1.317 belongs was established by Bastard et al., who "unearthed 14 potential new enzymatic activities, leading to the designation of these proteins as β-keto acid cleavage enzymes" (<a href="https://pubmed.ncbi.nlm.nih.gov/24240508/">PMID: 24240508</a>).</p>
+<h3 id="f005-organism-specific-experimental-support-in-p-putida">F005 — Organism-specific experimental support in <em>P. putida</em></h3>
+<p>Finally, classic biochemistry performed directly in the target organism corroborates the pathway inferred for PP_0303. Goulas (1988) purified carnitine dehydrogenase (EC 1.1.1.108) from <em>Pseudomonas putida</em> IFP 206 to homogeneity — a 62 kDa homodimer, specific for L-carnitine and NAD⁺ — showing that "Carnitine dehydrogenase (carnitine:NAD+ oxidoreductase, EC 1.1.1.108) from Pseudomonas putida IFP 206 catalyzes the oxidation of L-carnitine to 3-dehydrocarnitine" (<a href="https://pubmed.ncbi.nlm.nih.gov/3058208/">PMID: 3058208</a>). This is precisely the substrate-supplying step feeding PP_0303, and its enzyme corresponds to PP_0303's immediate neighbor, PP_0302.</p>
+<p>Earlier, Kleber and colleagues (1978) showed that <em>P. putida</em> grows on γ-butyrobetaine, L- and D,L-carnitine, glycine betaine, and choline; that L-carnitine induces carnitine dehydrogenase; and that trimethylamine/trimethylammonium turnover accompanies growth on carnitine as sole carbon source. They reported that "the formation of trimethylamine increased, if L-carnitine or gamma-butyrobetaine were the only carbon sources" (<a href="https://pubmed.ncbi.nlm.nih.gov/565193/">PMID: 565193</a>), documenting active L-carnitine/trimethylammonium catabolism in <em>P. putida</em> — the physiological pathway in which PP_0303/CdhC functions.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>PP_0303 is the <strong>committed, carbon-conserving cleavage step</strong> that converts the carnitine skeleton into a glycine-betaine intermediate while capturing the acetyl group as acetoacetate. The full catabolic route in <em>P. putida</em> KT2440 can be summarized as follows:</p>
+<div class="codehilite"><pre><span></span><code> ABC transporter (Cbc/CaiX; PP_0296/PP_0304, periplasmic SBPs)
+   L-carnitine (extracellular) ─────────────────────────────────►  L-carnitine (cytoplasm)
+                                                        │
+                          PP_0302  carnitine 3-dehydrogenase (EC 1.1.1.108)
+                          L-carnitine + NAD⁺ → 3-dehydrocarnitine + NADH
+                                                        │
+                                                        ▼
+              ┌────────────────────────────────────────────────────────────┐
+      acetyl-CoA ───► │  PP_0303  CdhC  (EC 2.3.1.317)  — BKACE, Zn²⁺, TIM barrel    │
+              │  3-dehydrocarnitine + acetyl-CoA → betainyl-CoA + acetoacetate│
+              └────────────────────────────────────────────────────────────┘
+                                     │                         │
+                                     ▼                         ▼
+              PP_0301 betainyl-CoA thioesterase        acetoacetate
+              (EC 3.1.2.33)                            → central metabolism
+              betainyl-CoA + H₂O → glycine betaine + CoA
+                                     │
+                                     ▼
+              glycine betaine  →  dimethylglycine  →  sarcosine  →  glycine
+                               (PP_0310/PP_0311 and downstream dehydrogenases)
+</code></pre></div>
+
+<p>Chemically, PP_0303 performs the family's signature transformation on a <strong>β-keto acid</strong> substrate. By analogy to the Kce mechanism (<a href="https://pubmed.ncbi.nlm.nih.gov/21632536/">PMID: 21632536</a>), the reaction proceeds through Zn²⁺-assisted deprotonation of 3-dehydrocarnitine, nucleophilic addition onto the incoming acetyl-CoA, intramolecular CoA transfer, and a final retro-Claisen C–C cleavage. In the Kce case the products are acetoacetate + 3-aminobutyryl-CoA; in the CdhC/PP_0303 case the products are <strong>acetoacetate + betainyl-CoA</strong>. The conserved Zn²⁺ triad (His47/His49/Glu248) supplies the metal-dependent catalytic core, while the two diverged substrate-contact residues (Gly15, Ala85 in place of Kce's Glu15, Ser83) reshape the active-site pocket to accommodate the trimethylammonium-bearing 3-dehydrocarnitine rather than the amino-bearing 3-keto-5-aminohexanoate. This is a textbook example of how a conserved catalytic scaffold is repurposed for a new substrate within an enzyme superfamily.</p>
+<p>The <strong>physiological logic</strong> of this pathway is nutrient acquisition: carnitine and related quaternary-ammonium compounds are abundant in soil and rhizosphere environments (and in animal tissues), and <em>P. putida</em> uses this cluster to exploit them as carbon and nitrogen sources. The pathway simultaneously feeds the two-carbon acetyl unit (as acetoacetate) toward central metabolism and routes the trimethylammonium moiety through glycine betaine demethylation to glycine.</p>
+<p><strong>Localization:</strong> All steps catalyzed by PP_0303 occur in the cytoplasm; the substrate is delivered there by a periplasmic-SBP-dependent ABC transporter system (the Cbc/CaiX machinery characterized in related pseudomonads), consistent with PP_0303 lacking any export or membrane-anchoring signal.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>Role in this report</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24240508/">24240508</a></td>
+<td><em>Revealing the hidden functional diversity of an enzyme family</em></td>
+<td>Defines the BKACE (DUF849/PF05853) family and its 14 activities; establishes the reaction class of EC 2.3.1.317 and warns that family substrate specificity is under-annotated (supports F001, F002, F003, F004)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21632536/">21632536</a></td>
+<td><em>3-Keto-5-aminohexanoate cleavage enzyme: a common fold for an uncommon Claisen-type condensation</em></td>
+<td>Structural/mechanistic archetype (Kce): TIM-barrel + Zn²⁺ active site, catalytic triad, and the deprotonation/addition/retro-Claisen mechanism PP_0303 shares (supports F001, F002)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19406895/">19406895</a></td>
+<td><em>Identification of genes required for Pseudomonas aeruginosa carnitine catabolism</em></td>
+<td>Experimentally defines carnitine → 3-dehydrocarnitine → glycine betaine → glycine pathway and links the cdh gene region (containing PA5387/CdhC, PP_0303's 82%-identical ortholog) to carnitine growth (supports F004)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/3058208/">3058208</a></td>
+<td><em>Purification and properties of carnitine dehydrogenase from Pseudomonas putida</em></td>
+<td>Organism-specific proof that <em>P. putida</em> oxidizes L-carnitine to 3-dehydrocarnitine (PP_0303's substrate), via the enzyme corresponding to neighbor PP_0302 (supports F005)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/565193/">565193</a></td>
+<td><em>Interrelationships between carnitine metabolism and fatty acid assimilation in P. putida</em></td>
+<td>Demonstrates inducible L-carnitine/trimethylammonium catabolism in <em>P. putida</em>, the physiological context of PP_0303 (supports F005)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19919675/">19919675</a></td>
+<td><em>The ABC transporter Cbc recruits multiple substrate-binding proteins…</em></td>
+<td>Characterizes the choline/betaine/carnitine ABC transporter (Cbc/CaiX) delivering carnitine to the cytoplasm upstream of PP_0303 (context for localization)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17951379/">17951379</a></td>
+<td><em>Two gene clusters and a regulator for P. aeruginosa glycine betaine catabolism</em></td>
+<td>Defines the downstream glycine betaine → DMG → sarcosine → glycine route the PP_0303 product feeds into (pathway context)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18156257/">18156257</a></td>
+<td><em>Pseudomonas syringae BetT is a low-affinity choline transporter…</em></td>
+<td>Context on quaternary-ammonium transport and <em>P. putida</em> BCCT transporters (peripheral context)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Strength of evidence.</strong> The core assignment rests on three independent, mutually reinforcing lines: (1) <strong>sequence/structure</strong> — 43% identity to the structurally characterized Kce and complete conservation of the catalytic Zn triad; (2) <strong>genomic context</strong> — membership in a complete, dedicated carnitine-catabolic operon with the correct upstream (PP_0302) and downstream (PP_0301) enzymes and associated transporters/regulators; and (3) <strong>orthology to a functionally studied enzyme</strong> — 82% identity to <em>P. aeruginosa</em> CdhC (PA5387), whose gene region is experimentally required for carnitine catabolism. Organism-specific biochemistry in <em>P. putida</em> confirms flux through the substrate-supplying step. The chief caveat is that PP_0303 <em>itself</em> has not been purified and assayed; the assignment is inferential (albeit strongly so), and EC 2.3.1.317 is a recently minted (2024) number.</p>
+<hr />
+<h2 id="supported-and-refuted-hypotheses">Supported and Refuted Hypotheses</h2>
+<ul>
+<li><strong>Supported (high confidence):</strong> PP_0303 = CdhC, a cytoplasmic Zn²⁺-dependent BKACE catalyzing 3-dehydrocarnitine + acetyl-CoA → betainyl-CoA + acetoacetate, the committed step of L-carnitine catabolism. (EC 2.3.1.317; 82% identity to characterized PA5387; complete carnitine operon; conserved Zn triad.)</li>
+<li><strong>Supported:</strong> The original genome annotation "dehydrocarnitine cleavage enzyme" is correct in substance — upgraded from "plausible" (early exploration) to "corroborated."</li>
+<li><strong>Refuted:</strong> PP_0303 catalyzes the identical reaction as the Kce archetype (3-keto-5-aminohexanoate cleavage). The substrate is 3-dehydrocarnitine, and substrate-pocket residues diverge accordingly. The generic InterPro GO term (3-keto-5-aminohexanoate cleavage) is a family-level default, not the specific activity of PP_0303.</li>
+</ul>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct enzymology on PP_0303.</strong> The substrate (3-dehydrocarnitine), co-substrate (acetyl-CoA), and products (betainyl-CoA, acetoacetate) have not been demonstrated for the purified <em>P. putida</em> protein. The assignment is inference from orthology, operon structure, and family chemistry — strong, but not a direct kinetic measurement.</p>
+</li>
+<li>
+<p><strong>The name in UniProt is uncurated.</strong> The "dehydrocarnitine cleavage enzyme" label is an ECO:0000313 imported annotation from the 2002 genome. Although our analysis indicates it is substantively correct, UniProt still lacks curated catalytic-activity, pathway, and localization comments for Q88R31.</p>
+</li>
+<li>
+<p><strong>Substrate-specificity residues diverge from the archetype.</strong> Two of four substrate-contacting positions differ from Kce. While consistent with a shifted (carnitine-type) substrate, the precise structural basis for 3-dehydrocarnitine recognition has not been solved for PP_0303 (no experimental structure; homology/AlphaFold models only).</p>
+</li>
+<li>
+<p><strong>Regulation and physiology in KT2440 specifically.</strong> The regulatory logic (AraC-family activators PP_0298/PP_0305) and growth phenotypes have been characterized largely in <em>P. aeruginosa</em>; direct genetic knockout/growth data for <em>P. putida</em> PP_0303 were not established here.</p>
+</li>
+<li>
+<p><strong>Cofactor stoichiometry and metal specificity.</strong> Zn²⁺ is annotated and the ligands are conserved, but metal dependence has not been experimentally verified for this specific protein.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Heterologous expression and in vitro assay.</strong> Clone PP_0303, purify the His-tagged protein, and assay 3-dehydrocarnitine + acetyl-CoA → betainyl-CoA + acetoacetate by LC-MS/coupled spectrophotometric detection of CoA-thioester products. Measure kcat/Km against 3-dehydrocarnitine and, as controls, 3-keto-5-aminohexanoate and other β-keto acids to define specificity.</p>
+</li>
+<li>
+<p><strong>Gene knockout / growth phenotyping in KT2440.</strong> Construct a clean ΔPP_0303 mutant and test growth on L-carnitine, γ-butyrobetaine, 3-dehydrocarnitine, and glycine betaine as sole carbon/nitrogen sources; complement to confirm. Predict: loss of growth on carnitine but retained growth on glycine betaine (i.e., a block precisely at the CdhC step).</p>
+</li>
+<li>
+<p><strong>Metabolite tracing.</strong> Feed ¹³C-labeled L-carnitine to wild-type and ΔPP_0303 cells and follow accumulation of 3-dehydrocarnitine (upstream) versus glycine betaine/betainyl-CoA (downstream) by NMR/MS, mirroring the Wargo–Hogan approach in <em>P. aeruginosa</em>.</p>
+</li>
+<li>
+<p><strong>Structural determination.</strong> Solve the crystal structure (or validate an AlphaFold model) of PP_0303, ideally with bound 3-dehydrocarnitine or a substrate analog, to confirm the Zn²⁺ triad geometry and the roles of the diverged Gly15/Ala85 positions in accommodating the trimethylammonium group.</p>
+</li>
+<li>
+<p><strong>Metal-dependence test.</strong> Assay activity with and without chelators (EDTA/1,10-phenanthroline) and reconstitute with Zn²⁺ vs. other divalent cations to confirm the annotated cofactor.</p>
+</li>
+<li>
+<p><strong>Database curation update.</strong> Submit a curated functional annotation for Q88R31 (function = CdhC, EC 2.3.1.317; pathway = L-carnitine catabolism to glycine betaine; localization = cytoplasm), replacing the uncurated legacy name, once in vitro confirmation is obtained.</p>
+</li>
+</ol>
+<hr />
+<p><em>Report generated from a multi-iteration autonomous investigation combining sequence analysis, active-site residue mapping, genomic-context (operon) analysis, orthology comparison, and literature review. Core conclusion: PP_0303 = CdhC (EC 2.3.1.317), the committed BKACE cleavage step of L-carnitine catabolism in </em>Pseudomonas putida<em> KT2440.</em></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="PP_0303-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="PP_0303-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:24240508</li>
+<li>PMID:21632536</li>
+<li>PMID:19406895</li>
+<li>PMID:3058208</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88R31
+gene_symbol: PP_0303
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  PP_0303 encodes the predicted CdhC 3-dehydrocarnitine:acetyl-CoA
+  trimethylamine transferase of L-carnitine catabolism. It is expected to form
+  betainyl-CoA and acetoacetate from 3-dehydrocarnitine and acetyl-CoA.
+existing_annotations:
+  - term:
+      id: GO:0043720
+      label: 3-keto-5-aminohexanoate cleavage activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: This beta-keto-acid family term assigns the wrong physiological substrate.
+      action: MODIFY
+      reason: &gt;-
+        PP_0303 is embedded beside lcdH and the predicted CdhB thioesterase and
+        is the ortholog of experimentally characterized P. aeruginosa CdhC
+        Q9HTH7. CdhC uses 3-dehydrocarnitine and acetyl-CoA (RHEA:47044), not
+        3-keto-5-aminohexanoate. The substrate-specific term is incorrect, but
+        the broader acyltransferase activity remains valid.
+      proposed_replacement_terms:
+        - id: GO:0016747
+          label: acyltransferase activity, transferring groups other than amino-acyl groups
+      supported_by:
+        - reference_id: file:PSEPK/PP_0303/PP_0303-deep-research-openscientist.md
+          supporting_text: It is 82% identical to the experimentally studied P. aeruginosa ortholog CdhC (PA5387)
+        - reference_id: UniProtKB:Q9HTH7
+          supporting_text: Catalyzes the condensation of dehydrocarnitine and acetyl-CoA
+        - reference_id: file:PSEPK/PP_0303/PP_0303-goa.tsv
+          supporting_text: &#34;GO:0043720\t3-keto-5-aminohexanoate cleavage activity&#34;
+  - term:
+      id: GO:0042413
+      label: carnitine catabolic process
+    evidence_type: ISS
+    original_reference_id: PMID:19406895
+    qualifier: involved_in
+    review:
+      summary: Conserved-locus evidence supports a role in carnitine catabolism.
+      action: NEW
+      reason: &gt;-
+        PP_0303 is the KT2440 ortholog of CdhC in the experimentally defined
+        Pseudomonas carnitine-catabolism locus.
+      supported_by:
+        - reference_id: UniProtKB:Q9HTH7
+          supporting_text: Is involved in a L-carnitine degradation pathway
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+    findings: []
+  - id: UniProtKB:Q9HTH7
+    title: Reviewed Pseudomonas aeruginosa CdhC entry
+    findings:
+      - statement: Defines EC 2.3.1.317 and RHEA:47044 for 3-dehydrocarnitine cleavage.
+  - id: PMID:24240508
+    title: Revealing the hidden functional diversity of an enzyme family.
+    findings:
+      - statement: Provides experimental support for the CdhC reaction assigned to Q9HTH7.
+  - id: PMID:19406895
+    title: Identification of genes required for Pseudomonas aeruginosa carnitine catabolism.
+    findings:
+      - statement: Establishes the conserved locus as required for carnitine catabolism.
+  - id: file:PSEPK/PP_0303/PP_0303-uniprot.txt
+    title: UniProtKB record for PP_0303
+    findings:
+      - statement: Identifies Q88R31 as a dehydrocarnitine cleavage enzyme in the KT2440 locus.
+  - id: file:PSEPK/PP_0303/PP_0303-goa.tsv
+    title: QuickGO annotations for PP_0303
+    findings:
+      - statement: Contains the single annotation reviewed here.
+  - id: file:PSEPK/PP_0303/PP_0303-deep-research-openscientist.md
+    title: OpenScientist deep research report for PP_0303
+    findings:
+      - statement: &gt;-
+          Supports the CdhC assignment through 82% identity to the studied
+          P. aeruginosa ortholog, conserved catalytic residues, and locus context,
+          while noting that PP_0303 itself has not been assayed directly.
+core_functions:
+  - description: &gt;-
+      Transfer of the trimethylamine-containing fragment of
+      3-dehydrocarnitine to acetyl-CoA, forming betainyl-CoA and acetoacetate.
+    molecular_function:
+      id: GO:0016747
+      label: acyltransferase activity, transferring groups other than amino-acyl groups
+    directly_involved_in:
+      - id: GO:0042413
+        label: carnitine catabolic process
+    supported_by:
+      - reference_id: file:PSEPK/PP_0303/PP_0303-deep-research-openscientist.md
+        supporting_text: The chief caveat is that PP_0303 *itself* has not been purified and assayed
+      - reference_id: UniProtKB:Q9HTH7
+        supporting_text: Catalyzes the condensation of dehydrocarnitine and acetyl-CoA
+proposed_new_terms:
+  - proposed_name: 3-dehydrocarnitine:acetyl-CoA trimethylamine transferase activity
+    proposed_definition: &gt;-
+      Catalysis of the reaction 3-dehydrocarnitine + acetyl-CoA =
+      N,N,N-trimethylglycyl-CoA + acetoacetate.
+    justification: &gt;-
+      The exact EC 2.3.1.317/RHEA:47044 activity is experimentally established,
+      while GO:0043720 describes another substrate in the diverse BKACE family.
+    proposed_parent:
+      id: GO:0016747
+      label: acyltransferase activity, transferring groups other than amino-acyl groups
+    supported_by:
+      - reference_id: UniProtKB:Q9HTH7
+        supporting_text: Catalyzes the condensation of dehydrocarnitine and acetyl-CoA
+suggested_questions:
+  - question: Does purified PP_0303 have the same substrate profile and zinc dependence as Q9HTH7?
+suggested_experiments:
+  - description: Reconstitute the PP_0303 reaction with 3-dehydrocarnitine and acetyl-CoA and quantify both products by LC-MS.
+    experiment_type: in vitro enzyme assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
