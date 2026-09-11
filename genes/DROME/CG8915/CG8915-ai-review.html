@@ -1,0 +1,2857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CG8915 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CG8915</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9VX63" target="_blank" class="term-link">
+                        Q9VX63
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Drosophila melanogaster</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CG8915";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">7</span> Annotations</a>
+
+
+
+        <a href="#review-research" title="Deep research and hypothesis research reports"><span class="nav-count">1</span> Research</a>
+
+
+
+        <a href="#external-predictions" title="External predictions assessed separately from GOA annotations" class="nav-external"><span class="nav-count">1</span> External</a>
+
+
+
+        <a href="#review-core-functions" title="Core biological functions"><span class="nav-count">1</span> Core Function</a>
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">7</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">2</span> Documents</a>
+
+
+
+
+
+
+
+
+
+
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9VX63" data-a="DESCRIPTION: CG8915 is an R3H-containing DEAH-family RNA helica..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CG8915 is an R3H-containing DEAH-family RNA helicase with conserved ATP-binding and catalytic motifs. It is inferred to couple ATP hydrolysis to RNA remodeling with 3&#39;-to-5&#39; polarity, based on its relationship to characterized YTHDC2-family enzymes. Its physiological RNA targets and cellular compartment remain unresolved. The protein is distinct from the divergent helicase-like Bgcn protein and lacks an annotated YTH methyladenosine-reader domain.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000166" target="_blank" class="term-link">
+                                    GO:0000166
+                                </a>
+                            </span>
+                            <span class="term-label">nucleotide binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VX63" data-a="GO:0000166" data-r="GO_REF:0000104" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The conserved P-loop supports ATP binding as the specific nucleotide interaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The conserved P-loop supports ATP binding as the specific nucleotide interaction. Both sequence alignments preserve the diagnostic ATP-binding region, unlike the divergent Bgcn control.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    ATP binding
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG8915/CG8915-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">CG8915/Q9VX63 retains a canonical ATP-binding P-loop and DEAH catalytic motif. It differs from the inactive helicase-like protein Bgcn/Q9W1I2 at both diagnostic regions.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003676" target="_blank" class="term-link">
+                                    GO:0003676
+                                </a>
+                            </span>
+                            <span class="term-label">nucleic acid binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VX63" data-a="GO:0003676" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nucleic acid binding is supported but less informative than RNA binding for this R3H-containing RNA helicase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Nucleic acid binding is supported but less informative than RNA binding for this R3H-containing RNA helicase. The conserved domain architecture supports RNA as the relevant nucleic acid; no DNA-specific function is established.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                                    RNA binding
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG8915/CG8915-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001374; R3H_dom.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29033321" target="_blank" class="term-link">
+                                        PMID:29033321
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Our biochemical studies indicate that YTHDC2 is an
+RNA-induced ATPase with a 3&#39;→5&#39; RNA helicase activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                                    GO:0003723
+                                </a>
+                            </span>
+                            <span class="term-label">RNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VX63" data-a="GO:0003723" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CG8915 contains the RNA-helicase core and an R3H RNA-binding domain.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> CG8915 contains the RNA-helicase core and an R3H RNA-binding domain. These features support the PAINT RNA-binding inference, independently of precise transcript specificity or of whether every mechanistic feature of mammalian YTHDC2 is retained.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG8915/CG8915-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">CG8915/Q9VX63 retains a canonical ATP-binding P-loop and DEAH catalytic motif. It differs from the inactive helicase-like protein Bgcn/Q9W1I2 at both diagnostic regions.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG8915/CG8915-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001374; R3H_dom.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29033321" target="_blank" class="term-link">
+                                        PMID:29033321
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Our biochemical studies indicate that YTHDC2 is an
+RNA-induced ATPase with a 3&#39;→5&#39; RNA helicase activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004386" target="_blank" class="term-link">
+                                    GO:0004386
+                                </a>
+                            </span>
+                            <span class="term-label">helicase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VX63" data-a="GO:0004386" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The broad activity is consistent with a conserved ATP-dependent RNA helicase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The broad activity is consistent with a conserved ATP-dependent RNA helicase. The manually curated transfer from human YTHDC2 supplies the more informative 3&#39;-5&#39; RNA helicase activity, supported by target motif conservation and primary ortholog enzymology.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034458" target="_blank" class="term-link">
+                                    3&#39;-5&#39; RNA helicase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG8915/CG8915-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">CG8915/Q9VX63 retains a canonical ATP-binding P-loop and DEAH catalytic motif. It differs from the inactive helicase-like protein Bgcn/Q9W1I2 at both diagnostic regions.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29033321" target="_blank" class="term-link">
+                                        PMID:29033321
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Our biochemical studies indicate that YTHDC2 is an
+RNA-induced ATPase with a 3&#39;→5&#39; RNA helicase activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VX63" data-a="GO:0005524" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CG8915 retains the diagnostic ATP-binding P-loop and catalytic DEAH motif.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> CG8915 retains the diagnostic ATP-binding P-loop and catalytic DEAH motif. Comparative alignment to experimentally characterized YTHDC2 supports ATP utilization; the altered motifs of the separate Bgcn protein are not present in this target.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG8915/CG8915-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">CG8915/Q9VX63 retains a canonical ATP-binding P-loop and DEAH catalytic motif. It differs from the inactive helicase-like protein Bgcn/Q9W1I2 at both diagnostic regions.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29033321" target="_blank" class="term-link">
+                                        PMID:29033321
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Our biochemical studies indicate that YTHDC2 is an
+RNA-induced ATPase with a 3&#39;→5&#39; RNA helicase activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016787" target="_blank" class="term-link">
+                                    GO:0016787
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VX63" data-a="GO:0016787" data-r="GO_REF:0000104" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The broad activity is consistent with a conserved ATP-dependent RNA helicase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The broad activity is consistent with a conserved ATP-dependent RNA helicase. The manually curated transfer from human YTHDC2 supplies the more informative 3&#39;-5&#39; RNA helicase activity, supported by target motif conservation and primary ortholog enzymology.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034458" target="_blank" class="term-link">
+                                    3&#39;-5&#39; RNA helicase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG8915/CG8915-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">CG8915/Q9VX63 retains a canonical ATP-binding P-loop and DEAH catalytic motif. It differs from the inactive helicase-like protein Bgcn/Q9W1I2 at both diagnostic regions.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29033321" target="_blank" class="term-link">
+                                        PMID:29033321
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Our biochemical studies indicate that YTHDC2 is an
+RNA-induced ATPase with a 3&#39;→5&#39; RNA helicase activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034458" target="_blank" class="term-link">
+                                    GO:0034458
+                                </a>
+                            </span>
+                            <span class="term-label">3&#39;-5&#39; RNA helicase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VX63" data-a="GO:0034458" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The manually curated ISS transfer from human YTHDC2 is biologically reasonable for this DEAH/R3H helicase with conserved ATP-binding and catalytic motifs.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The manually curated ISS transfer from human YTHDC2 is biologically reasonable for this DEAH/R3H helicase with conserved ATP-binding and catalytic motifs. Current FlyBase orthology also favors YTHDC2. This is conserved-function inference, not a fly biochemical assay; detailed RNA substrates, YTH-domain methyladenosine recognition and meiotic phenotypes are not implied.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG8915/CG8915-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">CG8915/Q9VX63 retains a canonical ATP-binding P-loop and DEAH catalytic motif. It differs from the inactive helicase-like protein Bgcn/Q9W1I2 at both diagnostic regions.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29033321" target="_blank" class="term-link">
+                                        PMID:29033321
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Our biochemical studies indicate that YTHDC2 is an
+RNA-induced ATPase with a 3&#39;→5&#39; RNA helicase activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section" id="review-core-functions">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds and remodels RNA through a conserved ATP-dependent DEAH helicase mechanism; precise substrates remain unresolved.</h3>
+                <span class="vote-buttons" data-g="Q9VX63" data-a="FUNCTION: Binds and remodels RNA through a conserved ATP-dep..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0034458" target="_blank" class="term-link">
+                            3&#39;-5&#39; RNA helicase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:DROME/CG8915/CG8915-bioinformatics/RESULTS.md
+
+                        </span>
+
+                        <div class="finding-text">CG8915/Q9VX63 retains a canonical ATP-binding P-loop and DEAH catalytic motif. It differs from the inactive helicase-like protein Bgcn/Q9W1I2 at both diagnostic regions.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29033321" target="_blank" class="term-link">
+                                PMID:29033321
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Our biochemical studies indicate that YTHDC2 is an
+RNA-induced ATPase with a 3&#39;→5&#39; RNA helicase activity.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:DROME/CG8915/CG8915-bioinformatics/RESULTS.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">DROME/CG8915/CG8915-bioinformatics/RESULTS.md</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:DROME/CG8915/CG8915-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">DROME/CG8915/CG8915-uniprot.txt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29033321" target="_blank" class="term-link">
+                            PMID:29033321
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Regulation of m(6)A Transcripts by the 3&#39;→5&#39; RNA Helicase YTHDC2 Is Essential for a Successful Meiotic Program in the Mammalian Germline.</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+    <section class="section external-predictions" id="external-predictions" aria-labelledby="external-predictions-title">
+        <h2 class="section-title" id="external-predictions-title">External Prediction Reviews</h2>
+        <p class="prediction-notice">These computational predictions are reviewed separately from the GOA annotation set used for this review.
+            The assessments below are from this project and do not constitute official GO annotations or endorsement by GO/UniProt.
+            They are not included in the existing annotation review above.</p>
+
+
+        <article class="prediction-review">
+        <h3>ProtNLM <span class="badge">External predictions</span></h3>
+        <p class="prediction-source"><a href="CG8915-protnlm-predictions-review.yaml">View prediction review YAML</a> &middot; CG8915-protnlm-predictions-review.yaml
+            &middot; Review status: COMPLETE</p>
+
+        <p>The broad nucleic-acid-binding prediction is supported and less precise than RNA binding.</p>
+
+        <p class="prediction-source">Review score: 2 = concordant with evidence; 1 = uncertain; 0 = discordant with evidence. This is an assessment score, not a model probability.</p>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003676" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:0003676
+                    </a>
+                    <span class="term-label">nucleic acid binding</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_MF</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-lsp">
+                        LSP — Less precise than existing annotation
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 2/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM
+                 &middot; Version: ProtNLM2 API snapshot 2026-09-08
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> Nucleic acid binding is supported by the R3H domain and conserved RNA-helicase architecture. RNA binding is the existing, more specific assignment. Target sequence analysis retains the ATP-binding and DEAH motifs, although the broad RNA-binding conclusion does not depend on resolving every aspect of catalysis or YTHDC2-family phylogeny.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="CG8915-bioinformatics/RESULTS.md" target="_blank" class="term-link">file:DROME/CG8915/CG8915-bioinformatics/RESULTS.md</a>:
+
+
+                        <span class="finding-text">"CG8915/Q9VX63 retains a canonical ATP-binding P-loop and DEAH catalytic motif. It differs from the inactive helicase-like protein Bgcn/Q9W1I2 at both diagnostic regions."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="CG8915-uniprot.txt" target="_blank" class="term-link">file:DROME/CG8915/CG8915-uniprot.txt</a>:
+
+
+                        <span class="finding-text">"DR   InterPro; IPR001374; R3H_dom."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29033321" target="_blank" class="term-link">PMID:29033321</a>:
+
+
+                        <span class="finding-text">"Our biochemical studies indicate that YTHDC2 is an
+RNA-induced ATPase with a 3&#39;→5&#39; RNA helicase activity."</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        </article>
+
+    </section>
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section" id="review-research">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CG8915-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9VX63" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Research report: *Drosophila melanogaster* CG8915 / Q9VX63</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">17 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-08T18:24:13.945221</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="CG8915-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-drosophila-melanogaster-cg8915-q9vx63">Research report: <em>Drosophila melanogaster</em> CG8915 / Q9VX63</h1>
+<h2 id="executive-conclusion">Executive conclusion</h2>
+<p>The gene symbol <strong>CG8915 is correctly associated with <em>Drosophila melanogaster</em></strong> and FlyBase identifier <strong>FBgn0030833</strong>; published datasets use this same symbol–identifier pairing. Together with the user-supplied UniProt accession <strong>Q9VX63</strong>, this verifies that the target is the fruit-fly protein annotated as an <strong>RNA helicase</strong>, rather than a similarly named gene from another organism (buffin2010lasermicrodissectionof pages 4-5, bhargava2018discoveringgcnaa pages 56-60).</p>
+<p>However, <strong>the literature is limited for this specific protein</strong>. No retrieved study—including searches prioritizing 2023–2024—directly characterized its catalytic activity, physiological RNA substrate, interaction partners, pathway, subcellular localization, or loss-of-function phenotype. The most defensible functional annotation is therefore:</p>
+<blockquote>
+<p><strong>CG8915/Q9VX63 is a predicted ATP-dependent RNA or ribonucleoprotein-remodeling enzyme, but its physiological substrate, precise helicase mechanism, pathway, and cellular compartment remain unknown.</strong></p>
+</blockquote>
+<p>This conclusion is based primarily on the supplied UniProt/InterPro domain architecture, not on direct CG8915 enzymology. Recent expert reviews emphasize that conserved helicase cores recognize RNA structure and backbone chemistry more readily than RNA sequence; physiological specificity generally comes from accessory regions, cofactors, and RNP context (lang2024regulationandmechanisms pages 2-4, lang2024regulationandmechanisms pages 1-2).</p>
+<h2 id="1-identity-verification">1. Identity verification</h2>
+<h3 id="verified-identifiers">Verified identifiers</h3>
+<ul>
+<li><strong>Organism:</strong> <em>Drosophila melanogaster</em> (fruit fly; DROME).</li>
+<li><strong>Gene:</strong> <strong>CG8915</strong>, also supplied as <code>Dmel\CG8915</code>, <code>cg8915</code>, and <code>Dmel_CG8915</code>.</li>
+<li><strong>FlyBase:</strong> <strong>FBgn0030833</strong>.</li>
+<li><strong>UniProt:</strong> <strong>Q9VX63</strong>.</li>
+<li><strong>Database description:</strong> RNA helicase.</li>
+</ul>
+<p>A 2010 <em>Drosophila</em> sensory-organ-precursor transcriptome table explicitly pairs <strong>CG8915 with FBgn0030833</strong>, independently supporting the requested identity. A separate 2018 table also uses the CG8915–FBgn0030833 pairing, although it contributes no interpretable functional experiment (buffin2010lasermicrodissectionof pages 4-5, bhargava2018discoveringgcnaa pages 56-60).</p>
+<p>No evidence was used for a different organism or a different, similarly named gene. The mandatory identity check is therefore satisfied, but the protein remains poorly characterized.</p>
+<h2 id="2-domain-architecture-and-molecular-classification">2. Domain architecture and molecular classification</h2>
+<p>The supplied InterPro annotations are:</p>
+<ul>
+<li>helicase ATP-binding domain (<strong>IPR014001</strong>);</li>
+<li>DEAD/DEAH-box helicase domain (<strong>IPR011545</strong>);</li>
+<li>helicase-associated domain (<strong>IPR007502</strong>);</li>
+<li>HA2/winged-helix region (<strong>IPR048333</strong>);</li>
+<li>DEAD-box-helicase-associated OB fold (<strong>IPR011709</strong>).</li>
+</ul>
+<p>Collectively, these domains are consistent with an <strong>SF2-type RNA helicase/remodeling protein</strong> containing the conserved ATPase–RNA-binding core plus accessory elements that may regulate RNA engagement, conformational coupling, processivity, or interaction with other RNP components. DEAH/RHA-family enzymes often contain C-terminal winged-helix, ratchet-like, and OB-fold elements involved in regulated RNA recognition and activity. Nevertheless, these structural correspondences do not independently prove that CG8915 is processive or belongs to a specific mechanistic subclass (balaya2025roleofdeaddeahbox pages 4-5, balaya2025roleofdeaddeahbox pages 2-4).</p>
+<p>The broad database label “DEAD/DEAH-box helicase domain” is insufficient to decide whether CG8915 behaves like a canonical <strong>DEAD-box local remodeler</strong> or a <strong>DEAH/RHA-type translocase</strong>. That distinction requires inspection of diagnostic sequence motifs and, ideally, biochemical measurements. It would therefore be premature to assign CG8915 3′-overhang loading, 3′→5′ movement, or processive duplex unwinding.</p>
+<h2 id="3-primary-biochemical-function">3. Primary biochemical function</h2>
+<h3 id="best-supported-reaction-hypothesis">Best-supported reaction hypothesis</h3>
+<p>The predicted generic reaction is:</p>
+<p><strong>ATP + H₂O → ADP + inorganic phosphate</strong>, coupled to a conformational cycle that binds and remodels RNA or an RNA–protein complex.</p>
+<p>RNA helicases typically contain two RecA-like domains. ATP and RNA promote closure of these domains and formation of the active hydrolysis site; nucleotide cycling can then support duplex destabilization, RNA translocation, RNA-protein displacement, RNA clamping, or RNP reorganization (lang2024regulationandmechanisms pages 2-4, lang2024regulationandmechanisms pages 1-2).</p>
+<h3 id="what-has-not-been-demonstrated-for-cg8915">What has not been demonstrated for CG8915</h3>
+<p>No retrieved publication reports:</p>
+<ul>
+<li>purified CG8915 ATPase activity;</li>
+<li>RNA-stimulated ATP hydrolysis;</li>
+<li>Mg²⁺ dependence or kinetic constants;</li>
+<li>duplex-unwinding or strand-annealing activity;</li>
+<li>processivity or directionality;</li>
+<li>preference for single-stranded versus double-stranded RNA;</li>
+<li>RNA-sequence, RNA-structure, or RNP specificity;</li>
+<li>DNA-helicase activity.</li>
+</ul>
+<p>Accordingly, even the reaction above remains a <strong>domain-supported prediction</strong>, not a CG8915-specific experimental result.</p>
+<h3 id="substrate-specificity">Substrate specificity</h3>
+<p>The physiological substrate is <strong>unknown</strong>. There is no evidence assigning CG8915 to mRNA, pre-mRNA, rRNA, tRNA, small RNA, viral RNA, a particular structured RNA, or a named RNP. Current mechanistic understanding explains why substrate identity cannot be recovered from the catalytic core alone: conserved helicase cores commonly contact the RNA phosphate backbone and ribose 2′-OH groups rather than reading a unique base sequence. Auxiliary domains and partner proteins frequently recruit a helicase to its relevant substrate (lang2024regulationandmechanisms pages 2-4, lang2024regulationandmechanisms pages 1-2).</p>
+<h2 id="4-biological-process-and-pathway">4. Biological process and pathway</h2>
+<p>No specific biochemical or signaling pathway can presently be assigned to CG8915. RNA helicases as a class participate in transcriptional regulation, pre-mRNA splicing, ribosome biogenesis, RNA export, translation, RNA decay, RNA surveillance, and RNP-condensate regulation, but none of these processes has been demonstrated specifically for CG8915 (lang2024regulationandmechanisms pages 2-4, balaya2025roleofdeaddeahbox pages 1-2).</p>
+<p>The one biologically suggestive observation is expression enrichment in sensory-organ precursor cells. In a laser-microdissection/microarray study published in <strong>February 2010</strong>, CG8915 had an <strong>SOP-to-epithelial-cell signal ratio of 2.8224225</strong>, placing it among transcripts at least twofold enriched in sensory-organ precursor cells. This is direct quantitative evidence of differential transcript abundance in that experiment, but the authors did not report CG8915-specific qRT-PCR validation, protein localization, perturbation, or functional follow-up (buffin2010lasermicrodissectionof pages 4-5).</p>
+<p>Thus, participation in <strong>sensory-organ-precursor RNA metabolism or differentiation</strong> is a reasonable hypothesis, not an established pathway assignment. Expression enrichment alone does not show that CG8915 controls precursor specification.</p>
+<h2 id="5-cellular-and-tissue-localization">5. Cellular and tissue localization</h2>
+<h3 id="tissuecell-type-evidence">Tissue/cell-type evidence</h3>
+<p>The 2.8224225-fold microarray enrichment supports expression in, and relative enrichment of the transcript within, sensory-organ precursor cells compared with neighboring epithelial cells under the conditions tested (buffin2010lasermicrodissectionof pages 4-5).</p>
+<h3 id="subcellular-localization">Subcellular localization</h3>
+<p>The protein’s operative compartment is <strong>unknown</strong>. No retrieved study places CG8915 in the nucleus, nucleolus, cytoplasm, mitochondria, ribosome, spliceosome, RNA granule, or another organelle or complex. Localization should not be inferred merely from the term “RNA helicase,” because helicase targeting commonly depends on terminal targeting sequences, accessory domains, post-translational regulation, protein partners, and the relevant RNP substrate (lang2024regulationandmechanisms pages 2-4, balaya2025roleofdeaddeahbox pages 1-2).</p>
+<p>A direct fluorescent knock-in or validated antibody-localization study is needed before assigning a compartment.</p>
+<h2 id="6-genetic-and-phenotypic-evidence">6. Genetic and phenotypic evidence</h2>
+<p>CG8915 appeared in a candidate table from a <em>Drosophila</em> wing-vein gain-of-function screen published in <strong>November 2006</strong>. The available text does not provide a CG8915-specific phenotype, validation experiment, molecular mechanism, or causal conclusion. Its presence in the table therefore demonstrates only that the locus occurred among screened candidates; it does <strong>not</strong> establish a role in wing-vein formation (molnar2006againoffunctionscreen pages 8-10).</p>
+<p>No validated CG8915-specific knockout, RNAi, rescue, viability, fertility, developmental, neurological, or morphological phenotype was found. This absence should be interpreted as a knowledge gap rather than evidence that the gene is dispensable.</p>
+<h2 id="7-recent-developments-and-expert-assessment">7. Recent developments and expert assessment</h2>
+<p>No CG8915-specific mechanistic publication from 2023–2024 was identified. The relevant recent advance is instead conceptual: modern RNA-helicase research increasingly treats these proteins as regulated <strong>RNA/RNP remodelers</strong>, not merely duplex-unwinding enzymes.</p>
+<p>The <strong>October 2024</strong> review by Lang, Jagtap, and Hennig explains that helicases can unwind RNA, displace RNA-binding proteins, clamp RNA, anneal strands, or reorganize RNPs. It also emphasizes that cofactors and auxiliary domains control recruitment, specificity, processivity, and conformational state. Applied to CG8915, this means that its domain architecture supports ATP-dependent RNA remodeling but does not identify a substrate or pathway (<a href="https://doi.org/10.1080/15476286.2024.2415801">DOI</a>) (lang2024regulationandmechanisms pages 2-4, lang2024regulationandmechanisms pages 1-2).</p>
+<p>A <strong>July 2023</strong> authoritative review in <em>Nature Reviews Molecular Cell Biology</em> likewise surveys the diverse cellular functions of eukaryotic RNA helicases and reinforces the need to establish each enzyme’s partners and substrate context rather than infer physiology from a conserved helicase label alone (<a href="https://doi.org/10.1038/s41580-023-00628-5">DOI</a>). The retrieved evidence does not mention CG8915 specifically, so this source informs only the mechanistic framework.</p>
+<h2 id="8-evidence-hierarchy">8. Evidence hierarchy</h2>
+<p>The available evidence is summarized below. Direct gene-specific observations are deliberately separated from family-level inference.</p>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Best-supported conclusion</th>
+<th>Evidence type</th>
+<th>Confidence</th>
+<th>Critical limitation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity</td>
+<td><strong>CG8915</strong> corresponds to <em>Drosophila melanogaster</em> <strong>FBgn0030833</strong> and the supplied UniProt accession <strong>Q9VX63</strong>, annotated as an RNA helicase. Published tables independently associate CG8915 with FBgn0030833 (buffin2010lasermicrodissectionof pages 4-5, bhargava2018discoveringgcnaa pages 56-60).</td>
+<td>Supplied UniProt annotation plus direct identifier mapping in publications</td>
+<td>High</td>
+<td>The literature does not provide an independently validated biochemical name or detailed family assignment.</td>
+</tr>
+<tr>
+<td>Domain architecture</td>
+<td>Supplied annotations list a helicase ATP-binding region, DEAD/DEAH-box helicase domain, helicase-associated domain, HA2/winged-helix region, and OB-fold. This architecture is compatible with an SF2-like RNA-remodeling enzyme.</td>
+<td>Supplied database/domain annotation; family-level interpretation (balaya2025roleofdeaddeahbox pages 4-5, balaya2025roleofdeaddeahbox pages 2-4)</td>
+<td>Moderate–high</td>
+<td>Domain presence has not been experimentally confirmed for CG8915 in the retrieved studies and does not by itself establish catalytic mode or substrate.</td>
+</tr>
+<tr>
+<td>Primary biochemical-function hypothesis</td>
+<td>The most defensible hypothesis is <strong>ATP-dependent binding and remodeling of RNA or ribonucleoprotein complexes</strong>, potentially including duplex unwinding or protein displacement.</td>
+<td>Family-level inference from helicase architecture and current reviews (lang2024regulationandmechanisms pages 2-4, lang2024regulationandmechanisms pages 1-2)</td>
+<td>Moderate</td>
+<td>No purified-protein ATPase, RNA-binding, unwinding, translocation, or RNP-remodeling assay has been reported for CG8915.</td>
+</tr>
+<tr>
+<td>Catalytic reaction</td>
+<td>A candidate generic reaction is ATP hydrolysis coupled to RNA/RNP remodeling: ATP + H₂O → ADP + inorganic phosphate.</td>
+<td>Family-level inference (lang2024regulationandmechanisms pages 2-4, balaya2025roleofdeaddeahbox pages 4-5)</td>
+<td>Moderate for ATP-dependent remodeling; low for the exact CG8915 reaction</td>
+<td>CG8915 catalytic activity, ion requirements, turnover parameters, directionality, and coupling efficiency remain unmeasured.</td>
+</tr>
+<tr>
+<td>SOP/epithelial expression</td>
+<td>CG8915 microarray signal was <strong>2.8224225-fold higher in sensory-organ precursor cells than in epithelial cells</strong> (buffin2010lasermicrodissectionof pages 4-5).</td>
+<td>Direct but high-throughput, table-level expression evidence</td>
+<td>Moderate</td>
+<td>No CG8915-specific qRT-PCR, protein measurement, spatial validation, or functional test accompanied the table entry.</td>
+</tr>
+<tr>
+<td>Gain-of-function screen</td>
+<td>CG8915 appeared among candidate genes associated with insertions examined in a <em>Drosophila</em> wing-vein gain-of-function screen (molnar2006againoffunctionscreen pages 8-10).</td>
+<td>Direct but table-level screen occurrence</td>
+<td>Low for biological interpretation</td>
+<td>The paper provides no CG8915-specific validation or demonstrated wing phenotype; inclusion in the table is not proof of a vein-development function.</td>
+</tr>
+<tr>
+<td>Cellular localization</td>
+<td><strong>Unknown.</strong> No retrieved study directly assigns CG8915 protein to the nucleus, cytoplasm, mitochondria, ribosome, spliceosome, granule, or another compartment.</td>
+<td>Absent gene-specific evidence</td>
+<td>Unknown</td>
+<td>RNA-helicase localization commonly depends on terminal sequences, cofactors, interactions, and RNP context, which cannot be derived securely from the core domains (lang2024regulationandmechanisms pages 2-4, balaya2025roleofdeaddeahbox pages 1-2).</td>
+</tr>
+<tr>
+<td>Pathway or biological process</td>
+<td><strong>Unassigned.</strong> Neural-precursor RNA metabolism is a testable possibility because CG8915 transcript was enriched in sensory-organ precursors, but no specific pathway is established.</td>
+<td>Hypothesis based on direct high-throughput expression evidence (buffin2010lasermicrodissectionof pages 4-5)</td>
+<td>Low</td>
+<td>Expression enrichment does not establish a causal role in sensory-organ specification or identify the relevant RNA-processing pathway.</td>
+</tr>
+<tr>
+<td>Physiological substrate</td>
+<td><strong>Unknown.</strong> No specific mRNA, pre-mRNA, rRNA, small RNA, viral RNA, RNA structure, or RNP substrate has been identified.</td>
+<td>Absent gene-specific evidence</td>
+<td>Unknown</td>
+<td>Conserved helicase cores generally contact the RNA backbone and 2′-OH groups; physiological specificity usually depends on auxiliary regions and cofactors (lang2024regulationandmechanisms pages 2-4, lang2024regulationandmechanisms pages 1-2).</td>
+</tr>
+<tr>
+<td>Processivity and directionality</td>
+<td>The architecture may resemble helicases whose accessory domains support regulated RNA recognition or translocation, but CG8915 cannot confidently be classified as a local DEAD-box remodeler versus a processive DEAH/RHA-type enzyme.</td>
+<td>Family-level inference (lang2024regulationandmechanisms pages 2-4, balaya2025roleofdeaddeahbox pages 2-4)</td>
+<td>Low</td>
+<td>The supplied annotation combines broad DEAD/DEAH terminology; motif inspection and biochemical assays are required before assigning 3′ loading, 3′→5′ movement, or processivity.</td>
+</tr>
+<tr>
+<td>Phenotype</td>
+<td><strong>No validated CG8915-specific loss- or gain-of-function phenotype was found.</strong></td>
+<td>Absent gene-specific evidence; one unvalidated screen-table occurrence (molnar2006againoffunctionscreen pages 8-10)</td>
+<td>High confidence that the retrieved sources do not establish a phenotype</td>
+<td>This is not evidence that CG8915 lacks a phenotype; dedicated knockout, RNAi, rescue, fertility, viability, and tissue-specific analyses are needed.</td>
+</tr>
+<tr>
+<td>Recent research</td>
+<td>No CG8915-specific mechanistic publication from <strong>2023–2024</strong> was identified. Recent reviews refine general RNA-helicase mechanisms and emphasize regulation by cofactors and auxiliary domains (lang2024regulationandmechanisms pages 2-4, lang2024regulationandmechanisms pages 1-2).</td>
+<td>Literature-search result plus recent family-level reviews</td>
+<td>Moderate</td>
+<td>Absence from the retrieved literature is not definitive proof that no relevant dataset or unpublished result exists.</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>No therapeutic, biotechnology, diagnostic, agricultural, or other real-world implementation specific to CG8915 was found. Its immediate use is as a candidate for functional-genomic studies of RNA remodeling and sensory-organ precursor biology.</td>
+<td>Research-priority inference</td>
+<td>Low–moderate</td>
+<td>The proposed utility is prospective; no CG8915-specific application has been demonstrated.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Evidence-tier assessment of the identity, inferred molecular function, expression, and major knowledge gaps for Drosophila CG8915/Q9VX63. It separates direct gene-specific findings from database annotations, family-level inference, and unknowns.</em></p>
+<h2 id="9-current-applications-and-real-world-implementation">9. Current applications and real-world implementation</h2>
+<p>No therapeutic, diagnostic, agricultural, or biotechnology application specific to CG8915 was identified. Claims about human RNA-helicase drug targeting cannot be transferred to this fly protein without orthology, biochemical, and disease-mechanism evidence.</p>
+<p>Its current practical value is principally as a <strong>functional-genomics candidate</strong>. The strongest tractable research context is sensory-organ precursor biology because of the measured transcript enrichment, while the helicase-domain architecture makes RNA processing or RNP remodeling the most plausible mechanistic axis (buffin2010lasermicrodissectionof pages 4-5, lang2024regulationandmechanisms pages 2-4).</p>
+<h2 id="10-priority-experiments-for-definitive-annotation">10. Priority experiments for definitive annotation</h2>
+<ol>
+<li><strong>Sequence and phylogenetic classification:</strong> inspect helicase motifs and accessory-domain order, then identify well-supported orthologues. This should resolve DEAD-box versus DEAH/RHA-like classification.</li>
+<li><strong>Biochemical validation:</strong> purify wild-type CG8915 and ATPase-motif mutants; measure basal and RNA-stimulated ATP hydrolysis, RNA binding, unwinding, translocation, strand annealing, and protein displacement.</li>
+<li><strong>Substrate profiling:</strong> apply eCLIP/iCLIP or affinity purification followed by RNA sequencing to identify bound RNAs; compare wild-type and ATPase-defective protein.</li>
+<li><strong>Localization:</strong> generate an endogenous fluorescent knock-in and image embryos, imaginal discs, sensory-organ lineages, nuclei, nucleoli, cytoplasm, mitochondria, and RNA granules.</li>
+<li><strong>Interaction mapping:</strong> use affinity-purification mass spectrometry or proximity labeling to identify cofactors and RNP complexes.</li>
+<li><strong>Genetics:</strong> create a clean null allele and catalytic-dead knock-in, followed by genomic rescue. Tissue-specific depletion in sensory-organ precursors would directly test the expression-based developmental hypothesis.</li>
+<li><strong>Expression validation:</strong> confirm the reported 2.8224225 SOP enrichment using RNA in situ hybridization, single-cell RNA sequencing, or cell-type-specific quantitative PCR.</li>
+</ol>
+<h2 id="final-functional-annotation">Final functional annotation</h2>
+<p><strong>Recommended annotation:</strong> “Putative ATP-dependent RNA/RNP helicase or remodeling factor.”</p>
+<p><strong>Confidence:</strong> Moderate for a generic RNA-remodeling molecular function; low for every more specific assignment.</p>
+<p><strong>Not currently supportable:</strong> a named RNA substrate, exact substrate sequence or structure, processive directionality, a defined RNA-processing/signaling pathway, a subcellular compartment, or a causal developmental phenotype.</p>
+<h3 id="principal-sources">Principal sources</h3>
+<ul>
+<li>Buffin E, Gho M. “Laser Microdissection of Sensory Organ Precursor Cells of Drosophila Microchaetes.” <em>PLoS ONE</em>. <strong>February 2010</strong>. https://doi.org/10.1371/journal.pone.0009285 (buffin2010lasermicrodissectionof pages 4-5)</li>
+<li>Molnar C, López-Varea A, Hernández R, de Celis JF. “A Gain-of-Function Screen Identifying Genes Required for Vein Formation in the Drosophila melanogaster Wing.” <em>Genetics</em>. <strong>November 2006</strong>. https://doi.org/10.1534/genetics.106.061283 (molnar2006againoffunctionscreen pages 8-10)</li>
+<li>Lang N, Jagtap PKA, Hennig J. “Regulation and mechanisms of action of RNA helicases.” <em>RNA Biology</em>. <strong>October 2024</strong>. https://doi.org/10.1080/15476286.2024.2415801 (lang2024regulationandmechanisms pages 2-4, lang2024regulationandmechanisms pages 1-2)</li>
+<li>Bohnsack KE, et al. “Cellular functions of eukaryotic RNA helicases and their links to human diseases.” <em>Nature Reviews Molecular Cell Biology</em>. <strong>July 2023</strong>. https://doi.org/10.1038/s41580-023-00628-5</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(buffin2010lasermicrodissectionof pages 4-5): Eulalie Buffin and Michel Gho. Laser microdissection of sensory organ precursor cells of drosophila microchaetes. PLoS ONE, 5:e9285, Feb 2010. URL: https://doi.org/10.1371/journal.pone.0009285, doi:10.1371/journal.pone.0009285. This article has 23 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bhargava2018discoveringgcnaa pages 56-60): V Bhargava. Discovering gcna: a novel regulator of germline genomic stability. Unknown journal, 2018.</p>
+</li>
+<li>
+<p>(lang2024regulationandmechanisms pages 2-4): Nina Lang, Pravin Kumar Ankush Jagtap, and Janosch Hennig. Regulation and mechanisms of action of rna helicases. Oct 2024. URL: https://doi.org/10.1080/15476286.2024.2415801, doi:10.1080/15476286.2024.2415801. This article has 28 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lang2024regulationandmechanisms pages 1-2): Nina Lang, Pravin Kumar Ankush Jagtap, and Janosch Hennig. Regulation and mechanisms of action of rna helicases. Oct 2024. URL: https://doi.org/10.1080/15476286.2024.2415801, doi:10.1080/15476286.2024.2415801. This article has 28 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(balaya2025roleofdeaddeahbox pages 4-5): Rex Devasahayam Arokia Balaya, Saptami Kanekar, Shreya Kumar, and Richard K. Kandasamy. Role of dead/deah-box helicases in immunity, infection and cancers. Cell Communication and Signaling : CCS, Jun 2025. URL: https://doi.org/10.1186/s12964-025-02225-9, doi:10.1186/s12964-025-02225-9. This article has 16 citations.</p>
+</li>
+<li>
+<p>(balaya2025roleofdeaddeahbox pages 2-4): Rex Devasahayam Arokia Balaya, Saptami Kanekar, Shreya Kumar, and Richard K. Kandasamy. Role of dead/deah-box helicases in immunity, infection and cancers. Cell Communication and Signaling : CCS, Jun 2025. URL: https://doi.org/10.1186/s12964-025-02225-9, doi:10.1186/s12964-025-02225-9. This article has 16 citations.</p>
+</li>
+<li>
+<p>(balaya2025roleofdeaddeahbox pages 1-2): Rex Devasahayam Arokia Balaya, Saptami Kanekar, Shreya Kumar, and Richard K. Kandasamy. Role of dead/deah-box helicases in immunity, infection and cancers. Cell Communication and Signaling : CCS, Jun 2025. URL: https://doi.org/10.1186/s12964-025-02225-9, doi:10.1186/s12964-025-02225-9. This article has 16 citations.</p>
+</li>
+<li>
+<p>(molnar2006againoffunctionscreen pages 8-10): Cristina Molnar, Ana López-Varea, Rosario Hernández, and Jose F de Celis. A gain-of-function screen identifying genes required for vein formation in the drosophila melanogaster wing. Genetics, 174:1635-1659, Nov 2006. URL: https://doi.org/10.1534/genetics.106.061283, doi:10.1534/genetics.106.061283. This article has 59 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="CG8915-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>buffin2010lasermicrodissectionof pages 4-5</li>
+<li>molnar2006againoffunctionscreen pages 8-10</li>
+<li>bhargava2018discoveringgcnaa pages 56-60</li>
+<li>lang2024regulationandmechanisms pages 2-4</li>
+<li>lang2024regulationandmechanisms pages 1-2</li>
+<li>balaya2025roleofdeaddeahbox pages 4-5</li>
+<li>balaya2025roleofdeaddeahbox pages 2-4</li>
+<li>balaya2025roleofdeaddeahbox pages 1-2</li>
+<li>DOI</li>
+<li>https://doi.org/10.1080/15476286.2024.2415801</li>
+<li>https://doi.org/10.1038/s41580-023-00628-5</li>
+<li>https://doi.org/10.1371/journal.pone.0009285</li>
+<li>https://doi.org/10.1534/genetics.106.061283</li>
+<li>https://doi.org/10.1371/journal.pone.0009285,</li>
+<li>https://doi.org/10.1080/15476286.2024.2415801,</li>
+<li>https://doi.org/10.1186/s12964-025-02225-9,</li>
+<li>https://doi.org/10.1534/genetics.106.061283,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CG8915-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9VX63" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="cg8915-evidence-notes">CG8915 evidence notes</h1>
+<p>Q9VX63 is the 976-residue native PA/PB sequence of <a href="https://flybase.org/reports/FBgn0030833">FBgn0030833</a>; the current two protein products are identical. All seven exact-accession GOA rows are reviewed. Original ProtNLM GO, name, score, and donor metadata are preserved in the source JSON.</p>
+<p>The <a href="CG8915-bioinformatics/RESULTS.md">sequence analysis</a> compares CG8915 with human YTHDC2/Q9H6S0 and the divergent fly Bgcn/Q9W1I2 control. CG8915 retains P-loop GATGSGKST and DEAH motifs, whereas Bgcn has different residues at both aligned regions. The analysis supports catalytic competence without conflating the two fly genes. It does not reconstruct their full phylogeny.</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/29033321">PMID:29033321</a>(https://pubmed.ncbi.nlm.nih.gov/29033321/) reports: “Our biochemical studies indicate that YTHDC2 is an RNA-induced ATPase with a 3'→5' RNA helicase activity.” This is mammalian evidence supporting the manual ISS transfer, not direct CG8915 enzymology. <a href="https://pubmed.ncbi.nlm.nih.gov/29360036">PMID:29360036</a>(https://pmc.ncbi.nlm.nih.gov/articles/PMC5832417/) is cached with full text. Its statement that Drosophila retained only Bgcn conflicts with the current CG8915/YTHDC2 database correspondence; its main text does not name CG8915. The preserved target motifs prevent simply assigning Bgcn's pseudohelicase mechanism to CG8915. A broader phylogenetic study would be needed to reconcile family sampling. No methyladenosine-reader, meiotic or nuclear-location annotation is adopted on this basis.</p>
+<p>Falcon completed and was inspected. It found no target biochemical assay and emphasized broad helicase-domain inference, but did not inspect the exact motifs or the current target-specific manual ISS transfer. Those additional checks justify conserved catalytic-function inference. Its sensory-organ-precursor expression and wing-screen leads do not establish a separate molecular function. The ProtNLM nucleic-acid-binding claim is LSP independently of the finer catalytic or evolutionary uncertainties.</p>
+            </div>
+        </details>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioinformatics Results</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RESULTS.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9VX63" data-a="DOC: Bioinformatics Results" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="cg8915-helicase-motif-comparison">CG8915 helicase-motif comparison</h1>
+<p>CG8915/Q9VX63 retains a canonical ATP-binding P-loop and DEAH catalytic motif. It differs from the inactive helicase-like protein Bgcn/Q9W1I2 at both diagnostic regions. This supports a catalytically competent RNA-helicase inference for CG8915, without implying methyladenosine recognition or a meiotic pathway.</p>
+<p>Using human YTHDC2/Q9H6S0 as the reference, both MAFFT strategies give:</p>
+<table>
+<thead>
+<tr>
+<th>Region</th>
+<th>Human YTHDC2</th>
+<th>CG8915</th>
+<th>Bgcn control</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Motif I</td>
+<td>216–224 GETGSGKTT</td>
+<td>232–240 GATGSGKST</td>
+<td>171–179 AALCWDKSV</td>
+</tr>
+<tr>
+<td>Motif II</td>
+<td>316–319 DEVH</td>
+<td>333–336 DEAH</td>
+<td>269–272 NDVH</td>
+</tr>
+</tbody>
+</table>
+<p>The whole-protein alignment identities over paired nongap positions are approximately 32.6–32.8% for CG8915 versus human YTHDC2 and 27.0–27.7% for Bgcn versus human YTHDC2. These alignments verify motif conservation; they are not a phylogeny and do not independently settle orthology or all accessory-domain relationships.</p>
+<h2 id="biological-grounding-and-limitations">Biological grounding and limitations</h2>
+<p>Current <a href="https://flybase.org/reports/FBgn0030833">FlyBase FBgn0030833</a> assigns YTHDC2 as the best bidirectional DIOPT human match (9/14 methods), and the target has an R3H domain, two helicase-core domains, HA2 and an OB fold. The target record does not contain a YTH-domain assignment. <a href="https://pubmed.ncbi.nlm.nih.gov/29033321">PMID:29033321</a>(https://pubmed.ncbi.nlm.nih.gov/29033321/) directly demonstrates RNA-stimulated ATPase and 3′–5′ RNA-helicase activity for mammalian YTHDC2; the manually transferred FlyBase ISS assertion cites human Q9H6S0. This is conserved-function inference for CG8915, not a target enzymology experiment.</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/29360036">PMID:29360036</a>(https://pmc.ncbi.nlm.nih.gov/articles/PMC5832417/), <a href="https://doi.org/10.7554/eLife.30919">DOI:10.7554/eLife.30919</a>, discusses divergence of Bgcn and states that Drosophila lacks a more YTHDC2-like version. Its main text does not name CG8915. That taxonomic conclusion cannot be used to equate CG8915 with Bgcn or to import Bgcn's altered motifs: the exact present sequences directly differ at those positions. Reconciling the historical family sampling with current CG8915 orthology would require a broader phylogeny; no such resolution is claimed here.</p>
+<p>RNA binding is supported independently of the fine orthology question by the conserved RNA-helicase architecture and R3H domain. The broad ProtNLM nucleic-acid-binding claim remains supported even if future experiments revise the exact ATPase mechanism. No methyladenosine-binding, germline differentiation, nuclear localization or specific transcript is inferred from mammalian YTHDC2 studies.</p>
+<h2 id="reproduction-and-controls">Reproduction and controls</h2>
+<p>Run <code>just</code> in this directory with uv and MAFFT 7.526. Python dependencies are locked (Biopython 1.85). <code>prepare.py</code> extracts exact benchmark Q9VX63 JSON plus downloaded human YTHDC2 and fly Bgcn Swiss-Prot records. G-INS-i and L-INS-i alignments use <code>--maxiterate 1000</code>. <code>analyze.py</code> receives reference coordinates explicitly and records site mappings, alignment hashes and paired identities in JSON.</p>
+<ul>
+<li>[x] Scripts accept all paths, identifiers and positions as arguments; conclusions are in this report only.</li>
+<li>[x] Different-gene positive (YTHDC2) and divergent (Bgcn) controls were analyzed with the same scripts.</li>
+<li>[x] Both alignments completed and independently agree on each displayed residue mapping.</li>
+<li>[x] Input FASTA, source records, output alignments, logs and numeric summaries are retained.</li>
+<li>[x] Sequence evidence is distinguished from unmeasured target activity and unresolved detailed phylogeny.</li>
+</ul>
+<p>Sources: <code>../CG8915-uniprot-source.json</code> from the frozen cohort; <a href="https://rest.uniprot.org/uniprotkb/Q9H6S0.txt">Q9H6S0</a> and <a href="https://rest.uniprot.org/uniprotkb/Q9W1I2.txt">Q9W1I2</a>, saved as adjacent <code>CG8915-reference-*-uniprot.txt</code> files. Human reference positions were taken from the fetched sequence/ATP-binding feature and its DEVH motif.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9VX63
+gene_symbol: CG8915
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:7227
+  label: Drosophila melanogaster
+description: CG8915 is an R3H-containing DEAH-family RNA helicase with conserved ATP-binding and catalytic
+  motifs. It is inferred to couple ATP hydrolysis to RNA remodeling with 3&#39;-to-5&#39; polarity, based on its
+  relationship to characterized YTHDC2-family enzymes. Its physiological RNA targets and cellular compartment
+  remain unresolved. The protein is distinct from the divergent helicase-like Bgcn protein and lacks an
+  annotated YTH methyladenosine-reader domain.
+existing_annotations:
+- term:
+    id: GO:0000166
+    label: nucleotide binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  supporting_entities:
+  - UniRule:UR000400010
+  review:
+    action: MODIFY
+    summary: The conserved P-loop supports ATP binding as the specific nucleotide interaction.
+    reason: The conserved P-loop supports ATP binding as the specific nucleotide interaction. Both sequence
+      alignments preserve the diagnostic ATP-binding region, unlike the divergent Bgcn control.
+    supported_by:
+    - &amp;id001
+      reference_id: file:DROME/CG8915/CG8915-bioinformatics/RESULTS.md
+      supporting_text: CG8915/Q9VX63 retains a canonical ATP-binding P-loop and DEAH catalytic motif.
+        It differs from the inactive helicase-like protein Bgcn/Q9W1I2 at both diagnostic regions.
+    proposed_replacement_terms:
+    - id: GO:0005524
+      label: ATP binding
+- term:
+    id: GO:0003676
+    label: nucleic acid binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  supporting_entities:
+  - InterPro:IPR001374
+  - InterPro:IPR011545
+  - InterPro:IPR036867
+  - UniRule:UR000416679
+  review:
+    action: MODIFY
+    summary: Nucleic acid binding is supported but less informative than RNA binding for this R3H-containing
+      RNA helicase.
+    reason: Nucleic acid binding is supported but less informative than RNA binding for this R3H-containing
+      RNA helicase. The conserved domain architecture supports RNA as the relevant nucleic acid; no DNA-specific
+      function is established.
+    supported_by:
+    - &amp;id002
+      reference_id: file:DROME/CG8915/CG8915-uniprot.txt
+      supporting_text: DR   InterPro; IPR001374; R3H_dom.
+    - &amp;id003
+      reference_id: PMID:29033321
+      supporting_text: &#39;Our biochemical studies indicate that YTHDC2 is an
+
+        RNA-induced ATPase with a 3&#39;&#39;→5&#39;&#39; RNA helicase activity.&#39;
+    proposed_replacement_terms:
+    - id: GO:0003723
+      label: RNA binding
+- term:
+    id: GO:0003723
+    label: RNA binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  supporting_entities:
+  - AGI_LocusCode:AT1G48650
+  - AGI_LocusCode:AT2G35920
+  - AGI_LocusCode:AT2G47250
+  - AGI_LocusCode:AT2G47680
+  - AGI_LocusCode:AT3G62310
+  - FB:FBgn0002774
+  - FB:FBgn0032194
+  - FB:FBgn0032883
+  - MGI:MGI:108177
+  - MGI:MGI:1919412
+  - MGI:MGI:2445102
+  - MGI:MGI:2448561
+  - PANTHER:PTN008360424
+  - PomBase:SPBC1711.17
+  - RGD:1308767
+  - UniProtKB:O43143
+  - UniProtKB:Q08211
+  - UniProtKB:Q28141
+  - UniProtKB:Q38D68
+  - UniProtKB:Q38DJ1
+  - UniProtKB:Q57XZ3
+  - UniProtKB:Q581T1
+  - UniProtKB:Q7L2E3
+  - UniProtKB:Q8IY37
+  - UniProtKB:Q9H2U1
+  - UniProtKB:Q9H5Z1
+  - UniProtKB:Q9H6R0
+  review:
+    action: ACCEPT
+    summary: CG8915 contains the RNA-helicase core and an R3H RNA-binding domain.
+    reason: CG8915 contains the RNA-helicase core and an R3H RNA-binding domain. These features support
+      the PAINT RNA-binding inference, independently of precise transcript specificity or of whether every
+      mechanistic feature of mammalian YTHDC2 is retained.
+    supported_by:
+    - *id001
+    - *id002
+    - *id003
+- term:
+    id: GO:0004386
+    label: helicase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  supporting_entities:
+  - FB:FBgn0002774
+  - FB:FBgn0032883
+  - MGI:MGI:1919412
+  - MGI:MGI:1920081
+  - MGI:MGI:2448561
+  - PANTHER:PTN008360424
+  - PomBase:SPBC1711.17
+  - SGD:S000000815
+  - SGD:S000001561
+  - SGD:S000003088
+  - SGD:S000004735
+  - UniProtKB:O43143
+  - UniProtKB:P43329
+  - UniProtKB:Q08211
+  - UniProtKB:Q28141
+  - UniProtKB:Q581T1
+  - UniProtKB:Q7L2E3
+  - UniProtKB:Q9H2U1
+  - UniProtKB:Q9H6S0
+  review:
+    action: MODIFY
+    summary: The broad activity is consistent with a conserved ATP-dependent RNA helicase.
+    reason: The broad activity is consistent with a conserved ATP-dependent RNA helicase. The manually
+      curated transfer from human YTHDC2 supplies the more informative 3&#39;-5&#39; RNA helicase activity, supported
+      by target motif conservation and primary ortholog enzymology.
+    supported_by:
+    - *id001
+    - *id003
+    proposed_replacement_terms:
+    - id: GO:0034458
+      label: 3&#39;-5&#39; RNA helicase activity
+- term:
+    id: GO:0005524
+    label: ATP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  supporting_entities:
+  - InterPro:IPR011545
+  - UniRule:UR000400010
+  review:
+    action: ACCEPT
+    summary: CG8915 retains the diagnostic ATP-binding P-loop and catalytic DEAH motif.
+    reason: CG8915 retains the diagnostic ATP-binding P-loop and catalytic DEAH motif. Comparative alignment
+      to experimentally characterized YTHDC2 supports ATP utilization; the altered motifs of the separate
+      Bgcn protein are not present in this target.
+    supported_by:
+    - *id001
+    - *id003
+- term:
+    id: GO:0016787
+    label: hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  supporting_entities:
+  - UniRule:UR000400010
+  review:
+    action: MODIFY
+    summary: The broad activity is consistent with a conserved ATP-dependent RNA helicase.
+    reason: The broad activity is consistent with a conserved ATP-dependent RNA helicase. The manually
+      curated transfer from human YTHDC2 supplies the more informative 3&#39;-5&#39; RNA helicase activity, supported
+      by target motif conservation and primary ortholog enzymology.
+    supported_by:
+    - *id001
+    - *id003
+    proposed_replacement_terms:
+    - id: GO:0034458
+      label: 3&#39;-5&#39; RNA helicase activity
+- term:
+    id: GO:0034458
+    label: 3&#39;-5&#39; RNA helicase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:Q9H6S0
+  review:
+    action: ACCEPT
+    summary: The manually curated ISS transfer from human YTHDC2 is biologically reasonable for this DEAH/R3H
+      helicase with conserved ATP-binding and catalytic motifs.
+    reason: The manually curated ISS transfer from human YTHDC2 is biologically reasonable for this DEAH/R3H
+      helicase with conserved ATP-binding and catalytic motifs. Current FlyBase orthology also favors
+      YTHDC2. This is conserved-function inference, not a fly biochemical assay; detailed RNA substrates,
+      YTH-domain methyladenosine recognition and meiotic phenotypes are not implied.
+    supported_by:
+    - *id001
+    - *id003
+references:
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator
+    judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related
+    proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:DROME/CG8915/CG8915-bioinformatics/RESULTS.md
+  title: DROME/CG8915/CG8915-bioinformatics/RESULTS.md
+  findings: []
+- id: file:DROME/CG8915/CG8915-uniprot.txt
+  title: DROME/CG8915/CG8915-uniprot.txt
+  findings: []
+- id: PMID:29033321
+  title: Regulation of m(6)A Transcripts by the 3&#39;→5&#39; RNA Helicase YTHDC2 Is Essential for a Successful
+    Meiotic Program in the Mammalian Germline.
+  full_text_unavailable: true
+  findings: []
+core_functions:
+- description: Binds and remodels RNA through a conserved ATP-dependent DEAH helicase mechanism; precise
+    substrates remain unresolved.
+  molecular_function:
+    id: GO:0034458
+    label: 3&#39;-5&#39; RNA helicase activity
+  supported_by:
+  - *id001
+  - *id003
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

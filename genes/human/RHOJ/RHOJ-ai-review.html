@@ -1,0 +1,2291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RHOJ - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>RHOJ</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/G3V4H1" target="_blank" class="term-link">
+                        G3V4H1
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "RHOJ";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">3</span> Annotations</a>
+
+
+
+        <a href="#review-research" title="Deep research and hypothesis research reports"><span class="nav-count">1</span> Research</a>
+
+
+
+
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">6</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">2</span> Documents</a>
+
+
+
+
+
+
+
+
+
+        <a href="#review-questions" title="Suggested questions for experts"><span class="nav-count">1</span> Questions</a>
+
+
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="G3V4H1" data-a="DESCRIPTION: RHOJ is a Cdc42-related small GTPase that regulate..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>RHOJ is a Cdc42-related small GTPase that regulates endothelial cytoskeletal organization and vascular morphogenesis. The 153-residue human G3V4H1 product shares its first 103 residues with the 214-residue reference RHOJ but has a divergent C-terminal portion that does not preserve the complete reference nucleotide-binding architecture or prenylated tail. Its nucleotide binding, hydrolysis and membrane association are unresolved.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003924" target="_blank" class="term-link">
+                                    GO:0003924
+                                </a>
+                            </span>
+                            <span class="term-label">GTPase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="G3V4H1" data-a="GO:0003924" data-r="GO_REF:0000120" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Full-length RHOJ/TCL hydrolyzes GTP, but G3V4H1 preserves only the first 103 reference residues before a highly divergent tail. The complete nucleotide-binding architecture is not retained. Lack of exact-product biochemical measurements prevents assigning either normal hydrolysis or an active GTPase-deficient state.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10967094" target="_blank" class="term-link">
+                                        PMID:10967094
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In vitro, TCL shows rapid GDP/GTP
+exchange and displays higher GTP dissociation and hydolysis rates than TC10.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RHOJ/RHOJ-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">| Binding site:  | 136–136 | 0 / 1 | 0 |</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003925" target="_blank" class="term-link">
+                                    GO:0003925
+                                </a>
+                            </span>
+                            <span class="term-label">G protein activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000003
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="G3V4H1" data-a="GO:0003925" data-r="GO_REF:0000003" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> G protein activity requires a functional guanine-nucleotide-regulated signaling protein. The short product retains the N-terminal switch/effector region but loses key C-terminal features of the reference G-domain. Its signaling competence cannot be inferred from the full-length gene.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RHOJ/RHOJ-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">| Binding site:  | 136–136 | 0 / 1 | 0 |</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27660391" target="_blank" class="term-link">
+                                        PMID:27660391
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Chimeras of TCL and TC10
+revealed amino acids 121-129 of TCL contributed to the differences in nucleotide
+loading.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005525" target="_blank" class="term-link">
+                                    GO:0005525
+                                </a>
+                            </span>
+                            <span class="term-label">GTP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="G3V4H1" data-a="GO:0005525" data-r="GO_REF:0000120" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Several N-terminal nucleotide-contact residues are retained, but reference guanine-contact residue 136 is missing and a further contact at 177 is not conserved. The incomplete binding pocket makes GTP binding uncertain even though the full-length protein binds and hydrolyzes GTP.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/RHOJ/RHOJ-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">| Binding site:  | 136–136 | 0 / 1 | 0 |</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10967094" target="_blank" class="term-link">
+                                        PMID:10967094
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">In vitro, TCL shows rapid GDP/GTP
+exchange and displays higher GTP dissociation and hydolysis rates than TC10.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10967094" target="_blank" class="term-link">
+                            PMID:10967094
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Characterization of TCL, a new GTPase of the rho family related to TC10 andCcdc42.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Full-length human TCL/RHOJ has intrinsic GTP hydrolysis activity, distinguishing it from GTPase-deficient Rho-family proteins.</div>
+
+                        <div class="finding-text">"In vitro, TCL shows rapid GDP/GTP
+exchange and displays higher GTP dissociation and hydolysis rates than TC10."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27660391" target="_blank" class="term-link">
+                            PMID:27660391
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TCL/RhoJ Plasma Membrane Localization and Nucleotide Exchange Is Coordinately Regulated by Amino Acids within the N Terminus and a Distal Loop Region.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human RHOJ nucleotide exchange and membrane localization depend on sequence regions including a distal loop; this supports caution for an altered C-terminal product.</div>
+
+                        <div class="finding-text">"Chimeras of TCL and TC10
+revealed amino acids 121-129 of TCL contributed to the differences in nucleotide
+loading."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/RHOJ/RHOJ-bioinformatics/RESULTS.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Exact RHOJ product-to-reference sequence mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/RHOJ/RHOJ-protnlm-source.json
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Frozen exact-input ProtNLM output and UniProt sequence for G3V4H1</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section" id="review-questions">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is G3V4H1 stably expressed, and does it bind guanine nucleotide or an effector despite its divergent C-terminal sequence?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="G3V4H1" data-a="Q: Is G3V4H1 stably expressed, and does it bind guani..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section" id="review-research">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RHOJ-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="G3V4H1" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Human RHOJ Functional-Annotation Research Report</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">16 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-10T14:33:27.214110</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="RHOJ-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="human-rhoj-functional-annotation-research-report">Human RHOJ Functional-Annotation Research Report</h1>
+<h2 id="executive-summary">Executive summary</h2>
+<p><strong>RHOJ is correctly identified as a human gene</strong>, corresponding to ENSG00000126785 and named <em>ras homolog family member J</em>. The literature also uses <strong>RhoJ, TCL, TC10-like, TC10βL,</strong> and occasionally <strong>RhoT</strong>. However, one element of the supplied UniProt-derived annotation needs correction: RHOJ is consistently classified as a <strong>Rho-family, Cdc42-subfamily small GTPase—not a Rab-family GTPase</strong>. Its P-loop NTPase, Ras-like small-GTPase, and Rho-family domains are fully consistent with RHOJ; the “Rab family” assignment is most likely an automated annotation error. No same-symbol organism mismatch was found. Open Targets independently maps human RHOJ to ENSG00000126785. (OpenTargets Search: -RHOJ, barlow2019buildingbloodvessels—one pages 7-9, uemura2021rhogtpasesin pages 1-2)</p>
+<p>RhoJ’s primary function is to act as a <strong>membrane-associated guanine-nucleotide molecular switch</strong>. It cycles between signaling-competent GTP-bound and inactive or differently interacting GDP-bound states, thereby coordinating receptor trafficking, focal-adhesion turnover, actin organization, contractility, and directional endothelial migration. Its best-resolved physiological role is in vascular endothelial cells, particularly angiogenic endothelium. The strongest mechanistic model places RhoJ at the intersection of attractive VEGF-A signaling and repulsive semaphorin-3E/PlexinD1 signaling. (uemura2021rhogtpasesin pages 1-2, kaur2011rhojtclregulatesendothelial pages 2-2, fukushima2020rhojintegratesattractive pages 10-13)</p>
+<table>
+<thead>
+<tr>
+<th>Annotation aspect</th>
+<th>Best-supported conclusion</th>
+<th>Principal evidence/model</th>
+<th>Confidence / limitations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity and family</td>
+<td>Human <strong>RHOJ</strong> (ENSG00000126785; aliases <strong>TCL</strong>, <strong>TC10-like</strong>) is a <strong>Rho-family small GTPase of the Cdc42 subfamily</strong>, not a Rab-family protein. The supplied P-loop NTPase, Ras-like small-GTPase, and Rho-family domains support this identity; “Rab family” is likely an automated annotation error.</td>
+<td>Human endothelial-expression studies, Rho-GTPase reviews, and Open Targets nomenclature independently identify RHOJ as a Rho/Cdc42-subfamily protein. (OpenTargets Search: -RHOJ, barlow2019buildingbloodvessels—one pages 7-9, uemura2021rhogtpasesin pages 1-2, kaur2011rhojtclregulatesendothelial pages 2-2)</td>
+<td><strong>High.</strong> No symbol or organism mismatch was found. The accession may represent an Ensembl-derived isoform rather than the canonical reviewed entry, but it maps to human RHOJ.</td>
+</tr>
+<tr>
+<td>Catalytic molecular-switch function</td>
+<td>RhoJ binds GDP or GTP and intrinsically catalyzes <strong>GTP + H₂O → GDP + Pi</strong> (EC 3.6.5.2). GTP-bound RhoJ is the signaling-competent state; guanine nucleotides—not proteins—are its substrates. Active RhoJ binds CRIB-domain proteins such as PAK, WASP, and N-WASP and interacts with PlexinD1.</td>
+<td>Biochemical classification and interaction studies of RhoJ/Cdc42-subfamily GTPases. (uemura2021rhogtpasesin pages 1-2, leszczynska2011signallingandfunction pages 34-38, uemura2021rhogtpasesin pages 4-7)</td>
+<td><strong>High</strong> for molecular-switch chemistry and CRIB binding; <strong>moderate</strong> for the complete physiological effector map. RHOJ-specific kinetic constants and a definitive GEF/GAP/GDI set remain insufficiently characterized.</td>
+</tr>
+<tr>
+<td>Subcellular localization</td>
+<td>RhoJ functions on intracellular membrane-associated structures and at adhesion sites: endogenous protein has been observed at <strong>punctate focal adhesions</strong>, while tagged protein also occurs at the plasma membrane, intracellular vesicles, and early/sorting endosomes. Strong overexpression can produce additional endosomal or lysosomal localization.</td>
+<td>Colocalization with vinculin, talin, and phospho-FAK-Y397 in endothelial cells; trafficking studies using tagged RhoJ. (kaur2011rhojtclregulatesendothelial pages 2-2, leszczynska2011signallingandfunction pages 34-38, leszczynska2011signallingandfunction pages 134-138)</td>
+<td><strong>High</strong> for focal adhesions; <strong>moderate</strong> for vesicular compartments because some observations depend on expression level. Membrane association is consistent with the C-terminal CAAX motif typical of Rho GTPases.</td>
+</tr>
+<tr>
+<td>Endothelial cytoskeletal role</td>
+<td>RhoJ promotes endothelial migration and tube formation while regulating focal-adhesion turnover, actomyosin contractility, stress fibers, and extracellular-matrix remodeling. Knockdown generally increases focal adhesions and contractile structures and impairs motility or tubulogenesis; activated RhoJ produces the reciprocal phenotype.</td>
+<td>RHOJ siRNA, dominant-active RhoJ, Matrigel and organotypic tube assays, wound migration, collagen contraction, and focal-adhesion imaging in HUVEC and related endothelial models. (barlow2019buildingbloodvessels—one pages 7-9, kaur2011rhojtclregulatesendothelial pages 2-2, leszczynska2011signallingandfunction pages 129-134, leszczynska2011signallingandfunction pages 134-138)</td>
+<td><strong>High</strong> for cultured endothelial cells; <strong>moderate-to-high</strong> for in-vivo vascular morphogenesis. Results can vary with endothelial source, cell density, and migration state.</td>
+</tr>
+<tr>
+<td>VEGF-A–PlexinD1–Sema3E pathway</td>
+<td>RhoJ integrates attractive <strong>VEGF-A</strong> and repulsive <strong>Sema3E</strong> cues. In VEGF signaling it supports a VEGFR2–PlexinD1–neuropilin-1 complex, limits degradation of internalized VEGFR2, and prolongs PLCγ, ERK, and AKT signaling. Sema3E releases RhoJ from PlexinD1, promotes cytoskeletal contraction and actin depolymerization, and facilitates VEGFR2-Y1214 and p38 signaling that redirects migration.</td>
+<td>Receptor-complex, trafficking, signaling, migration, endothelial-knockout, developmental-retina, and oxygen-induced-retinopathy experiments. (uemura2021rhogtpasesin pages 1-2, uemura2021rhogtpasesin pages 4-7, fukushima2020rhojintegratesattractive pages 10-13)</td>
+<td><strong>High</strong> for pathway architecture in experimental endothelial systems. Earlier reports disagreed on whether VEGF activates or inactivates RhoJ, likely reflecting timing and context; the nucleotide-state cycle remains more nuanced than a simple on/off response.</td>
+</tr>
+<tr>
+<td>Cancer and therapy resistance</td>
+<td>RHOJ can act in both tumor vasculature and tumor cells. Preclinical evidence links it to tumor angiogenesis and, in melanoma or EMT-like tumor states, tolerance of replication stress and genotoxic therapy through DNA-damage responses and formin-dependent nuclear-actin polymerization. RhoJ loss increased DNA damage, apoptosis, and treatment sensitivity in experimental models.</td>
+<td>Endothelial knockout and tumor-vessel studies, melanoma genetic deletion, chemotherapy experiments, and integrated disease-target evidence. Melanoma deletion studies reported reduced tumor growth (<strong>p &lt; 0.0001</strong>) and lung metastasis (<strong>p = 0.003</strong>), although metastasis was confounded by lower primary-tumor burden. (OpenTargets Search: -RHOJ, uemura2021rhogtpasesin pages 12-13)</td>
+<td><strong>Moderate.</strong> Mechanistic evidence is preclinical and tumor-context dependent; human causal genetics and prospective biomarker validation are lacking.</td>
+</tr>
+<tr>
+<td>Translational status</td>
+<td>Proposed applications include disrupting RhoJ–PlexinD1 signaling, sensitizing cancer cells to DNA-damaging therapy, inhibiting pathological retinal or tumor angiogenesis, and using anti-RhoJ antibody-functionalized radiosensitizing nanoparticles. <strong>No approved RHOJ-selective therapy or relevant RHOJ clinical trial was identified.</strong></td>
+<td>Preclinical retinal and tumor models, nanoparticle-targeting studies, and Open Targets assessment. Open Targets gives neoplasm an overall RHOJ association score of approximately <strong>0.135</strong>, driven mainly by literature and animal-model evidence rather than human genetics. (OpenTargets Search: -RHOJ, uemura2021rhogtpasesin pages 12-13, fukushima2020rhojintegratesattractive pages 10-13)</td>
+<td><strong>Low-to-moderate translational maturity.</strong> RHOJ is a plausible but unvalidated therapeutic target; selectivity against related Cdc42-subfamily GTPases, endothelial safety, delivery, and clinical target engagement remain unresolved.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Evidence-based functional annotation of human RHOJ, including the family correction, molecular mechanism, localization, endothelial pathways, cancer evidence, and translational maturity. The table distinguishes well-supported conclusions from unresolved or exclusively preclinical findings.</em></p>
+<h2 id="1-identity-nomenclature-and-domain-family-verification">1. Identity, nomenclature, and domain-family verification</h2>
+<p>The target is <strong>human RHOJ</strong>, not a similarly named gene from another organism. RHOJ is enriched in endothelial cells and was historically called <strong>TCL or TC10-like</strong> because of its close relationship to the Cdc42 branch of the Rho family. Reviews and primary endothelial studies consistently place it in the <strong>classical Cdc42 subfamily of Rho GTPases</strong>. (barlow2019buildingbloodvessels—one pages 7-9, uemura2021rhogtpasesin pages 1-2, leszczynska2011signallingandfunction pages 34-38)</p>
+<p>The supplied domain annotations—P-loop NTPase, small-GTPase nucleotide-binding, Ras-like small-GTPase, and Rho-family small-GTPase—agree with this identification. By contrast, classification as “Rab family” conflicts with both phylogenetic assignment and experimentally established Rho/Cdc42-like biology. This discrepancy should therefore be corrected rather than propagated into downstream annotation.</p>
+<p>The accession <strong>G3V4H1</strong> appears to be an Ensembl-derived human RHOJ protein record rather than the principal manually reviewed representation. This does not invalidate the gene assignment, but isoform-specific sequence details should be checked against the current canonical human RHOJ entry before designing reagents such as antibodies, CRISPR guides, or structural constructs.</p>
+<h2 id="2-primary-molecular-function-and-catalytic-reaction">2. Primary molecular function and catalytic reaction</h2>
+<p>RhoJ is a <strong>small guanosine-triphosphate hydrolase</strong>, EC 3.6.5.2. Its intrinsic reaction is:</p>
+<p><strong>GTP + H₂O → GDP + inorganic phosphate (Pi).</strong></p>
+<p>Accordingly, its chemical substrate is <strong>GTP</strong>, with GDP as the nucleotide product; RhoJ is not a kinase and does not use another protein as a catalytic substrate. Like other Rho-family switches, GDP–GTP exchange changes switch-region conformation and consequently alters effector binding. GTP-bound RhoJ binds CRIB-domain proteins, including reported interactions with PAK-family kinases, WASP, and N-WASP. Other reported partners include CIP4, Par6, p50RhoGAP, PAK1B, and PAK4, although the physiological importance of several of these interactions remains less firmly demonstrated than the endothelial PlexinD1 pathway. (uemura2021rhogtpasesin pages 1-2, leszczynska2011signallingandfunction pages 34-38, uemura2021rhogtpasesin pages 4-7)</p>
+<p>A notable biochemical feature reported for RhoJ is relatively rapid spontaneous GDP-to-GTP exchange. Nevertheless, RHOJ-specific kinetic constants and a definitive set of physiologically dominant guanine-nucleotide exchange factors, GTPase-activating proteins, and GDIs remain incompletely characterized. ERG is an established transcriptional promoter of endothelial RHOJ expression, while VEGF/ARHGEF15-related nucleotide-state regulation appears context- and time-dependent. Earlier reports disagreed over whether VEGF acutely activates or inactivates RhoJ, cautioning against a simplistic linear activation model. (barlow2019buildingbloodvessels—one pages 7-9, uemura2021rhogtpasesin pages 12-13)</p>
+<h2 id="3-cellular-and-tissue-localization">3. Cellular and tissue localization</h2>
+<h3 id="tissue-and-cell-type-distribution">Tissue and cell-type distribution</h3>
+<p>RHOJ is <strong>endothelial enriched</strong>, rather than absolutely endothelial exclusive. Human tissue studies detected vascular expression in heart, adrenal gland, lymph node, skeletal muscle, pancreas, placenta, liver, and lung, and in vessels associated with some cancers. Placental pericytes and aortic smooth-muscle cells expressed substantially lower levels than endothelial cells. Expression in embryonic mouse trunk and intersomitic vessels supports a conserved role in developing vasculature. Some non-endothelial tumor cells can also express RHOJ, particularly in mesenchymal or therapy-resistant states. (kaur2011rhojtclregulatesendothelial pages 2-2, leszczynska2011signallingandfunction pages 34-38)</p>
+<h3 id="subcellular-localization">Subcellular localization</h3>
+<p>RhoJ acts on the cytoplasmic face of membranes and at cytoskeleton–membrane interfaces. Endogenous endothelial RhoJ has been localized to <strong>punctate focal adhesions</strong>, colocalizing with vinculin, talin, and phospho-FAK-Y397. Tagged RhoJ has additionally been observed at the dorsal plasma membrane, intracellular vesicles, and early/sorting endosomes. High transient overexpression can broaden apparent localization to endosomes and lysosomes, so these latter observations require caution. (kaur2011rhojtclregulatesendothelial pages 2-2, leszczynska2011signallingandfunction pages 34-38, leszczynska2011signallingandfunction pages 134-138)</p>
+<p>This distribution is functionally coherent with RhoJ’s roles in adhesion turnover and membrane trafficking. Rho-family proteins generally associate with membranes through C-terminal CAAX-directed lipid modification. RhoJ has been implicated in trafficking of transferrin receptor, podocalyxin, and α5β1 integrin, although endothelial knockdown produced only a small, statistically non-significant delay in transferrin release and did not measurably change VEGFR2 surface abundance in one study. Thus, RhoJ’s trafficking effects are likely selective for particular cargo and cellular states rather than reflecting a global endocytic defect. (uemura2021rhogtpasesin pages 1-2, leszczynska2011signallingandfunction pages 129-134, fukushima2020rhojintegratesattractive pages 10-13)</p>
+<h2 id="4-endothelial-cytoskeletal-and-adhesion-function">4. Endothelial cytoskeletal and adhesion function</h2>
+<p>RhoJ regulates a connected set of endothelial behaviors:</p>
+<ul>
+<li>directional migration and motility;</li>
+<li>tube formation and lumenogenesis;</li>
+<li>focal-adhesion abundance and turnover;</li>
+<li>actomyosin contractility and stress-fiber organization;</li>
+<li>α5β1-integrin trafficking and fibronectin remodeling;</li>
+<li>receptor transport and signal duration.</li>
+</ul>
+<p>In HUVECs, RHOJ silencing impaired migration and tubulogenesis and generally increased focal adhesions, stress fibers, myosin signaling, and ROCK-associated contractility. Constitutively active RhoJ promoted migration and excessive sprouting while reducing focal adhesions and contractile structures. These effects were most evident in sparse or actively migrating cells and less consistent in intact confluent monolayers, indicating that RhoJ function depends on cellular state and geometry. (barlow2019buildingbloodvessels—one pages 7-9, kaur2011rhojtclregulatesendothelial pages 2-2, leszczynska2011signallingandfunction pages 129-134, leszczynska2011signallingandfunction pages 134-138)</p>
+<p>RhoJ is functionally coupled to, but distinct from, Cdc42, Rac1, and RhoA. RHOJ knockdown did not simply alter their expression. Instead, evidence indicates that RhoJ competes with Cdc42 for shared CRIB-domain effectors and restrains RhoA–ROCK-associated contractility while supporting Rac1/Cdc42-type protrusive and morphogenetic behavior. The GIT–PIX complex has also been implicated in RhoJ-dependent focal-adhesion disassembly. (barlow2019buildingbloodvessels—one pages 7-9, uemura2021rhogtpasesin pages 4-7, uemura2021rhogtpasesin pages 12-13)</p>
+<h2 id="5-vegf-a-plexind1-and-semaphorin-3e-signaling">5. VEGF-A, PlexinD1, and semaphorin-3E signaling</h2>
+<p>The most precise contemporary model is that RhoJ integrates <strong>attractive VEGF-A</strong> and <strong>repulsive Sema3E</strong> cues through PlexinD1.</p>
+<h3 id="vegf-a-attraction">VEGF-A attraction</h3>
+<p>Following VEGF-A stimulation, RhoJ supports assembly of a <strong>VEGFR2–PlexinD1–neuropilin-1 holoreceptor complex</strong>. This complex protects internalized VEGFR2 from degradation and prolongs downstream PLCγ, ERK, and AKT signaling, thereby maintaining forward endothelial migration. After conversion toward the GDP-bound state, RhoJ shifts its association from PlexinD1 toward VEGFR2, contributing to eventual signal termination. (uemura2021rhogtpasesin pages 1-2, fukushima2020rhojintegratesattractive pages 10-13)</p>
+<h3 id="sema3e-repulsion">Sema3E repulsion</h3>
+<p>GTP-bound RhoJ associates with the intracellular domain of PlexinD1. Sema3E stimulation releases RhoJ, allowing it to compete with Cdc42 for shared effectors and drive actin depolymerization, filopodial retraction, and contraction. PlexinD1-associated RhoJ also facilitates Sema3E-induced PlexinD1–VEGFR2 association, VEGFR2 transphosphorylation at <strong>Y1214</strong>, and p38 MAPK activation, producing reverse or repulsive migration. (uemura2021rhogtpasesin pages 1-2, uemura2021rhogtpasesin pages 4-7, fukushima2020rhojintegratesattractive pages 10-13)</p>
+<p>This model explains how one small GTPase can regulate apparently opposing behaviors: its biological output depends on nucleotide state, binding partner, receptor complex, intracellular position, and stimulus timing rather than merely on total expression.</p>
+<h2 id="6-physiological-and-pathological-angiogenesis">6. Physiological and pathological angiogenesis</h2>
+<p>Endothelial RhoJ is required for efficient vascular morphogenesis but is not simply a universal vessel-maintenance factor. Genetic deficiency delays developmental vascular growth and disrupts directional positioning of endothelial cells. In oxygen-induced retinopathy, endothelial RhoJ deletion suppresses aberrant neovascularization, supporting a relatively greater requirement in actively angiogenic or pathological endothelium than in established quiescent vessels. (uemura2021rhogtpasesin pages 1-2, fukushima2020rhojintegratesattractive pages 10-13)</p>
+<p>These data underpin expert proposals that RhoJ may be useful for treating retinal neovascular disease. However, this remains a preclinical concept. The same pathway can also support physiological revascularization after ischemia, so inhibition could potentially suppress desirable repair as well as pathological vessel growth. Therapeutic design would therefore require disease- and tissue-selective delivery or transient pathway modulation.</p>
+<h2 id="7-cancer-biology-and-therapy-resistance">7. Cancer biology and therapy resistance</h2>
+<p>RHOJ can contribute to cancer through two distinguishable compartments.</p>
+<h3 id="tumor-endothelium">Tumor endothelium</h3>
+<p>RhoJ is enriched in angiogenic tumor vessels and supports endothelial migration, tube formation, matrix remodeling, and vessel maintenance. RhoJ-deficient mice show reduced tumor vascular density and tumor growth, giving rise to the proposal that RhoJ may offer greater vascular selectivity than broadly inhibiting ubiquitous Rho-family proteins. (OpenTargets Search: -RHOJ, uemura2021rhogtpasesin pages 12-13)</p>
+<h3 id="tumor-cells">Tumor cells</h3>
+<p>In melanoma and EMT-like tumor-cell states, RHOJ supports tolerance to replication stress and DNA-damaging chemotherapy. Mechanistic evidence links RhoJ to activation of dormant replication origins, continued DNA synthesis following cisplatin/5-fluorouracil exposure, DNA-damage repair, and formin-dependent nuclear-actin polymerization. RhoJ depletion increases γ-H2AX, apoptosis, and chemotherapy sensitivity. In cited melanoma models, deletion significantly inhibited tumor growth (<strong>p &lt; 0.0001</strong>) and reduced lung metastasis (<strong>p = 0.003</strong>), although the metastasis result was partly confounded by lower primary-tumor burden. Rhoj-knockout tumors reportedly remained stable during three weeks of cisplatin/5-FU treatment. (OpenTargets Search: -RHOJ)</p>
+<p>These findings suggest a potentially valuable dual action—simultaneously weakening tumor cells and their vasculature—but causal human evidence remains limited. Open Targets gives the RHOJ–neoplasm association an overall score of approximately <strong>0.135</strong>; the signal is driven largely by literature and animal models, with no corresponding human genetic-association evidence in that entry. Database links to preeclampsia, endometriosis, liver disease, and myasthenia gravis should be treated as hypothesis-generating associations, not established RHOJ functions. (OpenTargets Search: -RHOJ)</p>
+<h2 id="8-developments-in-20232024-and-present-applications">8. Developments in 2023–2024 and present applications</h2>
+<p>The core mechanistic advances still derive primarily from 2011–2021 work; genuinely RHOJ-focused publications in 2023–2024 were sparse in the retrieved literature. A January 2024 medicinal-chemistry review discussed emerging pyrimidine-based <strong>CDC42/RHOJ inhibitor classes</strong>, indicating active interest in chemical modulation, but the available evidence did not establish a clinically validated, RHOJ-selective molecule.</p>
+<p>Present implementations are therefore experimental rather than clinical:</p>
+<ol>
+<li><strong>Antiangiogenic targeting:</strong> inhibit RhoJ in tumor or retinal endothelium to suppress aberrant vessel growth.</li>
+<li><strong>Receptor-complex disruption:</strong> interfere with RhoJ–PlexinD1 binding to block VEGFR2/PlexinD1 signaling and directional migration.</li>
+<li><strong>Chemosensitization:</strong> inhibit RhoJ-dependent replication-stress and DNA-repair responses in tumor cells.</li>
+<li><strong>Targeted nanomedicine:</strong> anti-RhoJ antibody-functionalized gold/iodine nanoparticles have been evaluated as vascularly targeted radiosensitizers in preclinical tumor models. (uemura2021rhogtpasesin pages 12-13, OpenTargets Search: -RHOJ, fukushima2020rhojintegratesattractive pages 10-13)</li>
+</ol>
+<p>No approved RHOJ-selective medicine, validated clinical biomarker implementation, or relevant RHOJ-directed clinical trial was identified. Accordingly, phrases such as “therapeutic target” should currently be understood as <strong>preclinical target rationale</strong>, not evidence of clinical utility.</p>
+<h2 id="9-expert-interpretation-and-evidence-quality">9. Expert interpretation and evidence quality</h2>
+<p>The strongest annotation is that RhoJ is an <strong>endothelial-enriched spatiotemporal regulator of receptor trafficking and cytoskeletal organization</strong>, rather than a conventional downstream enzyme with a narrow protein substrate. Its distinctive contribution is to coordinate extracellular guidance information with adhesion turnover and receptor lifetime, allowing endothelial cells to choose direction while migrating through heterogeneous VEGF and semaphorin fields. (uemura2021rhogtpasesin pages 1-2, fukushima2020rhojintegratesattractive pages 10-13)</p>
+<p>Evidence is strongest for cultured human endothelial phenotypes and genetically manipulated mouse vascular models. Confidence is moderate for individual effector assignments beyond PlexinD1 and CRIB-domain proteins, and lower for human disease causality or therapeutic efficacy. Important unresolved questions include RHOJ-specific nucleotide-cycle kinetics, its dominant physiological GEFs/GAPs/GDIs, isoform-specific behavior, quantitative compartment-resolved activity in living human tissues, and whether direct inhibition can achieve useful selectivity over Cdc42 and RHOQ without impairing normal vascular repair.</p>
+<h2 id="key-sources-and-publication-dates">Key sources and publication dates</h2>
+<ul>
+<li>Kaur S. et al., <strong>March 2011</strong>, <em>Arteriosclerosis, Thrombosis, and Vascular Biology</em>, “RhoJ/TCL Regulates Endothelial Motility and Tube Formation…” DOI: https://doi.org/10.1161/ATVBAHA.110.216341. (kaur2011rhojtclregulatesendothelial pages 2-2)</li>
+<li>Barlow H.R. and Cleaver O., <strong>June 2019</strong>, <em>Cells</em>, “Building Blood Vessels—One Rho GTPase at a Time.” DOI: https://doi.org/10.3390/cells8060545. (barlow2019buildingbloodvessels—one pages 7-9)</li>
+<li>Fukushima Y. et al., <strong>April 2020</strong>, <em>The EMBO Journal</em>, “RhoJ integrates attractive and repulsive cues in directional migration of endothelial cells.” DOI: https://doi.org/10.15252/embj.2019102930. (fukushima2020rhojintegratesattractive pages 10-13)</li>
+<li>Uemura A. and Fukushima Y., <strong>April 2021</strong>, <em>International Journal of Molecular Sciences</em>, “Rho GTPases in Retinal Vascular Diseases.” DOI: https://doi.org/10.3390/ijms22073684. (uemura2021rhogtpasesin pages 1-2)</li>
+<li>Open Targets Platform, target <strong>RHOJ/ENSG00000126785</strong>, accessed through the current target-association dataset; disease scores are integrative evidence metrics rather than effect sizes or clinical-risk estimates. (OpenTargets Search: -RHOJ)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(OpenTargets Search: -RHOJ): Open Targets Query (-RHOJ, 5 results). Buniello, A. et al. (2025). Open Targets Platform: facilitating therapeutic hypotheses building in drug discovery. Nucleic Acids Research.</p>
+</li>
+<li>
+<p>(barlow2019buildingbloodvessels—one pages 7-9): Haley Rose Barlow and Ondine Cleaver. Building blood vessels—one rho gtpase at a time. Cells, 8:545, Jun 2019. URL: https://doi.org/10.3390/cells8060545, doi:10.3390/cells8060545. This article has 44 citations.</p>
+</li>
+<li>
+<p>(uemura2021rhogtpasesin pages 1-2): Akiyoshi Uemura and Yoko Fukushima. Rho gtpases in retinal vascular diseases. International Journal of Molecular Sciences, 22:3684, Apr 2021. URL: https://doi.org/10.3390/ijms22073684, doi:10.3390/ijms22073684. This article has 25 citations.</p>
+</li>
+<li>
+<p>(kaur2011rhojtclregulatesendothelial pages 2-2): Sukhbir Kaur, Katarzyna Leszczynska, Sabu Abraham, Margherita Scarcia, Sabina Hiltbrunner, Christopher J. Marshall, Georgia Mavria, Roy Bicknell, and Victoria L. Heath. Rhoj/tcl regulates endothelial motility and tube formation and modulates actomyosin contractility and focal adhesion numbers. Arteriosclerosis, Thrombosis, and Vascular Biology, 31:657-664, Mar 2011. URL: https://doi.org/10.1161/atvbaha.110.216341, doi:10.1161/atvbaha.110.216341. This article has 94 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(fukushima2020rhojintegratesattractive pages 10-13): Yoko Fukushima, Koichi Nishiyama, Hiroshi Kataoka, Marcus Fruttiger, Shigetomo Fukuhara, Kohji Nishida, Naoki Mochizuki, Hiroki Kurihara, Shin‐Ichi Nishikawa, and Akiyoshi Uemura. Rhoj integrates attractive and repulsive cues in directional migration of endothelial cells. The EMBO Journal, Apr 2020. URL: https://doi.org/10.15252/embj.2019102930, doi:10.15252/embj.2019102930. This article has 37 citations.</p>
+</li>
+<li>
+<p>(leszczynska2011signallingandfunction pages 34-38): K Leszczynska. Signalling and function of the small rho gtpase rhoj in endothelial cells. Unknown journal, 2011.</p>
+</li>
+<li>
+<p>(uemura2021rhogtpasesin pages 4-7): Akiyoshi Uemura and Yoko Fukushima. Rho gtpases in retinal vascular diseases. International Journal of Molecular Sciences, 22:3684, Apr 2021. URL: https://doi.org/10.3390/ijms22073684, doi:10.3390/ijms22073684. This article has 25 citations.</p>
+</li>
+<li>
+<p>(leszczynska2011signallingandfunction pages 134-138): K Leszczynska. Signalling and function of the small rho gtpase rhoj in endothelial cells. Unknown journal, 2011.</p>
+</li>
+<li>
+<p>(leszczynska2011signallingandfunction pages 129-134): K Leszczynska. Signalling and function of the small rho gtpase rhoj in endothelial cells. Unknown journal, 2011.</p>
+</li>
+<li>
+<p>(uemura2021rhogtpasesin pages 12-13): Akiyoshi Uemura and Yoko Fukushima. Rho gtpases in retinal vascular diseases. International Journal of Molecular Sciences, 22:3684, Apr 2021. URL: https://doi.org/10.3390/ijms22073684, doi:10.3390/ijms22073684. This article has 25 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="RHOJ-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>kaur2011rhojtclregulatesendothelial pages 2-2</li>
+<li>fukushima2020rhojintegratesattractive pages 10-13</li>
+<li>uemura2021rhogtpasesin pages 1-2</li>
+<li>leszczynska2011signallingandfunction pages 34-38</li>
+<li>uemura2021rhogtpasesin pages 4-7</li>
+<li>leszczynska2011signallingandfunction pages 134-138</li>
+<li>leszczynska2011signallingandfunction pages 129-134</li>
+<li>uemura2021rhogtpasesin pages 12-13</li>
+<li>https://doi.org/10.1161/ATVBAHA.110.216341.</li>
+<li>https://doi.org/10.3390/cells8060545.</li>
+<li>https://doi.org/10.15252/embj.2019102930.</li>
+<li>https://doi.org/10.3390/ijms22073684.</li>
+<li>https://doi.org/10.3390/cells8060545,</li>
+<li>https://doi.org/10.3390/ijms22073684,</li>
+<li>https://doi.org/10.1161/atvbaha.110.216341,</li>
+<li>https://doi.org/10.15252/embj.2019102930,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RHOJ-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="G3V4H1" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="rhoj-g3v4h1-evidence-and-exact-input-prediction-review">RHOJ (G3V4H1): evidence and exact-input prediction review</h1>
+<p>The full-length RHOJ/TCL protein is an active, rapidly exchanging GTPase, contrary to a generic GTPase-deficient Rho-family description. However, G3V4H1 is a substantially altered short product, so its activity cannot be decided from the full-length result in either direction.</p>
+<h2 id="input-identity-and-functional-boundary">Input identity and functional boundary</h2>
+<p>G3V4H1 and Q9H4E5 share HGNC:688. The first 103 residues match exactly; the remainder is highly divergent. The reference guanine-binding residue 136 is not aligned to the target, reference binding residue 177 is not conserved, and the terminal lipidation region is absent from the conserved segment. Retaining the P-loop and switch-region segment alone does not establish a functional G-domain.</p>
+<h2 id="biological-evidence">Biological evidence</h2>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/10967094/">PMID:10967094 — Characterization of TCL, a new GTPase of the rho family related to TC10 andCcdc42.</a>: Full-length human TCL/RHOJ has intrinsic GTP hydrolysis activity, distinguishing it from GTPase-deficient Rho-family proteins.</li>
+</ul>
+<blockquote>
+<p>In vitro, TCL shows rapid GDP/GTP<br />
+exchange and displays higher GTP dissociation and hydolysis rates than TC10.</p>
+</blockquote>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/27660391/">PMID:27660391 — TCL/RhoJ Plasma Membrane Localization and Nucleotide Exchange Is Coordinately Regulated by Amino Acids within the N Terminus and a Distal Loop Region.</a>: Human RHOJ nucleotide exchange and membrane localization depend on sequence regions including a distal loop; this supports caution for an altered C-terminal product.</li>
+</ul>
+<blockquote>
+<p>Chimeras of TCL and TC10<br />
+revealed amino acids 121-129 of TCL contributed to the differences in nucleotide<br />
+loading.</p>
+</blockquote>
+<h2 id="exact-non-go-claims">Exact non-GO claims</h2>
+<p>The complete emitted record is preserved in <a href="RHOJ-protnlm-source.json">RHOJ-protnlm-source.json</a>. Assessments below address the selected protein product; evidence on longer products is identified explicitly.</p>
+<h3 id="protein-name">Protein name</h3>
+<blockquote>
+<p>Cell division control protein 42 homolog</p>
+</blockquote>
+<p>LSP (CS 2) if “homolog” is read as a broad relationship: RHOJ is demonstrably Cdc42-related. The name is less informative than RHOJ/TCL and must not be read as identifying the CDC42 paralog or guaranteeing an intact Cdc42-like enzyme. <a href="https://pubmed.ncbi.nlm.nih.gov/10967094">PMID:10967094</a>(https://pubmed.ncbi.nlm.nih.gov/10967094/).</p>
+<h3 id="function">Function</h3>
+<blockquote>
+<p>Binds GTP but lacks intrinsic GTPase activity and is resistant to Rho-specific GTPase-activating proteins</p>
+</blockquote>
+<p>UNC (CS 1) for the selected G3V4H1 product. The “lacks intrinsic GTPase activity” description is contradicted for full-length RHOJ by direct hydrolysis measurements, but the target has a divergent, incomplete G-domain. The conjunction “binds GTP but lacks hydrolysis and resists GAPs” requires binding, hydrolysis and GAP assays of this exact product; a truncation alone does not establish an atypical GTPase mechanism. <a href="https://pubmed.ncbi.nlm.nih.gov/10967094">PMID:10967094</a>(https://pubmed.ncbi.nlm.nih.gov/10967094/); <a href="RHOJ-bioinformatics/RESULTS.md">sequence mapping</a>.</p>
+<h3 id="location">Location</h3>
+<blockquote>
+<p>Membrane</p>
+</blockquote>
+<p>UNC (CS 1). The selected product does not retain the reference C-terminal membrane-targeting region, and RHOJ membrane association is sensitive to sequence-dependent nucleotide loading. Partner-mediated membrane association remains possible, so no exclusively cytosolic alternative is asserted. <a href="https://pubmed.ncbi.nlm.nih.gov/27660391">PMID:27660391</a>(https://pubmed.ncbi.nlm.nih.gov/27660391/).</p>
+<p>No GO or EC term was emitted in this record; the name, function and location assessments above constitute its prediction review.</p>
+<h2 id="family-integration">Family integration</h2>
+<p>PTHR24072 establishes Rho-family ancestry but includes paralogs with different nucleotide cycling properties. The experimentally characterized RHOJ branch is catalytically active. The selected altered product creates an additional product-integrity boundary beyond family membership.</p>
+<h2 id="evidence-limits">Evidence limits</h2>
+<p>The original RHOJ paper is abstract-only in the cache; the 2016 mechanistic study has full text. Neither tests G3V4H1. A confident pseudoenzyme designation would conflate a potentially incomplete product with a stable, evolved GTPase-deficient signaling protein.</p>
+<p>Exact sequence mapping: <a href="RHOJ-bioinformatics/RESULTS.md">RHOJ-bioinformatics/RESULTS.md</a>. Global alignments can place nonhomologous alternative tails opposite gaps or distant residues; only conserved segments and explicitly retained feature intervals support functional transfer.</p>
+<h2 id="research-integration">Research integration</h2>
+<p>The genuine <a href="RHOJ-deep-research-falcon.md">Falcon report</a> supplies literature synthesis for DTD1. Its full-length enzyme mechanism is interpreted through the exact127-residue input and the mapped absence of the Gly-cisPro site; activity of the longer human editing core is not an assay of this short product.</p>
+            </div>
+        </details>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioinformatics Results</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RESULTS.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="G3V4H1" data-a="DOC: Bioinformatics Results" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="rhoj-exact-selected-product-and-same-gene-reference">RHOJ: exact selected product and same-gene reference</h1>
+<p>Selected G3V4H1 has 153 residues; reference Q9H4E5 has 214 residues.</p>
+<p>Biopython PairwiseAligner global BLOSUM62, gap open -10, extension -0.5.</p>
+<table>
+<thead>
+<tr>
+<th>Reference interval</th>
+<th>Selected interval</th>
+<th>Identical residues</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1–103</td>
+<td>1–103</td>
+<td>103</td>
+</tr>
+<tr>
+<td>115–115</td>
+<td>104–104</td>
+<td>1</td>
+</tr>
+<tr>
+<td>121–127</td>
+<td>105–111</td>
+<td>3</td>
+</tr>
+<tr>
+<td>160–181</td>
+<td>112–133</td>
+<td>5</td>
+</tr>
+<tr>
+<td>182–184</td>
+<td>140–142</td>
+<td>2</td>
+</tr>
+<tr>
+<td>195–201</td>
+<td>143–149</td>
+<td>2</td>
+</tr>
+<tr>
+<td>205–208</td>
+<td>150–153</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p>Reference feature mapping (sequence coverage does not establish retained function):</p>
+<table>
+<thead>
+<tr>
+<th>Reference feature</th>
+<th>Interval</th>
+<th>Mapped / length</th>
+<th>Identical</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Motif: Effector region</td>
+<td>50–58</td>
+<td>9 / 9</td>
+<td>9</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>31–31</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>33–33</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>34–34</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>35–35</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>35–35</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>36–36</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>50–50</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>53–53</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>53–53</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>75–75</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>78–78</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>136–136</td>
+<td>0 / 1</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>177–177</td>
+<td>1 / 1</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>A shared segment does not establish that a truncated product folds, is expressed, localizes, or catalyzes the full-length reaction.</p>
+<p>Inputs are the sibling frozen ProtNLM source and same-gene reference JSON files. Reproduce with <code>UV_NO_SYNC=1 uv run python compare_sequences.py</code> from this directory.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: G3V4H1
+gene_symbol: RHOJ
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: RHOJ is a Cdc42-related small GTPase that regulates endothelial cytoskeletal organization
+  and vascular morphogenesis. The 153-residue human G3V4H1 product shares its first 103 residues with
+  the 214-residue reference RHOJ but has a divergent C-terminal portion that does not preserve the complete
+  reference nucleotide-binding architecture or prenylated tail. Its nucleotide binding, hydrolysis and
+  membrane association are unresolved.
+existing_annotations:
+- term:
+    id: GO:0003924
+    label: GTPase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  supporting_entities:
+  - InterPro:IPR001806
+  - UniRule:UR002201975
+  review:
+    action: UNDECIDED
+    summary: Full-length RHOJ/TCL hydrolyzes GTP, but G3V4H1 preserves only the first 103 reference residues
+      before a highly divergent tail. The complete nucleotide-binding architecture is not retained. Lack
+      of exact-product biochemical measurements prevents assigning either normal hydrolysis or an active
+      GTPase-deficient state.
+    supported_by:
+    - &amp;id002
+      reference_id: PMID:10967094
+      supporting_text: &#39;In vitro, TCL shows rapid GDP/GTP
+
+        exchange and displays higher GTP dissociation and hydolysis rates than TC10.&#39;
+    - &amp;id001
+      reference_id: file:human/RHOJ/RHOJ-bioinformatics/RESULTS.md
+      supporting_text: &#39;| Binding site:  | 136–136 | 0 / 1 | 0 |&#39;
+- term:
+    id: GO:0003925
+    label: G protein activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  qualifier: enables
+  supporting_entities:
+  - EC:3.6.5.2
+  review:
+    action: UNDECIDED
+    summary: G protein activity requires a functional guanine-nucleotide-regulated signaling protein.
+      The short product retains the N-terminal switch/effector region but loses key C-terminal features
+      of the reference G-domain. Its signaling competence cannot be inferred from the full-length gene.
+    supported_by:
+    - *id001
+    - reference_id: PMID:27660391
+      supporting_text: &#39;Chimeras of TCL and TC10
+
+        revealed amino acids 121-129 of TCL contributed to the differences in nucleotide
+
+        loading.&#39;
+- term:
+    id: GO:0005525
+    label: GTP binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  supporting_entities:
+  - InterPro:IPR001806
+  - InterPro:IPR003578
+  - InterPro:IPR005225
+  - UniRule:UR002201975
+  review:
+    action: UNDECIDED
+    summary: Several N-terminal nucleotide-contact residues are retained, but reference guanine-contact
+      residue 136 is missing and a further contact at 177 is not conserved. The incomplete binding pocket
+      makes GTP binding uncertain even though the full-length protein binds and hydrolyzes GTP.
+    supported_by:
+    - *id001
+    - *id002
+references:
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Enzyme Commission mapping
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10967094
+  title: Characterization of TCL, a new GTPase of the rho family related to TC10 andCcdc42.
+  findings:
+  - statement: Full-length human TCL/RHOJ has intrinsic GTP hydrolysis activity, distinguishing it from
+      GTPase-deficient Rho-family proteins.
+    supporting_text: &#39;In vitro, TCL shows rapid GDP/GTP
+
+      exchange and displays higher GTP dissociation and hydolysis rates than TC10.&#39;
+  full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Primary report checked against the cached abstract/full text; the evidence scope is
+      stated in the finding.
+- id: PMID:27660391
+  title: TCL/RhoJ Plasma Membrane Localization and Nucleotide Exchange Is Coordinately Regulated by Amino
+    Acids within the N Terminus and a Distal Loop Region.
+  findings:
+  - statement: Human RHOJ nucleotide exchange and membrane localization depend on sequence regions including
+      a distal loop; this supports caution for an altered C-terminal product.
+    supporting_text: &#39;Chimeras of TCL and TC10
+
+      revealed amino acids 121-129 of TCL contributed to the differences in nucleotide
+
+      loading.&#39;
+  full_text_unavailable: false
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Primary report checked against the cached abstract/full text; the evidence scope is
+      stated in the finding.
+- id: file:human/RHOJ/RHOJ-bioinformatics/RESULTS.md
+  title: Exact RHOJ product-to-reference sequence mapping
+- id: file:human/RHOJ/RHOJ-protnlm-source.json
+  title: Frozen exact-input ProtNLM output and UniProt sequence for G3V4H1
+core_functions: []
+suggested_questions:
+- question: Is G3V4H1 stably expressed, and does it bind guanine nucleotide or an effector despite its
+    divergent C-terminal sequence?
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

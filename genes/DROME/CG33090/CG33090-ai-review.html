@@ -1,0 +1,2068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CG33090 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CG33090</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/X2JE45" target="_blank" class="term-link">
+                        X2JE45
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Drosophila melanogaster</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CG33090";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">2</span> Annotations</a>
+
+
+
+        <a href="#review-research" title="Deep research and hypothesis research reports"><span class="nav-count">1</span> Research</a>
+
+
+
+        <a href="#external-predictions" title="External predictions assessed separately from GOA annotations" class="nav-external"><span class="nav-count">1</span> External</a>
+
+
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">3</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">2</span> Documents</a>
+
+
+
+
+
+
+
+
+
+
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="X2JE45" data-a="DESCRIPTION: CG33090 encodes GBA2-family glycoside hydrolase pr..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CG33090 encodes GBA2-family glycoside hydrolase proteins related to non-lysosomal glucosylceramidases. Its 799-residue PC isoform has a distinct shortened N-terminus and shares a 771-residue C-terminal sequence with the longer PB isoform. PC retains the conserved GH116 catalytic nucleophile and acid/base residues, while the effect of its altered N-terminal domain on glucoside hydrolysis and lipid metabolism remains unresolved.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004553" target="_blank" class="term-link">
+                                    GO:0004553
+                                </a>
+                            </span>
+                            <span class="term-label">hydrolase activity, hydrolyzing O-glycosyl compounds</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="X2JE45" data-a="GO:0004553" data-r="GO_REF:0000002" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The exact target is native PC (X2JE45), which differs from the longer PB isoform in its N-terminal GH116 region.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The exact target is native PC (X2JE45), which differs from the longer PB isoform in its N-terminal GH116 region. Its conserved catalytic Glu362 and Asp575 support hydrolase potential, but 177 PB N-terminal residues are replaced by a distinct 28-residue segment. Primary human GBA2 isoform experiments show that N-terminal alterations can abolish activity despite expression. Those changes are not identical to fly PC, so neither catalytic activity nor inactivity is established for this particular isoform; an isoform-resolved assay is needed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG33090/CG33090-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">Both global and local MAFFT alignments map human GBA2 Glu527 to PC Glu362 and Asp677 to PC Asp575 (PB Glu511 and Asp724). The catalytic nucleophile and acid/base residue types are retained.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG33090/CG33090-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">PC has a distinct 28-residue N-terminus followed by a 771-residue sequence identical to PB residues 178–948.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33261081" target="_blank" class="term-link">
+                                        PMID:33261081
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Thus, all human GBA2 isoforms were expressed but only isoform 1 clearly hydrolyzed the MUG substrate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005975" target="_blank" class="term-link">
+                                    GO:0005975
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="X2JE45" data-a="GO:0005975" data-r="GO_REF:0000002" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The exact target is native PC (X2JE45), which differs from the longer PB isoform in its N-terminal GH116 region.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The exact target is native PC (X2JE45), which differs from the longer PB isoform in its N-terminal GH116 region. Its conserved catalytic Glu362 and Asp575 support hydrolase potential, but 177 PB N-terminal residues are replaced by a distinct 28-residue segment. Primary human GBA2 isoform experiments show that N-terminal alterations can abolish activity despite expression. Those changes are not identical to fly PC, so neither catalytic activity nor inactivity is established for this particular isoform; an isoform-resolved assay is needed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG33090/CG33090-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">Both global and local MAFFT alignments map human GBA2 Glu527 to PC Glu362 and Asp677 to PC Asp575 (PB Glu511 and Asp724). The catalytic nucleophile and acid/base residue types are retained.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG33090/CG33090-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">PC has a distinct 28-residue N-terminus followed by a 771-residue sequence identical to PB residues 178–948.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/33261081" target="_blank" class="term-link">
+                                        PMID:33261081
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Thus, all human GBA2 isoforms were expressed but only isoform 1 clearly hydrolyzed the MUG substrate.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:DROME/CG33090/CG33090-bioinformatics/RESULTS.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">DROME/CG33090/CG33090-bioinformatics/RESULTS.md</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33261081" target="_blank" class="term-link">
+                            PMID:33261081
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Effect of Expression of Human Glucosylceramidase 2 Isoforms on Lipid Profiles in COS-7 Cells.</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+    <section class="section external-predictions" id="external-predictions" aria-labelledby="external-predictions-title">
+        <h2 class="section-title" id="external-predictions-title">External Prediction Reviews</h2>
+        <p class="prediction-notice">These computational predictions are reviewed separately from the GOA annotation set used for this review.
+            The assessments below are from this project and do not constitute official GO annotations or endorsement by GO/UniProt.
+            They are not included in the existing annotation review above.</p>
+
+
+        <article class="prediction-review">
+        <h3>ProtNLM <span class="badge">External predictions</span></h3>
+        <p class="prediction-source"><a href="CG33090-protnlm-predictions-review.yaml">View prediction review YAML</a> &middot; CG33090-protnlm-predictions-review.yaml
+            &middot; Review status: COMPLETE</p>
+
+        <p>Hydrolase activity is plausible from the conserved GBA2 catalytic core, but remains unresolved for the distinct native PC N-terminal architecture.</p>
+
+        <p class="prediction-source">Review score: 2 = concordant with evidence; 1 = uncertain; 0 = discordant with evidence. This is an assessment score, not a model probability.</p>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004553" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:0004553
+                    </a>
+                    <span class="term-label">hydrolase activity, hydrolyzing O-glycosyl compounds</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_MF</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-unc">
+                        UNC — Uncertain
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 1/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM
+                 &middot; Version: ProtNLM2 API snapshot 2026-09-08
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> X2JE45 is the native 799-residue PC isoform. It retains the catalytic residues corresponding to human GBA2 Glu527 and Asp677, but replaces PB residues 1–177 with a distinct 28-residue N-terminus that alters the GH116 N-terminal region. Human GBA2 isoform experiments establish that such noncatalytic-domain changes can impair activity; they do not demonstrate that this different fly isoform is inactive. The specific missing evidence is activity or fold integrity of native PC, rather than uncertainty about the GBA2 family as a whole.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="CG33090-bioinformatics/RESULTS.md" target="_blank" class="term-link">file:DROME/CG33090/CG33090-bioinformatics/RESULTS.md</a>:
+
+
+                        <span class="finding-text">"Both global and local MAFFT alignments map human GBA2 Glu527 to PC Glu362 and Asp677 to PC Asp575 (PB Glu511 and Asp724). The catalytic nucleophile and acid/base residue types are retained."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="CG33090-bioinformatics/RESULTS.md" target="_blank" class="term-link">file:DROME/CG33090/CG33090-bioinformatics/RESULTS.md</a>:
+
+
+                        <span class="finding-text">"PC has a distinct 28-residue N-terminus followed by a 771-residue sequence identical to PB residues 178–948."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/33261081" target="_blank" class="term-link">PMID:33261081</a>:
+
+
+                        <span class="finding-text">"Thus, all human GBA2 isoforms were expressed but only isoform 1 clearly hydrolyzed the MUG substrate."</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        </article>
+
+    </section>
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section" id="review-research">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CG33090-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="X2JE45" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional-annotation report: *Drosophila melanogaster* CG33090 / UniProt X2JE45</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">12 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-08T18:34:00.446957</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="CG33090-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="functional-annotation-report-drosophila-melanogaster-cg33090-uniprot-x2je45">Functional-annotation report: <em>Drosophila melanogaster</em> CG33090 / UniProt X2JE45</h1>
+<h2 id="executive-conclusion">Executive conclusion</h2>
+<p>The gene symbol <strong>CG33090 is correctly associated, in the supplied UniProt record, with UniProt X2JE45 from <em>Drosophila melanogaster</em></strong>, gene identifier <strong>FBgn0028916</strong>, and historical aliases <strong>BG:DS01068.2, CG15287, CG31837, and CG7469</strong>. Its supplied InterPro assignments—GH116_N, GH116_catalytic, six-hairpin glycosidase superfamily, and non-lysosomal glucosylceramidase—are mutually consistent with a <strong>glycoside hydrolase family 116 (GH116)-like protein</strong>.</p>
+<p>However, the gene symbol <strong>“Dmel\CG33090” is literature-limited for this specific protein</strong>. Searches using CG33090, FBgn0028916, X2JE45, and its historical aliases found no paper directly demonstrating enzyme activity, physiological substrate, localization, phenotype, or pathway. The retrieved GH116 and GBA2 publications do not mention CG33090. Therefore, CG33090 must not be presented as an experimentally established glucosylceramidase. The strongest defensible annotation is:</p>
+<blockquote>
+<p><strong>Predicted GH116-family retaining glycoside hydrolase; potentially a non-lysosomal, GBA2-like glucosylceramidase, but its physiological substrate, cellular location, and pathway function remain unverified.</strong></p>
+</blockquote>
+<h2 id="1-target-identity-verification">1. Target-identity verification</h2>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Verified interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Accession</td>
+<td>UniProt <strong>X2JE45</strong></td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><strong><em>Drosophila melanogaster</em></strong>, fruit fly</td>
+</tr>
+<tr>
+<td>Current gene symbol</td>
+<td><strong>CG33090</strong></td>
+</tr>
+<tr>
+<td>FlyBase identifier</td>
+<td><strong>FBgn0028916</strong></td>
+</tr>
+<tr>
+<td>Historical aliases</td>
+<td>BG:DS01068.2, CG15287, CG31837, CG7469</td>
+</tr>
+<tr>
+<td>Current protein description</td>
+<td>Uncharacterized protein</td>
+</tr>
+<tr>
+<td>Domain-level classification</td>
+<td>GH116_N and GH116_catalytic regions within a six-hairpin glycosidase-like fold</td>
+</tr>
+</tbody>
+</table>
+<p>No conflicting same-symbol protein was identified in the literature search. Nevertheless, historical CG aliases can reflect changes in genome assembly or gene-model consolidation and should not be treated as independent loci without release-specific verification.</p>
+<p>The supplied domain architecture aligns with experimentally studied GH116 proteins: the bacterial model TxGH116 has an N-terminal two-sheet β-sandwich associated with a C-terminal six-hairpin/(α/α)₆-solenoid catalytic domain. This supports the database-level classification of CG33090 as GH116-like, although it does not establish a particular substrate (pengthaisong2023reactionmechanismof pages 1-2).</p>
+<h2 id="2-primary-molecular-function">2. Primary molecular function</h2>
+<h3 id="21-what-can-be-assigned-with-the-highest-confidence">2.1 What can be assigned with the highest confidence</h3>
+<p>GH116 enzymes are <strong>retaining glycoside hydrolases</strong>: cleavage proceeds through a covalent glycosyl-enzyme intermediate and retains the substrate’s anomeric configuration. GH116 is functionally diverse, containing characterized β-glucosidase, β-xylosidase, and β-<em>N</em>-acetylglucosaminidase activities. Thus, the family assignment supports glycosidase chemistry but does not, by itself, prove glucosylceramide specificity (pengthaisong2023reactionmechanismof pages 1-2).</p>
+<p>The best current functional label for CG33090 is consequently <strong>predicted GH116 glycoside hydrolase</strong>. Calling it “non-lysosomal glucosylceramidase,” assigning EC 3.2.1.45, or asserting glucosylceramide as its natural substrate would exceed the available CG33090-specific evidence.</p>
+<h3 id="22-candidate-glucosylceramidase-reaction">2.2 Candidate glucosylceramidase reaction</h3>
+<p>If CG33090 is functionally equivalent to metazoan GBA2, its candidate reaction would be:</p>
+<p><strong>β-D-glucosylceramide + H₂O → ceramide + D-glucose</strong></p>
+<p>A GBA2-like enzyme might also hydrolyze <strong>glucosylsphingosine</strong>. Human GBA2 is a GH116 non-lysosomal enzyme reported to hydrolyze both glucosylceramide and glucosylsphingosine (pengthaisong2023reactionmechanismof pages 1-2). Human GBA2 additionally acts on bile-acid glucosides and can transfer sugar to cholesterol using glucosylceramide or galactosylceramide as donors, demonstrating that family members can support reactions beyond simple glucosylceramide hydrolysis (jatooratthawichot2020effectofexpression pages 1-3).</p>
+<p>These observations make glucosylceramide a biologically plausible candidate substrate for CG33090, not an established one. GH116’s broader substrate diversity leaves open the possibility that the fly enzyme acts on a soluble glycoside or another glycoconjugate.</p>
+<h2 id="3-catalytic-mechanism-and-structural-inference">3. Catalytic mechanism and structural inference</h2>
+<p>The most important recent mechanistic development is the 2023 ACS Catalysis study by Pengthaisong and colleagues, published in April 2023 (DOI: <a href="https://doi.org/10.1021/acscatal.3c00620">10.1021/acscatal.3c00620</a>). In TxGH116, <strong>Glu441</strong> is the catalytic nucleophile and <strong>Asp593</strong> is the general acid/base. These residues are approximately <strong>8 Å apart</strong>, compared with roughly <strong>4.5–6.5 Å</strong> in conventional retaining glycosidases that protonate laterally (pengthaisong2023reactionmechanismof pages 1-2).</p>
+<p>Structures of a D593N mutant bound to cellobiose and laminaribiose, together with QM/MM calculations, support an unusual <strong>perpendicular protonation</strong> trajectory. The −1-subsite glucose binds in a relaxed ⁴C₁ chair, progresses through a ⁴H₃ half-chair transition state, and is protonated by the acid from above the pyranose-ring plane; a constrained gauche/trans orientation of glucose C6OH helps organize this geometry (pengthaisong2023reactionmechanismof pages 1-2).</p>
+<p>For CG33090, retaining chemistry and analogous catalytic carboxylates are reasonable predictions. Exact catalytic-residue numbers cannot be transferred from TxGH116 without a sequence alignment, and catalytic equivalence should ultimately be tested by site-directed mutagenesis.</p>
+<h2 id="4-substrate-specificity">4. Substrate specificity</h2>
+<p>Substrate specificity is the central unresolved issue.</p>
+<p>Human GBA2 provides the strongest metazoan analogy. A COS-7 expression study tested <strong>nine human GBA2 isoforms</strong>; only isoform 1 showed clearly elevated activity, whereas the others remained near background. The artificial-substrate assay used <strong>3.5 mM 4-methylumbelliferyl-β-D-glucoside, pH 5.8, 37 °C, for 30 minutes</strong>, with or without <strong>10 μM conduritol B epoxide</strong> (jatooratthawichot2020effectofexpression pages 1-3, jatooratthawichot2020effectofexpression pages 14-16). Human GBA2 has also been reported as a 927-residue, approximately 104-kDa enzyme with an activity optimum around <strong>pH 5.5–6.0</strong>; unlike lysosomal GBA1, it is CBE-insensitive and does not require saposin C (kim2021studiestowardsfinding pages 13-17).</p>
+<p>Lipidomics after active GBA2 isoform-1 expression showed decreases in Hex1Cer species <strong>34:1, 40:1, 42:1, and 42:2</strong> and increases in corresponding ceramides. Cer/Hex1Cer ratios increased for all four matched species, supporting activity across multiple ceramide lipid moieties. Sphingomyelin/Hex1Cer ratios rose for 40:1, 40:2, and 42:2, consistent with downstream conversion of some released ceramide to sphingomyelin, although sphingomyelin abundance itself did not change significantly (jatooratthawichot2020effectofexpression pages 6-9).</p>
+<p>The assay could not analytically distinguish glucosylceramide from galactosylceramide, although negligible GalCer in the tested COS-7 system made the HexCer signal likely to represent GlcCer. Effects were strongest at 48 hours and were not significant at 72 hours, emphasizing the context dependence of overexpression lipidomics (jatooratthawichot2020effectofexpression pages 6-9, jatooratthawichot2020effectofexpression pages 14-16).</p>
+<p>None of these quantitative findings concerns CG33090 directly. They define what should be tested, rather than what can already be asserted about the fly protein.</p>
+<h2 id="5-cellular-localization">5. Cellular localization</h2>
+<p>No CG33090-specific microscopy, fractionation, topology, or endogenous-tagging study was found. Its cellular location therefore remains <strong>unknown</strong>.</p>
+<p>Human GBA2 is reported to be a tightly membrane-associated but <strong>nonintegral</strong> protein located on the <strong>cytoplasmic faces of the endoplasmic reticulum and Golgi</strong>; family-level discussion also includes endosomes. This localization gives the catalytic domain access to cytosol-facing glycosphingolipid pools outside lysosomes (pengthaisong2023reactionmechanismof pages 1-2, kim2021studiestowardsfinding pages 13-17).</p>
+<p>Accordingly, cytosolic association with ER, Golgi, or endosomal membranes is a reasonable working hypothesis for CG33090 only if it is genuinely GBA2-like. The “non-lysosomal glucosylceramidase” InterPro label does not by itself demonstrate membrane association or exclude another compartment.</p>
+<h2 id="6-biological-process-and-pathway-placement">6. Biological process and pathway placement</h2>
+<p>Under the GBA2-like hypothesis, CG33090 would participate in <strong>non-lysosomal glycosphingolipid catabolism</strong>, controlling the balance between glucosylceramide and ceramide. Because ceramide can feed sphingomyelin and other sphingolipid branches, altered activity could affect a wider lipid network. Human-cell lipidomics supports this pathway direction: active GBA2 reduced multiple Hex1Cer species, increased matched ceramides, and altered selected sphingomyelin/Hex1Cer ratios without globally disrupting lipid-class distribution (jatooratthawichot2020effectofexpression pages 6-9).</p>
+<p>Nevertheless, no CG33090 knockout, rescue, tissue-specific perturbation, metabolomics, or flux experiment was identified. It is therefore premature to assign CG33090 definitively to the fly sphingolipid pathway or to infer neuronal, developmental, fertility, or behavioral functions from mammalian GBA2 phenotypes.</p>
+<h2 id="7-evidence-assessment">7. Evidence assessment</h2>
+<p>The key distinction between established observations and inference is summarized below.</p>
+<table>
+<thead>
+<tr>
+<th>Proposed statement</th>
+<th>Evidence level</th>
+<th>Supporting observations</th>
+<th>Annotation implication</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>X2JE45 corresponds to <em>Drosophila melanogaster</em> CG33090 (FBgn0028916), with historical aliases BG:DS01068.2, CG15287, CG31837, and CG7469.</td>
+<td>Direct database identity</td>
+<td>The supplied UniProt record links the accession, organism, gene identifier, and aliases; exact-identifier searches found no conflicting protein assignment.</td>
+<td>Identity is sufficiently resolved for annotation, but historical aliases should not be treated as separate genes without checking genome-release history.</td>
+</tr>
+<tr>
+<td>CG33090 contains GH116-related regions, including GH116_N and GH116_catalytic, within a six-hairpin glycosidase-like fold.</td>
+<td>Direct database identity / GH116 family evidence</td>
+<td>The supplied InterPro assignments are IPR024462, IPR006775, IPR008928, IPR012341, and IPR052566. Experimentally studied GH116 proteins have an N-terminal β-sandwich and C-terminal six-hairpin or (α/α)₆ catalytic domain (pengthaisong2023reactionmechanismof pages 1-2).</td>
+<td>The strongest defensible molecular annotation is <strong>predicted GH116-family glycoside hydrolase</strong>; domain membership alone does not identify the physiological substrate.</td>
+</tr>
+<tr>
+<td>The protein probably uses retaining glycosidase chemistry.</td>
+<td>GH116 family evidence</td>
+<td>GH116 enzymes are retaining glycoside hydrolases. In TxGH116, Glu441 is the nucleophile and Asp593 is the acid/base; their approximately 8 Å separation supports unusual perpendicular protonation, compared with approximately 4.5–6.5 Å in conventional lateral protonators (pengthaisong2023reactionmechanismof pages 1-2).</td>
+<td>Retention of anomeric configuration and analogous catalytic carboxylates are credible predictions, but the corresponding CG33090 residues must be confirmed by sequence alignment and mutagenesis.</td>
+</tr>
+<tr>
+<td>CG33090 may hydrolyze glucosylceramide to ceramide and glucose and possibly glucosylsphingosine.</td>
+<td>Human GBA2 analogy</td>
+<td>Human GBA2 is a GH116 non-lysosomal enzyme that hydrolyzes glucosylceramide and glucosylsphingosine (pengthaisong2023reactionmechanismof pages 1-2). However, GH116 also includes β-glucosidase, β-xylosidase, β-<em>N</em>-acetylglucosaminidase, and other substrate specificities (pengthaisong2023reactionmechanismof pages 1-2).</td>
+<td><strong>Plausible but unproven.</strong> CG33090 should not be named glucosylceramidase or assigned EC 3.2.1.45 until activity against defined fly glucosylceramides is demonstrated.</td>
+</tr>
+<tr>
+<td>If CG33090 is GBA2-like, it could act on the cytosolic faces of ER, Golgi, or endosomal membranes rather than in lysosomes.</td>
+<td>Human GBA2 analogy</td>
+<td>Human GBA2 is described as a nonintegral, membrane-associated enzyme on cytoplasmic ER/Golgi surfaces; family literature also reports association with endosomes (pengthaisong2023reactionmechanismof pages 1-2, kim2021studiestowardsfinding pages 13-17).</td>
+<td>This is a testable localization hypothesis, not a CG33090 annotation. Cytosolic membrane association must not be inferred solely from the “non-lysosomal glucosylceramidase” InterPro label.</td>
+</tr>
+<tr>
+<td>A GBA2-like CG33090 would participate in glycosphingolipid catabolism and regulate the glucosylceramide–ceramide balance.</td>
+<td>Human GBA2 analogy</td>
+<td>Expression of active human GBA2 isoform 1 increased ceramide and decreased Hex1Cer species 34:1, 40:1, 42:1, and 42:2; matched Cer/Hex1Cer ratios rose, supporting pathway flux from glucosylceramide toward ceramide (jatooratthawichot2020effectofexpression pages 6-9).</td>
+<td>Comparative pathway placement is biologically coherent, but no CG33090-specific lipidomic, genetic, or flux evidence currently establishes this role in flies.</td>
+</tr>
+<tr>
+<td>Substrate breadth cannot be predicted reliably from GH116 membership alone.</td>
+<td>GH116 family evidence / unknown</td>
+<td>Human GBA2 shows broad specificity for glucosylceramides with different lipid components and can act on bile-acid glucosides; GH116 enzymes as a whole accept chemically diverse glycosides (jatooratthawichot2020effectofexpression pages 1-3, pengthaisong2023reactionmechanismof pages 1-2).</td>
+<td>Annotation should retain “predicted glycosidase” and list glucosylceramide as a candidate substrate rather than an established substrate.</td>
+</tr>
+<tr>
+<td>No CG33090-specific biochemical or localization publication was found.</td>
+<td>Unknown</td>
+<td>Searches using CG33090, FBgn0028916, X2JE45, and the historical aliases found no publication reporting purified-enzyme activity, substrate specificity, localization, expression-linked mechanism, phenotype, or pathway assignment. The retrieved GH116 and GBA2 papers do not mention CG33090 (pengthaisong2023reactionmechanismof pages 1-2, jatooratthawichot2020effectofexpression pages 1-3).</td>
+<td>Functional and localization claims remain computational or comparative; absence of a retrieved publication is not proof that no unpublished or newly deposited evidence exists.</td>
+</tr>
+<tr>
+<td>Major experiments needed are recombinant-enzyme assays, catalytic-residue validation, lipidomics, and localization analysis.</td>
+<td>Unknown</td>
+<td>Priority tests include hydrolysis of structurally defined fly glucosylceramides and glucosylsphingosine; screening against soluble β-glucosides, xylosides, and β-<em>N</em>-acetylglucosaminides; product and stereochemistry analysis; catalytic carboxylate mutagenesis; endogenous tagging and membrane-topology studies; and CG33090 knockout/rescue lipidomics. Human GBA2 assays used 3.5 mM 4MUG at pH 5.8 and 37 °C for 30 minutes, but such artificial-substrate activity alone would not establish physiological specificity (jatooratthawichot2020effectofexpression pages 14-16).</td>
+<td>These experiments are required to distinguish a GBA2-like glucosylceramidase from another GH116 glycosidase and to determine its actual cellular compartment and pathway role.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table separates verified CG33090 identity and domain information from GH116-family inference, human GBA2 analogy, and unresolved claims. It highlights why glucosylceramidase activity, membrane localization, and pathway placement remain hypotheses requiring direct experiments.</em></p>
+<h2 id="8-recent-developments-and-expert-interpretation">8. Recent developments and expert interpretation</h2>
+<p>The major 2023 advance was mechanistic rather than gene-specific: structural complexes and QM/MM simulations established GH116’s unusual perpendicular protonation geometry. This finding has implications for designing inhibitors that distinguish perpendicular-protonating GH116 enzymes such as GBA2 from conventional lateral protonators such as GBA1 (pengthaisong2023reactionmechanismof pages 1-2).</p>
+<p>A 2023 review of glycoside hydrolases and the 2023 mechanistic work also reinforce that GH116 comprises subfamilies with distinct substrate preferences. This makes domain-only annotation inadequate for assigning the physiological substrate of CG33090. No 2023–2024 primary study directly characterizing CG33090 was retrieved.</p>
+<p>The appropriate expert interpretation is therefore conservative: <strong>the domain evidence is strong for catalytic class, moderate for retaining GH116 chemistry, but weak for a GBA2-specific substrate and weak for any cellular localization or physiological pathway</strong>. An InterPro hit to “non-lysosomal glucosylceramidase” should be treated as a homology-derived hypothesis, not equivalent to biochemical validation.</p>
+<h2 id="9-current-applications-and-real-world-relevance">9. Current applications and real-world relevance</h2>
+<p>There is no known CG33090-specific clinical, industrial, or biotechnology implementation. Its current value is principally as:</p>
+<ol>
+<li>a candidate fly enzyme for comparative sphingolipid biology;</li>
+<li>a possible model for evolution of metazoan GH116/GBA2 proteins;</li>
+<li>a target for testing whether GH116 catalytic architecture necessarily predicts lipid-glycoside activity; and</li>
+<li>a potential genetic system for evaluating selective GH116 probes or inhibitors, once substrate specificity is established.</li>
+</ol>
+<p>Broader GH116 research has practical relevance to selective inhibitor design, glycosidase chemical biology, glycosynthase engineering, and lipid-metabolism studies, but these applications cannot yet be attributed specifically to CG33090 (pengthaisong2023reactionmechanismof pages 1-2, jatooratthawichot2020effectofexpression pages 1-3).</p>
+<h2 id="10-experiments-required-for-definitive-annotation">10. Experiments required for definitive annotation</h2>
+<p>The highest-priority experiments are:</p>
+<ol>
+<li><strong>Sequence/structure validation:</strong> align CG33090 to characterized GH116 enzymes, identify candidate nucleophile and acid/base residues, and assess preservation of substrate-pocket residues.</li>
+<li><strong>Purified-enzyme assays:</strong> test structurally defined <em>Drosophila</em> glucosylceramides and glucosylsphingosine, alongside soluble β-glucosides, β-xylosides, and β-<em>N</em>-acetylglucosaminides.</li>
+<li><strong>Product confirmation:</strong> use LC–MS to demonstrate ceramide and glucose production and determine kinetic constants across lipid acyl chains.</li>
+<li><strong>Mechanistic validation:</strong> mutate the predicted catalytic carboxylates and measure loss of activity; establish retention of anomeric configuration.</li>
+<li><strong>Localization:</strong> endogenously tag CG33090, combine microscopy with ER/Golgi/endosome markers, and use membrane extraction or protease-protection assays to determine peripheral association and topology.</li>
+<li><strong>In-vivo pathway testing:</strong> perform CG33090 knockout and rescue followed by targeted glucosylceramide, glucosylsphingosine, ceramide, and sphingomyelin lipidomics.</li>
+<li><strong>Physiological specificity:</strong> use tissue-restricted perturbation only after biochemical function is established, avoiding interpretation of broad phenotypes as proof of the primary reaction.</li>
+</ol>
+<h2 id="final-annotation-recommendation">Final annotation recommendation</h2>
+<p><strong>Recommended name:</strong> “Predicted GH116-family glycoside hydrolase.”<br />
+<strong>Permissible note:</strong> “Contains GH116_N and GH116 catalytic domains; potentially related to non-lysosomal glucosylceramidases.”<br />
+<strong>Do not yet assign as established:</strong> non-lysosomal glucosylceramidase/GBA2, EC 3.2.1.45, glucosylceramide as physiological substrate, ER/Golgi/endosomal localization, or a defined glycosphingolipid pathway role.</p>
+<h3 id="principal-literature">Principal literature</h3>
+<ul>
+<li>Pengthaisong S. et al. <strong>Reaction Mechanism of Glycoside Hydrolase Family 116 Utilizes Perpendicular Protonation.</strong> <em>ACS Catalysis</em> 13, 5850–5863. Published April 2023. <a href="https://doi.org/10.1021/acscatal.3c00620">https://doi.org/10.1021/acscatal.3c00620</a> (pengthaisong2023reactionmechanismof pages 1-2)</li>
+<li>Jatooratthawichot P. et al. <strong>Effect of Expression of Human Glucosylceramidase 2 Isoforms on Lipid Profiles in COS-7 Cells.</strong> <em>Metabolites</em> 10, 488. Published November 2020. <a href="https://doi.org/10.3390/metabo10120488">https://doi.org/10.3390/metabo10120488</a> (jatooratthawichot2020effectofexpression pages 1-3, jatooratthawichot2020effectofexpression pages 6-9, jatooratthawichot2020effectofexpression pages 14-16)</li>
+</ul>
+<p>Overall, CG33090 is a well-supported <strong>GH116-domain protein</strong> but remains an experimentally <strong>uncharacterized Drosophila enzyme</strong>. Its proposed glucosylceramidase activity and membrane-associated sphingolipid role are useful, testable hypotheses—not established functional annotations.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(pengthaisong2023reactionmechanismof pages 1-2): Salila Pengthaisong, Beatriz Piniello, Gideon J. Davies, Carme Rovira, and James R. Ketudat Cairns. Reaction mechanism of glycoside hydrolase family 116 utilizes perpendicular protonation. ACS Catalysis, 13:5850-5863, Apr 2023. URL: https://doi.org/10.1021/acscatal.3c00620, doi:10.1021/acscatal.3c00620. This article has 29 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jatooratthawichot2020effectofexpression pages 1-3): Peeranat Jatooratthawichot, Chutima Talabnin, Lukana Ngiwsara, Yepy Hardi Rustam, Jisnuson Svasti, Gavin E. Reid, and James R. Ketudat Cairns. Effect of expression of human glucosylceramidase 2 isoforms on lipid profiles in cos-7 cells. Nov 2020. URL: https://doi.org/10.3390/metabo10120488, doi:10.3390/metabo10120488. This article has 10 citations.</p>
+</li>
+<li>
+<p>(jatooratthawichot2020effectofexpression pages 14-16): Peeranat Jatooratthawichot, Chutima Talabnin, Lukana Ngiwsara, Yepy Hardi Rustam, Jisnuson Svasti, Gavin E. Reid, and James R. Ketudat Cairns. Effect of expression of human glucosylceramidase 2 isoforms on lipid profiles in cos-7 cells. Nov 2020. URL: https://doi.org/10.3390/metabo10120488, doi:10.3390/metabo10120488. This article has 10 citations.</p>
+</li>
+<li>
+<p>(kim2021studiestowardsfinding pages 13-17): J Kim. Studies towards finding selective substrates for human β-glucosidases. Unknown journal, 2021.</p>
+</li>
+<li>
+<p>(jatooratthawichot2020effectofexpression pages 6-9): Peeranat Jatooratthawichot, Chutima Talabnin, Lukana Ngiwsara, Yepy Hardi Rustam, Jisnuson Svasti, Gavin E. Reid, and James R. Ketudat Cairns. Effect of expression of human glucosylceramidase 2 isoforms on lipid profiles in cos-7 cells. Nov 2020. URL: https://doi.org/10.3390/metabo10120488, doi:10.3390/metabo10120488. This article has 10 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="CG33090-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>pengthaisong2023reactionmechanismof pages 1-2</li>
+<li>jatooratthawichot2020effectofexpression pages 1-3</li>
+<li>kim2021studiestowardsfinding pages 13-17</li>
+<li>jatooratthawichot2020effectofexpression pages 6-9</li>
+<li>jatooratthawichot2020effectofexpression pages 14-16</li>
+<li>10.1021/acscatal.3c00620</li>
+<li>https://doi.org/10.1021/acscatal.3c00620</li>
+<li>https://doi.org/10.3390/metabo10120488</li>
+<li>https://doi.org/10.1021/acscatal.3c00620](https://doi.org/10.1021/acscatal.3c00620</li>
+<li>https://doi.org/10.3390/metabo10120488](https://doi.org/10.3390/metabo10120488</li>
+<li>https://doi.org/10.1021/acscatal.3c00620,</li>
+<li>https://doi.org/10.3390/metabo10120488,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CG33090-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="X2JE45" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="cg33090-evidence-notes">CG33090 evidence notes</h1>
+<p>X2JE45 is native PC (799 aa) of <a href="https://flybase.org/reports/FBgn0028916">FBgn0028916</a>, distinct from PB/Q7KT91 (948 aa), PD/X2J9U5 (946 aa), and PE/X2JAF7 (923 aa). All two GOA rows attached to the exact accession are reviewed. The benchmark did not accidentally substitute a foreign sequence.</p>
+<p>The <a href="CG33090-bioinformatics/RESULTS.md">reproducible analysis</a> finds PC residues 29–799 identical to PB residues 178–948, with catalytic E362/D575 retained. Both independent MAFFT strategies recover those sites. The alteration overlaps the N-terminal GH116 domain, which is a specific reason to investigate native PC activity rather than simply accept or reject a family-derived name.</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/25344605">PMID:25344605</a>(https://doi.org/10.1074/jbc.M114.593376) experimentally establishes human E527/D677 as the catalytic pair. Its abstract is cached; the primary full-text search result supplies the precise residue designation. <a href="https://pubmed.ncbi.nlm.nih.gov/33261081">PMID:33261081</a>(https://pmc.ncbi.nlm.nih.gov/articles/PMC7761373/) is cached with full text and reports: “Thus, all human GBA2 isoforms were expressed but only isoform 1 clearly hydrolyzed the MUG substrate.” The tested N-terminal human alterations are not the same as PC. They demonstrate the importance of considering the whole isoform, not that PC must be inactive. The broad glycosyl-hydrolase prediction is UNC for this sequence.</p>
+<p>The ancillary ProtNLM name points to non-lysosomal glucosylceramidase and its locations to ER/Golgi membranes. These are reasonable family-context leads for the longer protein, but their PC-specific relevance depends on protein folding and localization; mammalian bile-acid metabolism is not transferred to a fly protein. The original name, scores, locations and donors remain intact in CG33090-predictions-source.json.</p>
+<p>Falcon completed in 343.06 seconds and was inspected. It independently identified the human isoform-activity study PMID:33261081 as relevant, but did not compare the exact 799-residue native PC sequence with the longer fly PB product. Its broad family-level glycosidase discussion is therefore supplemented by the explicit native-isoform analysis. The unresolved verdict concerns this target's altered N-terminal architecture, not an automatic demand for direct fly assays before accepting conserved functions.</p>
+            </div>
+        </details>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioinformatics Results</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RESULTS.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="X2JE45" data-a="DOC: Bioinformatics Results" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="cg33090-native-isoform-and-catalytic-site-comparison">CG33090 native isoform and catalytic-site comparison</h1>
+<p>The benchmark protein X2JE45 is the native 799-residue PC isoform, not the 948-residue PB protein Q7KT91. PC has a distinct 28-residue N-terminus followed by a 771-residue sequence identical to PB residues 178–948. Thus PB residues 1–177 are replaced by PC residues 1–28; this is not a simple catalytic-site substitution.</p>
+<p>Both global and local MAFFT alignments map human GBA2 Glu527 to PC Glu362 and Asp677 to PC Asp575 (PB Glu511 and Asp724). The catalytic nucleophile and acid/base residue types are retained. These site identities support GH116 catalytic potential but do not establish that the shortened native isoform is active.</p>
+<p>The alteration overlaps the beginning of PB's annotated GH116 N-terminal domain (132–445), while the shared C-terminal sequence includes its catalytic domain (505–937). PB position 132 aligns to a gap in PC; PB positions 445, 505 and 937 map to PC positions 296, 356 and 788. N-terminal-domain integrity is therefore a specific uncertainty distinct from the retained active-site chemistry.</p>
+<h2 id="evidence-and-interpretation">Evidence and interpretation</h2>
+<p>Human GBA2 Glu527/Asp677 were experimentally identified by mutagenesis, substrate hydrolysis, azide rescue and activity-based labeling in <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4271221/">Kallemeijn et al. 2014, PMID:25344605</a>, <a href="https://doi.org/10.1074/jbc.M114.593376">DOI:10.1074/jbc.M114.593376</a>. The publication cache has its abstract; the site-specific results were verified in the primary full-text search result. Neither experiment assayed Drosophila PC.</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/33261081">PMID:33261081</a>(https://pmc.ncbi.nlm.nih.gov/articles/PMC7761373/), <a href="https://doi.org/10.3390/metabo10120488">DOI:10.3390/metabo10120488</a>, is cached with full text. Expressed human alternative isoforms, including N-terminal-domain variants, showed background-like glucoside hydrolysis despite detectable protein; only isoform 1 changed glucosylceramide/ceramide levels substantially. This demonstrates that retaining a nominal catalytic domain is insufficient across GBA2 isoforms. The human changes are not identical to fly PC and do not prove PC inactive.</p>
+<p>The exact PC hydrolase claim is consequently unresolved pending an isoform-resolved activity or convincing fold analysis. The conserved long C-terminal sequence argues against declaring a pseudoenzyme solely from this comparison. This work provides no evidence of a wrong input sequence: PC is a native annotated protein.</p>
+<h2 id="reproduction-and-controls">Reproduction and controls</h2>
+<p>Run <code>just</code> in this directory. Dependencies are Biopython 1.85 (locked with uv) and MAFFT 7.526. The workflow extracts immutable benchmark UniProt JSON and separately downloaded reference Swiss-Prot sequences, computes independent G-INS-i (<code>--globalpair --maxiterate 1000</code>) and L-INS-i (<code>--localpair --maxiterate 1000</code>) alignments, maps supplied reference sites, and independently computes exact common suffixes without alignment. Input FASTA, alignment files/logs, hashes and numeric JSON results are in <code>inputs/</code> and <code>outputs/</code>.</p>
+<p>Inputs: frozen X2JE45 record in <code>../CG33090-uniprot-source.json</code>; <a href="https://rest.uniprot.org/uniprotkb/Q7KT91.txt">Q7KT91 PB</a> and <a href="https://rest.uniprot.org/uniprotkb/Q9HCG7.txt">Q9HCG7 human GBA2</a>, preserved as adjacent <code>CG33090-reference-*-uniprot.txt</code> files. Native isoform assignment is independently recorded in the local FlyBase report for <a href="https://flybase.org/reports/FBgn0028916">FBgn0028916</a>.</p>
+<ul>
+<li>[x] Scripts accept input/output paths, reference IDs and positions as arguments; biological conclusions are confined to this report.</li>
+<li>[x] The mapping script was exercised with the different human reference and the fly PB reference; the human self-map is exact, while the PB comparison checks a native alternate protein.</li>
+<li>[x] Both alignment strategies completed and agree on both catalytic-site mappings.</li>
+<li>[x] Raw inputs, computed outputs, logs and dependency lock are retained.</li>
+<li>[x] Interpretation distinguishes observed sequence differences, inferred structural risk, and unmeasured activity.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: X2JE45
+gene_symbol: CG33090
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:7227
+  label: Drosophila melanogaster
+description: CG33090 encodes GBA2-family glycoside hydrolase proteins related to non-lysosomal glucosylceramidases.
+  Its 799-residue PC isoform has a distinct shortened N-terminus and shares a 771-residue C-terminal sequence
+  with the longer PB isoform. PC retains the conserved GH116 catalytic nucleophile and acid/base residues,
+  while the effect of its altered N-terminal domain on glucoside hydrolysis and lipid metabolism remains
+  unresolved.
+existing_annotations:
+- term:
+    id: GO:0004553
+    label: hydrolase activity, hydrolyzing O-glycosyl compounds
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  supporting_entities:
+  - InterPro:IPR006775
+  review:
+    action: UNDECIDED
+    summary: The exact target is native PC (X2JE45), which differs from the longer PB isoform in its N-terminal
+      GH116 region.
+    reason: The exact target is native PC (X2JE45), which differs from the longer PB isoform in its N-terminal
+      GH116 region. Its conserved catalytic Glu362 and Asp575 support hydrolase potential, but 177 PB
+      N-terminal residues are replaced by a distinct 28-residue segment. Primary human GBA2 isoform experiments
+      show that N-terminal alterations can abolish activity despite expression. Those changes are not
+      identical to fly PC, so neither catalytic activity nor inactivity is established for this particular
+      isoform; an isoform-resolved assay is needed.
+    supported_by:
+    - &amp;id001
+      reference_id: file:DROME/CG33090/CG33090-bioinformatics/RESULTS.md
+      supporting_text: Both global and local MAFFT alignments map human GBA2 Glu527 to PC Glu362 and Asp677
+        to PC Asp575 (PB Glu511 and Asp724). The catalytic nucleophile and acid/base residue types are
+        retained.
+    - &amp;id002
+      reference_id: file:DROME/CG33090/CG33090-bioinformatics/RESULTS.md
+      supporting_text: PC has a distinct 28-residue N-terminus followed by a 771-residue sequence identical
+        to PB residues 178–948.
+    - &amp;id003
+      reference_id: PMID:33261081
+      supporting_text: Thus, all human GBA2 isoforms were expressed but only isoform 1 clearly hydrolyzed
+        the MUG substrate.
+- term:
+    id: GO:0005975
+    label: carbohydrate metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  supporting_entities:
+  - InterPro:IPR008928
+  - InterPro:IPR012341
+  review:
+    action: UNDECIDED
+    summary: The exact target is native PC (X2JE45), which differs from the longer PB isoform in its N-terminal
+      GH116 region.
+    reason: The exact target is native PC (X2JE45), which differs from the longer PB isoform in its N-terminal
+      GH116 region. Its conserved catalytic Glu362 and Asp575 support hydrolase potential, but 177 PB
+      N-terminal residues are replaced by a distinct 28-residue segment. Primary human GBA2 isoform experiments
+      show that N-terminal alterations can abolish activity despite expression. Those changes are not
+      identical to fly PC, so neither catalytic activity nor inactivity is established for this particular
+      isoform; an isoform-resolved assay is needed.
+    supported_by:
+    - *id001
+    - *id002
+    - *id003
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: file:DROME/CG33090/CG33090-bioinformatics/RESULTS.md
+  title: DROME/CG33090/CG33090-bioinformatics/RESULTS.md
+  findings: []
+- id: PMID:33261081
+  title: Effect of Expression of Human Glucosylceramidase 2 Isoforms on Lipid Profiles in COS-7 Cells.
+  full_text_unavailable: false
+  findings: []
+core_functions: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

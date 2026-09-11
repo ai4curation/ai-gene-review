@@ -1,0 +1,2573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>uap1.S - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>uap1.S</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q6DCZ6" target="_blank" class="term-link">
+                        Q6DCZ6
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Xenopus laevis</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "uap1.S";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">3</span> Annotations</a>
+
+
+
+        <a href="#review-research" title="Deep research and hypothesis research reports"><span class="nav-count">1</span> Research</a>
+
+
+
+
+
+        <a href="#review-core-functions" title="Core biological functions"><span class="nav-count">1</span> Core Function</a>
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">7</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">2</span> Documents</a>
+
+
+
+
+
+
+
+
+
+        <a href="#review-questions" title="Suggested questions for experts"><span class="nav-count">1</span> Questions</a>
+
+
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q6DCZ6" data-a="DESCRIPTION: Xenopus laevis uap1.S encodes a UDP-N-acetylhexosa..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Xenopus laevis uap1.S encodes a UDP-N-acetylhexosamine pyrophosphorylase that is predicted to convert UTP and N-acetylglucosamine-1-phosphate to UDP-N-acetylglucosamine. This reaction supplies an activated sugar nucleotide for cellular glycosylation pathways. The complete UAP-like architecture and conserved nucleotide-sugar contacts support the assignment; the relative GlcNAc and GalNAc substrate preferences of the frog protein have not been measured.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003977" target="_blank" class="term-link">
+                                    GO:0003977
+                                </a>
+                            </span>
+                            <span class="term-label">UDP-N-acetylglucosamine diphosphorylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6DCZ6" data-a="GO:0003977" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The complete UAP1-like sequence preserves the annotated human nucleotide-sugar contacts, and recombinant human/fungal orthologs establish UDP-GlcNAc pyrophosphorylase activity. This supports the specific reaction as an evolutionary inference for the frog product.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9603950" target="_blank" class="term-link">
+                                        PMID:9603950
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">All the recombinant ScUap1p,
+CaUap1p, and HsUap1p possessed UDP-N-acetylglucosamine pyrophosphorylase
+activities in vitro.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9603950" target="_blank" class="term-link">
+                                        PMID:9603950
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The yeast Uap1p utilized N-acetylglucosamine-1-phosphate as
+the substrate</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:XENLA/uap1.S/uap1.S-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">| 1–453 | 1–453 | 342 |</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006048" target="_blank" class="term-link">
+                                    GO:0006048
+                                </a>
+                            </span>
+                            <span class="term-label">UDP-N-acetylglucosamine biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q6DCZ6" data-a="GO:0006048" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Producing UDP-GlcNAc from GlcNAc-1-phosphate and UTP directly contributes to UDP-GlcNAc biosynthesis. The intact UAP-like sequence supports this reaction-level pathway annotation without assigning every downstream glycosylation process.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9603950" target="_blank" class="term-link">
+                                        PMID:9603950
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">All the recombinant ScUap1p,
+CaUap1p, and HsUap1p possessed UDP-N-acetylglucosamine pyrophosphorylase
+activities in vitro.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9603950" target="_blank" class="term-link">
+                                        PMID:9603950
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The yeast Uap1p utilized N-acetylglucosamine-1-phosphate as
+the substrate</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:XENLA/uap1.S/uap1.S-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">| 1–453 | 1–453 | 342 |</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070569" target="_blank" class="term-link">
+                                    GO:0070569
+                                </a>
+                            </span>
+                            <span class="term-label">uridylyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q6DCZ6" data-a="GO:0070569" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Uridylyltransferase activity is correct but broader than the sequence-supported UAP1 substrate-specific reaction. Use UDP-N-acetylglucosamine diphosphorylase activity.
+                        </div>
+
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003977" target="_blank" class="term-link">
+                                    UDP-N-acetylglucosamine diphosphorylase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9603950" target="_blank" class="term-link">
+                                        PMID:9603950
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">All the recombinant ScUap1p,
+CaUap1p, and HsUap1p possessed UDP-N-acetylglucosamine pyrophosphorylase
+activities in vitro.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:XENLA/uap1.S/uap1.S-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">| 1–453 | 1–453 | 342 |</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section" id="review-core-functions">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Synthesizes UDP-N-acetylglucosamine from UTP and N-acetylglucosamine-1-phosphate, inferred from conserved UAP1 sequence and ortholog enzymology.</h3>
+                <span class="vote-buttons" data-g="Q6DCZ6" data-a="FUNCTION: Synthesizes UDP-N-acetylglucosamine from UTP and N..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003977" target="_blank" class="term-link">
+                            UDP-N-acetylglucosamine diphosphorylase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006048" target="_blank" class="term-link">
+                                UDP-N-acetylglucosamine biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9603950" target="_blank" class="term-link">
+                                PMID:9603950
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">All the recombinant ScUap1p,
+CaUap1p, and HsUap1p possessed UDP-N-acetylglucosamine pyrophosphorylase
+activities in vitro.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9603950" target="_blank" class="term-link">
+                                PMID:9603950
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The yeast Uap1p utilized N-acetylglucosamine-1-phosphate as
+the substrate</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:XENLA/uap1.S/uap1.S-bioinformatics/RESULTS.md
+
+                        </span>
+
+                        <div class="finding-text">| 1–453 | 1–453 | 342 |</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11707391" target="_blank" class="term-link">
+                                PMID:11707391
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">we
+have solved the crystal structures of AGX1 and AGX2 in complexes with UDPGlcNAc</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9603950" target="_blank" class="term-link">
+                            PMID:9603950
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The eukaryotic UDP-N-acetylglucosamine pyrophosphorylases. Gene cloning, protein expression, and catalytic mechanism.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Fungal and human UAP1 proteins have directly measured UDP-GlcNAc pyrophosphorylase activity and complement a yeast UAP1 deficiency.</div>
+
+                        <div class="finding-text">"All the recombinant ScUap1p,
+CaUap1p, and HsUap1p possessed UDP-N-acetylglucosamine pyrophosphorylase
+activities in vitro."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The founding UAP1 study establishes the N-acetylglucosamine phosphosugar substrate, distinguishing it from UDP-glucose pyrophosphorylase.</div>
+
+                        <div class="finding-text">"The yeast Uap1p utilized N-acetylglucosamine-1-phosphate as
+the substrate"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:XENLA/uap1.S/uap1.S-bioinformatics/RESULTS.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Frog-human UAP1 sequence and nucleotide-sugar contact mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:XENLA/uap1.S/uap1.S-ugp-prediction-donor.json
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt record identifying the UDP-glucose pyrophosphorylase donor</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:XENLA/uap1.S/uap1.S-protnlm-source.json
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Frozen exact-input ProtNLM output and UniProt sequence for Q6DCZ6</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11707391" target="_blank" class="term-link">
+                            PMID:11707391
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Crystal structures of two human pyrophosphorylase isoforms in complexes with UDPGlc(Gal)NAc: role of the alternatively spliced insert in the enzyme oligomeric assembly and active site architecture.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human UAP1 structures establish nucleotide-sugar contacts and isoform-dependent architecture; conservation is mapped explicitly to frog Uap1.S.</div>
+
+                        <div class="finding-text">"we
+have solved the crystal structures of AGX1 and AGX2 in complexes with UDPGlcNAc"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section" id="review-questions">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the relative GlcNAc-1-phosphate and GalNAc-1-phosphate catalytic efficiencies of frog Uap1.S?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q6DCZ6" data-a="Q: What are the relative GlcNAc-1-phosphate and GalNA..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section" id="review-research">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(uap1.S-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q6DCZ6" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *Xenopus laevis* **uap1.S** (UniProt Q6DCZ6)</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">23 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-10T14:59:46.536137</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="uap1.S-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="functional-annotation-report-xenopus-laevis-uap1s-uniprot-q6dcz6">Functional Annotation Report: <em>Xenopus laevis</em> <strong>uap1.S</strong> (UniProt Q6DCZ6)</h1>
+<h2 id="executive-conclusion">Executive conclusion</h2>
+<p>The gene symbol <strong>uap1.S</strong> is potentially ambiguous in cross-species searches, and literature is limited for this specific protein. Based on the supplied UniProt/Xenbase record, Q6DCZ6 is the <em>Xenopus laevis</em> short-homeolog/provisional product <strong>Uap1-prov</strong>, not a UDP-glucose pyrophosphorylase and not a UAP1 protein from another organism. Its UDPGP type-1-family assignment and UDP-sugar-pyrophosphorylase domains are consistent with a <strong>UDP-N-acetylglucosamine pyrophosphorylase</strong>. However, no publication directly characterizing Q6DCZ6 enzymatically, structurally, genetically, or by cellular imaging was retrieved.</p>
+<p>The most defensible primary annotation is therefore an orthology/domain-based prediction: <strong>Q6DCZ6 probably catalyzes the terminal reversible reaction of the hexosamine biosynthesis pathway (HBP), UTP + N-acetylglucosamine-1-phosphate ⇌ UDP-N-acetylglucosamine + pyrophosphate, most likely in the cytosol.</strong> GlcNAc-1-phosphate is the strongest predicted phosphosugar substrate. Activity toward GalNAc-1-phosphate is plausible from vertebrate UAP1 biology but remains unverified for Q6DCZ6.</p>
+<table>
+<thead>
+<tr>
+<th>Annotation question</th>
+<th>Best-supported conclusion</th>
+<th>Evidence type and organism</th>
+<th>Confidence and caveat</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Exact identity</td>
+<td>Q6DCZ6 corresponds to the provisionally named <strong>uap1.S / uap1-prov</strong> protein of <em>Xenopus laevis</em>. The supplied record assigns it to the UDPGP type-1 family and identifies nucleotide-diphosphosugar transferase, UDP-sugar pyrophosphorylase, UDPGP-family, and PF01704 domains. It should not be confused with UDP-glucose pyrophosphorylase.</td>
+<td>User-provided UniProt and Xenbase record-level annotation; published work distinguishes UAP1 from UGP and other nucleotide-sugar pyrophosphorylases (mio1998theeukaryoticudpnacetylglucosamine pages 2-2)</td>
+<td><strong>High for record identity; moderate for functional interpretation.</strong> The protein description is provisional, and no publication specific to Q6DCZ6 was retrieved.</td>
+</tr>
+<tr>
+<td>Catalytic reaction</td>
+<td>Most likely catalyzes the reversible terminal hexosamine-pathway reaction: <strong>UTP + N-acetylglucosamine-1-phosphate ⇌ UDP-N-acetylglucosamine + pyrophosphate</strong>.</td>
+<td>Orthology and domain inference supported by direct fungal UAP1 biochemistry and established human UAP1 function (paneque2023thehexosaminebiosynthesis pages 9-10, fang2013geneticandstructural pages 1-2, maruyama2007crystalstructureof pages 1-1)</td>
+<td><strong>High-confidence inference, not direct frog evidence.</strong> Catalytic activity has not been demonstrated experimentally for Q6DCZ6.</td>
+</tr>
+<tr>
+<td>Substrate specificity</td>
+<td>The best-supported predicted substrates are <strong>GlcNAc-1-P</strong> and <strong>UTP</strong>. Activity toward GalNAc-1-P is plausible for a vertebrate UAP1-like enzyme but cannot be assigned to Q6DCZ6 without an assay. Human AGX1 is 2–3-fold more active with GalNAc-1-P, whereas AGX2 favors GlcNAc-1-P.</td>
+<td>Human isoform biochemistry and fungal substrate-specificity experiments; <em>Aspergillus fumigatus</em> UAP1 selectively uses GlcNAc-1-P (paneque2023thehexosaminebiosynthesis pages 9-10, fang2013geneticandstructural pages 1-2)</td>
+<td><strong>High for GlcNAc-1-P as the predicted primary phosphosugar; low-to-moderate for GalNAc-1-P.</strong> Human splice-isoform behavior must not be assumed for Q6DCZ6.</td>
+</tr>
+<tr>
+<td>Catalytic mechanism</td>
+<td>Expected to use an induced-fit, divalent-cation-assisted <strong>SN2-type uridylyl transfer</strong> in which a GlcNAc-1-P phosphate oxygen attacks the UTP α-phosphate. Conserved eukaryotic UAP lysine residues help coordinate phosphate groups.</td>
+<td>Direct crystallographic and biochemical evidence from <em>Candida albicans</em> and <em>A. fumigatus</em> UAP1 (raimi2020amechanisminspiredudpnacetylglucosamine pages 1-2, maruyama2007crystalstructureof pages 1-1, maruyama2007crystalstructureof pages 1-2)</td>
+<td><strong>Moderate-to-high evolutionary inference.</strong> Conservation of the complete catalytic residue set in Q6DCZ6 was not independently verified.</td>
+</tr>
+<tr>
+<td>Cellular localization</td>
+<td>The reaction most likely occurs in the <strong>cytosol</strong>, generating UDP-GlcNAc for cytosolic and nuclear pathways or subsequent transport into the ER and Golgi.</td>
+<td>Vertebrate pathway-topology inference; direct cytoplasmic localization has been reported for rice UAP proteins, not Q6DCZ6 (chen2024hexosaminebiosynthesisand pages 5-6, sosicka2019therapeuticmonosaccharideslooking pages 1-2, wang2021udpnacetylglucosaminepyrophosphorylase2 pages 1-2)</td>
+<td><strong>Moderate.</strong> No direct microscopy, tagging, or fractionation evidence was found for <em>X. laevis</em> uap1.S.</td>
+</tr>
+<tr>
+<td>Biochemical pathway</td>
+<td>Predicted to perform the fourth and final reaction of the <strong>hexosamine biosynthesis pathway</strong>, downstream of GFAT, GNPNAT or GNA1, and PGM3 or AGM1. It may also process GlcNAc-1-P derived from salvage metabolism.</td>
+<td>Current pathway review and direct UAP1 enzymology in other eukaryotes (raimi2020amechanisminspiredudpnacetylglucosamine pages 1-2, paneque2023thehexosaminebiosynthesis pages 9-10, sosicka2019therapeuticmonosaccharideslooking pages 4-5, paneque2023thehexosaminebiosynthesis pages 1-3)</td>
+<td><strong>High-confidence orthology and pathway inference.</strong> Frog-specific metabolic-flux evidence is unavailable.</td>
+</tr>
+<tr>
+<td>Biological processes</td>
+<td>By producing UDP-GlcNAc, Q6DCZ6 is predicted to support cytosolic and nuclear <strong>O-GlcNAcylation</strong>, ER and Golgi <strong>N-glycosylation</strong>, glycolipid and GPI-anchor synthesis, and glycosaminoglycan production.</td>
+<td>Established mammalian and eukaryotic UDP-GlcNAc biology and pathway compartmentation (paneque2023thehexosaminebiosynthesis pages 10-12, paneque2023thehexosaminebiosynthesis pages 1-3, chen2024hexosaminebiosynthesisand pages 5-6)</td>
+<td><strong>Moderate-to-high for biochemical contribution; low for frog-specific phenotypes.</strong> Product supply does not prove that Q6DCZ6 directly regulates every downstream process.</td>
+</tr>
+<tr>
+<td>Biological importance</td>
+<td>UAP enzymes are essential or strongly required for survival and morphogenesis in several non-vertebrate systems, but essentiality or a developmental role cannot currently be assigned specifically to <em>X. laevis</em> uap1.S.</td>
+<td>Direct conditional-genetic evidence in <em>A. fumigatus</em> and loss-and-rescue studies in rice (wang2021udpnacetylglucosaminepyrophosphorylase2 pages 1-2, fang2013geneticandstructural pages 1-2)</td>
+<td><strong>Low-to-moderate for extrapolation to Q6DCZ6.</strong> Organism-specific biology and possible <em>X. laevis</em> homeolog redundancy limit inference.</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>No validated application directly targets Q6DCZ6. Fungal UAP1 is under investigation as an antifungal target, and a mechanism-inspired UTP analogue inhibits fungal UAP1 at micromolar concentrations. Broader HBP manipulation is being studied in cancer, immunity, metabolic disease, and glycosylation disorders.</td>
+<td>Fungal structural pharmacology and recent pathway reviews (paneque2023thehexosaminebiosynthesis pages 10-12, paneque2023thehexosaminebiosynthesis pages 1-3, raimi2020amechanisminspiredudpnacetylglucosamine pages 1-2)</td>
+<td><strong>High that no Q6DCZ6-specific application was identified; moderate for broader translational relevance.</strong> Fungal inhibitor and disease-pathway findings are not frog-protein validation.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Evidence hierarchy for functional annotation of Xenopus laevis uap1.S/Q6DCZ6, separating record-level identity, direct ortholog experiments, and pathway-based inference. Confidence statements identify where frog-specific validation remains absent.</em></p>
+<h2 id="1-identity-verification-and-ambiguity-control">1. Identity verification and ambiguity control</h2>
+<p>The supplied record identifies:</p>
+<ul>
+<li><strong>Accession:</strong> UniProt Q6DCZ6</li>
+<li><strong>Organism:</strong> <em>Xenopus laevis</em> (African clawed frog)</li>
+<li><strong>Gene:</strong> <em>uap1.S</em>, with synonyms <em>uap1</em> and <em>uap1-prov</em></li>
+<li><strong>Description:</strong> provisional “Uap1-prov protein”</li>
+<li><strong>Family:</strong> UDPGP type 1</li>
+<li><strong>Domains:</strong> nucleotide-diphosphosugar transferase, UDP-sugar pyrophosphorylase, UDPGP family, and Pfam PF01704</li>
+</ul>
+<p>These attributes are internally consistent with a eukaryotic UAP/UAGPase enzyme. Published cloning work distinguishes UAP1/UDP-GlcNAc pyrophosphorylase from yeast UGP1/UDP-glucose pyrophosphorylase and from other nucleotide-sugar pyrophosphorylases, so the generic family label <strong>UDPGP</strong> must not be interpreted as proof that Q6DCZ6 primarily makes UDP-glucose (mio1998theeukaryoticudpnacetylglucosamine pages 2-2).</p>
+<p>No retrieved paper mentioned <strong>Q6DCZ6</strong>, <strong><em>X. laevis uap1.S</em></strong>, or <strong><em>uap1-prov</em></strong>. Consequently, the record-level identity can be accepted, but molecular-function details below are principally inferred from conserved domains and experimentally characterized orthologs. Findings for human, fungal, rice, or plant UAP1 are explicitly identified as such and are not presented as direct frog evidence.</p>
+<h2 id="2-predicted-primary-molecular-function">2. Predicted primary molecular function</h2>
+<h3 id="21-catalyzed-reaction">2.1 Catalyzed reaction</h3>
+<p>The predicted reaction is:</p>
+<p><strong>UTP + α-D-GlcNAc-1-phosphate ⇌ UDP-GlcNAc + pyrophosphate (PPi)</strong></p>
+<p>This is the fourth and terminal reaction of the canonical eukaryotic HBP. A 2023 review identifies human UAP1, also called GlcNAc-1-phosphate uridyltransferase, as the enzyme catalyzing this reversible conversion (publication: April 2023; https://doi.org/10.3390/genes14040933) (paneque2023thehexosaminebiosynthesis pages 9-10). Direct biochemical assays establish the same forward and reverse reactions for <em>Aspergillus fumigatus</em> UAP1, including direct detection of UDP-GlcNAc depletion and UTP formation during pyrophosphorolysis (publication: July 2013; https://doi.org/10.1111/mmi.12290) (fang2013geneticandstructural pages 1-2).</p>
+<p>Accordingly, Q6DCZ6 is best described as a <strong>predicted UDP-N-acetylglucosamine pyrophosphorylase/GlcNAc-1-phosphate uridylyltransferase</strong>, rather than merely a generic nucleotide-sugar transferase.</p>
+<h3 id="22-substrate-specificity">2.2 Substrate specificity</h3>
+<p><strong>High-confidence prediction:</strong> UTP is the nucleotide substrate and GlcNAc-1-phosphate is the principal phosphosugar substrate.</p>
+<p>The strongest direct specificity evidence comes from fungal UAP1: <em>A. fumigatus</em> AfUAP1 selectively preferred GlcNAc-1-phosphate over alternative sugar phosphates. Its measured Michaelis constants were <strong>34 ± 3 μM for GlcNAc-1-phosphate</strong> and <strong>21 ± 2 μM for UTP</strong>. UTP inhibited AfUAP1 above 1 mM, with <strong>Ki = 1.9 ± 0.2 mM</strong> (fang2013geneticandstructural pages 1-2). These values demonstrate the biochemical behavior of a fungal ortholog; they must not be assigned numerically to Q6DCZ6.</p>
+<p><strong>Possible secondary activity:</strong> Vertebrate UAP1 enzymes can process GalNAc-1-phosphate. Human UAP1 has two splice isoforms, AGX1 and AGX2, differing by a 17-residue insert. AGX1 is reported to be <strong>2–3-fold more active with GalNAc-1-phosphate</strong>, whereas AGX2 preferentially processes GlcNAc-1-phosphate (paneque2023thehexosaminebiosynthesis pages 9-10). The supplied frog record does not establish an equivalent splice form or the presence of the determinants responsible for this preference. Thus, UDP-GalNAc production should be annotated only as <strong>possible</strong>, pending direct testing.</p>
+<h3 id="23-catalytic-mechanism">2.3 Catalytic mechanism</h3>
+<p>Structural work on <em>Candida albicans</em> UAP1 supports an <strong>SN2-type uridylyl-transfer mechanism</strong>: a non-esterified oxygen of the GlcNAc-1-phosphate phosphate attacks the α-phosphate of UTP, displacing the β/γ phosphates as PPi. Ligand binding drives induced-fit closure of active-site loops. A conserved lysine coordinates product phosphate groups, while Mg²⁺ promotes catalysis and UTP binding through phosphate coordination (publication: June 2007; https://doi.org/10.1074/jbc.m611873200) (maruyama2007crystalstructureof pages 1-1, maruyama2007crystalstructureof pages 1-2).</p>
+<p>More recent <em>A. fumigatus</em> structures captured UDP-GlcNAc, PPi, and Mg²⁺ in a Michaelis-like complex and directly supported pyrophosphorolysis. The conserved fungal Lys437 was proposed to perform a role analogous to a second catalytic metal in bacterial orthologs (publication: March 2020; https://doi.org/10.1039/c9cb00017h) (raimi2020amechanisminspiredudpnacetylglucosamine pages 1-2). Q6DCZ6 probably shares this general fold and mechanism because of its family/domain assignment, but conservation of every catalytic residue was not independently verified here.</p>
+<h2 id="3-biochemical-pathway-and-biological-processes">3. Biochemical pathway and biological processes</h2>
+<h3 id="31-position-in-the-hexosamine-biosynthesis-pathway">3.1 Position in the hexosamine biosynthesis pathway</h3>
+<p>In the de novo HBP, glucose-derived fructose-6-phosphate and glutamine enter reactions catalyzed by GFAT, GNA1/GNPNAT, and AGM1/PGM3, producing GlcNAc-1-phosphate. UAP1 then performs terminal uridylylation using UTP. The pathway therefore integrates carbon, nitrogen, acetyl-CoA, and nucleotide availability into UDP-GlcNAc production (raimi2020amechanisminspiredudpnacetylglucosamine pages 1-2, sosicka2019therapeuticmonosaccharideslooking pages 4-5, paneque2023thehexosaminebiosynthesis pages 1-3).</p>
+<p>GlcNAc salvage can also supply substrate: NAGK phosphorylates recycled or exogenous GlcNAc to GlcNAc-6-phosphate, and PGM3 converts it to GlcNAc-1-phosphate before the UAP1 reaction. The same predicted Q6DCZ6 activity could therefore service both de novo and salvage-derived flux (paneque2023thehexosaminebiosynthesis pages 10-12, sosicka2019therapeuticmonosaccharideslooking pages 4-5).</p>
+<h3 id="32-consequences-of-udp-glcnac-production">3.2 Consequences of UDP-GlcNAc production</h3>
+<p>The immediate role of Q6DCZ6 is predicted to be <strong>metabolite production</strong>, not direct signaling. UDP-GlcNAc then acts as a donor or precursor for several systems:</p>
+<ol>
+<li><strong>O-GlcNAcylation:</strong> O-GlcNAc transferase uses UDP-GlcNAc to modify serine/threonine residues on cytosolic and nuclear proteins, coupling nutrient state to transcription, signaling, metabolism, and proteostasis (paneque2023thehexosaminebiosynthesis pages 1-3, chen2024hexosaminebiosynthesisand pages 5-6).</li>
+<li><strong>N-linked glycosylation:</strong> UDP-GlcNAc contributes to dolichol-linked N-glycan precursor assembly on the cytosolic face of the ER; later glycan processing occurs in the ER lumen and Golgi (paneque2023thehexosaminebiosynthesis pages 1-3, chen2024hexosaminebiosynthesisand pages 5-6).</li>
+<li><strong>Golgi glycan remodeling and branching:</strong> UDP-GlcNAc is transported into secretory-pathway compartments for glycosyltransferase reactions (paneque2023thehexosaminebiosynthesis pages 1-3, sosicka2019therapeuticmonosaccharideslooking pages 1-2).</li>
+<li><strong>GPI anchors, glycolipids, and glycosaminoglycans:</strong> UDP-GlcNAc supplies GlcNAc units to these glycoconjugate pathways (raimi2020amechanisminspiredudpnacetylglucosamine pages 1-2, paneque2023thehexosaminebiosynthesis pages 10-12).</li>
+</ol>
+<p>These are downstream uses of the product and should not be interpreted as evidence that Q6DCZ6 directly regulates every associated pathway. Its precise biochemical role is to maintain the relevant UDP-GlcNAc pool.</p>
+<h2 id="4-cellular-localization">4. Cellular localization</h2>
+<p>The most likely site of Q6DCZ6 activity is the <strong>cytosol</strong>, but confidence is moderate rather than definitive.</p>
+<p>Most nucleotide sugars are synthesized in the cytosol, and cytoplasmic UDP-GlcNAc is required directly for O-GlcNAcylation and hyaluronan synthesis. Nucleotide sugars needed in the ER or Golgi are subsequently transported across organelle membranes (sosicka2019therapeuticmonosaccharideslooking pages 1-2). Current pathway topology likewise places initial N-glycan assembly on the cytosolic face of the ER and O-GlcNAc utilization in the cytosol and nucleus, supporting a cytosol-accessible source of UDP-GlcNAc (chen2024hexosaminebiosynthesisand pages 5-6).</p>
+<p>Direct cytoplasmic localization has been reported for rice UAP1/UAP2, but that is non-vertebrate evidence and cannot by itself establish frog localization (wang2021udpnacetylglucosaminepyrophosphorylase2 pages 1-2). No fluorescent-tagging, immunolocalization, fractionation, or proteomic localization experiment specific to Q6DCZ6 was found. The appropriate annotation is therefore <strong>“predicted cytosolic”</strong>, not experimentally verified cytosolic.</p>
+<h2 id="5-biological-and-developmental-significance">5. Biological and developmental significance</h2>
+<p>No Q6DCZ6-specific knockout, knockdown, overexpression, rescue, or developmental-expression study was retrieved. A frog-specific developmental role therefore cannot presently be assigned.</p>
+<p>Across eukaryotes, however, the pathway is often indispensable because UDP-GlcNAc supports multiple forms of glycosylation. Conditional suppression of <em>A. fumigatus uap1</em> impaired survival, cell-wall synthesis, and morphogenesis (fang2013geneticandstructural pages 1-2). In rice, UAP1 loss causes lesion-mimic spots and early senescence, while UAP2 overexpression rescues the phenotype (wang2021udpnacetylglucosaminepyrophosphorylase2 pages 1-2). These experiments establish the biological importance of UAP enzymes in those organisms, but fungal chitin production and plant leaf survival are not direct models of <em>Xenopus</em> physiology.</p>
+<p>For <em>X. laevis</em>, the most conservative expectation is that uap1.S contributes broadly to glycoprotein maturation, intracellular O-GlcNAc signaling, extracellular-matrix glycan production, and membrane-protein biogenesis by supplying UDP-GlcNAc. Whether the <strong>.S homeolog</strong> is individually essential will depend on expression, dosage, and possible compensation by another <em>X. laevis</em> homeolog; no direct evidence resolving this was found.</p>
+<h2 id="6-recent-developments-and-expert-interpretation">6. Recent developments and expert interpretation</h2>
+<p>The most relevant recent authoritative sources are pathway reviews rather than studies of the frog protein itself.</p>
+<ul>
+<li><strong>Paneque et al., April 2023</strong>, reviewed mammalian HBP regulation and emphasized that UDP-GlcNAc production integrates glucose, glutamine, acetyl-CoA, and UTP availability. The review also describes regulation of human UAP1: UAP1 mRNA decreases after SIN1 disruption, suggesting mTORC2-linked control, and Fbxl17 binding may inhibit UAP1 phosphorylation/activity. Fbxl17 loss increases global O-GlcNAcylation in breast-cancer cells, although this remains indirect evidence of altered UAP1 output rather than a validated therapeutic mechanism. https://doi.org/10.3390/genes14040933 (paneque2023thehexosaminebiosynthesis pages 9-10).</li>
+<li><strong>Chen and Cheng, March 2024</strong>, reviewed HBP/glycosylation interconnections and reinforced the conserved terminal UAP reaction, divalent-cation dependence, human AGX1/AGX2 substrate differences, and compartmental uses of UDP-GlcNAc. The review is plant-centered, so it is useful for conserved biochemistry but not direct vertebrate functional annotation. https://doi.org/10.3389/fpls.2024.1349064 (chen2024hexosaminebiosynthesisand pages 5-6).</li>
+</ul>
+<p>The expert-level interpretation is that family/domain conservation makes the core Q6DCZ6 enzyme assignment strong, whereas substrate breadth, kinetic constants, expression pattern, homeolog-specific necessity, and localization remain open experimental questions.</p>
+<h2 id="7-applications-and-real-world-implementation">7. Applications and real-world implementation</h2>
+<p>There is <strong>no validated diagnostic, therapeutic, agricultural, or biotechnology application specific to Q6DCZ6</strong>.</p>
+<p>The clearest direct UAP1 application is antifungal target discovery. Fungal UAP1 is essential for chitin-supported cell-wall biology, and fungal versus human active-site differences may permit selective inhibition. A mechanism-inspired UTP analogue, meUTP, inhibited <em>A. fumigatus</em> UAP1 at micromolar concentrations, providing a chemical starting point rather than an approved drug (raimi2020amechanisminspiredudpnacetylglucosamine pages 1-2). The biological demand is substantial in fungi: chitin accounts for approximately <strong>1–2% of yeast cell mass</strong> and as much as <strong>10–20% of filamentous-fungal dry cell-wall weight</strong> (raimi2020amechanisminspiredudpnacetylglucosamine pages 1-2).</p>
+<p>Broader HBP manipulation is being investigated in cancer metabolism, immune-cell differentiation, diabetes, glycosylation disorders, and protein homeostasis. For example, GlcNAc salvage supports pancreatic ductal adenocarcinoma under glutamine deprivation, and cell-permeable GlcNAc derivatives can alter N-glycan branching and T-cell differentiation (paneque2023thehexosaminebiosynthesis pages 10-12). These are pathway-level applications; none validates Q6DCZ6 as a drug target or demonstrates a frog implementation.</p>
+<h2 id="8-recommended-functional-annotation-and-confidence">8. Recommended functional annotation and confidence</h2>
+<p><strong>Recommended primary annotation:</strong></p>
+<blockquote>
+<p><em>Xenopus laevis</em> uap1.S/Q6DCZ6 is a predicted cytosolic UDP-N-acetylglucosamine pyrophosphorylase (GlcNAc-1-phosphate uridylyltransferase) of the UDPGP type-1 family. It likely catalyzes UTP + GlcNAc-1-phosphate ⇌ UDP-GlcNAc + PPi in the terminal step of de novo and salvage-supported hexosamine biosynthesis, thereby supplying UDP-GlcNAc for intracellular O-GlcNAcylation and secretory-pathway and extracellular-matrix glycosylation.</p>
+</blockquote>
+<p><strong>Confidence by component:</strong></p>
+<ul>
+<li>Protein identity/organism: <strong>high at the supplied database-record level</strong>.</li>
+<li>UAP catalytic class and core reaction: <strong>high-confidence inference</strong>.</li>
+<li>GlcNAc-1-phosphate as primary phosphosugar: <strong>high-confidence inference</strong>.</li>
+<li>GalNAc-1-phosphate activity: <strong>plausible but unverified</strong>.</li>
+<li>Cytosolic localization: <strong>moderate-confidence pathway inference</strong>.</li>
+<li>Frog developmental phenotype, tissue expression, and essentiality: <strong>unknown</strong>.</li>
+<li>Q6DCZ6-specific application: <strong>none established</strong>.</li>
+</ul>
+<h2 id="9-highest-value-validation-experiments">9. Highest-value validation experiments</h2>
+<p>The most informative next steps would be recombinant Q6DCZ6 assays with UTP and a phosphosugar panel—GlcNAc-1-P, GalNAc-1-P, Glc-1-P, Gal-1-P, GlcN-1-P, and GlcNAc-6-P—followed by LC-MS or NMR product confirmation and kinetic determination. Catalytic-site conservation should be checked by sequence/structure alignment against human AGX proteins and fungal UAP1 structures. Endogenous tagging or antibody-based imaging should test cytosolic localization. Finally, homeolog-resolved expression and perturbation in <em>X. laevis</em> embryos would determine whether uap1.S has a unique developmental role or is buffered by another homeolog.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(mio1998theeukaryoticudpnacetylglucosamine pages 2-2): T Mio, T Yabe, M Arisawa, and H Yamada-Okabe. The eukaryotic udp-n-acetylglucosamine pyrophosphorylases: gene cloning, protein expression, and catalytic mechanism. Unknown journal, 1998.</p>
+</li>
+<li>
+<p>(paneque2023thehexosaminebiosynthesis pages 9-10): Alysta Paneque, Harvey Fortus, Julia Zheng, Guy Werlen, and Estela Jacinto. The hexosamine biosynthesis pathway: regulation and function. Apr 2023. URL: https://doi.org/10.3390/genes14040933, doi:10.3390/genes14040933. This article has 276 citations.</p>
+</li>
+<li>
+<p>(fang2013geneticandstructural pages 1-2): Wenxia Fang, Ting Du, Olawale G. Raimi, Ramon Hurtado‐Guerrero, Michael D. Urbaniak, Adel F. M. Ibrahim, Michael A. J. Ferguson, Cheng Jin, and Daan M. F. van Aalten. Genetic and structural validation of aspergillus fumigatus udp-n-acetylglucosamine pyrophosphorylase as an antifungal target. Molecular Microbiology, 89:479-493, Jul 2013. URL: https://doi.org/10.1111/mmi.12290, doi:10.1111/mmi.12290. This article has 47 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(maruyama2007crystalstructureof pages 1-1): Daisuke Maruyama, Yuichi Nishitani, Tsuyoshi Nonaka, Akiko Kita, Takaaki A. Fukami, Toshiyuki Mio, Hisafumi Yamada-Okabe, Toshiko Yamada-Okabe, and Kunio Miki. Crystal structure of uridine-diphospho-n-acetylglucosamine pyrophosphorylase from candida albicans and catalytic reaction mechanism*. Journal of Biological Chemistry, 282:17221-17230, Jun 2007. URL: https://doi.org/10.1074/jbc.m611873200, doi:10.1074/jbc.m611873200. This article has 55 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(raimi2020amechanisminspiredudpnacetylglucosamine pages 1-2): Olawale G. Raimi, Ramon Hurtado-Guerrero, Vladimir Borodkin, Andrew Ferenbach, Michael D. Urbaniak, Michael A. J. Ferguson, and Daan M. F. van Aalten. A mechanism-inspired udp-n-acetylglucosamine pyrophosphorylase inhibitor. RSC Chemical Biology, 1:13-25, Mar 2020. URL: https://doi.org/10.1039/c9cb00017h, doi:10.1039/c9cb00017h. This article has 34 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(maruyama2007crystalstructureof pages 1-2): Daisuke Maruyama, Yuichi Nishitani, Tsuyoshi Nonaka, Akiko Kita, Takaaki A. Fukami, Toshiyuki Mio, Hisafumi Yamada-Okabe, Toshiko Yamada-Okabe, and Kunio Miki. Crystal structure of uridine-diphospho-n-acetylglucosamine pyrophosphorylase from candida albicans and catalytic reaction mechanism*. Journal of Biological Chemistry, 282:17221-17230, Jun 2007. URL: https://doi.org/10.1074/jbc.m611873200, doi:10.1074/jbc.m611873200. This article has 55 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chen2024hexosaminebiosynthesisand pages 5-6): Ya-Huei Chen and Wan-Hsing Cheng. Hexosamine biosynthesis and related pathways, protein n-glycosylation and o-glcnacylation: their interconnection and role in plants. Frontiers in Plant Science, Mar 2024. URL: https://doi.org/10.3389/fpls.2024.1349064, doi:10.3389/fpls.2024.1349064. This article has 29 citations.</p>
+</li>
+<li>
+<p>(sosicka2019therapeuticmonosaccharideslooking pages 1-2): Paulina Sosicka, Bobby G. Ng, and Hudson H. Freeze. Therapeutic monosaccharides: looking back, moving forward. Biochemistry, 59:3064-3077, Aug 2020. URL: https://doi.org/10.1021/acs.biochem.9b00565, doi:10.1021/acs.biochem.9b00565. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wang2021udpnacetylglucosaminepyrophosphorylase2 pages 1-2): Zhaohai Wang, Qiang Wang, Lingxia Wei, Yan Shi, Ting Li, KeKe Hu, Shuai Liu, Hua Zhong, Jianglin Liao, Yangsheng Li, Hongyu Zhang, and Yingjin Huang. Udp-n-acetylglucosamine pyrophosphorylase 2 (uap2) and 1 (uap1) perform synergetic functions for leaf survival in rice. Frontiers in Plant Science, Jun 2021. URL: https://doi.org/10.3389/fpls.2021.685102, doi:10.3389/fpls.2021.685102. This article has 9 citations.</p>
+</li>
+<li>
+<p>(sosicka2019therapeuticmonosaccharideslooking pages 4-5): Paulina Sosicka, Bobby G. Ng, and Hudson H. Freeze. Therapeutic monosaccharides: looking back, moving forward. Biochemistry, 59:3064-3077, Aug 2020. URL: https://doi.org/10.1021/acs.biochem.9b00565, doi:10.1021/acs.biochem.9b00565. This article has 37 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(paneque2023thehexosaminebiosynthesis pages 1-3): Alysta Paneque, Harvey Fortus, Julia Zheng, Guy Werlen, and Estela Jacinto. The hexosamine biosynthesis pathway: regulation and function. Apr 2023. URL: https://doi.org/10.3390/genes14040933, doi:10.3390/genes14040933. This article has 276 citations.</p>
+</li>
+<li>
+<p>(paneque2023thehexosaminebiosynthesis pages 10-12): Alysta Paneque, Harvey Fortus, Julia Zheng, Guy Werlen, and Estela Jacinto. The hexosamine biosynthesis pathway: regulation and function. Apr 2023. URL: https://doi.org/10.3390/genes14040933, doi:10.3390/genes14040933. This article has 276 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="uap1.S-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>mio1998theeukaryoticudpnacetylglucosamine pages 2-2</li>
+<li>paneque2023thehexosaminebiosynthesis pages 9-10</li>
+<li>fang2013geneticandstructural pages 1-2</li>
+<li>raimi2020amechanisminspiredudpnacetylglucosamine pages 1-2</li>
+<li>sosicka2019therapeuticmonosaccharideslooking pages 1-2</li>
+<li>chen2024hexosaminebiosynthesisand pages 5-6</li>
+<li>paneque2023thehexosaminebiosynthesis pages 10-12</li>
+<li>maruyama2007crystalstructureof pages 1-1</li>
+<li>maruyama2007crystalstructureof pages 1-2</li>
+<li>sosicka2019therapeuticmonosaccharideslooking pages 4-5</li>
+<li>paneque2023thehexosaminebiosynthesis pages 1-3</li>
+<li>https://doi.org/10.3390/genes14040933</li>
+<li>https://doi.org/10.1111/mmi.12290</li>
+<li>https://doi.org/10.1074/jbc.m611873200</li>
+<li>https://doi.org/10.1039/c9cb00017h</li>
+<li>https://doi.org/10.3389/fpls.2024.1349064</li>
+<li>https://doi.org/10.3390/genes14040933,</li>
+<li>https://doi.org/10.1111/mmi.12290,</li>
+<li>https://doi.org/10.1074/jbc.m611873200,</li>
+<li>https://doi.org/10.1039/c9cb00017h,</li>
+<li>https://doi.org/10.3389/fpls.2024.1349064,</li>
+<li>https://doi.org/10.1021/acs.biochem.9b00565,</li>
+<li>https://doi.org/10.3389/fpls.2021.685102,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(uap1.S-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q6DCZ6" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="uap1s-q6dcz6-evidence-and-exact-input-prediction-review">uap1.S (Q6DCZ6): evidence and exact-input prediction review</h1>
+<p>The function paragraph assigns UDP-glucose production and glycogen precursor synthesis to a protein with the sequence and substrate-pocket architecture of UAP1. UDP-sugar pyrophosphorylases share related chemistry, but their sugar substrates cannot be interchanged.</p>
+<h2 id="input-identity-and-functional-boundary">Input identity and functional boundary</h2>
+<p>Q6DCZ6 is the Xenbase-linked uap1.S product, not UGP2. Its 507-residue sequence aligns across the human UAP1 reference Q16222 with 382 identities among 505 aligned residues. All annotated reference nucleotide-sugar contact positions are conserved. A 17-residue human segment is absent from the alignment, similar in size to the known human UAP1 isoform insert; this does not identify the frog product as a particular human isoform or determine its substrate ratio. The model donor O35156 is UGP2.</p>
+<h2 id="biological-evidence">Biological evidence</h2>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/9603950/">PMID:9603950 — The eukaryotic UDP-N-acetylglucosamine pyrophosphorylases. Gene cloning, protein expression, and catalytic mechanism.</a>: Fungal and human UAP1 proteins have directly measured UDP-GlcNAc pyrophosphorylase activity and complement a yeast UAP1 deficiency.</li>
+</ul>
+<blockquote>
+<p>All the recombinant ScUap1p, <br />
+CaUap1p, and HsUap1p possessed UDP-N-acetylglucosamine pyrophosphorylase <br />
+activities in vitro.</p>
+<p>The yeast Uap1p utilized N-acetylglucosamine-1-phosphate as <br />
+the substrate</p>
+</blockquote>
+<h2 id="exact-non-go-claims">Exact non-GO claims</h2>
+<p>The complete emitted record is preserved in <a href="uap1.S-protnlm-source.json">uap1.S-protnlm-source.json</a>. Assessments below address the selected protein product; evidence on longer products is identified explicitly.</p>
+<h3 id="protein-name">Protein name</h3>
+<blockquote>
+<p>Uncharacterized protein</p>
+</blockquote>
+<p>UNSCORED: the returned “Uncharacterized protein” name has no ProtNLM evidence tag and makes no substrate-specific assertion.</p>
+<h3 id="function">Function</h3>
+<blockquote>
+<p>UTP--glucose-1-phosphate uridylyltransferase catalyzing the conversion of glucose-1-phosphate into UDP-glucose, a crucial precursor for the production of glycogen</p>
+</blockquote>
+<p>PLI (CS 0; PARALOG_OVERANNOTATION). The paragraph transfers UGP2 glucose-1-phosphate specificity and the resulting glycogen-precursor role to a UAP1-like enzyme. Conserved UAP1 nucleotide-sugar contacts and experimentally characterized ortholog chemistry support GlcNAc-1-phosphate utilization instead. The model’s shared uridylyltransfer chemistry is insufficient to establish the different phosphosugar substrate. <a href="https://pubmed.ncbi.nlm.nih.gov/9603950">PMID:9603950</a>(https://pubmed.ncbi.nlm.nih.gov/9603950/); <a href="uap1.S-bioinformatics/RESULTS.md">sequence mapping</a>; <a href="uap1.S-ugp-prediction-donor.json">donor</a>.</p>
+<p>No GO or EC term was emitted in this record; the name, function and location assessments above constitute its prediction review.</p>
+<h2 id="family-integration">Family integration</h2>
+<p>PTHR11952 has the broad official name UDP- GLUCOSE PYROPHOSPHORYLASE, but the selected SF4 is UDP-N-ACETYLHEXOSAMINE PYROPHOSPHORYLASE. Family-level naming does not erase experimentally established UAP/UGP substrate distinctions. No exact GlcNAc-versus-GalNAc efficiency is inferred from the frog homeolog name or the missing human insert.</p>
+<h2 id="evidence-limits">Evidence limits</h2>
+<p>The founding primary study is abstract-only in the cache and directly reports the recombinant human/fungal activity. Human structural contact annotations are explicitly sequence-mapped, not treated as a structure of frog Uap1.S. The genuine Falcon report correctly identifies the UAP/UGP distinction; frog-specific kinetics, compartment and homeolog redundancy remain unmeasured.</p>
+<p>Exact sequence mapping: <a href="uap1.S-bioinformatics/RESULTS.md">uap1.S-bioinformatics/RESULTS.md</a>. Global alignments can place nonhomologous alternative tails opposite gaps or distant residues; only conserved segments and explicitly retained feature intervals support functional transfer.</p>
+<h2 id="additional-primary-evidence">Additional primary evidence</h2>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/11707391/">PMID:11707391 — Crystal structures of two human pyrophosphorylase isoforms in complexes with UDPGlc(Gal)NAc: role of the alternatively spliced insert in the enzyme oligomeric assembly and active site architecture.</a>: Human UAP1 structures establish nucleotide-sugar contacts and isoform-dependent architecture; conservation is mapped explicitly to frog Uap1.S.</p>
+<blockquote>
+<p>we<br />
+have solved the crystal structures of AGX1 and AGX2 in complexes with UDPGlcNAc</p>
+</blockquote>
+            </div>
+        </details>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioinformatics Results</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RESULTS.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q6DCZ6" data-a="DOC: Bioinformatics Results" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="uap1s-exact-selected-product-and-human-ortholog-reference">uap1.S: exact selected product and human ortholog reference</h1>
+<p>Selected Q6DCZ6 has 507 residues; reference Q16222 has 522 residues.</p>
+<p>Biopython PairwiseAligner global BLOSUM62, gap open -10, extension -0.5.</p>
+<table>
+<thead>
+<tr>
+<th>Reference interval</th>
+<th>Selected interval</th>
+<th>Identical residues</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1–453</td>
+<td>1–453</td>
+<td>342</td>
+</tr>
+<tr>
+<td>471–522</td>
+<td>454–505</td>
+<td>40</td>
+</tr>
+</tbody>
+</table>
+<p>Reference feature mapping (sequence coverage does not establish retained function):</p>
+<table>
+<thead>
+<tr>
+<th>Reference feature</th>
+<th>Interval</th>
+<th>Mapped / length</th>
+<th>Identical</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Binding site:</td>
+<td>108–108</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>108–108</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>110–110</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>110–110</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>111–111</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>111–111</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>196–196</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>196–196</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>222–222</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>222–222</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>223–223</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>223–223</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>251–251</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>251–251</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>252–252</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>252–252</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>290–290</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>290–290</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>303–303</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>303–303</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>304–304</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>304–304</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>327–327</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>327–327</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>381–381</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>407–407</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>407–407</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>472–472</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>Binding site:</td>
+<td>472–472</td>
+<td>1 / 1</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p>A shared segment does not establish that a truncated product folds, is expressed, localizes, or catalyzes the full-length reaction.</p>
+<p>Inputs are the sibling frozen ProtNLM source and human ortholog reference JSON files. Reproduce with <code>UV_NO_SYNC=1 uv run python compare_sequences.py</code> from this directory.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q6DCZ6
+gene_symbol: uap1.S
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:8355
+  label: Xenopus laevis
+description: Xenopus laevis uap1.S encodes a UDP-N-acetylhexosamine pyrophosphorylase that is predicted
+  to convert UTP and N-acetylglucosamine-1-phosphate to UDP-N-acetylglucosamine. This reaction supplies
+  an activated sugar nucleotide for cellular glycosylation pathways. The complete UAP-like architecture
+  and conserved nucleotide-sugar contacts support the assignment; the relative GlcNAc and GalNAc substrate
+  preferences of the frog protein have not been measured.
+existing_annotations:
+- term:
+    id: GO:0003977
+    label: UDP-N-acetylglucosamine diphosphorylase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  supporting_entities:
+  - PANTHER:PTN008986934
+  review:
+    action: ACCEPT
+    summary: The complete UAP1-like sequence preserves the annotated human nucleotide-sugar contacts,
+      and recombinant human/fungal orthologs establish UDP-GlcNAc pyrophosphorylase activity. This supports
+      the specific reaction as an evolutionary inference for the frog product.
+    supported_by:
+    - &amp;id001
+      reference_id: PMID:9603950
+      supporting_text: &#34;All the recombinant ScUap1p, \nCaUap1p, and HsUap1p possessed UDP-N-acetylglucosamine\
+        \ pyrophosphorylase \nactivities in vitro.&#34;
+    - &amp;id002
+      reference_id: PMID:9603950
+      supporting_text: &#34;The yeast Uap1p utilized N-acetylglucosamine-1-phosphate as \nthe substrate&#34;
+    - &amp;id003
+      reference_id: file:XENLA/uap1.S/uap1.S-bioinformatics/RESULTS.md
+      supporting_text: &#39;| 1–453 | 1–453 | 342 |&#39;
+- term:
+    id: GO:0006048
+    label: UDP-N-acetylglucosamine biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  supporting_entities:
+  - PANTHER:PTN008986934
+  review:
+    action: ACCEPT
+    summary: Producing UDP-GlcNAc from GlcNAc-1-phosphate and UTP directly contributes to UDP-GlcNAc biosynthesis.
+      The intact UAP-like sequence supports this reaction-level pathway annotation without assigning every
+      downstream glycosylation process.
+    supported_by:
+    - *id001
+    - *id002
+    - *id003
+- term:
+    id: GO:0070569
+    label: uridylyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  supporting_entities:
+  - ARBA:ARBA00028517
+  - InterPro:IPR002618
+  review:
+    action: MODIFY
+    summary: Uridylyltransferase activity is correct but broader than the sequence-supported UAP1 substrate-specific
+      reaction. Use UDP-N-acetylglucosamine diphosphorylase activity.
+    supported_by:
+    - *id001
+    - *id003
+    proposed_replacement_terms:
+    - id: GO:0003977
+      label: UDP-N-acetylglucosamine diphosphorylase activity
+references:
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:9603950
+  title: The eukaryotic UDP-N-acetylglucosamine pyrophosphorylases. Gene cloning, protein expression,
+    and catalytic mechanism.
+  findings:
+  - statement: Fungal and human UAP1 proteins have directly measured UDP-GlcNAc pyrophosphorylase activity
+      and complement a yeast UAP1 deficiency.
+    supporting_text: &#34;All the recombinant ScUap1p, \nCaUap1p, and HsUap1p possessed UDP-N-acetylglucosamine\
+      \ pyrophosphorylase \nactivities in vitro.&#34;
+  - statement: The founding UAP1 study establishes the N-acetylglucosamine phosphosugar substrate, distinguishing
+      it from UDP-glucose pyrophosphorylase.
+    supporting_text: &#34;The yeast Uap1p utilized N-acetylglucosamine-1-phosphate as \nthe substrate&#34;
+  full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Primary report checked against the cached abstract/full text; the evidence scope is
+      stated in the finding.
+- id: file:XENLA/uap1.S/uap1.S-bioinformatics/RESULTS.md
+  title: Frog-human UAP1 sequence and nucleotide-sugar contact mapping
+- id: file:XENLA/uap1.S/uap1.S-ugp-prediction-donor.json
+  title: UniProt record identifying the UDP-glucose pyrophosphorylase donor
+- id: file:XENLA/uap1.S/uap1.S-protnlm-source.json
+  title: Frozen exact-input ProtNLM output and UniProt sequence for Q6DCZ6
+- id: PMID:11707391
+  title: &#39;Crystal structures of two human pyrophosphorylase isoforms in complexes with UDPGlc(Gal)NAc:
+    role of the alternatively spliced insert in the enzyme oligomeric assembly and active site architecture.&#39;
+  full_text_unavailable: false
+  findings:
+  - statement: Human UAP1 structures establish nucleotide-sugar contacts and isoform-dependent architecture;
+      conservation is mapped explicitly to frog Uap1.S.
+    supporting_text: &#39;we
+
+      have solved the crystal structures of AGX1 and AGX2 in complexes with UDPGlcNAc&#39;
+core_functions:
+- description: Synthesizes UDP-N-acetylglucosamine from UTP and N-acetylglucosamine-1-phosphate, inferred
+    from conserved UAP1 sequence and ortholog enzymology.
+  molecular_function:
+    id: GO:0003977
+    label: UDP-N-acetylglucosamine diphosphorylase activity
+  directly_involved_in:
+  - id: GO:0006048
+    label: UDP-N-acetylglucosamine biosynthetic process
+  supported_by:
+  - *id001
+  - *id002
+  - *id003
+  - reference_id: PMID:11707391
+    supporting_text: &#39;we
+
+      have solved the crystal structures of AGX1 and AGX2 in complexes with UDPGlcNAc&#39;
+suggested_questions:
+- question: What are the relative GlcNAc-1-phosphate and GalNAc-1-phosphate catalytic efficiencies of
+    frog Uap1.S?
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

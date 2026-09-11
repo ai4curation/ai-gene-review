@@ -1,0 +1,2133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spcs2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Spcs2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A0A140LHW5" target="_blank" class="term-link">
+                        A0A140LHW5
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Mus musculus</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "Spcs2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+
+
+        <a href="#review-research" title="Deep research and hypothesis research reports"><span class="nav-count">1</span> Research</a>
+
+
+
+        <a href="#external-predictions" title="External predictions assessed separately from GOA annotations" class="nav-external"><span class="nav-count">3</span> External</a>
+
+
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">4</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">2</span> Documents</a>
+
+
+
+
+
+
+
+
+
+        <a href="#review-questions" title="Suggested questions for experts"><span class="nav-count">1</span> Questions</a>
+
+
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A0A140LHW5" data-a="DESCRIPTION: SPCS2 is a noncatalytic subunit of the endoplasmic..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>SPCS2 is a noncatalytic subunit of the endoplasmic-reticulum signal peptidase complex. The 74-residue mouse product A0A140LHW5 retains only an N-terminal segment of the 226-residue Spcs2 reference and lacks its two transmembrane helices. Stable membrane integration, complex assembly and a biological function for this short product have not been established.</p>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34388369" target="_blank" class="term-link">
+                            PMID:34388369
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structure of the human signal peptidase complex reveals the determinants for signal peptide cleavage.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human structural analysis identifies distinct catalytic SEC11 subunits within the four-subunit signal peptidase complex.</div>
+
+                        <div class="finding-text">"the
+human SPC exists in two functional paralogs with distinct proteolytic subunits."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/42173868" target="_blank" class="term-link">
+                            PMID:42173868
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural basis of signal peptide recognition by the signal peptidase complex.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The substrate-bound human structure distinguishes SPCS2 from the catalytic SEC11 subunit.</div>
+
+                        <div class="finding-text">"the catalytic SPC subunit (paralog Sec11A or Sec11C, respectively) is joined by SPCS1 (also known as SPC12), SPCS2 (SPC25), and SPCS3 (SPC22/23)."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:mouse/Spcs2/Spcs2-bioinformatics/RESULTS.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Exact Spcs2 product-to-reference sequence mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:mouse/Spcs2/Spcs2-protnlm-source.json
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Frozen exact-input ProtNLM output and UniProt sequence for A0A140LHW5</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section" id="review-questions">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does A0A140LHW5 correspond to an endogenous translated Spcs2 product, and can its N-terminal fragment associate with a signal peptidase subunit?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="A0A140LHW5" data-a="Q: Does A0A140LHW5 correspond to an endogenous transl..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+    <section class="section external-predictions" id="external-predictions" aria-labelledby="external-predictions-title">
+        <h2 class="section-title" id="external-predictions-title">External Prediction Reviews</h2>
+        <p class="prediction-notice">These computational predictions are reviewed separately from the GOA annotation set used for this review.
+            The assessments below are from this project and do not constitute official GO annotations or endorsement by GO/UniProt.
+            They are not included in the existing annotation review above.</p>
+
+
+        <article class="prediction-review">
+        <h3>ProtNLM <span class="badge">External predictions</span></h3>
+        <p class="prediction-source"><a href="Spcs2-protnlm-predictions-review.yaml">View prediction review YAML</a> &middot; Spcs2-protnlm-predictions-review.yaml
+            &middot; Review status: COMPLETE</p>
+
+        <p>Peptidase activity is incorrectly transferred to a short derivative of the noncatalytic SPCS2 subunit. Signal-peptide processing and complex membership remain uncertain for a product lacking the reference membrane-spanning segments.</p>
+
+        <p class="prediction-source">Review score: 2 = concordant with evidence; 1 = uncertain; 0 = discordant with evidence. This is an assessment score, not a model probability.</p>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008233" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:0008233
+                    </a>
+                    <span class="term-label">peptidase activity</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_MF</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-npi">
+                        NPI — Nonparalog incorrect
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 0/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM
+                 &middot; Version: ProtNLM2
+
+                 &middot; <a href="#" target="_blank" class="term-link">file:mouse/Spcs2/Spcs2-protnlm-source.json</a>
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> SPCS2 is an accessory subunit; SEC11A/C contain the signal-peptidase catalytic site. The selected product additionally lacks the reference transmembrane architecture. Catalysis by the complex does not establish peptidase activity of this protein.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/42173868" target="_blank" class="term-link">PMID:42173868</a>:
+
+
+                        <span class="finding-text">"the catalytic SPC subunit (paralog Sec11A or Sec11C, respectively) is joined by SPCS1 (also known as SPC12), SPCS2 (SPC25), and SPCS3 (SPC22/23)."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="Spcs2-bioinformatics/RESULTS.md" target="_blank" class="term-link">file:mouse/Spcs2/Spcs2-bioinformatics/RESULTS.md</a>:
+
+
+                        <span class="finding-text">"Selected A0A140LHW5 has 74 residues; reference Q9CYN2 has 226 residues."</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006465" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:0006465
+                    </a>
+                    <span class="term-label">signal peptide processing</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_BP</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-unc">
+                        UNC — Uncertain
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 1/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM
+                 &middot; Version: ProtNLM2
+
+                 &middot; <a href="#" target="_blank" class="term-link">file:mouse/Spcs2/Spcs2-protnlm-source.json</a>
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> Full-length SPCS2 contributes to signal peptide processing as a component of the signal peptidase complex. A0A140LHW5 lacks both reference transmembrane helices and has no demonstrated complex incorporation or processing phenotype; the process cannot be transferred confidently to this exact product.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/42173868" target="_blank" class="term-link">PMID:42173868</a>:
+
+
+                        <span class="finding-text">"the catalytic SPC subunit (paralog Sec11A or Sec11C, respectively) is joined by SPCS1 (also known as SPC12), SPCS2 (SPC25), and SPCS3 (SPC22/23)."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="Spcs2-bioinformatics/RESULTS.md" target="_blank" class="term-link">file:mouse/Spcs2/Spcs2-bioinformatics/RESULTS.md</a>:
+
+
+                        <span class="finding-text">"Selected A0A140LHW5 has 74 residues; reference Q9CYN2 has 226 residues."</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005787" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:0005787
+                    </a>
+                    <span class="term-label">signal peptidase complex</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_CC</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-unc">
+                        UNC — Uncertain
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 1/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM
+                 &middot; Version: ProtNLM2
+
+                 &middot; <a href="#" target="_blank" class="term-link">file:mouse/Spcs2/Spcs2-protnlm-source.json</a>
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> Same-gene identity supports an SPCS2 origin, but the 74-residue selected sequence retains only the N-terminal segment of the 226-residue membrane subunit. Membership in an assembled signal peptidase complex requires evidence that this short product is expressed and incorporated.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="Spcs2-bioinformatics/RESULTS.md" target="_blank" class="term-link">file:mouse/Spcs2/Spcs2-bioinformatics/RESULTS.md</a>:
+
+
+                        <span class="finding-text">"Selected A0A140LHW5 has 74 residues; reference Q9CYN2 has 226 residues."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/42173868" target="_blank" class="term-link">PMID:42173868</a>:
+
+
+                        <span class="finding-text">"the catalytic SPC subunit (paralog Sec11A or Sec11C, respectively) is joined by SPCS1 (also known as SPC12), SPCS2 (SPC25), and SPCS3 (SPC22/23)."</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        </article>
+
+    </section>
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section" id="review-research">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(Spcs2-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A140LHW5" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional annotation report: mouse **Spcs2** (UniProt A0A140LHW5)</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">9 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-10T14:34:37.561433</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="Spcs2-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="Spcs2-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000014 Figure 2 from the document illustrates the architecture and topology of the human signal peptidase complex (SPC). Panels A and B sh</a>
+                        <span>(image/png)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="functional-annotation-report-mouse-spcs2-uniprot-a0a140lhw5">Functional annotation report: mouse <strong>Spcs2</strong> (UniProt A0A140LHW5)</h1>
+<h2 id="executive-conclusion">Executive conclusion</h2>
+<p>The supplied identity is internally consistent: <strong>Spcs2</strong> in <em>Mus musculus</em> corresponds to <strong>signal peptidase complex subunit 2</strong>, called <strong>SPCS2</strong> or historically <strong>SPC25</strong> in mammals and <strong>Spc2</strong> in <em>Saccharomyces cerevisiae</em>. No conflicting same-symbol protein was used in this report. However, the retrieved literature contains <strong>no accession-specific biochemical study, targeted mouse Spcs2 knockout analysis, or direct localization experiment for A0A140LHW5</strong>. Accordingly, the most defensible annotation combines the supplied mouse database identity with strong structural evidence from human SPCS2 and mechanistic evidence from yeast Spc2, explicitly treating the latter as orthology-based inference.</p>
+<p>Mouse Spcs2 is best annotated as a <strong>noncatalytic, integral endoplasmic-reticulum membrane subunit of the eukaryotic signal peptidase complex (SPC)</strong>. It helps organize the complex and its local membrane environment and probably tunes substrate and cleavage-site selection. It is <strong>not itself the peptidase</strong>: peptide-bond hydrolysis is performed by the catalytic SEC11A- or SEC11C-containing subunit of the assembled mammalian complex. (liaci2021structureofthe pages 1-3, liaci2021structureofthe pages 3-4, chung2024spc2modulatessubstrate pages 1-2)</p>
+<h2 id="1-identity-verification-and-nomenclature">1. Identity verification and nomenclature</h2>
+<p>The target supplied by the user is:</p>
+<ul>
+<li><strong>Organism:</strong> <em>Mus musculus</em> (mouse)</li>
+<li><strong>Gene:</strong> <em>Spcs2</em></li>
+<li><strong>UniProt accession:</strong> A0A140LHW5</li>
+<li><strong>Description:</strong> signal peptidase complex subunit 2 homolog</li>
+<li><strong>Source cross-references supplied:</strong> Ensembl ENSMUSP00000146574.2 and MGI:1913874</li>
+</ul>
+<p>This designation aligns with the conserved eukaryotic nomenclature <strong>Spc2/SPCS2</strong>. Mammalian SPCS2 is also called <strong>SPC25</strong>, reflecting its historical apparent molecular mass. Recent literature explicitly maps yeast Spc2 to mammalian SPCS2 and places it with SPCS1, SPCS3, and SEC11 in the conserved ER signal peptidase complex. (chung2024spc2modulatessubstrate pages 1-2, liaci2021structureofthe pages 3-4)</p>
+<p>The supplied description says “homolog (<em>S. cerevisiae</em>)”; this does not mean the record is a yeast protein. It denotes homology to yeast Spc2. The organism remains mouse. The literature consistently supports the protein-family assignment <strong>eukaryotic signal peptidase-complex Spc2/SPCS2 accessory subunit</strong>, although the supplied UniProt record does not list a named domain family.</p>
+<p><strong>Accession caveat:</strong> A0A140LHW5 appears to be an Ensembl-derived UniProt entry rather than an experimentally curated, accession-specific protein record. Exact isoform sequence, residue boundaries, and topology should therefore be checked against the current UniProt/Ensembl record before designing reagents. The retrieved literature establishes the conserved function of SPCS2, not that every feature has been experimentally demonstrated for this precise mouse isoform.</p>
+<h2 id="2-primary-molecular-function">2. Primary molecular function</h2>
+<h3 id="21-complex-level-reaction">2.1 Complex-level reaction</h3>
+<p>The SPC removes cleavable signal peptides from secretory and membrane-protein precursors at the ER membrane. The net reaction is hydrolysis of the peptide bond at the signal-peptide cleavage site:</p>
+<p><strong>signal-peptide–precursor + H₂O → free signal peptide + mature luminal/secretory protein N-terminus</strong>.</p>
+<p>This processing occurs during or shortly after translocation into the ER and facilitates subsequent folding, maturation, and trafficking through the secretory pathway. The complex can also process selected noncanonical membrane substrates after membrane insertion. (kozono2023cleavageofthe pages 1-4, millership2018neuronatinregulatespancreatic pages 1-2, chung2024spc2modulatessubstrate pages 1-2)</p>
+<h3 id="22-what-spcs2-itself-does">2.2 What Spcs2 itself does</h3>
+<p>Spcs2 is an <strong>accessory architectural and specificity-modulating component</strong>, not an independent enzyme. In mammals, either SEC11A or SEC11C contributes the catalytic protease; SPCS1, SPCS2, and SPCS3 are shared accessory components. Human structural mutagenesis assigns a Ser–His–Asp catalytic triad to SEC11A/C—Ser56/68, His96/108, and Asp122/134 in SEC11A/C, respectively—not to SPCS2. (liaci2021structureofthe pages 4-5)</p>
+<p>The likely primary roles of mouse Spcs2 are therefore to:</p>
+<ol>
+<li>stabilize and orient SPC transmembrane architecture;</li>
+<li>contribute two helices to the membrane-embedded region and much of the cytosolic clamp;</li>
+<li>help generate the locally thinned membrane environment through which signal peptides approach the luminal active site;</li>
+<li>transiently couple the SPC to the Sec61-family translocon through Sec61β; and</li>
+<li>tune discrimination among cleavable signal peptides, signal anchors, and ordinary transmembrane segments. (liaci2021structureofthe pages 3-4, liaci2021structureofthe pages 4-5, chung2024spc2modulatessubstrate pages 2-3, chung2024spc2modulatessubstrate pages 1-2)</li>
+</ol>
+<p>Thus, Spcs2 should not receive an annotation implying that isolated Spcs2 catalyzes peptide-bond hydrolysis. A catalytic annotation applies only to the assembled SEC11-containing SPC.</p>
+<h2 id="3-complex-architecture-topology-and-cellular-localization">3. Complex architecture, topology, and cellular localization</h2>
+<p>Human cryo-EM and structural-proteomics experiments resolved two approximately <strong>84-kDa heterotetrameric complexes</strong>: SPC-A contains SPCS1/SPC12, SPCS2/SPC25, SPCS3/SPC22/23, and SEC11A; SPC-C contains the same three accessory subunits and SEC11C. Both purified paralogs cleaved pre-β-lactamase in vitro with similar efficiencies. The structures were determined at approximately <strong>4.9 Å</strong> overall resolution. (liaci2021structureofthe pages 3-4)</p>
+<p>SPCS2/SPC25 contains <strong>two transmembrane helices</strong> and accounts for much of the ordered cytosolic mass. Together with SPCS1, it forms a clamp-like cytosolic structure that orients the transmembrane segments of SEC11 and SPCS3. All four subunits frame an approximately <strong>15-Å-wide, lipid-filled transmembrane window</strong>. The catalytic SEC11 domain lies on the <strong>ER-luminal side</strong>, close to the membrane surface. (liaci2021structureofthe pages 3-4, liaci2021structureofthe pages 4-5)</p>
+<p>The structural placement of SPCS2/SPC25 is directly visible in the human SPC architecture, with SPCS2 contributing both cytosolic and transmembrane structure rather than the luminal catalytic center. This is strong evidence for conserved mammalian topology, although it is not a direct structure of mouse A0A140LHW5. (liaci2021structureofthe media bbbed03f)</p>
+<p>Membrane thinning is a central mechanistic feature. The membrane-like layer narrows to about <strong>23 Å</strong> inside the SPC window, compared with approximately <strong>35–40 Å</strong> outside. This is proposed to make the short hydrophobic segment of a signal peptide accessible to the luminal SEC11 active site while excluding longer, stable transmembrane helices. (liaci2021structureofthe pages 4-5)</p>
+<p><strong>Functional localization:</strong> Spcs2 therefore carries out its function in the <strong>ER membrane</strong>, at the interface between cytosolic nascent-chain/translocon machinery, the lipid bilayer, and the ER-luminal catalytic domain. Association with the Sec61 β subunit has been reported in yeast and mammalian systems, supporting transient coupling of translocation and cleavage; efficient yeast precursor processing without Spc2 shows that this coupling is helpful but not absolutely required in that organism. (chung2024spc2modulatessubstrate pages 1-2)</p>
+<h2 id="4-substrate-specificity-and-cleavage-site-recognition">4. Substrate specificity and cleavage-site recognition</h2>
+<p>The SPC acts on signal peptides with a tripartite organization:</p>
+<ul>
+<li>an N-terminal, often positively charged <strong>n-region</strong>;</li>
+<li>a hydrophobic <strong>h-region</strong>, commonly about <strong>7–15 residues</strong> long; and</li>
+<li>a more polar <strong>c-region</strong>, commonly <strong>3–7 residues</strong>, containing the scissile bond. (liaci2021structureofthe pages 1-3, liaci2021structureofthe pages 3-4, chung2024spc2modulatessubstrate pages 1-2)</li>
+</ul>
+<p>Cleavage generally favors small, neutral residues at positions <strong>−1 and −3</strong> relative to the scissile bond and disfavors proline at +1. Human structural modeling places the −1 and −3 side chains in shallow hydrophobic pockets that accommodate only small residues. Specificity is nevertheless contextual rather than reducible to one strict motif: n-region length, h-region hydrophobicity and length, membrane topology, and cleavage-site accessibility all contribute. (liaci2021structureofthe pages 4-5, chung2024spc2modulatessubstrate pages 1-2)</p>
+<p>The most direct recent evidence for an Spc2-specific role comes from a <strong>November 2024 Journal of Cell Biology</strong> study in yeast. Spc2 deletion or mutation altered both substrate discrimination and cleavage-site selection. Spc2 promoted processing of signal sequences with n-regions shorter than <strong>16 residues</strong> and suppressed processing of sequences with n-regions longer than <strong>16 residues</strong>. Natural Ecm38 and Kar2 signal peptides, each with a 10-residue n-region, were cleaved less efficiently without Spc2; longer engineered CPY signal sequences became more susceptible. Re-expression restored the wild-type pattern. (chung2024spc2modulatessubstrate pages 2-3)</p>
+<p>The same study localized this specificity function to the cytosolic C-terminal region: deleting <strong>23 or 58 residues</strong> reproduced the Spc2-null cleavage profile, whereas replacing the second transmembrane helix did not. Simulations predicted a thicker central membrane region without Spc2, providing a plausible physical explanation for changed substrate access. (chung2024spc2modulatessubstrate pages 2-3)</p>
+<p>These results are strong for yeast Spc2 and mechanistically compatible with conserved human architecture. They should presently be treated as a <strong>high-confidence hypothesis for mouse Spcs2</strong>, not as a demonstrated mouse substrate rule.</p>
+<h2 id="5-pathway-placement-and-biological-processes">5. Pathway placement and biological processes</h2>
+<p>Spcs2 belongs primarily to the <strong>early secretory-pathway protein-biogenesis machinery</strong>, not to a classical signal-transduction cascade. The sequence of events is:</p>
+<ol>
+<li>a nascent secretory or membrane protein is targeted to the ER;</li>
+<li>its signal peptide or signal anchor engages a Sec61-containing translocon;</li>
+<li>the precursor enters the ER membrane in an N-cytosolic/C-luminal orientation;</li>
+<li>an appropriate cleavage region is presented to SEC11 in the SPC;</li>
+<li>signal-peptide removal permits downstream folding, quality control, trafficking, and secretion or membrane delivery. (kozono2023cleavageofthe pages 1-4, chung2024spc2modulatessubstrate pages 2-3, chung2024spc2modulatessubstrate pages 1-2)</li>
+</ol>
+<p>Because this reaction sits upstream of the maturation of many proteins, broad perturbation can produce pleiotropic effects. Such downstream effects should not be interpreted as separate signaling functions of Spcs2 unless a direct substrate relationship is demonstrated.</p>
+<p>A mouse study provides organism-level context for the complex but not a Spcs2-selective result. Neuronatin bound the SPC and enhanced insulin signal-peptide cleavage and nascent preproinsulin translocation; <em>Nnat</em>-deficient mice consequently had reduced insulin content and impaired glucose-stimulated insulin secretion. This establishes that mammalian SPC regulation can be physiologically important in mouse β cells, but it does <strong>not</strong> isolate Spcs2 as the causal subunit. (millership2018neuronatinregulatespancreatic pages 1-2)</p>
+<p>SPC cleavage can also regulate noncanonical signaling proteins. A 2023 study showed that the SEC11A-containing SPC, but not the SEC11C-containing form, cleaves the luminal C terminus of the tail-anchored protein Jaw1; this increased Jaw1-dependent augmentation of IP3-receptor calcium release. This demonstrates paralog-selective SPC processing and an indirect route by which SPC activity can influence signaling, while again not proving a unique Spcs2-specific signaling function. (kozono2023cleavageofthe pages 1-4)</p>
+<h2 id="6-recent-developments-20232024">6. Recent developments, 2023–2024</h2>
+<p>The key advance in <strong>2024</strong> was the demonstration that yeast Spc2 is not merely a passive connector or stabilizer: it actively tunes substrate and cleavage-site choice through its cytosolic domain and effects on the local membrane. The study found only an approximately <strong>10% reduction</strong> in Sec11 and Spc3 abundance after Spc2 deletion, while standard secretory precursors remained efficiently processed. This separates altered specificity from wholesale catalytic collapse. (chung2024spc2modulatessubstrate pages 2-3)</p>
+<p>The 2024 work builds on the authoritative 2021 human cryo-EM model, which showed how SPCS2 contributes to the membrane window and cytosolic architecture. Together, these studies support a current expert model in which accessory SPC subunits are active determinants of selectivity, not simply stoichiometric scaffolds. (liaci2021structureofthe pages 1-3, liaci2021structureofthe pages 3-4, liaci2021structureofthe pages 4-5)</p>
+<p>A 2023 Jaw1 study further established that mammalian SPC paralogs can differ in substrate preference: Jaw1 was selectively processed by SEC11A-containing SPC. This underscores that complex composition and membrane-substrate geometry matter in addition to the canonical −1/−3 rule. (kozono2023cleavageofthe pages 1-4)</p>
+<p>No 2023–2024 study retrieved here directly perturbed mouse Spcs2 itself. That evidence gap is important: current functional annotation is considerably stronger at the conserved complex level than at the accession-specific mouse level.</p>
+<h2 id="7-applications-and-real-world-relevance">7. Applications and real-world relevance</h2>
+<p>Current applications are principally experimental rather than clinical:</p>
+<ul>
+<li><strong>Secretory-protein engineering:</strong> understanding SPC specificity assists signal-peptide and cleavage-site design for recombinant secretion.</li>
+<li><strong>Membrane-protein quality control:</strong> Spcs2 provides a mechanistic handle for studying how cells avoid inappropriate cleavage of signal anchors and transmembrane helices.</li>
+<li><strong>Disease-variant interpretation:</strong> mutations near signal-peptide cleavage sites can impair processing or competitively burden the SPC.</li>
+<li><strong>Viral-host-factor research:</strong> many enveloped viral polyproteins require host ER signal-peptidase processing, making the SPC a candidate antiviral target or dependency.</li>
+<li><strong>Structural pharmacology:</strong> the SEC11 active site and SPCS2-shaped membrane window offer potential sites for complex- or substrate-selective intervention. (liaci2021structureofthe pages 1-3, liaci2021structureofthe pages 4-5, kozono2023cleavageofthe pages 1-4, chung2024spc2modulatessubstrate pages 1-2)</li>
+</ul>
+<p>There is, however, <strong>no established clinical diagnostic, approved drug, or real-world intervention directed specifically at mouse or human SPCS2</strong> in the retrieved evidence. Because the SPC processes a broad range of host secretory proteins, systemic inhibition would be expected to carry substantial on-target toxicity. A more plausible translational strategy would be substrate- or paralog-selective modulation rather than complete Spcs2/SPC inhibition.</p>
+<h2 id="8-evidence-grading-summary">8. Evidence-grading summary</h2>
+<p>The following table separates direct observations from orthology-based annotation and summarizes the principal quantitative evidence.</p>
+<table>
+<thead>
+<tr>
+<th>Question/feature</th>
+<th>Best-supported annotation</th>
+<th>Evidence system</th>
+<th>Evidence type and strength</th>
+<th>Key quantitative detail</th>
+<th>Caveat</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity</td>
+<td>A0A140LHW5 is the supplied <em>Mus musculus</em> Spcs2 product, corresponding by nomenclature and conservation to mammalian SPCS2/SPC25 and yeast Spc2. Human SPCS2 and yeast Spc2 occupy conserved structural contexts in the signal peptidase complex (SPC). (chung2024spc2modulatessubstrate pages 4-4, chung2024spc2modulatessubstrate pages 2-3)</td>
+<td>Mouse database record; human and yeast orthologs</td>
+<td><strong>Moderate for identity; indirect for function.</strong> Database assignment plus cross-species structural conservation</td>
+<td>No accession-specific quantitative result retrieved</td>
+<td>No direct experiment validating the A0A140LHW5 sequence or isoform was found; functional annotation is largely orthology-based.</td>
+</tr>
+<tr>
+<td>Complex membership</td>
+<td>SPCS2 is one of three conserved accessory SPC subunits; mammalian complexes contain SPCS1/SPC12, SPCS2/SPC25, SPCS3/SPC22/23, and either SEC11A or SEC11C. (liaci2021structureofthe pages 1-3, liaci2021structureofthe pages 3-4, kozono2023cleavageofthe pages 1-4)</td>
+<td>Human; yeast; inferred mouse</td>
+<td><strong>Strong human structural evidence; strong evolutionary support; inferred for mouse.</strong> Cryo-EM, affinity purification, structural proteomics, and conservation</td>
+<td>Human SPC-A and SPC-C are heterotetramers of approximately <strong>84 kDa</strong>; cryo-EM maps were approximately <strong>4.9 Å</strong> resolution. (liaci2021structureofthe pages 3-4)</td>
+<td>Mammalian complex membership is strongly supported, but no mouse Spcs2 complex purification was retrieved.</td>
+</tr>
+<tr>
+<td>Catalytic status</td>
+<td>Spcs2/SPCS2 is an accessory architectural and specificity-modulating subunit, not the protease. SEC11A or SEC11C supplies the catalytic active site. (liaci2021structureofthe pages 1-3, liaci2021structureofthe pages 4-5, chung2024spc2modulatessubstrate pages 1-2)</td>
+<td>Human structure and mutagenesis; yeast genetics; inferred mouse</td>
+<td><strong>Strong for mammalian catalytic assignment; moderate-to-strong for an accessory Spcs2 role.</strong> Structural, biochemical, and genetic evidence</td>
+<td>Human SEC11A/C uses a Ser–His–Asp triad: Ser56/68, His96/108, and Asp122/134 in SEC11A/C, respectively. Yeast Spc2 loss only marginally impaired general cleavage. (liaci2021structureofthe pages 4-5, chung2024spc2modulatessubstrate pages 2-3)</td>
+<td>Spcs2 should not be annotated as independently catalyzing peptide-bond hydrolysis; any catalytic-function term applies to the assembled SPC, not isolated Spcs2.</td>
+</tr>
+<tr>
+<td>ER localization and topology</td>
+<td>The protein is an integral component of the ER-membrane SPC. Mammalian SPCS2/SPC25 contains two transmembrane helices and contributes most of the ordered cytosolic portion, where it helps form a clamp around other SPC transmembrane segments. (liaci2021structureofthe pages 3-4, liaci2021structureofthe pages 4-5, liaci2021structureofthe media bbbed03f)</td>
+<td>Human; inferred mouse</td>
+<td><strong>Strong human structural evidence; inferred for mouse.</strong> Cryo-EM, cross-linking MS, and prior topology mapping</td>
+<td>The SPC contains a lipid-filled transmembrane window approximately <strong>15 Å</strong> wide; approximately <strong>80%</strong> of modeled SPC residues were resolved, and <strong>80%</strong> of cross-links satisfied the linker-distance restraint. (liaci2021structureofthe pages 3-4)</td>
+<td>Exact residue boundaries and orientation for accession A0A140LHW5 were not directly established by the retrieved evidence.</td>
+</tr>
+<tr>
+<td>Substrate class</td>
+<td>The assembled SPC cleaves N-terminal signal peptides from secretory and membrane-protein precursors during or after ER translocation; it can also process selected noncanonical membrane substrates. Spcs2 modulates recognition rather than supplying the scissile-bond chemistry. (kozono2023cleavageofthe pages 1-4, chung2024spc2modulatessubstrate pages 1-2)</td>
+<td>Mammalian cell studies; yeast; inferred mouse</td>
+<td><strong>Strong for SPC substrate class; indirect for mouse Spcs2 contribution.</strong> Biochemistry, cell biology, and genetics</td>
+<td>Typical cleavable signal peptides contain a hydrophobic h-region of <strong>7–15 residues</strong> and a polar c-region of <strong>3–7 residues</strong>. (liaci2021structureofthe pages 1-3, liaci2021structureofthe pages 3-4)</td>
+<td>A complete Spcs2-dependent mouse substrate inventory is unavailable; substrates should not automatically be assigned as direct Spcs2 binders.</td>
+</tr>
+<tr>
+<td>Cleavage-site rules</td>
+<td>SPC favors small, neutral residues at the −1 and −3 positions relative to the scissile bond and disfavors proline at +1. It distinguishes cleavable signal peptides from longer signal anchors and ordinary transmembrane helices. (liaci2021structureofthe pages 4-5, chung2024spc2modulatessubstrate pages 1-2)</td>
+<td>Human structural modeling; yeast experiments; inferred mouse</td>
+<td><strong>Strong general SPC evidence; moderate Spcs2-specific evidence.</strong> Active-site structure plus mutational and processing assays</td>
+<td>Human structures show shallow −1/−3 hydrophobic pockets sized for small side chains. In yeast, signal sequences with n-regions of <strong>≤12 residues</strong> were fully processed during a <strong>5-minute</strong> pulse in wild-type cells. (liaci2021structureofthe pages 4-5, chung2024spc2modulatessubstrate pages 2-3)</td>
+<td>These are complex-level rules; cleavage also depends on precursor topology, h-region properties, and accessibility, not a strict sequence motif alone.</td>
+</tr>
+<tr>
+<td>Membrane thinning</td>
+<td>SPCS2 helps create the SPC transmembrane window and locally thinned lipid environment, facilitating presentation of short signal-peptide hydrophobic segments to the luminal SEC11 active site. (liaci2021structureofthe pages 1-3, liaci2021structureofthe pages 4-5, liaci2021structureofthe media bbbed03f)</td>
+<td>Human structure and simulation; yeast simulation; inferred mouse</td>
+<td><strong>Strong structural support for the complex; moderate mechanistic support for SPCS2 specifically.</strong> Cryo-EM and molecular dynamics</td>
+<td>The membrane-like layer narrows to about <strong>23 Å</strong> inside the window versus approximately <strong>35–40 Å</strong> outside. Yeast simulations predict a thicker central membrane when Spc2 is absent. (liaci2021structureofthe pages 4-5, chung2024spc2modulatessubstrate pages 2-3)</td>
+<td>The causal effect of mouse Spcs2 on bilayer thickness has not been measured directly; the mouse mechanism is inferred from conserved architecture.</td>
+</tr>
+<tr>
+<td>Substrate and cleavage-site selection</td>
+<td>Yeast Spc2 sharpens discrimination between signal peptides and signal anchors: it promotes cleavage of substrates with short n-regions and limits cleavage of long-n-region substrates. Its cytosolic C-terminal domain is important for this effect. (chung2024spc2modulatessubstrate pages 2-3)</td>
+<td>Yeast; inferred mouse</td>
+<td><strong>Strong yeast genetic and biochemical evidence; hypothesis-level transfer to mouse.</strong> Deletion, complementation, pulse labeling, mutagenesis, quantitative proteomics, and simulation</td>
+<td>Spc2 promoted cleavage when n-region length was <strong>&lt;16 residues</strong> and reduced cleavage when it was <strong>&gt;16 residues</strong>. Deleting <strong>23 or 58 C-terminal residues</strong> reproduced the deletion phenotype, whereas replacing TM2 did not. (chung2024spc2modulatessubstrate pages 2-3)</td>
+<td>This is the clearest 2024 Spc2-specific mechanistic result, but it was obtained in <em>S. cerevisiae</em>, not mouse. Mammalian validation is needed.</td>
+</tr>
+<tr>
+<td>Effect on complex stability and basal activity</td>
+<td>Spc2 modestly stabilizes or organizes the SPC but is not indispensable for its basic catalytic activity in yeast. (chung2024spc2modulatessubstrate pages 2-3)</td>
+<td>Yeast; inferred mouse</td>
+<td><strong>Moderate-to-strong yeast evidence; uncertain mouse relevance.</strong> Quantitative proteomics and precursor-processing assays</td>
+<td>Deletion reduced Sec11 and Spc3 abundance by approximately <strong>10%</strong>, while two standard secretory precursors remained efficiently processed. Earlier yeast work reported an approximately <strong>twofold</strong> reduction in vitro after SPC25/Spc2 deletion. (liaci2021structureofthe pages 3-4, chung2024spc2modulatessubstrate pages 2-3)</td>
+<td>Yeast dispensability cannot establish mouse viability or tissue-level phenotype; mammalian subunit dependencies may differ.</td>
+</tr>
+<tr>
+<td>Sec61 association</td>
+<td>Spc2/SPCS2 interacts with the β subunit of the Sec61-family translocon and can mediate transient coupling between the translocon and SPC. (chung2024spc2modulatessubstrate pages 1-2)</td>
+<td>Yeast and mammalian systems; inferred mouse</td>
+<td><strong>Moderate.</strong> Prior interaction studies summarized by recent peer-reviewed work</td>
+<td>Secretory precursors can still be efficiently processed without yeast Spc2, indicating that this connector function is not absolutely required in that system. (chung2024spc2modulatessubstrate pages 1-2)</td>
+<td>The retrieved evidence did not quantify a direct interaction between A0A140LHW5 and mouse Sec61β; stable constitutive coupling should not be assumed.</td>
+</tr>
+<tr>
+<td>Pathway placement</td>
+<td>Spcs2 functions in early secretory-pathway protein biogenesis: ER targeting/translocation is followed by SPC-mediated signal-peptide removal, enabling downstream folding, trafficking, and maturation. It is not primarily a signaling molecule, although SPC cleavage can regulate specific signaling proteins. (kozono2023cleavageofthe pages 1-4, millership2018neuronatinregulatespancreatic pages 1-2, chung2024spc2modulatessubstrate pages 1-2)</td>
+<td>Mammalian and yeast; inferred mouse</td>
+<td><strong>Strong for pathway placement; indirect for specific mouse outcomes.</strong> Cell biology, biochemistry, and in-vivo mouse work on an SPC-associated regulator</td>
+<td>In mice, neuronatin was shown to bind the SPC and augment insulin signal-peptide cleavage, linking the complex to preproinsulin biogenesis; this does not isolate Spcs2's individual contribution. (millership2018neuronatinregulatespancreatic pages 1-2)</td>
+<td>Broad phenotypes such as altered secretion, calcium signaling, or metabolism should not be assigned directly to Spcs2 without Spcs2-selective perturbation.</td>
+</tr>
+<tr>
+<td>Mouse-specific evidence scarcity</td>
+<td>No direct mouse Spcs2 knockout, localization, catalytic assay, or accession-specific interaction evidence was identified in the retrieved literature. The defensible annotation is therefore conserved mammalian SPC accessory subunit with explicit evidence qualifiers.</td>
+<td>Mouse evidence search</td>
+<td><strong>Evidence gap.</strong> Absence of retrieved direct studies, not proof that none exist</td>
+<td><strong>0</strong> directly relevant mouse Spcs2 studies were identified in the gathered evidence set</td>
+<td>Database expression or phenotype records may exist outside the retrieved corpus; conclusions should be updated if validated mouse alleles or targeted biochemical studies become available.</td>
+</tr>
+<tr>
+<td>Applications</td>
+<td>SPC biology is used experimentally to study secretory-protein maturation, cleavage-site prediction, membrane-protein quality control, and host dependence of viral-polyprotein processing. Structural knowledge may support inhibitor or substrate-engineering strategies. (liaci2021structureofthe pages 1-3, kozono2023cleavageofthe pages 1-4, chung2024spc2modulatessubstrate pages 1-2)</td>
+<td>Human or other mammalian cells; yeast; inferred relevance to mouse models</td>
+<td><strong>Strong as a research application; preliminary as a therapeutic application.</strong> Structural biology, CRISPR studies, mutational assays, and cell biology</td>
+<td>Jaw1 processing was selective for SEC11A-containing rather than SEC11C-containing SPC, illustrating paralog-specific substrate processing. (kozono2023cleavageofthe pages 1-4)</td>
+<td>No approved therapy, diagnostic test, or direct real-world intervention targeting mouse Spcs2 was established. Because SPC processes many host proteins, systemic inhibition may have substantial on-target toxicity.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Evidence-grading summary for mouse Spcs2/A0A140LHW5, separating direct observations from human- and yeast-based functional inference. It highlights the strongest annotation, quantitative support, and principal caveats for each feature.</em></p>
+<h2 id="9-recommended-functional-annotation">9. Recommended functional annotation</h2>
+<p>A conservative annotation for <strong>mouse Spcs2/A0A140LHW5</strong> is:</p>
+<blockquote>
+<p><strong>Integral endoplasmic-reticulum membrane accessory subunit of the signal peptidase complex. In the assembled SEC11A- or SEC11C-containing SPC, Spcs2 contributes to transmembrane/cytosolic architecture, local membrane thinning, transient translocon association, and selection of cleavable signal peptides versus signal anchors. It is not itself the catalytic peptidase.</strong></p>
+</blockquote>
+<p>Suggested process and localization terms include <strong>signal-peptide processing</strong>, <strong>protein targeting/translocation at the ER</strong>, <strong>secretory-pathway protein maturation</strong>, <strong>endoplasmic-reticulum membrane</strong>, and <strong>signal peptidase complex</strong>. “Serine peptidase activity” should not be assigned directly to Spcs2 without wording that clearly refers to its participation in the assembled catalytic complex.</p>
+<h2 id="10-major-limitations-and-research-priorities">10. Major limitations and research priorities</h2>
+<p>The central limitation is the scarcity of direct evidence for this precise mouse protein. No targeted mouse Spcs2 knockout phenotype, purified mouse complex, accession-specific interactome, residue-level topology map, or substrate panel was identified. The highest-priority experiments would therefore be: endogenous tagging and ER-localization/topology mapping; co-immunoprecipitation or native proteomics with SEC11A/C, SPCS1/3, and Sec61β; acute rather than chronic Spcs2 depletion followed by N-terminomics; rescue with C-terminal and transmembrane mutants; and conditional mouse alleles in highly secretory tissues. These experiments would test whether the 2024 yeast n-region-selection mechanism is conserved in mouse and would distinguish primary cleavage defects from secondary ER-stress phenotypes.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(liaci2021structureofthe pages 1-3): A. Manuel Liaci, Barbara Steigenberger, Sem Tamara, Paulo Cesar Telles de Souza, Mariska Gröllers-Mulderij, Patrick Ogrissek, Siewert Jan Marrink, Richard Scheltema, and Friedrich Förster. Structure of the human signal peptidase complex reveals the determinants for signal peptide cleavage. Jan 2021. URL: https://doi.org/10.2139/ssrn.3778304, doi:10.2139/ssrn.3778304. This article has 159 citations.</p>
+</li>
+<li>
+<p>(liaci2021structureofthe pages 3-4): A. Manuel Liaci, Barbara Steigenberger, Sem Tamara, Paulo Cesar Telles de Souza, Mariska Gröllers-Mulderij, Patrick Ogrissek, Siewert Jan Marrink, Richard Scheltema, and Friedrich Förster. Structure of the human signal peptidase complex reveals the determinants for signal peptide cleavage. Jan 2021. URL: https://doi.org/10.2139/ssrn.3778304, doi:10.2139/ssrn.3778304. This article has 159 citations.</p>
+</li>
+<li>
+<p>(chung2024spc2modulatessubstrate pages 1-2): Yeonji Chung, Chewon Yim, Gilberto P. Pereira, Sungjoon Son, Lisbeth R. Kjølbye, Lauren E. Mazurkiewicz, Amy M. Weeks, Friedrich Förster, Gunnar von Heijne, Paulo C.T. Souza, and Hyun Kim. Spc2 modulates substrate- and cleavage site-selection in the yeast signal peptidase complex. Journal of Cell Biology, Nov 2024. URL: https://doi.org/10.1083/jcb.202211035, doi:10.1083/jcb.202211035. This article has 7 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kozono2023cleavageofthe pages 1-4): Takuma Kozono, Chifuyu Jogano, Wataru Okumura, Hiroyuki Sato, Hitomi Matsui, Tsubasa Takagi, Nobuaki Okumura, Toshifumi Takao, Takashi Tonozuka, and Atsushi Nishikawa. Cleavage of the jaw1 c-terminal region enhances its augmentative effect on the ca2+ release via ip3 receptors. Journal of cell science, Feb 2023. URL: https://doi.org/10.1242/jcs.260439, doi:10.1242/jcs.260439. This article has 5 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(millership2018neuronatinregulatespancreatic pages 1-2): Steven J. Millership, Gabriela Da Silva Xavier, Agharul I. Choudhury, Sergio Bertazzo, Pauline Chabosseau, Silvia M.A. Pedroni, Elaine E. Irvine, Alex Montoya, Peter Faull, William R. Taylor, Julie Kerr-Conte, Francois Pattou, Jorge Ferrer, Mark Christian, Rosalind M. John, Mathieu Latreille, Ming Liu, Guy A. Rutter, James Scott, and Dominic J. Withers. Neuronatin regulates pancreatic β cell insulin content and secretion. The Journal of Clinical Investigation, 128:3369-3381, Jul 2018. URL: https://doi.org/10.1172/jci120115, doi:10.1172/jci120115. This article has 78 citations.</p>
+</li>
+<li>
+<p>(liaci2021structureofthe pages 4-5): A. Manuel Liaci, Barbara Steigenberger, Sem Tamara, Paulo Cesar Telles de Souza, Mariska Gröllers-Mulderij, Patrick Ogrissek, Siewert Jan Marrink, Richard Scheltema, and Friedrich Förster. Structure of the human signal peptidase complex reveals the determinants for signal peptide cleavage. Jan 2021. URL: https://doi.org/10.2139/ssrn.3778304, doi:10.2139/ssrn.3778304. This article has 159 citations.</p>
+</li>
+<li>
+<p>(chung2024spc2modulatessubstrate pages 2-3): Yeonji Chung, Chewon Yim, Gilberto P. Pereira, Sungjoon Son, Lisbeth R. Kjølbye, Lauren E. Mazurkiewicz, Amy M. Weeks, Friedrich Förster, Gunnar von Heijne, Paulo C.T. Souza, and Hyun Kim. Spc2 modulates substrate- and cleavage site-selection in the yeast signal peptidase complex. Journal of Cell Biology, Nov 2024. URL: https://doi.org/10.1083/jcb.202211035, doi:10.1083/jcb.202211035. This article has 7 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(liaci2021structureofthe media bbbed03f): A. Manuel Liaci, Barbara Steigenberger, Sem Tamara, Paulo Cesar Telles de Souza, Mariska Gröllers-Mulderij, Patrick Ogrissek, Siewert Jan Marrink, Richard Scheltema, and Friedrich Förster. Structure of the human signal peptidase complex reveals the determinants for signal peptide cleavage. Jan 2021. URL: https://doi.org/10.2139/ssrn.3778304, doi:10.2139/ssrn.3778304. This article has 159 citations.</p>
+</li>
+<li>
+<p>(chung2024spc2modulatessubstrate pages 4-4): Yeonji Chung, Chewon Yim, Gilberto P. Pereira, Sungjoon Son, Lisbeth R. Kjølbye, Lauren E. Mazurkiewicz, Amy M. Weeks, Friedrich Förster, Gunnar von Heijne, Paulo C.T. Souza, and Hyun Kim. Spc2 modulates substrate- and cleavage site-selection in the yeast signal peptidase complex. Journal of Cell Biology, Nov 2024. URL: https://doi.org/10.1083/jcb.202211035, doi:10.1083/jcb.202211035. This article has 7 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="Spcs2-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000014 Figure 2 from the document illustrates the architecture and topology of the human signal peptidase complex (SPC). Panels A and B sh" src="Spcs2-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>liaci2021structureofthe pages 4-5</li>
+<li>liaci2021structureofthe pages 3-4</li>
+<li>millership2018neuronatinregulatespancreatic pages 1-2</li>
+<li>kozono2023cleavageofthe pages 1-4</li>
+<li>liaci2021structureofthe pages 1-3</li>
+<li>https://doi.org/10.2139/ssrn.3778304,</li>
+<li>https://doi.org/10.1083/jcb.202211035,</li>
+<li>https://doi.org/10.1242/jcs.260439,</li>
+<li>https://doi.org/10.1172/jci120115,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(Spcs2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A140LHW5" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="spcs2-a0a140lhw5-evidence-and-exact-input-prediction-review">Spcs2 (A0A140LHW5): evidence and exact-input prediction review</h1>
+<p>A0A140LHW5 is a short Spcs2-derived product lacking the membrane-spanning architecture of the full subunit. The peptidase prediction assigns catalytic activity to an accessory subunit. Complex membership and signal-peptide processing are plausible for full-length Spcs2 but unproven for this selected product.</p>
+<h2 id="input-identity-and-functional-boundary">Input identity and functional boundary</h2>
+<p>A0A140LHW5 and Q9CYN2 share MGI:1913874. The first 66 residues are identical; the selected product has an eight-residue alternative tail. Both reference transmembrane helices (87–107 and 112–132) lie outside that conserved segment. The global alignment of the eight-residue tail to isolated reference residues is not evidence that a transmembrane helix is retained.</p>
+<h2 id="biological-evidence">Biological evidence</h2>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/34388369/">PMID:34388369 — Structure of the human signal peptidase complex reveals the determinants for signal peptide cleavage.</a>: Human structural analysis identifies distinct catalytic SEC11 subunits within the four-subunit signal peptidase complex.</li>
+</ul>
+<blockquote>
+<p>the <br />
+human SPC exists in two functional paralogs with distinct proteolytic subunits.</p>
+</blockquote>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/42173868/">PMID:42173868 — Structural basis of signal peptide recognition by the signal peptidase complex.</a>: The substrate-bound human structure distinguishes SPCS2 from the catalytic SEC11 subunit.</li>
+</ul>
+<blockquote>
+<p>the catalytic SPC subunit (paralog Sec11A or Sec11C, respectively) is joined by SPCS1 (also known as SPC12), SPCS2 (SPC25), and SPCS3 (SPC22/23).</p>
+</blockquote>
+<h2 id="exact-non-go-claims">Exact non-GO claims</h2>
+<p>The complete emitted record is preserved in <a href="Spcs2-protnlm-source.json">Spcs2-protnlm-source.json</a>. Assessments below address the selected protein product; evidence on longer products is identified explicitly.</p>
+<h3 id="protein-name">Protein name</h3>
+<blockquote>
+<p>Signal peptidase complex subunit 2</p>
+</blockquote>
+<p>CNN (CS 2) as a gene-of-origin label, with an essential truncation qualification: the sequence shares the Spcs2 N terminus. UNC if interpreted as an assembled, functional signal peptidase subunit. <a href="Spcs2-bioinformatics/RESULTS.md">Sequence mapping</a>.</p>
+<h3 id="location">Location</h3>
+<blockquote>
+<p>Endoplasmic reticulum membrane</p>
+</blockquote>
+<p>UNC (CS 1). The two reference membrane helices are absent from the retained sequence. Indirect ER association remains possible through protein partners, but it is not demonstrated for A0A140LHW5; absence of a transmembrane helix alone is not proof of exclusively soluble localization.</p>
+<h2 id="emitted-go-claims">Emitted GO claims</h2>
+<p>All 3 emitted GO claims are individually assessed in <a href="Spcs2-protnlm-predictions-review.yaml">Spcs2-protnlm-predictions-review.yaml</a>.</p>
+<h2 id="family-integration">Family integration</h2>
+<p>The exact accession has no PANTHER assignment. Q9CYN2 provides independently verified same-gene context for PTHR13085; that family membership does not validate the selected short product as an assembled subunit or enzyme.</p>
+<h2 id="evidence-limits">Evidence limits</h2>
+<p>The exact-product GOA snapshot is empty. No core molecular function is asserted. Human complex structures establish the catalytic/accessory distinction, while exact mouse product expression, membrane binding and complex incorporation remain unresolved.</p>
+<p>Exact sequence mapping: <a href="Spcs2-bioinformatics/RESULTS.md">Spcs2-bioinformatics/RESULTS.md</a>. Global alignments can place nonhomologous alternative tails opposite gaps or distant residues; only conserved segments and explicitly retained feature intervals support functional transfer.</p>
+<h2 id="research-integration">Research integration</h2>
+<p>The genuine Falcon report is retained. Its gene-level synthesis is interpreted through the exact product sequence and the primary sources above; the truncation boundary and paralog distinctions are assessed independently.</p>
+            </div>
+        </details>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioinformatics Results</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RESULTS.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A140LHW5" data-a="DOC: Bioinformatics Results" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="spcs2-exact-selected-product-and-same-gene-reference">Spcs2: exact selected product and same-gene reference</h1>
+<p>Selected A0A140LHW5 has 74 residues; reference Q9CYN2 has 226 residues.</p>
+<p>Biopython PairwiseAligner global BLOSUM62, gap open -10, extension -0.5.</p>
+<table>
+<thead>
+<tr>
+<th>Reference interval</th>
+<th>Selected interval</th>
+<th>Identical residues</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1–66</td>
+<td>1–66</td>
+<td>66</td>
+</tr>
+<tr>
+<td>110–112</td>
+<td>67–69</td>
+<td>1</td>
+</tr>
+<tr>
+<td>144–147</td>
+<td>70–73</td>
+<td>2</td>
+</tr>
+<tr>
+<td>226–226</td>
+<td>74–74</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>Reference feature mapping (sequence coverage does not establish retained function):</p>
+<table>
+<thead>
+<tr>
+<th>Reference feature</th>
+<th>Interval</th>
+<th>Mapped / length</th>
+<th>Identical</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Transmembrane: Helical</td>
+<td>87–107</td>
+<td>0 / 21</td>
+<td>0</td>
+</tr>
+<tr>
+<td>Transmembrane: Helical</td>
+<td>112–132</td>
+<td>1 / 21</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p>A shared segment does not establish that a truncated product folds, is expressed, localizes, or catalyzes the full-length reaction.</p>
+<p>Inputs are the sibling frozen ProtNLM source and same-gene reference JSON files. Reproduce with <code>UV_NO_SYNC=1 uv run python compare_sequences.py</code> from this directory.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A0A140LHW5
+gene_symbol: Spcs2
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:10090
+  label: Mus musculus
+description: SPCS2 is a noncatalytic subunit of the endoplasmic-reticulum signal peptidase complex. The
+  74-residue mouse product A0A140LHW5 retains only an N-terminal segment of the 226-residue Spcs2 reference
+  and lacks its two transmembrane helices. Stable membrane integration, complex assembly and a biological
+  function for this short product have not been established.
+references:
+- id: PMID:34388369
+  title: Structure of the human signal peptidase complex reveals the determinants for signal peptide cleavage.
+  findings:
+  - statement: Human structural analysis identifies distinct catalytic SEC11 subunits within the four-subunit
+      signal peptidase complex.
+    supporting_text: &#34;the \nhuman SPC exists in two functional paralogs with distinct proteolytic subunits.&#34;
+  full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Primary report checked against the cached abstract/full text; the evidence scope is
+      stated in the finding.
+- id: PMID:42173868
+  title: Structural basis of signal peptide recognition by the signal peptidase complex.
+  findings:
+  - statement: The substrate-bound human structure distinguishes SPCS2 from the catalytic SEC11 subunit.
+    supporting_text: the catalytic SPC subunit (paralog Sec11A or Sec11C, respectively) is joined by SPCS1
+      (also known as SPC12), SPCS2 (SPC25), and SPCS3 (SPC22/23).
+  full_text_unavailable: false
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Primary report checked against the cached abstract/full text; the evidence scope is
+      stated in the finding.
+- id: file:mouse/Spcs2/Spcs2-bioinformatics/RESULTS.md
+  title: Exact Spcs2 product-to-reference sequence mapping
+- id: file:mouse/Spcs2/Spcs2-protnlm-source.json
+  title: Frozen exact-input ProtNLM output and UniProt sequence for A0A140LHW5
+core_functions: []
+suggested_questions:
+- question: Does A0A140LHW5 correspond to an endogenous translated Spcs2 product, and can its N-terminal
+    fragment associate with a signal peptidase subunit?
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

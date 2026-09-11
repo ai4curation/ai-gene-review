@@ -1,0 +1,2380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CG3515 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CG3515</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9VQD1" target="_blank" class="term-link">
+                        Q9VQD1
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Drosophila melanogaster</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CG3515";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">4</span> Annotations</a>
+
+
+
+        <a href="#review-research" title="Deep research and hypothesis research reports"><span class="nav-count">1</span> Research</a>
+
+
+
+        <a href="#external-predictions" title="External predictions assessed separately from GOA annotations" class="nav-external"><span class="nav-count">1</span> External</a>
+
+
+
+        <a href="#review-core-functions" title="Core biological functions"><span class="nav-count">1</span> Core Function</a>
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">5</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">1</span> Documents</a>
+
+
+
+
+
+
+
+
+
+
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9VQD1" data-a="DESCRIPTION: CG3515 is a Swd2/WDR82-family WD-repeat protein in..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CG3515 is a Swd2/WDR82-family WD-repeat protein inferred to associate with nuclear chromatin and the Set1C/COMPASS histone-methylation machinery. It is distinct from the Drosophila Wdr82/CG17293 paralog. Its precise complex partners and physiological role have not been characterized directly.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003682" target="_blank" class="term-link">
+                                    GO:0003682
+                                </a>
+                            </span>
+                            <span class="term-label">chromatin binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VQD1" data-a="GO:0003682" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CG3515 is a Swd2/WDR82-family WD-repeat protein with a curated ancestral assignment to chromatin and Set1C/COMPASS.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> CG3515 is a Swd2/WDR82-family WD-repeat protein with a curated ancestral assignment to chromatin and Set1C/COMPASS. Characterized WDR82 associates with chromatin and Set1 complexes, providing a biological basis for conserved nuclear chromatin-complex function. CG3515 is distinct from the experimentally studied fly Wdr82/CG17293 paralog; this is a family-based assignment, not a direct CG3515 localization or interaction assay.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG3515/CG3515-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR037867; Swd2/WDR82.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18838538" target="_blank" class="term-link">
+                                        PMID:18838538
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We have shown that Wdr82,
+which associates with chromatin in a histone H2B ubiquitination-dependent
+manner, is a specific component of Set1 complexes but not that of MLL1-4
+complexes.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VQD1" data-a="GO:0005634" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CG3515 is a Swd2/WDR82-family WD-repeat protein with a curated ancestral assignment to chromatin and Set1C/COMPASS.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> CG3515 is a Swd2/WDR82-family WD-repeat protein with a curated ancestral assignment to chromatin and Set1C/COMPASS. Characterized WDR82 associates with chromatin and Set1 complexes, providing a biological basis for conserved nuclear chromatin-complex function. CG3515 is distinct from the experimentally studied fly Wdr82/CG17293 paralog; this is a family-based assignment, not a direct CG3515 localization or interaction assay.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG3515/CG3515-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR037867; Swd2/WDR82.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18838538" target="_blank" class="term-link">
+                                        PMID:18838538
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We have shown that Wdr82,
+which associates with chromatin in a histone H2B ubiquitination-dependent
+manner, is a specific component of Set1 complexes but not that of MLL1-4
+complexes.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016070" target="_blank" class="term-link">
+                                    GO:0016070
+                                </a>
+                            </span>
+                            <span class="term-label">RNA metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VQD1" data-a="GO:0016070" data-r="GO_REF:0000117" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A nuclear WDR82-family chromatin-complex role is supported, but the broad RNA-metabolic assertion has no independently resolved CG3515 RNA-processing or transcriptional role in the evidence reviewed.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A nuclear WDR82-family chromatin-complex role is supported, but the broad RNA-metabolic assertion has no independently resolved CG3515 RNA-processing or transcriptional role in the evidence reviewed. WDR82-family proteins participate in several complexes, and the specific RNA pathway or complex retained by this paralog is not established.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG3515/CG3515-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR037867; Swd2/WDR82.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048188" target="_blank" class="term-link">
+                                    GO:0048188
+                                </a>
+                            </span>
+                            <span class="term-label">Set1C/COMPASS complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VQD1" data-a="GO:0048188" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CG3515 is a Swd2/WDR82-family WD-repeat protein with a curated ancestral assignment to chromatin and Set1C/COMPASS.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> CG3515 is a Swd2/WDR82-family WD-repeat protein with a curated ancestral assignment to chromatin and Set1C/COMPASS. Characterized WDR82 associates with chromatin and Set1 complexes, providing a biological basis for conserved nuclear chromatin-complex function. CG3515 is distinct from the experimentally studied fly Wdr82/CG17293 paralog; this is a family-based assignment, not a direct CG3515 localization or interaction assay.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG3515/CG3515-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR037867; Swd2/WDR82.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18838538" target="_blank" class="term-link">
+                                        PMID:18838538
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We have shown that Wdr82,
+which associates with chromatin in a histone H2B ubiquitination-dependent
+manner, is a specific component of Set1 complexes but not that of MLL1-4
+complexes.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section" id="review-core-functions">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Conserved WDR82-family chromatin association supports participation in nuclear Set1C/COMPASS.</h3>
+                <span class="vote-buttons" data-g="Q9VQD1" data-a="FUNCTION: Conserved WDR82-family chromatin association suppo..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003682" target="_blank" class="term-link">
+                            chromatin binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0048188" target="_blank" class="term-link">
+                            Set1C/COMPASS complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:DROME/CG3515/CG3515-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   InterPro; IPR037867; Swd2/WDR82.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18838538" target="_blank" class="term-link">
+                                PMID:18838538
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">We have shown that Wdr82,
+which associates with chromatin in a histone H2B ubiquitination-dependent
+manner, is a specific component of Set1 complexes but not that of MLL1-4
+complexes.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:DROME/CG3515/CG3515-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">DROME/CG3515/CG3515-uniprot.txt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18838538" target="_blank" class="term-link">
+                            PMID:18838538
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Molecular regulation of H3K4 trimethylation by Wdr82, a component of human Set1/COMPASS.</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+    <section class="section external-predictions" id="external-predictions" aria-labelledby="external-predictions-title">
+        <h2 class="section-title" id="external-predictions-title">External Prediction Reviews</h2>
+        <p class="prediction-notice">These computational predictions are reviewed separately from the GOA annotation set used for this review.
+            The assessments below are from this project and do not constitute official GO annotations or endorsement by GO/UniProt.
+            They are not included in the existing annotation review above.</p>
+
+
+        <article class="prediction-review">
+        <h3>ProtNLM <span class="badge">External predictions</span></h3>
+        <p class="prediction-source"><a href="CG3515-protnlm-predictions-review.yaml">View prediction review YAML</a> &middot; CG3515-protnlm-predictions-review.yaml
+            &middot; Review status: COMPLETE</p>
+
+        <p>The nucleus prediction is supported as a conserved WDR82-family localization and is already represented in the annotation record.</p>
+
+        <p class="prediction-source">Review score: 2 = concordant with evidence; 1 = uncertain; 0 = discordant with evidence. This is an assessment score, not a model probability.</p>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:0005634
+                    </a>
+                    <span class="term-label">nucleus</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_CC</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-cnn">
+                        CNN — Correct but not novel
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 2/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM
+                 &middot; Version: ProtNLM2 API snapshot 2026-09-08
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> Nuclear localization is a reasonable conserved inference from the diagnostic Swd2/WDR82 family assignment and curated chromatin/COMPASS placement. Primary WDR82 experiments establish chromatin association and Set1-complex membership, providing the biological basis for that transfer. CG3515 is a separate fly paralog from Wdr82/CG17293, so these are not claimed as direct target experiments. The nucleus term is already present, making this supported prediction non-novel.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="CG3515-uniprot.txt" target="_blank" class="term-link">file:DROME/CG3515/CG3515-uniprot.txt</a>:
+
+
+                        <span class="finding-text">"DR   InterPro; IPR037867; Swd2/WDR82."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18838538" target="_blank" class="term-link">PMID:18838538</a>:
+
+
+                        <span class="finding-text">"We have shown that Wdr82,
+which associates with chromatin in a histone H2B ubiquitination-dependent
+manner, is a specific component of Set1 complexes but not that of MLL1-4
+complexes."</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        </article>
+
+    </section>
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section" id="review-research">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CG3515-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9VQD1" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Research report: *Drosophila melanogaster* CG3515 / UniProt Q9VQD1</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">37 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-08T18:16:38.757579</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="CG3515-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-drosophila-melanogaster-cg3515-uniprot-q9vqd1">Research report: <em>Drosophila melanogaster</em> CG3515 / UniProt Q9VQD1</h1>
+<h2 id="executive-conclusion">Executive conclusion</h2>
+<p><strong>The gene symbol <code>Dmel\CG3515</code> is not itself ambiguous in the supplied UniProt context, but literature is extremely limited for this specific protein.</strong> The target is <em>Drosophila melanogaster</em> CG3515 (FlyBase FBgn0031431; UniProt Q9VQD1), annotated as a WD-repeat protein belonging to the SWD2 family. Comparative sequence work explicitly included Dm_CG3515 among SWD2-related proteins and supports WD40-repeat architecture, probably a seven-bladed β-propeller (dichtl2004functionsfors. pages 2-3, dichtl2004functionsfors. pages 3-3).</p>
+<p>However, the experimentally studied fly protein commonly called <strong>Wdr82/dWdr82 appears to be the separate locus CG17293</strong>, not CG3515. CG3515 and CG17293 are listed separately in comparative SWD2-family analysis, and CG17293 has independently been described as highly related to mammalian WDR82 (dichtl2004functionsfors. pages 3-3, park2011molecularorganizationof pages 4-5). Therefore, results on dWdr82-dependent COMPASS activity, H3K4 trimethylation, and Su(s)-mediated transcription termination <strong>must not be assigned to Q9VQD1/CG3515</strong>.</p>
+<p>The defensible functional annotation is consequently narrow: <strong>CG3515 is most likely a nonenzymatic WD40 interaction scaffold, but its binding partners, complex membership, pathway, cellular localization, and organismal role have not been established experimentally.</strong></p>
+<table>
+<thead>
+<tr>
+<th>Claim/topic</th>
+<th>Finding</th>
+<th>Evidence type</th>
+<th>Confidence</th>
+<th>Key caveat</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Target identity</td>
+<td>Q9VQD1 corresponds to <em>Drosophila melanogaster</em> CG3515 (FBgn0031431), annotated as a WD repeat-containing protein in the SWD2 family. Comparative literature explicitly includes Dm_CG3515 among SWD2-related sequences (dichtl2004functionsfors. pages 2-3, dichtl2004functionsfors. pages 3-3)</td>
+<td>Curated database annotation plus comparative sequence evidence</td>
+<td>High</td>
+<td>The protein name is annotation-based; it does not demonstrate a particular biochemical role in flies.</td>
+</tr>
+<tr>
+<td>Predicted structure</td>
+<td>Sequence/profile analysis supports WD40-repeat architecture, plausibly forming a seven-bladed β-propeller typical of SWD2-family scaffolds (dichtl2004functionsfors. pages 2-3, dichtl2004functionsfors. pages 3-3)</td>
+<td>Bioinformatic and evolutionary inference</td>
+<td>Moderate–high</td>
+<td>No experimentally determined CG3515 structure was identified; the seven-bladed model is predicted rather than directly measured.</td>
+</tr>
+<tr>
+<td>Primary molecular function</td>
+<td>CG3515 is most plausibly a nonenzymatic protein-interaction scaffold or adaptor, not an enzyme, transporter, receptor, or structural filament protein.</td>
+<td>Domain/family inference</td>
+<td>Moderate</td>
+<td>No CG3515-specific catalytic assay, binding assay, interaction map, or substrate-specificity study was found.</td>
+</tr>
+<tr>
+<td>Complex membership and pathway</td>
+<td>No direct evidence identified that CG3515 belongs to Drosophila COMPASS, a cleavage/polyadenylation complex, or a transcription-termination complex. Yeast SWD2 has dual SET1C and CPF roles, but these cannot be automatically transferred to CG3515 (dichtl2004functionsfors. pages 2-3)</td>
+<td>Cross-species family analogy</td>
+<td>Low for CG3515</td>
+<td>Orthology within a diversified WD-repeat family is insufficient to establish conserved complex membership.</td>
+</tr>
+<tr>
+<td>Cellular localization</td>
+<td>No experimentally validated cellular or subcellular localization was found for CG3515.</td>
+<td>Negative literature finding</td>
+<td>Undetermined</td>
+<td>A nuclear localization would be plausible only if a transcription/chromatin role were independently confirmed.</td>
+</tr>
+<tr>
+<td>Genetic or organismal function</td>
+<td>No CG3515-specific loss-of-function phenotype, rescue experiment, tissue-specific perturbation, or validated biological process was identified.</td>
+<td>Negative literature finding</td>
+<td>Undetermined</td>
+<td>High-throughput screens or database predictions should not be interpreted as mechanistic validation.</td>
+</tr>
+<tr>
+<td>Distinction from fly Wdr82</td>
+<td>CG17293 is a separate Drosophila locus described as highly related to mammalian WDR82; functional fly studies of “dWdr82” connect that protein to COMPASS-dependent H3K4 trimethylation and Su(s)-associated transcription termination (mohan2011thecompassfamily pages 5-7, brewerjensen2016suppressorofsable pages 11-12, park2011molecularorganizationof pages 4-5)</td>
+<td>Locus-specific literature disambiguation</td>
+<td>High</td>
+<td>These CG17293/dWdr82 findings must not be attributed to CG3515/Q9VQD1.</td>
+</tr>
+<tr>
+<td>Peroxisomal DBP false match</td>
+<td>A peroxisome review’s apparent “CG3515” reference concerns a D-bifunctional-protein homolog and is inconsistent with the surrounding identification of CG3415; it is unrelated to Q9VQD1 and is best treated as a typographical or identifier error (faust2012aninventoryof pages 3-5)</td>
+<td>Contextual identifier audit</td>
+<td>High</td>
+<td>It provides no evidence that Q9VQD1 is peroxisomal or participates in fatty-acid β-oxidation.</td>
+</tr>
+<tr>
+<td>Recent 2023–2024 context</td>
+<td>Mammalian studies place WDR82 in ZC3H4 Restrictor-mediated early termination and in SET1-associated protection from premature termination; related work links WDR82 to PNUTS/PP1 and Pol II regulation (polizzese2024terminationofextragenic pages 26-30, mandana2025investigatingthebases pages 24-25, polizzese2024terminationofextragenic pages 22-26)</td>
+<td>Recent mammalian mechanistic evidence</td>
+<td>High for mammalian WDR82; low for fly CG3515</td>
+<td>No 2023–2024 study directly validating these mechanisms for CG3515 was identified.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Evidence-tier summary separating experimentally supported identity and domain features of CG3515/Q9VQD1 from unvalidated functional inference. It highlights the critical distinction between CG3515 and the separate Drosophila Wdr82-associated locus CG17293.</em></p>
+<h2 id="1-identity-verification-and-disambiguation">1. Identity verification and disambiguation</h2>
+<h3 id="verified-target">Verified target</h3>
+<ul>
+<li><strong>Organism:</strong> <em>Drosophila melanogaster</em> (fruit fly).</li>
+<li><strong>Gene:</strong> CG3515 / Dmel_CG3515.</li>
+<li><strong>FlyBase identifier:</strong> FBgn0031431, as supplied in the target metadata.</li>
+<li><strong>UniProt accession:</strong> Q9VQD1.</li>
+<li><strong>Annotated description:</strong> WD repeat-containing protein 82.</li>
+<li><strong>Family/domain assignment:</strong> SWD2-family protein with Swd2/WDR82 and WD40-repeat annotations.</li>
+</ul>
+<p>The 2004 SWD2 comparative analysis explicitly includes “Dm_CG3515” and separately lists Dm_CG17293. Thus, the two identifiers refer to distinct fly proteins rather than aliases of one locus (dichtl2004functionsfors. pages 3-3). The paper is primarily a yeast study and supplies comparative-sequence—not direct fly-functional—evidence [Dichtl et al., June 2004; DOI URL: https://doi.org/10.1261/rna.7090104] (dichtl2004functionsfors. pages 2-3).</p>
+<h3 id="critical-false-matches">Critical false matches</h3>
+<ol>
+<li><strong>CG17293/dWdr82:</strong> A Drosophila neuroendocrine study describes CG17293 as highly related to mammalian WDR82. Functional publications using the name dWdr82 therefore cannot be presumed to concern CG3515 unless the locus is explicitly verified [Park et al., September 2011; https://doi.org/10.1016/j.cub.2011.08.015] (park2011molecularorganizationof pages 4-5).</li>
+<li><strong>Peroxisomal D-bifunctional protein:</strong> A 2012 peroxisome inventory contains an apparent “CG3515” reference in a discussion whose correct surrounding identifier is CG3415, a D-bifunctional-protein homolog. This is an unrelated identifier error and provides no evidence that Q9VQD1 is peroxisomal or participates in fatty-acid β-oxidation [Faust et al., October 2012; https://doi.org/10.1111/j.1600-0854.2012.01393.x] (faust2012aninventoryof pages 3-5).</li>
+<li><strong>CRL4 substrate-receptor screen:</strong> CG3515 appeared only as one candidate in a DCAF screen; the experimentally validated Mahjong protein was CG10080. Those neural-stem-cell phenotypes do not establish a function for CG3515 [Ly et al., June 2019; https://doi.org/10.1371/journal.pbio.3000276] (ly2019crl4mahje3ubiquitin pages 7-9).</li>
+</ol>
+<h2 id="2-protein-architecture-and-primary-molecular-function">2. Protein architecture and primary molecular function</h2>
+<p>CG3515 contains WD40-repeat/domain signatures. WD40 proteins generally fold into β-propeller platforms whose exposed surfaces organize protein–protein interactions. Comparative profile analysis of SWD2-family sequences predicts up to seven WD repeats and a seven-bladed β-propeller; this is consistent with the supplied InterPro/Pfam assignments but has not been validated by a CG3515 crystal structure or cryo-EM model (dichtl2004functionsfors. pages 2-3, dichtl2004functionsfors. pages 3-3).</p>
+<p>Accordingly, CG3515 is best classified as a <strong>putative protein-interaction scaffold or adaptor</strong>. There is no evidence that it catalyzes a chemical reaction, binds a transport substrate, forms a structural filament, or possesses intrinsic methyltransferase or phosphatase activity. Questions of catalytic reaction and substrate specificity are therefore not applicable on current evidence.</p>
+<p>The protein description “WD repeat-containing protein 82” should be treated cautiously: it reflects homology/domain annotation, not proof that CG3515 performs all functions of mammalian WDR82. In particular, assigning it as a Pol II CTD receptor, SET1-complex subunit, or transcription-termination factor would exceed the target-specific evidence.</p>
+<h2 id="3-biological-processes-and-biochemical-pathways">3. Biological processes and biochemical pathways</h2>
+<h3 id="what-is-directly-supported-for-cg3515">What is directly supported for CG3515</h3>
+<p>Only the following is presently well supported:</p>
+<ul>
+<li>It is an SWD2-family, WD-repeat protein in <em>D. melanogaster</em> (dichtl2004functionsfors. pages 2-3, dichtl2004functionsfors. pages 3-3).</li>
+<li>Its architecture is compatible with a multivalent interaction scaffold (dichtl2004functionsfors. pages 3-3).</li>
+</ul>
+<p>No retrieved study directly demonstrated CG3515 participation in:</p>
+<ul>
+<li>SET1/COMPASS;</li>
+<li>H3K4 mono-, di-, or trimethylation;</li>
+<li>cleavage/polyadenylation machinery;</li>
+<li>RNA polymerase II termination;</li>
+<li>RNA degradation or the nuclear exosome;</li>
+<li>peroxisomal β-oxidation;</li>
+<li>neuroendocrine differentiation;</li>
+<li>neural-stem-cell reactivation.</li>
+</ul>
+<h3 id="evolutionary-inference-from-yeast-swd2">Evolutionary inference from yeast SWD2</h3>
+<p>Yeast Swd2 is a shared component of two functionally distinct assemblies: SET1C, which supports histone H3 lysine-4 methylation, and cleavage/polyadenylation factor, which participates in mRNA and snoRNA 3′-end formation. Temperature-sensitive yeast mutants displayed defects in specific RNA 3′-end processing, reduced H3K4 di- and trimethylation, lower Set1 abundance, and shortened telomeres [Dichtl et al., June 2004; https://doi.org/10.1261/rna.7090104] (dichtl2004functionsfors. pages 2-3).</p>
+<p>These findings provide a biologically plausible hypothesis for CG3515, but not a verified annotation. The separate existence of CG17293 indicates that SWD2-family functions may have diverged or partitioned between fly paralogs. Orthology resolution and complex proteomics are required before the yeast dual-function model can be transferred to CG3515.</p>
+<h3 id="evidence-from-the-different-fly-protein-dwdr82">Evidence from the different fly protein dWdr82</h3>
+<p>In Drosophila S2 cells, depletion of dWdr82 significantly reduced H3K4 trimethylation while leaving H3K4 dimethylation comparatively unaffected, consistent with a role in trimethylation-competent COMPASS [Mohan et al., November 2011; https://doi.org/10.1128/MCB.06092-11] (mohan2011thecompassfamily pages 5-7). Separately, dWdr82 and Su(s) inhibit Pol II elongation through heat-shock-inducible Hsp70-αβ repetitive elements and promote production of unstable, heterogeneously polyadenylated transcripts. Su(s) becomes less stable without Wdr82, and the pathway likely acts upstream of nuclear-exosome degradation [Brewer-Jensen et al., January 2016 issue; DOI metadata retrieved November 2016; https://doi.org/10.1261/rna.048819.114] (brewerjensen2016suppressorofsable pages 11-12).</p>
+<p>These are important demonstrations of SWD2/WDR82-family biology in flies, but because the functional papers do not establish CG3515 as their tested locus—and independent evidence points to CG17293—they should be used only as hypotheses for Q9VQD1.</p>
+<h2 id="4-cellular-and-subcellular-localization">4. Cellular and subcellular localization</h2>
+<p>No experimentally validated localization was found for CG3515/Q9VQD1. A nuclear or chromatin-associated location would be plausible if CG3515 participates in transcription or chromatin regulation, but this remains an inference.</p>
+<p>The Su(s)-dWdr82 pathway operates in a nuclear transcriptional context: Su(s) associates with polytene-chromosome sites containing hypophosphorylated or Ser5-phosphorylated Pol II, and S2-cell experiments measured Pol II occupancy after RNAi and heat shock (brewerjensen2016suppressorofsable pages 11-12, brewerjensen2016suppressorofsable pages 14-15). This does not constitute localization evidence for CG3515 itself.</p>
+<p>There is likewise no valid evidence for peroxisomal localization. The apparent peroxisomal “CG3515” mention is embedded in a discussion of CG3415 and is inconsistent with the target’s WD-repeat identity (faust2012aninventoryof pages 3-5).</p>
+<h2 id="5-recent-developments-20232024">5. Recent developments, 2023–2024</h2>
+<p>No 2023–2024 publication directly characterizing CG3515 was identified. Recent advances concern mammalian WDR82 and clarify why simple transfer to CG3515 is hazardous.</p>
+<p>A 2023 mammalian study showed that SET1 complexes protect low-to-moderately transcribed CpG-island genes from premature termination. This protective effect can be independent of SET1 histone-methyltransferase activity and depends on interaction with WDR82; at extragenic transcription sites, ZC3H4/WDR82 Restrictor activity remains unopposed [Hughes et al., March 2023; https://doi.org/10.1038/s41467-023-36236-2]. In current models, mammalian WDR82 is a WD40 adaptor used in several nuclear assemblies: SET1A/B–COMPASS at promoters, ZC3H4–WDR82 Restrictor during early noncoding transcription, and PNUTS–PP1-associated termination machinery near gene ends (polizzese2024terminationofextragenic pages 26-30, polizzese2024terminationofextragenic pages 22-26, kelley2022characterisingthemolecular pages 32-35).</p>
+<p>A December 2023 study further reported that the core WDR82–ZC3H4 Restrictor machinery cooperates with Symplekin and PNUTS to terminate extragenic transcription [Russo et al., December 2023; https://doi.org/10.1101/gad.351057.123]. A July 2024 preprint proposed direct interaction between PNUTS and Restrictor through a WDR82-binding domain and linked PP1-dependent Pol II CTD Ser5 dephosphorylation to termination [Erickson et al., July 2024; https://doi.org/10.1101/2024.07.12.603302]. These developments sharpen the family-level hypothesis that WDR82 proteins bridge Pol II to regulatory complexes, but they do not identify CG3515 as the fly executor of those functions.</p>
+<h2 id="6-real-world-applications-and-experimental-utility">6. Real-world applications and experimental utility</h2>
+<p>There is no established clinical, agricultural, diagnostic, or biotechnology application specific to CG3515. Its most immediate value is as an <strong>annotation and functional-genomics target</strong>:</p>
+<ol>
+<li><strong>Paralog disambiguation:</strong> CG3515 provides a useful case for testing how SWD2-family functions partition between insect paralogs.</li>
+<li><strong>Complex proteomics:</strong> Endogenous tagging followed by affinity purification–mass spectrometry could determine whether it binds Set1/COMPASS, cleavage/polyadenylation factors, termination machinery, or an unrecognized complex.</li>
+<li><strong>Transcription/chromatin assays:</strong> Acute depletion combined with CUT&amp;Tag for H3K4me3, Pol II phospho-isoforms, and nascent-RNA sequencing would test the leading family-derived hypotheses.</li>
+<li><strong>Localization:</strong> Endogenous fluorescent tagging and cell fractionation are necessary before assigning nuclear, cytoplasmic, or organellar localization.</li>
+<li><strong>Genetics:</strong> A clean null allele with genomic rescue would establish essentiality and distinguish direct phenotypes from high-throughput RNAi artifacts.</li>
+</ol>
+<p>Mammalian WDR82 pathways are relevant to transcriptional control, retroelement restriction, and HIV latency, but these applications concern mammalian WDR82 complexes, not CG3515. For example, a 2023 study identified PCF11–WDR82 as a premature-termination complex that attenuates latent HIV-1 transcription [Ait Said et al., November 2023; https://doi.org/10.1073/pnas.2313356120].</p>
+<h2 id="7-quantitative-evidence-and-evidence-quality">7. Quantitative evidence and evidence quality</h2>
+<p>Target-specific quantitative data are essentially absent. The strongest numerical feature associated with CG3515 is the predicted <strong>seven-repeat/seven-bladed WD40 architecture</strong>, which remains computational rather than structural evidence (dichtl2004functionsfors. pages 3-3).</p>
+<p>Quantitative results found in nearby literature belong to other genes. For example, the CRL4Mahj study reported large changes in EdU- and PH3-positive neural stem cells after perturbing CG10080/Mahjong, while CG3515 was only a screened candidate; these values must not be attributed to CG3515 (ly2019crl4mahje3ubiquitin pages 7-9). Likewise, significant loss of H3K4me3 after dWdr82 RNAi supports the function of the separately studied fly Wdr82 protein, not Q9VQD1 (mohan2011thecompassfamily pages 5-7).</p>
+<h3 id="confidence-assessment">Confidence assessment</h3>
+<ul>
+<li><strong>High confidence:</strong> identity as <em>D. melanogaster</em> CG3515/Q9VQD1; SWD2-family and WD-repeat annotation; distinction from CG17293 and the peroxisomal false match.</li>
+<li><strong>Moderate confidence:</strong> nonenzymatic WD40 β-propeller/scaffold role.</li>
+<li><strong>Low confidence:</strong> participation in a particular chromatin, RNA-processing, or termination complex.</li>
+<li><strong>Unknown:</strong> precise binding partners, biochemical pathway, tissue requirement, phenotype, and subcellular localization.</li>
+</ul>
+<h2 id="final-functional-annotation">Final functional annotation</h2>
+<p><strong>CG3515/Q9VQD1 is a poorly characterized <em>Drosophila melanogaster</em> SWD2-family WD40-repeat protein, most likely functioning as a protein-interaction scaffold. No direct evidence currently establishes its complex membership, pathway, localization, substrate, or biological phenotype. Functional Drosophila studies of Wdr82 most likely concern the distinct CG17293 locus and must not be transferred to CG3515.</strong> The leading—but unvalidated—hypothesis is that CG3515 participates in a nuclear multiprotein assembly involved in chromatin or RNA metabolism, based solely on its conserved SWD2/WD40 architecture and cross-species family biology.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(dichtl2004functionsfors. pages 2-3): BERNHARD DICHTL, REIN AASLAND, and WALTER KELLER. Functions for s. cerevisiae swd2p in 3' end formation of specific mrnas and snornas and global histone 3 lysine 4 methylation. RNA, 10 6:965-77, Jun 2004. URL: https://doi.org/10.1261/rna.7090104, doi:10.1261/rna.7090104. This article has 89 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dichtl2004functionsfors. pages 3-3): BERNHARD DICHTL, REIN AASLAND, and WALTER KELLER. Functions for s. cerevisiae swd2p in 3' end formation of specific mrnas and snornas and global histone 3 lysine 4 methylation. RNA, 10 6:965-77, Jun 2004. URL: https://doi.org/10.1261/rna.7090104, doi:10.1261/rna.7090104. This article has 89 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(park2011molecularorganizationof pages 4-5): Dongkook Park, Tarik Hadžić, Ping Yin, Jannette Rusch, Katharine Abruzzi, Michael Rosbash, James B. Skeath, Satchidananda Panda, Jonathan V. Sweedler, and Paul H. Taghert. Molecular organization of drosophila neuroendocrine cells by dimmed. Current Biology, 21:1515-1524, Sep 2011. URL: https://doi.org/10.1016/j.cub.2011.08.015, doi:10.1016/j.cub.2011.08.015. This article has 44 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mohan2011thecompassfamily pages 5-7): Man Mohan, Hans-Martin Herz, Edwin R. Smith, Ying Zhang, Jessica Jackson, Michael P. Washburn, Laurence Florens, Joel C. Eissenberg, and Ali Shilatifard. The compass family of h3k4 methylases in drosophila. Nov 2011. URL: https://doi.org/10.1128/mcb.06092-11, doi:10.1128/mcb.06092-11. This article has 273 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(brewerjensen2016suppressorofsable pages 11-12): Paul Brewer-Jensen, Carrie B. Wilson, John Abernethy, Lonna Mollison, Samantha Card, and Lillie L. Searles. Suppressor of sable [su(s)] and wdr82 down-regulate rna from heat-shock-inducible repetitive elements by a mechanism that involves transcription termination. RNA, 22(1):139-154, Nov 2016. URL: https://doi.org/10.1261/rna.048819.114, doi:10.1261/rna.048819.114. This article has 34 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(faust2012aninventoryof pages 3-5): Joseph E. Faust, Avani Verma, Chengwei Peng, and James A. McNew. An inventory of peroxisomal proteins and pathways in drosophila melanogaster. Traffic, 13:1378-1392, Oct 2012. URL: https://doi.org/10.1111/j.1600-0854.2012.01393.x, doi:10.1111/j.1600-0854.2012.01393.x. This article has 112 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(polizzese2024terminationofextragenic pages 26-30): D Polizzese. Termination of extragenic transcription by the restrictor complex: dissecting rna binding specificity. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(mandana2025investigatingthebases pages 24-25): GM Mandana. Investigating the bases of the specificity of the restrictor complex for the termination of noncoding transcription. Unknown journal, 2025.</p>
+</li>
+<li>
+<p>(polizzese2024terminationofextragenic pages 22-26): D Polizzese. Termination of extragenic transcription by the restrictor complex: dissecting rna binding specificity. Unknown journal, 2024.</p>
+</li>
+<li>
+<p>(ly2019crl4mahje3ubiquitin pages 7-9): Phuong Thao Ly, Ye Sing Tan, Chwee Tat Koe, Yingjie Zhang, Gengqiang Xie, Sharyn Endow, Wu-Min Deng, Fengwei Yu, and Hongyan Wang. Crl4mahj e3 ubiquitin ligase promotes neural stem cell reactivation. Jun 2019. URL: https://doi.org/10.1371/journal.pbio.3000276, doi:10.1371/journal.pbio.3000276. This article has 32 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(brewerjensen2016suppressorofsable pages 14-15): Paul Brewer-Jensen, Carrie B. Wilson, John Abernethy, Lonna Mollison, Samantha Card, and Lillie L. Searles. Suppressor of sable [su(s)] and wdr82 down-regulate rna from heat-shock-inducible repetitive elements by a mechanism that involves transcription termination. RNA, 22(1):139-154, Nov 2016. URL: https://doi.org/10.1261/rna.048819.114, doi:10.1261/rna.048819.114. This article has 34 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kelley2022characterisingthemolecular pages 32-35): Characterising the molecular basis of WDR82 binding in multiple contexts This article has 0 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="CG3515-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>faust2012aninventoryof pages 3-5</li>
+<li>park2011molecularorganizationof pages 4-5</li>
+<li>mohan2011thecompassfamily pages 5-7</li>
+<li>brewerjensen2016suppressorofsable pages 11-12</li>
+<li>polizzese2024terminationofextragenic pages 26-30</li>
+<li>mandana2025investigatingthebases pages 24-25</li>
+<li>polizzese2024terminationofextragenic pages 22-26</li>
+<li>brewerjensen2016suppressorofsable pages 14-15</li>
+<li>kelley2022characterisingthemolecular pages 32-35</li>
+<li>Dichtl et al., June 2004; DOI URL: https://doi.org/10.1261/rna.7090104</li>
+<li>Park et al., September 2011; https://doi.org/10.1016/j.cub.2011.08.015</li>
+<li>Faust et al., October 2012; https://doi.org/10.1111/j.1600-0854.2012.01393.x</li>
+<li>Ly et al., June 2019; https://doi.org/10.1371/journal.pbio.3000276</li>
+<li>Dichtl et al., June 2004; https://doi.org/10.1261/rna.7090104</li>
+<li>Mohan et al., November 2011; https://doi.org/10.1128/MCB.06092-11</li>
+<li>Brewer-Jensen et al., January 2016 issue; DOI metadata retrieved November 2016; https://doi.org/10.1261/rna.048819.114</li>
+<li>Hughes et al., March 2023; https://doi.org/10.1038/s41467-023-36236-2</li>
+<li>Russo et al., December 2023; https://doi.org/10.1101/gad.351057.123</li>
+<li>Erickson et al., July 2024; https://doi.org/10.1101/2024.07.12.603302</li>
+<li>Ait Said et al., November 2023; https://doi.org/10.1073/pnas.2313356120</li>
+<li>su(s)</li>
+<li>https://doi.org/10.1261/rna.7090104]</li>
+<li>https://doi.org/10.1016/j.cub.2011.08.015]</li>
+<li>https://doi.org/10.1111/j.1600-0854.2012.01393.x]</li>
+<li>https://doi.org/10.1371/journal.pbio.3000276]</li>
+<li>https://doi.org/10.1128/MCB.06092-11]</li>
+<li>https://doi.org/10.1261/rna.048819.114]</li>
+<li>https://doi.org/10.1038/s41467-023-36236-2].</li>
+<li>https://doi.org/10.1101/gad.351057.123].</li>
+<li>https://doi.org/10.1101/2024.07.12.603302].</li>
+<li>https://doi.org/10.1073/pnas.2313356120].</li>
+<li>https://doi.org/10.1261/rna.7090104,</li>
+<li>https://doi.org/10.1016/j.cub.2011.08.015,</li>
+<li>https://doi.org/10.1128/mcb.06092-11,</li>
+<li>https://doi.org/10.1261/rna.048819.114,</li>
+<li>https://doi.org/10.1111/j.1600-0854.2012.01393.x,</li>
+<li>https://doi.org/10.1371/journal.pbio.3000276,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CG3515-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9VQD1" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="cg3515-evidence-notes">CG3515 evidence notes</h1>
+<p>Q9VQD1 is the 395-residue PA product of FBgn0031431 (AAF51244/NP_608687), with one protein-coding transcript. Its record contains <code>DR   InterPro; IPR037867; Swd2/WDR82.</code>; the family assignment is more diagnostic than generic WD40 repeats. <a href="https://flybase.org/reports/FBgn0031431">FlyBase</a>.</p>
+<p>CG3515 is not Wdr82/CG17293 (FBgn0032030, Q9VLN1). The current FlyBase orthology table nevertheless places CG3515 with human WDR82 (7/14 DIOPT methods, best target score but not best reverse score). This is consistent with a diverged paralog and with the curated PAINT chromatin/COMPASS assignment. A paralog distinction warrants keeping direct experimental attribution accurate; it does not alone demonstrate loss of conserved nuclear localization.</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/18838538">PMID:18838538</a>(https://pubmed.ncbi.nlm.nih.gov/18838538/) establishes that human WDR82 associates with chromatin and Set1 complexes. The cached abstract directly supports that family property; full-text fetching encountered a publisher/browser restriction. The accessible primary search excerpt identifies CG17293 as the closest fly sequence, and is not represented as evidence that CG3515 itself was assayed. Nuclear localization and chromatin/COMPASS roles are accepted as conserved-family inferences. A specific CG3515 RNA-metabolic role remains unresolved; no histone methyltransferase activity is assigned to the WD-repeat subunit itself.</p>
+<p>ProtNLM nucleus is CNN: this broad location is supported by nuclear-complex family biology and already occurs in the record. The original location score and donor metadata remain in the frozen prediction JSON.</p>
+<p>Research-provider outcome: the default Falcon process timed out after 600 seconds. The configured perplexity-lite fallback returned HTTP 401 (<code>insufficient_quota</code>). The original Falcon child subsequently produced a complete report (614.92 seconds), which was inspected. Its CG3515/CG17293 distinction agrees with the identity analysis. It identified the primary comparative Swd2 analysis <a href="https://pubmed.ncbi.nlm.nih.gov/15146080">PMID:15146080</a>(https://doi.org/10.1261/rna.7090104), now cached as an abstract; the report's exact CG3515 alignment row has not been independently recovered from full text. The primary yeast study establishes dual chromatin and RNA-processing roles, while the present fly review treats chromatin/COMPASS as conserved-family inference and leaves specific RNA processing unresolved. The provider's absence of a direct fly assay does not itself refute the curated phylogenetic inference.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9VQD1
+gene_symbol: CG3515
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:7227
+  label: Drosophila melanogaster
+description: CG3515 is a Swd2/WDR82-family WD-repeat protein inferred to associate with nuclear chromatin
+  and the Set1C/COMPASS histone-methylation machinery. It is distinct from the Drosophila Wdr82/CG17293
+  paralog. Its precise complex partners and physiological role have not been characterized directly.
+existing_annotations:
+- term:
+    id: GO:0003682
+    label: chromatin binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  supporting_entities:
+  - MGI:MGI:1924555
+  - PANTHER:PTN000458398
+  review:
+    action: ACCEPT
+    summary: CG3515 is a Swd2/WDR82-family WD-repeat protein with a curated ancestral assignment to chromatin
+      and Set1C/COMPASS.
+    reason: CG3515 is a Swd2/WDR82-family WD-repeat protein with a curated ancestral assignment to chromatin
+      and Set1C/COMPASS. Characterized WDR82 associates with chromatin and Set1 complexes, providing a
+      biological basis for conserved nuclear chromatin-complex function. CG3515 is distinct from the experimentally
+      studied fly Wdr82/CG17293 paralog; this is a family-based assignment, not a direct CG3515 localization
+      or interaction assay.
+    supported_by:
+    - &amp;id001
+      reference_id: file:DROME/CG3515/CG3515-uniprot.txt
+      supporting_text: DR   InterPro; IPR037867; Swd2/WDR82.
+    - &amp;id002
+      reference_id: PMID:18838538
+      supporting_text: &#39;We have shown that Wdr82,
+
+        which associates with chromatin in a histone H2B ubiquitination-dependent
+
+        manner, is a specific component of Set1 complexes but not that of MLL1-4
+
+        complexes.&#39;
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  supporting_entities:
+  - ARBA:ARBA00026330
+  - UniProtKB-SubCell:SL-0191
+  review:
+    action: ACCEPT
+    summary: CG3515 is a Swd2/WDR82-family WD-repeat protein with a curated ancestral assignment to chromatin
+      and Set1C/COMPASS.
+    reason: CG3515 is a Swd2/WDR82-family WD-repeat protein with a curated ancestral assignment to chromatin
+      and Set1C/COMPASS. Characterized WDR82 associates with chromatin and Set1 complexes, providing a
+      biological basis for conserved nuclear chromatin-complex function. CG3515 is distinct from the experimentally
+      studied fly Wdr82/CG17293 paralog; this is a family-based assignment, not a direct CG3515 localization
+      or interaction assay.
+    supported_by:
+    - *id001
+    - *id002
+- term:
+    id: GO:0016070
+    label: RNA metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  supporting_entities:
+  - ARBA:ARBA00028985
+  review:
+    action: UNDECIDED
+    summary: A nuclear WDR82-family chromatin-complex role is supported, but the broad RNA-metabolic assertion
+      has no independently resolved CG3515 RNA-processing or transcriptional role in the evidence reviewed.
+    reason: A nuclear WDR82-family chromatin-complex role is supported, but the broad RNA-metabolic assertion
+      has no independently resolved CG3515 RNA-processing or transcriptional role in the evidence reviewed.
+      WDR82-family proteins participate in several complexes, and the specific RNA pathway or complex
+      retained by this paralog is not established.
+    supported_by:
+    - *id001
+- term:
+    id: GO:0048188
+    label: Set1C/COMPASS complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  supporting_entities:
+  - FB:FBgn0032030
+  - PANTHER:PTN000458398
+  - PomBase:SPBC18H10.06c
+  - SGD:S000001501
+  - UniProtKB:Q6UXN9
+  - dictyBase:DDB_G0278945
+  review:
+    action: ACCEPT
+    summary: CG3515 is a Swd2/WDR82-family WD-repeat protein with a curated ancestral assignment to chromatin
+      and Set1C/COMPASS.
+    reason: CG3515 is a Swd2/WDR82-family WD-repeat protein with a curated ancestral assignment to chromatin
+      and Set1C/COMPASS. Characterized WDR82 associates with chromatin and Set1 complexes, providing a
+      biological basis for conserved nuclear chromatin-complex function. CG3515 is distinct from the experimentally
+      studied fly Wdr82/CG17293 paralog; this is a family-based assignment, not a direct CG3515 localization
+      or interaction assay.
+    supported_by:
+    - *id001
+    - *id002
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:DROME/CG3515/CG3515-uniprot.txt
+  title: DROME/CG3515/CG3515-uniprot.txt
+  findings: []
+- id: PMID:18838538
+  title: Molecular regulation of H3K4 trimethylation by Wdr82, a component of human Set1/COMPASS.
+  full_text_unavailable: true
+  findings: []
+core_functions:
+- description: Conserved WDR82-family chromatin association supports participation in nuclear Set1C/COMPASS.
+  molecular_function:
+    id: GO:0003682
+    label: chromatin binding
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  in_complex:
+    id: GO:0048188
+    label: Set1C/COMPASS complex
+  supported_by:
+  - *id001
+  - *id002
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

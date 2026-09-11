@@ -1,0 +1,2390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ttv - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ttv</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/D5SHU8" target="_blank" class="term-link">
+                        D5SHU8
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Drosophila melanogaster</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ttv";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">5</span> Annotations</a>
+
+
+
+        <a href="#review-research" title="Deep research and hypothesis research reports"><span class="nav-count">1</span> Research</a>
+
+
+
+        <a href="#external-predictions" title="External predictions assessed separately from GOA annotations" class="nav-external"><span class="nav-count">1</span> External</a>
+
+
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">6</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">2</span> Documents</a>
+
+
+
+
+
+
+
+
+
+
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="D5SHU8" data-a="DESCRIPTION: Tout-velu is an exostosin-family glycosyltransfera..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Tout-velu is an exostosin-family glycosyltransferase associated with heparan-sulfate synthesis. The native 299-residue PC isoform retains the C-terminal glycosyltransferase region but lacks the N-terminal membrane anchor and the other glycosyltransferase domain found in full-length Ttv. Its catalytic competence, intracellular targeting and contribution to glycan synthesis remain unresolved.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005789" target="_blank" class="term-link">
+                                    GO:0005789
+                                </a>
+                            </span>
+                            <span class="term-label">endoplasmic reticulum membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="D5SHU8" data-a="GO:0005789" data-r="GO_REF:0000044" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The source protein is a C-terminal isoform lacking the N-terminal membrane anchor of full-length Ttv.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The source protein is a C-terminal isoform lacking the N-terminal membrane anchor of full-length Ttv. It might associate with membranes through other proteins, but this has not been demonstrated. The full-length membrane annotation does not independently establish ER-membrane residence for PC; the correct compartment remains unresolved.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/ttv/ttv-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">The C-terminal glycosyltransferase-region active-site Asp670 maps to target Asp209, and the source-record nucleotide-sugar/metal-binding residues in this region are retained.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/ttv/ttv-flybase.txt
+
+                                </span>
+
+                                <div class="support-text">ttv-PC FBpp0305368 34.4 299 9.71 D5SHU8 NP_001260972 AGB93504</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009101" target="_blank" class="term-link">
+                                    GO:0009101
+                                </a>
+                            </span>
+                            <span class="term-label">glycoprotein biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="D5SHU8" data-a="GO:0009101" data-r="GO_REF:0000002" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The native short PC product retains a C-terminal glycosyltransferase region but lacks the N-terminal region needed for the full-length domain architecture and membrane targeting.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The native short PC product retains a C-terminal glycosyltransferase region but lacks the N-terminal region needed for the full-length domain architecture and membrane targeting. Catalytic potential remains plausible, but no exact-isoform assay establishes native activity, trafficking or participation in glycan synthesis. Keep this annotation undecided rather than transfer all full-length Ttv properties.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/ttv/ttv-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">The C-terminal glycosyltransferase-region active-site Asp670 maps to target Asp209, and the source-record nucleotide-sugar/metal-binding residues in this region are retained.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/ttv/ttv-flybase.txt
+
+                                </span>
+
+                                <div class="support-text">ttv-PC FBpp0305368 34.4 299 9.71 D5SHU8 NP_001260972 AGB93504</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="D5SHU8" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The source protein is a C-terminal isoform lacking the N-terminal membrane anchor of full-length Ttv.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The source protein is a C-terminal isoform lacking the N-terminal membrane anchor of full-length Ttv. It might associate with membranes through other proteins, but this has not been demonstrated. The full-length membrane annotation does not independently establish ER-membrane residence for PC; the correct compartment remains unresolved.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/ttv/ttv-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">The C-terminal glycosyltransferase-region active-site Asp670 maps to target Asp209, and the source-record nucleotide-sugar/metal-binding residues in this region are retained.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/ttv/ttv-flybase.txt
+
+                                </span>
+
+                                <div class="support-text">ttv-PC FBpp0305368 34.4 299 9.71 D5SHU8 NP_001260972 AGB93504</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016757" target="_blank" class="term-link">
+                                    GO:0016757
+                                </a>
+                            </span>
+                            <span class="term-label">glycosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="D5SHU8" data-a="GO:0016757" data-r="GO_REF:0000002" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The native short PC product retains a C-terminal glycosyltransferase region but lacks the N-terminal region needed for the full-length domain architecture and membrane targeting.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The native short PC product retains a C-terminal glycosyltransferase region but lacks the N-terminal region needed for the full-length domain architecture and membrane targeting. Catalytic potential remains plausible, but no exact-isoform assay establishes native activity, trafficking or participation in glycan synthesis. Keep this annotation undecided rather than transfer all full-length Ttv properties.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/ttv/ttv-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">The C-terminal glycosyltransferase-region active-site Asp670 maps to target Asp209, and the source-record nucleotide-sugar/metal-binding residues in this region are retained.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/ttv/ttv-flybase.txt
+
+                                </span>
+
+                                <div class="support-text">ttv-PC FBpp0305368 34.4 299 9.71 D5SHU8 NP_001260972 AGB93504</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/36593275" target="_blank" class="term-link">
+                                        PMID:36593275
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">EXT1 and EXT2, where each protein monomer contains distinct GT47 (GT-B fold) and
+GT64 (GT-A fold) glycosyltransferase domains.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1901135" target="_blank" class="term-link">
+                                    GO:1901135
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate derivative metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="D5SHU8" data-a="GO:1901135" data-r="GO_REF:0000117" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The native short PC product retains a C-terminal glycosyltransferase region but lacks the N-terminal region needed for the full-length domain architecture and membrane targeting.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The native short PC product retains a C-terminal glycosyltransferase region but lacks the N-terminal region needed for the full-length domain architecture and membrane targeting. Catalytic potential remains plausible, but no exact-isoform assay establishes native activity, trafficking or participation in glycan synthesis. Keep this annotation undecided rather than transfer all full-length Ttv properties.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/ttv/ttv-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">The C-terminal glycosyltransferase-region active-site Asp670 maps to target Asp209, and the source-record nucleotide-sugar/metal-binding residues in this region are retained.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/ttv/ttv-flybase.txt
+
+                                </span>
+
+                                <div class="support-text">ttv-PC FBpp0305368 34.4 299 9.71 D5SHU8 NP_001260972 AGB93504</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:DROME/ttv/ttv-bioinformatics/RESULTS.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">RESULTS.md</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:DROME/ttv/ttv-flybase.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ttv-flybase.txt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36593275" target="_blank" class="term-link">
+                            PMID:36593275
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural basis for heparan sulfate co-polymerase action by the EXT1-2 complex.</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+    <section class="section external-predictions" id="external-predictions" aria-labelledby="external-predictions-title">
+        <h2 class="section-title" id="external-predictions-title">External Prediction Reviews</h2>
+        <p class="prediction-notice">These computational predictions are reviewed separately from the GOA annotation set used for this review.
+            The assessments below are from this project and do not constitute official GO annotations or endorsement by GO/UniProt.
+            They are not included in the existing annotation review above.</p>
+
+
+        <article class="prediction-review">
+        <h3>ProtNLM2 <span class="badge">External predictions</span></h3>
+        <p class="prediction-source"><a href="ttv-protnlm-predictions-review.yaml">View prediction review YAML</a> &middot; ttv-protnlm-predictions-review.yaml
+            &middot; Review status: COMPLETE</p>
+
+        <p>The native short Ttv isoform retains a potentially catalytic C-terminal glycosyltransferase domain, but its autonomous activity and physiological access to substrates are unverified.</p>
+
+        <p class="prediction-source">Review score: 2 = concordant with evidence; 1 = uncertain; 0 = discordant with evidence. This is an assessment score, not a model probability.</p>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016757" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:0016757
+                    </a>
+                    <span class="term-label">glycosyltransferase activity</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_MF</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-unc">
+                        UNC — Uncertain
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 1/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM2
+                 &middot; Version: UniProt API snapshot 2026-09-08
+
+                 &middot; <a href="#" target="_blank" class="term-link">file:DROME/ttv/ttv-protnlm-source.json</a>
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> D5SHU8 is the 299-residue ttv-PC isoform, not the full-length760-residue protein. The retained C-terminal region contains the annotated catalytic Asp and multiple ligand-binding residues, so short length does not justify categorical refutation of glycosyltransferase activity. However, the other domain and N-terminal targeting/anchor region are absent, and the current data do not establish folding, complex support or substrate access in PC. An equivalent electronic annotation exists but adds no independent validation. Target-specific activity or a convincing domain-level functional analysis is missing; UNC preserves this distinction.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="ttv-bioinformatics/RESULTS.md" target="_blank" class="term-link">file:DROME/ttv/ttv-bioinformatics/RESULTS.md</a>:
+
+
+                        <span class="finding-text">"The C-terminal glycosyltransferase-region active-site Asp670 maps to target Asp209, and the source-record nucleotide-sugar/metal-binding residues in this region are retained."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="ttv-flybase.txt" target="_blank" class="term-link">file:DROME/ttv/ttv-flybase.txt</a>:
+
+
+                        <span class="finding-text">"ttv-PC FBpp0305368 34.4 299 9.71 D5SHU8 NP_001260972 AGB93504"</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36593275" target="_blank" class="term-link">PMID:36593275</a>:
+
+
+                        <span class="finding-text">"EXT1 and EXT2, where each protein monomer contains distinct GT47 (GT-B fold) and
+GT64 (GT-A fold) glycosyltransferase domains."</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        </article>
+
+    </section>
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section" id="review-research">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ttv-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="D5SHU8" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional annotation report: *Drosophila melanogaster* **ttv**</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">19 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-08T18:15:22.724249</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="ttv-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="functional-annotation-report-drosophila-melanogaster-ttv">Functional annotation report: <em>Drosophila melanogaster</em> <strong>ttv</strong></h1>
+<h2 id="executive-conclusion">Executive conclusion</h2>
+<p>The requested protein is correctly identified as <em>Drosophila melanogaster</em> Tout-velu (<strong>ttv</strong>, CG10117; UniProt <strong>D5SHU8</strong>), not an unrelated same-symbol gene. It is the fly ortholog of vertebrate <strong>EXT1</strong> and an exostosin-family, membrane-associated glycosyltransferase required for synthesis of heparan-sulfate (HS) chains. Its principal biochemical role is HS-backbone polymerization in collaboration with the EXT2-like protein Sister of tout-velu (Sotv). The resulting HS chains decorate proteoglycans—notably the cell-surface glypicans Dally and Dally-like—and regulate extracellular morphogen distribution, especially Hedgehog (Hh), but also Wingless/Wnt and Decapentaplegic/BMP signaling. (dasgupta2007functionalconservationof pages 2-5, takei2004threedrosophilaext pages 1-2, dasgupta2007functionalconservationof pages 1-2)</p>
+<h2 id="1-identity-verification">1. Identity verification</h2>
+<p>The supplied identity is internally and externally consistent:</p>
+<ul>
+<li><strong>Organism:</strong> <em>Drosophila melanogaster</em>.</li>
+<li><strong>Gene:</strong> <strong>ttv</strong>, conventionally expanded as <em>tout-velu</em>; supplied FlyBase locus <strong>FBgn0265974</strong> and ORF name <strong>CG10117</strong>.</li>
+<li><strong>Protein:</strong> Tout-velu, the Drosophila homolog of mammalian EXT1.</li>
+<li><strong>Family/domains:</strong> EXT/exostosin glycosyltransferase family, consistent with the supplied glycosyltransferase-family-47, Exostosin, GT64 and nucleotide-diphosphosugar-transferase annotations.</li>
+</ul>
+<p>Published sequence analysis describes Ttv as a transmembrane EXT-family protein with a putative catalytic region and a conserved DXD motif typical of many nucleotide-sugar-dependent glycosyltransferases. Human EXT1 is reported to be 56% identical to Ttv and can functionally replace it in flies, strongly confirming orthology and biochemical conservation. (dasgupta2007functionalconservationof pages 2-5, takei2004threedrosophilaext pages 1-2)</p>
+<p>No literature on a different organism’s “ttv” gene was used. One nomenclature caution is that UniProt D5SHU8 carries the generic submitted protein description “MIP20656p”; this should not be interpreted as a separate biological identity from the supplied <em>ttv</em>/CG10117 mapping.</p>
+<table>
+<thead>
+<tr>
+<th>Annotation aspect</th>
+<th>Best-supported conclusion</th>
+<th>Evidence type / strength</th>
+<th>Key caveat</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity and orthology</td>
+<td><strong>ttv/CG10117 in <em>Drosophila melanogaster</em></strong> encodes Tout-velu, the fly homolog of vertebrate <strong>EXT1</strong>; human EXT1 is 56% identical and can restore heparan-sulfate synthesis in <em>ttv</em> mutants. This matches UniProt D5SHU8. (dasgupta2007functionalconservationof pages 2-5, dasgupta2007functionalconservationof pages 1-2)</td>
+<td>Direct cross-species complementation and sequence comparison; <strong>strong</strong>.</td>
+<td>D5SHU8 itself is an unreviewed UniProt entry, and CG10117 is not printed in every retrieved paper.</td>
+</tr>
+<tr>
+<td>Protein family and domains</td>
+<td>Ttv is an EXT-family, membrane-associated glycosyltransferase with a putative catalytic region and conserved <strong>DXD</strong> motif, consistent with the supplied Exostosin, GT64, and glycosyltransferase-family-47 annotations. (takei2004threedrosophilaext pages 1-2)</td>
+<td>Sequence/domain conservation plus genetic function; <strong>strong for family assignment</strong>, indirect for individual-domain activity.</td>
+<td>No retrieved study structurally resolved Drosophila Ttv or assigned catalytic residues experimentally.</td>
+</tr>
+<tr>
+<td>Primary catalytic function and reaction</td>
+<td>Ttv participates in heparan-sulfate copolymerase activity, elongating the HS backbone through alternating transfer of <strong>glucuronic acid (GlcA)</strong> and <strong>N-acetylglucosamine (GlcNAc)</strong> from UDP-sugar donors to a growing acceptor chain; GlcAT-II and GlcNAcT-II activities are associated with the Ttv/EXT system. (takei2004threedrosophilaext pages 1-2, dasgupta2007functionalconservationof pages 1-2)</td>
+<td>Strong genetic and rescue evidence for HS polymerization; reaction-level specificity is substantially informed by conserved EXT1 biochemistry.</td>
+<td>Direct purified-Ttv assays defining donor kinetics, acceptor specificity, or the division of the two transferase activities in flies were not available in the retrieved evidence.</td>
+</tr>
+<tr>
+<td>Ttv–Sotv complex</td>
+<td>Ttv and the EXT2-like protein Sotv function collaboratively and nonredundantly as the fly counterpart of the EXT1–EXT2 HS copolymerase; human EXT1 physically interacts with Drosophila Sotv and restores HS production in <em>ttv</em> mutants. (takei2004threedrosophilaext pages 8-9, dasgupta2007functionalconservationof pages 2-5, dasgupta2007functionalconservationof pages 6-7)</td>
+<td>Drosophila genetics, heterologous biochemical interaction, and functional rescue; <strong>strong</strong>, although partly cross-species.</td>
+<td>A native endogenous Ttv–Sotv complex was not directly characterized in the retrieved excerpts; Botv is required for HS biosynthesis but is not established here as part of the same polymerase complex.</td>
+</tr>
+<tr>
+<td>ER/Golgi localization</td>
+<td>EXT enzymes operate in the secretory pathway. Expressed human EXT1 in fly wing discs localized mainly to the <strong>endoplasmic reticulum</strong>, with partial Golgi localization; EXT1–EXT2-like complex formation is associated with Golgi localization and higher activity. (takei2004threedrosophilaext pages 8-9, dasgupta2007functionalconservationof pages 2-5, dasgupta2007functionalconservationof pages 1-2, dasgupta2007functionalconservationof pages 6-7)</td>
+<td>Fluorescence localization in Drosophila plus conserved mammalian EXT trafficking; <strong>moderate</strong> for endogenous Ttv localization.</td>
+<td>The evidence chiefly concerns tagged human EXT1 or conserved-family behavior, not high-resolution localization of endogenous Drosophila Ttv; “Golgi-resident Ttv” should therefore be treated as a well-supported inference.</td>
+</tr>
+<tr>
+<td>HSPG and glypican product</td>
+<td>Ttv-dependent polymerization produces HS chains on secretory-pathway proteoglycans, including cell-surface glypicans such as Dally and Dally-like. <em>ttv</em> mutant cells show severely reduced heparitinase-generated 3G10 staining, demonstrating defective HSPG production in vivo. (takei2004threedrosophilaext pages 7-8, jimenezjimenez2024hedgehogonthe pages 7-10, takei2004threedrosophilaext pages 1-2)</td>
+<td>Direct mutant histochemistry combined with established glypican biology; <strong>strong for global HSPG synthesis</strong>.</td>
+<td>The retrieved experiments do not quantify Ttv’s contribution to each individual core protein or define glypican-specific HS chain structures.</td>
+</tr>
+<tr>
+<td>Hedgehog pathway</td>
+<td>Ttv-generated HS is required chiefly for efficient Hedgehog stabilization, extracellular distribution, and long-range signaling. Hh accumulates at EXT-mutant boundaries and is reduced within mutant tissue; cells immediately beside the compartment boundary may still respond, whereas more distant deficient cells generally do not. (takei2004threedrosophilaext pages 7-8, takei2004threedrosophilaext pages 5-6, jimenezjimenez2024hedgehogonthe pages 7-10)</td>
+<td>Mutant-clone distribution and target-gene experiments; <strong>strong direct in vivo evidence</strong>.</td>
+<td>Current models—inter-chain “monkey-bar” transfer, facilitated extracellular movement, and cytoneme-mediated transport—may cooperate, but none is conclusively established as the sole mechanism; a direct HS role in Patched receptor activation remains uncertain. (jimenezjimenez2024hedgehogonthe pages 7-10, jimenezjimenez2024hedgehogonthe pages 14-16, jimenezjimenez2024hedgehogonthe pages 17-19)</td>
+</tr>
+<tr>
+<td>Wg/Wnt and Dpp/BMP pathways</td>
+<td>Loss of <em>ttv</em> or other fly EXT genes can reduce Wg and Dpp distribution or signaling and cause morphogen accumulation before mutant territories, supporting a general role for HS in gradient movement; Wg effects are typically weaker than Hh or Dpp effects. (takei2004threedrosophilaext pages 2-4, takei2004threedrosophilaext pages 8-9, takei2004threedrosophilaext pages 7-8, takei2004threedrosophilaext pages 5-6)</td>
+<td>Direct mosaic genetics and protein/reporter localization; <strong>moderate-to-strong</strong>.</td>
+<td>Earlier studies reported apparently Hh-selective <em>ttv</em> effects. Residual HS, allele strength, tissue context, and compensation by other EXT proteins likely contribute to the differing results.</td>
+</tr>
+<tr>
+<td>Research and model applications</td>
+<td><em>ttv</em> mutants, mosaics, and RNAi provide in vivo tools for testing HS-dependent morphogen gradients, cell-nonautonomous signaling, glypican transport models, autophagy, and functional conservation of human EXT1. Human EXT1 rescued 9 of 158 <em>ttv</em>-null animals to adulthood—<strong>5.7% overall</strong>—while controls produced no adults. (dasgupta2007functionalconservationof pages 2-5, jimenezjimenez2024hedgehogonthe pages 7-10, jimenezjimenez2024hedgehogonthe pages 14-16)</td>
+<td>Genetic perturbation and cross-species rescue; <strong>strong as a mechanistic model system</strong>.</td>
+<td>These are research applications rather than established clinical implementations; pleiotropic loss of HS synthesis can complicate attribution to one ligand or core proteoglycan.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table distinguishes direct Drosophila evidence from conclusions inferred through EXT1 conservation for ttv/CG10117 (UniProt D5SHU8). It summarizes molecular identity, catalytic function, localization, signaling roles, applications, and key uncertainties.</em></p>
+<h2 id="2-primary-molecular-function">2. Primary molecular function</h2>
+<h3 id="21-reaction-and-product">2.1 Reaction and product</h3>
+<p>Ttv is best annotated as a component of the <strong>heparan-sulfate glycosaminoglycan copolymerase</strong>. HS-chain elongation consists of alternating additions of:</p>
+<ul>
+<li><strong>D-glucuronic acid (GlcA)</strong> from UDP-GlcA, and</li>
+<li><strong>N-acetyl-D-glucosamine (GlcNAc)</strong> from UDP-GlcNAc</li>
+</ul>
+<p>to the nonreducing end of a growing HS-chain acceptor. The associated activities are conventionally termed GlcAT-II and GlcNAcT-II. The retrieved fly literature explicitly associates Ttv with these two HS-copolymerase activities and shows genetically that Ttv is indispensable for normal HS production. (takei2004threedrosophilaext pages 1-2)</p>
+<p>The most defensible reaction-level annotation is therefore:</p>
+<p><strong>UDP-GlcA/UDP-GlcNAc + growing heparan-sulfate acceptor → elongated [–GlcA–GlcNAc–]n heparan-sulfate chain + UDP.</strong></p>
+<p>This is a polymerization activity, not the later sulfation or epimerization of HS. Ttv determines whether an HS backbone is efficiently produced; subsequent modifying enzymes generate the heterogeneous sulfation patterns that confer selective ligand binding.</p>
+<h3 id="22-substrate-specificity-and-evidentiary-limits">2.2 Substrate specificity and evidentiary limits</h3>
+<p>The biologically relevant acceptor is the growing HS polysaccharide attached through a glycosaminoglycan linkage region to proteoglycan core proteins. The products include HS chains on Dally and Dally-like glypicans, although Ttv is not specific to one core protein. Its experimentally supported specificity is for <strong>HS/HSGAG synthesis</strong>, rather than chondroitin-sulfate production: loss of <em>ttv</em> severely reduces the heparitinase-dependent 3G10 HSPG epitope in mutant wing-disc cells. (takei2004threedrosophilaext pages 7-8)</p>
+<p>A qualification is essential. The fly evidence strongly establishes HS polymerization genetically and through functional rescue, but the retrieved studies do not report purified Drosophila Ttv kinetics, donor-sugar Km values, acceptor-chain-length preferences, or an unambiguous division of the two transferase reactions between isolated Ttv and Sotv. Reaction-level specificity is therefore supported jointly by fly genetics and conserved EXT1/EXT2 biochemistry, rather than by a complete purified-enzyme characterization of D5SHU8 itself.</p>
+<h3 id="23-functional-complex">2.3 Functional complex</h3>
+<p>Ttv and Sotv are nonredundant fly counterparts of vertebrate EXT1 and EXT2. Genetic loss of either markedly reduces HSPG synthesis. Human EXT1 can interact with Drosophila Sotv and form a functional polymerase that restores HS production in <em>ttv</em> mutants, providing biochemical and functional evidence for conserved partnership. (takei2004threedrosophilaext pages 8-9, dasgupta2007functionalconservationof pages 2-5, dasgupta2007functionalconservationof pages 6-7)</p>
+<p>Brother of tout-velu (Botv), an EXTL3-like protein, is also required for normal fly HSPG production, but the retrieved evidence does not establish Botv as a stable subunit of the same elongating Ttv–Sotv complex. Its contribution should therefore be annotated as a related, nonredundant HS-biosynthetic function rather than assumed membership in one trimeric polymerase. (takei2004threedrosophilaext pages 8-9, takei2004threedrosophilaext pages 1-2)</p>
+<h2 id="3-cellular-and-extracellular-localization">3. Cellular and extracellular localization</h2>
+<p>Ttv acts within the <strong>secretory pathway</strong>, where proteoglycan core proteins acquire their glycosaminoglycan chains before delivery to the cell surface or extracellular matrix. EXT-family enzymes are type-II membrane-associated proteins found in the ER/Golgi system. In Drosophila wing discs, tagged human EXT1 localized mainly to the ER with partial Golgi localization and could restore HS synthesis; EXT1–EXT2 complex formation is associated with Golgi localization and increased polymerase activity. (takei2004threedrosophilaext pages 8-9, dasgupta2007functionalconservationof pages 2-5, dasgupta2007functionalconservationof pages 1-2)</p>
+<p>Thus, the best-supported annotation is that Ttv carries out catalysis on the <strong>luminal side of ER/Golgi secretory compartments</strong>, with the Golgi being the expected principal site of HS-chain elongation. However, direct high-resolution localization of endogenous fly Ttv was not demonstrated in the retrieved evidence. “Golgi/ER-localized HS polymerase” is consequently stronger than assigning it exclusively to one compartment.</p>
+<p>Ttv itself is not the extracellular signaling scaffold. Its <strong>products</strong>, HS-modified proteoglycans, reach the plasma membrane and extracellular space. GPI-anchored glypicans Dally and Dally-like place Ttv-dependent HS chains on the outer cell surface, where they bind, stabilize, transfer or present morphogens. (jimenezjimenez2024hedgehogonthe pages 7-10, jimenezjimenez2024hedgehogonthe pages 1-2)</p>
+<h2 id="4-pathways-and-precise-biological-role">4. Pathways and precise biological role</h2>
+<h3 id="41-hedgehog-signaling">4.1 Hedgehog signaling</h3>
+<p>The clearest pathway role is enabling Hh distribution across epithelial tissue. In EXT-mutant clones, Hh abundance and target-gene activation decrease within mutant territory, while Hh can accumulate at the wild-type/mutant boundary. This pattern supports a transport, stabilization or presentation defect rather than a simple failure to produce Hh. In normal wing discs, the Hh-induced <em>dpp</em> response extends approximately <strong>15 cell diameters</strong> from the anterior–posterior boundary, whereas the higher-threshold Patched response extends about <strong>five cells</strong>; EXT mutations truncate these responses. (takei2004threedrosophilaext pages 2-4, takei2004threedrosophilaext pages 7-8, takei2004threedrosophilaext pages 5-6)</p>
+<p>The current 2024 expert synthesis assigns glypican HS roles at several stages: ligand release, extracellular retention, long-range transport, gradient formation and reception by distant cells. Cells immediately next to the Hh source can sometimes respond despite HS deficiency, whereas more distant deficient cells generally cannot, emphasizing a particularly strong requirement for long-range signaling. (jimenezjimenez2024hedgehogonthe pages 7-10, jimenezjimenez2024hedgehogonthe pages 1-2)</p>
+<p>Two leading mechanisms remain unresolved:</p>
+<ol>
+<li><strong>Inter-chain transfer or “monkey-bar” model:</strong> Hh binds HS and transfers between appropriately sulfated chains. Loss of acceptor HS can trap Hh at clone boundaries.</li>
+<li><strong>Cytoneme model:</strong> basal cellular projections carry Hh-containing material and use glypicans/HSPGs to establish contacts and transfer ligand at specialized receiving sites.</li>
+</ol>
+<p>The February 27, 2024 review concludes that these mechanisms may be complementary and may operate at different apical or basolateral locations. It explicitly cautions that neither model alone explains every mosaic experiment and that HS has not been proven to be an obligatory structural component of the Patched receptor complex. (jimenezjimenez2024hedgehogonthe pages 7-10, jimenezjimenez2024hedgehogonthe pages 14-16, jimenezjimenez2024hedgehogonthe pages 17-19)</p>
+<h3 id="42-winglesswnt-and-dppbmp-signaling">4.2 Wingless/Wnt and Dpp/BMP signaling</h3>
+<p>Ttv is not exclusively a Hedgehog-pathway gene. Loss of <em>ttv</em>, <em>sotv</em> or <em>botv</em> can reduce Wg and Dpp protein movement and pathway output, while ligand accumulates in wild-type cells immediately before mutant territories. These findings support a general role for HS-rich cell surfaces in morphogen retention and tissue-scale transfer. Wg effects are usually weaker than Hh or Dpp effects, and some earlier studies reported an apparently Hh-selective <em>ttv</em> phenotype. The most plausible interpretation is quantitative and context-dependent: residual HS, allele strength, tissue context, pathway threshold and partial compensation by other EXT proteins can make Wg less sensitive. (takei2004threedrosophilaext pages 2-4, takei2004threedrosophilaext pages 8-9, takei2004threedrosophilaext pages 7-8, takei2004threedrosophilaext pages 1-2)</p>
+<p>Although HSPGs regulate FGF signaling broadly, the retrieved evidence did not demonstrate a Ttv-specific FGF phenotype with the same precision as the Hh/Wg/Dpp experiments. FGF should therefore be listed as a plausible broader HS-dependent context, not a primary pathway assignment supported here by direct <em>ttv</em> assays.</p>
+<h2 id="5-experimental-evidence-and-relevant-quantitative-data">5. Experimental evidence and relevant quantitative data</h2>
+<ul>
+<li>Mutations in any of the three fly EXT genes severely reduced HSPG-associated 3G10 staining in mutant wing-disc cells, demonstrating a cell-autonomous biosynthetic requirement. (takei2004threedrosophilaext pages 7-8)</li>
+<li>EXT-mutant territories contained less Hh, Wg and Dpp-GFP and caused ligand accumulation immediately before clone boundaries, directly connecting HS synthesis to morphogen movement. (takei2004threedrosophilaext pages 7-8, takei2004threedrosophilaext pages 5-6)</li>
+<li>Ttv and human EXT1 share <strong>56% amino-acid identity</strong>. (dasgupta2007functionalconservationof pages 2-5)</li>
+<li>Human EXT1 restored glycosaminoglycan synthesis and rescued <strong>9 of 158</strong> <em>ttv</em>-null animals to adulthood—<strong>5.7% overall</strong>, versus no adult survivors in controls. Individual experiments yielded 6.9%, 5.4% and 4.7% rescue. This is unusually strong evidence that the primary function is evolutionarily conserved HS synthesis rather than a fly-specific signaling-adapter role. (dasgupta2007functionalconservationof pages 2-5)</li>
+<li>The three Drosophila EXT proteins show approximately <strong>26–32% overall similarity</strong>, with greater C-terminal conservation, consistent with related catalytic architecture but nonredundant biological functions. (takei2004threedrosophilaext pages 1-2)</li>
+</ul>
+<h2 id="6-current-applications-and-real-world-relevance">6. Current applications and real-world relevance</h2>
+<h3 id="drosophila-research-applications">Drosophila research applications</h3>
+<p><em>ttv</em> loss-of-function alleles, mosaic clones and tissue-specific RNAi are practical tools for removing HS synthesis in defined cells. They are used to distinguish morphogen production, movement and reception; test cell-autonomous versus non-cell-autonomous requirements; and evaluate competing extracellular-transfer and cytoneme models. (jimenezjimenez2024hedgehogonthe pages 7-10, jimenezjimenez2024hedgehogonthe pages 14-16)</p>
+<p>Because HS controls many ligands, <em>ttv</em> perturbation has also been used as a system-level manipulation of extracellular signaling. This is informative but pleiotropic: a <em>ttv</em> phenotype should not automatically be attributed to one ligand or one HSPG core protein.</p>
+<h3 id="translational-relevance">Translational relevance</h3>
+<p>Ttv is a validated in vivo functional model of human EXT1. The ability of human EXT1 to rescue fly <em>ttv</em> provides a potential framework for testing conserved activity or loss of function in human EXT1 variants. EXT1/EXT2 defects in humans cause hereditary multiple exostoses, but Drosophila <em>ttv</em> is principally a mechanistic model rather than a clinical target or implemented therapy. (dasgupta2007functionalconservationof pages 2-5, dasgupta2007functionalconservationof pages 1-2)</p>
+<h2 id="7-recommended-functional-annotation">7. Recommended functional annotation</h2>
+<p><strong>Molecular function:</strong> Heparan-sulfate glycosaminoglycan copolymerase component; nucleotide-sugar-dependent glycosyltransferase involved in alternating GlcA and GlcNAc addition during HS-chain elongation.</p>
+<p><strong>Principal partner:</strong> Sotv/EXT2-like protein; Botv is a related nonredundant HS-biosynthetic factor.</p>
+<p><strong>Biological process:</strong> Heparan-sulfate proteoglycan biosynthesis; formation and extracellular distribution of Hh, Wg/Wnt and Dpp/BMP morphogen gradients.</p>
+<p><strong>Cellular location:</strong> ER/Golgi secretory pathway, probably acting primarily in Golgi luminal HS elongation; its HS products function on the extracellular face of the plasma membrane and in extracellular matrices.</p>
+<p><strong>Confidence:</strong> High for identity, EXT-family assignment, HS synthesis and Hh-gradient function; moderate for the precise endogenous ER-versus-Golgi distribution and for assigning both catalytic transferase activities directly to isolated Ttv; unresolved for the exclusive physical mechanism by which Ttv-dependent HS transports Hh.</p>
+<h2 id="key-sources">Key sources</h2>
+<ol>
+<li>Takei Y. et al. “Three Drosophila EXT genes shape morphogen gradients through synthesis of heparan sulfate proteoglycans.” <em>Development</em> 131, 73–82. <strong>Published January 2004.</strong> https://doi.org/10.1242/dev.00913 (takei2004threedrosophilaext pages 2-4, takei2004threedrosophilaext pages 1-2)</li>
+<li>Dasgupta U. et al. “Functional conservation of the human EXT1 tumor suppressor gene and its Drosophila homolog toutvelu.” <em>Development Genes and Evolution</em> 217, 555–561. <strong>Published July 2007.</strong> https://doi.org/10.1007/s00427-007-0163-2 (dasgupta2007functionalconservationof pages 2-5, dasgupta2007functionalconservationof pages 6-7)</li>
+<li>Jiménez-Jiménez C., Grobe K., Guerrero I. “Hedgehog on the Move: Glypican-Regulated Transport and Gradient Formation in Drosophila.” <em>Cells</em> 13, 418. <strong>Published February 27, 2024.</strong> https://doi.org/10.3390/cells13050418 (jimenezjimenez2024hedgehogonthe pages 7-10, jimenezjimenez2024hedgehogonthe pages 14-16, jimenezjimenez2024hedgehogonthe pages 1-2)</li>
+</ol>
+<p>No directly focused 2023 study was recovered that materially revised Ttv’s enzymatic annotation. The 2024 review is the most recent authoritative source retrieved for the mechanistic interpretation of its major signaling consequence.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(dasgupta2007functionalconservationof pages 2-5): Ujjaini Dasgupta, Bharat L. Dixit, Melissa Rusch, Scott Selleck, and Inge The. Functional conservation of the human ext1 tumor suppressor gene and its drosophila homolog toutvelu. Development Genes and Evolution, 217:555-561, Jul 2007. URL: https://doi.org/10.1007/s00427-007-0163-2, doi:10.1007/s00427-007-0163-2. This article has 7 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(takei2004threedrosophilaext pages 1-2): Yuki Takei, Yutakahiko Ozawa, Makoto Sato, Akira Watanabe, and Tetsuya Tabata. Three drosophila ext genes shape morphogen gradients through synthesis of heparan sulfate proteoglycans. Development, 131:73-82, Jan 2004. URL: https://doi.org/10.1242/dev.00913, doi:10.1242/dev.00913. This article has 334 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dasgupta2007functionalconservationof pages 1-2): Ujjaini Dasgupta, Bharat L. Dixit, Melissa Rusch, Scott Selleck, and Inge The. Functional conservation of the human ext1 tumor suppressor gene and its drosophila homolog toutvelu. Development Genes and Evolution, 217:555-561, Jul 2007. URL: https://doi.org/10.1007/s00427-007-0163-2, doi:10.1007/s00427-007-0163-2. This article has 7 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(takei2004threedrosophilaext pages 8-9): Yuki Takei, Yutakahiko Ozawa, Makoto Sato, Akira Watanabe, and Tetsuya Tabata. Three drosophila ext genes shape morphogen gradients through synthesis of heparan sulfate proteoglycans. Development, 131:73-82, Jan 2004. URL: https://doi.org/10.1242/dev.00913, doi:10.1242/dev.00913. This article has 334 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(dasgupta2007functionalconservationof pages 6-7): Ujjaini Dasgupta, Bharat L. Dixit, Melissa Rusch, Scott Selleck, and Inge The. Functional conservation of the human ext1 tumor suppressor gene and its drosophila homolog toutvelu. Development Genes and Evolution, 217:555-561, Jul 2007. URL: https://doi.org/10.1007/s00427-007-0163-2, doi:10.1007/s00427-007-0163-2. This article has 7 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(takei2004threedrosophilaext pages 7-8): Yuki Takei, Yutakahiko Ozawa, Makoto Sato, Akira Watanabe, and Tetsuya Tabata. Three drosophila ext genes shape morphogen gradients through synthesis of heparan sulfate proteoglycans. Development, 131:73-82, Jan 2004. URL: https://doi.org/10.1242/dev.00913, doi:10.1242/dev.00913. This article has 334 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jimenezjimenez2024hedgehogonthe pages 7-10): Carlos Jiménez-Jiménez, Kay Grobe, and Isabel Guerrero. Hedgehog on the move: glypican-regulated transport and gradient formation in drosophila. Cells, 13:418, Feb 2024. URL: https://doi.org/10.3390/cells13050418, doi:10.3390/cells13050418. This article has 2 citations.</p>
+</li>
+<li>
+<p>(takei2004threedrosophilaext pages 5-6): Yuki Takei, Yutakahiko Ozawa, Makoto Sato, Akira Watanabe, and Tetsuya Tabata. Three drosophila ext genes shape morphogen gradients through synthesis of heparan sulfate proteoglycans. Development, 131:73-82, Jan 2004. URL: https://doi.org/10.1242/dev.00913, doi:10.1242/dev.00913. This article has 334 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jimenezjimenez2024hedgehogonthe pages 14-16): Carlos Jiménez-Jiménez, Kay Grobe, and Isabel Guerrero. Hedgehog on the move: glypican-regulated transport and gradient formation in drosophila. Cells, 13:418, Feb 2024. URL: https://doi.org/10.3390/cells13050418, doi:10.3390/cells13050418. This article has 2 citations.</p>
+</li>
+<li>
+<p>(jimenezjimenez2024hedgehogonthe pages 17-19): Carlos Jiménez-Jiménez, Kay Grobe, and Isabel Guerrero. Hedgehog on the move: glypican-regulated transport and gradient formation in drosophila. Cells, 13:418, Feb 2024. URL: https://doi.org/10.3390/cells13050418, doi:10.3390/cells13050418. This article has 2 citations.</p>
+</li>
+<li>
+<p>(takei2004threedrosophilaext pages 2-4): Yuki Takei, Yutakahiko Ozawa, Makoto Sato, Akira Watanabe, and Tetsuya Tabata. Three drosophila ext genes shape morphogen gradients through synthesis of heparan sulfate proteoglycans. Development, 131:73-82, Jan 2004. URL: https://doi.org/10.1242/dev.00913, doi:10.1242/dev.00913. This article has 334 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jimenezjimenez2024hedgehogonthe pages 1-2): Carlos Jiménez-Jiménez, Kay Grobe, and Isabel Guerrero. Hedgehog on the move: glypican-regulated transport and gradient formation in drosophila. Cells, 13:418, Feb 2024. URL: https://doi.org/10.3390/cells13050418, doi:10.3390/cells13050418. This article has 2 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="ttv-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>takei2004threedrosophilaext pages 1-2</li>
+<li>takei2004threedrosophilaext pages 7-8</li>
+<li>dasgupta2007functionalconservationof pages 2-5</li>
+<li>dasgupta2007functionalconservationof pages 1-2</li>
+<li>takei2004threedrosophilaext pages 8-9</li>
+<li>dasgupta2007functionalconservationof pages 6-7</li>
+<li>jimenezjimenez2024hedgehogonthe pages 7-10</li>
+<li>takei2004threedrosophilaext pages 5-6</li>
+<li>jimenezjimenez2024hedgehogonthe pages 14-16</li>
+<li>jimenezjimenez2024hedgehogonthe pages 17-19</li>
+<li>takei2004threedrosophilaext pages 2-4</li>
+<li>jimenezjimenez2024hedgehogonthe pages 1-2</li>
+<li>–GlcA–GlcNAc–</li>
+<li>https://doi.org/10.1242/dev.00913</li>
+<li>https://doi.org/10.1007/s00427-007-0163-2</li>
+<li>https://doi.org/10.3390/cells13050418</li>
+<li>https://doi.org/10.1007/s00427-007-0163-2,</li>
+<li>https://doi.org/10.1242/dev.00913,</li>
+<li>https://doi.org/10.3390/cells13050418,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ttv-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="D5SHU8" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ttv-pc-review-notes">ttv-PC review notes</h1>
+<p>The native 299-residue PC isoform matches full-length residues 462–760 and preserves the C-terminal catalytic-site region. The N-terminal glycosyltransferase domain and membrane anchor are absent. Broad activity is not refuted solely from shortening because exostosins possess two chemically distinct domains. <a href="https://pubmed.ncbi.nlm.nih.gov/36593275">PMID:36593275</a>(https://pubmed.ncbi.nlm.nih.gov/36593275/) and <a href="https://pubmed.ncbi.nlm.nih.gov/36402845">PMID:36402845</a>(https://pubmed.ncbi.nlm.nih.gov/36402845/) characterize this division and describe important complex/construct qualifications. The structural studies describe domain-specific chemistry and important expression/activity limitations for isolated constructs; neither assays native fly PC. All five IEAs and the single GO prediction remain UNC pending direct exact-isoform evidence; no wrong-input assertion is made.</p>
+<h2 id="provider-research-assessment">Provider research assessment</h2>
+<p>The Falcon synthesis integrates fly EXT genetics, morphogen distribution and human EXT1 rescue. These strongly support the full-length Ttv gene function. Its ER/Golgi and copolymerase conclusions do not specifically establish activity or targeting of the native 299-residue PC product, which lacks the N-terminal domain and anchor. The retained C-terminal architecture and primary EXT domain studies support keeping the exact-product glycosyltransferase question open.</p>
+            </div>
+        </details>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioinformatics Results</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RESULTS.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="D5SHU8" data-a="DOC: Bioinformatics Results" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ttv-exact-isoform-sequence-comparison">ttv exact-isoform sequence comparison</h1>
+<p>D5SHU8 is the native 299-residue ttv-PC product (FlyBase FBpp0305368) and matches residues 462–760 of full-length Q9V730. The C-terminal glycosyltransferase-region active-site Asp670 maps to target Asp209, and the source-record nucleotide-sugar/metal-binding residues in this region are retained. The N-terminal membrane anchor and N-terminal glycosyltransferase region are absent. Mammalian EXT structures distinguish N-terminal GT-B and C-terminal GT-A domains; the retained C-terminal domain is not intrinsically devoid of catalytic potential. However, experimental isolated-domain expression/activity limitations and missing targeting information prevent assigning full physiological catalytic competence to this native short isoform.</p>
+<h2 id="reproducibility">Reproducibility</h2>
+<p>Global BLOSUM62 alignment, gap-open -10, gap-extension -0.5, Biopython 1.85. Inputs, alignment and JSON results are retained; run <code>just</code> in this directory. Source feature positions are read from comparator JSON. A separate reference self-alignment verifies indexing and full sequence recovery; the generic script was also run on independent fly gene proteins. The self-control is a computational check, not biological validation. Prediction-time input sequence is not supplied by the release API.</p>
+<ul>
+<li>[x] No biological results or conclusions hardcoded in analysis.</li>
+<li>[x] Same algorithm run on other protein inputs.</li>
+<li>[x] Analysis and control completed successfully.</li>
+<li>[x] Direct inputs/results retained.</li>
+<li>[x] Sequence provenance and inference limitations stated.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: D5SHU8
+gene_symbol: ttv
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:7227
+  label: Drosophila melanogaster
+description: Tout-velu is an exostosin-family glycosyltransferase associated with heparan-sulfate synthesis.
+  The native 299-residue PC isoform retains the C-terminal glycosyltransferase region but lacks the N-terminal
+  membrane anchor and the other glycosyltransferase domain found in full-length Ttv. Its catalytic competence,
+  intracellular targeting and contribution to glycan synthesis remain unresolved.
+existing_annotations:
+- term:
+    id: GO:0005789
+    label: endoplasmic reticulum membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB-SubCell:SL-0097
+  review:
+    action: UNDECIDED
+    summary: The source protein is a C-terminal isoform lacking the N-terminal membrane anchor of full-length
+      Ttv.
+    reason: The source protein is a C-terminal isoform lacking the N-terminal membrane anchor of full-length
+      Ttv. It might associate with membranes through other proteins, but this has not been demonstrated.
+      The full-length membrane annotation does not independently establish ER-membrane residence for PC;
+      the correct compartment remains unresolved.
+    supported_by:
+    - &amp;id001
+      reference_id: file:DROME/ttv/ttv-bioinformatics/RESULTS.md
+      supporting_text: The C-terminal glycosyltransferase-region active-site Asp670 maps to target Asp209,
+        and the source-record nucleotide-sugar/metal-binding residues in this region are retained.
+    - &amp;id002
+      reference_id: file:DROME/ttv/ttv-flybase.txt
+      supporting_text: ttv-PC FBpp0305368 34.4 299 9.71 D5SHU8 NP_001260972 AGB93504
+- term:
+    id: GO:0009101
+    label: glycoprotein biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  supporting_entities:
+  - InterPro:IPR004263
+  review:
+    action: UNDECIDED
+    summary: The native short PC product retains a C-terminal glycosyltransferase region but lacks the
+      N-terminal region needed for the full-length domain architecture and membrane targeting.
+    reason: The native short PC product retains a C-terminal glycosyltransferase region but lacks the
+      N-terminal region needed for the full-length domain architecture and membrane targeting. Catalytic
+      potential remains plausible, but no exact-isoform assay establishes native activity, trafficking
+      or participation in glycan synthesis. Keep this annotation undecided rather than transfer all full-length
+      Ttv properties.
+    supported_by:
+    - *id001
+    - *id002
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  supporting_entities:
+  - InterPro:IPR015338
+  review:
+    action: UNDECIDED
+    summary: The source protein is a C-terminal isoform lacking the N-terminal membrane anchor of full-length
+      Ttv.
+    reason: The source protein is a C-terminal isoform lacking the N-terminal membrane anchor of full-length
+      Ttv. It might associate with membranes through other proteins, but this has not been demonstrated.
+      The full-length membrane annotation does not independently establish ER-membrane residence for PC;
+      the correct compartment remains unresolved.
+    supported_by:
+    - *id001
+    - *id002
+- term:
+    id: GO:0016757
+    label: glycosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  supporting_entities:
+  - InterPro:IPR004263
+  - InterPro:IPR015338
+  review:
+    action: UNDECIDED
+    summary: The native short PC product retains a C-terminal glycosyltransferase region but lacks the
+      N-terminal region needed for the full-length domain architecture and membrane targeting.
+    reason: The native short PC product retains a C-terminal glycosyltransferase region but lacks the
+      N-terminal region needed for the full-length domain architecture and membrane targeting. Catalytic
+      potential remains plausible, but no exact-isoform assay establishes native activity, trafficking
+      or participation in glycan synthesis. Keep this annotation undecided rather than transfer all full-length
+      Ttv properties.
+    supported_by:
+    - *id001
+    - *id002
+    - reference_id: PMID:36593275
+      supporting_text: &#39;EXT1 and EXT2, where each protein monomer contains distinct GT47 (GT-B fold) and
+
+        GT64 (GT-A fold) glycosyltransferase domains.&#39;
+- term:
+    id: GO:1901135
+    label: carbohydrate derivative metabolic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  supporting_entities:
+  - ARBA:ARBA00026297
+  review:
+    action: UNDECIDED
+    summary: The native short PC product retains a C-terminal glycosyltransferase region but lacks the
+      N-terminal region needed for the full-length domain architecture and membrane targeting.
+    reason: The native short PC product retains a C-terminal glycosyltransferase region but lacks the
+      N-terminal region needed for the full-length domain architecture and membrane targeting. Catalytic
+      potential remains plausible, but no exact-isoform assay establishes native activity, trafficking
+      or participation in glycan synthesis. Keep this annotation undecided rather than transfer all full-length
+      Ttv properties.
+    supported_by:
+    - *id001
+    - *id002
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping,
+    accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: file:DROME/ttv/ttv-bioinformatics/RESULTS.md
+  title: RESULTS.md
+  findings: []
+- id: file:DROME/ttv/ttv-flybase.txt
+  title: ttv-flybase.txt
+  findings: []
+- id: PMID:36593275
+  title: Structural basis for heparan sulfate co-polymerase action by the EXT1-2 complex.
+  findings: []
+  full_text_unavailable: false
+core_functions: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

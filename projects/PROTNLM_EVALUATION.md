@@ -104,6 +104,18 @@ Predictions are post-processed by the **Evidencer**, which applies exclusion cri
 
 ## ARGO-ProtNLM-50 benchmark design
 
+The [cross-benchmark family curation](PROTNLM_EVALUATION/family-curation.md) covers all 282 selected protein records and paired references, with 211 structured family reviews and individual assessments for 18 inputs without exact-record PANTHER assignments. The gene-to-family index distinguishes direct sequence assignments from verified canonical gene context.
+
+The [human and model-organism challenge set](PROTNLM_EVALUATION/mod-evolution20.md) selects twenty additional prediction-bearing genes across seven species, with priorities for evolutionary analysis of substrate specificity, catalytic divergence and complex participation. The cohort complements the fly and pombe selections with substrate-specificity, catalytic-divergence and complex-participation cases.
+
+The [Neurospora cohort](PROTNLM_EVALUATION/neurospora.md) covers 20 genes: all 16 GO/function-bearing entries in the published species subset and four selected localization cases. Its 21 GO predictions, three function paragraphs and ten localization claims are reviewed separately, with a full 51-record source census.
+
+The [pombe cohort](PROTNLM_EVALUATION/pombe.md) includes all 20 GO/function-bearing entries among 28 fission-yeast accessions identified in the original export: 32 GO claims and 11 function paragraphs. These currently reviewed/Swiss-Prot entries are API-accessible despite being absent from the published pilot accession list.
+
+The [fly cohort](PROTNLM_EVALUATION/fly.md) includes all 41 Drosophila melanogaster genes with GO or function-text predictions in the published species subset, plus a separate tier of 29 location/keyword-only records. Its full 94-record census preserves exact sequences, current FlyBase identifiers and original prediction provenance.
+
+The next cohort is [40 selected horse genes](PROTNLM_EVALUATION/horse40.md) with released functional predictions and paired human–horse reviews. See the [review findings and evidence gaps](PROTNLM_EVALUATION/horse40-review-findings.md). The [horse-first benchmark design](PROTNLM_EVALUATION/mammal-benchmark-design.md) includes the prediction census and mammalian evidence leads.
+
 ARGO-ProtNLM-50 was constructed **after the ProtNLM release**, rather than specified in advance as a benchmark for the model. ProtNLM predictions were released for a partly arbitrary set of proteins, mostly unreviewed/TrEMBL entries. We then selected 50 proteins from that available set to sample different species and kinds of annotations. The resulting benchmark is an exploratory, stratified sample, not a prospective test set or a random sample of protein space.
 
 The selection covers:

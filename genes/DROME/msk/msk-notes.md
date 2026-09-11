@@ -1,0 +1,15 @@
+# Moleskin evidence notes
+
+Q9VSD6 is the native 1049-residue PA product of FBgn0026252 (AAF50487/NP_524780), the sole current protein. DIM-7, D-Importin-7 and Moleskin refer to this locus. [FlyBase](https://flybase.org/reports/FBgn0026252).
+
+[PMID:11262240](https://pubmed.ncbi.nlm.nih.gov/11262240/) establishes activated ERK nuclear import by mutation, association and rescue. [PMID:17699602](https://pubmed.ncbi.nlm.nih.gov/17699602/) connects cortical DIM-7/integrin localization with import. The abstract's perinuclear ring is ERK cargo under import blockade, so that particular sentence is not used as direct localization evidence for Moleskin itself.
+
+[PMID:23885126](https://pmc.ncbi.nlm.nih.gov/articles/PMC3771954/) is cached with full text and identifies an additional snRNP pathway: Moleskin associates with snurportin and U1/U2/U4-containing snRNPs, localizes to Cajal bodies, and is required for normal snRNP/coilin/SMN distribution. Co-immunoprecipitation supports physical association with the RNP cargo, not necessarily direct contact with naked RNA. These RNA-specific binding rows are retained as non-core features of cargo association, while the nuclear-import receptor is the core activity.
+
+[PMID:16540506](https://pmc.ncbi.nlm.nih.gov/articles/PMC1994332/) full text differentiates ommatidial rotation from chirality and larval proliferation from later apoptotic loss. Pupal msk-null cells show activated caspase despite the negative early-larval apoptosis result. The survival annotation is retained in the documented stage. The wing/eye phenotype papers PMID:16308331 and PMID:17110483 remain partly abstract-only after full-text retrieval attempts; their curated cell-type annotations are biologically consistent with the verified ERK-import mechanism and are not overturned because of incomplete cache access.
+
+The high-throughput localization paper PMID:25294944 is cached with full text but its main prose does not name msk. The nuclear/cytosolic calls are independently supported by direct target studies, so the survey annotations are accepted without pretending to have independently inspected a supplementary target row.
+
+ProtNLM intracellular protein transport is LSP relative to specific nuclear import. The developmental phenotype set remains non-core to distinguish the transport receptor's biochemical role from its varied signaling consequences.
+
+Falcon completed successfully in 456.68 seconds. Its additional cargo leads were checked against cached primary full texts: [PMID:17785517](https://pubmed.ncbi.nlm.nih.gov/17785517/) identifies Msk in a fly RNAi screen for nuclear import of phosphorylated Mad; [PMID:35246520](https://pmc.ncbi.nlm.nih.gov/articles/PMC8897400/) shows cytoplasmic Yorkie accumulation after Msk depletion in wing discs, including two RNAi lines and growth rescue. These support a broader cargo repertoire. The mammalian dominant-cargo hierarchy is not automatically asserted for fly; the direct fly conclusion is Msk-dependent Yorkie nuclear accumulation. The Falcon synthesis omits the verified snRNP/Cajal-body pathway, which remains part of the review.
