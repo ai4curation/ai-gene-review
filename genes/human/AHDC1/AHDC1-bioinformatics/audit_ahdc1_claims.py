@@ -106,21 +106,26 @@ RETRACTED = [
     re.compile(r"occupancy\s+reported\s+survived\s+a\s+condensate-disrupting", re.I),
 ]
 # A retraction context makes a retracted phrasing legitimate to quote.
+# MINIMAL by construction -- see markers() and run `--markers` to re-derive.
+#
+# A reviewer observed that this list "only ever widens": every marker is a standing
+# licence to keep a retracted claim within +/-400 characters of it, and adding one is
+# always the quickest way to turn a red run green. It needed a shrinking force.
+#
+# `--markers` computes a greedy minimal cover and refuses to pass if anything can be
+# dropped. That took the list from EIGHT markers to these three; "earlier draft",
+# "retracted", "got it wrong", "was WRONG" and "withdrawn" were all excusing text
+# that one of the survivors already covers. ("rewritten" and "earlier version",
+# added in the previous round, went the same way.)
+#
+# Note "withdrawn" is droppable only because "superseded" covers the same windows --
+# which is why the naive one-at-a-time test was wrong. See markers().
 RETRACTION_MARKERS = (
-    "earlier draft",
-    "retracted",
-    "got it wrong",
-    "was WRONG",
     "refuted",
-    "withdrawn",
     "superseded",
     # A note may legitimately QUOTE the reading it replaced in order to record what
-    # changed. "pre-correction" and "rewritten" mark exactly that, and adding the
-    # meaning-anchored patterns above without these markers would red-flag the
-    # legitimate quotation in the PMID:32814053 reference_review.
+    # changed; this marks exactly that in the PMID:32814053 reference_review.
     "pre-correction",
-    "rewritten",
-    "earlier version",
 )
 # Characters either side of a match that count as "the same context". Bounded on
 # purpose -- see the comment in check_retracted.
@@ -527,7 +532,55 @@ def provenance() -> int:
     return 0
 
 
+def markers() -> int:
+    """The RETRACTION_MARKERS list must be MINIMAL, because it only ever widens.
+
+    Each marker is a standing licence to keep a retracted claim within +/-400
+    characters of it, and adding one is always the quickest way to turn a red run
+    green -- so the list needs a shrinking force, which this is.
+
+    The obvious test is wrong and was written that way first: dropping each marker
+    IN TURN and asking whether the audit goes red reports "inert" for markers that
+    are jointly necessary. Two markers covering the same window each test inert
+    while together being the only cover. Measured here: six of eight markers looked
+    individually inert, and removing all six turned the audit RED on three counts.
+
+    So this computes a GREEDY MINIMAL COVER instead -- remove a marker only if the
+    audit still passes with it already removed -- and exits non-zero if anything can
+    be dropped, naming it. Greedy gives a minimal set, not necessarily the minimum
+    one, which is the honest claim and is sufficient: it certifies no marker can be
+    deleted one at a time from the committed list.
+    """
+    global RETRACTION_MARKERS
+    full = RETRACTION_MARKERS
+    assert not run(), "audit is not green to begin with; fix that before auditing markers"
+    keep = list(full)
+    droppable = []
+    try:
+        for mk in full:
+            trial = [x for x in keep if x != mk]
+            RETRACTION_MARKERS = tuple(trial)
+            if not run():  # still green without it, given what is already gone
+                keep = trial
+                droppable.append(mk)
+                print(f"  {'DROPPABLE':13} {mk!r}")
+            else:
+                print(f"  {'required':13} {mk!r}")
+    finally:
+        RETRACTION_MARKERS = full
+    if droppable:
+        print(f"\n{len(droppable)} marker(s) can be removed without the audit going red:")
+        for mk in droppable:
+            print("  x", mk)
+        print(f"  minimal cover would be: {keep}")
+        return 1
+    print(f"\nall {len(full)} retraction markers are required: the list is minimal")
+    return 0
+
+
 if __name__ == "__main__":
+    if "--markers" in sys.argv:
+        raise SystemExit(markers())
     if "--provenance" in sys.argv:
         raise SystemExit(provenance())
     if "--self-test" in sys.argv:

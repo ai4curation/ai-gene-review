@@ -29,7 +29,7 @@ number or a phrasing asserted in prose and never re-derived from the data it des
 |---|---|
 | coverage | every data row of `AHDC1-goa.tsv` is matched by a non-`NEW` `existing_annotation` on (GO id, evidence code, reference, WITH/FROM) — asserted by **presence**, so a deleted entry fails rather than being skipped |
 | arithmetic | `entries == GOA rows + NEW rows`, the action tally sums to the entry count, and no `PENDING` survives |
-| retraction | **eight** retracted-claim **regexes**, matched against **whitespace-normalised** text, must not appear in the review, the notes or the history record **outside an explicit retraction context** — five from the IntAct decomposition error, three from the hexanediol condensate-control reading |
+| retraction | **nine** retracted-claim **regexes**, matched against **whitespace-normalised** text, must not appear in the review, the notes or the history record **outside an explicit retraction context** — six from the IntAct decomposition error, three from the hexanediol condensate-control reading. All nine are certified `HISTORIC` by `--provenance`; the three context markers are certified minimal by `--markers` |
 | required claims | five load-bearing claims must appear in the number of files they should |
 | paired claims | **two** claims must each be present in **each** of two named rows' `review.reason`, resolved through the parsed YAML — the tagged-transgene weighting justification, and the hexanediol filtering argument, each on both `GO:0003700` and `GO:0003682`. A missing row is an **error**, not a skip, so deleting the row cannot satisfy the check |
 | duplicate keys | the review is loaded with a `SafeLoader` subclass that **raises** on a duplicated mapping key, which PyYAML otherwise resolves silently by keeping the last one |
@@ -154,6 +154,32 @@ was removed. All nine surviving patterns are HISTORIC, over 24 replayed revision
 A lint that guards imagined phrasings while presenting itself as evidence-based is this
 file's own failure mode, one level up — so it is now checked by machine rather than claimed
 in prose.
+
+## Markers only ever widen, so they now have a shrinking force
+
+A reviewer's closing note: every `RETRACTION_MARKER` is a standing licence to keep a
+retracted claim within ±400 characters of it, adding one is always the quickest way to
+turn a red run green, and **the list only ever widens**.
+
+```bash
+uv run python genes/human/AHDC1/AHDC1-bioinformatics/audit_ahdc1_claims.py --markers
+```
+
+computes a **greedy minimal cover** — remove a marker only if the audit still passes with
+it already removed — and exits non-zero if anything can be dropped. It took the list from
+**eight markers to three** (`refuted`, `superseded`, `pre-correction`).
+
+**The obvious version of this test is wrong, and I wrote it that way first.** Dropping each
+marker *in turn* and asking whether the audit goes red reports "inert" for markers that are
+**jointly** necessary: two markers covering the same window each test inert while together
+being the only cover. Measured — six of eight looked individually inert, and removing all
+six turned the audit **red on three counts**. `withdrawn` is droppable only because
+`superseded` covers the same windows; drop both and the struck bullet in the notes is
+uncovered.
+
+Greedy gives a *minimal* set, not necessarily the *minimum* one. That is the honest claim
+and it is sufficient: it certifies that nothing can be deleted one at a time from what is
+committed.
 
 ## What writing it found
 
