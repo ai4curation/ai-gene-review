@@ -128,6 +128,33 @@ invented.
 vocabulary, not the claim's meaning. Seed it from what the claim *asserts* — preferably a
 number — and it will still fire after someone rewrites the sentence.
 
+### …and the same reviewer showed the fix repeated the mistake
+
+Two of the five replacement patterns were verbatim fragments of the one stale sentence —
+seeded from the diff of *this* fix exactly as the original four were seeded from the diff
+of `af3276a2`. The proof was in the same commit: my replacement note restates the retracted
+reading as *"one experiment, twelvefold"* and **none of the eight patterns matched it**.
+Added, together with `pre-correction` / `rewritten` / `earlier version` as
+`RETRACTION_MARKERS` — the paired half, since a note may legitimately *quote* the reading
+it replaced, and adding the pattern without the marker would red-flag that quotation.
+
+**So the seeding basis is now itself auditable:**
+
+```bash
+uv run python genes/human/AHDC1/AHDC1-bioinformatics/audit_ahdc1_claims.py --provenance
+```
+
+replays every past revision of the review and the notes on this branch and classifies each
+pattern as **HISTORIC** (matches text that really existed — fires on a literal revert) or
+**INVENTED** (matches nothing, ever — guards a defect someone imagined), exiting non-zero
+on any INVENTED. Running it immediately found one invented pattern of my own
+(`twelve\s+records\s+are\s+…\s+one\s+experiment`, a paraphrase I had guessed at); it
+was removed. All nine surviving patterns are HISTORIC, over 24 replayed revisions.
+
+A lint that guards imagined phrasings while presenting itself as evidence-based is this
+file's own failure mode, one level up — so it is now checked by machine rather than claimed
+in prose.
+
 ## What writing it found
 
 It failed on its first run, and every failure was real rather than a regex artefact:

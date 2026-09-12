@@ -91,6 +91,12 @@ RETRACTED = [
     re.compile(r"twelve-?fold\s+overstatement", re.I),
     re.compile(r"overstates\s+replication\s+twelve-?fold", re.I),
     re.compile(r"this\s+is\s+one\s+screen", re.I),
+    # Added after a reviewer pointed out that the five patterns above were STILL
+    # seeded from the diff of the fix -- two of them verbatim fragments of the one
+    # stale sentence -- and proved it the same way: the replacement note restates
+    # the retracted reading as "one experiment, twelvefold", and not one of the
+    # patterns above matched that. Anchored on the paraphrase's own arithmetic.
+    re.compile(r"one\s+experiment,?\s+twelve-?fold", re.I),
     # The hexanediol condensate-control reading (asserted passes 6-8, withdrawn in
     # pass 8). Anchored on the assertion itself, not on one file's wording, because
     # the GO:0003682 row still states the pre-treatment's INTENT immediately before
@@ -108,6 +114,13 @@ RETRACTION_MARKERS = (
     "refuted",
     "withdrawn",
     "superseded",
+    # A note may legitimately QUOTE the reading it replaced in order to record what
+    # changed. "pre-correction" and "rewritten" mark exactly that, and adding the
+    # meaning-anchored patterns above without these markers would red-flag the
+    # legitimate quotation in the PMID:32814053 reference_review.
+    "pre-correction",
+    "rewritten",
+    "earlier version",
 )
 # Characters either side of a match that count as "the same context". Bounded on
 # purpose -- see the comment in check_retracted.
@@ -461,7 +474,62 @@ def self_test() -> int:
     return 0 if ok else 1
 
 
+def provenance() -> int:
+    """Classify every RETRACTED pattern by what would make it fire.
+
+    The reviewer's structural point was that patterns seeded from the diff of a fix
+    inherit that fix's vocabulary. That answer should be checkable rather than
+    asserted, so this replays the branch's own history and reports, per pattern,
+    whether it matches text that really existed in some past revision (HISTORIC --
+    fires on a literal revert) or nothing at all (INVENTED -- guards a defect I
+    imagined). Whitespace is normalised, as in the live check.
+
+    Exits non-zero if any pattern is INVENTED: a lint guarding imagined phrasings
+    while presenting itself as evidence-based is this file's own failure mode, one
+    level up.
+    """
+    import subprocess
+
+    files = [REVIEW.relative_to(REPO), NOTES.relative_to(REPO)]
+    revs = subprocess.run(
+        ["git", "-C", str(REPO), "rev-list", "HEAD", "--", *map(str, files)],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.split()
+    assert revs, "no revisions found -- is this a git worktree?"
+
+    history: list[str] = []
+    for commit in revs:
+        for f in files:
+            r = subprocess.run(
+                ["git", "-C", str(REPO), "show", f"{commit}:{f}"],
+                capture_output=True,
+                text=True,
+            )
+            if r.returncode == 0:
+                history.append(re.sub(r"\s+", " ", r.stdout))
+    assert history, "no historical file contents retrieved"
+    print(f"replayed {len(history)} historical revisions of {len(files)} files")
+
+    invented = []
+    for pat in RETRACTED:
+        n = sum(1 for t in history if pat.search(t))
+        if not n:
+            invented.append(pat.pattern)
+        print(f"  {'HISTORIC' if n else 'INVENTED':9} in {n:2} revision(s)  {pat.pattern}")
+    if invented:
+        print(f"\n{len(invented)} pattern(s) guard text that never existed:")
+        for p in invented:
+            print("  x", p)
+        return 1
+    print("\nall retraction patterns guard text that really existed")
+    return 0
+
+
 if __name__ == "__main__":
+    if "--provenance" in sys.argv:
+        raise SystemExit(provenance())
     if "--self-test" in sys.argv:
         raise SystemExit(self_test())
     probs = run()
