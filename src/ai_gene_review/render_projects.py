@@ -1218,6 +1218,15 @@ def render_project(
         else:
             title = md_path.stem
 
+    # The Families landing page is a catalog derived from authored reviews.
+    family_rows = None
+    if md_path.name == "FAMILIES.md" and md_path.parent.name == "projects":
+        from ai_gene_review.family_index import collect_family_reviews
+
+        family_rows = collect_family_reviews(md_path.resolve().parent.parent)
+        if template_path is None:
+            template_path = Path(__file__).parent / "templates" / "family_index.html.j2"
+
     # Set up template
     if template_path is None:
         module_dir = Path(__file__).parent
@@ -1238,6 +1247,7 @@ def render_project(
         title=title,
         content=html_content,
         source_file=md_path.name,
+        family_rows=family_rows,
         warnings=warnings,
         frontmatter=frontmatter,
         projects_base_path="../" * subdir_depth,
