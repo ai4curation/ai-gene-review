@@ -145,7 +145,11 @@ onto σ5 (8YAB chain C) by sequence-independent structural superposition, with t
   The substitutions are precisely at the functional positions: σ2 V88 → σ5 T143 and σ2
   V98 → σ5 R151 replace hydrophobic pocket lining with polar and basic side chains, and
   σ2 R15 — the basic patch that reads the acidic residue of the motif, and the FHH3
-  hotspot — is σ5 Y25.
+  hotspot — is σ5 Y25. The functional weight of those particular positions is not my
+  inference: they are the ones whose substitution kills binding in the AP-2 co-crystal
+  study [PMID:19140243 "Mutation of a number of these to hydrophilic residues (σ2L65S, σ2V88D, σ2V98S or σ2L103S), or filling in the pocket by replacement of σ2A63 or σ2N92 with tryptophan, strongly inhibited binding of recombinant AP2 core complexes to different dileucine motifs"],
+  and Arg15 is the one that carries a Mendelian disease
+  [PMID:23222959 "missense mutations of AP2 σ subunit (AP2S1) affecting Arg15, which forms key contacts with dileucine-based motifs of CCV cargo proteins, result in familial hypocalciuric hypercalcemia type 3 (FHH3)"].
 * And the surface is not free: three of the equivalent positions (L120, L152, S156) are
   in contact with the ζ N-terminus (ζ residues 1–10) in the assembled core. In AP-2 that
   surface is blocked by the β2 N-terminus in the *closed* state and released on
@@ -214,8 +218,10 @@ is `GO:0000724`, `GO:0016197`, `GO:0030119`, and its description reads "It is re
 for efficient homologous recombination DNA double-strand break repair", cited to
 `PUB00067710` = PMID:20613862. So the IEA on AP5S1 is that single HeLa esiRNA result
 coming back to the same gene through a family signature — it supplies nothing the IMP has
-not already supplied, and the same mapping propagates a human cell-line phenotype to all
-830 proteins and 2,269 taxa in the family. `EVIDENCE_CIRCULAR_OR_REDUNDANT` on this row;
+not already supplied, and the same mapping propagates a human cell-line phenotype
+family-wide: the InterPro API reports 790 proteins across 2,294 taxa for IPR029392, and
+the PANTHER family it is built on, PTHR16120, reports 830 proteins across 2,269 taxa in
+its own metadata. `EVIDENCE_CIRCULAR_OR_REDUNDANT` on this row;
 the family-wide over-reach goes to `suggested_questions` for InterPro.
 
 ## 9. The five IBAs
