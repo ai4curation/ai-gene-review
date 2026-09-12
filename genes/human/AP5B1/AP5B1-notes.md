@@ -20,8 +20,11 @@ source; anything I could not check is flagged as such.
 - GOA: 24 rows, 9 distinct GO terms. By evidence code: IPI 12, NAS 6, IBA 2, IEA 1, HDA 1,
   IMP 1, IDA 1 (15 rows carry an experimental code; 15 rows carry a WITH/FROM). By aspect:
   MF 12, CC 7, BP 5. By assigning group: IntAct 8, UniProt 7, ComplexPortal 6, GO_Central 2,
-  InterPro 1. (Counted by script, not by eye — `.scratch/reconcile_AP5B1.py` and the count
-  helper in the same directory.)
+  InterPro 1. Every one of these numbers was produced by a script over the GOA tsv, not read
+  off by eye; the same harness reconciles each GOA row against exactly one review row on the
+  key (GO id, evidence code, reference, normalised WITH/FROM) and it passes at 24/24 with one
+  additional NEW row. The harness lives outside the repo tree, per the campaign rule on
+  scratch files.
 - Affinage record: `self_evaluation_pairwise: win`, `faith_pct: 100.0`, 7 citations, and
   `.affinage.log` says "trust gates clear". The narrative describes the right protein — the
   beta subunit of AP-5 — with no symbol collision of the AGT/AGXT kind. All 7 cited ids are
@@ -331,6 +334,20 @@ downgraded.
   2025-2026 cohorts, bi-allelic LoF and founder missense alleles, plus subunit-specific RPE
   localisation. Flagged in its own reason as a tissue-level, non-core consequence rather than
   a molecular core function.
+
+Final tally: 12 MODIFY, 9 ACCEPT, 3 MARK_AS_OVER_ANNOTATED, 1 NEW. No REMOVE and no
+UNDECIDED: nothing in GOA for this gene is contradicted by the literature, and every cited
+reference was readable at least in abstract.
+
+**Three validation warnings remain, all deliberate.** Two are "inconsistent review actions"
+on GO:0016197 and GO:0030119, where the IBA/IEA rows are ACCEPTed at the general term while
+the human experimental row is refined. That divergence is the point rather than an oversight:
+the direction of transport and the four-subunit composition are human results, and pushing
+either down a level on a eukaryote-root PAINT node or on an InterPro family signature would
+propagate a human-specific finding to 1,227 proteins across 2,973 taxa. Each of those four
+`review.reason` fields states the divergence explicitly. The third warning is that no
+`supporting_text` cites the affinage file; that is the campaign rule (affinage is a lead, not
+evidence) and is recorded in the affinage `reference_review`.
 
 ## 7. What affinage missed, and what it got right
 

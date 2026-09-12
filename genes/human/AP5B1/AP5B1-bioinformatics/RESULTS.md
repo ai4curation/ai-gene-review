@@ -10,7 +10,7 @@ cd genes/human/AP5B1/AP5B1-bioinformatics
 uv run python clathrin_box_scan.py --json results.json
 ```
 
-`run.log` is the captured output of the run described here; `results.json` is the full
+`run-output.txt` is the captured output of the run described here; `results.json` is the full
 machine-readable result set.
 
 ## Why this test
