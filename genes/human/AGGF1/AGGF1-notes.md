@@ -242,7 +242,7 @@ significance filter quietly dropped a paper that bears directly on this review's
 largest proposal. The reviewer caught it; the lesson is the same one as the
 hand-written paper list two rounds earlier, one level up.
 
-**The first version of this table said "exactly one independent group", and it was
+**The first version of this table under-counted the independent set, and it was
 wrong** — because `lab_independence.py` used a hand-written paper list that had
 silently omitted PMID:29885663. A list you curate is a list you can under-curate,
 and the conclusion then describes the list rather than the literature. The script

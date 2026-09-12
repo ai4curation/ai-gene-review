@@ -106,6 +106,42 @@ def relevant() -> list[str]:
     return cached
 
 
+def measure() -> dict:
+    """The derived numbers, returned so other checks can assert against them
+    instead of hard-coding a count that then drifts. `audit_claims.py` imports
+    this: the prose must agree with what the author lists actually say, which is
+    a different and much stronger check than blacklisting spellings of a wrong
+    count -- three consecutive review rounds found a new spelling of the same
+    claim that the previous round's literal did not cover."""
+    rows = [(p, authors(p)[0], authors(p)[-1]) for p in relevant()]
+    groups: dict[str, list[str]] = defaultdict(list)
+    for pmid, _first, last in rows:
+        sn, ini = surname_initials(last)
+        key = None
+        for existing in groups:
+            esn, eini = existing.split("|")
+            if esn == sn and (ini.startswith(eini) or eini.startswith(ini)):
+                key = existing
+                break
+        groups[key or f"{sn}|{ini}"].append(pmid)
+    biggest = max(groups.values(), key=len)
+    dominant_names = {a for pmid in biggest for a in authors(pmid)}
+    lineage = [p for p, _f, last in rows if p not in biggest and last in dominant_names]
+    independent = [p for p, _f, last in rows
+                   if p not in biggest and last not in dominant_names]
+    doc = yaml.safe_load(REVIEW.read_text())
+    cited = {r["id"].split(":", 1)[1] for r in doc["references"] if r["id"].startswith("PMID:")}
+    return {
+        "total": len(rows),
+        "dominant": len(biggest),
+        "lineage": len(lineage),
+        "independent": sorted(independent),
+        "independent_n": len(independent),
+        "independent_cited": sorted(p for p in independent if p in cited),
+        "independent_cited_n": sum(1 for p in independent if p in cited),
+    }
+
+
 def main() -> None:
     pmids = relevant()
     print(f"derived paper set: {len(pmids)} cached AGGF1 primary studies "

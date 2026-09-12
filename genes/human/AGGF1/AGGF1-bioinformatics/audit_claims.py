@@ -191,6 +191,56 @@ def check(paths: dict[str, str]) -> list[str]:
         (r"carried by (?:roughly |about |~)?1\.4\s?%",
          "a gnomAD ALLELE frequency used as a carrier frequency; carriers are ~2.8%"),
     ]
+    # --- independence claims are checked against the MEASUREMENT, not a blacklist ---
+    # Three consecutive rounds each found a new spelling of the same wrong claim
+    # that the previous round's literal did not cover ("several later labs",
+    # "later labs", "the second substantive independent group"). Enumerating
+    # spellings cannot converge. Instead, import the derived numbers and reject
+    # any prose number that disagrees with them, plus any significance-ranking of
+    # the independent set -- which is what every one of those spellings was doing.
+    try:
+        import lab_independence
+
+        m = lab_independence.measure()
+    except Exception as exc:  # noqa: BLE001 - report, never abort the harness
+        problems.append(f"could not run lab_independence.measure(): {exc}")
+        m = None
+    if m:
+        words = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six"}
+        ok = {
+            words.get(m["independent_n"], str(m["independent_n"])),
+            str(m["independent_n"]),
+            words.get(m["independent_cited_n"], str(m["independent_cited_n"])),
+            str(m["independent_cited_n"]),
+        }
+        COUNT_RE = re.compile(
+            r"\b(one|two|three|four|five|six|1|2|3|4|5|6)\s+"
+            r"(?:\w+\s+){0,2}independent\s+(?:group|laborator|lab\b|team)",
+            re.I,
+        )
+        RANK_RE = re.compile(
+            r"\b(?:second|third|only|single|main|primary|chief|most)\s+"
+            r"(?:\w+\s+){0,2}independent\s+(?:group|replicat|laborator|lab\b)"
+            r"|\b(?:two|three|four)\s+are\s+substantive"
+            r"|\bsubstantive\s+independent\b",
+            re.I,
+        )
+        for name, text in (("RESULTS.md", results), ("notes", notes), ("review", review)):
+            flat = re.sub(r"\s+", " ", text)
+            for mt in COUNT_RE.finditer(flat):
+                if mt.group(1).lower() not in ok:
+                    problems.append(
+                        f"{name}: independent-group count {mt.group(1)!r} disagrees with "
+                        f"lab_independence.measure() ({m['independent_n']} independent, "
+                        f"{m['independent_cited_n']} of them cited): {mt.group(0)[:70]!r}"
+                    )
+            for mt in RANK_RE.finditer(flat):
+                problems.append(
+                    f"{name}: significance-ranking of the independent set, the class "
+                    f"three rounds of literal guards failed to cover: "
+                    f"{mt.group(0)[:70]!r}"
+                )
+
     for pat, why in retracted_patterns:
         for name, text in (("RESULTS.md", results), ("notes", notes), ("review", review)):
             for m in re.finditer(pat, re.sub(r"\s+", " ", text), re.I):
@@ -312,6 +362,14 @@ def self_test() -> int:
         ("notes", "three independent contributions the review actually uses",
          "the only genuinely independent group", 1,
          "the superseded 'one independent group' count"),
+        # The DERIVED guard: these mutations invent counts and rankings that no
+        # literal blacklist contains, which is the whole point of deriving.
+        ("notes", "Three of the four are used.",
+         "Only two independent groups exist.", 1,
+         "an independent-group count disagreeing with the measurement"),
+        ("notes", "Three of the four are used.",
+         "PMID:39905000 is the single independent group.", 1,
+         "a significance-ranking of the independent set, in a new wording"),
         # One physical line: the YAML wraps at width=100 and a longer span no-ops.
         ("review", "Three of those four are used",
          "Of those four, two are substantive", 1,

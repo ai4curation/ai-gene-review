@@ -324,7 +324,10 @@ rather than taking "independent replication" on impression. Its paper set is
 **derived** — GOA references + affinage citations + the review's own references,
 minus the high-throughput screens and the corrections/commentary — because the
 first version used a hand-written list that had silently omitted PMID:29885663
-and therefore reported "exactly one independent group" when the answer is two.
+and therefore reported an independent-group count that described its own list
+rather than the literature. The correct counts are the ones in the table below,
+and `audit_claims.py` now derives them from `lab_independence.measure()` rather
+than blacklisting spellings of the wrong ones.
 A list you curate is a list you can under-curate, and the conclusion then
 describes the list rather than the literature.
 
@@ -371,8 +374,19 @@ proof of the same person, the senior author differs and the affiliations are a
 different institution, so the paper is still counted as independent — but "one
 independent replication" is load-bearing here, so the overlap is printed.
 
-The script also fails if the review text reintroduces a laboratory-count claim the
-author lists contradict.
+`audit_claims.py` imports `lab_independence.measure()` and checks the prose
+against it, rather than blacklisting spellings of wrong counts. Three consecutive
+review rounds each found a wording the previous round's literal did not cover, so
+enumerating spellings does not converge. The derived check instead rejects **any**
+counted independent-group claim that disagrees with the measurement, and **any**
+significance-ranking of the independent set — and it found two further instances
+the literals had missed the moment it was switched on.
+
+(The retracted wordings are described rather than quoted here, for the same
+reason they are paraphrased in the notes: a guard that has to tell a retraction
+apart from a report of one will eventually let the claim back in. Writing this
+paragraph with the examples spelled out tripped the guard immediately, which is
+the behaviour you want.)
 
 ## Checks that came back negative, recorded so the next reviewer knows they ran
 
