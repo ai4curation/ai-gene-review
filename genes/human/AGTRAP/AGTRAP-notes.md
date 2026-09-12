@@ -197,7 +197,9 @@ Per-reference GOA binding-row counts, re-derived from the TSV rather than from p
 ### Three Y2H partners that survive scrutiny
 
 Searching the partners rather than the symbol (the recall gap affinage cannot
-close) turned up orthogonal validation for exactly three:
+close) turned up orthogonal validation for three. "Three" is what this search
+found, not a proof that no fourth exists — the exhaustive statement available is
+the IntAct one above, that no GOA partner has non-two-hybrid evidence:
 
 - **PITPNC1 / RdgBβ** (`Q9UKF7`, 4 GOA rows) — `PMID:21728994`, titled for
   RdgBβ, not for AGTRAP: *"the PITP domain of RdgBβ interacts with the integral
