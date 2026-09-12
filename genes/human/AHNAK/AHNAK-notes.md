@@ -269,8 +269,21 @@ informative molecular function at all**. The things AHNAK is actually known for 
 | binds/activates PLC-γ1 | 10318799 | **no** |
 | restrains 53BP1 oligomerisation (human KO) | 33961796 | **no** |
 | cortical actin organisation (siRNA) | 14699089 | **no** |
+| stimulates LIG4-XRCC4 double-stranded ligation (purified proteins) | 15177040 | **no** |
 
-Hence 8 `NEW` rows. The two `MODIFY`s move bare `GO:0005515` S100A10 rows to `GO:0044548`, which the
+The last row was nearly missed. `PMID:15177040` entered this review only as the source of the
+"weak DNA-binding activity" caveat on the `GO:0003723` row — cited, but supporting no annotation.
+Re-reading it for that caveat surfaced the actual result: [PMID:15177040 "We characterised AHNAK as
+a protein that stimulates the double-stranded (DS) ligation activity of DNA ligase IV-XRCC4."],
+with purified proteins and an in-cell co-IP. A cited reference that supports no annotation is a
+flag, in the same way the brief flags an empty `findings:` list on a full-text reference.
+
+Term choice was constrained: `GO:0051106 positive regulation of DNA ligation` is **obsolete**
+(checked at QuickGO, not inferred from an empty search), and `involved_in GO:0006303` would
+over-reach because no cellular repair assay exists. `GO:0008047 enzyme activator activity` —
+*"A molecular function regulator that increases a catalytic activity"* — is what was measured.
+
+Hence 9 `NEW` rows. The two `MODIFY`s move bare `GO:0005515` S100A10 rows to `GO:0044548`, which the
 gene already carries — the only partner on this protein with crystal structures behind it.
 
 `GO:0005515` on DYSF/myoferlin was left as-is deliberately: it is the strongest IPI on the gene
