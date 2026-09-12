@@ -45,7 +45,7 @@ three PAINT IBD donors for the family node — mouse Ap1s1 (P61967), *S. pombe* 
 
 | Position in P61966 | Expected | Found | Source of the claim |
 |---|---|---|---|
-| 15 | R | R | basic patch, "equivalent to sigma2 Arg 15" |
+| 15 | R | R | basic patch, "equivalent to sigma2 Arg 15" — but see the caveat below |
 | 63 | A | A | A63D abolishes binding in sigma2 |
 | 88 | V | V | sigma1A V88D abolishes signal binding |
 | 103 | I | I | sigma1A I103S abolishes signal binding |
@@ -53,6 +53,16 @@ three PAINT IBD donors for the family node — mouse Ap1s1 (P61967), *S. pombe* 
 
 All five verify. P61966 is at sequence version 1 and is 158 aa, matching the length
 asserted by the script.
+
+**Position 15 is the weakest of the five and is scored anyway.** Mattera et al. report that
+sigma1A R15E is *among the substitutions that did not abolish* binding of the Nef and
+tyrosine signals, and that mutating the large subunit's arginine (gamma1 R15E) "caused a
+much greater reduction in binding ... than mutation of sigma1A Arg 15". So the acidic
+residue of the sorting signal is read mainly by the large subunit, and sigma1A's Arg15 is a
+subordinate contributor. It is kept as one of the five anchor sites because it is part of
+the structurally defined basic patch and because dropping an inconvenient site would bias
+the scoring, but no conclusion here should lean on it. The same subordination is recorded
+in the `residue_claims` comment in the gene review.
 
 ## Result 2 — the alignment independently reproduces the stated homologies
 

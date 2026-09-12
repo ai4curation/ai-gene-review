@@ -90,6 +90,15 @@ MF children of GO:0140312 `cargo adaptor activity` (only GO:0035615). Hence a
 `proposed_new_terms` entry, and an ONTOLOGY knowledge gap. This is a real gap, not an
 artefact of one empty search.
 
+On the proposed term's parent: `GO:0005515 protein binding` is normally a term to avoid, so
+the choice was checked rather than defaulted. GO:0089710 — the tyrosine counterpart the
+proposal is modelled on — is itself `is_a` GO:0005515 (is_a ancestors GO:0005515,
+GO:0005488, GO:0003674), so mirroring it puts the two motif-binding siblings in one genus.
+The plausible alternative fails on inspection: GO:0005048 is named "signal sequence
+**receptor** activity", is_a GO:0003674 directly, and is defined around signals for proper
+localization in the cell — it is in the receptor branch, not the binding branch, and is not
+a genus for binding a cytosolic sorting motif.
+
 ## 3. Bioinformatics: the site is retained, but retention is not the evidence
 
 `AP1S1-bioinformatics/` (`uv run python dileucine_site.py`) fetches nine sigma subunits
