@@ -400,6 +400,30 @@ about GATA3's *dependence on* AHDC1, which is IMP-shaped and would support a reg
 term, not a binding term. `IPI` on the proximity data with the labelling-radius caveat is
 what matches the measurement. Recorded in the row rather than only in the PR reply.
 
+**A sixth item, from the second (later dismissed) review, and the sharpest of them:** the
+tagged-transgene caveat was *weighted one way for `GO:0003700` and another for
+`GO:0003682`* and got only a trailing clause. That is a real inconsistency to answer,
+because it is the **same experimental limitation** reaching two opposite conclusions — the
+shape the campaign flags as "same author, same gene, two verdicts".
+
+The asymmetry survives being made explicit, which is why it is now stated on both rows
+rather than removed. Over-expression of a tagged chromatin protein distorts **which** sites
+are occupied far more than **whether** the protein reaches chromatin at all: an
+over-expressed protein samples weak and off-target sites that the endogenous one would not.
+`GO:0003700` claims site specificity, so the limitation is load-bearing there.
+`GO:0003682` claims only association, so it is secondary there. Two further facts limit it
+on the `GO:0003682` side and are cited only there: the occupancy is **conditional** —
+absent at day 0 and present at day 7 in the same cells with the same construct, which
+over-expression alone would not reproduce — and an **independently generated** ENCODE
+dataset in a different cell type recovers the same chromatin-state distribution, peak
+number and target gene set. Neither rescues a specificity claim, which is why neither
+appears on the `GO:0003700` row.
+
+And the `GO:0003700` objection never rested on the construct anyway: all four arguments
+there hold if the transgene were endogenous. The audit script now enforces that the
+weighting is justified in **both** places, via an occurrence-count check, because a
+file-presence check cannot express "stated on both sides of a comparison".
+
 One factual note about the review itself: it ran with neither `uv` nor `just` available, so
 its term-id and quote checks were manual against `cache/go/terms.csv` and the cached
 publications. Its conclusions matched the local `just validate` result, but the `Build and

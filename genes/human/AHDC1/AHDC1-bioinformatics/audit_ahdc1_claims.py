@@ -105,6 +105,19 @@ REQUIRED = {
     ),
 }
 
+# Claims that must appear a given number of times WITHIN one file. A file-count
+# check cannot express "stated on both sides of a comparison", which is what the
+# tagged-transgene symmetry needs: the same experimental limitation is weighted
+# differently on the GO:0003700 and GO:0003682 rows, and a reader must be able to
+# see the justification from either row.
+REQUIRED_OCCURRENCES = {
+    "tagged_transgene_weighting_justified": (
+        "AHDC1-ai-review.yaml",
+        re.compile(r"weighted\s+(?:differently|less)", re.I),
+        2,
+    ),
+}
+
 
 def load_review() -> dict:
     return yaml.load(REVIEW.read_text(), Loader=DupKeyLoader)
@@ -197,7 +210,20 @@ def check_required(problems: list[str]) -> None:
                 f"required claim {name!r} found in {len(hits)} file(s) "
                 f"({hits}), expected at least {min_files}"
             )
-    print(f"  required-claim scan: {len(REQUIRED)} claims")
+    for name, (fname, pattern, min_count) in REQUIRED_OCCURRENCES.items():
+        if fname not in corpus:
+            problems.append(f"required-occurrence check {name!r} names unknown file {fname!r}")
+            continue
+        n = len(pattern.findall(corpus[fname]))
+        if n < min_count:
+            problems.append(
+                f"required claim {name!r} occurs {n} time(s) in {fname}, "
+                f"expected at least {min_count}"
+            )
+    print(
+        f"  required-claim scan: {len(REQUIRED)} claims, "
+        f"{len(REQUIRED_OCCURRENCES)} occurrence-count claims"
+    )
 
 
 def run() -> list[str]:
@@ -267,6 +293,17 @@ def self_test() -> int:
         assert "axh" not in NOTES.read_text().lower(), "self-test mutation did not land"
         fired["required_claim_missing"] = bool(run())
         NOTES.write_text(notes_base)
+
+        # guard: an occurrence-count claim dropping below its threshold. Removing
+        # ONE of the two "weighted differently/less" statements must fail, which a
+        # file-presence check could not detect.
+        pat = re.compile(r"weighted\s+(?:differently|less)", re.I)
+        assert len(pat.findall(base)) >= 2, "self-test expected >=2 occurrences to thin"
+        thinned = pat.sub("weighted somehow", base, count=1)
+        assert len(pat.findall(thinned)) == len(pat.findall(base)) - 1, "thinning did not land"
+        REVIEW.write_text(thinned)
+        fired["required_occurrence_count"] = bool(run())
+        REVIEW.write_text(base)
     finally:
         REVIEW, NOTES, HISTORY_DIR = orig_review, orig_notes, orig_hist
         shutil.rmtree(tmp, ignore_errors=True)

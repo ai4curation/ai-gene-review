@@ -25,6 +25,7 @@ number or a phrasing asserted in prose and never re-derived from the data it des
 | arithmetic | `entries == GOA rows + NEW rows`, the action tally sums to the entry count, and no `PENDING` survives |
 | retraction | four retracted phrasings must not reappear in the review, the notes or the history record **outside an explicit retraction context** |
 | required claims | five load-bearing claims must appear in the number of files they should |
+| occurrence counts | one claim must appear **twice within a single file** — the justification for weighting the tagged-transgene caveat differently on the `GO:0003700` and `GO:0003682` rows, which a file-presence check cannot express because it is a statement about both sides of a comparison |
 | duplicate keys | the review is loaded with a `SafeLoader` subclass that **raises** on a duplicated mapping key, which PyYAML otherwise resolves silently by keeping the last one |
 
 ## Reproduce
@@ -39,8 +40,11 @@ Current state: `0 problems`, with `GOA rows=15  entries=20  NEW=5` and the actio
 numbers are **not** hand-maintained here — the script derives both sides and fails if they
 disagree, so this table cannot drift away from the file without the check going red.
 
-All four self-test guards fire: `coverage_on_deleted_entry`, `duplicate_key`,
-`retracted_phrasing`, `required_claim_missing`.
+All five self-test guards fire: `coverage_on_deleted_entry`, `duplicate_key`,
+`retracted_phrasing`, `required_claim_missing`, `required_occurrence_count`. The last is
+exercised by **thinning** — removing one of the two occurrences and asserting the removal
+landed before running the check — because a guard whose mutation silently no-ops "proves"
+itself against nothing.
 
 ## What writing it found
 
