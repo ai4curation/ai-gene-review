@@ -540,7 +540,7 @@ OK: GOA and review reconcile exactly
   model review, `genes/human/AGT`, carries the identical warning with `status: COMPLETE`.
 - `checkquotes.py` → `checked 80 quotes: 0 failures, 0 skipped`.
 - `uv run python -m ai_gene_review.validation.gene_residue_claims` →
-  `91 pass, 0 fail, 0 unresolved` over 14 gene reviews, AP3M2's five claims among them.
+  `352 pass, 0 fail, 0 unresolved` over 20 gene reviews, AP3M2's five claims among them.
 - Duplicate-key scan of the YAML → none. `cache/go/terms.csv` → no deletions relative to
   the merge base, no duplicate ids.
 
