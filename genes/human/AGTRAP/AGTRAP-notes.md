@@ -343,6 +343,17 @@ which discriminates these papers cleanly:
 | `PMID:15757644` | `Animals`, `Mice` — no `Humans` | corroboration only |
 | `PMID:27015675` | `Animals`, `Humans`, `HEK293 Cells` | `GO:0141109` **ISS** |
 
+Reproduce the table with one call (the cached `publications/PMID_*.md` records
+carry title, authors and abstract but **no MeSH headings**, so this cannot be
+checked from the repo alone — worth capturing in the cache now that the indexing
+has done real curatorial work here):
+
+```
+curl -s "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed\
+&id=12960423,10358057,11162453,15757644,27015675&retmode=xml" \
+  | grep -o '<DescriptorName[^>]*>[^<]*</DescriptorName>'
+```
+
 So the two codes are consistent once the indexing is consulted rather than the
 abstract alone: 12960423 is indexed as human work, 11162453 as rat work. NLM
 essentially always adds `Animals` when animal material is used, so its absence
