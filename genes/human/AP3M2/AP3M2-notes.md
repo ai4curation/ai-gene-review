@@ -236,14 +236,19 @@ helix in the mu3 linker [PMID:39705307 "Both helices follow a heptad-repeat sequ
 Scanning the 45 residues preceding each protein's own UniProt MHD boundary with an
 Eisenberg hydrophobic-moment window, AP3M2 139-156 (`ILRTVVNTITGSTNVGDQ`) scores
 <uH> = 0.487 against AP3M1 0.450, AP1M1 0.433, AP1M2 0.373, AP2M1 0.227 and AP4M1
-0.161, with AP3M2 and AP3M1 the only two proteins whose best window also has positive
-mean hydrophobicity. Consistent with mu3B retaining the mu3 membrane-insertion feature.
-This is a prediction, not an observation, and is reported as such.
+0.161 — the two mu3 proteins hold the top two moments. Mean hydrophobicity, by contrast,
+is positive for AP3M2 (+0.10), AP3M1 (+0.12) **and AP4M1 (+0.44)**, so ⟨H⟩ alone does not
+separate mu3 from the rest and it is the moment that does; `analyze.py` computes that
+list rather than my eyeballing the table. Consistent with mu3B retaining the mu3
+membrane-insertion feature. This is a prediction, not an observation, and is reported as
+such.
 
 **Isoform 2.** `P53677-2` combines VAR_SEQ 268-273 (`NLVAIP -> KCCLGM`) with VAR_SEQ
 274-418 (`Missing`), i.e. it truncates at residue 273 of 418 and so removes the
-C-terminal half of the MHD (176-417) — the half that carries every one of the nine
-cargo-contacting positions above. Worth noting because the four IntAct interactions in
+C-terminal half of the MHD (176-417). Computed against the cargo-contacting positions
+rather than assumed: the truncation deletes **seven of the nine** (389, 392, 402, 403,
+404, 405, 406) and retains two (Y180, F181), which lie N-terminal to it — so isoform 2
+keeps the start of the site and loses the part that reads the Ø position. Worth noting because the four IntAct interactions in
 the UniProt record (FGFR3, HRAS, MEOX2, SPRED1) are all on the **-2** isoform with
 `NbExp=3`, which is replicate counts within one dataset, not three studies. No GO row
 depends on them and none was added.

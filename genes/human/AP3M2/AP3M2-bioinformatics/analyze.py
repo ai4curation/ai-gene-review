@@ -351,13 +351,16 @@ def main() -> int:
     out.append("| AP3M1 pos | mu3A | AP3M2 pos | mu3B | identical? |")
     out.append("|---|---|---|---|---|")
     ap3_same = 0
+    ap3m2_cargo: list[tuple[int, str, int | None, str | None]] = []
     ap3_claims: list[tuple[int, str, int, str]] = []
     for pos, aa in ap3_contacts:
         tgt = m1_to_m2.get(pos)
         if tgt is None:
+            ap3m2_cargo.append((pos, aa, None, None))
             out.append(f"| {pos} | {aa} | - | - | no aligned residue |")
             continue
         t_aa = entries["AP3M2"].sequence[tgt - 1]
+        ap3m2_cargo.append((pos, aa, tgt, t_aa))
         same = t_aa == aa
         ap3_same += same
         ap3_claims.append((pos, aa, tgt, t_aa))
@@ -513,20 +516,27 @@ def main() -> int:
     out.append("| symbol | window (start-end) | sequence | <H> | <uH> |")
     out.append("|---|---|---|---|---|")
     ah: dict[str, float] = {}
+    mean_h: dict[str, float] = {}
     for s, e in entries.items():
         lo = max(1, e.mhd_start - LINKER_UPSTREAM)
         hi = e.mhd_start - AH_WINDOW
         start, window, h, mu = best_ah_window(e.sequence, lo, hi)
         ah[s] = mu
+        mean_h[s] = h
         out.append(
             f"| {s} | {start}-{start + AH_WINDOW - 1} | `{window}` | {h:+.2f} | {mu:.3f} |"
         )
     out.append("")
+    positive_h = [s for s in entries if mean_h[s] > 0]
     out.append(
         f"AP3M2 <uH> = {ah['AP3M2']:.3f} versus AP3M1 {ah['AP3M1']:.3f}; the AP-1/AP-2 "
         f"subunits score "
         + ", ".join(f"{s} {ah[s]:.3f}" for s in ("AP1M1", "AP1M2", "AP2M1"))
-        + f" and AP4M1 {ah['AP4M1']:.3f}.\n"
+        + f" and AP4M1 {ah['AP4M1']:.3f}. The two mu3 proteins hold the top two "
+        f"hydrophobic moments. Mean hydrophobicity is positive for "
+        + ", ".join(f"{s} ({mean_h[s]:+.2f})" for s in positive_h)
+        + " - so a positive <H> alone does not separate mu3 from the rest, and it is the "
+        "moment that does.\n"
     )
 
     # --------------------------------------------------------------- isoform 2
@@ -540,10 +550,20 @@ def main() -> int:
         span = f"{start}-{end}" if end else start
         out.append(f"- VAR_SEQ {span}: {note}")
     e = entries["AP3M2"]
+    missing = [
+        (int(a), int(b)) for a, b, note in vsp if note and note.startswith("Missing")
+    ]
+    cargo_positions = sorted(t2 for _, _, t2, _ in ap3m2_cargo if t2)
+    lost = [q for q in cargo_positions if any(a <= q <= b for a, b in missing)]
+    kept = [q for q in cargo_positions if q not in lost]
     out.append(
         f"\nThe MHD of AP3M2 spans {e.mhd_start}-{e.mhd_end} of {len(e.sequence)} "
         "residues, so the isoform-2 variant removes the C-terminal portion of the very "
-        "domain that carries the sorting-signal pocket analysed in section 2.\n"
+        f"domain that carries the sorting-signal site analysed in section 2. Of the "
+        f"{len(cargo_positions)} cargo-contacting positions, isoform 2 deletes "
+        f"{len(lost)} ({', '.join(str(q) for q in lost)}) and retains "
+        f"{len(kept)} ({', '.join(str(q) for q in kept)}), which lie N-terminal to the "
+        "truncation.\n"
     )
 
     # ------------------------------------------------------------------ expression

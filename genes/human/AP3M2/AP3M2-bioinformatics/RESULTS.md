@@ -118,14 +118,14 @@ Begley et al. 2024 (PMID:39705307) report a membrane-inserting amphipathic helix
 | AP2M1 | 139-156 | `KSQHQTKEEQSQITSQVT` | -0.41 | 0.227 |
 | AP4M1 | 139-156 | `VVSKPFSLFDLSSVGLFG` | +0.44 | 0.161 |
 
-AP3M2 <uH> = 0.487 versus AP3M1 0.450; the AP-1/AP-2 subunits score AP1M1 0.433, AP1M2 0.373, AP2M1 0.227 and AP4M1 0.161.
+AP3M2 <uH> = 0.487 versus AP3M1 0.450; the AP-1/AP-2 subunits score AP1M1 0.433, AP1M2 0.373, AP2M1 0.227 and AP4M1 0.161. The two mu3 proteins hold the top two hydrophobic moments. Mean hydrophobicity is positive for AP3M2 (+0.10), AP3M1 (+0.12), AP4M1 (+0.44) - so a positive <H> alone does not separate mu3 from the rest, and it is the moment that does.
 
 ## 4. AP3M2 isoform 2 (P53677-2)
 
 - VAR_SEQ 268-273: NLVAIP -> KCCLGM (in isoform 2)
 - VAR_SEQ 274-418: Missing (in isoform 2)
 
-The MHD of AP3M2 spans 176-417 of 418 residues, so the isoform-2 variant removes the C-terminal portion of the very domain that carries the sorting-signal pocket analysed in section 2.
+The MHD of AP3M2 spans 176-417 of 418 residues, so the isoform-2 variant removes the C-terminal portion of the very domain that carries the sorting-signal site analysed in section 2. Of the 9 cargo-contacting positions, isoform 2 deletes 7 (389, 392, 402, 403, 404, 405, 406) and retains 2 (180, 181), which lie N-terminal to the truncation.
 
 ## 5. Is human AP3M2 neuron-restricted?
 
