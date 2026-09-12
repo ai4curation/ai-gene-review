@@ -226,7 +226,7 @@ high-throughput screens and the non-studies):
 | trainee/collaborator lineage — senior author is themselves an author on a Wang-group paper | **5** — Tian XL (23628701, 33471274), Xu Y (26850475), Zhou B (28958996), Lu Q (32061268) |
 | senior author on **no** Wang-group paper | **4** — Qi J (17884784), **Zhang JH (29885663)**, Liao S (33168501), **Chen L (39905000)** |
 
-All four are used. **PMID:29885663** (*J Neuroinflammation* 2018) corroborates
+Three of the four are used. **PMID:29885663** (*J Neuroinflammation* 2018) corroborates
 the PI3K/AKT axis, in rats; **PMID:39905000** (*Nature Communications* 2025)
 independently re-confirms the TNFSF12 interaction and measures AGGF1 in patient
 vitreous; and **PMID:33168501** (Liao S) shows AGGF1 co-localising with γH2AX in
@@ -235,9 +235,9 @@ nuclear — cited on the `GO:0005634` row for localisation only, not for its
 DNA-repair interpretation. Only **PMID:17884784** (Qi J, a 2007 yeast two-hybrid
 Id1 report) is not used.
 
-An earlier version of this section said "two of the four are substantive" and
-named only the first two. That filter was a **judgement layered on top of a
-measurement** — the count is derived end to end, and then a hand-applied
+An earlier version of this section applied a significance filter that named
+only the first two and left PMID:33168501 out. That filter was a **judgement
+layered on top of a measurement** — the count is derived end to end, and then a hand-applied
 significance filter quietly dropped a paper that bears directly on this review's
 largest proposal. The reviewer caught it; the lesson is the same one as the
 hand-written paper list two rounds earlier, one level up.
@@ -276,6 +276,19 @@ anyone could do for this gene's annotation.
 A review that collapses `NbExp` into independent experiments and catches a
 bait-labelling artefact has no business asserting laboratory independence it never
 checked. The check is now committed so the claim stays a measurement.
+
+## A fetcher defect to report, not a curation one
+
+`publications/PMID_33168501.md` has `title: '[ole of AGGF1 in DNA damage repair…'`
+— the **R of `[Role` has been eaten**, presumably by a bracket-stripping step in
+the publication fetcher. Translated PubMed titles are conventionally wrapped in
+square brackets, so this would affect every record of that form, not just this
+one.
+
+The review's `references[].title` reproduces the cached string verbatim, which is
+what keeps title validation passing. **Hand-correcting it in the YAML alone would
+mask the bug**, so it is recorded here instead, for whoever owns
+`src/ai_gene_review/etl/publication.py`.
 
 ## Process notes
 

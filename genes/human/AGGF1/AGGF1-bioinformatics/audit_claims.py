@@ -140,8 +140,19 @@ def check(paths: dict[str, str]) -> list[str]:
             "share senior author Wang Q/QK",
         "Exactly one, PMID:39905000":
             "the superseded 'only one independent group' claim -- the derived "
-            "27-paper set has FOUR senior authors on no Wang-group paper, two of "
-            "them substantive (Zhang JH, Chen L)",
+            "27-paper set has FOUR senior authors on no Wang-group paper, three of "
+            "which this review uses (Zhang JH, Chen L, Liao S)",
+        # A significance filter hand-applied on top of a derived count puts the
+        # judgement back in where it looks already measured. It excluded
+        # PMID:33168501, the only independent support for the GO:0005634 row.
+        # The three prose files PARAPHRASE this retraction rather than quoting it,
+        # precisely so this one literal can cover the class.
+        "two of the four are substantive":
+            "a significance filter hand-applied on top of a derived count",
+        "two are substantive":
+            "the same filter in its shorter phrasing",
+        "All four are used":
+            "the superseded count -- three of the four are used; PMID:17884784 is not",
         "the only genuinely independent group":
             "the same superseded claim in its other phrasing",
         "the single substantive independent replication":
@@ -301,6 +312,10 @@ def self_test() -> int:
         ("notes", "three independent contributions the review actually uses",
          "the only genuinely independent group", 1,
          "the superseded 'one independent group' count"),
+        # One physical line: the YAML wraps at width=100 and a longer span no-ops.
+        ("review", "Three of those four are used",
+         "Of those four, two are substantive", 1,
+         "the retracted significance filter, in the YAML this time"),
         ("review", "a benign polymorphism: its gnomAD v4 allele",
          "a benign polymorphism carried by roughly 1.4% of the population: its "
          "gnomAD v4 allele", 1,

@@ -354,7 +354,7 @@ interaction and the extracellular pool, **PMID:29885663** on the PI3K/AKT row, a
 human-cell corroboration (AGGF1 co-localising with γH2AX in HCT116) for what was
 otherwise a Wang-group-and-lineage proposal.
 
-An earlier version of this section said "two of the four are substantive" and left
+An earlier version of this section applied a significance filter that left
 PMID:33168501 out. That was a **judgement layered on top of a measurement** — the
 count is derived end to end, then a hand-applied significance filter dropped a
 paper bearing directly on the review's largest proposal. Same failure as the
