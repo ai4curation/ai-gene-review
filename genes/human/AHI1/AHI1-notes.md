@@ -449,6 +449,56 @@ by one. Counting the column took five seconds. **A number in a review that was n
 computed is a latent error**, and the campaign's most heavily confirmed lesson is that a
 number which refuses to add up is the actual bug report.
 
+## Review round: the one factual challenge, checked rather than conceded
+
+The PR review approved and raised five non-blocking suggestions. Four were taken as
+written. The first was a **factual challenge**, and the campaign rule is to verify a
+reviewer's checkable premises before conceding, because a conceded-but-false point
+becomes a defect in the review.
+
+The challenge: the `GO:0005515`/NPHP1 row claims UniProt's `NbExp=4` comes from one
+publication, but GOA carries **two** NPHP1 IPI rows from two papers (`PMID:18633336` and
+`PMID:23532844`) and UniProt cites both — so `NbExp=4` "plausibly spans both".
+
+Re-queried IntAct **per record**, resolving each to its PubMed id rather than to the
+internal `EBI-*` experiment id the first pass had printed:
+
+```
+NPHP1 (O15259): 4 records
+  EBI-9662903  molecular sieving  pubmed=23532844
+  EBI-9662916  molecular sieving  pubmed=23532844
+  EBI-9662962  anti tag coip      pubmed=23532844
+  EBI-9661010  anti tag coip      pubmed=23532844
+  distinct PubMed ids: ['23532844']
+```
+
+The original claim is **correct**: 4 records, 2 methods, 1 paper. All five partner pairs
+resolve the same way — every IntAct record for AHI1 traces to a single publication per
+partner.
+
+But the challenge pointed at something real, and the reconciliation is worth recording.
+`NbExp` counts **records**, not methods, which is why NPHP1's 4 does not equal its method
+count while HAP1's 3 does. And `PMID:18633336`'s NPHP1 evidence is missing from IntAct
+because that GOA row is `assignedBy: UniProt` — curated straight from the paper without
+being lodged in IntAct — while the other is `assignedBy: IntAct`. So the two GOA rows
+**are** independent evidence even though IntAct's count is not, and the apparent
+arithmetic problem is an assigner artefact rather than a counting error.
+
+The first pass had printed `publicationIdentifiers[0]`, which is an `EBI-*` token that
+says nothing about how many papers are involved — the `size=1` trap in another guise: a
+lookup that answers confidently about the wrong thing.
+
+The other four suggestions were adopted: the `GO:0090263` proposal now spells out the
+**two-step** implementation (mouse IMP first, human ISS second — a curator cannot make an
+ISS whose `WITH` target lacks the term); `core_functions` entry 1 now says explicitly
+that its adaptor MF is **inferred by transfer** from a mouse macrophage assay rather than
+demonstrated at the transition zone; `GO:0097730` was added to that entry's locations and
+self-association was given its **own** `core_functions` entry, since V443D separates it
+from NPHP1 tetramer formation and it is one of only two molecular activities measured on
+the human protein in human cells; and the `GO:0007169` row now states the line it sits
+on — whether the annotated process is one the protein's *measured activity acts on* —
+which keeps it while `GO:0045944` and `GO:0050795` fall the other way.
+
 ## Committed check
 
 `AHI1-bioinformatics/audit_ahi1_claims.py` (with `--self-test`) enforces the invariants
