@@ -285,6 +285,44 @@ maximum ventricular filling rate. All of it is mouse, so proposed for human as
 `GO:0141110 transporter inhibitor activity` that phospholamban holds by IDA.
 Not in GOA in any form.
 
+## Finding 8: the coverage gap is symmetric, and mouse shows it is fixable
+
+Every finding above looks at AGTRAP's own record. Querying each **partner's** GO
+record instead (`scratchpad/reciprocity.py`, paging asserted against
+`numberOfHits`) shows the missing curation is not a quirk of this gene's entry —
+the targeted papers produced nothing on either side:
+
+| paper | partner | annotations from that paper on the partner |
+|---|---|---|
+| `PMID:12960423` | human AGTR1 `P30556` | **0** of 79 |
+| `PMID:11733189` | human RACK1 `P63244` | **0** of 166 |
+| `PMID:21728994` | human PITPNC1 `Q9UKF7` | **0** of 28 |
+| `PMID:27015675` | human ATP2A2 `P16615` | **0** of 84 |
+| `PMID:35414770` | human PBX3 `P40426` | **0** of 23 |
+| `PMID:35671117` | **mouse** Fam114a1 `Q9D281` | **10**, incl. reciprocal `GO:0005515` IPI with `Q9WVK0` |
+
+Five targeted interaction papers, ten opportunities across both partners, zero
+human annotations. The single counter-example is the one that matters: MGI
+curated `PMID:35671117` **reciprocally** — mouse Fam114a1 IPI with `Q9WVK0` and
+mouse Agtrap IPI with `Q9D281` — and also gave Fam114a1 `GO:0038166` by IMP. So
+the same paper yields a curated, reciprocal, experimentally-grounded pair in
+mouse and nothing at all in human.
+
+Two consequences worth stating. First, this is a **curation** defect rather than
+a biology one, which is the distinction AFF4's review drew; the diagnosis for
+AGTRAP is "uncharacterised in GO", not "over-annotated", even though 181 rows are
+marked over-annotated — those two coexist here because the 188 screen rows and
+the missing targeted rows come from different places. Second, human AGTRAP's only
+`GO:0038166` row is an InterPro family-name mapping, while mouse *Fam114a1* — its
+partner — holds `GO:0038166` by **IMP**. The experimental grounding for
+angiotensin-signalling involvement exists in the neighbourhood; it just never
+reached this gene.
+
+The three PITPNC1 back-references that do exist on the partner side
+(`PMID:16189514`, `PMID:19060904`, `PMID:25416956`, all IntAct `GO:0005515` IPI)
+are the same CCSB screens already counted here — reciprocity of the screen, not
+of the targeted study.
+
 ## Checks run that came back negative (recorded so the next reviewer knows)
 
 - **Retractions / errata / expressions of concern**: all 21 PMIDs relied on were
