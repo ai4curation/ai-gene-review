@@ -523,14 +523,40 @@ up in PubMed and cached: kinases and phosphatases are *"virtually inactive"* at 
 concentrations used to dissolve condensates, and **the Gibbin ChIP used 5%**. The
 concentration match is what makes it a real citation rather than a gesture.
 
-Scope discipline on that citation: only the **kinase/phosphatase** result is cited, because
-that is what the paper measured. An earlier draft also asserted that hexanediol alters
-chromatin compaction directly; no citation for it surfaced, so the claim was **dropped**
-rather than left standing unsourced.
+Scope discipline on that citation: only the **kinase/phosphatase** and
+**dissolution-threshold** results are cited, because those are what the paper measured. An
+earlier draft also asserted that hexanediol alters chromatin compaction directly; no
+citation for it surfaced, so the claim was **dropped** rather than left standing unsourced.
 
-And the hedge cuts **only against the strengthening half**: the filtering half holds
-whatever the mechanism, because a map collected after a disruptive pre-treatment is a
-filtered map regardless of what the disruption acted on.
+### …and then the citation refuted the claim it was brought in to hedge
+
+The pass-8 reviewer read further into the paper than I had, and the result is a
+**withdrawal, not a hedge**. Two statements, both verbatim in the cached full text:
+
+> "We found that at least 7.5% 1,6-hexanediol is required to dissolve phase-separated
+> GST-CTD"
+
+> "This holds already at concentrations of 1,6-hexanediol where the agent inhibits kinase
+> activity while condensates are not yet dissolved"
+
+**The Gibbin ChIP used 5%** — *below* the only dissolution threshold this paper reports,
+and inside the range where it finds kinases and phosphatases virtually inactive. So the
+pre-treatment cannot be relied on to have dissolved anything, and "survived a
+condensate-disrupting pre-treatment" may partly mean **the condensates were never
+disrupted**. The condensate-control reading is therefore withdrawn, and the `GO:0003682`
+row no longer rests on it; the binding call rests on the conditional occupancy and the
+endogenous-locus ENCODE replication, neither of which involves the reagent.
+
+The **filtering half is untouched**, and does not depend on the mechanism at all: whatever
+occupancy did depend on the interactions the reagent disrupts was removed before
+crosslinking, and a pre-treatment that inactivates kinases and phosphatases at this
+concentration is not inert either way.
+
+Worth naming the shape of this, because it is the second time on this gene: **I brought in
+a citation to qualify a claim and did not read past the abstract-level fact I wanted from
+it.** The same paper's Discussion contained the concentration threshold that overturns the
+claim outright. This is the ACRBP lesson — *if you cite a PMID more than once, read its
+full text* — arriving one round late.
 
 *And a "reports but does not gate" bug in my own script.* `fetch_encode_ahdc1.py` printed
 its warnings and still returned `0`, so a future run in which the ENCODE tag turned out to

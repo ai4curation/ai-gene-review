@@ -91,6 +91,11 @@ All six self-test guards fire: `coverage_on_deleted_entry`, `duplicate_key`,
 exactly one side is thinned, and each asserts the mutation landed before running the check
 — a guard whose mutation silently no-ops "proves" itself against nothing.
 
+Each case also asserts **which** problem appeared, not merely that one did. `bool(run())`
+would have been satisfied by any failure, and three of the six mutations share a YAML
+round-trip: had the round-trip itself perturbed the document, all three would have "passed"
+while testing nothing. `fired_with(run(), "<expected text>")` closes that vacuous-pass mode.
+
 ## What writing it found
 
 It failed on its first run, and every failure was real rather than a regex artefact:

@@ -275,6 +275,17 @@ def run() -> list[str]:
     return problems
 
 
+def fired_with(problems: list[str], expected: str) -> bool:
+    """Did the INTENDED guard fire, rather than merely some guard?
+
+    ``bool(run())`` only proves a problem appeared. Three of the mutations below go
+    through a YAML round-trip, so they share a possible vacuous-pass mode: if the
+    round-trip itself perturbed the document, every one of them would "pass" while
+    testing nothing. Matching the expected problem text closes that.
+    """
+    return any(expected.lower() in p.lower() for p in problems)
+
+
 def self_test() -> int:
     """Break it on purpose. A guard no mutation exercises is reported, not counted."""
     import shutil
@@ -304,12 +315,12 @@ def self_test() -> int:
                 break
         assert removed is not None, "self-test could not find a non-NEW entry to delete"
         REVIEW.write_text(yaml.dump(doc, sort_keys=False))
-        fired["coverage_on_deleted_entry"] = bool(run())
+        fired["coverage_on_deleted_entry"] = fired_with(run(), "GOA row not covered")
 
         # guard: duplicate mapping key
         REVIEW.write_text(base.replace("gene_symbol: AHDC1", "gene_symbol: AHDC1\ngene_symbol: AHDC1", 1))
         assert REVIEW.read_text() != base, "self-test target 'gene_symbol: AHDC1' not present"
-        fired["duplicate_key"] = bool(run())
+        fired["duplicate_key"] = fired_with(run(), "DUPLICATE YAML KEY")
 
         # guard: a retracted phrasing reintroduced with no retraction context
         REVIEW.write_text(
@@ -320,14 +331,18 @@ def self_test() -> int:
             )
         )
         assert "This is one screen." in REVIEW.read_text(), "self-test mutation did not land"
-        fired["retracted_phrasing"] = bool(run())
+        fired["retracted_phrasing"] = fired_with(
+            run(), "retracted phrasing outside a retraction context"
+        )
 
         # guard: a required claim deleted
         REVIEW.write_text(base)
         notes_base = NOTES.read_text()
         NOTES.write_text(re.sub(r"(?i)axh", "XXX", notes_base))
         assert "axh" not in NOTES.read_text().lower(), "self-test mutation did not land"
-        fired["required_claim_missing"] = bool(run())
+        fired["required_claim_missing"] = fired_with(
+            run(), "required claim 'atxn1_axh_mapping'"
+        )
         NOTES.write_text(notes_base)
 
         # guard: a paired claim removed from ONE side. This is the mutation a
@@ -345,7 +360,9 @@ def self_test() -> int:
         assert hit is not None, "self-test could not find the GO:0003682 side to thin"
         assert not pat.search(hit["review"]["reason"]), "thinning did not land"
         REVIEW.write_text(yaml.dump(doc, sort_keys=False))
-        fired["paired_claim_one_side_removed"] = bool(run())
+        fired["paired_claim_one_side_removed"] = fired_with(
+            run(), "tagged_transgene_weighting_justified' is absent from the GO:0003682"
+        )
         REVIEW.write_text(base)
 
         # guard: the row a paired claim names is deleted entirely -- must fail, not skip
@@ -356,7 +373,9 @@ def self_test() -> int:
         ]
         assert len(doc["existing_annotations"]) < before, "self-test deletion did not land"
         REVIEW.write_text(yaml.dump(doc, sort_keys=False))
-        fired["paired_claim_row_deleted"] = bool(run())
+        fired["paired_claim_row_deleted"] = fired_with(
+            run(), "no existing_annotation for GO:0003682"
+        )
         REVIEW.write_text(base)
     finally:
         REVIEW, NOTES, HISTORY_DIR = orig_review, orig_notes, orig_hist
