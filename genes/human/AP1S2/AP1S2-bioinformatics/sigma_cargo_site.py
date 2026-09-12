@@ -4,7 +4,7 @@ Mattera et al. 2011 (PMID:21097499) located the (D/E)XXXL(L/I) sorting-signal bi
 the AP-1 gamma/sigma1, AP-2 alpha/sigma2 and AP-3 delta/sigma3 hemicomplexes, and identified the
 sigma-side residues whose substitution abolishes or weakens signal binding:
 
-    sigma2 (AP2S1): R15, A63, V88, E100, L101, L103
+    sigma2 (AP2S1): R15, A63, V88, N92, E100, L101, L103
     sigma1A (AP1S1): R15, A63, V88, L101, I103
     sigma3A (AP3S1): R15, V94, L107, L109
 
@@ -61,6 +61,8 @@ TESTED_SITES = {
         (15, "R", "sigma2 R15; R15E inhibits dileucine-signal binding"),
         (63, "A", "sigma2 A63; A63D largely abolishes binding of both Nef and tyrosinase"),
         (88, "V", "sigma2 V88; V88D abolishes dileucine-signal binding"),
+        (92, "N", "sigma2 N92; N92A had no effect on Nef binding but decreased tyrosinase "
+                  "binding - a tolerant, signal-dependent position"),
         (100, "E", "sigma2 E100; E100A largely abolishes binding of both signals"),
         (101, "L", "sigma2 L101; L101A has signal-dependent effects"),
         (103, "L", "sigma2 L103; L103S abolishes dileucine-signal binding"),
@@ -187,6 +189,15 @@ def main() -> int:
                 "verdict": verdict,
                 "role": role,
             })
+
+    print("\n# sigma1A residue at each sigma2-tested position "
+          "(the AP-1 counterpart, computed not assumed)")
+    s2, s1a = records["P53680"], records["P61966"]
+    s2_to_s1a, _ = map_positions(s1a, s2)
+    for pos, expected, _role in TESTED_SITES["P53680"]:
+        tgt = s2_to_s1a.get(pos)
+        res = s1a.sequence[tgt - 1] if tgt else None
+        print(f"    sigma2 {expected}{pos:<4} -> sigma1A {res or '-'}{tgt or '-'}")
 
     print("\n# Alignment gap structure relative to AP1S2 (P56377, 157 aa)")
     for comparator in ("P53680", "Q9DB50"):

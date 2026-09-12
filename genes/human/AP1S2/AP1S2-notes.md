@@ -82,15 +82,25 @@ and L100 are corroborative. The positions that carry the argument are the three 
 counterparts abolish binding outright: the γ1-σ1A interaction "was abolished only by V88D and
 I103S (for Nef) and also by A63D (for tyrosinase)" [PMID:21097499], mapping to AP1S2 V87, I102
 and A62. A62 is the one specific to the tyrosinase signal, which is also the signal on which the
-γ2-σ1B hemicomplex diverges from γ1-σ1B. This is recorded in the `role` and
-`comment` of the R14 residue claim.
+γ2-σ1B hemicomplex diverges from γ1-σ1B. This is recorded in the
+`role` and `comment` of the R14 and A62 residue claims.
 
-All five sigma1A positions whose substitution abolishes or weakens dileucine-signal binding
-("the loss of signal binding by the sigma2 V88D or L103S substitutions and the homologous
-sigma1A V88D and I103S and sigma3A V94D and L109S substitutions" [PMID:21097499]) are present in
-AP1S2. The one difference versus sigma2 (L103 -> I102) is the Leu/Ile difference that
-distinguishes the whole AP-1 sigma1 subfamily; sigma1A, which was shown to bind all three test
-signals, carries Ile there too. **There is no residue-level argument that sigma1B has lost the
+All five sigma1A positions PMID:21097499 names in its text are present in AP1S2. Three quotes
+span them, which is why no single one anchors the claim: the abolishing pair and their sigma2
+and sigma3A homologues come from "the loss of signal binding by the sigma2 V88D or L103S
+substitutions and the homologous sigma1A V88D and I103S and sigma3A V94D and L109S
+substitutions"; the third abolishing position from "the interaction with σ1A was abolished only
+by V88D and I103S (for Nef) and also by A63D (for tyrosinase)"; and the two weak ones from "Two
+residues that exemplify these differences are σ1A Arg 15 and Leu 101 , which can be substituted
+with relatively little impact on the ability of γ1-σ1A to recognize (D/E) XXX L(L/I) signals"
+[all PMID:21097499]. AP1S2 differs from sigma2 at exactly two positions in
+that set, L103 -> I102 and N92 -> D91, and the alignment computes sigma1A's counterpart at each:
+sigma1A carries Ile at 103 and Asp at 92, so both differences are AP-1 sigma1 subfamily states
+that sigma1B shares with sigma1A rather than sigma1B-specific losses. The N92 position is
+tolerant in sigma2 itself ("the N92A and L101A mutations had no effect on the interaction with
+the Nef signal but decreased the interaction with the tyrosinase signal" [PMID:21097499]), and
+it is recorded as a SUBSTITUTED residue claim anchored on sigma2 rather than being left out of
+the scan. **There is no residue-level argument that sigma1B has lost the
 cargo-signal site**, and this is recorded as `residue_claims` on the GO:0035615 row so that the
 "fold without function" mirror error is closed off explicitly.
 

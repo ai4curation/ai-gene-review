@@ -33,6 +33,7 @@ Global pairwise alignment (Biopython `PairwiseAligner`, BLOSUM62, gap open -11, 
 | AP2S1 / sigma2 (P53680) | R15 | R14 | RETAINED |
 | AP2S1 / sigma2 | A63 | A62 | RETAINED |
 | AP2S1 / sigma2 | V88 | V87 | RETAINED |
+| AP2S1 / sigma2 | N92 | D91 | SUBSTITUTED (Asn -> Asp; sigma1A carries Asp here too) |
 | AP2S1 / sigma2 | E100 | E99 | RETAINED |
 | AP2S1 / sigma2 | L101 | L100 | RETAINED |
 | AP2S1 / sigma2 | L103 | I102 | SUBSTITUTED (Leu -> Ile; sigma1A also carries Ile here) |
@@ -41,13 +42,30 @@ Global pairwise alignment (Biopython `PairwiseAligner`, BLOSUM62, gap open -11, 
 | AP3S1 / sigma3A | L107 | L100 | RETAINED |
 | AP3S1 / sigma3A | L109 | I102 | SUBSTITUTED (Leu -> Ile, as for sigma1A) |
 
-**Conclusion.** Every sigma-side residue whose substitution abolishes or weakens
-dileucine-signal binding in sigma1A is present in AP1S2, at R14, A62, V87, L100 and I102 in
+**Conclusion.** All five sigma1A positions PMID:21097499 names in its text are present in
+AP1S2, at R14, A62, V87, L100 and I102 in
 AP1S2's own numbering (UniProt sequence version 1). That includes all three whose substitution
 *abolished* the gamma1-sigma1A interaction outright — the paper reports it "was abolished only
 by V88D and I103S (for Nef) and also by A63D (for tyrosinase)" — which map to **V87, I102 and
 A62**. A62 is the one tied specifically to the tyrosinase signal, which is also the signal where
-the gamma2-sigma1B hemicomplex's fine specificity differs from gamma1-sigma1B. The single difference against sigma2 (L103 -> I102)
+the gamma2-sigma1B hemicomplex's fine specificity differs from gamma1-sigma1B.
+
+**The two positions where AP1S2 differs from sigma2 are AP-1 subfamily states, not sigma1B
+losses.** The paper states it tested the sigma1A counterparts of the sigma2 residues wholesale
+("The sigma2 residues that participate in the interaction with (D/E)XXXL(L/I) signals are
+conserved on sigma1A and sigma3A ... We therefore tested the effect of mutating these sigma1A
+and sigma3A residues") without naming every outcome in the text, so the sigma2 set is scanned
+here too. AP1S2 differs from sigma2 at exactly two of those positions, and the script computes
+the sigma1A counterpart of each rather than assuming it:
+
+| sigma2 site | sigma1A counterpart | AP1S2 | reading |
+|---|---|---|---|
+| N92 | **D92** | D91 | Asn->Asp is the AP-1 sigma1 state; sigma1B matches sigma1A |
+| L103 | **I103** | I102 | Leu->Ile is the AP-1 sigma1 state; sigma1B matches sigma1A |
+
+So neither difference is sigma1B-specific. The N92 position is in any case a tolerant one in
+sigma2 itself: "the N92A and L101A mutations had no effect on the interaction with the Nef
+signal but decreased the interaction with the tyrosinase signal". The single difference against sigma2 (L103 -> I102)
 is the same Leu/Ile difference that distinguishes the AP-1 sigma1 subfamily from sigma2, and
 sigma1A — which was shown experimentally to bind all three test signals — carries Ile there too.
 There is therefore no residue-level basis for arguing that sigma1B has lost the cargo-signal
