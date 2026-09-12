@@ -108,6 +108,14 @@ hydrophobic residue, which is conserved across the related RSV M proteins."]
 has a term and a curation precedent for this on the sister subunit, and AP3M1 simply lacks
 the row. That is the main `NEW` recommendation of this review.
 
+One bookkeeping note on that term. GO's current primary label for `GO:0005048`, per both OLS
+and QuickGO queried this session, is "signal sequence receptor activity", with "signal
+sequence binding" listed as an exact synonym. The repository's committed ontology cache
+(`cache/ontologies/go.tsv`, fetched 2026-03-21) still carries "signal sequence binding", and
+that cache is deliberately the validation authority here - its README states that cache
+updates belong in separate commits from label fixes. The review therefore writes the cached
+label, and this paragraph records the drift so it is visible rather than silent.
+
 ### Bioinformatics: is the pocket actually there?
 
 Rather than assert conservation, I measured it — `AP3M1-bioinformatics/cargo_pocket.py`,
@@ -369,7 +377,12 @@ matrix interaction (PMID:29028839) that UniProt itself cites as reference [6]. M
 
 - Is human AP3M1 associated with any disease? Searches on `"AP3M1" AND (mutation OR variant
   OR patient)` (143 hits) returned no Mendelian AP3M1 disorder; the human AP-3 diseases are
-  HPS2 (`AP3B1`) and HPS10 (`AP3D1`). AP3M1 shares a bidirectional CpG-island promoter with
+  HPS2 (`AP3B1`) and HPS10 (`AP3D1`) [PMID:31898847 "The adaptor protein-3 (AP-3) complex
+  consist of 4 subunits and includes the protein products of AP3B1, which is mutated in
+  HPS-2"], and the 2020 HPS mutation update states that all ten subtypes have an assigned
+  gene [PMID:31898847 "The ten described human HPS subtypes (HPS-1 through HPS-10), are each
+  associated with a specific gene defect"]. The string `AP3M1` does not occur anywhere in
+  that review's cached full text. AP3M1 shares a bidirectional CpG-island promoter with
   adenosine kinase [PMID:14575525 "These mutants should prove useful in elucidating the role
   of AP-3 mu3A in vesicle-mediated protein sorting--a process that is altered in
   Hermansky-Pudlak syndrome."], which is a plausible reason large ADK-region deletions could
