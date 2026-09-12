@@ -180,11 +180,17 @@ def main() -> None:
     for n in D.NEW_ROWS:
         if n["term"][0] in existing_terms:
             raise SystemExit(f"NEW row {n['term'][0]} duplicates a term already in GOA")
-        entries.append({
+        new_entry = {
             "term": {"id": n["term"][0], "label": n["term"][1]},
             "evidence_type": n["evidence_type"],
             "original_reference_id": n["reference"],
             "qualifier": n["qualifier"],
+        }
+        # NEW rows have no GOA line, so their supporting_entities (when the evidence code
+        # calls for one, e.g. the interactor of an IPI) come from the decisions module.
+        if n.get("supporting_entities"):
+            new_entry["supporting_entities"] = list(n["supporting_entities"])
+        new_entry.update({
             "review": {
                 "summary": n["summary"],
                 "action": "NEW",
@@ -194,6 +200,7 @@ def main() -> None:
                 ],
             },
         })
+        entries.append(new_entry)
 
     doc = {
         "id": "P59780",

@@ -514,3 +514,68 @@ Recorded as `relevance: MEDIUM`, `correctness: VERIFIED` with that caveat noted.
 - Everything else about this protein is dark, and the `knowledge_gaps` section is
   the honest deliverable: what distinguishes sigma-3B from sigma-3A is unknown,
   and nobody has looked.
+
+---
+
+## 10. Post-review consistency pass
+
+The PR was approved on the first round with no blocking issues, but six
+suggestions were posted. Each was checked against the artifact before acting.
+
+**Acted on.**
+
+- **`ACCEPT` paired with `NO_FAILURE_NON_CORE` on two rows.** Real, and a genuine
+  internal contradiction: `ActionEnum` defines `ACCEPT` as retaining the
+  annotation *as representing the core function*, so pairing it with a non-core
+  root cause makes a row disagree with itself. Resolved by asking which side was
+  right in each case rather than by making them agree mechanically.
+  `GO:0006886 intracellular protein transport` is genuinely core — it is what
+  AP-3 does and it is already in `core_functions.directly_involved_in` — so its
+  root cause became `NO_FAILURE_CORE`. `GO:0015031 protein transport` is the
+  broader parent, whose definition extends to movement into, out of and between
+  cells, which AP-3 does not do; its action became `KEEP_AS_NON_CORE`, matching
+  the reason text. A scripted audit now checks the file for both directions of
+  this conflict and for core_functions terms graded non-core elsewhere; both
+  come back clean.
+- **The `GO:0016182` replacement inherits a non-core caveat it did not state.**
+  Correct: synaptic vesicle budding from endosome is exactly as neuronal and as
+  complex-level as the `GO:0008089` / `GO:0048490` / `GO:0036465` rows graded
+  `KEEP_AS_NON_CORE`. `MODIFY` cannot carry the non-core marker, so the caveat is
+  now stated in the reason, together with why `GO:0035459` — which matches
+  PMID:15537701's literal readout of vesicle cargo content more closely — was not
+  chosen here: it would drop the annotation out of the synaptic-vesicle branch,
+  which is the point of the term being replaced.
+- **The `GO:0005198` justification leaned on an ontology-coverage argument.**
+  Also correct. "The only subunit-level molecular function GO can currently
+  express for this protein" is a fact about GO, not evidence that the protein has
+  the activity, and it invites the "every subunit gets one" objection. Removed
+  from the annotation's reason; the substantive support (core chain of a
+  heterotetramer, with a documented beta-3/sigma-3 intersubunit contact and a
+  reconstitution requiring delta and sigma-3B together) already stood without it,
+  and the ontology-coverage point lives where it belongs, in `knowledge_gaps`.
+- **The `GO:0030674` row is an IPI with no interactor recorded.** Fair. The
+  accessions were looked up rather than taken from the review comment:
+  `UniProtKB:O14617` (AP3D1, the delta chain forming the hemicomplex) and
+  `UniProtKB:Q14108` (SCARB2/LIMP-II, whose cytosolic tail is the bait). Because
+  a `NEW` row has no GOA line, these come from the decisions module rather than
+  from the WITH/FROM column, and the generator was extended to emit them; the
+  GOA-to-YAML reconciliation is unaffected, since it only checks non-`NEW` rows.
+- **`GO:0035654` → `GO:0035459` trades AP-3 specificity for correctness.** The
+  reviewer flagged this as a choice worth making explicit rather than as an
+  error, which is right. The reason now records that keeping the term and
+  pursuing the definition fix was considered — that fix is proposed in
+  `proposed_new_terms` — and why generalising won: losing granularity is a
+  smaller cost than keeping an assertion the cited evidence contradicts.
+
+**Checked and not acted on.**
+
+- **`GO:0016182` is absent from the local term caches.** True, and worth
+  confirming, so it was: QuickGO returns `GO:0016182`, "synaptic vesicle budding
+  from endosome", `isObsolete: false`, no secondary ids, definition *"Budding of
+  synaptic vesicles during the formation of constitutive recycling vesicles from
+  early endosomes."* No change needed.
+- **The proposed parent for "dileucine sorting signal binding" should perhaps be
+  `GO:0089710`'s own parent rather than `GO:0005515`.** Checked on QuickGO: the
+  `is_a` ancestors of `GO:0089710` are `GO:0005515`, `GO:0005488`, `GO:0003674`,
+  so its direct parent *is* `GO:0005515 protein binding`. The proposal already
+  sits exactly where the intended sibling sits; nothing to change.

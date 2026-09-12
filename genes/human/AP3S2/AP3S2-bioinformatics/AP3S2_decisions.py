@@ -354,17 +354,21 @@ DECISIONS: dict[int, dict] = {
 
     3: dict(  # GO:0006886 intracellular protein transport, IEA InterPro
         summary=(
-            "Generic but correct: AP-3 selects transmembrane proteins for movement between "
-            "intracellular compartments [PMID:9545220]."),
+            "Moving transmembrane proteins between intracellular compartments is what AP-3 is "
+            "for, so this term is core even though it is reached from a family signature "
+            "[PMID:9545220]."),
         action="ACCEPT",
         reason=(
             "IPR000804 is the clathrin small-chain signature shared by all AP-complex sigma "
-            "subunits, and intracellular protein transport is true of every one of them. The "
-            "term is broader than what is known about AP-3 specifically, but a broad IEA that "
-            "is correct needs no action; more specific process terms are supplied by other "
-            "rows and by the proposed replacement on the GO:0006896 row."),
+            "subunits, and intracellular protein transport is true of every one of them - but "
+            "being family-wide is not the same as being peripheral. Signal-mediated sorting of "
+            "membrane proteins between intracellular compartments is the function of AP-3 "
+            "[PMID:9545220], and the term is carried in this review's core_functions as one of "
+            "the processes the subunit is directly involved in. Accepted as core; the more "
+            "specific destination is supplied by the replacement proposed on the GO:0006896 "
+            "row, and there is no conflict between holding a parent and a child."),
         prop=dict(
-            root_cause="NO_FAILURE_NON_CORE",
+            root_cause="NO_FAILURE_CORE",
             status={"InterPro:IPR000804": ("SUPPORTS_TRANSFER", (
                 "Clathrin adaptor small-chain signature, present on the target "
                 "(PROSITE PS00989 / Pfam PF01217 on the same record). The mapped term is a "
@@ -408,11 +412,15 @@ DECISIONS: dict[int, dict] = {
 
     5: dict(  # GO:0015031 protein transport, IEA InterPro
         summary="The most general true statement about an AP-complex subunit.",
-        action="ACCEPT",
+        action="KEEP_AS_NON_CORE",
         reason=(
             "IPR016635 is the AP-complex small-subunit signature and protein transport is the "
-            "process every member serves. Uninformative but correct, and the UniProt keyword "
-            "block carries the same claim. No action."),
+            "process every member serves. Correct, and the UniProt keyword block carries the "
+            "same claim, so there is nothing to remove or repair. But GO:0015031 is the parent "
+            "of the intracellular transport term this review does take as core, and its "
+            "definition extends to movement into, out of and between cells - a scope AP-3 does "
+            "not cover. Kept, marked non-core, so that the grading matches the reasoning "
+            "rather than promoting the broadest available parent to a core function."),
         prop=dict(
             root_cause="NO_FAILURE_NON_CORE",
             status={"InterPro:IPR016635": ("SUPPORTS_TRANSFER", (
@@ -689,7 +697,16 @@ DECISIONS: dict[int, dict] = {
             "term: AP-3 does not copurify with clathrin-coated vesicles and builds its "
             "carriers without a clathrin lattice [PMID:42139345]. GO:0016182 synaptic vesicle "
             "budding from endosome names the step AP-3 is actually credited with and keeps the "
-            "annotation in the synaptic-vesicle domain the source paper is about."),
+            "annotation in the synaptic-vesicle domain the source paper is about. Two caveats "
+            "on the replacement. It is as neuronal and as complex-level as the GO:0008089, "
+            "GO:0048490 and GO:0036465 rows this review grades KEEP_AS_NON_CORE, and it should "
+            "be read with the same reservation - MODIFY cannot carry the non-core marker, so "
+            "it is stated here instead. And GO:0035459 vesicle cargo loading, the replacement "
+            "chosen on the GO:0035654 row, arguably matches the cited paper's actual readout "
+            "more literally, since it measured vesicle cargo content rather than budding; "
+            "GO:0016182 is preferred because it keeps the annotation in the synaptic-vesicle "
+            "branch, which is the whole point of the original term, and because endosomal "
+            "budding is the step AP-3 is independently credited with in neurons."),
         replace=[("GO:0016182", "synaptic vesicle budding from endosome")],
         supported_by=[Q_ZNT3, Q_SV_LEVELS, Q_NO_CCV, Q_NO_CLATHRIN],
     ),
@@ -740,7 +757,12 @@ DECISIONS: dict[int, dict] = {
             "and reconstituted AP3:ARF1 builds carriers with no clathrin lattice at all "
             "[PMID:42139345]. UniProt already describes the complex as not clathrin-associated. "
             "GO:0035459 vesicle cargo loading is the same assertion with the superseded "
-            "commitment removed."),
+            "commitment removed. The alternative was considered and rejected: keeping "
+            "GO:0035654 and pursuing the definition fix would preserve AP-3 specificity, and "
+            "that fix is proposed in proposed_new_terms and knowledge_gaps. It is not the "
+            "right call for this row, because an annotation should not assert a mechanism its "
+            "own evidence contradicts while the ontology catches up; generalising loses "
+            "granularity, whereas keeping it would keep a falsehood."),
         replace=[("GO:0035459", "vesicle cargo loading")],
         supported_by=[Q_CLATHRIN_1998, Q_NO_CCV, Q_NO_CLATHRIN, Q_UP_NOT_CLATHRIN,
                       Q_TMEM163_MOTIF, Q_TMEM163_CARGO],
@@ -869,6 +891,7 @@ NEW_ROWS = [
         evidence_type="IPI",
         qualifier="contributes_to",
         reference="PMID:14691137",
+        supporting_entities=["UniProtKB:O14617", "UniProtKB:Q14108"],
         summary=(
             "The activity the gene actually performs and that its GO record does not record "
             "at all: as part of a delta-sigma3B hemicomplex, sigma-3B brings a cargo protein's "
@@ -893,7 +916,9 @@ NEW_ROWS = [
             "clathrin lattice [PMID:42139345]. GO:0030674 is the nearest term that states the "
             "adaptor activity without importing a contradicted mechanism; the precise activity "
             "- binding a dileucine sorting signal - has no GO term and is proposed as a new "
-            "one."),
+            "one. The IPI interactors are recorded: UniProtKB:O14617 (AP3D1, the delta chain "
+            "that forms the hemicomplex) and UniProtKB:Q14108 (SCARB2/LIMP-II, whose cytosolic "
+            "tail is the bait)."),
         supported_by=[Q_Y3H, Q_ALASCAN, Q_CLONED_SEPARATELY, Q_COMPOSITE, Q_RESIDUES,
                       Q_BIO_POCKET, Q_NO_CLATHRIN],
     ),
@@ -914,8 +939,7 @@ NEW_ROWS = [
             "from the yeast three-hybrid reconstitution, in which the LIMP-II interaction is "
             "read out only when delta and sigma-3B are co-expressed [PMID:14691137], and from "
             "the cryo-EM core, where sigma-3's pocket is capped by the beta-3 N-terminal "
-            "extension - an intersubunit contact [PMID:39705307]. This is the only "
-            "subunit-level molecular function GO can currently express for this protein."),
+            "extension - an intersubunit contact [PMID:39705307]."),
         supported_by=[Q_COMPONENTS, Q_SUBUNITS, Q_Y3H, Q_POCKET_OCCLUDED],
     ),
 ]
