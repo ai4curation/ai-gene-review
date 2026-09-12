@@ -150,6 +150,28 @@ def main():
         "An unresolved family grant can coexist with strong evidence for a particular member. Listed subfamilies and representatives are a scoped set, not an exhaustive phylogeny.",
         "",
     ]
+    status_rows = []
+    lines += [
+        "Review status records whether curation is complete. Term scope records whether a family-wide transfer is supported; COMPLETE does not imply FAMILY_WIDE.",
+        "",
+        "[Filterable scope data](family-status.csv) separates unresolved term boundaries from review completion.",
+        "",
+        "| Family | Review status | Term scopes |",
+        "|---|---|---|",
+    ]
+    for f in families:
+        d = docs[f]
+        scopes = collections.Counter(t["scope"] for t in d.get("term_assessments", []))
+        label = "; ".join(f"{scope}: {count}" for scope, count in sorted(scopes.items())) or "No term grants asserted"
+        status_rows.append({"family_id": f, "review_status": d["review_status"],
+                            "term_scopes": label, "unresolved_terms": scopes["UNRESOLVED"],
+                            "family_wide_terms": scopes["FAMILY_WIDE"]})
+        lines.append(f"| [{f}](#{f.lower()}) | {d['review_status']} | {label} |")
+    lines += [""]
+    with (BASE / "family-status.csv").open("w") as stream:
+        writer = csv.DictWriter(stream, fieldnames=list(status_rows[0]))
+        writer.writeheader()
+        writer.writerows(status_rows)
     for f in families:
         d = docs[f]
         lines += [

@@ -96,6 +96,51 @@
             "title": "AnatomicalEntityDescriptor",
             "type": "object"
         },
+        "AncestralNodeDescriptor": {
+            "additionalProperties": false,
+            "description": "A PANTHER/PAINT ancestral node (a PTN identifier, e.g. PANTHER:PTN000299444) used to ground an evolutionary inference about a function. Asserting an ancestral node states that the function associated with the enclosing annoton is inferred to have arisen at, or been present in, the last common ancestor represented by this node, and is therefore inferred to be retained in extant descendant proteins barring divergence, neofunctionalization, or loss of key residues. This is a stronger, clade-level claim than a representative member. Such nodes can be resolved from the IBA WITH/FROM column (GO_REF:0000033) of a representative member's GOA record rather than guessed.",
+            "properties": {
+                "description": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "evidence": {
+                    "items": {
+                        "$ref": "#/$defs/EvidenceItem"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "notes": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "preferred_term": {
+                    "type": "string"
+                },
+                "term": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Term"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                }
+            },
+            "required": [
+                "preferred_term"
+            ],
+            "title": "AncestralNodeDescriptor",
+            "type": "object"
+        },
         "AnnotationExtension": {
             "additionalProperties": false,
             "description": "",
@@ -324,6 +369,18 @@
             "title": "CellularComponentDescriptor",
             "type": "object"
         },
+        "ChainingStatusEnum": {
+            "description": "Curator adjudication of reaction continuity across a module connection (whether the upstream reaction's product is consumed as the downstream reaction's substrate). Used as an explicit override for the advisory, non-blocking automated chaining check.",
+            "enum": [
+                "VERIFIED",
+                "KNOWLEDGE_GAP",
+                "MAPPING_GAP",
+                "NOT_APPLICABLE",
+                "UNVERIFIED"
+            ],
+            "title": "ChainingStatusEnum",
+            "type": "string"
+        },
         "ChemicalEntityDescriptor": {
             "additionalProperties": false,
             "description": "A descriptor for a chemical entity, metabolite, cofactor, ion, or small molecule.",
@@ -481,6 +538,52 @@
                 "OTHER"
             ],
             "title": "ConditionTypeEnum",
+            "type": "string"
+        },
+        "Conformance": {
+            "additionalProperties": false,
+            "description": "Assertion that a module node (together with its parts and connections) is an instance of a reusable template module or motif, optionally recording how it deviates from that template. Modeled after the dismech conforms_to pattern: conformance is a consistency check, not inheritance.",
+            "properties": {
+                "deviations": {
+                    "description": "Specific differences from the template (e.g. a missing or merged tier, a substituted function term). Listed deviations are treated as informational rather than errors during conformance QC.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "notes": {
+                    "description": "Free-text rationale or context for the conformance and any deviations.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "status": {
+                    "$ref": "#/$defs/ConformanceStatusEnum",
+                    "description": "Whether the node matches the template exactly, matches with the noted deviations, or matches the core motif while extending it."
+                },
+                "template": {
+                    "description": "Reference to the template, as a module path relative to modules/ with an optional node id after a hash (e.g. \"mapk_relay\" or \"mapk_relay#map2k\"). The referenced template defines the required steps, function terms, and connection topology this node must contain.",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "template"
+            ],
+            "title": "Conformance",
+            "type": "object"
+        },
+        "ConformanceStatusEnum": {
+            "description": "How closely a module node matches a template motif it conforms to.",
+            "enum": [
+                "EXACT",
+                "WITH_DEVIATIONS",
+                "EXTENDS"
+            ],
+            "title": "ConformanceStatusEnum",
             "type": "string"
         },
         "CoreFunction": {
@@ -825,7 +928,7 @@
         },
         "EvidenceItem": {
             "additionalProperties": false,
-            "description": "A lightweight citable source for module-level assertions. The source may be a PMID, DOI, database record, local file, pathway record, issue, or any other citable artifact. This is deliberately less strict than the publication quote validation used in gene reviews.",
+            "description": "A lightweight citable source for module-level assertions. The source may be a PMID, DOI, database record, local file, pathway record, issue, or any other citable artifact. When a literature source_id (PMID/DOI) is paired with a supporting_text, that quote is validated verbatim (normalized substring) against the cached publication by the project's module supporting-text check (ai_gene_review.validation.module_validator), using the same matcher as gene reviews; non-literature source_ids (GO, file:, Reactome, PANTHER, ...) carry no supporting_text quote and are not fetched.",
             "properties": {
                 "notes": {
                     "type": [
@@ -1024,6 +1127,16 @@
             "additionalProperties": false,
             "description": "A descriptor for a protein family, orthogroup, or other evolutionary grouping.",
             "properties": {
+                "ancestral_nodes": {
+                    "description": "PANTHER/PAINT ancestral node(s) at which the associated function is inferred to have arisen (or to have been present in the last common ancestor). Unlike representative_members, which only give orienting examples, an ancestral node makes a clade-level evolutionary claim: extant descendants are inferred to retain the function unless there is evidence of divergence, neofunctionalization, or loss of key residues.",
+                    "items": {
+                        "$ref": "#/$defs/AncestralNodeDescriptor"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
                 "description": {
                     "type": [
                         "string",
@@ -1033,6 +1146,16 @@
                 "evidence": {
                     "items": {
                         "$ref": "#/$defs/EvidenceItem"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "family_terms": {
+                    "description": "Multiple family-level ontology/database groundings when this descriptor intentionally abstracts over more than one family, such as a conserved role split across multiple PANTHER PTHR families. Use the inherited term slot for the ordinary single-family case.",
+                    "items": {
+                        "$ref": "#/$defs/Term"
                     },
                     "type": [
                         "array",
@@ -1565,6 +1688,266 @@
             "title": "GeneReviewStatusEnum",
             "type": "string"
         },
+        "GoCamActivityReview": {
+            "additionalProperties": false,
+            "description": "Review of a single GO-CAM activity (annoton): the cached gene product / molecular function / process / location, a best-practice QC verdict, and how the activity relates to the gene's annotation review.",
+            "properties": {
+                "activity_id": {
+                    "description": "Activity individual id within the model, e.g. gomodel:568b0f9600000284/57ec3a7e00000079.",
+                    "type": "string"
+                },
+                "biological_process": {
+                    "description": "part_of biological process GO id as cached, if any.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "cellular_component": {
+                    "description": "occurs_in cellular component GO id as cached, if any.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "consistency": {
+                    "$ref": "#/$defs/GoCamConsistencyEnum",
+                    "description": "How this activity relates to the gene's annotation review (genes/**/<gene>-ai-review.yaml)."
+                },
+                "evidence": {
+                    "items": {
+                        "$ref": "#/$defs/EvidenceItem"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "gene_product": {
+                    "description": "enabled_by gene product id as cached (e.g. UniProtKB:..., WB:...).",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "gene_review": {
+                    "description": "Reference to the gene review compared against, e.g. file:human/TP53/TP53-ai-review.yaml.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "molecular_function": {
+                    "description": "Molecular function GO id of the activity as cached.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "notes": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "qc_flags": {
+                    "description": "Specific GO-CAM best-practice issues observed for this activity.",
+                    "items": {
+                        "$ref": "#/$defs/GoCamQcFlagEnum"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "supporting_text": {
+                    "description": "Verbatim supporting text from a cited reference, where applicable.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "verdict": {
+                    "$ref": "#/$defs/GoCamClaimVerdictEnum",
+                    "description": "Overall best-practice/evidence verdict for this activity (mirrors the OK / UNCERTAIN / WRONG forensic-review scale)."
+                }
+            },
+            "required": [
+                "activity_id"
+            ],
+            "title": "GoCamActivityReview",
+            "type": "object"
+        },
+        "GoCamAssociation": {
+            "additionalProperties": false,
+            "description": "A reference from a module element to a production GO-CAM (Gene Ontology Causal Activity Model), optionally pinned to a specific activity (annoton) within that model. The referenced model is expected to be cached under gocams/<model_id>/<model_id>-src.yaml.",
+            "properties": {
+                "activity": {
+                    "description": "Optional activity/annoton id within the model that this element corresponds to, e.g. gomodel:568b0f9600000284/57ec3a7e00000079.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "description": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "evidence": {
+                    "items": {
+                        "$ref": "#/$defs/EvidenceItem"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "model": {
+                    "description": "GO-CAM model id, e.g. gomodel:568b0f9600000284 (or the bare local id 568b0f9600000284). Matches the cached gocams/<model_id>/ folder.",
+                    "type": "string"
+                },
+                "notes": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "title": {
+                    "description": "Cached model title, recorded for human readability.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "model"
+            ],
+            "title": "GoCamAssociation",
+            "type": "object"
+        },
+        "GoCamClaimVerdictEnum": {
+            "description": "Forensic-review verdict for a GO-CAM activity, mirroring the OK / UNCERTAIN / WRONG scale used for claim validation: does the asserted activity hold up against the cited evidence and GO-CAM best practice?",
+            "enum": [
+                "OK",
+                "UNCERTAIN",
+                "WRONG"
+            ],
+            "title": "GoCamClaimVerdictEnum",
+            "type": "string"
+        },
+        "GoCamConsistencyEnum": {
+            "description": "How a GO-CAM activity relates to the corresponding gene's annotation review (genes/**/<gene>-ai-review.yaml).",
+            "enum": [
+                "CONSISTENT",
+                "MORE_SPECIFIC",
+                "MORE_GENERAL",
+                "RELATED",
+                "CONFLICT",
+                "NOT_IN_REVIEW",
+                "NO_GENE_REVIEW"
+            ],
+            "title": "GoCamConsistencyEnum",
+            "type": "string"
+        },
+        "GoCamQcFlagEnum": {
+            "description": "Specific GO-CAM best-practice issues observed for an activity. Derived from the GO-CAM annotation best-practice checklist (see gocams/BEST_PRACTICE.md).",
+            "enum": [
+                "BINDING_AS_FUNCTION",
+                "GENERIC_MF",
+                "HAS_INPUT_MISUSE",
+                "DIRECT_VS_INDIRECT_CAUSAL",
+                "INCORRECT_DIRECTIONALITY",
+                "MISSING_LOCATION",
+                "MISSING_PROCESS",
+                "ORPHAN_ACTIVITY",
+                "MISSING_EVIDENCE",
+                "COMPLEX_SUBUNIT_REPRESENTATION"
+            ],
+            "title": "GoCamQcFlagEnum",
+            "type": "string"
+        },
+        "GoCamReview": {
+            "additionalProperties": false,
+            "description": "A reviewer's assessment of a cached production GO-CAM model (gocams/<model_id>/<model_id>-src.yaml), recorded alongside it as gocams/<model_id>/<model_id>-review.yaml. Captures a standalone reading of the model, per-activity (annoton) QC against GO-CAM best practice, and the consistency of each activity with the corresponding gene annotation review. Validate standalone with `-C GoCamReview`.",
+            "properties": {
+                "activity_reviews": {
+                    "description": "Per-activity (annoton) reviews.",
+                    "items": {
+                        "$ref": "#/$defs/GoCamActivityReview"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "description": {
+                    "description": "Description of the entity",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "model": {
+                    "description": "GO-CAM model id (gomodel:... or the bare local id) matching the cached gocams/<model_id>/ folder.",
+                    "type": "string"
+                },
+                "notes": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "references": {
+                    "items": {
+                        "$ref": "#/$defs/Reference"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "status": {
+                    "$ref": "#/$defs/GoCamReviewStatusEnum"
+                },
+                "summary": {
+                    "description": "Reviewer's standalone reading of what the model asserts (the causal story), independent of the curation project.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "taxon": {
+                    "description": "Primary taxon of the model, e.g. NCBITaxon:6239.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "title": {
+                    "description": "Title of the entity",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "title",
+                "model"
+            ],
+            "title": "GoCamReview",
+            "type": "object"
+        },
+        "GoCamReviewStatusEnum": {
+            "description": "Progress state of a GO-CAM model review.",
+            "enum": [
+                "DRAFT",
+                "IN_PROGRESS",
+                "COMPLETE"
+            ],
+            "title": "GoCamReviewStatusEnum",
+            "type": "string"
+        },
         "InterPro2GORedundancy": {
             "additionalProperties": false,
             "description": "Analysis of whether rule GO annotations are redundant with existing InterPro2GO mappings from the GO Consortium.",
@@ -1809,6 +2192,16 @@
                         }
                     ]
                 },
+                "gocam_associations": {
+                    "description": "References to production GO-CAM model activities (annotons) that realize this module annoton. Used to ground an abstract/non-grounded module role in concrete curated causal activity models.",
+                    "items": {
+                        "$ref": "#/$defs/GoCamAssociation"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
                 "id": {
                     "type": "string"
                 },
@@ -1869,6 +2262,17 @@
             "additionalProperties": false,
             "description": "A connection between module nodes, annotons, or other named elements. Source and target are IDs scoped to the module document.",
             "properties": {
+                "chaining_note": {
+                    "description": "Free-text explanation for the chaining_status, e.g. why a break is a genuine knowledge gap, or which GO/RHEA mapping is missing.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "chaining_status": {
+                    "$ref": "#/$defs/ChainingStatusEnum",
+                    "description": "Curator adjudication of reaction continuity across this connection: whether the upstream reaction's product is the downstream reaction's substrate. This is an explicit override for the (advisory, non-blocking) automated chaining check, so a known gap can be acknowledged rather than re-reported each run. Leave unset to let the automated check report its finding."
+                },
                 "connection_type": {
                     "$ref": "#/$defs/ModuleConnectionTypeEnum"
                 },
@@ -2042,6 +2446,16 @@
                         "null"
                     ]
                 },
+                "conforms_to": {
+                    "description": "Reusable template motifs that this node (together with its parts and connections) is an instance of. Conformance is a compositional, bundle-scoped consistency check: a concrete cascade may freely extend its start and end, while an inner sub-bundle node declares that its parts match a generic motif (e.g. the three-tier MAP kinase relay).",
+                    "items": {
+                        "$ref": "#/$defs/Conformance"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
                 "connections": {
                     "items": {
                         "$ref": "#/$defs/ModuleConnection"
@@ -2070,6 +2484,16 @@
                 "evidence": {
                     "items": {
                         "$ref": "#/$defs/EvidenceItem"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "gocam_associations": {
+                    "description": "References to production GO-CAM models (or specific activities) that realize this module node as a whole.",
+                    "items": {
+                        "$ref": "#/$defs/GoCamAssociation"
                     },
                     "type": [
                         "array",
@@ -2228,6 +2652,10 @@
                         "null"
                     ]
                 },
+                "scope": {
+                    "$ref": "#/$defs/ModuleScopeEnum",
+                    "description": "Whether this module is a concrete biological realization or an abstract reusable motif/template. ABSTRACT modules are intentionally gene-free and are not expected to declare representative protein members for every leaf node."
+                },
                 "status": {
                     "type": [
                         "string",
@@ -2246,6 +2674,15 @@
             ],
             "title": "ModuleReview",
             "type": "object"
+        },
+        "ModuleScopeEnum": {
+            "description": "How concrete the module document is expected to be.",
+            "enum": [
+                "CONCRETE",
+                "ABSTRACT"
+            ],
+            "title": "ModuleScopeEnum",
+            "type": "string"
         },
         "ModuleTypeEnum": {
             "description": "Broad type of biological module node.",
@@ -2875,7 +3312,7 @@
             "type": "string"
         },
         "PredictionErrorTypeEnum": {
-            "description": "Types of errors that lead to incorrect functional predictions, based on Table 1 of de Cr\u00e9cy-Lagard et al. 2025 (PMID:40703034).",
+            "description": "Types of errors that lead to incorrect functional predictions. The first block is based on Table 1 of de Cr\u00e9cy-Lagard et al. 2025 (PMID:40703034); the trailing values capture additional, recurrent failure patterns observed when evaluating sequence- and LLM-based function predictors (e.g. ProtNLM2, BioReason-Pro) that Table 1 does not name explicitly.",
             "enum": [
                 "FAILURE_TO_CAPTURE_LITERATURE",
                 "NAMING_INCONSISTENCY",
@@ -2886,7 +3323,13 @@
                 "FREQUENCY_BIAS",
                 "TRAINING_DATA_CONTAMINATION",
                 "PATHWAY_CONTEXT_IGNORED",
-                "IN_VITRO_NOT_IN_VIVO"
+                "IN_VITRO_NOT_IN_VIVO",
+                "PSEUDOENZYME_OVERANNOTATION",
+                "LOCALIZATION_DEFAULT",
+                "TAXON_CONSTRAINT_VIOLATION",
+                "WRONG_INPUT_SEQUENCE",
+                "DOMAIN_ARCHITECTURE_MISMATCH",
+                "COMPLEX_ACTIVITY_TRANSFER"
             ],
             "title": "PredictionErrorTypeEnum",
             "type": "string"
@@ -2978,6 +3421,141 @@
                 "OTHER_NCRNA"
             ],
             "title": "ProductTypeEnum",
+            "type": "string"
+        },
+        "PropagationFailureModeEnum": {
+            "description": "Biological subtype for a propagation or inference issue.",
+            "enum": [
+                "WRONG_ORTHOLOG_OR_PARALOG",
+                "FUNCTIONAL_DIVERGENCE",
+                "PSEUDO_OR_SUBACTIVITY_LOSS",
+                "CONTEXT_OR_TISSUE_MISMATCH",
+                "LINEAGE_OR_TAXON_MISMATCH",
+                "COMPARTMENT_OR_COMPLEX_MISMATCH",
+                "REGULATORY_SIGN_INVERSION",
+                "ROLE_CONFLATION",
+                "GRANULARITY_MISMATCH",
+                "SOURCE_MISCITATION",
+                "SOURCE_EVIDENCE_WEAK",
+                "CIRCULAR_PROPAGATION"
+            ],
+            "title": "PropagationFailureModeEnum",
+            "type": "string"
+        },
+        "PropagationReview": {
+            "additionalProperties": false,
+            "description": "Structured, mechanical assessment of a propagated or inferred annotation. The detailed biological rationale remains in review.reason; this object records the reusable taxonomy and optional per-source-gene/node comments.",
+            "properties": {
+                "failure_modes": {
+                    "description": "Biological shape of the propagation issue. Multiple values are allowed when a case combines, for example, paralog transfer and functional divergence.",
+                    "items": {
+                        "$ref": "#/$defs/PropagationFailureModeEnum"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "residue_claims": {
+                    "description": "Machine-checkable form of a residue-level argument, e.g. \"this protein lost the catalytic cysteine\". Optional and additive: the vast majority of existing reviews state such arguments only in review.reason prose, and those are grandfathered, never invalidated. Supply this whenever a NEW review rests on residue gain, loss, or retention, so a validator can resolve the claim against the actual sequences and contradict it.\nThis exists because the argument is cheap to assert and hard to check. A survey of 17 \"lacks the catalytic residue\" claims in this repo found 4 where the site was fully intact -- CASP12 (truncated instead), LPA (activation junction), AZIN1 (lost substrate contacts, kept the catalytic Cys) and HSPA13 (a different domain). Each conclusion happened to survive for another reason, so nothing caught the faulty mechanism.",
+                    "items": {
+                        "$ref": "#/$defs/ResidueClaim"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "residue_claims_not_applicable": {
+                    "description": "Why this annotation's argument cannot be expressed as a residue claim, for cases that are genuinely not point-residue questions -- capping versus severing (CAPG), holdase versus foldase (CRYAA), or a whole domain absent rather than residues substituted (MEFV, RAD51C). Recording the reason keeps the escape valve honest rather than silent.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "root_cause": {
+                    "$ref": "#/$defs/PropagationRootCauseEnum",
+                    "description": "Where the issue lies, or that no issue was found: source annotation, propagation decision, term scoping, circular/redundant evidence, or no propagation failure."
+                },
+                "source_entities": {
+                    "description": "Source genes, gene products, PANTHER nodes, family nodes, or other source entities inspected for the propagated annotation.",
+                    "items": {
+                        "$ref": "#/$defs/PropagationSource"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "root_cause"
+            ],
+            "title": "PropagationReview",
+            "type": "object"
+        },
+        "PropagationRootCauseEnum": {
+            "description": "Mechanical root-cause classification for propagated or inferred annotations. This distinguishes bad source annotations from bad propagation decisions and term-scoping issues.",
+            "enum": [
+                "NO_FAILURE_CORE",
+                "NO_FAILURE_NON_CORE",
+                "SOURCE_BAD",
+                "SOURCE_STALE_OR_MISSING",
+                "SOURCE_WEAK_OR_INFERRED",
+                "EVIDENCE_CIRCULAR_OR_REDUNDANT",
+                "PROPAGATION_BAD",
+                "TERM_SCOPING_PROBLEM",
+                "UNRESOLVED"
+            ],
+            "title": "PropagationRootCauseEnum",
+            "type": "string"
+        },
+        "PropagationSource": {
+            "additionalProperties": false,
+            "description": "A source entity considered while reviewing an inferred annotation. This is intentionally compact: use comment for source-specific caveats, not for restating the whole review rationale.",
+            "properties": {
+                "comment": {
+                    "description": "Short source-specific comment, e.g. \"human ANG supports angiogenesis, but mouse Ang2/Angrp is non-angiogenic\" or \"seed is inferred-only\".",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "source_id": {
+                    "description": "Identifier for the source entity, e.g. UniProtKB:P03950, MGI:MGI:104579, PANTHER:PTN002745520, or a GO_REF/source label when no gene product identifier is available.",
+                    "type": "string"
+                },
+                "source_label": {
+                    "description": "Human-readable source label, such as a gene symbol or node label.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "source_status": {
+                    "$ref": "#/$defs/PropagationSourceStatusEnum",
+                    "description": "Mechanical status of this source with respect to the target annotation."
+                }
+            },
+            "required": [
+                "source_id"
+            ],
+            "title": "PropagationSource",
+            "type": "object"
+        },
+        "PropagationSourceStatusEnum": {
+            "description": "Mechanical status of a source entity with respect to a propagated target annotation.",
+            "enum": [
+                "SUPPORTS_TRANSFER",
+                "SUPPORTS_SOURCE_BUT_NOT_TARGET",
+                "SOURCE_BAD",
+                "SOURCE_STALE_OR_MISSING",
+                "SOURCE_WEAK_OR_INFERRED",
+                "CIRCULAR_OR_REDUNDANT",
+                "NOT_RELEVANT",
+                "UNRESOLVED"
+            ],
+            "title": "PropagationSourceStatusEnum",
             "type": "string"
         },
         "ProposedOntologyTerm": {
@@ -3386,6 +3964,127 @@
             "title": "RelationDescriptor",
             "type": "object"
         },
+        "ResidueClaim": {
+            "additionalProperties": false,
+            "description": "A claim that a specific position in THIS gene's protein does or does not carry the residue an anchor protein has at the corresponding position.\nBoth sides carry an explicit position and residue, which is what makes the claim checkable without an alignment: the anchor and target residues are each resolved directly against their own sequences. The alignment is only needed to confirm the two positions genuinely correspond, so a claim remains partially verifiable even when no alignment is pinned.\nPositions are always in each protein's own native numbering, never an alignment column -- columns shift when PANTHER re-releases a family, and a stale column still resolves, to the wrong residue.",
+            "properties": {
+                "alignment_release": {
+                    "description": "Version of the alignment *resource* the correspondence was taken from, when one exists -- e.g. \"PANTHER 19.0\" or \"Pfam 37.0\". A tool name or a script path is not a release and does not belong here; put that in comment.\nOmit it for an alignment computed ad hoc. That is not a gap: the claim states both positions and both residues, so the alignment is only how the correspondence was *discovered*, while the evidence is the two sequence lookups the validator performs. Pinning matters for a shared resource whose coordinates can shift under you, not for a one-off computation.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "anchor": {
+                    "$ref": "#/$defs/ResiduePosition",
+                    "description": "The comparator: a protein known to have the functional residue, and where."
+                },
+                "claim_type": {
+                    "$ref": "#/$defs/ResidueClaimEnum",
+                    "description": "Whether the target lost, retained, or substituted the residue."
+                },
+                "comment": {
+                    "description": "Short note, e.g. why the target position is absent rather than substituted.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "method": {
+                    "$ref": "#/$defs/ResidueClaimMethodEnum",
+                    "description": "How the correspondence between anchor and target positions was established."
+                },
+                "role": {
+                    "description": "Mechanistic role of the anchor residue (e.g. \"metal ligand\", \"nucleophile\").",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "site_ref": {
+                    "description": "Optional reference to a curated family-level residue site, as ``<family_id>#<site_id>`` (e.g. PANTHER:PTHR11022#zn_triad). When given, the validator additionally checks that the site exists in that family review and that the anchor position is one the site declares -- which is what stops a gene review and a family review drifting apart.",
+                    "pattern": "^PANTHER:PTHR[0-9]{5}#[a-z0-9_]+$",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "target": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/ResiduePosition"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "The corresponding position in this gene's own protein. Omit only when the region is unalignable, in which case say so in comment; a missing target is weaker evidence than a stated substitution."
+                }
+            },
+            "required": [
+                "claim_type",
+                "anchor",
+                "method"
+            ],
+            "title": "ResidueClaim",
+            "type": "object"
+        },
+        "ResidueClaimEnum": {
+            "description": "What a residue claim asserts about the target protein.",
+            "enum": [
+                "LOST",
+                "RETAINED",
+                "SUBSTITUTED"
+            ],
+            "title": "ResidueClaimEnum",
+            "type": "string"
+        },
+        "ResidueClaimMethodEnum": {
+            "description": "How the anchor-to-target position correspondence was established.",
+            "enum": [
+                "MSA",
+                "STRUCTURE",
+                "UNIPROT_FEATURE",
+                "LITERATURE"
+            ],
+            "title": "ResidueClaimMethodEnum",
+            "type": "string"
+        },
+        "ResiduePosition": {
+            "additionalProperties": false,
+            "description": "A single residue in a named protein, in that protein's own numbering.",
+            "properties": {
+                "accession": {
+                    "description": "UniProt CURIE, e.g. UniProtKB:Q96PD5.",
+                    "type": "string"
+                },
+                "position": {
+                    "description": "1-based position in this protein's own sequence.",
+                    "minimum": 1,
+                    "type": "integer"
+                },
+                "residue": {
+                    "description": "Single-letter residue expected at that position. U and O are permitted for selenocysteine and pyrrolysine -- a catalytic position can legitimately be selenocysteine, as in SEPHS2.",
+                    "pattern": "^[ACDEFGHIKLMNPQRSTVWYUO]$",
+                    "type": "string"
+                },
+                "sequence_version": {
+                    "description": "UniProt sequence version (the SV in a P49903.2 style citation) the position was read against. Record it: an amino-acid sequence is not immutable. SEPHS2 is already on sequence version 3, and a corrected or re-chosen canonical sequence shifts every downstream position, so an unversioned claim can go silently wrong -- or worse, keep passing against a different residue that happens to match.\nThe validator compares this against the current record and, when they differ, says so explicitly rather than letting a stale claim look verified.",
+                    "minimum": 1,
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "accession",
+                "position",
+                "residue"
+            ],
+            "title": "ResiduePosition",
+            "type": "object"
+        },
         "Review": {
             "additionalProperties": false,
             "description": "A review of an existing annotation.",
@@ -3423,6 +4122,17 @@
                         "array",
                         "null"
                     ]
+                },
+                "propagation_review": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/PropagationReview"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Mechanical review metadata for annotations whose evidence depends on propagation or inference from source genes, family nodes, orthogroups, or other non-target evidence. Use this to classify source-side vs propagation-side failure modes without duplicating the prose rationale in review.reason."
                 },
                 "proposed_replacement_terms": {
                     "description": "If the action is MODIFY, then this is a list of proposed replacement terms",

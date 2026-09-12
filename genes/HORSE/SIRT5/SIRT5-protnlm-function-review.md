@@ -12,7 +12,7 @@ Target: [F6S899](https://www.uniprot.org/uniprotkb/F6S899/entry), Equus caballus
 
 ### NAD-dependent lysine demalonylase
 
-**Uncertain.** Human SIRT5 has this activity, but the selected horse sequence diverges sharply after roughly residue200 and lacks multiple human NAD-contact segments. Two conserved zinc-coordinating cysteines map to tryptophans.
+**Uncertain.** Human SIRT5 has this activity, but the selected horse sequence diverges sharply after roughly residue 200 and lacks multiple human NAD-contact segments. Two conserved zinc-coordinating cysteines map to tryptophans.
 
 ### Lysine desuccinylase
 
