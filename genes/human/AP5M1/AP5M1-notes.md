@@ -431,7 +431,14 @@ deepen cleanly rather than errors to delete.
   and lysosomal membrane organization, and the closest existing terms are
   GO:0170064 lysosome fission and GO:0097749 membrane tubulation (with a child
   GO:0097750 for endosome membranes but none for autolysosomes). Proposed as a
-  new term rather than forced into an existing one.
+  new term rather than forced into an existing one. **The merged ZFYVE26 review
+  already requests the same term** under the same name and parent, with a shorter
+  definition; the review here says so explicitly and asks that the two be merged
+  into one request rather than filed twice. Primary evidence for the process
+  itself is [PMID:25365221 "spastizin and spatacsin were essential components for
+  the initiation of lysosomal tubulation"], which is about the two partner
+  proteins and not about AP5M1, so it supports the term request and nothing on
+  this gene.
 - **Isoform 2** removes most of the MHD and is annotated as possible intron
   retention; whether it makes protein and whether it assembles with β5 is
   untested.
