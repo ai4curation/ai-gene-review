@@ -1,7 +1,7 @@
 # AHSP (human, Q9NZD4) — review notes
 
 Working journal for the GO annotation review. Provenance is recorded inline as a
-bracketed citation followed by a verbatim quotation from that reference. All 16
+bracketed citation followed by a verbatim quotation from that reference. All 17
 such quotes in this file were machine-verified against the cached publications
 with the repo's own `SupportingTextValidator` (the code CI uses for the review
 YAML), because nothing in CI checks a notes file.
@@ -77,6 +77,32 @@ chaperones: `GO:0140713` sits under `GO:0140597 protein carrier activity` and
 describes binding a *folded* client, keeping it soluble, and depositing it into
 its final assembly. That is AHSP's mechanism with "nucleosome" replaced by
 "hemoglobin tetramer". Hence the proposal `globin chaperone activity` as a sibling.
+
+**The obvious alternative, considered and rejected: annotate `GO:0140597` itself.**
+It is an existing term, no proposal needed, and its definition — "Directly binding
+to a protein and delivering it either to an acceptor molecule or to a specific
+location" — reads as though it fits, since β-globin is an acceptor molecule. Two
+reasons not to:
+
+1. **The parent term's own comment defines a carrier by movement:** *"Note that a
+   carrier moves with its substrate/cargo, while a transporter does not move with the
+   cargo, but facilitates the change in localization"* (`GO:0140104`). AHSP does not
+   move anywhere. And the hand-off is not an act of delivery but **competitive
+   displacement** — β-globin outcompetes AHSP at the same interface
+   [PMID:15550245 "The AHSP-alphaHb interactions are extensive but suboptimal, explaining why beta-hemoglobin can competitively displace AHSP to form HbA"].
+   Annotating `GO:0140597` would assert an activity whose mechanism is the reverse of
+   what was measured: AHSP is displaced, it does not deliver.
+2. **It would drop the part that makes AHSP distinctive.** Every existing child of
+   `GO:0140597` is about getting a client somewhere. None involves changing the
+   client's chemistry. Suppressing the haem iron's reactivity is not a side effect of
+   holding α-globin — it is the reason holding it works, and it is what `GO:0016209`
+   cannot express either (§4). A term that captured only the carrier half would leave
+   the redox half homeless in both branches.
+
+So `GO:0140597` is cited as the proposed *parent*, not used as the annotation. This is
+recorded because it is the first question a reviewer should ask, and "we did not just
+reach for the nearest existing term" is only credible if the nearest existing term is
+named and dispatched.
 
 AHSP is therefore another gene stranded by the `GO:0051082`/`GO:0140309` gap
 tracked in repo issue #2222 — but the *shape* of its stranding differs from the
@@ -313,7 +339,7 @@ Two reasons, one practical and one principled:
   PMID:12066189's abstract instead.
 
 Both the review YAML and this notes file were then checked with a strict-duplicate-key
-loader plus the repo's own `SupportingTextValidator`: **66 quotes in the YAML and 16 in
+loader plus the repo's own `SupportingTextValidator`: **66 quotes in the YAML and 17 in
 the notes, 0 problems, raw `supporting_text` key count equal to the parsed count** (so no
 duplicate YAML key silently discarded provenance). The checker was tested by breaking
 it - mutating one quoted word made it exit 1 and name the row - before its clean run was
