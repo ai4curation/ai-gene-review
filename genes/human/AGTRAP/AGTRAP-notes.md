@@ -211,9 +211,27 @@ AGTR1 binding is measured, curated by UniProt on the **human** entry
 it is nowhere in the human GO record.
 
 `GO:0031702 type 1 angiotensin receptor binding` exists and is exactly right
-(Daviet showed the binding is AT1a-specific and excludes AT2). Its 197 current
-holders are **all AGT orthologues by IEA** — the ligand precursor. The protein
-named for the receptor holds nothing. Proposed as `NEW`.
+(Daviet showed the binding is AT1a-specific and excludes AT2). Proposed as `NEW`.
+
+**A claim I had to retract here.** The first draft said its 197 holders were *all*
+angiotensinogen orthologues by IEA — read off page 1 of a paginated QuickGO result,
+which is exactly the failure the brief warns about. Paging the whole thing (197
+annotations over 188 gene products, `len(results)` asserted against `numberOfHits`)
+gives 175 IEA, 10 ISO, 9 IPI, 3 IDA, and **16 entities with non-IEA evidence**:
+
+| holder | evidence | what it binds |
+|---|---|---|
+| AGT | human IPI, mouse IDA, rat ISO | the ligand precursor |
+| ARRB2 | rat IPI, mouse ISO | receptor cytoplasmic face |
+| JAK2 | rat IPI, mouse ISO/IEA | receptor cytoplasmic face |
+| TYK2 | rat IPI, mouse ISO | receptor cytoplasmic face |
+| ARAP1 | rat IPI, mouse ISO | receptor cytoplasmic face |
+| BDKRB2, EDNRB | human/rat IPI, ISO | heteromeric receptor partners |
+
+So the term is **already** used for cytoplasmic-face binders — AGTRAP's exact class —
+which makes the proposal stronger than the retracted version claimed, not weaker. What
+is genuinely thin is human coverage: five human entities, only AGT and BDKRB2 by IPI,
+the rest Ensembl projections.
 
 Note the composite-claim trap in UniProt's SUBUNIT line: the RACK1 half comes
 from `PMID:11733189` and the AGTR1 half from `PMID:12960423`. `PMID:11733189`
