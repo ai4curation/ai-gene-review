@@ -1,9 +1,12 @@
 # AP5B1 (beta-5 adaptin): does it carry the beta-adaptin clathrin-binding apparatus?
 
-Reproducible analysis for the AP5B1 gene review. Everything below is produced by
-`clathrin_box_scan.py`, which fetches sequences from UniProt, Pfam domain boundaries and
-secondary-structure/REGION features from InterPro and UniProt at run time. No result is
-hardcoded; expected sequence lengths are asserted so a changed accession fails loudly.
+Reproducible analysis for the AP5B1 gene review. Every number and every residue position
+below is emitted by `clathrin_box_scan.py`, which fetches at run time: sequences from
+UniProt, Pfam domain boundaries from InterPro, secondary-structure and REGION features from
+UniProt, and the modelled residue ranges of PDB 8YAB chain B from the PDBe polymer-coverage
+API. Nothing is hardcoded; expected sequence lengths are asserted so a changed accession
+fails loudly. Cross-check any figure in this document against `run-output.txt` or
+`results.json` — if it is not in one of those, it does not belong here.
 
 ```
 cd genes/human/AP5B1/AP5B1-bioinformatics
@@ -57,28 +60,37 @@ form that matters**: AP5B1 has no clathrin box in an accessible linker.
 Both are absent from AP5B1 (and from all four controls). This reproduces Hirst et al.
 verbatim.
 
-### 3. `WDW`: present, but the 2011 structural dismissal does not hold — and does not matter
+### 3. `WDW`: present, inside the solenoid, and unavailable — the 2011 reading holds
 
 AP5B1 has one `WDW`, at 223-225. Hirst et al. placed it "in the middle of the alpha-helical
-solenoid". On the current records it is **not** in the solenoid: it falls in the 105-262
-interval between Pfam domains PF21587 (AP5B1_N) and PF21588 (AP5B1_middle), and **no UniProt
-feature covers residue 223** — the nearest secondary structure from PDB 8YAB is a helix
-ending at 203, and a MobiDB-lite disordered region begins at 234. So the residue lies in an
-unstructured inter-domain segment, which is the kind of place a linear motif could in
-principle work.
+solenoid" and concluded it is therefore unlikely to reach clathrin. The structure released
+fourteen years later agrees. From the run:
 
-This does not rescue a clathrin-binding claim, for two reasons that the same run establishes:
+* **residues 223-229 are modelled in PDB 8YAB chain B**, whose modelled span is 7-631. The
+  motif is inside the solenoid, not C-terminal to it and not in a linker between structural
+  modules.
+* it sits between two solenoid helices — nearest UniProt feature before is `Helix 182-203`,
+  nearest after is the MobiDB-lite `Region 234-260 (Disordered)` — and is flanked by two
+  unmodelled stretches, **213-222 and 230-260**. So it is a short ordered island in a poorly
+  ordered inter-helical loop of the trunk, not an exposed hinge of the AP-1/AP-2 kind.
+* the only reason it superficially looks inter-domain is that Pfam's AP5B1-specific models
+  leave 105-262 uncovered. That is a model-coverage gap, not a structural boundary: the same
+  region is continuously part of the cryo-EM-resolved trunk, and §4 below notes the Pfam
+  coverage caveat in general.
+
+A first pass of this analysis read the absence of a covering Pfam domain and a covering
+UniProt feature as evidence that the residue is outside the solenoid. That was an
+over-reading of an absence: neither database annotates inter-helical loops, and the PDBe
+coverage check — added afterwards, and now part of the script — settles it directly. The
+2011 claim is confirmed, not qualified.
+
+Two further points make the conclusion independent of where exactly the tripeptide sits:
 
 * the validated W-box consensus is `PWxxW`, and **`PWxxW` is absent from AP5B1** (and from
   all four controls). A bare `WDW` tripeptide is not a W-box.
-* the biochemistry is independent of the sequence argument: beta-5 is not enriched in — or
-  even detectable in — the clathrin-coated-vesicle fraction, and tagged AP-5 does not
+* the biochemistry is independent of the sequence argument entirely: beta-5 is not enriched
+  in — or even detectable in — the clathrin-coated-vesicle fraction, and tagged AP-5 does not
   colocalise with clathrin heavy chain (PMID:22022230).
-
-Recorded here because it is a real qualification of a widely repeated statement: the
-sequence-level argument for dismissing the AP5B1 `WDW` was based on a structural assignment
-that the 2025 cryo-EM structure does not support. The conclusion is unchanged; the reason
-for it is not the one usually given.
 
 ### 4. Hinge: AP5B1 has the shortest trunk-to-appendage linker of the five
 
@@ -94,9 +106,10 @@ it:
 | AP4B1 | PF01602 (11-522) | PF09066 | 99 aa |
 
 AP5B1's is the shortest, and by a factor of ~3 against the two clathrin-dependent beta
-subunits. This confirms the fourth claim. An independent check from a different source
-agrees on where the AP5B1 trunk ends: the UniProt HELIX features derived from PDB 8YAB run
-from residue 10 to residue 629, against PF21588 ending at 627.
+subunits. This confirms the fourth claim. Two independent checks from different sources agree
+on where the AP5B1 trunk ends, both emitted by the run: the UniProt secondary-structure
+features derived from PDB 8YAB span residues 10-629, and the modelled range of 8YAB chain B
+itself ends at 631 — against PF21588 ending at 627.
 
 **Caveat, stated rather than buried:** PF21587-PF21590 were built on the AP5B1 family
 itself, whereas PF01602 (Adaptin_N) is a pan-family model, so the boundary calls are not
@@ -115,9 +128,13 @@ counterpart of the cell-biological result that AP-5 does not associate with clat
 it is why the AP-1/AP-2 beta-subunit annotation `GO:0030276 clathrin binding` should not
 be transferred to AP5B1.
 
-Separately relevant to annotation transfer: AP5B1 is **not** in the beta-adaptin PANTHER
-family. AP1B1, AP2B1, AP3B1 and AP4B1 are all `PTHR11134` (ADAPTOR COMPLEX SUBUNIT BETA
-FAMILY MEMBER, 17,626 proteins); AP5B1 is the sole occupant of `PTHR34033` (AP-5 COMPLEX
-SUBUNIT BETA-1, 1,227 proteins, one subfamily SF1 whose five reviewed members are the human,
-mouse, rat, bovine and Xenopus AP5B1 orthologues). PAINT therefore cannot leak AP-1/2/3/4
-beta-subunit terms onto AP5B1 through the family tree.
+Separately relevant to annotation transfer, and **not** produced by this script: AP5B1 is
+not in the beta-adaptin PANTHER family. AP1B1, AP2B1, AP3B1 and AP4B1 are all `PTHR11134`
+(ADAPTOR COMPLEX SUBUNIT BETA FAMILY MEMBER, 17,626 proteins); AP5B1 is the sole occupant of
+`PTHR34033` (AP-5 COMPLEX SUBUNIT BETA-1, 1,227 proteins, one subfamily SF1 whose five
+reviewed members are the human, mouse, rat, bovine and Xenopus AP5B1 orthologues). PAINT
+therefore cannot leak AP-1/2/3/4 beta-subunit terms onto AP5B1 through the family tree.
+Sources for this paragraph, all checkable in committed files or by one API call: the five
+family assignments come from the UniProt `DR PANTHER` lines for each accession, and the
+PTHR34033 counts and member list from `interpro/panther/PTHR34033/PTHR34033-metadata.yaml`
+and `PTHR34033-entries.csv`.

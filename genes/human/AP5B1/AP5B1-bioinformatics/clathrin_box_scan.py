@@ -9,7 +9,7 @@ long unstructured hinge -> C-terminal appendage (ear). Clathrin is recruited by 
 linear motifs that sit *in the hinge*:
 
   * the "clathrin box"      consensus L(phi)x(phi)[DE]   (phi = bulky hydrophobic)
-    e.g. AP2B1 LLNLD, AP1B1 LLDLD
+    e.g. AP2B1 LLNLD, AP1B1 LLNLD
   * the type-II / "LLDLL" box
   * the W-box               PWxxW  (and the short WDW / YQW motifs named by Hirst et al.)
 
@@ -43,6 +43,11 @@ UNIPROT_JSON = "https://rest.uniprot.org/uniprotkb/{acc}.json?fields=ft_helix,ft
 INTERPRO_MATCHES = (
     "https://www.ebi.ac.uk/interpro/api/entry/all/protein/uniprot/{acc}/?page_size=200"
 )
+PDBE_COVERAGE = "https://www.ebi.ac.uk/pdbe/api/pdb/entry/polymer_coverage/{pdb}"
+
+# Experimental structures whose modelled residue ranges are used to decide whether a motif
+# position is actually resolved. Keyed by the symbol under test.
+STRUCTURES: dict[str, tuple[str, str]] = {"AP5B1": ("8yab", "B")}
 
 # accession -> (gene symbol, expected length, role in this test)
 TARGETS: dict[str, tuple[str, int, str]] = {
@@ -70,6 +75,8 @@ class Protein:
     seq: str
     domains: list[tuple[str, str, int, int]] = field(default_factory=list)  # db, id, start, end
     features: list[tuple[str, int, int, str]] = field(default_factory=list)  # type, start, end, note
+    observed: list[tuple[int, int]] = field(default_factory=list)  # modelled ranges in a PDB chain
+    structure: str | None = None
 
     @property
     def length(self) -> int:
@@ -124,12 +131,54 @@ def fetch_features(acc: str) -> list[tuple[str, int, int, str]]:
     return sorted(out, key=lambda f: f[1])
 
 
+def fetch_observed_ranges(pdb: str, chain: str) -> list[tuple[int, int]]:
+    """Residue ranges actually modelled for one chain of an experimental structure."""
+    r = requests.get(PDBE_COVERAGE.format(pdb=pdb), timeout=60)
+    r.raise_for_status()
+    out: list[tuple[int, int]] = []
+    for mol in r.json()[pdb]["molecules"]:
+        for ch in mol["chains"]:
+            if ch["chain_id"] != chain:
+                continue
+            for obs in ch["observed"]:
+                out.append((obs["start"]["residue_number"], obs["end"]["residue_number"]))
+    return sorted(out)
+
+
+def coverage_at(pos: int, observed: list[tuple[int, int]]) -> dict:
+    """Is this residue modelled, and what are the nearest modelled/unmodelled boundaries?"""
+    if not observed:
+        return {}
+    covering = [(s, e) for s, e in observed if s <= pos <= e]
+    span_start, span_end = observed[0][0], observed[-1][1]
+    gaps = [(a[1] + 1, b[0] - 1) for a, b in zip(observed, observed[1:]) if b[0] - a[1] > 1]
+    return {
+        "modelled": bool(covering),
+        "modelled_segment": list(covering[0]) if covering else None,
+        "chain_modelled_span": [span_start, span_end],
+        "within_chain_span": span_start <= pos <= span_end,
+        "flanking_unmodelled_gaps": [list(g) for g in gaps if abs(g[0] - pos) < 60 or abs(g[1] - pos) < 60],
+    }
+
+
 def features_at(pos: int, features: list[tuple[str, int, int, str]]) -> list[str]:
     return [
         f"{ftype}:{start}-{end}" + (f" ({note})" if note else "")
         for ftype, start, end, note in features
         if start <= pos <= end
     ]
+
+
+def flanking_features(pos: int, features: list[tuple[str, int, int, str]]) -> dict:
+    """Nearest annotated feature before and after the residue, so that a position with no
+    covering feature is still placed in context rather than left as a bare absence."""
+    before = [f for f in features if f[2] < pos]
+    after = [f for f in features if f[1] > pos]
+    fmt = lambda f: f"{f[0]}:{f[1]}-{f[2]}" + (f" ({f[3]})" if f[3] else "")
+    return {
+        "nearest_before": fmt(max(before, key=lambda f: f[2])) if before else None,
+        "nearest_after": fmt(min(after, key=lambda f: f[1])) if after else None,
+    }
 
 
 def in_domain(pos: int, domains: list[tuple[str, str, int, int]]) -> str | None:
@@ -154,6 +203,8 @@ def scan(prot: Protein) -> dict[str, list[dict]]:
                     "match": text,
                     "within_pfam_domain": in_domain(start, prot.domains),
                     "uniprot_features_at_start": features_at(start, prot.features),
+                    "flanking_uniprot_features": flanking_features(start, prot.features),
+                    "structure_coverage": coverage_at(start, prot.observed),
                 }
             )
         hits[name] = found
@@ -224,15 +275,25 @@ def main() -> int:
             f"{symbol} ({acc}): UniProt now returns {len(seq)} aa, expected {expected_len}. "
             "Re-check the accession before trusting anything below."
         )
+        pdb_chain = STRUCTURES.get(symbol)
         prot = Protein(
             acc=acc, symbol=symbol, seq=seq,
             domains=fetch_domains(acc), features=fetch_features(acc),
+            observed=fetch_observed_ranges(*pdb_chain) if pdb_chain else [],
+            structure=f"{pdb_chain[0].upper()} chain {pdb_chain[1]}" if pdb_chain else None,
         )
         proteins[symbol] = prot
         report[symbol] = {
             "accession": acc,
             "role": role,
             "length": prot.length,
+            "structure": prot.structure,
+            "modelled_ranges": [list(r) for r in prot.observed],
+            "uniprot_secondary_structure_span": (
+                [min(f[1] for f in prot.features if f[0] in ("Helix", "Beta strand", "Turn")),
+                 max(f[2] for f in prot.features if f[0] in ("Helix", "Beta strand", "Turn"))]
+                if any(f[0] in ("Helix", "Beta strand", "Turn") for f in prot.features) else None
+            ),
             "pfam_domains": [
                 {"accession": d[1], "start": d[2], "end": d[3]} for d in prot.domains
             ],
@@ -306,10 +367,23 @@ def main() -> int:
     wdw = ap5["motif_hits"]["WDW"]
     print(f"3. WDW in AP5B1: {len(wdw)} hit(s); the validated W-box PW..W is "
           f"{'ABSENT' if not ap5['motif_hits']['W_box_PWxxW'] else 'PRESENT'}")
+    ss = ap5["uniprot_secondary_structure_span"]
+    print(f"   UniProt secondary-structure features for AP5B1 span residues "
+          f"{ss[0]}-{ss[1]} (all from {ap5['structure'] or 'no structure'})")
     for h in wdw:
         loc = h["within_pfam_domain"] or "outside any Pfam domain"
         feats = ", ".join(h["uniprot_features_at_start"]) or "no UniProt feature covers this residue"
+        fl = h["flanking_uniprot_features"]
+        cov = h["structure_coverage"]
         print(f"   WDW at {h['start']}-{h['end']}, {loc}; UniProt features here: {feats}")
+        print(f"     nearest feature before: {fl['nearest_before']}")
+        print(f"     nearest feature after:  {fl['nearest_after']}")
+        if cov:
+            print(f"     {ap5['structure']}: modelled={cov['modelled']} "
+                  f"segment={cov['modelled_segment']} "
+                  f"chain span={cov['chain_modelled_span']} "
+                  f"within span={cov['within_chain_span']}")
+            print(f"     nearby unmodelled gaps: {cov['flanking_unmodelled_gaps']}")
 
     print("4. trunk -> next-domain linker (the hinge position in AP-1/AP-2 beta subunits):")
     for sym in ("AP5B1", "AP1B1", "AP2B1", "AP3B1", "AP4B1"):

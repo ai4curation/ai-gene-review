@@ -66,13 +66,22 @@ My re-test on the current UniProt sequences and current Pfam boundaries:
 - The trunk-to-appendage linker is 62 aa in AP5B1 against 187 in AP1B1 and 178 in AP2B1;
   [file:human/AP5B1/AP5B1-bioinformatics/RESULTS.md "AP5B1's is the shortest, and by a factor of ~3 against the two clathrin-dependent beta subunits."]
   This confirms the "no long hinge" claim quantitatively.
-- **One qualification that the re-test produced.** The `WDW` at 223-225 is *not* in the
-  solenoid on the current records: no Pfam domain and no UniProt feature covers residue 223
-  (the nearest 8YAB helix ends at 203; the disordered region starts at 234). The 2011
-  structural dismissal of that motif does not hold. It does not change the conclusion,
-  because
+- **The `WDW` at 223-225 is in the solenoid, and the 2011 reading holds.** My first pass got
+  this wrong and the PR review caught it, so the correction is recorded here rather than
+  quietly overwritten. I had read the absence of a covering Pfam domain and of a covering
+  UniProt feature at residue 223 as evidence that the motif sits outside the solenoid in an
+  unstructured inter-domain segment, which would have made Hirst et al.'s structural
+  dismissal of it wrong. That was an over-reading of an absence: neither database annotates
+  inter-helical loops. Adding a PDBe polymer-coverage check to the script settles it —
+  **residues 223-229 are modelled in 8YAB chain B**, whose modelled span is 7-631, so the
+  tripeptide is inside the cryo-EM-resolved trunk, bracketed by `Helix 182-203` and the
+  MobiDB-lite `Region 234-260 (Disordered)` and flanked by unmodelled stretches 213-222 and
+  230-260. It is a short ordered island in a poorly ordered inter-helical loop of the
+  solenoid, not an exposed hinge. The apparent inter-domain position is a Pfam
+  family-model coverage gap (105-262) and nothing more. Independently of where it sits, it
+  is not a clathrin motif:
   [file:human/AP5B1/AP5B1-bioinformatics/RESULTS.md "the validated W-box consensus is `PWxxW`, and **`PWxxW` is absent from AP5B1**"],
-  and because the cell biology is independent of the sequence argument:
+  and the cell biology never depended on the sequence argument:
   [PMID:22022230 "AP-5 does not associate with clathrin and is insensitive to brefeldin A."].
 
 **Family placement.** UniProt puts AP5B1 in `DR   PANTHER; PTHR34033; AP-5 COMPLEX SUBUNIT BETA-1; 1.`
@@ -180,8 +189,14 @@ activity for the assembled hexamer:
 [PMID:40175557 "Our findings reveal that the AP5-SPG11-SPG15 complex can bind PI3P molecules, sense membrane curvature and drive membrane remodeling in vitro."],
 [PMID:40175557 "These studies provide insights into the structure and function of the spastic paraplegia AP5-SPG11-SPG15 complex, which is essential for the initiation of autolysosome tubulation."].
 Note: that paper's cache entry is abstract-only (`full_text_available: false`), so I have not
-been able to see which subunit contributes the curvature-sensing surface. The review therefore
-records this as a complex-level `contributes_to_molecular_function` and says so.
+been able to see which subunit contributes the curvature-sensing surface — and the abstract
+also says the authors solved SPG11-SPG15 on its own, so I cannot even establish that AP-5 is
+required for the activity. I first recorded this as a complex-level
+`contributes_to_molecular_function: GO:0140090`, and dropped it after the PR review pointed
+out the obvious: that slot would have asserted, in a field downstream tooling believes,
+exactly what the accompanying knowledge gap declares undetermined, and would have attached it
+to GO:0044599, the tetramer, when the measurement was on the hexamer. The gap is the honest
+record; the slot is left empty.
 The loss-of-function counterpart is a storage phenotype:
 [PMID:26085577 "Loss of AP-5 results in accumulation of aberrant endolysosomes: defining a new type of lysosomal storage disease."]
 
