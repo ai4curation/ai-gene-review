@@ -104,7 +104,12 @@ hydrophobic residue, which is conserved across the related RSV M proteins."]
 `GO:0035615` (IBA, seeded from AP-1/AP-2 donors) plus `GO:0031267` and 23 bare
 `GO:0005515` rows. The obvious comparator is the paralogue: human AP2M1 (Q96CW1) carries
 `GO:0005048` "signal sequence receptor activity" with **IDA** evidence from PMID:8918456
-(QuickGO, queried this session), which is exactly the mu-chain YxxΦ activity. So GO already
+(QuickGO, queried this session), which is exactly the mu-chain YxxΦ activity —
+[PMID:8918456 "We recently determined that fusion proteins containing tyrosine-based
+endocytic signals bind to the mu 2 subunit of AP-2"], measured
+[PMID:8918456 "Here we analyze the selectivity of peptide recognition by mu 2 and by AP-2
+using combinatorial selection methods and surface plasmon resonance"]. That paper is now
+cached so the precedent is checkable from the repository and not only from a live query. So GO already
 has a term and a curation precedent for this on the sister subunit, and AP3M1 simply lacks
 the row. That is the main `NEW` recommendation of this review.
 
