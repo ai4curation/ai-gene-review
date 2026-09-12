@@ -1,0 +1,1607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CG18507 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CG18507</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/M9PBB3" target="_blank" class="term-link">
+                        M9PBB3
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Drosophila melanogaster</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CG18507";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+
+
+        <a href="#review-research" title="Deep research and hypothesis research reports"><span class="nav-count">1</span> Research</a>
+
+
+
+
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">1</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">1</span> Documents</a>
+
+
+
+
+
+
+
+
+
+
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="M9PBB3" data-a="DESCRIPTION: CG18507 is a 510-residue DUF4481-domain protein wi..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CG18507 is a 510-residue DUF4481-domain protein with two predicted transmembrane helices. It is likely a membrane-associated protein, but its molecular activity, organelle distribution, and biological pathway remain unresolved.</p>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:DROME/CG18507/CG18507-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">DROME/CG18507/CG18507-uniprot.txt</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section" id="review-research">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CG18507-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="M9PBB3" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional-annotation report: *Drosophila melanogaster* CG18507 / UniProt M9PBB3</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">2 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-10T14:39:16.377202</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="CG18507-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="functional-annotation-report-drosophila-melanogaster-cg18507-uniprot-m9pbb3">Functional-annotation report: <em>Drosophila melanogaster</em> CG18507 / UniProt M9PBB3</h1>
+<h2 id="executive-conclusion">Executive conclusion</h2>
+<p>The gene symbol <strong>CG18507 is correctly matched</strong> to the requested <em>Drosophila melanogaster</em> protein (UniProt <strong>M9PBB3</strong>; FlyBase <strong>FBgn0028527</strong>; synonyms <strong>DS01368.1/BG:DS01368.1</strong>). I found no evidence that the gene-specific literature discussed below refers to a similarly named gene from another organism.</p>
+<p>However, <strong>the literature is limited for this specific protein</strong>. The strongest experimental conclusion is that <strong>CG18507 mRNA is expressed early in the embryonic tracheal system and its expression requires the bHLH–PAS transcription factor Trachealess (Trh)</strong>. There is presently no defensible assignment of a biochemical activity, transported substrate, ligand, structural role, or protein-level subcellular compartment. The supplied “transmembrane protein 268” and DUF4481 annotations support only a provisional membrane-protein classification—not a transporter designation.</p>
+<table>
+<thead>
+<tr>
+<th>Annotation question</th>
+<th>Conclusion</th>
+<th>Evidence type</th>
+<th>Confidence</th>
+<th>Key limitation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity</td>
+<td>M9PBB3 corresponds to <em>Drosophila melanogaster</em> CG18507 (FBgn0028527; DS01368.1), described in the supplied UniProt record as transmembrane protein 268. The literature occurrence of CG18507 is consistent with a fly gene and provides no conflicting identity.</td>
+<td>Supplied UniProt annotation plus gene-specific literature</td>
+<td>High</td>
+<td>The literature paper uses CG18507 rather than accession M9PBB3 or FBgn0028527.</td>
+</tr>
+<tr>
+<td>Molecular function or substrate</td>
+<td>Unknown. No catalytic reaction, ligand, transported substrate, or molecular mechanism can presently be assigned.</td>
+<td>Negative result from targeted literature search</td>
+<td>Very low for any specific function</td>
+<td>Absence of a published mechanism is not evidence that the protein lacks biochemical activity.</td>
+</tr>
+<tr>
+<td>Membrane localization</td>
+<td>Membrane association is predicted by the supplied “transmembrane protein 268” annotation, but no gene-specific protein-localization experiment was identified.</td>
+<td>Database/computational annotation only</td>
+<td>Low–moderate</td>
+<td>Cellular membrane, topology, orientation, and subcellular compartment have not been experimentally established.</td>
+</tr>
+<tr>
+<td>Embryonic tracheal expression</td>
+<td>CG18507 mRNA is an early-expressed tracheal transcript. It was among approximately 100 tracheal genes examined by RNA in situ hybridization; 96 genes were analyzed in detail, including 38 early-expressed genes. (chung2011trachealess(trh)regulates pages 22-25, chung2011trachealess(trh)regulates pages 5-7)</td>
+<td>Embryonic RNA in situ hybridization</td>
+<td>High for transcript expression</td>
+<td>Establishes RNA localization, not protein abundance or localization; detailed CG18507 images were not presented in the inspected text.</td>
+</tr>
+<tr>
+<td>Trachealess dependence</td>
+<td>CG18507 was one of 20 of 38 early-expressed genes whose expression required Trachealess (Trh) at all examined stages; its row used cDNA RE25285 and the protein-null <em>trh</em>8 allele. (chung2011trachealess(trh)regulates pages 22-25, chung2011trachealess(trh)regulates pages 5-7, chung2011trachealess(trh)regulates pages 4-5)</td>
+<td>Genetic perturbation plus RNA in situ hybridization</td>
+<td>High for expression dependence; low for direct regulation</td>
+<td>No Trh-binding, cis-regulatory, or reporter evidence shows that CG18507 is a direct Trh target.</td>
+</tr>
+<tr>
+<td>Vvl/Kni regulation</td>
+<td>The study scored CG18507 as not regulated by either Ventral veinless (Vvl) or Knirps (Kni) under its assay conditions. (chung2011trachealess(trh)regulates pages 25-28)</td>
+<td>Mutant-expression comparison</td>
+<td>Moderate</td>
+<td>A negative developmental expression result does not exclude context-specific, partial, or indirect regulation.</td>
+</tr>
+<tr>
+<td>DUF4481 inference</td>
+<td>The supplied InterPro/Pfam assignment, DUF4481 (IPR028054; PF14800), supports membership in a poorly characterized sequence family but does not establish transporter, receptor, enzyme, or structural activity.</td>
+<td>Domain-profile annotation</td>
+<td>High for the supplied domain call; very low for functional inference</td>
+<td>A domain of unknown function supplies no validated substrate, reaction, pathway, or compartment.</td>
+</tr>
+<tr>
+<td>2023–2024 literature status</td>
+<td>No pertinent 2023–2024 publication directly characterizing CG18507/M9PBB3 or DUF4481 was identified in the searches performed. The principal gene-specific experimental evidence remains the 2011 tracheal-development study.</td>
+<td>Exact-name, identifier, synonym, and domain literature searches</td>
+<td>Moderate</td>
+<td>Search coverage is not proof that no relevant article, preprint, supplement, or unindexed dataset exists.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Conservative evidence assessment for the identity, localization, regulation, and possible function of Drosophila CG18507/M9PBB3. It separates experimental findings from supplied database annotations and unsupported functional inference.</em></p>
+<h2 id="1-identity-verification">1. Identity verification</h2>
+<p>The supplied UniProt record identifies M9PBB3 as <strong>transmembrane protein 268</strong> encoded by <em>D. melanogaster</em> <strong>CG18507</strong>, with FlyBase identifier FBgn0028527 and the stated DS01368 synonyms. The gene-specific experimental paper uses the symbol <strong>CG18507</strong> and a corresponding cDNA clone, <strong>RE25285</strong>, in a <em>Drosophila</em> embryonic-expression screen, which is consistent with the requested identity. That paper does not print M9PBB3 or FBgn0028527 in the inspected sections, so the accession-to-gene mapping rests primarily on the supplied UniProt record rather than independent accession-level confirmation in the paper. CG18507 has also appeared in an oviposition-genomics candidate table with FBgn0028527 and cytological position 34C6, but that listing provides no functional experiment or interpretation and should not be treated as validation of an oviposition function. (betti2016genómicapoblacionaldel pages 80-83)</p>
+<p>The supplied domain assignments—<strong>DUF4481, Pfam PF14800; InterPro IPR028054</strong>—are compatible with a poorly characterized protein. Targeted searches using M9PBB3, FBgn0028527, DS01368.1, “transmembrane protein 268,” DUF4481, PF14800, and IPR028054 found no contradictory identity and no useful mechanistic characterization of the family.</p>
+<h2 id="2-experimentally-supported-biology">2. Experimentally supported biology</h2>
+<h3 id="embryonic-tracheal-expression">Embryonic tracheal expression</h3>
+<p>Chung, Chavez, and Andrew screened approximately <strong>100 genes</strong> previously reported by the Berkeley Drosophila Genome Project to be expressed in the trachea. They compared RNA expression in wild-type and <em>trh</em>-mutant embryos by in situ hybridization. The detailed analysis comprised <strong>96 genes</strong>, of which <strong>38</strong> began expression at embryonic stages 10–11. CG18507 was listed among the “early-expressed genes” whose expression depended on Trh at all examined stages. The CG18507 assay used cDNA clone <strong>RE25285</strong> and the <em>trh</em>8 allele. (chung2011trachealess(trh)regulates pages 22-25, chung2011trachealess(trh)regulates pages 5-7)</p>
+<p>This is good evidence for <strong>CG18507 transcript expression in embryonic tracheal cells</strong>. It is not evidence for protein localization: the experiment detected RNA, and the inspected material did not show antibody staining, tagged CG18507 protein, membrane fractionation, or organelle colocalization.</p>
+<h3 id="dependence-on-trachealess">Dependence on Trachealess</h3>
+<p>Among the 38 early-expressed genes, <strong>20/38 (52.6%)</strong> required Trh at all stages. CG18507 was in this group. More broadly, the investigators reported that tracheal expression of all 96 genes examined was absent from late stage 12 onward in <em>trh</em> mutants; they argued that this was not simply caused by loss of tracheal cells, because the cells persisted and retained early <em>trh</em> expression. Thus CG18507 belongs to a Trh-dependent embryonic tracheal-expression program. (chung2011trachealess(trh)regulates pages 22-25, chung2011trachealess(trh)regulates pages 5-7)</p>
+<p>The evidence establishes <strong>genetic dependence</strong>, not direct transcriptional regulation. No CG18507-specific Trh chromatin binding, enhancer mutagenesis, promoter-reporter test, or purified binding assay was reported in the inspected text. The most precise wording is therefore: <strong>Trh is required for CG18507 tracheal mRNA expression under the tested embryonic conditions</strong>. It remains unknown whether Trh acts directly at the CG18507 locus or through intermediate regulators.</p>
+<p>The relevant <em>trh</em>8 allele was characterized as protein-null. In the study’s associated transcriptomic experiment, three independent stage 11–16 wild-type and three <em>trh</em>8 embryo samples were analyzed on Drosophila Genome 2.0 arrays, using a 1.4-fold and <em>P</em>≤0.05 threshold; however, the gene-specific CG18507 conclusion cited above comes from the RNA in situ screen rather than a reported CG18507 microarray effect size. The microarray dataset is GEO <strong>GSE28780</strong>. (chung2011trachealess(trh)regulates pages 4-5)</p>
+<h3 id="relationship-to-vvl-and-kni">Relationship to Vvl and Kni</h3>
+<p>In the same developmental study, CG18507 was scored <strong>“No”</strong> for regulation by both Ventral veinless (Vvl) and Knirps (Kni). This narrows the tested regulatory context: detectable CG18507 expression depended on Trh but did not require Vvl or Kni under the study’s assay conditions. It does not exclude partial, stage-specific, redundant, or environmentally conditional effects. (chung2011trachealess(trh)regulates pages 25-28)</p>
+<h2 id="3-molecular-function-and-localization">3. Molecular function and localization</h2>
+<h3 id="function">Function</h3>
+<p>No primary biochemical function can currently be assigned. I found no evidence that CG18507/M9PBB3:</p>
+<ul>
+<li>catalyzes a defined reaction;</li>
+<li>transports a known substrate;</li>
+<li>binds a characterized ligand;</li>
+<li>acts as a receptor or signaling enzyme;</li>
+<li>forms a documented structural complex; or</li>
+<li>has a demonstrated loss-of-function cellular or organismal phenotype.</li>
+</ul>
+<p>Accordingly, it would be inappropriate to call it a transporter merely because it is annotated as transmembrane. <strong>A transmembrane protein may be a transporter, receptor, enzyme, assembly factor, or structural membrane component; topology alone does not distinguish these possibilities.</strong> DUF4481 is a “domain of unknown function” designation and supplies no validated substrate or mechanism.</p>
+<h3 id="cellular-site-of-action">Cellular site of action</h3>
+<p>The only localization-like experimental evidence is <strong>mRNA expression in embryonic tracheal cells</strong>. The supplied UniProt description predicts that the gene product is transmembrane, making residence in some cellular membrane plausible. Nevertheless, the available evidence does not identify plasma membrane versus endoplasmic reticulum, Golgi, endosome, lysosome, mitochondrial membrane, or another compartment, nor does it establish membrane topology. A cautious annotation is therefore:</p>
+<blockquote>
+<p><strong>Predicted integral membrane protein; CG18507 transcript is expressed in the developing embryonic tracheal system. Protein-level subcellular localization is unknown.</strong></p>
+</blockquote>
+<p>It should not be described as extracellular. The tracheal epithelium surrounds an extracellular lumen, but transcript expression in that tissue does not determine which cellular membrane contains the protein or which side faces the lumen.</p>
+<h2 id="4-pathway-placement-and-biological-process">4. Pathway placement and biological process</h2>
+<p>The demonstrated pathway-level placement is in the <strong>Trachealess-controlled transcriptional program of embryonic tracheal development</strong>. Trh is a central bHLH–PAS regulator required broadly for tracheal gene expression. CG18507 is one downstream expression readout within this program, but its biochemical contribution to tube formation, gas transport, epithelial polarity, secretion, membrane trafficking, or lumen maturation has not been determined. The study’s developmental model places Trh downstream of early patterning inputs and reports broader control of tracheal differentiation genes, but it does not assign CG18507 to a specific signaling or biochemical branch. (chung2011trachealess(trh)regulates pages 22-25, chung2011trachealess(trh)regulates pages 5-7)</p>
+<p>Thus, “involved in tracheal development” is reasonable only as a <strong>contextual, expression-based inference</strong>. A stronger statement—such as “required for tracheal development”—would require CG18507-specific perturbation and phenotype data that were not found.</p>
+<h2 id="5-recent-research-and-applications">5. Recent research and applications</h2>
+<p>Targeted searches did <strong>not identify a pertinent 2023–2024 publication</strong> directly characterizing CG18507/M9PBB3 or defining DUF4481 function. The principal gene-specific experimental evidence remains the paper published online in 2011. This negative search result should be interpreted cautiously because supplements, unpublished datasets, or resources not indexed by Google Scholar may exist.</p>
+<p>No clinical, agricultural, biotechnology, or therapeutic application specific to CG18507 was identified. Its present real-world use is chiefly as an <strong>uncharacterized Drosophila candidate gene</strong> suitable for functional-genomics studies of tracheal differentiation and membrane biology. Productive experiments would include tissue-specific CRISPR knockout or RNAi followed by tracheal morphology and viability measurements; endogenous fluorescent tagging for protein localization; membrane-topology analysis; and affinity-proteomics or comparative structural analysis to identify interaction partners and possible function.</p>
+<h2 id="6-evidence-based-annotation-recommendation">6. Evidence-based annotation recommendation</h2>
+<p><strong>Recommended primary annotation:</strong></p>
+<blockquote>
+<p><em>Drosophila melanogaster</em> CG18507 encodes a predicted DUF4481-containing transmembrane protein of unknown molecular function. CG18507 mRNA is expressed early in the embryonic tracheal system and requires Trachealess for expression throughout the stages tested; expression was not detectably dependent on Vvl or Kni in the same study. The protein’s biochemical activity, substrate, precise membrane compartment, topology, and physiological requirement remain unknown. (chung2011trachealess(trh)regulates pages 22-25, chung2011trachealess(trh)regulates pages 5-7, chung2011trachealess(trh)regulates pages 25-28)</p>
+</blockquote>
+<h2 id="key-source">Key source</h2>
+<p>Chung S, Chavez C, Andrew DJ. <strong>“Trachealess (Trh) regulates all tracheal genes during Drosophila embryogenesis.”</strong> <em>Developmental Biology</em>. Published December 2011;360(1):160–172. DOI and URL: https://doi.org/10.1016/j.ydbio.2011.09.014. This is the strongest directly relevant primary study found. (chung2011trachealess(trh)regulates pages 22-25, chung2011trachealess(trh)regulates pages 5-7)</p>
+<p>References</p>
+<ol>
+<li>
+<p>(chung2011trachealess(trh)regulates pages 22-25): SeYeon Chung, Cy Chavez, and Deborah J. Andrew. Trachealess (trh) regulates all tracheal genes during drosophila embryogenesis. Developmental biology, 360 1:160-72, Dec 2011. URL: https://doi.org/10.1016/j.ydbio.2011.09.014, doi:10.1016/j.ydbio.2011.09.014. This article has 63 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chung2011trachealess(trh)regulates pages 5-7): SeYeon Chung, Cy Chavez, and Deborah J. Andrew. Trachealess (trh) regulates all tracheal genes during drosophila embryogenesis. Developmental biology, 360 1:160-72, Dec 2011. URL: https://doi.org/10.1016/j.ydbio.2011.09.014, doi:10.1016/j.ydbio.2011.09.014. This article has 63 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chung2011trachealess(trh)regulates pages 4-5): SeYeon Chung, Cy Chavez, and Deborah J. Andrew. Trachealess (trh) regulates all tracheal genes during drosophila embryogenesis. Developmental biology, 360 1:160-72, Dec 2011. URL: https://doi.org/10.1016/j.ydbio.2011.09.014, doi:10.1016/j.ydbio.2011.09.014. This article has 63 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chung2011trachealess(trh)regulates pages 25-28): SeYeon Chung, Cy Chavez, and Deborah J. Andrew. Trachealess (trh) regulates all tracheal genes during drosophila embryogenesis. Developmental biology, 360 1:160-72, Dec 2011. URL: https://doi.org/10.1016/j.ydbio.2011.09.014, doi:10.1016/j.ydbio.2011.09.014. This article has 63 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(betti2016genómicapoblacionaldel pages 80-83): MIL Betti. Genómica poblacional del comportamiento de oviposición en drosophila melanogaster. Unknown journal, 2016.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="CG18507-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>https://doi.org/10.1016/j.ydbio.2011.09.014.</li>
+<li>https://doi.org/10.1016/j.ydbio.2011.09.014,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CG18507-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="M9PBB3" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="cg18507-m9pbb3-evidence-and-protnlm-claim-review">CG18507 (M9PBB3): evidence and ProtNLM claim review</h1>
+<p>CG18507 is a 510-residue DUF4481-domain protein with two predicted transmembrane helices. It is likely a membrane-associated protein, but its molecular activity, organelle distribution, and biological pathway remain unresolved.</p>
+<p>Exact input: <a href="https://www.uniprot.org/uniprotkb/M9PBB3/entry">M9PBB3</a>, 510 residues. The accession was fetched explicitly with the gene-directory alias; no canonical-sequence substitution is made.</p>
+<p>Raw emitted predictions: <a href="CG18507-predictions-source.json">CG18507-predictions-source.json</a>. Source features: <a href="CG18507-uniprot.txt">CG18507-uniprot.txt</a>, with an exact extraction in <a href="CG18507-sequence-evidence.json">CG18507-sequence-evidence.json</a>.</p>
+<h2 id="sequence-and-domain-evidence">Sequence and domain evidence</h2>
+<p>These are sequence/domain observations or explicitly named feature predictions, not measurements of biological function. ARBA assertions and ProtNLM-derived UniProt names are not counted as validation.</p>
+<div class="codehilite"><pre><span></span><code>DR   InterPro; IPR028054; DUF4481.
+FT   TRANSMEM        292..310
+FT                   /note=&quot;Helical&quot;
+FT                   /evidence=&quot;ECO:0000256|SAM:Phobius&quot;
+FT   TRANSMEM        316..339
+FT                   /note=&quot;Helical&quot;
+FT                   /evidence=&quot;ECO:0000256|SAM:Phobius&quot;
+</code></pre></div>
+
+<h2 id="protnlm-claims">ProtNLM claims</h2>
+<p>The snapshot emits names and location/keyword statements, with no GO or EC prediction for this target. Each actual statement is assessed below; no GO term has been substituted for it. Categories follow the function-prediction rubric, with nonspecific “uncharacterized” names marked UNC because they contain no testable function. CNN records an independently supported existing annotation; it does not assert a particular training-set composition.</p>
+<table>
+<thead>
+<tr>
+<th>Kind</th>
+<th>Verbatim emitted statement</th>
+<th>Assessment</th>
+<th>Evidence and limitation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td>Uncharacterized protein</td>
+<td>UNC</td>
+<td>Uncharacterized protein is nonspecific and supplies no testable function. The current UniProt TMEM268 name is explicitly generated by ProtNLM and is not independent validation.</td>
+</tr>
+<tr>
+<td>Location</td>
+<td>Membrane (SL-0162)</td>
+<td>COR</td>
+<td>Two Phobius-predicted transmembrane helices at residues 292-310 and 316-339 provide specific sequence support for the broad membrane claim. This is an inference from membrane-spanning architecture; it does not identify an organelle or physiological function.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="literature-evidence">Literature evidence</h2>
+<p>No target-specific primary finding is used to establish a molecular activity here. The current assessment is bounded by exact-record architecture and the explicitly identified curated inferences.</p>
+<h2 id="annotation-decisions">Annotation decisions</h2>
+<p>The accession-specific GOA fetch contains no existing annotation rows. The molecular activity remains unresolved; no broad GO root or invented function is added to create apparent coverage.</p>
+<h2 id="research-provenance">Research provenance</h2>
+<p>Genuine external literature research is requested through the repository Falcon wrapper, with perplexity-lite configured as fallback. Provider output is retained separately as <code>CG18507-deep-research-&lt;provider&gt;.md</code>; its source leads are checked against the underlying publications and exact sequence record.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: M9PBB3
+gene_symbol: CG18507
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:7227
+  label: Drosophila melanogaster
+description: CG18507 is a 510-residue DUF4481-domain protein with two predicted transmembrane helices.
+  It is likely a membrane-associated protein, but its molecular activity, organelle distribution, and
+  biological pathway remain unresolved.
+references:
+- id: file:DROME/CG18507/CG18507-uniprot.txt
+  title: DROME/CG18507/CG18507-uniprot.txt
+  findings: []
+core_functions: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
