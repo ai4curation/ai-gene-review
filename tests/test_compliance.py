@@ -284,3 +284,76 @@ def test_cli_reports_and_opt_in_threshold_exit(tmp_path):
     assert report["threshold_violations"][0]["slot_name"] == "literature_support"
     assert runner.invoke(app, args + ["--fail-on-threshold"]).exit_code == 1
     assert runner.invoke(app, args + ["--schema-only"]).exit_code != 0
+
+
+def test_recommended_slots_do_not_include_computed_metrics(tmp_path):
+    """Schema metadata stays distinct from the combined metric summaries."""
+    report = analyze(tmp_path, [annotation(), annotation("IEA")])
+    assert "supported_by" in report.recommended_slots
+    assert "literature_support" in report.summary_by_slot
+    assert "inference_support" in report.summary_by_slot
+    assert not {"literature_support", "inference_support"} & set(
+        report.recommended_slots
+    )
+
+
+def test_subtree_exclusion_keeps_parent_and_neighbor_checks(tmp_path):
+    """A normalized .** prefix excludes descendants, not its parent slot."""
+    data = tmp_path / "review.yaml"
+    data.write_text(
+        yaml.safe_dump(
+            {
+                "existing_annotations": [
+                    annotation(supported_by=[{"reference_id": "PMID:1"}])
+                ],
+                "core_functions": [
+                    {
+                        "description": "function",
+                        "supported_by": [{"reference_id": "PMID:1"}],
+                    }
+                ],
+            }
+        )
+    )
+    config = GeneQCConfig(
+        excluded_paths=["existing_annotations[].review.supported_by[].**"]
+    )
+    report = GeneComplianceAnalyzer(SCHEMA, config).analyze_file(data)
+    paths = {p.path for p in report.path_scores}
+    assert "existing_annotations[0].review.supported_by[0]" not in paths
+    assert "core_functions[0].supported_by[0]" in paths
+    parent = metric(report, "supported_by")
+    assert parent.path == "existing_annotations[].review"
+    assert (parent.populated, parent.total) == (1, 1)
+    assert metric(report, "supporting_text").total == 1
+
+
+def test_missing_review_does_not_create_a_contextual_opportunity(tmp_path):
+    """Absent decisions stay outside action-conditioned rules without crashing."""
+    report = analyze(
+        tmp_path, [{"evidence_type": "IMP", "original_reference_id": "PMID:1"}]
+    )
+    assert not any(
+        s.slot_name in {"literature_support", "inference_support"}
+        for s in report.aggregated_scores
+    )
+    assert report.total_checks > 0
+
+
+def test_comparison_policy_holds_action_changes_in_denominator(tmp_path):
+    """UNDECIDED and inferred ACCEPT cannot inflate the comparison by exclusion."""
+    from scripts.compare_compliance import comparison_policy
+
+    default = GeneQCConfig.from_yaml("conf/qc_config.yaml")
+    config = comparison_policy(default)
+    assert "UNDECIDED" not in default.annotation_rules["literature_support"].actions
+    before = analyze(
+        tmp_path, [annotation("IMP", "MODIFY"), annotation("IEA", "REMOVE")], config
+    )
+    after = analyze(
+        tmp_path, [annotation("IMP", "UNDECIDED"), annotation("IEA", "ACCEPT")], config
+    )
+    assert before.total_checks == after.total_checks
+    assert before.weighted_compliance == after.weighted_compliance
+    for name in ("literature_support", "inference_support"):
+        assert metric(before, name).total == metric(after, name).total == 1

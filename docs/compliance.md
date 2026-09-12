@@ -88,3 +88,43 @@ scores, and threshold violations from the combined checks. These standard
 `--dashboard-dir` expose scores and denominators; default TSV output remains a
 list of gaps. Threshold misses are advisory unless `--fail-on-threshold` is
 supplied, in which case they produce exit status 1. Default thresholds are null.
+
+## Comparing curation revisions
+
+Default scores change when annotations move into or out of applicable action
+sets. In particular, UNDECIDED leaves the default support denominator. Report
+these scores as contextual completeness, not as an improvement in evidence alone.
+
+For a comparison that keeps these decisions in scope, use:
+
+```bash
+uv run python scripts/compare_compliance.py \
+  --base 429666d2e90edbbab38886f6a53d279b9a8280ab \
+  --output docs/arath-compliance-comparison.md
+```
+
+The script defaults to the eleven ARATH genes re-reviewed in PR2996; override
+with `--genes SYMBOL ...`. Both baseline git YAMLs and current working-tree YAMLs
+use the same current schema, analyzer and config. An optional `--baseline-json`
+compares the recalculated contextual baseline with a historical CLI report;
+historical scores never supply the inclusive denominator. The Markdown and
+companion JSON contain contextual and inclusive scores, weighted numerators and
+denominators, evidence-rule counts, exact policies, and input hashes.
+
+The inclusive sensitivity policy selects **all conclusive actions and UNDECIDED**
+for each evidence rule, including ACCEPT and KEEP_AS_NON_CORE for inference
+support. Consequently action changes within this set cannot remove evidence
+opportunities. IEA still uses sourced rationale rather than a quotation check.
+PENDING and missing reviews remain outside both action-conditioned support
+rules. This policy is for comparisons; it does not change the default treatment
+of routine IEA acceptance or demand a citation for every unresolved decision.
+
+This controls action applicability, not every source of score variation. Changes
+to references, core functions and other recommended fields, and added or deleted
+annotations, can change the scores and denominators. Do not describe the resulting
+delta as the fraction caused by added evidence. The [PR2996 comparison](arath-compliance-comparison.md)
+provides the bounded before/after example.
+
+`recommended_slots` in JSON lists schema recommendations encountered before
+policy exclusions. Plugin names appear in `summary_by_slot` and aggregated
+metrics, but are not schema recommendation metadata.

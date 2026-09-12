@@ -184,7 +184,6 @@ def rebuild_report(report: ComplianceReport, config: GeneQCConfig) -> Compliance
     report.summary_by_slot = {
         slot: 100 * pop / total for slot, (pop, total) in slots.items() if total
     }
-    report.recommended_slots = sorted(slots)
     report.threshold_violations = [
         ThresholdViolation(
             path=f"{s.path}.{s.slot_name}",
@@ -286,6 +285,14 @@ class GeneComplianceAnalyzer:
             total_populated=0,
             path_scores=self.schema_scores(data),
         )
+        # Keep schema metadata separate from computed plugin metric names.
+        report.recommended_slots = sorted(
+            {
+                slot.slot_name
+                for score in report.path_scores
+                for slot in score.slot_scores
+            }
+        )
         paths = []
         for score in report.path_scores:
             kept = []
@@ -301,9 +308,6 @@ class GeneComplianceAnalyzer:
                     kept.append(slot)
             if kept:
                 score.slot_scores = kept
-                score.overall_percentage = (
-                    100 * sum(s.populated for s in kept) / sum(s.total for s in kept)
-                )
                 paths.append(score)
         for plugin in self.plugins:
             paths.extend(plugin.evaluate(data, self.config))

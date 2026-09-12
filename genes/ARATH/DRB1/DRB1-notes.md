@@ -50,3 +50,7 @@ Independently re-read PMID:18632569 full Results. DCL1 cleaves without added HYL
 Local UniProt O04492 and PTHR11207-entries.csv verify HYL1 in SF1 and P0A7Y0/Q9NRR4 in SF0. The actual PAINT table records GO:0004525 IBD at PTN000129453, with IRD exclusions at PTN001025433 and PTN001025446. SF membership alone does not establish the exact topology, ancestral placement rationale, or an unrestricted family-wide transfer. The report's SF0-to-SF1 mechanism and “architecturally impossible” wording are therefore not imported as demonstrated findings. Its own limitation states that domain calls used database records rather than de novo HMMER/InterProScan; no independent computational scan artifacts were supplied. No report claim about unverified paralogs, isoforms or other literature was added, and its suggested BP contributes_to semantics were not imported.
 
 Added report provenance and primary Results support to YAML; retained all 38 annotation identities and actions.
+
+## 2026-09-12: PR review follow-up
+
+Changed the two generic protein-binding to dsRNA-binding MODIFY decisions to REMOVE. The protein interactions are not denied; dsRNA binding already has appropriate direct-assay annotations, and redirecting IPI rows would mix evidence types. [PMID:15821876 "DCL1, DCL3, HYL1 and the four HYL1 homologs exhibit significant dsRNA-binding activity"] Made the three unresolved interaction summaries source-specific. Retained the DCL1-activator replacement, which describes a functional protein interaction.

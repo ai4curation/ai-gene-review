@@ -174,6 +174,9 @@ experimental annotations whose full text you have not read.
      Do not invent a specific function from interaction evidence alone. If the
      relevant evidence cannot be accessed or adjudicated, the standing
      `UNDECIDED` rule still applies.
+     Apply this policy to new reviews and to annotations touched during re-review.
+     Older untouched reviews may retain legacy actions; migrate those when they
+     are re-reviewed rather than treating their presence as an exception.
    - Consider specificity - terms that are too general should be modified to more specific functions
    - Watch for overly specific or contorted terms that might need generalization
    - Evaluate whether annotations truly represent core vs. peripheral functions

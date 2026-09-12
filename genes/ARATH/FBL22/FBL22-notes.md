@@ -57,3 +57,8 @@ and the limits of the 2009 expression result. The report also identifies a nearb
 that secondary lead was not promoted to a functional annotation. An exact excerpt
 from the refreshed report now supports the qualified core synthesis. Final gene
 and history validation passed; the review HTML was regenerated.
+
+
+## PR 2996 follow-up — incomplete support entry
+
+Moved the bare Falcon report reference on the GO:1905761 IBA review from supported_by to additional_reference_ids. The report remains a provenance pointer; no quotation was manufactured or required for the inference. The directly checked UniProt F-box domain quotation remains the support for compatible target architecture, with the PAINT assertion retained on its own phylogenetic basis. All four source annotations and their actions were preserved. No new research or cache refresh was needed.

@@ -99,3 +99,10 @@ HAF2/chromatin extensions. Those are research leads rather than independently
 verified new evidence in this pass; no contradictory annotation removal or new
 molecular activity was inferred from them. The unresolved protease/processing
 question remains explicit in the review.
+
+
+## PR 2996 follow-up — generic binding policy
+
+Rechecked the four GO:0005515 IPI rows against their accessible primary-source statements: ETP1/ETP2-dependent turnover (PMID:19196655), ER-localized ETR1 interaction (PMID:19769567), ECIP1 interaction with yeast two-hybrid and pull-down support (PMID:21631530), and ENAP1-dependent chromatin regulation (PMID:27694846). Changed MARK_AS_OVER_ANNOTATED to REMOVE for the uninformative generic MF annotation and retained all four actual interaction findings/snippets. Removal does not deny the experimental associations. These interactions do not independently establish a distinct molecular activity for their particular rows: being a degradation substrate is not ubiquitin ligase activity, ETR1/ECIP1 binding alone does not establish adaptor mechanism, and ENAP1 association does not confer histone acetyltransferase activity. Existing specific signaling/RNA/chromatin functions remain intact.
+
+Preserved all 63 original annotation identities. No new research jobs, cache refreshes, or renders were run.

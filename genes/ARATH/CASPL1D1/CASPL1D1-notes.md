@@ -25,3 +25,7 @@ Completed job 791983f1-5cd3-4df3-af03-bd97f953fe6f (three iterations); report an
 Re-read the primary Results, including the tagged localization and rescue: [PMID:31559647 "In the complementation test, caspl4d1‐1 mutant was crossed with pCASPL4D1::CASPL4D1‐mCherry plants"] These are CASPL4D1 experiments. Added this explicit boundary to the YAML and refined experiments to require rescue-competent tagged CASPL1D1 before mechanistic imaging. Excessive spread of HR cell death does not itself establish execution of cell death, so the report's extra hypersensitive-response term was not added. The five unresolved proteomic compartment assignments remain unresolved.
 
 The report's numerical sequence-identity claims are not independently reproduced: the delivered artifact bundle contains rendered reports, not the advertised analysis code/data. Low sequence identity alone is not evidence against functional conservation. Its ranking of the weak root double-mutant phenotype as better characterized than the gene-specific leaf phenotype is not adopted. The report is retained as a scoped, manually qualified hypothesis source; primary observations determine annotation decisions.
+
+## 2026-09-12: PR review follow-up
+
+Removed the OpenScientist conclusion as sole support of ND and removed assay-context quotations from the five unresolved HDA reviews. The reports and assay context remain in references/findings; neither substitutes for gene-level evidence. No biological decision was changed. Made summaries source-specific and corrected the description punctuation.
