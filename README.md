@@ -401,6 +401,10 @@ uses `<repo-root>/_site`. Shadow build failures warn
 without blocking regeneration PRs. The live site continues to publish
 from `main:/` until the shadow artifact has been verified.
 
+The Generate Pages workflow runs daily at 08:23 UTC and can also be started with
+GitHub Actions' **Run workflow** button. Each run rebuilds the full site, so merged
+content normally appears after the next daily regeneration PR is merged.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed contribution guidelines including:

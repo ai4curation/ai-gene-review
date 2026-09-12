@@ -115,12 +115,13 @@ def test_reviewer_app_token_cannot_write_pr_contents():
     assert permissions == {"permission-pull-requests": "write"}
 
 
-def test_generated_pages_triggers_on_project_data_files():
-    """Published project data must trigger regeneration of its pages copies."""
+def test_generated_pages_runs_daily_or_manually():
+    """Batch regeneration daily instead of rebuilding on every merge."""
     workflow = _workflow(GENERATE_PAGES)
-    paths = workflow[True]["push"]["paths"]
-    assert "projects/**/*.csv" in paths
-    assert "projects/**/*.json" in paths
+    triggers = workflow[True]
+    assert set(triggers) == {"schedule", "workflow_dispatch"}
+    assert triggers["schedule"] == [{"cron": "23 8 * * *"}]
+    assert triggers["workflow_dispatch"] is None
 
 
 def test_shadow_pages_failures_do_not_block_regeneration():
