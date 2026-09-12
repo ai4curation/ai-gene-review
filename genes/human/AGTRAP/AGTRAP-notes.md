@@ -275,9 +275,13 @@ Not in GOA in any form.
   members are AGTRAP orthologues — so `WRONG_ORTHOLOG_OR_PARALOG` does not apply
   to any row here. Both Compara donors (`Q9WVK0` mouse, `Q642A2` rat) and the
   PAINT seed (`MGI:MGI:1339977`) are true orthologues.
-- **Dead/obsolete accessions**: all 132 GOA partner accessions and all 4
-  WITH/FROM protein accessions resolved to live UniProt entries with a gene name
-  (the `O15507` failure mode from ACTR10 is absent here).
+- **Dead/obsolete accessions**: all 132 GOA partner accessions resolved to live
+  UniProt entries with a gene name, as did **both** distinct `UniProtKB:`
+  WITH/FROM accessions on the 11 non-binding rows — `Q9WVK0` (3 rows) and
+  `Q642A2` (1 row). (An earlier draft of this line said "all 4 WITH/FROM protein
+  accessions", conflating 4 *rows* with 4 *accessions*; there are 2. The
+  `O15507` failure mode from ACTR10 — a dead accession that answers every query
+  with a silent zero — is absent here.)
 - **IBA landing above its donor** (ACRV1 pattern): mouse Agtrap holds
   `GO:0005886 plasma membrane` by IDA and the human IBA is at the same term, so
   no downward `MODIFY` is warranted.
