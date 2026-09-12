@@ -112,6 +112,7 @@ breakdowns, example genes, and affected GO terms.
   issue, and `exactMatch` with `predicate_modifier: Not` proposes removal.
 - [Methods, data, and reproducibility](INTERPRO/README.md) — extraction, family research,
   mapping format, and validation commands.
-- [Historical notes](INTERPRO/notes.md) — session chronology and earlier interpretations.
+- [Status and historical notes](INTERPRO/notes.md) — open follow-up tasks, archived
+  workstream checklists, and session chronology.
 - [Protein families](FAMILIES.md) · [IBA annotation review](IBA_REVIEW.md) ·
   [Over-annotation patterns](OVER_ANNOTATION_PATTERNS.html) — related collections.

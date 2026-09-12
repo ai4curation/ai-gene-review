@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+import pytest
 import yaml
 
 from ai_gene_review.family_index import collect_family_reviews
@@ -102,4 +103,26 @@ def test_project_render_builds_escaped_searchable_catalog(tmp_path):
     assert "&lt;script&gt;" in html
     assert '<script>alert("x")</script>' not in html
     assert "Browse families." in html
+    assert not warnings
+
+
+@pytest.mark.parametrize("content", ["", "# Review not started yet\n"])
+def test_empty_review_yaml_renders_as_unrecorded(tmp_path, content):
+    """Scaffolded YAML must not break the family catalog or project build."""
+    folder = tmp_path / "interpro/panther/PTHR1"
+    folder.mkdir(parents=True)
+    (folder / "PTHR1-review.yaml").write_text(content)
+    projects = tmp_path / "projects"
+    projects.mkdir()
+    source = projects / "FAMILIES.md"
+    source.write_text("---\ntitle: Families\nautolink_gene_symbols: false\n---\n")
+    rows = collect_family_reviews(tmp_path)
+    assert len(rows) == 1
+    assert rows[0]["status"] == "NOT_RECORDED"
+    assert rows[0]["coherence"] == "NOT_RECORDED"
+    assert rows[0]["terms"] == 0
+    output, warnings = render_project(
+        source, tmp_path / "pages/projects", tmp_path / "genes"
+    )
+    assert "PTHR1" in output.read_text()
     assert not warnings

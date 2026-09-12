@@ -38,7 +38,7 @@ def collect_family_reviews(repo_root: Path) -> list[dict[str, Any]]:
     rows = []
     for (database, identifier), sources in sorted(grouped.items()):
         structured = next((p for p in sources if p.suffix == ".yaml"), None)
-        data = yaml.safe_load(structured.read_text()) if structured else {}
+        data = (yaml.safe_load(structured.read_text()) or {}) if structured else {}
         metadata_path = (
             repo_root
             / "interpro"

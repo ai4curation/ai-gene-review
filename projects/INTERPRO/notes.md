@@ -6,7 +6,81 @@ autolink_gene_symbols: false
 Historical session notes for the [InterPro mapping review](../INTERPRO.md). These preserve the original chronology and provisional interpretations; consult the project page and linked mapping set for the current summary.
 
 
-## 2026-06-20
+## Open follow-up
+
+These unfinished tasks are carried forward from the recorded workstreams and research
+notes. Their completion has not been reassessed as part of the page reorganization.
+
+- [ ] Re-run the deferred sigma-54 family research and verify that the report contains
+      retrieved evidence and real citations before using it for a mapping proposal.
+- [ ] Re-run the deferred pseudouridine synthase family research with the same evidence check.
+- [ ] Re-run the deferred GAPDH family research with the same evidence check.
+- [ ] Continue down the [entry worklist](interpro_family_priorities.tsv): confirm flagged
+      gene-level verdicts, assess canonical replacement terms, and update gene reviews.
+- [ ] Check accepted annotations on exception members identified by family research.
+- [ ] Summarize per-entry recommendations for InterPro2GO curators.
+
+## Archived status — 2026-06-20
+
+The original checklist and verdict table are preserved below as a historical snapshot.
+Counts and provisional interpretations reflect that session; the
+[project findings](../INTERPRO.md#findings-and-proposed-curation-actions) and
+[mapping set](interpro2go.sssom.yaml) provide the current summary.
+
+### Workstream 1 — review flagged mappings
+- [x] Extractor that aggregates InterPro2GO verdicts across all reviews
+- [x] Per-entry priority worklist (1826 entries; 265 with ≥3 suspect mappings)
+- [ ] Work down the top entries: confirm the suspect verdicts, propose canonical
+      replacement terms, and feed corrections back to the gene reviews
+- [ ] Summarize per-entry recommendations for InterPro2GO curators
+
+### Workstream 2 — family deep research
+- [x] Confirmed the metadata fetcher supports `interpro` (IPR) entries
+- [x] Generated deep-research process: `templates/interpro_family_research.md`,
+      `scripts/deep_research_interpro_family.py`, and the
+      `just deep-research-interpro-family` recipe
+- [x] Seed example cached (`interpro/interpro/IPR000719/`)
+- [x] First family deep research generated with falcon/Edison
+      (`IPR000719-deep-research-falcon.md`): verdict that **both** InterPro2GO terms
+      (`ATP binding`, `protein phosphorylation`) over-annotate the domain because it
+      also matches pseudokinases — REMOVE at the domain level, restrict to catalytic
+      children (GO:0004674 / GO:0004713)
+- [x] Batch 1 of 5 more top entries researched with falcon/Edison (P450, Cu/Zn SOD,
+      GPCR, NRAMP/SLC11, DnaJ) — see the table below
+- [x] Began feeding verdicts back into gene reviews (DnaJ family): the reviews are
+      **strongly concordant** with the family research — all 7 DnaJ genes with the
+      InterPro2GO `ATP binding` annotation already flagged it (5 REMOVE, 1 MODIFY-to
+      ATPase-activator, 1 over-annotated). Hardened the one soft outlier (`yeast/YDJ1`,
+      MARK_AS_OVER_ANNOTATED → REMOVE) and attached the IPR012724 family report as
+      corroborating evidence.
+- [ ] Per-family, hunt for the higher-value case: a gene that currently **ACCEPTs** the
+      flagged term but is actually one of the verdict's *exception* members (pseudokinase,
+      copper chaperone, atypical chemokine/orphan receptor, non-catalytic P450) — a genuine
+      missed over-annotation rather than a soft-vs-hard mismatch
+- [x] Captured the family verdicts as proposed interpro2go edits in SSSOM YAML
+      (`INTERPRO/interpro2go.sssom.yaml`, 17 mappings over the 6 entries) — the
+      consortium-facing deliverable, validated via `just validate-interpro-mappings`
+- [ ] Continue down the worklist (`interpro_family_priorities.tsv`)
+
+### Family deep-research verdicts (falcon/Edison)
+
+| InterPro | Family | Entry type | InterPro2GO verdict |
+|----------|--------|-----------|---------------------|
+| IPR000719 | Protein kinase domain | domain | `ATP binding` + `protein phosphorylation` → **REMOVE** at domain level (captures pseudokinases); restrict to catalytic children (GO:0004674 / GO:0004713) |
+| IPR001128 | Cytochrome P450 | family | `heme binding` + `iron ion binding` universal → keep; `monooxygenase activity` + `oxidoreductase activity` over-annotate (819+ functionally diverse families) |
+| IPR001424 | Cu/Zn superoxide dismutase domain | domain | `superoxide metabolic process` → **REMOVE** (BP term on a structural module; copper-chaperone members don't dismutate); `metal ion binding` → KEEP_AS_NON_CORE |
+| IPR000276 | GPCR, rhodopsin-like (Class A) | family | `GPCR activity` + `GPCR signaling pathway` → MARK_AS_OVER_ANNOTATED / MODIFY (atypical chemokine + orphan receptors lack canonical G-protein coupling); `membrane` → KEEP_AS_NON_CORE |
+| IPR001046 | NRAMP / SLC11 metal transporter | family | `metal ion transmembrane transporter activity` + `metal ion transport` → ACCEPT as broad family terms; `membrane` → KEEP_AS_NON_CORE; do not add more specific terms at family level |
+| IPR012724 | Chaperone DnaJ (J-domain) | family | `ATP binding` → **REMOVE** (factually wrong — the Hsp70 *partner* binds ATP, not DnaJ); `protein folding` → ACCEPT; `response to heat` → KEEP_AS_NON_CORE (only heat-inducible subfamilies) |
+| IPR007197 | Radical SAM | domain | `catalytic activity` → **ACCEPT** despite being the MF *root* term — see note below; `iron-sulfur cluster binding` → ACCEPT (defining [4Fe-4S] cofactor) |
+| IPR020849 | Small GTPase, Ras-type | family | `GTP binding` → ACCEPT; **ADD `GTPase activity` (GO:0003924)** — proposed new mapping (annotation gain); `signal transduction` → demote to subfamily (GO:0007265); `membrane` → MARK_AS_OVER_ANNOTATED |
+| IPR002100 | Transcription factor, MADS-box | domain | `DNA binding` + `protein dimerization activity` → ACCEPT (both domain-intrinsic). Notably **do NOT add** `DNA-binding TF activity` — TF function is a whole-protein property (K/C domains + complex), not the MADS domain |
+
+- [ ] Run `just deep-research-interpro-family <IPR>` (falcon/Edison default) for the next entries
+
+Last updated: 2026-06-20
+
+## Session notes — 2026-06-20
 
 **Project creation.** Scoped the InterPro2GO (`GO_REF:0000002`) review. Built the
 extractor and the per-entry priority worklist from all 2732 reviewed genes: 3652
@@ -52,7 +126,7 @@ Notable findings:
 
 **Batch 1 of family deep research (falcon/Edison).** Ran five more top entries: P450
 (`IPR001128`), Cu/Zn SOD (`IPR001424`), GPCR Class A (`IPR000276`), NRAMP/SLC11
-(`IPR001046`), and DnaJ (`IPR012724`). See the verdict table under Workstream 2. A
+(`IPR001046`), and DnaJ (`IPR012724`). See the [archived family verdict table](#family-deep-research-verdicts-falconedison). A
 recurring, independently-reached pattern: cofactor/binding terms (`heme binding`, `metal
 ion binding`) and broad transport terms hold family-wide, but **whole-protein activity
 and process terms attached to a structural module over-annotate** — most sharply for
