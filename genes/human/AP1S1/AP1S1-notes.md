@@ -300,5 +300,25 @@ RCSB API rather than by searching the gene symbol.
   describe AP-1. Raised as a suggested question rather than acted on, since GO_Central
   itself applies this term to AP-1 sigma subunits (pombe vas2 carries it as IC
   `contributes_to` GO:0030121).
-- NEW: none. Everything I would add is either already present or blocked by the missing
-  dileucine-binding term, which is filed as `proposed_new_terms` plus an ONTOLOGY gap.
+- NEW: one row, GO:0005198 `structural molecule activity`, IMP, PMID:39269494. GOA gives
+  this gene exactly one MF term and it is complex-level and IEA-derived; the subunit's own
+  contribution -- holding AP-1 together -- is demonstrated in human cells in both
+  directions (wild-type sigma1A co-IPs with gamma1, restores gamma1 levels and restores
+  gamma1 membrane staining in triple-sigma1-KO cells; L90P does none of these, dropping
+  gamma1 co-IP to 0-13%) and is annotated nowhere. Coded IMP, not IDA, because the readouts
+  come from transfected constructs in a knockout background. The *more* interesting
+  subunit-level MF -- dileucine sorting-signal binding -- gets no NEW row because no GO term
+  exists for it; that is the `proposed_new_terms` entry and the ONTOLOGY knowledge gap
+  attached to the first core function.
+
+## 10. Final counts (all scripted, none asserted from memory)
+
+- 53 GOA rows, 53 seeded review rows, reconciled one-to-one on
+  (GO id, evidence code, reference, normalized WITH/FROM) by `.scratch/reconcile.py`.
+- Actions: ACCEPT 32, KEEP_AS_NON_CORE 19, REMOVE 1, MARK_AS_OVER_ANNOTATED 1, NEW 1 (54 total).
+- 13 rows carry WITH/FROM; all 13 have `supporting_entities` and all 13 have a
+  `propagation_review`, whose 27 `source_entities` are generated from those lists rather
+  than typed, so they cannot drift.
+- 53 references, every one with a `reference_review`. 175 `supporting_text` quotes, all
+  verbatim per `checkquotes.py`.
+- 4 residue claims, all resolving against the live sequences.
