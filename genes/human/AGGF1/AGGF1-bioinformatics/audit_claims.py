@@ -213,15 +213,20 @@ def check(paths: dict[str, str]) -> list[str]:
             words.get(m["independent_cited_n"], str(m["independent_cited_n"])),
             str(m["independent_cited_n"]),
         }
+        # ONE noun list, shared. The first version gave COUNT_RE and RANK_RE
+        # different lists, so "only independent replication" was caught and
+        # "one independent replication" was not -- two checks disagreeing about
+        # what their own subject is, which is how a scope divergence hides.
+        NOUN = r"(?:group|laborator|lab\b|team|replicat|contribution)"
         COUNT_RE = re.compile(
             r"\b(one|two|three|four|five|six|1|2|3|4|5|6)\s+"
-            r"(?:\w+\s+){0,2}independent\s+(?:group|laborator|lab\b|team)",
+            r"(?:\w+\s+){0,2}independent\s+" + NOUN,
             re.I,
         )
         RANK_RE = re.compile(
             r"\b(?:second|third|only|single|main|primary|chief|most)\s+"
-            r"(?:\w+\s+){0,2}independent\s+(?:group|replicat|laborator|lab\b)"
-            r"|\b(?:two|three|four)\s+are\s+substantive"
+            r"(?:\w+\s+){0,2}independent\s+" + NOUN
+            + r"|\b(?:two|three|four)\s+are\s+substantive"
             r"|\bsubstantive\s+independent\b",
             re.I,
         )
@@ -370,6 +375,10 @@ def self_test() -> int:
         ("notes", "Three of the four are used.",
          "PMID:39905000 is the single independent group.", 1,
          "a significance-ranking of the independent set, in a new wording"),
+        # The noun the two patterns used to disagree about.
+        ("notes", "Three of the four are used.",
+         "There is one independent replication.", 1,
+         "a count on the noun COUNT_RE's list used to omit"),
         # One physical line: the YAML wraps at width=100 and a longer span no-ops.
         ("review", "Three of those four are used",
          "Of those four, two are substantive", 1,

@@ -179,6 +179,17 @@ def main() -> None:
     print()
 
     biggest = max(groups.values(), key=len)
+    # Cross-check the printed table against measure(), which audit_claims.py uses.
+    # main() and measure() computed the same classification independently until
+    # the PR reviewer pointed out they could drift -- and the drift would be
+    # between what a human reads here and what the guard enforces, i.e. silent.
+    m = measure()
+    assert m["dominant"] == len(biggest), (
+        f"measure() says dominant={m['dominant']} but this table shows {len(biggest)}"
+    )
+    assert m["total"] == len(rows), (
+        f"measure() says total={m['total']} but this table shows {len(rows)}"
+    )
     print(f"Largest single group accounts for {len(biggest)}/{len(rows)} of the papers "
           "this review relies on.")
 
@@ -204,6 +215,13 @@ def main() -> None:
     for pmid, last in independent:
         print(f"    {pmid}  senior {last}")
     indep = [p for p, _ in independent]
+    assert sorted(indep) == m["independent"], (
+        f"measure() says independent={m['independent']} but this table shows "
+        f"{sorted(indep)} -- the two classifications have drifted"
+    )
+    assert len(lineage) == m["lineage"], (
+        f"measure() says lineage={m['lineage']} but this table shows {len(lineage)}"
+    )
     print()
 
     # "Independent" by senior author can still share bench authors. Measure the

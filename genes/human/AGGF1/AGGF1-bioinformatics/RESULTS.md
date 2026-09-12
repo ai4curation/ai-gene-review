@@ -371,8 +371,8 @@ remain entirely single-group.
 One caveat the script reports rather than hides: **Xu C appears on PMID:39905000
 and on 14 of the dominant group's 18 papers.** A shared surname-plus-initial is not
 proof of the same person, the senior author differs and the affiliations are a
-different institution, so the paper is still counted as independent — but "one
-independent replication" is load-bearing here, so the overlap is printed.
+different institution, so the paper is still counted as independent — but this
+paper's independence is load-bearing here, so the overlap is printed.
 
 `audit_claims.py` imports `lab_independence.measure()` and checks the prose
 against it, rather than blacklisting spellings of wrong counts. Three consecutive
