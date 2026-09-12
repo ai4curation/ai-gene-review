@@ -39,6 +39,21 @@ Note that there should be an entry under `existing_annotations` for every line i
 
 The exception is if you think there are key annotations missing. In this case you should add entries, completing the `term` portion yourself, with `action: NEW`. Only do this for annotations not covered or with `proposed_replacement_terms` in existing annotations.
 
+Before adding a `NEW` process term, satisfy two tests that evidence alone does not
+cover (see "Do not add what curators deliberately declined to add" in CLAUDE.md):
+
+- **Participation.** The gene product must itself execute some step of the process.
+  Being required for the process, being consumed by it, or being what it acts on is
+  not participation. Knockout/rescue data establishes necessity, which is precisely
+  what being a substrate means — so it cannot settle this question on its own. Ask
+  which entity performs the step.
+- **Comparator check.** If your argument is "every other participant carries this term
+  and my gene does not", name two or three other gene products in the **same role**
+  relative to the same kind of process and query whether they carry it. A systematic
+  absence across species and MODs is a convention you have not identified yet, not a
+  curation lapse. Check the term's parents too: a process under `GO:0006508 proteolysis`
+  or another reaction-type parent names the catalyst, not the substrate.
+
 2. **Critical Evaluation**: You must not accept existing annotations as gospel, regardless of whether they are marked as experimental (EXP, IDA, IPI, etc.) or computational (IEA, ISS, etc.). Many GO terms represent over-annotations that need correction.
 
 However, in general IBA annotations have undergone extensive review as well as making phylogenetic sense, they often frequently represent the term at the right level of specificity. However, they can be conservative and missing functions.
@@ -133,7 +148,7 @@ You should make use of:
    - **MODIFY**: Essence is sound but better terms exist (provide proposed_replacement_terms). Use this if the term is too deep or too shallow
    - **MARK_AS_OVER_ANNOTATED**: Not wrong but likely over-annotation
    - **UNDECIDED**: Unclear annotation requiring more evidence (always use if unable to access relevant publications)
-   - **NEW**: ONLY use this to suggest completely new annotations not in the set already provided by GO. You will need to come up with the evidence and reference
+   - **NEW**: ONLY use this to suggest completely new annotations not in the set already provided by GO. You will need to come up with the evidence and reference. Also apply the participation and comparator tests above — a gene product is `involved_in` a process only if it executes a step of it
 
 Note that duplicates (i.e exact same GO ID) are perfectly fine, there is no need to favor one evidence code over another.
 
