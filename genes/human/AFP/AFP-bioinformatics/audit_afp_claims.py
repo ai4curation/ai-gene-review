@@ -50,6 +50,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[4]
 assert (ROOT / "genes").is_dir(), f"repo root misresolved: {ROOT}"
 REVIEW = ROOT / "genes" / "human" / "AFP" / "AFP-ai-review.yaml"
+NOTES = ROOT / "genes" / "human" / "AFP" / "AFP-notes.md"
 GOA = ROOT / "genes" / "human" / "AFP" / "AFP-goa.tsv"
 RESULTS = Path(__file__).resolve().parent / "RESULTS.md"
 
@@ -133,6 +134,44 @@ def norm(s: str) -> str:
     return re.sub(r"\s+", " ", s).strip()
 
 
+# Delimiters that mark a retired phrase as being NARRATED rather than re-asserted.
+# Straight quotes alone are not enough: this notes file's house style for quoting
+# superseded wording is backticks and bold, so a guard that recognised only `"`
+# would red-build a correctly written journal entry -- and the path of least
+# resistance under a red build is to delete the narration, which is the opposite
+# of what the guard exists to protect. Recognise the styles actually in use.
+_NARRATION_OPENERS = ('"', "“", "`", "**", "*", "'")
+_NARRATION_CLOSERS = ('"', "”", "`", "**", "*", "'")
+
+
+def _quoted_somewhere(blob: str, phrase: str) -> bool:
+    """True if at least one occurrence of `phrase` in `blob` is narrated."""
+    return any(
+        _is_narrated(blob, m.start(), m.end())
+        for m in re.finditer(re.escape(phrase), blob)
+    )
+
+
+def _is_narrated(blob: str, start: int, end: int) -> bool:
+    """True if this occurrence is enclosed by any recognised quoting style.
+
+    Checks the actual neighbouring characters of THIS occurrence, so a later bare
+    re-assertion of a phrase quoted earlier in the file is not exempted.
+    """
+    for opener in _NARRATION_OPENERS:
+        if blob[max(0, start - len(opener)) : start] != opener:
+            continue
+        tail = blob[end : end + 3]
+        if any(tail.startswith(c) for c in _NARRATION_CLOSERS):
+            return True
+        # allow a closing delimiter after trailing sentence punctuation
+        if tail[:1] in (".", ",", ";", ":", "?", "!") and any(
+            tail[1:].startswith(c) for c in _NARRATION_CLOSERS
+        ):
+            return True
+    return False
+
+
 # --------------------------------------------------------------------------- #
 # inputs
 # --------------------------------------------------------------------------- #
@@ -205,7 +244,9 @@ def iter_quotes(doc):  # type: ignore[no-untyped-def]
 # checks.  Each APPENDS to `problems`; none raises, because a check that kills
 # the harness is worse than no check -- the harness still prints as though it ran.
 # --------------------------------------------------------------------------- #
-def check_all(review_path: Path = REVIEW) -> tuple[list[str], dict]:
+def check_all(
+    review_path: Path = REVIEW, notes_path: Path | None = None
+) -> tuple[list[str], dict]:
     problems: list[str] = []
     stats: dict = {}
     raw = review_path.read_text()
@@ -334,20 +375,17 @@ def check_all(review_path: Path = REVIEW) -> tuple[list[str], dict]:
     # mutant that cannot do the job asked of it. The through-line was verifying
     # the edits made rather than sweeping the document for the retired claim. So
     # this sweeps BOTH files, and it is a gate, not a note.
-    notes = (ROOT / "genes" / "human" / "AFP" / "AFP-notes.md").read_text()
+    notes = (notes_path or NOTES).read_text()
     for label, blob in (("review", raw), ("notes", notes)):
         for phrase in RETRACTED_PHRASINGS:
             for m in re.finditer(re.escape(phrase), blob):
                 # The notes deliberately quote some retired phrasings while
                 # narrating the correction, so they are allowed there -- but the
                 # exemption is per OCCURRENCE, not per phrase. A per-phrase
-                # exemption would mean that once a phrase appears once inside a
-                # quotation, every later bare re-assertion of it in that file is
+                # exemption would mean that once a phrase appeared once inside a
+                # quotation, every later bare re-assertion of it in that file was
                 # waved through: a guard defeated by the very thing it permits.
-                quoted = blob[m.start() - 1 : m.start()] == '"' and blob[
-                    m.end() : m.end() + 1
-                ] in ('"', ".", ",")
-                if label == "notes" and quoted:
+                if label == "notes" and _is_narrated(blob, m.start(), m.end()):
                     continue
                 line = blob[: m.start()].count("\n") + 1
                 problems.append(
@@ -492,21 +530,31 @@ def self_test() -> int:
         # guard: a BARE re-assertion in the notes of a phrase that is legitimately
         # quoted elsewhere in the same file. This is the case a per-phrase
         # exemption would wave through, so it is the one worth exercising.
-        notes_p = ROOT / "genes" / "human" / "AFP" / "AFP-notes.md"
-        notes_orig = notes_p.read_text()
+        # Mutates a TEMP COPY, never the tracked notes file: every other mutation
+        # here uses a temp path, and a self-test that edits a real file leaves
+        # residue if the process is killed between write and restore.
+        notes_orig = NOTES.read_text()
+        notes_tmp = NOTES.parent / ".audit-selftest-notes.md"
         quoted_phrase = next(
-            (p for p in RETRACTED_PHRASINGS if f'"{p}"' in notes_orig), None
+            (p for p in RETRACTED_PHRASINGS if _quoted_somewhere(notes_orig, p)), None
         )
-        assert quoted_phrase, "self-test needs a phrase already quoted in the notes"
+        assert quoted_phrase, "self-test needs a phrase already narrated in the notes"
         try:
-            notes_p.write_text(notes_orig + f"\n\nAFP really does have {quoted_phrase}.\n")
+            notes_tmp.write_text(
+                notes_orig + f"\n\nAFP really does have {quoted_phrase}.\n"
+            )
             tmp.write_text(raw)
-            probs, _ = check_all(tmp)
-            fired["notes_bare_reassertion"] = any(
-                "unquoted" in p for p in probs
+            probs, _ = check_all(tmp, notes_path=notes_tmp)
+            fired["notes_bare_reassertion"] = any("unquoted" in p for p in probs)
+
+            # complementary direction: the legitimate narration must NOT trip it
+            notes_tmp.write_text(notes_orig)
+            probs2, _ = check_all(tmp, notes_path=notes_tmp)
+            fired["narration_not_false_positive"] = not any(
+                "retracted phrasing present in notes" in p for p in probs2
             )
         finally:
-            notes_p.write_text(notes_orig)
+            notes_tmp.unlink(missing_ok=True)
 
         # guard: a dropped GOA row (review under-covers the TSV)
         doc2 = yaml.safe_load(raw)

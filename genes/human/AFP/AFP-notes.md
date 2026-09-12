@@ -411,8 +411,10 @@ sweeping *the document* for the claim I had retracted:
 
 **The fix is mechanical, not resolve.** `audit_afp_claims.py` now gates on a sweep of **13 retracted
 phrasings** across both the review and this file, plus **6 required corrections** asserted with
-minimum occurrence counts, so deleting a correction is as loud as leaving the original error. Two
-new `--self-test` mutations exercise exactly those guards.
+minimum occurrence counts, so deleting a correction is as loud as leaving the original error. Each
+guard is exercised by its own `--self-test` mutation. (The count of mutations is deliberately not
+stated here: it has already drifted once in this very paragraph, and an unreconciled number in prose
+is the defect this section is about. `--self-test` prints the list.)
 
 **And a sub-lesson that recurred three times inside the fix itself:** every hand-assigned threshold
 in those guards was wrong. `"proteoglycan binding"` guessed 2, actual **1** (the prose says "binding
@@ -426,3 +428,35 @@ The same defect had already appeared twice on this gene in a different costume: 
 IntAct partner census (12/9 asserted, **16/14** actual), and the `supporting_text` quote count
 hardcoded in this file as **63** while the document had reached **71**. Both are now derived, and
 the script reconciles the sentence above against its own count.
+
+### Round 8: the guard had the defect it was written to prevent
+
+The round-7 gate allowed this file to quote a retired phrasing while narrating its correction — but
+the exemption was keyed on **the phrase and the whole file**, so once a phrase appeared once inside
+quotation marks, every later *bare* re-assertion of it here was waved through. The single case the
+guard existed to catch was the one case it could not see. That is the campaign's "a guard defeatable
+by deleting the thing it guards" shape, arriving in the guard I had just committed as the durable fix.
+
+Now adjudicated **per occurrence**, on that occurrence's own neighbouring characters, reported with a
+line number.
+
+### Round 9: a guard that punishes the correct behaviour gets routed around
+
+The tightened rule recognised only straight double quotes as narration. This file's house style for
+quoting superseded wording is **backticks and bold** — so a future journal entry written the normal
+way would have turned the build red, and *the path of least resistance under a red build is to delete
+the narration.* A guard that makes honest record-keeping expensive buys silence, not correctness.
+
+Recognises backticks, bold, straight quotes, curly quotes and trailing sentence punctuation now, each
+verified directly. Two complementary self-test mutations: a bare re-assertion must fire the guard, and
+the legitimate narration already in this file must **not**.
+
+Also in round 9: the self-test no longer mutates this tracked file. It wrote to the real
+`AFP-notes.md` and restored in a `finally`, which leaves residue if the process is killed between the
+two; `check_all` now takes a `notes_path` so the mutation goes to a temp copy like every other one.
+
+**The pattern across rounds 5–9 is worth more than any of the individual fixes:** every round found a
+defect *in the previous round's fix*, and every one was found by the reviewer rather than by me
+re-reading. What changed my hit rate was not more care but changing what gets checked — sweeping the
+document instead of the diff, measuring thresholds instead of assigning them, and exercising each
+guard by breaking it. The annotation itself has not moved since round 4.
