@@ -158,8 +158,14 @@ def check_counts(goa: list[dict], problems: list[str]) -> None:
     holdup = [r for r in binding if r["REFERENCE"] == "PMID:36115835"]
     intact = [r for r in binding if r["ASSIGNED BY"] == "IntAct"]
 
+    doc = yaml.load(YML.read_text(encoding="utf-8"), Loader=StrictLoader)
+    n_new = sum(1 for a in doc["existing_annotations"]
+                if (a.get("review") or {}).get("action") == "NEW")
+
     computed = {
         "goa_rows": len(goa),
+        "new_rows": n_new,
+        "total_entries": len(doc["existing_annotations"]),
         "cc_rows": aspects["cellular_component"],
         "mf_rows": aspects["molecular_function"],
         "bp_rows": aspects["biological_process"],
@@ -191,6 +197,13 @@ def check_counts(goa: list[dict], problems: list[str]) -> None:
          (computed["holdup_rows"], computed["binding_rows"]), (8, 26)),
         (notes, "notes", "all 26 protein-binding rows were seeded", 1,
          (computed["binding_rows"],), (26,)),
+        # The NEW-row total. Added after a reviewer found notes:43 still saying "8 NEW"
+        # against a file with 9 - drift introduced by a later commit that this audit
+        # existed to prevent and did not, because the total was not among its claims.
+        (notes, "notes", "Final file = 66 GOA rows + 9 NEW.", 1,
+         (computed["goa_rows"], computed["new_rows"]), (66, 9)),
+        (notes, "notes", "Hence 9 `NEW` rows.", 1,
+         (computed["new_rows"],), (9,)),
         (notes, "notes", "21 assigned by\n  IntAct", 0, (), ()),  # prose, see YAML claim
         (review, "review", "eight of AHNAK''s twenty-six GO:0005515 rows", 1,
          (computed["holdup_rows"], computed["binding_rows"]), (8, 26)),
@@ -215,6 +228,8 @@ def check_counts(goa: list[dict], problems: list[str]) -> None:
         (notes, "notes", "MF: 23 rows"),
         (notes, "notes", "8 of the 21 protein-binding"),
         (review, "review", "twenty-one GO:0005515"),
+        (notes, "notes", "66 GOA rows + 8 NEW"),
+        (notes, "notes", "Hence 8 `NEW` rows"),
     ]
     for text, where, needle in retracted:
         if needle in text:

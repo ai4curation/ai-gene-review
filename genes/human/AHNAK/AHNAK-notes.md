@@ -40,7 +40,7 @@ grep -c '^- term:' stub    -> 66
 `GO:0005515` partner rows) is **absent here** — all 26 protein-binding rows were seeded
 individually. Verified programmatically by matching on
 `(term, evidence, reference, sorted(WITH/FROM), negated)` with an assertion that every TSV row
-is consumed exactly once and no review key goes unused. Final file = 66 GOA rows + 8 NEW.
+is consumed exactly once and no review key goes unused. Final file = 66 GOA rows + 9 NEW.
 
 ## WITH/FROM resolution (every token)
 
