@@ -1,3 +1,9 @@
+---
+title: "Anti-CRISPR Proteins Project"
+maturity: COMPLETE
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+---
+
 # Anti-CRISPR Proteins Project
 
 ## Overview
@@ -83,6 +89,10 @@ These proteins are excellent targets for AI-assisted curation because their mech
 
 - Phage-host interactions
 - Bacterial immune systems
+
+## Slides
+
+- [Slides](ANTI_CRISPR/slides/ANTI_CRISPR-slides.html) (Marp source: [ANTI_CRISPR-slides.md](ANTI_CRISPR/slides/ANTI_CRISPR-slides.md)) — AI generated
 
 ---
 

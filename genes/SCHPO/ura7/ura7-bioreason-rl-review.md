@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: ura7 (S. pombe)
 
-Source: ura7-deep-research-bioreason-rl.md
+Source: ura7-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 4/5

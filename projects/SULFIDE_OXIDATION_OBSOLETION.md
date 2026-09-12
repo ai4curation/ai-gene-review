@@ -1,3 +1,9 @@
+---
+title: "Sulfide Oxidation Children — Obsoletion & Replacement"
+maturity: IN_PROGRESS
+tags: [OBSOLETION]
+---
+
 # Sulfide Oxidation Children — Obsoletion & Replacement
 
 ## Overview

@@ -1,0 +1,12 @@
+> In *Schizosaccharomyces pombe*, Wsc1 (UniProt P87179) is experimentally supported as a plasma-membrane/cell wall stress sensor-like protein that helps maintain cell-wall integrity by activating the GTPase Rho1 rather than acting as a primary upstream activator of the canonical Pmk1 MAPK cascade; a later fission-yeast review further interprets Wsc1 as a mechanosensor that can cluster at sites of mechanical stress (Cruz et al., 2013, https://doi.org/10.1002/mbo3.113; Cansado et al., 2021, https://doi.org/10.3390/jof8010032) (pqac-00000000, pqac-00000005, pqac-00000006).
+>
+> The key primary localization result is that Wsc1p-GFP concentrates in patches at cell tips, consistent with a polarized cell-surface sensor; review synthesis extends this localization to active growth sites and the division septum (2013, https://doi.org/10.1002/mbo3.113; 2021, https://doi.org/10.3390/jof8010032) (pqac-00000000, pqac-00000005).
+>
+> Genetically and biochemically, Wsc1 functions with the Rho1 pathway: Wsc1 interacts with the Rho-GEF Rgf2, overexpression of *wsc1+* activates cell-wall biosynthesis and causes abnormal wall accumulation/growth defects, and *wsc1Δ* cells show reduced Rho1-GTP under cell-wall stress (2013, https://doi.org/10.1002/mbo3.113) (pqac-00000000, pqac-00000002).
+>
+> Wsc1 is partially redundant with Mtl2: either single deletion is viable, but simultaneous loss of *wsc1* and *mtl2* is lethal, and this lethality is rescued by overexpression of Rho1 or its GEFs, placing both sensors upstream of Rho1 activation (2013, https://doi.org/10.1002/mbo3.113; 2021, https://doi.org/10.3390/jof8010032) (pqac-00000000, pqac-00000005).
+>
+> Importantly, Pmk1/CIP signaling remains active in *wsc1Δ* and *mtl2Δ* cells during cell-wall stress, so Wsc1 is best understood as a Rho1-linked cell-wall stress sensor/mechanosensory module whose major experimentally demonstrated role is to promote Rho1-dependent wall biosynthesis, largely independently of being an essential trigger for Pmk1 activation (2013, https://doi.org/10.1002/mbo3.113; 2021, https://doi.org/10.3390/jof8010032) (pqac-00000002, pqac-00000005).
+
+
+*Blockquote: This blockquote summarizes the strongest experimentally supported conclusions about S. pombe Wsc1, focusing on localization, pathway placement, redundancy, and mechanistic interpretation. It is useful as a compact evidence-backed annotation statement for the gene/protein.*

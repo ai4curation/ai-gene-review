@@ -13,9 +13,11 @@ Test data is based on ARBA00026249 which has:
 
 import json
 from pathlib import Path
+from typing import cast
 
 import pytest
 
+from ai_gene_review.etl import rule_analysis
 from ai_gene_review.etl.arba import ARBARule
 from ai_gene_review.etl.rule_analysis import (
     analyze_interpro_overlap_in_condition_set,
@@ -27,6 +29,7 @@ from ai_gene_review.etl.rule_analysis import (
     get_swissprot_count_for_interpro,
     get_swissprot_count_for_interpro_intersection,
 )
+from ai_gene_review.etl.unirule import UniRule
 
 
 @pytest.fixture
@@ -38,6 +41,83 @@ def arba00026249_rule() -> ARBARule:
 
     data = json.loads(rule_file.read_text())
     return ARBARule.from_json(data)
+
+
+def minimal_rule_json(rule_id: str) -> dict:
+    return {
+        "uniRuleId": rule_id,
+        "information": {"version": "1"},
+        "mainRule": {"conditionSets": [], "annotations": []},
+        "statistics": {
+            "reviewedProteinCount": 0,
+            "unreviewedProteinCount": 0,
+        },
+        "createdDate": "2025-01-01",
+        "modifiedDate": "2025-01-01",
+    }
+
+
+@pytest.mark.parametrize(
+    ("candidate", "expected_error", "message"),
+    [
+        (
+            UniRule.from_json(minimal_rule_json("UR000000070")),
+            TypeError,
+            "requires an ARBARule instance; got UniRule",
+        ),
+        (
+            UniRule.from_json(minimal_rule_json("ARBA00026249")),
+            TypeError,
+            "requires an ARBARule instance; got UniRule",
+        ),
+        (
+            ARBARule.from_json(minimal_rule_json("UR000000070")),
+            ValueError,
+            "post-enrichment analysis currently supports ARBA######## IDs only",
+        ),
+        (
+            ARBARule.from_json(minimal_rule_json("TEST00000001")),
+            ValueError,
+            "post-enrichment analysis currently supports ARBA######## IDs only",
+        ),
+        (
+            ARBARule.from_json(minimal_rule_json("ARBA123")),
+            ValueError,
+            "post-enrichment analysis currently supports ARBA######## IDs only",
+        ),
+        (
+            ARBARule.from_json(minimal_rule_json("arba00026249")),
+            ValueError,
+            "post-enrichment analysis currently supports ARBA######## IDs only",
+        ),
+        (
+            ARBARule.from_json(minimal_rule_json("ARBA00026249-extra")),
+            ValueError,
+            "post-enrichment analysis currently supports ARBA######## IDs only",
+        ),
+    ],
+)
+def test_analyze_rule_post_enrichment_rejects_non_arba_before_io(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    candidate: ARBARule | UniRule,
+    expected_error: type[Exception],
+    message: str,
+) -> None:
+    def unexpected_cache_access(_cache_dir: Path) -> dict[str, list[str]]:
+        raise AssertionError("InterPro2GO cache must not be accessed")
+
+    cache_dir = tmp_path / "analysis cache"
+    monkeypatch.setattr(
+        rule_analysis,
+        "fetch_interpro2go_mappings",
+        unexpected_cache_access,
+    )
+
+    with pytest.raises(expected_error, match=message):
+        analyze_rule_post_enrichment(cast(ARBARule, candidate), cache_dir)
+
+    assert not cache_dir.exists()
 
 
 @pytest.mark.integration
@@ -402,7 +482,7 @@ def test_analyze_rule_post_enrichment_no_interpro(tmp_path):
     )
 
     rule = ARBARule(
-        uni_rule_id="TEST00000001",
+        uni_rule_id="ARBA99999999",
         version="1",
         condition_sets=[
             ConditionSet(
@@ -432,7 +512,7 @@ def test_analyze_rule_post_enrichment_no_interpro(tmp_path):
 
     result = analyze_rule_post_enrichment(rule, tmp_path)
 
-    assert result["rule_id"] == "TEST00000001"
+    assert result["rule_id"] == "ARBA99999999"
 
     # Should have condition set summary but no InterPro overlap
     assert "condition_sets_summary" in result

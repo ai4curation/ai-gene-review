@@ -1,0 +1,16 @@
+| Member name | Old nomenclature | Subfamily | Function | Primary receptor | Coreceptor | Taxonomic distribution | Evidence |
+|---|---|---|---|---|---|---|---|
+| IL-1α | IL-1F1 | IL-1 | Agonist | IL-1R1 | IL-1RAcP (IL-1R3) | Neo-IL-1; reported as mammalian-specific in recent broad evolutionary analysis | (pqac-00000017, pqac-00000025, pqac-00000026, pqac-00000008, pqac-00000011) |
+| IL-1β | IL-1F2 | IL-1 | Agonist | IL-1R1 | IL-1RAcP (IL-1R3) | Ancient IL-1; vertebrate-wide, including fish, birds, reptiles, mammals | (pqac-00000017, pqac-00000019, pqac-00000025, pqac-00000008, pqac-00000010) |
+| IL-1Ra | IL-1F3 | IL-1 | Antagonist | IL-1R1 | None for signaling; blocks productive IL-1RAcP recruitment | Paleo-IL-1; present from reptiles through mammals; identified in chicken and other non-mammalian vertebrates | (pqac-00000017, pqac-00000019, pqac-00000020, pqac-00000009, pqac-00000010) |
+| IL-18 | IL-1F4 | IL-18 | Agonist | IL-18Rα (IL-1R5) | IL-18Rβ (IL-1R7) | Ancient IL-1; vertebrate-wide, including teleost fish | (pqac-00000017, pqac-00000023, pqac-00000035, pqac-00000008, pqac-00000009) |
+| IL-36Ra | IL-1F5 | IL-36 | Antagonist | IL-36R (IL-1R6/IL-1RL2) | None for signaling; blocks productive IL-1RAcP recruitment | Neo-IL-1/IL-36 branch; generally treated as mammalian-specific in recent evolutionary synthesis | (pqac-00000017, pqac-00000022, pqac-00000026, pqac-00000009, pqac-00000011) |
+| IL-36α | IL-1F6 | IL-36 | Agonist | IL-36R (IL-1R6/IL-1RL2) | IL-1RAcP (IL-1R3) | Neo-IL-1/IL-36 branch; mammalian-specific | (pqac-00000017, pqac-00000025, pqac-00000026, pqac-00000009, pqac-00000011) |
+| IL-37 | IL-1F7 | IL-18 | Anti-inflammatory cytokine | IL-18Rα (IL-1R5) | SIGIRR/TIR8 (IL-1R8) | Neo-IL-1; mammalian-specific | (pqac-00000017, pqac-00000018, pqac-00000035, pqac-00000009) |
+| IL-36β | IL-1F8 | IL-36 | Agonist | IL-36R (IL-1R6/IL-1RL2) | IL-1RAcP (IL-1R3) | Neo-IL-1/IL-36 branch; mammalian-specific | (pqac-00000017, pqac-00000025, pqac-00000026, pqac-00000009, pqac-00000011) |
+| IL-36γ | IL-1F9 | IL-36 | Agonist | IL-36R (IL-1R6/IL-1RL2) | IL-1RAcP (IL-1R3) | Neo-IL-1/IL-36 branch; mammalian-specific | (pqac-00000017, pqac-00000025, pqac-00000026, pqac-00000009, pqac-00000011) |
+| IL-38 | IL-1F10 | IL-36 | Antagonist / anti-inflammatory, context-dependent | IL-36R; also reported for IL-1RAPL1 and IL-1R1 | None clearly established as obligate signaling coreceptor for inhibitory function | Paleo-IL-1; present from reptiles through mammals | (pqac-00000016, pqac-00000018, pqac-00000021, pqac-00000022, pqac-00000009) |
+| IL-33 | IL-1F11 | IL-1 | Agonist with context-dependent dual biology | ST2 (IL-1R4/IL-1RL1) | IL-1RAcP (IL-1R3) | Often reported as mammalian-specific in recent evolutionary syntheses; earlier comparative work noted ST2 in birds but no confirmed avian IL-33 ligand | (pqac-00000017, pqac-00000031, pqac-00000032, pqac-00000010, pqac-00000011) |
+
+
+*Table: This table summarizes all 11 canonical IL-1 family ligands, their legacy IL-1F nomenclature, receptor usage, functional class, and evolutionary distribution. It is useful for GO review because it makes the family’s strong functional heterogeneity and lineage restriction explicit.*

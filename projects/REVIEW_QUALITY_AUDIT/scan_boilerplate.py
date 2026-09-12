@@ -1,0 +1,180 @@
+#!/usr/bin/env python3
+"""Detect auto-generated / templated boilerplate in gene-review YAML.
+
+Some `*-ai-review.yaml` files were produced by a generation pass that filled
+every annotation's `review.summary` / `review.reason` from a tiny set of
+templated strings and attached the *same* generic `supported_by` evidence to
+every annotation regardless of the term (e.g. the literal placeholder
+"... deep research report reviewed for GO term specificity, core-function
+context, and evidence synthesis."). The action labels may be roughly sensible,
+but the *reasoning and evidence are not term-specific*, so the review carries no
+real curation signal and its `supporting_text` does not actually support the
+claim.
+
+This script scans every review file and scores it for that signature. Two
+distinct severities are reported:
+
+- **Tier 1 (critical):** the file contains the generic placeholder
+  supporting_text -- i.e. the *evidence* is fake/non-specific. Same defect class
+  as the mouse Fyn review.
+- **Tier 2 (templated reasons):** no placeholder evidence, but one templated
+  `reason` string is repeated across most annotations (very low unique-reason
+  ratio). Prose is boilerplate; evidence may still be real.
+
+Nothing is hard-coded about the outcome; if no boilerplate is found the report
+says so.
+
+Usage:
+    uv run python projects/REVIEW_QUALITY_AUDIT/scan_boilerplate.py \
+        --genes-dir genes --out-dir projects/REVIEW_QUALITY_AUDIT/reports
+"""
+from __future__ import annotations
+
+import argparse
+import csv
+import glob
+import os
+from collections import Counter
+
+import yaml
+
+try:  # fast C loader if available
+    from yaml import CSafeLoader as Loader
+except ImportError:  # pragma: no cover
+    from yaml import SafeLoader as Loader  # type: ignore
+
+# The generic "evidence" placeholder, provider-agnostic.
+PLACEHOLDER = "deep research report reviewed for GO term specificity"
+NOT_REVIEWED = {None, "", "PENDING", "UNREVIEWED"}
+
+
+def scan_file(path: str) -> dict | None:
+    try:
+        with open(path) as fh:
+            doc = yaml.load(fh, Loader=Loader)
+    except Exception:
+        return None
+    if not isinstance(doc, dict):
+        return None
+    anns = doc.get("existing_annotations") or []
+    reviewed = [a for a in anns if (a.get("review") or {}).get("action") not in NOT_REVIEWED]
+    n = len(reviewed)
+    if n < 5:
+        return None
+
+    reasons = [(a["review"].get("reason") or "").strip() for a in reviewed]
+    summaries = [(a["review"].get("summary") or "").strip() for a in reviewed]
+    rc = Counter(r for r in reasons if r)
+    top_reason, top_n = (rc.most_common(1)[0] if rc else ("", 0))
+    uniq_ratio = len({r for r in reasons if r}) / n
+    uniq_summary_ratio = (len({s for s in summaries if s}) / n) if any(summaries) else 1.0
+
+    placeholder_hits = 0
+    for a in reviewed:
+        for sb in a["review"].get("supported_by") or []:
+            if PLACEHOLDER in str(sb.get("supporting_text", "")):
+                placeholder_hits += 1
+
+    reason_templated = uniq_ratio <= 0.15 and top_n >= max(8, 0.4 * n)
+    summary_templated = uniq_summary_ratio <= 0.15
+
+    if placeholder_hits >= 3:
+        tier = 1  # fake evidence
+    elif reason_templated and summary_templated:
+        tier = 2  # summary AND reason both templated -> genuine rework needed
+    elif reason_templated:
+        tier = 3  # only the one-line reason is lazy; summary + evidence are specific
+    else:
+        return None
+
+    return {
+        "file": path.replace("genes/", ""),
+        "tier": tier,
+        "n_reviewed": n,
+        "uniq_summary_ratio": round(uniq_summary_ratio, 3),
+        "uniq_reason_ratio": round(uniq_ratio, 3),
+        "placeholder_hits": placeholder_hits,
+        "top_reason_count": top_n,
+        "top_reason": top_reason[:90],
+    }
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--genes-dir", default="genes")
+    ap.add_argument("--out-dir", default="projects/REVIEW_QUALITY_AUDIT/reports")
+    args = ap.parse_args()
+    os.makedirs(args.out_dir, exist_ok=True)
+
+    rows = []
+    total = 0
+    for path in glob.glob(os.path.join(args.genes_dir, "**", "*-ai-review.yaml"), recursive=True):
+        total += 1
+        r = scan_file(path)
+        if r:
+            rows.append(r)
+    rows.sort(key=lambda r: (r["tier"], -r["n_reviewed"]))
+
+    fields = ["tier", "file", "n_reviewed", "uniq_summary_ratio", "uniq_reason_ratio",
+              "placeholder_hits", "top_reason_count", "top_reason"]
+    with open(os.path.join(args.out_dir, "boilerplate_flags.csv"), "w", newline="") as fh:
+        w = csv.DictWriter(fh, fieldnames=fields)
+        w.writeheader()
+        for r in rows:
+            w.writerow(r)
+
+    t1 = [r for r in rows if r["tier"] == 1]
+    t2 = [r for r in rows if r["tier"] == 2]
+    t3 = [r for r in rows if r["tier"] == 3]
+
+    out = []
+    out.append("# Review-quality audit: templated-boilerplate scan\n")
+    out.append("*Auto-generated by `projects/REVIEW_QUALITY_AUDIT/scan_boilerplate.py`.*\n")
+    out.append(f"\n- Review files scanned: **{total}**")
+    out.append(f"- Flagged: **{len(rows)}** — Tier 1: **{len(t1)}**, "
+               f"Tier 2: **{len(t2)}**, Tier 3: **{len(t3)}**\n")
+
+    out.append("\n## Tier 1 (critical) — fake/non-specific supporting evidence\n")
+    out.append("Generic placeholder `supporting_text` on many annotations: the evidence "
+               "does not support the specific term. Same defect class as the mouse Fyn "
+               "review. **Re-review fully.**\n")
+    out.append("| File | reviewed | placeholder uses | top templated reason |")
+    out.append("|---|---|---|---|")
+    for r in t1:
+        out.append(f"| {r['file']} | {r['n_reviewed']} | {r['placeholder_hits']} | "
+                   f"{r['top_reason_count']}× \"{r['top_reason']}\" |")
+    if not t1:
+        out.append("| _none_ | | | |")
+
+    out.append("\n## Tier 2 — summary AND reason both templated\n")
+    out.append("Both the `summary` and the `reason` are drawn from a tiny templated set "
+               "(unique-summary ratio ≤ 0.15 and unique-reason ratio ≤ 0.15). The "
+               "per-annotation rationale carries no real curation signal even though the "
+               "`supporting_text` may be a real quote. **Genuine rework needed.**\n")
+    out.append("| File | reviewed | uniq-summary ratio | uniq-reason ratio | top reason |")
+    out.append("|---|---|---|---|---|")
+    for r in t2:
+        out.append(f"| {r['file']} | {r['n_reviewed']} | {r['uniq_summary_ratio']} | "
+                   f"{r['uniq_reason_ratio']} | {r['top_reason_count']}× \"{r['top_reason']}\" |")
+    if not t2:
+        out.append("| _none_ | | | | |")
+
+    out.append("\n## Tier 3 — reason-only boilerplate (low severity)\n")
+    out.append("Only the one-line `reason` is templated; the `summary` is term-specific "
+               "(unique-summary ratio > 0.15) and `supporting_text` is a real quote. The "
+               "substantive review is genuine — only the `reason` field is lazy. Low "
+               "priority; can be tightened in bulk later.\n")
+    out.append("| File | reviewed | uniq-summary ratio | uniq-reason ratio | top reason |")
+    out.append("|---|---|---|---|---|")
+    for r in t3:
+        out.append(f"| {r['file']} | {r['n_reviewed']} | {r['uniq_summary_ratio']} | "
+                   f"{r['uniq_reason_ratio']} | {r['top_reason_count']}× \"{r['top_reason']}\" |")
+
+    report = "\n".join(out) + "\n"
+    with open(os.path.join(args.out_dir, "REPORT.md"), "w") as fh:
+        fh.write(report)
+    print(report)
+
+
+if __name__ == "__main__":
+    main()

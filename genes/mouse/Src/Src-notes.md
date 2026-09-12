@@ -11,7 +11,7 @@ many receptor classes and phosphorylation of receptor/adaptor/cytoskeletal
 substrates [UniProt:P05480 "Non-receptor protein tyrosine kinase... activated
 following engagement of many different classes of cellular receptors"]. The
 BioReason report independently supports the same domain-based call
-[file:mouse/Src/Src-deep-research-bioreason.md "A cytoplasmic non-receptor
+[file:mouse/Src/Src-bioreason-rl-predictions.md "A cytoplasmic non-receptor
 tyrosine kinase"].
 
 Key local evidence for pathway and localization calls includes Src kinase

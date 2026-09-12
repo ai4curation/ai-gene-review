@@ -1,3 +1,10 @@
+---
+title: "Autoimmune Genetics - Greatest Hits"
+maturity: IN_PROGRESS
+tags: [BIOLOGY_DOMAIN]
+species: [human]
+---
+
 # Autoimmune Genetics - Greatest Hits
 
 ## Overview

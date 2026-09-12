@@ -1,0 +1,15 @@
+| Pathway step | Reaction | Gene(s) / enzyme | Substrates | Product(s) | Enzyme class / note |
+|---|---|---|---|---|---|
+| 1. HMP-P synthesis | Pyridoxal-5-phosphate + histidine → HMP-P | **THI5, THI11, THI12, THI13** | Pyridoxal-5-phosphate, histidine | HMP-P | HMP-P synthase; suicide enzyme family in yeast (pqac-00000011, pqac-00000012, pqac-00000019) |
+| 2. HMP-P phosphorylation | HMP-P + ATP → HMP-PP | **THI20, THI21**; **THI22** possible by homology but unproven | HMP-P, ATP | HMP-PP | HMP-P kinase; THI20 is the major isoform, THI21 is paralogous; THI22 remains uncharacterized (pqac-00000004, pqac-00000009, pqac-00000011, pqac-00000013, pqac-00000026) |
+| 3. HMP salvage phosphorylation | HMP + ATP → HMP-P | **THI20, THI21** | HMP, ATP | HMP-P | HMP kinase activity in the salvage branch; assigned to the trifunctional THI20/THI21 family (pqac-00000004, pqac-00000009, pqac-00000011, pqac-00000014) |
+| 4. HET-P synthesis | NAD+ + glycine + cysteine-derived sulfur → HET-P | **THI4** | NAD+, glycine, sulfur from conserved Cys in Thi4 | HET-P | Thiazole synthase; suicide enzyme with single-turnover sulfur donation (pqac-00000011, pqac-00000012, pqac-00000019) |
+| 5. HET salvage phosphorylation | HET + ATP → HET-P | **THI6** | HET, ATP | HET-P | Hydroxyethylthiazole kinase; bifunctional THI6 protein (pqac-00000005, pqac-00000014, pqac-00000017) |
+| 6. TMP formation | HMP-PP + HET-P → TMP | **THI6** | HMP-PP, HET-P | TMP | TMP diphosphorylase / thiamine-phosphate pyrophosphorylase; bifunctional THI6 enzyme (pqac-00000005, pqac-00000011, pqac-00000013, pqac-00000014) |
+| 7. Thiamine formation | TMP → thiamine | Unspecified phosphatase(s) | TMP | Thiamine | Dephosphorylation step; likely carried out by nonspecific phosphatases in yeast (pqac-00000004, pqac-00000014, pqac-00000018) |
+| 8. TDP formation | Thiamine + ATP → TDP | **THI80** | Thiamine, ATP | TDP (ThDP) | Thiamine diphosphokinase / thiamine pyrophosphokinase (pqac-00000005, pqac-00000011, pqac-00000014) |
+| 9. Thiamine degradation | Thiamine → HMP + thiazole-derived product | **THI20** | Thiamine | HMP + thiazole-related product(s) | Thiaminase II activity in the C-terminal domain of Thi20; family-level evidence also implicates THI21-like proteins (pqac-00000004, pqac-00000009, pqac-00000010, pqac-00000011) |
+| 10. Thiamine uptake | External thiamine → internal thiamine | **THI7 / THI10** | Extracellular thiamine | Intracellular thiamine | High-affinity plasma membrane thiamine transporter; uptake supports salvage and cofactor production (pqac-00000004, pqac-00000007, pqac-00000011, pqac-00000014) |
+
+
+*Table: This table summarizes the core thiamine biosynthesis, salvage, degradation, and uptake steps in Saccharomyces cerevisiae. It is useful for locating where THI22 fits relative to the better-characterized THI20/THI21 family members and the rest of the pathway.*

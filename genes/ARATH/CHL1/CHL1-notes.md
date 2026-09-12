@@ -1,134 +1,86 @@
-# CHL1 (At5g40090) - Disease Resistance Protein / CHS1-Like 1
+# CHL1 (At1g12110) - NPF6.3 / NRT1.1 Nitrate Transporter
 
 ## Identity
 
-- **UniProt**: Q9LUJ8
-- **Gene**: CHL1 (CHILLING SENSITIVE 1-LIKE 1, CHS1-LIKE 1)
-- **Locus**: At5g40090
+- **UniProt**: Q05085 (PTR7_ARATH)
+- **Gene**: CHL1 (CHLORATE RESISTANT 1); NPF6.3; NRT1.1; NRT1
+- **Locus**: At1g12110
 - **Organism**: Arabidopsis thaliana
-- **Protein**: Disease resistance protein CHL1 (459 aa, 51.6 kDa)
-- **Domain architecture**: TIR -- NB-ARC (truncated NLR, lacks LRR domain)
+- **Protein**: Protein NRT1/PTR FAMILY 6.3 (590 aa)
+- **Family**: Major facilitator superfamily (MFS); proton-dependent oligopeptide
+  transporter (POT/PTR, TC 2.A.17) family; NPF (NRT1/PTR) family
+- **Structures**: PDB 4OH3, 5A2N, 5A2O (X-ray, dimer)
 
-**CRITICAL NOTE**: The gene symbol "CHL1" in Arabidopsis is ambiguous. The more
-commonly studied CHL1 is At1g12110 (Q05085/NPF6.3/NRT1.1), a nitrate transporter
-also known as CHLORINA 1. The CHL1 under review here (Q9LUJ8, At5g40090) is a
-disease resistance protein named CHS1-LIKE 1. The existing GOA and UniProt files
-in this directory were fetched for the wrong protein (Q05085). The BioReason
-prediction file correctly targets Q9LUJ8.
+## IMPORTANT: Gene-identity correction (2026-06)
 
-## Domain Architecture
+The gene symbol "CHL1" in Arabidopsis is ambiguous. The CANONICAL CHL1 — and the
+gene defined by the UniProt record (Q05085), the QuickGO GOA (after re-fetch), the
+task brief, and the falcon deep research report in this folder — is **NPF6.3 /
+NRT1.1 (At1g12110)**, the dual-affinity nitrate transporter / transceptor.
 
-- **TIR domain** (residues 16-170): Toll/interleukin-1 receptor homology domain.
-  In plant NLRs, TIR domains have NADase enzymatic activity -- they cleave NAD+
-  to produce signaling molecules (pRib-AMP, di-ADPR, etc.) that activate the
-  EDS1-PAD4-ADR1 signaling node [PMID:34497423, "The EDS1-PAD4-ADR1 node
-  mediates Arabidopsis pattern-triggered immunity"].
+A previous version of `CHL1-ai-review.yaml` incorrectly reviewed a DIFFERENT gene,
+**Q9LUJ8 / At5g40090** ("Disease resistance protein CHL1" / CHS1-LIKE 1, a truncated
+TIR-NBS protein). The `CHL1-goa.tsv` had also been fetched for Q9LUJ8. Both were
+corrected: the review is now for Q05085 and the GOA was re-fetched for Q05085
+(QuickGO, 14 annotations). The BioReason SFT prediction files in this folder target
+Q9LUJ8 and are therefore not relevant to the canonical CHL1 nitrate transporter.
 
-- **NB-ARC domain** (residues 191-401): Nucleotide-binding adaptor shared by
-  APAF-1, R proteins, and CED-4. This is an AAA+ ATPase that acts as a molecular
-  switch: ATP-bound = active, ADP-bound = inactive.
+## Functional Summary (Q05085 / NRT1.1 / NPF6.3)
 
-- **No LRR domain**: CHL1 is a "truncated NLR" or TIR-NBS (TN) protein. It lacks
-  the C-terminal leucine-rich repeat domain found in canonical TNL immune receptors.
-  This places it in a special class of atypical NLR proteins whose functions are
-  still being elucidated.
+CHL1/NRT1.1 is the first cloned plant nitrate transporter and the founding member of
+the NPF (NRT1/PTR) family. It is a plasma-membrane, proton-coupled nitrate symporter
+in roots (epidermal/vascular cells) and guard cells. It is **dual-affinity** with
+biphasic kinetics: high-affinity Km ~50 uM and low-affinity Km ~4 mM
+[PMID:10330471]. The affinity mode is switched by phosphorylation of **Thr101** by
+the CBL1/CBL9-CIPK23 kinase module [PMID:12606566, PMID:19766570].
 
-## Functional Summary
+Beyond transport, CHL1 acts as a nitrate **sensor ("transceptor")** that initiates
+the primary nitrate response and regulates other nitrate genes (e.g., NRT2.1);
+sensing is separable from uptake [PMID:19766570, PMID:15319483]. It also facilitates
+**basipetal auxin transport**, linking nitrate availability to lateral root
+development [PMID:20627075], contributes to **stomatal opening / drought**
+[PMID:12509525], and mediates **root-to-shoot nitrate translocation** [PMID:23645597].
+Originally identified via chlorate-resistance screens (chlorate is a toxic nitrate
+analog) [PMID:8453665].
 
-CHL1 is a truncated TIR-NBS immune receptor that limits chloroplast damage and
-cell death at low temperatures. Its paralog CHS1 (At1g17610) was identified through
-a chilling-sensitive mutant screen. CHL1 overexpression alleviates chilling damage
-and enhances plant growth at both moderate and cold temperatures
-[PMID:23617639, "Over-expression of CHS1 or CHL1 alleviates chilling damage and
-enhances plant growth at moderate (24C) and chilling (13C) temperatures"].
+## Key Literature (nitrate transporter)
 
-## Key Literature
+- PMID:8453665 - Tsay et al. 1993, Cell. CHL1 = nitrate-inducible nitrate transporter.
+- PMID:9844028 - Wang et al. 1998, PNAS. Major role in high-affinity nitrate uptake.
+- PMID:10330471 - Liu et al. 1999, Plant Cell. Dual-affinity transporter; kinetics.
+- PMID:12606566 - Liu & Tsay 2003, EMBO J. Thr101 phosphorylation affinity switch.
+- PMID:12509525 - Guo et al. 2003, Plant Cell. Stomatal opening / drought.
+- PMID:15319483 - Munos et al. 2004, Plant Cell. Regulates NRT2.1.
+- PMID:17148611 - Remans et al. 2006, PNAS. Nitrate signaling / patch colonization.
+- PMID:19766570 - Ho et al. 2009, Cell. CHL1 functions as a nitrate sensor; CIPK23.
+- PMID:20627075 - Krouk et al. 2010, Dev Cell. Nitrate-regulated auxin transport.
+- PMID:23645597 - Leran et al. 2013, Mol Plant. Bidirectional root-to-shoot transport.
+- PMID:24572362 / PMID:24572366 - Sun et al. / Parker & Newstead 2014, Nature.
+  Crystal structures; nitrate-binding pocket (His356), proton coupling.
 
-### PMID:23617639 - Zbierzak et al. 2013, Plant Journal
-"A TIR-NBS protein encoded by Arabidopsis Chilling Sensitive 1 (CHS1) limits
-chloroplast damage and cell death at low temperature"
+## Falcon deep research (CHL1-deep-research-falcon.md)
 
-Key findings:
-- CHS1 (At1g17610) encodes a TIR-NBS protein; CHL1 (At5g40090) is its paralog
-- The chs1-1 mutation causes chilling sensitivity with activated defense responses
-  and salicylic acid production at 13C
-- Overexpression of CHS1 or CHL1 alleviates chilling damage
-- Chilling sensitivity depends on EDS1 and PAD4 regulators
-- Photosynthetic complex changes and thylakoid membrane damage precede cell death
-- The mutant showed excessive necrotic response to bacterial infection
+Falcon (Edison Scientific) report targets Q05085/NPF6.3/NRT1.1 correctly. Key
+synthesized points used to corroborate the review (all verbatim-verified):
+- Dual-affinity, biphasic kinetics across a wide nitrate range.
+- Transceptor concept: initiates primary nitrate response; regulates NRT2.1.
+- Proton-coupled nitrate symporter; ExxER motif, His356.
+- Thr101 affinity-mode switch; CBL1/CBL9-CIPK23; ABI2/ABA integration.
+- Plasma membrane of root epidermal/vascular cells + guard cells.
+- Basipetal auxin transport; lateral root development.
+- Contributes roughly 10-80% of whole-plant nitrate uptake.
 
-### PMID:23651299 - Wang et al. 2013, Plant Journal
-"A missense mutation in CHS1, a TIR-NB protein, induces chilling sensitivity in
-Arabidopsis"
+## GO Annotation Status (Q05085, after GOA re-fetch)
 
-Key findings:
-- Independent identification of CHS1 as a TIR-NB protein
-- CHS1 protein stability is positively regulated by low temperature
-- The chs1 mutant displays both chilling-sensitive and defense-associated phenotypes
-- Defense phenotypes include extensive cell death, H2O2 and SA accumulation, PR gene
-  expression
+Core: GO:0015112 nitrate transmembrane transporter activity (IMP); GO:0015706
+nitrate transmembrane transport (IMP); GO:0005886 plasma membrane (IDA);
+GO:0010167 response to nitrate (IMP, transceptor).
 
-### PMID:27699788 - Zhang et al. 2017, New Phytologist
-"Temperature-dependent autoimmunity mediated by chs1 requires its neighboring TNL
-gene SOC3"
-
-Key findings:
-- CHS1 interacts with the NB and LRR domains of neighboring TNL gene SOC3
-- Mutant chs1 gains additional interaction with the TIR domain of SOC3
-- Loss of SOC3 completely suppresses the chilling-sensitive phenotype of chs1-2
-- This establishes a paired immune receptor mechanism: TN protein (CHS1) working
-  with neighboring TNL (SOC3) to control temperature-dependent immunity
-
-## Molecular Mechanism
-
-CHL1/CHS1-type TIR-NBS proteins function as adaptors or regulators within the
-plant immune system. They pair with full-length TNL receptors (like SOC3 pairs with
-CHS1) to form functional immune receptor complexes. This is analogous to other
-documented truncated NLR functions:
-
-- TN10 pairs with clustered TNL receptors [PMC8069298]
-- TN13 associates with CC-NBS-LRR receptor RPS5 [PMID:33982335]
-- TIR-NBS2 is required for activated defense in exo70B1 mutant [PMID:25617755]
-
-The TIR domain in these proteins has NADase activity that generates small molecule
-signals (pRib-AMP/ADP, di-ADPR) which bind to and activate EDS1-PAD4 heterodimers,
-recruiting helper NLRs like ADR1 to execute immune responses.
-
-## GO Annotation Status
-
-The actual GOA annotations for Q9LUJ8 (from QuickGO) are:
-- GO:0043531 ADP binding (IEA, InterPro:IPR002182)
-- GO:0061809 NAD+ nucleosidase activity, cyclic ADP-ribose generating (IEA, EC:3.2.2.6)
-- GO:0006952 defense response (IEA, InterPro:IPR044974)
-- GO:0007165 signal transduction (IEA, InterPro:IPR000157)
-- GO:0005737 cytoplasm (IEA, UniProt-SubCell)
-- GO:0009507 chloroplast (ISM, TAIR)
-
-## BioReason Prediction Assessment
-
-The BioReason SFT prediction for Q9LUJ8 is domain-architecture-driven and generally
-sound in recognizing the TIR-NB-ARC architecture. However:
-
-1. **Mitochondrial localization (GO:0005739)**: BioReason claims mitochondrial
-   localization. This is INCORRECT. UniProt annotates CHL1 to the cytoplasm, and
-   TAIR predicts chloroplast. There is no evidence for mitochondrial localization.
-   The reasoning that "Apaf-like assemblies often interface with mitochondrial
-   signaling hubs" conflates animal apoptosome biology with plant NLR biology.
-
-2. **Defense response to fungus (GO:0050832) and bacterium (GO:0042742)**: These
-   are plausible but SPECULATIVE for CHL1 specifically. The documented function is
-   in cold stress response. The chs1 mutant showed altered bacterial response
-   (excessive necrosis), but CHL1 itself has not been shown to directly mediate
-   pathogen defense.
-
-3. **Positive regulation of cell death (GO:0010942)**: Partially supported. The
-   chs1 mutant (gain-of-function) activates cell death, but the wild-type CHS1/CHL1
-   actually LIMITS cell death. So this is backwards.
-
-4. **Protein binding (GO:0005515)**: Too generic. The actual molecular function is
-   NAD+ nucleosidase activity (GO:0061809) based on TIR domain enzymatic function.
-   BioReason missed this key enzymatic activity entirely.
-
-5. **No GO term predictions listed**: The BioReason file has empty GO term prediction
-   sections, suggesting the model did not generate specific GO predictions beyond the
-   narrative.
+Generic/over-annotations addressed: GO:0006857 oligopeptide transport (REMOVE -
+family-level; CHL1 does not transport peptides); GO:0016020 membrane,
+GO:0022857 transmembrane transporter activity, GO:0055085 transmembrane transport
+(MODIFY to specific nitrate terms / plasma membrane); GO:0005515 protein binding
+x2 (one MODIFY to protein kinase binding for CIPK23; one REMOVE for generic
+AT2G45820 interaction). Non-core developmental/pleiotropic: GO:0010540 basipetal
+auxin transport, GO:0048527 lateral root development, GO:0048573 photoperiodism
+flowering, GO:0009414 response to water deprivation.

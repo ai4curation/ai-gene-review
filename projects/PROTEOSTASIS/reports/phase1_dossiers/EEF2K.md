@@ -1,0 +1,25 @@
+# PN dossier: EEF2K
+
+- review_batch: proteostasis-batch-2026-06-07c
+- review_yaml: genes/human/EEF2K/EEF2K-ai-review.yaml
+- PN workbook rows: 1
+
+## PN row 1: Translation | Cytosolic translation | Translation elongation | assorted elongation factors
+- UniProt: O00418
+- In branches: TR
+- PN-node mapping records (path + ancestors):
+    - [type] Translation|Cytosolic translation|Translation elongation|assorted elongation factors
+        status=mapped scope=ok_for_propagation_to_go GO=[GO:0003746 translation elongation factor activity]
+        rationale: This PN type groups cytosolic elongation factors. Translation elongation factor activity is the shared molecular-function target.
+    - [group] Translation|Cytosolic translation|Translation elongation
+        status=context_only scope=too_broad_to_propagate GO=[GO:0006414 translational elongation]
+        rationale: This PN group is an elongation-context bucket, but it also contains tRNA synthetases, tRNA deacylases, and multisynthetase-complex members whose direct shared assertions are narrower molecular functions or complexes. The elongation relationship is retained as context only.
+    - [class] Translation|Cytosolic translation
+        status=context_only scope=too_broad_to_propagate GO=[GO:0002181 cytoplasmic translation]
+        rationale: The PN class Cytosolic translation is centered on the cytoplasmic translation apparatus and process, but it also houses supporting machinery such as ribosome biogenesis factors. The GO process term is a useful high-level label for the class, but propagating it to all members would over-annotate genes whose PN placement is through assembly or maturation context rather than core cytoplasmic translation.
+    - [branch] Translation
+        status=context_only scope=too_broad_to_propagate GO=[GO:0006412 translation]
+        rationale: The PN Translation branch is organized around the translation apparatus and immediately associated cotranslational quality-control systems. GO translation is the closest high-level process label, but the PN branch also contains adjacent machinery such as ribosome biogenesis and nascent-chain handling. Keeping this relationship is useful for interpretation, but it is too broad to project safely onto every member.
+
+## Projected GO annotations (1)
+- GO:0003746 translation elongation factor activity | scope=ok_for_propagation_to_go | goa_status=more_specific_than_existing_goa | from=Translation|Cytosolic translation|Translation elongation|assorted elongation factors

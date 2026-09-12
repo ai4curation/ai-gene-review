@@ -14,6 +14,7 @@ journal: Open Biology
 year: '2012'
 doi: 10.1098/rsob.120096
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Regulation of ASIC channels by a stomatin/STOML3 complex located in a mobile vesicle pool in sensory neurons

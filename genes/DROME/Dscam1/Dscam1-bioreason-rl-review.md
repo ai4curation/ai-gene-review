@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: Dscam1 (DROME)
 
-Source: Dscam1-deep-research-bioreason-rl.md
+Source: Dscam1-bioreason-rl-predictions.md
 
 - **Correctness**: 3/5
 - **Completeness**: 2/5
@@ -20,6 +20,12 @@ While the structural description is reasonable, the functional interpretation fu
 3. **Immune function absent**: The curated review documents that Dscam1 has secreted isoforms that function in immune recognition by binding bacteria in the hemolymph (PMID:16109846). BioReason mentions only the cell-surface form.
 
 4. **Axon guidance receptor activity missing**: The curated core functions include axon guidance receptor activity (GO:0008046), with signaling via the Dock/Pak pathway. BioReason vaguely mentions "actin remodeling" but does not identify axon guidance.
+
+**Input caveat:** the BioReason export contains exactly 2,000 residues, whereas cached
+UniProt Dscam1 is 2,016 residues. Only the final 16 residues are absent, so this is much
+less severe than the other 2,000-residue truncations, but it should still be recorded in
+the truncated-input stratum. The central adhesion-versus-repulsion error is not explained
+by this small truncation.
 
 Comparison with interpro2go:
 

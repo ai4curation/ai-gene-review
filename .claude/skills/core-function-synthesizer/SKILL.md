@@ -21,12 +21,17 @@ core_functions:
   directly_involved_in:
     <LIST OF BP TERMS -- this function must be directly involved in these biological processes>
   locations:
-    <LIST OF CELLULAR LOCATIONS -- the gene product must FUNCTION in these cellular components>
+    <LIST OF CELLULAR LOCATIONS (cellular anatomical entities such as membranes, nucleus,
+     cytosol, organelle parts) where the gene product FUNCTIONS.
+     Do NOT put protein-containing complexes here -- complex membership goes in in_complex.>
   anatomical_locations:
     <LIST OF ANATOMICAL LOCATIONS>
   substrates:
     <LIST OF SUBSTRATES -- only include if not implied by the molecular function>
   in_complex:
+    # The protein-containing complex (a GO:0032991 descendant) that this gene product is an
+    # active unit of. Use this -- NOT locations -- for ANY complex term (e.g. ribosome,
+    # spliceosome, EMC, signal peptidase complex, SRP). Single-valued.
     id: <GO COMPLEX ID OR TEMP:COMPLEX_ID>
     label: <COMPLEX NAME>
 ```

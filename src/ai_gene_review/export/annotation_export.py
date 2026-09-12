@@ -27,6 +27,7 @@ from pathlib import Path
 from typing import Dict, List, Any, Union, Optional
 
 from ai_gene_review.datamodel.gene_review_model import GeneReview, ExistingAnnotation
+from ai_gene_review.export.browser_payload import write_browser_data_js
 
 
 class _AttrDict:
@@ -458,18 +459,7 @@ class AnnotationExporter:
         output_path = Path(output_path)
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
-        # Strip null/None values and empty lists to reduce file size.
-        # In JS, accessing a missing key returns undefined (falsy, same as null).
-        compact = [
-            {k: v for k, v in ann.items() if v is not None and v != []}
-            for ann in annotations
-        ]
-
-        with open(output_path, "w") as f:
-            f.write("window.searchData = ")
-            json.dump(compact, f, indent=2, default=str)
-            f.write(";\n")
-            f.write("window.dispatchEvent(new Event('searchDataReady'));\n")
+        write_browser_data_js(annotations, output_path)
 
         return len(annotations)
 
@@ -734,8 +724,8 @@ class AnnotationExporter:
     def _gene_dir_from_source_path(source_path: Optional[Path]) -> Optional[Path]:
         """Derive the gene directory from a source YAML file path.
 
-        Expects paths like ``genes/SCHPO/Tim10/Tim10-ai-review.yaml``
-        and returns ``genes/SCHPO/Tim10``.
+        Expects paths like ``genes/SCHPO/tim10/tim10-ai-review.yaml``
+        and returns ``genes/SCHPO/tim10``.
 
         >>> AnnotationExporter._gene_dir_from_source_path(Path("genes/human/TP53/TP53-ai-review.yaml"))
         PosixPath('genes/human/TP53')

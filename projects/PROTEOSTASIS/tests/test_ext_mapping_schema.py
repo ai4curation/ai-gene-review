@@ -51,6 +51,24 @@ def test_ext_mapping_schema_has_go_term_binding() -> None:
     assert schema["slots"]["subject_curations"]["range"] == "SubjectCuration"
     assert schema["slots"]["curation_status"]["range"] == "CurationStatusEnum"
     assert schema["slots"]["curation_status"]["required"] is True
+    assert schema["slots"]["condition_level"]["range"] == "MappingConditionLevelEnum"
+    assert schema["slots"]["ontology_gap"]["range"] == "OntologyGapReview"
+    assert schema["slots"]["ontology_gap"]["inlined"] is True
+    assert schema["classes"]["SubjectCuration"]["slots"].index("ontology_gap") > schema[
+        "classes"
+    ]["SubjectCuration"]["slots"].index("excluded_subjects")
+    assert "OntologyGapReview" in schema["classes"]
+    assert schema["slots"]["candidate_parent_terms"]["range"] == "GOTerm"
+    assert schema["slots"]["candidate_parent_terms"]["multivalued"] is True
+    assert schema["slots"]["status"]["range"] == "OntologyGapStatusEnum"
+    assert "ntr_candidate" in schema["enums"]["OntologyGapStatusEnum"]["permissible_values"]
+    assert "ntr_justified" in schema["enums"]["OntologyGapStatusEnum"]["permissible_values"]
+    assert (
+        "better_as_gocam_or_annotation_extension"
+        in schema["enums"]["OntologyGapStatusEnum"]["permissible_values"]
+    )
+    assert "open_go_ntr" in schema["enums"]["OntologyGapActionEnum"]["permissible_values"]
+    assert "gene_symbol" in schema["enums"]["MappingConditionLevelEnum"]["permissible_values"]
     assert schema["enums"]["GOTermEnum"]["reachable_from"]["source_nodes"] == [
         "GO:0003674",
         "GO:0008150",
@@ -112,8 +130,8 @@ def test_ext_mapping_sets_use_unified_subject_curations() -> None:
     assert status_counts == {
         "pending_review": 0,
         "mapped": 483,
-        "context_only": 88,
-        "no_mapping": 1458,
+        "context_only": 90,
+        "no_mapping": 1456,
         "deferred": 0,
     }
 
@@ -153,3 +171,13 @@ def test_representative_curations_survived_migration() -> None:
         "Mitochondrial proteostasis|Chaperone",
     )
     assert mitochondrial_chaperone["curation_status"] == "no_mapping"
+
+    alr_efflux = _find_curation(
+        mapping_sets,
+        "Autophagy-Lysosome Pathway|Autophagic lysosome reformation|Efflux of autophagy products",
+    )
+    ontology_gap = alr_efflux["ontology_gap"]
+    assert ontology_gap["status"] == "ntr_candidate"
+    assert ontology_gap["gap_type"] == "missing_specific_process"
+    assert ontology_gap["candidate_parent_terms"][0]["id"] == "GO:0007041"
+    assert ontology_gap["recommended_action"] == "request_expert_input"

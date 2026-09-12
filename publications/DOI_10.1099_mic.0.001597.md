@@ -14,6 +14,7 @@ journal: Microbiology
 year: '2025'
 doi: 10.1099/mic.0.001597
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # TrkA of Streptococcus mitis CCUG31611 binds cyclic di-adenosine monophosphate and is required for growth in low potassium conditions

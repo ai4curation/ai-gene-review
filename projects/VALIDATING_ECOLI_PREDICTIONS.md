@@ -1,4 +1,14 @@
+---
+title: "Validating E. coli ML Predictions"
+maturity: IN_PROGRESS
+tags: [PIPELINE, FLAGSHIP]
+species: [ECOLI]
+---
+
 # Validating E. coli ML Predictions
+
+[Function prediction evaluation index](FUNCTION_PREDICTION_EVALUATION.md)
+
 
 ## Overview
 

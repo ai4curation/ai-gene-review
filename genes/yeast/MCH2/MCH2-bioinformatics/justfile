@@ -1,0 +1,42 @@
+# MCH2 (YKL221W, P36032) bioinformatics analysis
+# Reproducible pipeline. Requires: uv, mafft on PATH.
+
+# Run the whole pipeline
+all: fetch tm topology corroborate align identity tree motif
+
+# 1. Fetch protein sequences (target + MCH paralogs + JEN1 + human SLC16/MCT family)
+fetch:
+    uv run python scripts/fetch_sequences.py --accessions data/accessions.tsv --out data/panel.fasta
+    uv run python scripts/fetch_sequences.py --accessions data/accessions_test.tsv --out data/test_panel.fasta
+
+# 2. De novo hydropathy-based TM prediction (approximate; see RESULTS.md caveats)
+tm:
+    uv run python scripts/predict_tm.py --fasta data/panel.fasta --out results/tm_predictions.tsv
+    uv run python scripts/predict_tm.py --fasta data/test_panel.fasta --out results/tm_predictions_test.tsv
+
+# 3. Parse authoritative UniProt-annotated TM topology
+topology:
+    uv run python scripts/parse_uniprot_topology.py --uniprot ../MCH2-uniprot.txt --out results/uniprot_topology.tsv
+
+# 4. Corroborate annotated TM helices with hydropathy peaks
+corroborate:
+    uv run python scripts/hydropathy_corroboration.py --fasta data/panel.fasta --acc P36032 --topology results/uniprot_topology.tsv --out results/tm_hydropathy_corroboration.tsv
+
+# 5. Multiple sequence alignment
+align:
+    mafft --quiet --auto data/panel.fasta > results/panel_aln.fasta
+
+# 6. Pairwise identity matrix + MCH2 closest relatives
+identity:
+    uv run python scripts/pairwise_identity.py --aln results/panel_aln.fasta --focal P36032 --matrix results/identity_matrix.tsv --ranked results/mch2_closest.tsv
+
+# 7. Neighbor-joining tree (subfamily placement)
+tree:
+    uv run python scripts/build_tree.py --aln results/panel_aln.fasta --newick results/panel_nj.nwk --ascii results/panel_nj_ascii.txt
+
+# 8. Conserved MCT residue check + motif scan + data-driven conservation
+motif:
+    uv run python scripts/motif_check.py --aln results/panel_aln.fasta --anchor P53985 --out results/motif_conservation.tsv
+
+clean:
+    rm -f results/*.tsv results/*.fasta results/*.nwk results/*.txt results/*.log

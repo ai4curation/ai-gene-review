@@ -19,3 +19,4 @@ None &#8594;  <sub>1..1</sub> [String](types/String.md)
 ## Used by
 
  * [GeneReview](GeneReview.md)
+ * [PredictionReview](PredictionReview.md)

@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: mrcA (P. putida)
 
-Source: mrcA-deep-research-bioreason-rl.md
+Source: mrcA-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

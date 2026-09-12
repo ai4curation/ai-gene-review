@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: Notch1 (mouse)
 
-Source: Notch1-deep-research-bioreason-rl.md
+Source: Notch1-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 4/5
@@ -16,6 +16,11 @@ This correctly describes: (1) the EGF repeat extracellular domain with calcium s
 The mention of "endocytic activation" is slightly misleading -- endocytosis by the ligand-presenting (signal-sending) cell provides the pulling force, but the Notch-bearing cell undergoes proteolytic cleavage at the membrane. The summary could be read as suggesting the Notch receptor itself is endocytosed for activation, which is not the primary mechanism.
 
 A minor inaccuracy: the primary molecular function is described as "protein binding" (GO:0005515), which is too generic. The curated review identifies more specific functions including GO:0005112 (Notch binding), GO:0038023 (signaling receptor activity), and the transcriptional coactivator role. BioReason does not explicitly name the RBPJ/CSL transcription factor partnership in the summary, though the thinking trace does.
+
+**Input caveat:** the BioReason export contains exactly 2,000 residues, whereas cached
+UniProt Notch1 is 2,531 residues. The missing C-terminal sequence includes part of the
+intracellular signaling region. This case should be reported in the truncated-input
+stratum; the scores still evaluate the Functional Summary as generated.
 
 Comparison with interpro2go:
 

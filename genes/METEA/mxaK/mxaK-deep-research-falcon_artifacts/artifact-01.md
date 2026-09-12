@@ -1,0 +1,6 @@
+> In *Methylorubrum extorquens* AM1, deletion of **mxaK** produced methanol dehydrogenase containing the MxaF/MxaI subunits but with **no detectable enzymatic activity**, indicating that MxaK is required for enzyme maturation rather than for assembly of the structural subunits. In the same study, **activity was restored by incubation with 10 mM CaCl2 at pH 9.5**, directly supporting a role for MxaK in the **Ca2+ incorporation** step of MxaFI methanol dehydrogenase maturation. (pqac-00000000, pqac-00000007)
+>
+> Zhou et al. further proposed an assembly model in which **MxaK**, together with MxaR, MxaS, MxaA, MxaC, and MxaL, acts after PQQ loading to help insert **Ca2+ into the catalytic center of MxaF**, yielding the mature active enzyme; these conclusions are specifically illustrated in **Figures 2d/2e and 5g** of the 2025 *Nature Communications* paper. (pqac-00000002, pqac-00000007)
+
+
+*Blockquote: This blockquote summarizes the strongest direct experimental evidence for mxaK function from Zhou et al. 2025, including the deletion phenotype, calcium rescue result, and the proposed assembly model placing MxaK in the Ca2+ insertion step.*

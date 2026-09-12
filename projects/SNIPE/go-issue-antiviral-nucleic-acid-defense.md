@@ -1,3 +1,7 @@
+---
+title: "GO Issue: NTR for SNIPE defense system + gap in anti-phage defense hierarchy"
+---
+
 # GO Issue: NTR for SNIPE defense system + gap in anti-phage defense hierarchy
 
 ## Summary

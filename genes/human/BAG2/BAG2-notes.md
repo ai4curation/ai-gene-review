@@ -1,0 +1,46 @@
+# BAG2 (O95816) research notes
+
+## Identity / domain architecture
+- BAG family molecular chaperone regulator 2 (BAG-2 / Bcl-2-associated athanogene 2). 211 aa. Single BAG domain (residues 109-189) and an N-terminal coiled coil (20-61). [file:human/BAG2/BAG2-uniprot.txt "DOMAIN          109..189"]
+- Unlike BAG1, BAG2 lacks a ubiquitin-like (UBL) domain. [PMID:19228967 "However, BAG2 lacks the ubiquitin-like domain ( Lüders et al., 2000 ; Alberti et al., 2002 ), and therefore, may be suited to triage client proteins independently of ubiquitin."]
+
+## Core molecular function: HSP70/HSC70 nucleotide-exchange factor (co-chaperone)
+- BAG2 is a co-chaperone for HSP70/HSC70, acting as a nucleotide-exchange factor (NEF) that promotes ADP release and thereby client release. [file:human/BAG2/BAG2-uniprot.txt "Acts as\nCC       a nucleotide-exchange factor (NEF) promoting the release of ADP from"]
+- Member of an evolutionarily conserved family of Hsp70/Hsc70 regulators; binds with high affinity (KD ~1-10 nM) to the ATPase domain of Hsc70 and modulates chaperone activity in a Hip-repressible manner. [PMID:9873016 "The human BAG-1, BAG-2, and BAG-3 proteins bind with high affinity (KD congruent with 1-10 nM) to the ATPase domain of Hsc70 and inhibit its chaperone activity in a Hip-repressible manner."]
+- Direct biochemical confirmation of NEF / Hsp70-binding activity: BAG2 binds Hsp72 (HSPA1A) and acts in nucleotide/peptide release assays (though with notably lower affinity than BAG1/BAG3). [PMID:24318877 "Proteins with Bcl2-associated anthanogene (BAG) domains act as nucleotide exchange factors (NEFs) for the molecular chaperone heat shock protein 70 (Hsp70)."] [PMID:24318877 "their relative affinity values predicted their potency in nucleotide and peptide release assays"]
+
+## CHIP (STUB1) E3 ligase inhibition / protein triage
+- BAG2 is a main component of CHIP complexes and inhibits CHIP ubiquitin ligase activity by abrogating the CHIP/E2 cooperation. [PMID:16207813 "BAG-2 inhibits the ubiquitin ligase activity of CHIP by abrogating the CHIP/E2 cooperation and stimulates the chaperone-assisted maturation of CFTR."]
+- This is a negative regulation of ubiquitination of chaperone clients; BAG2 stimulates CFTR maturation (a transmembrane transporter client). [PMID:16207813 "stimulates the chaperone-assisted maturation of CFTR"]
+- BAG2 stabilizes immature CFTR conformations in addition to inhibiting CHIP. [PMID:16207813 "the stimulating activity of BAG-2 in CFTR maturation seems to reflect not only its ability to inhibit the CHIP-mediated ubiquitylation of CFTR, but also to stabilize immature CFTR conformations."]
+- BAG2 interacts with STUB1 (CHIP) per UniProt interaction table. [file:human/BAG2/BAG2-uniprot.txt "Q9UNE7: STUB1"]
+
+## Tau triage at the microtubule (neuronal context)
+- The BAG2/Hsp70 complex is tethered to the microtubule and captures/delivers tau to the proteasome for ubiquitin-independent degradation; preferentially degrades Sarkosyl-insoluble and phosphorylated tau. [PMID:19228967 "The BAG2/Hsp70 complex is tethered to the microtubule and this complex can capture and deliver Tau to the proteasome for ubiquitin-independent degradation. This complex preferentially degrades Sarkosyl insoluble Tau and phosphorylated Tau."]
+- BAG2 can associate with microtubules even without tau. [PMID:19228967 "BAG2 can associate with microtubules in the absence of Tau"]
+- By inhibiting CHIP, BAG2 directs the Hsp70-tau complex away from ubiquitination. [PMID:19228967 "By inhibiting CHIP ( Qian et al., 2006 ), BAG2 directs the Hsp70-Tau complex away from ubiquitination."]
+- This pathway is ubiquitin-INDEPENDENT and proteasome-dependent. [PMID:19228967 "these findings suggest that BAG2 mediates ubiquitin independent degradation of Tau through the proteasome."]
+- NOTE on the negated annotation GO:0032436 (positive regulation of proteasomal ubiquitin-dependent protein catabolic process, NOT): consistent with BAG2 routing tau to a ubiquitin-INDEPENDENT proteasomal route while inhibiting the ubiquitin-dependent CHIP route. The NOT is well justified.
+
+## Substrate stabilization by reducing ubiquitination (disease-relevant clients)
+- BAG2 directly binds and stabilizes PINK1 by decreasing its ubiquitination. [PMID:24383081 "BAG2 (Bcl-2-associated athanogene family protein 2), a member of the BAG family, which directly binds with and stabilises PINK1 by decreasing its ubiquitination."]
+- BAG2 (with BAG5) stabilizes pathogenic ataxin3-80Q by inhibiting its ubiquitination. [PMID:25006867 "BAG2 ... and BAG5 ... stabilise pathogenic ataxin3-80Q by inhibiting its ubiquitination"]
+
+## Localization
+- Cytosolic (Reactome TAS). Neuronal axon/dendrite/(dendritic) microtubule colocalization annotations derive from ARUK-UCL ISS based on the tau-triage microtubule work (PMID:19228967), which demonstrated microtubule tethering. These are real but context-specific (neuronal) localizations.
+
+## Synthesis of core vs non-core
+- CORE: HSP70/HSC70 nucleotide-exchange factor activity (GO:0000774), heat shock protein / chaperone binding, co-chaperone in a protein-folding chaperone complex, negative regulation of CHIP-mediated protein ubiquitination (GO:0031397), protein stabilization (GO:0050821) of chaperone clients.
+- NON-CORE / context: tau binding & neuronal microtubule/axon/dendrite localization (neuronal protein-triage context); CFTR (transmembrane transporter) maturation.
+- OVER-ANNOTATED / uninformative: the many high-throughput "protein binding" (GO:0005515) IPI annotations from interactome maps (spliceosome, viral perturbation, histone crosslinking, EGFR network, kinase networks, OpenCell, etc.).
+- Broad/indirect BP terms (positive regulation of protein metabolic process GO:0051247; protein metabolic process GO:0019538) are over-broad parent terms.
+
+## Falcon deep research findings (2026-06-07)
+Synthesis of the new Falcon (Edison) report relative to the existing COMPLETE review. CONFIRMS = already in review; NEW = not previously captured; PROVISIONAL = preprint/low-confidence, not used to change annotations.
+
+- CONFIRMS (core mechanism): BAG2 is a BAG-family HSP70/HSC70 co-chaperone/NEF that binds the chaperone ATPase domain via its C-terminal BAG domain and inhibits CHIP/STUB1 E3 ligase by disrupting CHIP-E2 (UBCH5A/B) cooperation, shifting protein triage away from ubiquitination/degradation. The foundational Arndt 2005 biochemistry (BAG2 inhibits CHIP-mediated ubiquitylation of Raf-1 and Hsc70; co-fractionates with Hsc70/CHIP in high-MW complexes) underpins the already-cited Dai/PMID:16207813 work. [DOI:10.1091/mbc.e05-07-0660 Arndt 2005 "BAG-2 acts as an inhibitor of the chaperone-associated ubiquitin ligase CHIP"]
+- NEW (peer-reviewed, added to refs): Schönbühler 2016 shows BAG2 prevents CHIP-mediated ubiquitination of HSP72 (HSPA1A/HSPA1B) and stabilizes HSP72 post-translationally (no mRNA change); BAG2 and CHIP protein levels rise in senescent fibroblasts (aging-associated proteostasis). [DOI:10.3390/ijms18010069 Schönbühler 2016]. NOTE: this DOI did not reliably resolve to a PubMed PMID via E-utilities, so kept in notes only, not added to refs.
+- NEW (peer-reviewed, added to refs): Altinok 2021 review frames BAG2 as a co-chaperone that modifies chaperone function and protein triage in health/disease. [PMID:34831344 "With or without You: Co-Chaperones Mediate Health and Disease by Modifying Chaperone Function and Protein Triage"]
+- NEW (peer-reviewed, added to refs): Bisceglia 2024 identifies BAG2 as a candidate cancer-driver/diagnostic-adjunct in malignant pleural mesothelioma (upregulated by RNA-seq log2FC 1.55, padj 0.0019, n=211 validation cohort; moderate-strong IHC in MPM, absent in reactive mesothelium). Disease-association, not a new molecular function. [PMID:39300217 "BAG2, MAD2L1, and MDK are cancer-driver genes and candidate targets for novel therapies in malignant pleural mesothelioma"]
+- PROVISIONAL (preprints / low-confidence, NOT used to change annotations): (i) Lauer 2024 bioRxiv - BAG2 recruited Hsp70-dependently to DNAJ-PKAc fusion scaffolds in fibrolamellar carcinoma, promoting survival/etoposide resistance; reported Ser20 phosphorylation. [DOI:10.1101/2023.06.28.546958]. (ii) Liu 2024 Research Square - proposed BAG2-CHIP-HSP70-Apaf1-cytochrome c anti-apoptotic axis in gastric cancer; FIIN-2 proposed as BAG2-CHIP inhibitor. [DOI:10.21203/rs.3.rs-4285523/v1]. (iii) Lian 2024 - BAG2 prognostic associations in liposarcoma. [DOI:10.1038/s41598-024-67659-6]. (iv) Yang 2023 - AD network modeling links a BAG2-HSC70-STUB1-MAPT expression signature to disease (expression/network only, not biochemical). [DOI:10.3389/fnagi.2023.1090400]. These reinforce the existing "tunable brake on CHIP/STUB1 ubiquitination -> pro-survival/chemoresistance" theme but add no validated new GO molecular function or localization.
+- LOCALIZATION (status unchanged): Report supports BAG2 in large cytosolic high-MW Hsc70/CHIP complexes but does not resolve a definitive basal subcellular compartment beyond cytosol; consistent with existing cytosol (core) + neuronal microtubule/axon/dendrite (non-core) annotations. No autophagy/mitophagy or innate-immunity BAG2-specific evidence was found (explicitly flagged as not established in the report).

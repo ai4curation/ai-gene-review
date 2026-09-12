@@ -1,0 +1,1984 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProtNLM-50 Prediction Evaluation</title>
+    <style>
+        :root {
+            --color-cor: #16a34a;
+            --color-cnn: #65a30d;
+            --color-lsp: #ca8a04;
+            --color-unc: #6b7280;
+            --color-pli: #dc2626;
+            --color-npi: #ef4444;
+            --color-rep: #f97316;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: #fff;
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        .subtitle { color: var(--text-muted); margin-bottom: 1.5rem; }
+
+        .summary-bar {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+            padding: 1rem 1.5rem;
+            background: var(--bg-light);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .summary-stat { text-align: center; }
+        .summary-stat .value { font-size: 1.5rem; font-weight: 700; }
+        .summary-stat .label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .assessment-dist {
+            display: flex;
+            height: 28px;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+        .assessment-dist .seg {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #fff;
+            min-width: 0;
+            transition: flex 0.3s;
+        }
+        .seg-COR { background: var(--color-cor); }
+        .seg-CNN { background: var(--color-cnn); }
+        .seg-LSP { background: var(--color-lsp); }
+        .seg-UNC { background: var(--color-unc); }
+        .seg-PLI { background: var(--color-pli); }
+        .seg-NPI { background: var(--color-npi); }
+        .seg-REP { background: var(--color-rep); }
+
+        .legend {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+            font-size: 0.8rem;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .legend-swatch {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .controls input[type="text"] {
+            padding: 0.4rem 0.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            width: 250px;
+        }
+        .controls select {
+            padding: 0.4rem 0.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        th {
+            background: var(--bg-light);
+            padding: 0.6rem 0.8rem;
+            text-align: left;
+            border-bottom: 2px solid var(--border-color);
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+        th:hover { background: #eef2ff; }
+        th .sort-arrow { font-size: 0.65rem; margin-left: 0.3rem; color: var(--text-muted); }
+        td {
+            padding: 0.5rem 0.8rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+        tr:hover { background: #fafbff; }
+
+        .badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .badge-COR { background: var(--color-cor); }
+        .badge-CNN { background: var(--color-cnn); }
+        .badge-LSP { background: var(--color-lsp); }
+        .badge-UNC { background: var(--color-unc); }
+        .badge-PLI { background: var(--color-pli); }
+        .badge-NPI { background: var(--color-npi); }
+        .badge-REP { background: var(--color-rep); }
+
+        .badge-error {
+            display: inline-block;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .term-type {
+            display: inline-block;
+            padding: 0.1rem 0.35rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+        }
+
+        .gene-link { color: #2563eb; text-decoration: none; }
+        .gene-link:hover { text-decoration: underline; }
+
+        .summary-cell { max-width: 400px; }
+        .summary-text {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.4;
+            font-size: 0.8rem;
+            color: #374151;
+        }
+        tr.expanded .summary-text {
+            -webkit-line-clamp: unset;
+            overflow: visible;
+        }
+
+        .no-predictions {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .protein-row td { background: #f8fafc; font-weight: 500; }
+
+        footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.75rem; }
+    </style>
+</head>
+<body>
+
+<h1>ProtNLM-50 Prediction Evaluation</h1>
+<p class="subtitle"></p>
+
+<div class="summary-bar">
+    <div class="summary-stat">
+        <div class="value">50</div>
+        <div class="label">Proteins</div>
+    </div>
+    <div class="summary-stat">
+        <div class="value">77</div>
+        <div class="label">Predictions</div>
+    </div>
+
+
+    <div class="summary-stat">
+        <div class="value" style="color: var(--color-cor);">19</div>
+        <div class="label">COR</div>
+    </div>
+
+
+
+    <div class="summary-stat">
+        <div class="value" style="color: var(--color-cnn);">8</div>
+        <div class="label">CNN</div>
+    </div>
+
+
+
+    <div class="summary-stat">
+        <div class="value" style="color: var(--color-lsp);">13</div>
+        <div class="label">LSP</div>
+    </div>
+
+
+
+    <div class="summary-stat">
+        <div class="value" style="color: var(--color-unc);">30</div>
+        <div class="label">UNC</div>
+    </div>
+
+
+
+
+
+    <div class="summary-stat">
+        <div class="value" style="color: var(--color-npi);">7</div>
+        <div class="label">NPI</div>
+    </div>
+
+
+
+
+    <div class="summary-stat">
+        <div class="value">1.4</div>
+        <div class="label">Mean CS</div>
+    </div>
+</div>
+
+
+<div class="assessment-dist">
+
+
+    <div class="seg seg-COR" style="flex: 19;" title="COR: 19">
+        COR (19)
+    </div>
+
+
+
+    <div class="seg seg-CNN" style="flex: 8;" title="CNN: 8">
+        CNN (8)
+    </div>
+
+
+
+    <div class="seg seg-LSP" style="flex: 13;" title="LSP: 13">
+        LSP (13)
+    </div>
+
+
+
+    <div class="seg seg-UNC" style="flex: 30;" title="UNC: 30">
+        UNC (30)
+    </div>
+
+
+
+
+
+    <div class="seg seg-NPI" style="flex: 7;" title="NPI: 7">
+        NPI (7)
+    </div>
+
+
+
+
+</div>
+
+
+<div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-cor)"></div>COR — Correct novel</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-cnn)"></div>CNN — Correct, not novel</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-lsp)"></div>LSP — Less precise</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-unc)"></div>UNC — Uncertain</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-pli)"></div>PLI — Paralog incorrect</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-npi)"></div>NPI — Nonparalog incorrect</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-rep)"></div>REP — Frequency bias</div>
+</div>
+
+<div class="controls">
+    <input type="text" id="search" placeholder="Filter by protein, term, or text…" oninput="filterTable()">
+    <select id="assessmentFilter" onchange="filterTable()">
+        <option value="">All assessments</option>
+
+        <option value="COR">COR</option>
+
+        <option value="CNN">CNN</option>
+
+        <option value="LSP">LSP</option>
+
+        <option value="UNC">UNC</option>
+
+        <option value="PLI">PLI</option>
+
+        <option value="NPI">NPI</option>
+
+        <option value="REP">REP</option>
+
+    </select>
+    <select id="typeFilter" onchange="filterTable()">
+        <option value="">All term types</option>
+
+        <option value="GO_BP">GO_BP</option>
+
+        <option value="GO_CC">GO_CC</option>
+
+        <option value="GO_MF">GO_MF</option>
+
+    </select>
+    <label style="font-size:0.85rem;">
+        <input type="checkbox" id="hideNoPred" onchange="filterTable()"> Hide no-prediction rows
+    </label>
+</div>
+
+<table id="evalTable">
+<thead>
+<tr>
+    <th onclick="sortTable(0)">Protein <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(1)">Organism <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(2)">Predicted Term <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(3)">Type <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(4)">Assessment <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(5)">CS <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(6)">Error <span class="sort-arrow">▼</span></th>
+    <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+
+
+
+<tr data-assessment="COR" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/9PRIM/A0A8C9H4D2/A0A8C9H4D2-ai-review.html">A0A8C9H4D2</a>
+        <br><small style="color:var(--text-muted)">OLFML2A</small>
+    </td>
+    <td><small>Piliocolobus tephrosceles</small></td>
+    <td>
+        <strong>GO:0031012</strong><br>
+        extracellular matrix
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The primate target and mouse photomedin-1 (Olfml2a; Q8BHP7) share the OLFML2A PANTHER subfamily PTHR23192:SF29. Mouse photomedin-1 was experimentally secreted as a disulfide-bonded dimer; the photomedins bound chondroitin sulphate-E and heparin, supporting association with extracellular glycosaminoglycans (PMID:15836428). This supports an inferred matrix-associated location for the OLFML2A gene product rather than transferring a generic olfactomedin-domain property. The 439-residue primate record lacks an annotated signal peptide, so secretion of that deposited sequence is not demonstrated; the assignment relies on conserved ortholog biology, not on an observed targeting signal in this record. Matrix association is absent from the cached target annotations, making COR appropriate for this explicitly inferred localization. Matrix organization is assessed separately using the mouse experimental process annotation.</div></td>
+</tr>
+
+<tr data-assessment="COR" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/9PRIM/A0A8C9H4D2/A0A8C9H4D2-ai-review.html">A0A8C9H4D2</a>
+        <br><small style="color:var(--text-muted)">OLFML2A</small>
+    </td>
+    <td><small>Piliocolobus tephrosceles</small></td>
+    <td>
+        <strong>GO:0030198</strong><br>
+        extracellular matrix organization
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Mouse photomedin-1 (Olfml2a; Q8BHP7) has an MGI IDA annotation to extracellular matrix organization, with the relation acts_upstream_of_or_within. The QuickGO record identifies PMID:18757743 as its source: a study that includes functional ECM-assembly assays. This is distinct from the secretion and glycosaminoglycan-binding evidence in PMID:15836428. The experimentally grounded curated process annotation, together with the matching OLFML2A PANTHER subfamily PTHR23192:SF29, supports transfer of a broad involvement in matrix organization to the primate gene product. COR denotes this ortholog-based inference, not a demonstrated matrix-remodeling mechanism or an assay of the deposited 439-residue sequence. The process is absent from the cached target annotations.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="UNC" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/ABRPR/A0A8B8L1Z3/A0A8B8L1Z3-ai-review.html">A0A8B8L1Z3</a>
+
+    </td>
+    <td><small>Abrus precatorius</small></td>
+    <td>
+        <strong>GO:0005783</strong><br>
+        endoplasmic reticulum
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The sequence record identifies a J-domain at residues 70–135 in a 474-residue protein. This supports membership in a chaperone-related protein family but does not distinguish ER-localized proteins from J-domain proteins in other compartments. No ER localization annotation, diagnostic ER-targeting feature, or localization study is available in the inspected sources. The absence of an annotated signal peptide does not exclude association with the cytoplasmic face of the ER, so this localization remains uncertain.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="CNN" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/AEDAE/A0A6I8TLE4/A0A6I8TLE4-ai-review.html">A0A6I8TLE4</a>
+
+    </td>
+    <td><small>Aedes aegypti</small></td>
+    <td>
+        <strong>GO:0005096</strong><br>
+        GTPase activator activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-CNN">CNN</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target contains a RasGAP domain and the RasGAP conserved-site signature, alongside PH and C2 domains. Mutational analysis of characterized RasGAPs establishes that conserved RasGAP elements stimulate GTP hydrolysis by the bound GTPase (PMID:12787671); this supports transfer of the broad GTPase activator activity to the target without specifying a substrate beyond the available evidence. The exact GO term is present in the cached UniProt record, although the local GOA export is empty. Correctness rests on the domain and mechanistic evidence, while the existing annotation establishes overlap only.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/AQUCT/A0A2G9RZF1/A0A2G9RZF1-ai-review.html">A0A2G9RZF1</a>
+
+    </td>
+    <td><small>Aquarana catesbeiana</small></td>
+    <td>
+        <strong>GO:0007338</strong><br>
+        single fertilization
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target is a 156-residue CUB-domain protein from Aquarana catesbeiana. CUB domains occur in diverse extracellular proteins, including both reproductive and nonreproductive proteins (PMID:8510165); a CUB or spermadhesin-like fold does not identify a fertilization-specific subfamily. Neither reproductive expression nor a fertilization phenotype is established in the inspected sources. The predicted process is absent from the cached annotations and remains uncertain rather than contradicted.</div></td>
+</tr>
+
+<tr data-assessment="COR" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/AQUCT/A0A2G9RZF1/A0A2G9RZF1-ai-review.html">A0A2G9RZF1</a>
+
+    </td>
+    <td><small>Aquarana catesbeiana</small></td>
+    <td>
+        <strong>GO:0005576</strong><br>
+        extracellular region
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The sequence contains a nearly complete CUB domain at residues 31–147. The comparative analysis defining CUB domains places this module in extracellular proteins with diverse functions (PMID:8510165), supporting a broad extracellular localization inference for this vertebrate protein. The record does not establish the secretion route or whether the short sequence is a complete gene product; no specific extracellular tissue or function is inferred. Extracellular region is absent from the cached GOA/UniProt annotations.</div></td>
+</tr>
+
+
+
+
+<tr data-assessment="" data-type="" data-nopred="1" class="no-pred-row">
+    <td>
+        <a class="gene-link" href="../../../genes/ARAHY/A0A444Z7V7/A0A444Z7V7-ai-review.html">A0A444Z7V7</a>
+
+    </td>
+    <td><small>Arachis hypogaea</small></td>
+    <td colspan="6" class="no-predictions">No predictions</td>
+</tr>
+
+
+
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/ARATH/F4JLB7/F4JLB7-ai-review.html">F4JLB7</a>
+
+    </td>
+    <td><small>Arabidopsis thaliana</small></td>
+    <td>
+        <strong>GO:0016310</strong><br>
+        phosphorylation
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The OpenScientist investigation integrates LRR domain architecture, catalytic-motif analysis, and predicted structure to argue against intrinsic protein kinase activity. Those findings do not exclude participation in phosphorylation through an associated kinase or signaling complex. The cached IBA signaling receptor annotation is compatible with such a role, but does not establish it. No target-specific pathway evidence establishes or excludes participation in phosphorylation, so this biological-process prediction remains uncertain.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/ARATH/F4JLB7/F4JLB7-ai-review.html">F4JLB7</a>
+
+    </td>
+    <td><small>Arabidopsis thaliana</small></td>
+    <td>
+        <strong>GO:0016301</strong><br>
+        kinase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The OpenScientist investigation strongly supports rejection of kinase activity: it integrates LRR-only domain assignments, a sequence scan finding no ordered kinase catalytic motifs, and an AlphaFold model assessed as an LRR fold without a kinase lobe. These complementary findings argue against a protein kinase catalytic domain in the 450-residue target, rather than merely noting the absence of a kinase annotation in UniProt. The report also explains why the ERECTA FunFam match supports a shared LRR region without transferring the kinase&#39;s catalytic activity. The rejection rests on this combined architecture and analysis evidence, not on absence of a single short motif; it is a computational assessment without a direct biochemical assay. The kinase prediction is therefore NPI; participation in a phosphorylation pathway is a separate question.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="COR" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/ARTAN/A0A2U1PS28/A0A2U1PS28-ai-review.html">A0A2U1PS28</a>
+
+    </td>
+    <td><small>Artemisia annua</small></td>
+    <td>
+        <strong>GO:0009507</strong><br>
+        chloroplast
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The 661-residue target has the EF4/LepA domain architecture and is assigned to the chloroplastic GUF1 subfamily PTHR43512:SF4 in the cached sequence record. Arabidopsis cpLEPA was experimentally characterized as a chloroplast translation factor (PMID:23166764), providing biological grounding for transfer of this localization within the plant subfamily. This is an inference from subfamily placement, not a targeting assay on Artemisia. The chloroplast term is absent from the cached annotations; the mitochondrial UniRule assignments are a conflicting automated inference rather than decisive localization evidence.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/ASPOR/Q2U1U6/Q2U1U6-ai-review.html">Q2U1U6</a>
+
+    </td>
+    <td><small>Aspergillus oryzae</small></td>
+    <td>
+        <strong>GO:0000272</strong><br>
+        polysaccharide catabolic process
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The sole InterPro assignment is the chondroitin-lyase-like structural superfamily IPR008929 in a 134-residue sequence. A partial fold assignment does not establish a complete catalytic enzyme or its physiological substrate. Polysaccharide catabolism is plausible for some proteins with this fold, but the inspected sources contain neither a diagnostic complete enzyme architecture nor a target assay. The term is absent from the cached annotations and remains uncertain.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/ASPOR/Q2U1U6/Q2U1U6-ai-review.html">Q2U1U6</a>
+
+    </td>
+    <td><small>Aspergillus oryzae</small></td>
+    <td>
+        <strong>GO:0004553</strong><br>
+        hydrolase activity, hydrolyzing O-glycosyl compounds
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">IPR008929 identifies a lyase-like fold, not an experimentally demonstrated catalytic reaction for this short protein. Lyase cleavage and hydrolysis are different mechanisms, so a putative lyase label cannot validate O-glycosyl hydrolase activity. Conversely, this limited fold assignment is insufficient to establish the target reaction and decisively exclude hydrolysis. The predicted activity is absent from the cached annotations; a complete gene model and catalytic-family or biochemical evidence are needed.</div></td>
+</tr>
+
+
+
+
+<tr data-assessment="" data-type="" data-nopred="1" class="no-pred-row">
+    <td>
+        <a class="gene-link" href="../../../genes/BALMU/A0A8B8WEG2/A0A8B8WEG2-ai-review.html">A0A8B8WEG2</a>
+
+    </td>
+    <td><small>Balaenoptera musculus</small></td>
+    <td colspan="6" class="no-predictions">No predictions</td>
+</tr>
+
+
+
+<tr data-assessment="" data-type="" data-nopred="1" class="no-pred-row">
+    <td>
+        <a class="gene-link" href="../../../genes/BORPE/Q7VZI5/Q7VZI5-ai-review.html">Q7VZI5</a>
+
+    </td>
+    <td><small>Bordetella pertussis</small></td>
+    <td colspan="6" class="no-predictions">No predictions</td>
+</tr>
+
+
+
+
+<tr data-assessment="LSP" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/BOVIN/E1BL04/E1BL04-ai-review.html">E1BL04</a>
+
+    </td>
+    <td><small>Bos taurus</small></td>
+    <td>
+        <strong>GO:0030036</strong><br>
+        actin cytoskeleton organization
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-LSP">LSP</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target has Xin actin-binding repeats and an XIRP2 subfamily assignment. Experiments on Xin repeats, including human XIRP2 repeats, demonstrate actin binding and stabilization of the actin cytoskeleton (PMID:15454575), supporting transfer of the broad process to bovine XIRP2. The cached IBA annotation actin filament organization is more specific than actin cytoskeleton organization. The prediction is therefore supported but less precise.</div></td>
+</tr>
+
+<tr data-assessment="LSP" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/BOVIN/E1BL04/E1BL04-ai-review.html">E1BL04</a>
+
+    </td>
+    <td><small>Bos taurus</small></td>
+    <td>
+        <strong>GO:0030054</strong><br>
+        cell junction
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-LSP">LSP</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target is a Xin-repeat protein in the XIRP2 subfamily. Xin-family localization at muscle attachment sites and the repeat-mediated actin interactions provide a biological basis for junction association (PMID:15454575), consistent with the target focal-adhesion IBA. The cached annotations include focal adhesion and cell-cell junction, which specify junction types beyond the predicted cell junction. The broad prediction is supported but less precise.</div></td>
+</tr>
+
+<tr data-assessment="LSP" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/BOVIN/E1BL04/E1BL04-ai-review.html">E1BL04</a>
+
+    </td>
+    <td><small>Bos taurus</small></td>
+    <td>
+        <strong>GO:0003779</strong><br>
+        actin binding
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-LSP">LSP</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Xin repeats are experimentally established actin-binding modules, and human XIRP2 repeats share this activity (PMID:15454575). The bovine target contains these repeats and has a curated IBA for actin filament binding. Actin binding is a broader molecular function than that existing annotation. It is biologically correct but adds no specificity.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/CAEEL/A0A061AL94/A0A061AL94-ai-review.html">A0A061AL94</a>
+        <br><small style="color:var(--text-muted)">mcm-4</small>
+    </td>
+    <td><small>Caenorhabditis elegans</small></td>
+    <td>
+        <strong>GO:0006367</strong><br>
+        transcription initiation at RNA polymerase II promoter
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The record links this 74-residue sequence to mcm-4, whose full-length Caenorhabditis elegans product is experimentally established in DNA replication and replication checkpoint control (PMID:21146520). These findings do not establish RNA polymerase II transcription initiation, and the short sequence lacks the architecture of a complete MCM helicase subunit. They also do not exclude every indirect transcriptional role. The exact process is absent from the cached annotations and remains unverified for this gene product.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/CAEEL/A0A061AL94/A0A061AL94-ai-review.html">A0A061AL94</a>
+        <br><small style="color:var(--text-muted)">mcm-4</small>
+    </td>
+    <td><small>Caenorhabditis elegans</small></td>
+    <td>
+        <strong>GO:0005634</strong><br>
+        nucleus
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Full-length C. elegans MCM-4 associates with chromatin and functions in nuclear DNA replication (PMID:21146520). The accession being evaluated encodes only 74 residues, so transfer of nuclear localization requires evidence that this fragment retains targeting or complex-association determinants or represents an incomplete model of the full-length product. The inspected sources do not resolve that relationship experimentally. Nucleus is absent from the cached annotations and is uncertain for the deposited sequence, despite being appropriate for full-length MCM-4.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="CNN" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/CALMI/A0A4W3GVU1/A0A4W3GVU1-ai-review.html">A0A4W3GVU1</a>
+
+    </td>
+    <td><small>Callorhinchus milii</small></td>
+    <td>
+        <strong>GO:0005634</strong><br>
+        nucleus
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-CNN">CNN</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target is an ESRP1-family RNA-binding protein with an ESRP1 RRM assignment and the sequence GLSPPPCKLPCLSPP. Experiments on mammalian ESRP1 identify this peptide region as sufficient for nuclear localization and show that splice isoforms lacking CKLP can instead be cytoplasmic (PMID:28634384). Retention of the nuclear peptide supports transfer to this Callorhinchus sequence, without claiming that every ESRP1 isoform is nuclear. The exact nucleus annotation is already present in both cached UniProt and GOA.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="LSP" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/CANLF/A0A8I3PI07/A0A8I3PI07-ai-review.html">A0A8I3PI07</a>
+        <br><small style="color:var(--text-muted)">CNNM4</small>
+    </td>
+    <td><small>Canis lupus familiaris</small></td>
+    <td>
+        <strong>GO:0005886</strong><br>
+        plasma membrane
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-LSP">LSP</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target is assigned to the CNNM4 subfamily and contains the CNNM transmembrane region and CBS domain. Mouse CNNM4 experiments show basolateral localization in transporting epithelia (PMID:24339795), supporting the conserved membrane localization inference for the canine protein. Plasma membrane is already annotated, and basolateral plasma membrane is an existing, more specific localization. The prediction is supported but less precise.</div></td>
+</tr>
+
+<tr data-assessment="LSP" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/CANLF/A0A8I3PI07/A0A8I3PI07-ai-review.html">A0A8I3PI07</a>
+        <br><small style="color:var(--text-muted)">CNNM4</small>
+    </td>
+    <td><small>Canis lupus familiaris</small></td>
+    <td>
+        <strong>GO:0022857</strong><br>
+        transmembrane transporter activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-LSP">LSP</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The CNNM4 subfamily and membrane-spanning architecture support ion transport rather than an arbitrary membrane role. Mouse CNNM4 expression and knockout experiments establish a role in magnesium extrusion and epithelial magnesium transport (PMID:24339795). The target already has curated IBA magnesium ion transmembrane transporter activity, which is more specific than the predicted generic transmembrane transporter activity. The broad prediction is supported without resolving the detailed transport mechanism.</div></td>
+</tr>
+
+<tr data-assessment="LSP" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/CANLF/A0A8I3PI07/A0A8I3PI07-ai-review.html">A0A8I3PI07</a>
+        <br><small style="color:var(--text-muted)">CNNM4</small>
+    </td>
+    <td><small>Canis lupus familiaris</small></td>
+    <td>
+        <strong>GO:0006811</strong><br>
+        monoatomic ion transport
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-LSP">LSP</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">CNNM4-dependent magnesium transport is supported by mouse epithelial experiments (PMID:24339795) and by the target CNNM4 subfamily and membrane architecture. The target has a curated IBA annotation for magnesium ion transport. Ion transport is a broader process that discards the established ion specificity. The prediction is therefore supported but less precise.</div></td>
+</tr>
+
+
+
+
+<tr data-assessment="" data-type="" data-nopred="1" class="no-pred-row">
+    <td>
+        <a class="gene-link" href="../../../genes/CHRVO/Q7NUH2/Q7NUH2-ai-review.html">Q7NUH2</a>
+
+    </td>
+    <td><small>Chromobacterium violaceum</small></td>
+    <td colspan="6" class="no-predictions">No predictions</td>
+</tr>
+
+
+
+
+<tr data-assessment="UNC" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/COLLI/A0A2I0M3K7/A0A2I0M3K7-ai-review.html">A0A2I0M3K7</a>
+
+    </td>
+    <td><small>Columba livia</small></td>
+    <td>
+        <strong>GO:0106029</strong><br>
+        tRNA pseudouridine synthase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target has TRUB2-specific family assignments and a partial pseudouridine-synthase architecture in only 142 residues. Human TRUB2/RPUSD3 perturbation implicates these proteins in mitochondrial mRNA pseudouridylation (PMID:27974379); this does not establish the tRNA-specific activity predicted here. Generic pseudouridine synthase activity in the cached annotations is not equivalent to tRNA pseudouridine synthase activity. A complete catalytic sequence and evidence for tRNA as a substrate are needed, while the available study does not by itself exclude additional tRNA activity.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="CNN" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/COTJA/A0A8C2TBA7/A0A8C2TBA7-ai-review.html">A0A8C2TBA7</a>
+        <br><small style="color:var(--text-muted)">PAM</small>
+    </td>
+    <td><small>Coturnix japonica</small></td>
+    <td>
+        <strong>GO:0004598</strong><br>
+        peptidylamidoglycolate lyase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-CNN">CNN</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target is assigned to the peptidylglycine alpha-amidating monooxygenase family and contains the PHM/PAL architecture. Structural and substrate-complex experiments on rat PAL establish cleavage of peptidyl-alpha-hydroxyglycine to an amidated peptide and glyoxylate (PMID:19604476), supporting transfer of this conserved reaction to avian PAM. The exact peptidylamidoglycolate lyase activity is already present in cached UniProt and GOA. Domain and reaction evidence support correctness independently of the existing electronic annotation.</div></td>
+</tr>
+
+<tr data-assessment="COR" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/COTJA/A0A8C2TBA7/A0A8C2TBA7-ai-review.html">A0A8C2TBA7</a>
+        <br><small style="color:var(--text-muted)">PAM</small>
+    </td>
+    <td><small>Coturnix japonica</small></td>
+    <td>
+        <strong>GO:0031418</strong><br>
+        L-ascorbic acid binding
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target contains the conserved PHM copper-monooxygenase module of bifunctional PAM. Pre-steady-state experiments on PHM support ascorbate interaction during reduction and conformational activation (PMID:35380039), providing a biochemical basis for transfer of ascorbate binding to this avian homolog. This concerns the PHM module rather than PAL catalysis and does not specify an unverified binding-site geometry. Ascorbate binding itself is absent from the cached annotations.</div></td>
+</tr>
+
+
+
+
+<tr data-assessment="" data-type="" data-nopred="1" class="no-pred-row">
+    <td>
+        <a class="gene-link" href="../../../genes/CUCME/A0A1S3BTE3/A0A1S3BTE3-ai-review.html">A0A1S3BTE3</a>
+
+    </td>
+    <td><small>Cucumis melo</small></td>
+    <td colspan="6" class="no-predictions">No predictions</td>
+</tr>
+
+
+
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/DANRE/A0A8M9QG43/A0A8M9QG43-ai-review.html">A0A8M9QG43</a>
+        <br><small style="color:var(--text-muted)">dnajc6</small>
+    </td>
+    <td><small>Danio rerio</small></td>
+    <td>
+        <strong>GO:0016311</strong><br>
+        dephosphorylation
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target has the PTEN-like, C2, and J-domain architecture of auxilin/DNAJC6. Structural work on bovine auxilin shows that the PTEN-like region lacks phosphatase activity and instead participates in membrane binding (PMID:20826345), so the target phosphatase-related electronic assertions do not validate catalysis. The predicted term is a biological process, however, and a noncatalytic protein could participate through another enzyme or complex. No such dephosphorylation role is established in the inspected evidence, leaving the process uncertain.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="LSP" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/DEIRA/Q9RSY6/Q9RSY6-ai-review.html">Q9RSY6</a>
+
+    </td>
+    <td><small>Deinococcus radiodurans</small></td>
+    <td>
+        <strong>GO:0003676</strong><br>
+        nucleic acid binding
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-LSP">LSP</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The sequence contains multiple S1 RNA-binding domains and is assigned to the bacterial bS1 family. Experimental work on E. coli S1 demonstrates RNA binding (PMID:9451450), consistent with the target curated IBA for mRNA binding. Nucleic acid binding is a broader molecular function than mRNA binding. The prediction is supported but loses the established substrate specificity.</div></td>
+</tr>
+
+<tr data-assessment="LSP" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/DEIRA/Q9RSY6/Q9RSY6-ai-review.html">Q9RSY6</a>
+
+    </td>
+    <td><small>Deinococcus radiodurans</small></td>
+    <td>
+        <strong>GO:0005840</strong><br>
+        ribosome
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-LSP">LSP</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target bS1 family assignment and repeated S1-domain architecture support its role in the bacterial small ribosomal subunit. This placement is also represented by the curated IBA for cytosolic small ribosomal subunit, with the established RNA-binding behavior of S1 providing functional context (PMID:9451450). Ribosome is a broader compartment than the annotated subunit. The prediction is supported but less precise.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="NPI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/DROPS/A0A6I8W8A2/A0A6I8W8A2-ai-review.html">A0A6I8W8A2</a>
+
+    </td>
+    <td><small>Drosophila pseudoobscura pseudoobscura</small></td>
+    <td>
+        <strong>GO:0016874</strong><br>
+        ligase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The deposited sequence is a short RCC1-repeat protein with RCC1/BLIP-II fold assignments and no HECT or other ligase catalytic module. An RCC1 region from a larger HERC-like protein does not carry the catalytic activity of that protein&#39;s separate HECT domain. The prediction of intrinsic ligase activity is therefore incompatible with the available domain architecture. This assessment concerns the deposited sequence; it does not establish whether a longer gene model at the locus encodes a ligase.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="CNN" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/DROVI/B4MAQ2/B4MAQ2-ai-review.html">B4MAQ2</a>
+
+    </td>
+    <td><small>Drosophila virilis</small></td>
+    <td>
+        <strong>GO:0005737</strong><br>
+        cytoplasm
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-CNN">CNN</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target contains Exportin-5-specific domain and subfamily assignments across a full-length transport-receptor architecture. Experiments in Drosophila establish Exportin-5-dependent export of nuclear pre-tRNAs to the cytoplasm (PMID:39098529), supporting cytoplasmic residence during the conserved transport cycle. This is a family-based localization inference and does not imply exclusive cytoplasmic localization. Cytoplasm is already present in cached GOA and UniProt.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="COR" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/GADMO/A0A8C5FPT8/A0A8C5FPT8-ai-review.html">A0A8C5FPT8</a>
+        <br><small style="color:var(--text-muted)">tbc1d14</small>
+    </td>
+    <td><small>Gadus morhua</small></td>
+    <td>
+        <strong>GO:0005776</strong><br>
+        autophagosome
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target has TBC1D14-like architecture and a strong phmmer match to reviewed bovine TBC1D14 A6H7I8 (reported score 791.8 in the raw evidence record). QuickGO records human TBC1D14 Q9P2M4 at autophagosomes with an IDA assigned by BHF-UCL from PMID:22613832, alongside a curated IBA; these are verified annotation records rather than an AI verdict. The paper emphasizes recycling endosomes and Golgi redistribution, so the localization should not be read as exclusive or constitutive autophagosome residence. The conserved sequence relationship and experimentally grounded curator annotation support broad localization transfer to cod despite the differing PANTHER subfamily label. The target itself lacks this term in cached GOA/UniProt, making this a supported additional annotation, not a target experiment or an existing target match.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/GIBF5/S0EDH7/S0EDH7-ai-review.html">S0EDH7</a>
+
+    </td>
+    <td><small>Gibberella fujikuroi</small></td>
+    <td>
+        <strong>GO:0006468</strong><br>
+        protein phosphorylation
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The only InterPro assignment is the broad kinase-like structural superfamily IPR011009. The record does not identify a canonical protein kinase domain or its diagnostic catalytic-site signatures, and the inspected sources contain no protein-substrate phosphorylation assay. A kinase-like fold can support a hypothesis but cannot establish this exact process. Protein phosphorylation is absent from the cached annotations and remains uncertain.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/GIBF5/S0EDH7/S0EDH7-ai-review.html">S0EDH7</a>
+
+    </td>
+    <td><small>Gibberella fujikuroi</small></td>
+    <td>
+        <strong>GO:0005524</strong><br>
+        ATP binding
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The kinase-like structural superfamily assignment is compatible with nucleotide binding in some members, but it does not establish ATP recognition by this protein. The inspected record contains no diagnostic ATP-binding-site assignment or experimentally characterized close relative establishing that property. ATP binding is absent from the cached annotations. Ligand-binding evidence or a more specific, supported functional-family assignment is needed.</div></td>
+</tr>
+
+
+
+
+<tr data-assessment="" data-type="" data-nopred="1" class="no-pred-row">
+    <td>
+        <a class="gene-link" href="../../../genes/JUGRE/A0A2I4G8T1/A0A2I4G8T1-ai-review.html">A0A2I4G8T1</a>
+
+    </td>
+    <td><small>Juglans regia</small></td>
+    <td colspan="6" class="no-predictions">No predictions</td>
+</tr>
+
+
+
+
+<tr data-assessment="COR" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/MACFA/A0A2K5UJ34/A0A2K5UJ34-ai-review.html">A0A2K5UJ34</a>
+
+    </td>
+    <td><small>Macaca fascicularis</small></td>
+    <td>
+        <strong>GO:0061371</strong><br>
+        determination of heart left/right asymmetry
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target is assigned specifically to the TTC39C subfamily rather than only to a generic TPR-repeat fold. Zebrafish ttc39c perturbation in a primary cilia study produced laterality defects, including abnormal heart positioning (PMID:25860617). Conservation of the TTC39C ciliary role and vertebrate cilia-dependent laterality provides a reasonable basis for transferring the broad heart-asymmetry process to macaque TTC39C. This is an ortholog-based inference rather than a macaque experiment; the process is absent from the cached target annotations.</div></td>
+</tr>
+
+
+
+
+<tr data-assessment="" data-type="" data-nopred="1" class="no-pred-row">
+    <td>
+        <a class="gene-link" href="../../../genes/MAIZE/A0A804UIX9/A0A804UIX9-ai-review.html">A0A804UIX9</a>
+
+    </td>
+    <td><small>Zea mays</small></td>
+    <td colspan="6" class="no-predictions">No predictions</td>
+</tr>
+
+
+
+
+<tr data-assessment="COR" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/MYTGA/A0A8B6BFL6/A0A8B6BFL6-ai-review.html">A0A8B6BFL6</a>
+
+    </td>
+    <td><small>Mytilus galloprovincialis</small></td>
+    <td>
+        <strong>GO:0003677</strong><br>
+        DNA binding
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target contains a reverse-transcriptase domain at residues 174–349 and a DNA/RNA polymerase fold assignment. Reverse transcription entails interaction with a DNA primer or nascent DNA product, providing a mechanistic basis for broad DNA binding. This inference does not specify a recognition sequence, chromosomal target, or recombinase activity. The cached GOA/UniProt record has no DNA-binding annotation, so this is a supported additional function.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/MYTGA/A0A8B6BFL6/A0A8B6BFL6-ai-review.html">A0A8B6BFL6</a>
+
+    </td>
+    <td><small>Mytilus galloprovincialis</small></td>
+    <td>
+        <strong>GO:0006310</strong><br>
+        DNA recombination
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The sequence supports a reverse-transcriptase relationship but has no identified recombinase domain or documented complete mobile-element context. Experimental DIRS retrotransposition work distinguishes cDNA production from completion of an element&#39;s integration cycle (PMID:32170321); it does not establish that this mussel protein belongs to that element class. An RT can participate in a larger recombination pathway, so lack of its own recombinase domain is not a decisive refutation of the biological process. The process is absent from the cached annotations and requires verified element context or functional evidence.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/MYTGA/A0A8B6BFL6/A0A8B6BFL6-ai-review.html">A0A8B6BFL6</a>
+
+    </td>
+    <td><small>Mytilus galloprovincialis</small></td>
+    <td>
+        <strong>GO:0015074</strong><br>
+        DNA integration
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">A reverse-transcriptase domain establishes a plausible role in cDNA synthesis, not necessarily chromosomal integration. DIRS experiments demonstrate that productive retrotransposition depends on the element and its proteins together (PMID:32170321), but the target&#39;s element identity and integration machinery are not established in the inspected sources. The prediction is a biological process, so a protein could contribute without catalyzing integration itself. DNA integration is absent from the cached annotations and remains uncertain pending element-context evidence.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="NPI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/MYTGA/A0A8B6GS20/A0A8B6GS20-ai-review.html">A0A8B6GS20</a>
+
+    </td>
+    <td><small>Mytilus galloprovincialis</small></td>
+    <td>
+        <strong>GO:0004438</strong><br>
+        phosphatidylinositol-3-phosphate phosphatase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">PSEUDOENZYME_OVERANNOTATION</span></td>
+    <td class="summary-cell"><div class="summary-text">The target has a myotubularin-like phosphatase domain at residues 372–544, but this interval contains no CX5R catalytic motif. Experiments on MTMR complexes distinguish active phosphatases from inactive family members that lack the catalytic cysteine and regulate their partners (PMID:22647598). This sequence-level deficiency argues against the predicted intrinsic PI3P phosphatase activity even though the protein could influence phosphoinositide metabolism through a partner. The unusual N-terminal domain arrangement and exact MTMR paralog identity remain unresolved; the activity judgment does not depend on calling the target MTMR9.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/ORYSI/B8BAB0/B8BAB0-ai-review.html">B8BAB0</a>
+
+    </td>
+    <td><small>Oryza sativa subsp. indica</small></td>
+    <td>
+        <strong>GO:0010152</strong><br>
+        pollen maturation
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target has a signal peptide and a PG-associated BURP-domain assignment. These features suggest an extracellular plant protein but do not specify the tissue, developmental stage, or physiological process in which it acts. The inspected sources provide no pollen expression or maturation phenotype for this target or a sufficiently resolved functional ortholog. Pollen maturation is absent from the cached annotations; a role in it remains plausible but unverified.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/ORYSJ/Q6YYC5/Q6YYC5-ai-review.html">Q6YYC5</a>
+
+    </td>
+    <td><small>Oryza sativa subsp. japonica</small></td>
+    <td>
+        <strong>GO:0070534</strong><br>
+        protein K63-linked ubiquitination
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target has a RING domain and an RGLG4 subfamily assignment. Arabidopsis RGLG3 and RGLG4 have experimentally demonstrated ubiquitin ligase activity (PMID:22898498), supporting general ubiquitination but not specifying a Lys63-linked chain for this rice protein. Chain linkage depends on the E2/E3 system and cannot be established by the RING domain alone. The linkage-specific process is absent from the cached annotations and requires appropriate biochemical or pathway evidence.</div></td>
+</tr>
+
+<tr data-assessment="COR" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/ORYSJ/Q6YYC5/Q6YYC5-ai-review.html">Q6YYC5</a>
+
+    </td>
+    <td><small>Oryza sativa subsp. japonica</small></td>
+    <td>
+        <strong>GO:0061630</strong><br>
+        ubiquitin protein ligase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target contains the RING domain and accompanying RGLG-family architecture, with a specific RGLG4 subfamily assignment. Ubiquitin ligase assays on Arabidopsis RGLG3/RGLG4 provide biological grounding for transfer of E3 activity (PMID:22898498). The target already has the broader curated IBA ubiquitin-protein transferase activity, but the exact E3 ligase term is absent from the cached annotations. The prediction is a supported refinement without a claim about substrate or ubiquitin-chain linkage.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="LSP" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/PANPA/A0A2R9CAF4/A0A2R9CAF4-ai-review.html">A0A2R9CAF4</a>
+
+    </td>
+    <td><small>Pan paniscus</small></td>
+    <td>
+        <strong>GO:0008509</strong><br>
+        monoatomic anion transmembrane transporter activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-LSP">LSP</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target has the SLC26/SulP transport domain, multiple transmembrane segments, and a STAS domain. Experimental characterization of SLC26A11 supports chloride conduction as well as sulfate transport (PMID:42509233), providing family-level grounding for anion transport. The cached target annotations include the more specific chloride channel activity. The generic anion-transporter prediction is therefore supported but less precise.</div></td>
+</tr>
+
+<tr data-assessment="LSP" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/PANPA/A0A2R9CAF4/A0A2R9CAF4-ai-review.html">A0A2R9CAF4</a>
+
+    </td>
+    <td><small>Pan paniscus</small></td>
+    <td>
+        <strong>GO:0016020</strong><br>
+        membrane
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-LSP">LSP</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">Multiple transmembrane segments in the target provide direct sequence-architecture support for membrane residence. This agrees with the membrane transport behavior characterized for SLC26A11 (PMID:42509233). The cached annotations identify specific membranes, including lysosomal and plasma membranes. Membrane is a valid but less precise localization and is not an error merely because it is broad.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="COR" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/PARTE/A0BFB4/A0BFB4-ai-review.html">A0BFB4</a>
+
+    </td>
+    <td><small>Paramecium tetraurelia</small></td>
+    <td>
+        <strong>GO:0006468</strong><br>
+        protein phosphorylation
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target has a protein kinase domain at residues 96–348 together with protein-kinase ATP-binding and serine/threonine-kinase active-site signatures. These features support the curated IBA protein serine/threonine kinase activity and provide a mechanistic basis for protein phosphorylation. The process term itself is absent from the cached annotations, so the prediction adds an explicit biological-process annotation. It follows from the supported catalytic activity and does not identify a new substrate or autophagy mechanism.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/PHATC/B7FXQ8/B7FXQ8-ai-review.html">B7FXQ8</a>
+
+    </td>
+    <td><small>Phaeodactylum tricornutum</small></td>
+    <td>
+        <strong>GO:0009651</strong><br>
+        response to salt stress
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target has an alpha-crystallin/Hsp20 domain and is assigned to the small heat-shock protein family. Characterized sHSPs bind unfolded proteins and form regulated oligomers (PMID:29983375), but those properties do not establish a salt-triggered response in this diatom protein. The inspected evidence contains no target expression or functional assay under salt stress. Response to salt stress is absent from the cached annotations and remains uncertain.</div></td>
+</tr>
+
+<tr data-assessment="COR" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/PHATC/B7FXQ8/B7FXQ8-ai-review.html">B7FXQ8</a>
+
+    </td>
+    <td><small>Phaeodactylum tricornutum</small></td>
+    <td>
+        <strong>GO:0051259</strong><br>
+        protein complex oligomerization
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The 163-residue target has the small heat-shock protein architecture, including the alpha-crystallin domain. Structural and functional experiments on sHSPs establish conserved oligomer assembly and plasticity (PMID:29983375), supporting transfer of broad protein oligomerization to this family member. This inference does not prescribe a particular oligomer size. The process is absent from the cached annotations.</div></td>
+</tr>
+
+<tr data-assessment="COR" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/PHATC/B7FXQ8/B7FXQ8-ai-review.html">B7FXQ8</a>
+
+    </td>
+    <td><small>Phaeodactylum tricornutum</small></td>
+    <td>
+        <strong>GO:0006457</strong><br>
+        protein folding
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The alpha-crystallin/Hsp20 domain and small-HSP family assignment support a holdase chaperone role. Characterized sHSPs bind nonnative clients and protect them from aggregation (PMID:29983375), allowing subsequent recovery of folding with other chaperones. The broad protein-folding process can encompass this assistance; it does not imply that the protein itself catalyzes ATP-dependent refolding. There is no more specific existing GOA/UniProt annotation against which to call this prediction less precise.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/PHATC/B7FXQ8/B7FXQ8-ai-review.html">B7FXQ8</a>
+
+    </td>
+    <td><small>Phaeodactylum tricornutum</small></td>
+    <td>
+        <strong>GO:0009408</strong><br>
+        response to heat
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target has an alpha-crystallin/Hsp20 domain consistent with a small-HSP chaperone. Experiments on other small HSPs establish oligomer plasticity and binding to unfolded clients (PMID:29983375), but do not establish this diatom protein&#39;s involvement in a heat-triggered response. The heat-shock family name alone does not identify the stimulus controlling this member. Response to heat is absent from the cached annotations and remains uncertain without target-specific thermal-response evidence or a justified transfer from a characterized close relative.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/PHATC/B7FXQ8/B7FXQ8-ai-review.html">B7FXQ8</a>
+
+    </td>
+    <td><small>Phaeodactylum tricornutum</small></td>
+    <td>
+        <strong>GO:0042542</strong><br>
+        response to hydrogen peroxide
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The small-HSP architecture supports a chaperone function, but it does not establish involvement in a response specifically triggered by hydrogen peroxide. General protection of unfolded proteins and evidence for stress responses in other sHSPs do not determine the target&#39;s peroxide response. No relevant target or close-ortholog expression, perturbation, or protection experiment is established in the inspected sources. The predicted process is absent from the cached annotations and remains uncertain.</div></td>
+</tr>
+
+<tr data-assessment="COR" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/PHATC/B7FXQ8/B7FXQ8-ai-review.html">B7FXQ8</a>
+
+    </td>
+    <td><small>Phaeodactylum tricornutum</small></td>
+    <td>
+        <strong>GO:0051082</strong><br>
+        unfolded protein binding
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target has the characteristic alpha-crystallin/Hsp20 domain of small heat-shock proteins. Client-binding experiments on characterized sHSPs demonstrate recognition of partially or globally unfolded proteins (PMID:29983375), providing a mechanistic basis for transferring broad unfolded-protein binding. This does not establish a particular client or ATP-dependent foldase activity. The molecular function is absent from the cached annotations.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="LSP" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/RABIT/G1TUN6/G1TUN6-ai-review.html">G1TUN6</a>
+        <br><small style="color:var(--text-muted)">UBE2L6</small>
+    </td>
+    <td><small>Oryctolagus cuniculus</small></td>
+    <td>
+        <strong>GO:0016740</strong><br>
+        transferase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-LSP">LSP</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target has a UBC conjugating-enzyme domain and the active-site cysteine annotation, consistent with its UBE2L6-family assignment. Experiments on UbcH8/UBE2L6 establish E2-mediated ubiquitin and ISG15 conjugation (PMID:15131269), supporting transfer of the broad catalytic class. Cached target annotations already include ISG15 transferase and ubiquitin-like protein transferase activities. Generic transferase activity is supported but less precise than those functions.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/SOYBN/C6T1A2/C6T1A2-ai-review.html">C6T1A2</a>
+
+    </td>
+    <td><small>Glycine max</small></td>
+    <td>
+        <strong>GO:0009788</strong><br>
+        negative regulation of abscisic acid-activated signaling pathway
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target is a plant C2H2 zinc-finger protein assigned to the ZFP7-like subfamily. Arabidopsis ZFP3 and overexpressed relatives including ZFP7 affect ABA sensitivity during germination (PMID:24808098), providing a relevant family-based hypothesis. However, the experiments do not establish the endogenous regulatory direction of this soybean paralog, and zinc-finger architecture alone cannot do so. The exact process is absent from the cached annotations and remains uncertain pending more resolved orthology or functional evidence.</div></td>
+</tr>
+
+<tr data-assessment="COR" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/SOYBN/C6T1A2/C6T1A2-ai-review.html">C6T1A2</a>
+
+    </td>
+    <td><small>Glycine max</small></td>
+    <td>
+        <strong>GO:0005634</strong><br>
+        nucleus
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target has the plant ZFP-family C2H2 DNA-binding architecture and a ZFP7-like subfamily assignment. Primary work identifies the related Arabidopsis ZFP3 as a nuclear protein (PMID:24808098), supporting broad nuclear localization by transfer within this transcription-factor group. This is a family-based inference rather than a localization experiment on soybean C6T1A2. Nucleus is absent from the cached GOA/UniProt annotations, so it is supported as an additional localization rather than an existing annotation match.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="COR" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/STRCO/Q9KZ33/Q9KZ33-ai-review.html">Q9KZ33</a>
+
+    </td>
+    <td><small>Streptomyces coelicolor (strain ATCC BAA-471 / A3(2) / M145)</small></td>
+    <td>
+        <strong>GO:0006352</strong><br>
+        DNA-templated transcription initiation
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target has ECF sigma-70 domain assignments and a curated IBA for sigma factor activity. A sigma factor participates in promoter recognition and initiation by bacterial RNA polymerase, supporting the predicted biological process. The cached annotation regulation of DNA-templated transcription initiation is related but is not a more specific subtype of initiation itself. The exact initiation term is absent from the cached annotations; this is a supported process inference from the established molecular function.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="UNC" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/STRCO/Q9L243/Q9L243-ai-review.html">Q9L243</a>
+        <br><small style="color:var(--text-muted)">SCO2678</small>
+    </td>
+    <td><small>Streptomyces coelicolor</small></td>
+    <td>
+        <strong>GO:0008253</strong><br>
+        5&#39;-nucleotidase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The 171-residue target has a Pfam HAD_SAK_2 assignment, but no specific nucleotidase activity annotation. This fold assignment does not determine whether the substrate is a nucleotide or whether phosphate is removed at its 5-prime position. The inspected sources contain no target substrate assay or well-resolved experimentally characterized ortholog establishing that specificity. The predicted activity is absent from the cached annotations and remains uncertain.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/STRCO/Q9L243/Q9L243-ai-review.html">Q9L243</a>
+        <br><small style="color:var(--text-muted)">SCO2678</small>
+    </td>
+    <td><small>Streptomyces coelicolor</small></td>
+    <td>
+        <strong>GO:0009264</strong><br>
+        deoxyribonucleotide catabolic process
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">A HAD-family domain can motivate a phosphatase hypothesis but does not identify deoxyribonucleotides as physiological substrates. The target has no established substrate profile or pathway placement linking it to deoxyribonucleotide degradation. This lack of specificity leaves the process unverified; it does not refute a plausible nucleotide-metabolic role. The predicted process is absent from the cached annotations.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="CNN" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/TAKRU/A0A674PKV4/A0A674PKV4-ai-review.html">A0A674PKV4</a>
+        <br><small style="color:var(--text-muted)">gas7a</small>
+    </td>
+    <td><small>Takifugu rubripes</small></td>
+    <td>
+        <strong>GO:0005737</strong><br>
+        cytoplasm
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-CNN">CNN</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target contains the GAS7-specific F-BAR domain, supporting a peripheral membrane-associated cytoplasmic protein. Experiments on GAS7 show assembly on membranes during phagocytic-cup formation (PMID:31628328), providing biological grounding for broad cytoplasmic localization. The exact cytoplasm term is already in the cached GOA record. Membrane or vesicle association supplies additional context, but does not by itself establish a more specific cytoplasmic compartment for this target.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="LSP" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/TOBAC/A0A1S3Y076/A0A1S3Y076-ai-review.html">A0A1S3Y076</a>
+
+    </td>
+    <td><small>Nicotiana tabacum</small></td>
+    <td>
+        <strong>GO:0008033</strong><br>
+        tRNA processing
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-LSP">LSP</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target combines PPR repeats with the PRORP catalytic region and has curated IBAs for RNase P activity and tRNA 5-prime-leader removal. Experiments on Arabidopsis PRORPs establish this cleavage step in plant tRNA maturation (PMID:22549728), supporting transfer to the tobacco homolog. The predicted tRNA processing term is broader than the existing leader-removal process. It is biologically supported but less precise.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="COR" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/TRIV3/A2FPI7/A2FPI7-ai-review.html">A2FPI7</a>
+
+    </td>
+    <td><small>Trichomonas vaginalis</small></td>
+    <td>
+        <strong>GO:0003677</strong><br>
+        DNA binding
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The 129-residue target contains a KilA-N domain spanning residues 19–124 and a KilA/APSES helix-turn-helix assignment. The primary comparative analysis defining KilA-N identifies a conserved DNA-binding module in viral and cellular regulatory proteins (PMID:11897024). This provides a domain-based inference for broad DNA binding, not an experimental binding measurement on Trichomonas A2FPI7 or evidence for a specific DNA sequence. The molecular function is absent from the cached annotations.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="NPI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/WHEAT/A0A3B6GK97/A0A3B6GK97-ai-review.html">A0A3B6GK97</a>
+
+    </td>
+    <td><small>Triticum aestivum</small></td>
+    <td>
+        <strong>GO:0016298</strong><br>
+        lipase activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The existing reproducible sequence alignment and motif scan place this protein with plant patatins but show a missing N-terminal catalytic region, including the serine nucleophile and oxyanion block. Structural and mutational work establishes the patatin Ser-Asp catalytic dyad (PMID:12779324), so the missing serine region argues against lipase activity in the deposited 302-residue sequence. This is target-specific contrary evidence despite the more specific lipase IBAs in the cached UniProt record. Whether the deficiency reflects an incomplete gene model or a biological inactive protein remains unresolved.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/WHEAT/A0A3B6GK97/A0A3B6GK97-ai-review.html">A0A3B6GK97</a>
+
+    </td>
+    <td><small>Triticum aestivum</small></td>
+    <td>
+        <strong>GO:0016042</strong><br>
+        lipid catabolic process
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The reproducible alignment supports a patatin-family relationship but shows that the deposited sequence lacks the catalytic serine region. Thus, lipid hydrolysis by the encoded protein cannot be assumed from family membership. The predicted biological process could still apply through a noncatalytic role or to a corrected full-length gene model, neither of which is established by the inspected evidence. Lipid catabolic process is not present as an equivalent annotation in the cached records and remains uncertain.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="COR" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/WHEAT/A0A3B6NKR6/A0A3B6NKR6-ai-review.html">A0A3B6NKR6</a>
+
+    </td>
+    <td><small>Triticum aestivum</small></td>
+    <td>
+        <strong>GO:0016310</strong><br>
+        phosphorylation
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target contains both GHMP kinase domains and a glucuronokinase-like family assignment. Purified and recombinant plant glucuronokinase catalyzes ATP-dependent sugar phosphorylation (PMID:19951951), providing functional grounding for broad phosphorylation in this family. This does not establish the target&#39;s precise substrate or the mevalonate-pathway assertion in the electronic annotations. The predicted process is absent from the cached annotations, and there is no supported more specific phosphorylation process that makes it less precise.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/WHEAT/A0A3B6RKV1/A0A3B6RKV1-ai-review.html">A0A3B6RKV1</a>
+
+    </td>
+    <td><small>Triticum aestivum</small></td>
+    <td>
+        <strong>GO:0010099</strong><br>
+        regulation of photomorphogenesis
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target shares F-box/JmjC architecture with Arabidopsis JMJ22, and the raw ProtNLM evidence record reports a phmmer match to reviewed JMJ22 Q67XX3 with score 689.2. Primary JMJ20/22 experiments establish a role in light-controlled germination (PMID:22483719), making a related developmental function plausible. This similarity does not resolve conservation of the broader photomorphogenic program in wheat. The exact process is absent from the cached target annotations and remains uncertain pending pathway-level evidence.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/WHEAT/A0A3B6RKV1/A0A3B6RKV1-ai-review.html">A0A3B6RKV1</a>
+
+    </td>
+    <td><small>Triticum aestivum</small></td>
+    <td>
+        <strong>GO:0010476</strong><br>
+        gibberellin mediated signaling pathway
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target has matching F-box/JmjC architecture and a strong reported phmmer match to characterized Arabidopsis JMJ22. JMJ20/22 affect gibberellin levels by modifying chromatin at biosynthetic genes (PMID:22483719), while gibberellin-mediated signaling is a distinct claim. Sequence similarity supports a related chromatin enzyme but does not establish the target&#39;s place in a hormone-signaling pathway. The exact process is absent from the cached target annotations and remains uncertain.</div></td>
+</tr>
+
+<tr data-assessment="COR" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/WHEAT/A0A3B6RKV1/A0A3B6RKV1-ai-review.html">A0A3B6RKV1</a>
+
+    </td>
+    <td><small>Triticum aestivum</small></td>
+    <td>
+        <strong>GO:0040029</strong><br>
+        epigenetic regulation of gene expression
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target shares F-box/JmjC architecture with reviewed Arabidopsis JMJ22 Q67XX3, the phmmer match reported in the raw prediction evidence with score 689.2. Primary experiments establish histone arginine demethylation by JMJ20/22 and regulation of chromatin at gibberellin-biosynthetic genes (PMID:22483719). Together, the sequence relationship, domain architecture, and characterized relative support transfer of broad epigenetic regulation; this is a family-based inference, not an assay on wheat or a claim of H3K4 lysine demethylation. The process is absent from the cached target annotations.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/WHEAT/A0A3B6RKV1/A0A3B6RKV1-ai-review.html">A0A3B6RKV1</a>
+
+    </td>
+    <td><small>Triticum aestivum</small></td>
+    <td>
+        <strong>GO:0010114</strong><br>
+        response to red light
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target has a strong reported sequence match to Arabidopsis JMJ22 and matching F-box/JmjC architecture. JMJ20/22 are derepressed following phytochrome B activation (PMID:22483719), establishing a red-light-related regulatory context in Arabidopsis. The target&#39;s catalytic-family relationship does not establish conservation of that light-dependent regulation in wheat. The response term is absent from the cached target annotations and remains uncertain pending regulatory or expression evidence.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/WHEAT/A0A3B6RKV1/A0A3B6RKV1-ai-review.html">A0A3B6RKV1</a>
+
+    </td>
+    <td><small>Triticum aestivum</small></td>
+    <td>
+        <strong>GO:0010030</strong><br>
+        positive regulation of seed germination
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target shares domain architecture and a strong reported sequence match with Arabidopsis JMJ22. JMJ20/22 redundantly promote germination by affecting chromatin at gibberellin-biosynthetic genes (PMID:22483719), supporting a relevant developmental hypothesis. The wheat protein&#39;s expression context, target loci, and regulatory direction during germination are not established by this sequence relationship. The exact process is absent from the cached target annotations and remains uncertain.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="COR" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/WHEAT/F6LAX4/F6LAX4-ai-review.html">F6LAX4</a>
+
+    </td>
+    <td><small>Triticum aestivum</small></td>
+    <td>
+        <strong>GO:0046982</strong><br>
+        protein heterodimerization activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-COR">COR</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target has a PP2A regulatory A-subunit family assignment and HEAT-repeat scaffold architecture, consistent with its curated PP2A-complex IBA. Structural work establishes that the A and C subunits form a heterodimeric core enzyme before association with a regulatory B subunit (PMID:17174897). This conserved interaction supports protein heterodimerization even though a more informative functional description is PP2A scaffolding. The exact term is absent from the cached annotations and is not biologically incorrect merely because it is broad.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/WHEAT/F6LAX4/F6LAX4-ai-review.html">F6LAX4</a>
+
+    </td>
+    <td><small>Triticum aestivum</small></td>
+    <td>
+        <strong>GO:0043025</strong><br>
+        neuronal cell body
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">TAXON_CONSTRAINT_VIOLATION</span></td>
+    <td class="summary-cell"><div class="summary-text">The target is a Triticum aestivum protein, as established by the sequence record and taxon. Neuronal cell body denotes the soma of a neuron, a cell type absent from wheat. This compartment is therefore incompatible with the target organism and is absent from its cached annotations. The prediction alone does not establish which training example or model mechanism produced the error.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/WHEAT/F6LAX4/F6LAX4-ai-review.html">F6LAX4</a>
+
+    </td>
+    <td><small>Triticum aestivum</small></td>
+    <td>
+        <strong>GO:0007059</strong><br>
+        chromosome segregation
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target is a PP2A A-subunit scaffold capable of participating in regulatory holoenzymes. The PP2A structure shows how the A subunit associates with catalytic and regulatory subunits (PMID:17174897); the scaffold need not itself catalyze a reaction to participate in a chromosome-related process. Chromosome segregation occurs in plants, but no specific complex or functional experiment connects this wheat product to it in the inspected sources. The process is absent from the cached annotations and remains uncertain.</div></td>
+</tr>
+
+<tr data-assessment="NPI" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/WHEAT/F6LAX4/F6LAX4-ai-review.html">F6LAX4</a>
+
+    </td>
+    <td><small>Triticum aestivum</small></td>
+    <td>
+        <strong>GO:0043005</strong><br>
+        neuron projection
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td><span class="badge-error">TAXON_CONSTRAINT_VIOLATION</span></td>
+    <td class="summary-cell"><div class="summary-text">The sequence record identifies the target organism as Triticum aestivum. Neuron projections are neuronal structures, and wheat has no neuronal cells. This localization is therefore biologically incompatible with the target taxon and is absent from the cached annotations. No inference about model frequency bias is needed to establish that incompatibility.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/WHEAT/F6LAX4/F6LAX4-ai-review.html">F6LAX4</a>
+
+    </td>
+    <td><small>Triticum aestivum</small></td>
+    <td>
+        <strong>GO:0000775</strong><br>
+        chromosome, centromeric region
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target PP2A scaffold can acquire specific localization through the regulatory complexes it assembles. Structural evidence for the PP2A A-B-C complex (PMID:17174897) does not identify a centromere-associated complex containing this wheat product. Plant chromosomes have centromeres, so the localization is biologically possible rather than taxon-inappropriate. It is absent from the cached annotations, and compartment-specific evidence is needed.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/WHEAT/F6LAX4/F6LAX4-ai-review.html">F6LAX4</a>
+
+    </td>
+    <td><small>Triticum aestivum</small></td>
+    <td>
+        <strong>GO:1990405</strong><br>
+        protein antigen binding
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The wheat product is a PP2A A-subunit scaffold. The human PP2A A-small-t structure establishes an inhibitor interaction (PMID:17608567); the viral protein&#39;s name small t antigen does not demonstrate antigen recognition by the scaffold. No antigen-recognition interaction is established for this wheat protein, and the predicted term is absent from its cached annotations. Without positive support or target-specific refutation of the broad binding claim, the prediction remains uncertain.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="LSP" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/XANCP/Q8P365/Q8P365-ai-review.html">Q8P365</a>
+        <br><small style="color:var(--text-muted)">btuE</small>
+    </td>
+    <td><small>Xanthomonas campestris pv. campestris</small></td>
+    <td>
+        <strong>GO:0006979</strong><br>
+        response to oxidative stress
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-LSP">LSP</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target has the BtuE subfamily assignment, glutathione-peroxidase domain, and peroxidase active-site signature. Purified E. coli BtuE reduces peroxides and its expression responds to oxidative stress (PMID:20621065), supporting transfer of the broad protective role. The target already has a curated IBA for cellular response to oxidative stress, which is more specific than response to oxidative stress. The prediction is supported but less precise; annotation overlap does not establish training-data contamination.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="NPI" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/XENNA/D3VIU4/D3VIU4-ai-review.html">D3VIU4</a>
+
+    </td>
+    <td><small>Xenorhabdus nematophila</small></td>
+    <td>
+        <strong>GO:0015276</strong><br>
+        ligand-gated monoatomic ion channel activity
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-NPI">NPI</span></td>
+    <td>0</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The 262-residue target has an N-terminal signal peptide followed by a solute-binding protein family 3 domain covering residues 40–259. This is the architecture of an exported ligand-binding component, without a membrane-spanning channel pore after signal-peptide removal. Binding a transported ligand does not make the binding component a ligand-gated ion channel. The predicted intrinsic channel activity is absent from the cached annotations and is contradicted by the available architecture.</div></td>
+</tr>
+
+
+
+
+
+<tr data-assessment="CNN" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/XENTR/A0A8J0SCI2/A0A8J0SCI2-ai-review.html">A0A8J0SCI2</a>
+
+    </td>
+    <td><small>Xenopus tropicalis</small></td>
+    <td>
+        <strong>GO:0000978</strong><br>
+        RNA polymerase II cis-regulatory region sequence-specific DNA binding
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-CNN">CNN</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target contains eight tandem C2H2 zinc-finger domains, consistent with sequence-specific DNA recognition. The cached GOA record has an exact curated IBA for RNA polymerase II cis-regulatory region sequence-specific DNA binding, alongside the corresponding transcription-factor activity. This is a curator-assessed phylogenetic inference consistent with the target architecture, not an ARBA assertion. The available evidence supports the function without identifying a particular DNA motif or target gene.</div></td>
+</tr>
+
+<tr data-assessment="CNN" data-type="GO_BP" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/XENTR/A0A8J0SCI2/A0A8J0SCI2-ai-review.html">A0A8J0SCI2</a>
+
+    </td>
+    <td><small>Xenopus tropicalis</small></td>
+    <td>
+        <strong>GO:0006357</strong><br>
+        regulation of transcription by RNA polymerase II
+    </td>
+    <td><span class="term-type">GO_BP</span></td>
+    <td><span class="badge badge-CNN">CNN</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target has the tandem C2H2 zinc-finger architecture of a sequence-specific DNA-binding factor. The exact regulation of transcription by RNA polymerase II annotation is present as a curated IBA in the cached GOA record, together with compatible DNA-binding transcription-factor activity. These phylogenetic annotations and the target architecture support the broad regulatory process. They do not specify whether the factor activates or represses its targets.</div></td>
+</tr>
+
+<tr data-assessment="CNN" data-type="GO_CC" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/XENTR/A0A8J0SCI2/A0A8J0SCI2-ai-review.html">A0A8J0SCI2</a>
+
+    </td>
+    <td><small>Xenopus tropicalis</small></td>
+    <td>
+        <strong>GO:0005634</strong><br>
+        nucleus
+    </td>
+    <td><span class="term-type">GO_CC</span></td>
+    <td><span class="badge badge-CNN">CNN</span></td>
+    <td>2</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The target zinc-finger architecture is compatible with its curated DNA-binding transcription-factor assignment. Nucleus is already present as a curated IBA in the cached GOA record, supporting this localization through a phylogenetic judgment consistent with the molecular function. No target localization experiment is asserted. The exact overlap makes this a supported, non-novel annotation.</div></td>
+</tr>
+
+<tr data-assessment="UNC" data-type="GO_MF" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        <a class="gene-link" href="../../../genes/XENTR/A0A8J0SCI2/A0A8J0SCI2-ai-review.html">A0A8J0SCI2</a>
+
+    </td>
+    <td><small>Xenopus tropicalis</small></td>
+    <td>
+        <strong>GO:0001228</strong><br>
+        DNA-binding transcription activator activity, RNA polymerase II-specific
+    </td>
+    <td><span class="term-type">GO_MF</span></td>
+    <td><span class="badge badge-UNC">UNC</span></td>
+    <td>1</td>
+    <td></td>
+    <td class="summary-cell"><div class="summary-text">The zinc-finger array and existing curated IBA support a DNA-binding RNA polymerase II transcription factor. They do not determine whether its effect on transcription is activating, repressing, or context-dependent. Absence of a recognizable activation domain is not decisive because activation can depend on partners or short interaction regions. The activator-specific term is absent from the cached annotations, and evidence for regulatory direction is needed.</div></td>
+</tr>
+
+
+
+
+<tr data-assessment="" data-type="" data-nopred="1" class="no-pred-row">
+    <td>
+        <a class="gene-link" href="../../../genes/XENTR/A0A8J1IYX6/A0A8J1IYX6-ai-review.html">A0A8J1IYX6</a>
+
+    </td>
+    <td><small>Xenopus tropicalis</small></td>
+    <td colspan="6" class="no-predictions">No predictions</td>
+</tr>
+
+
+
+<tr data-assessment="" data-type="" data-nopred="1" class="no-pred-row">
+    <td>
+        <a class="gene-link" href="../../../genes/XENTR/F6WPT1/F6WPT1-ai-review.html">F6WPT1</a>
+
+    </td>
+    <td><small>Xenopus tropicalis</small></td>
+    <td colspan="6" class="no-predictions">No predictions</td>
+</tr>
+
+
+</tbody>
+</table>
+
+<footer>
+    Generated from 50 prediction review YAML files.
+    Assessment categories per de Crécy-Lagard et al. 2025 (PMID:40703034).
+</footer>
+
+<script>
+function filterTable() {
+    const search = document.getElementById('search').value.toLowerCase();
+    const assessment = document.getElementById('assessmentFilter').value;
+    const termType = document.getElementById('typeFilter').value;
+    const hideNoPred = document.getElementById('hideNoPred').checked;
+    const rows = document.querySelectorAll('#evalTable tbody tr');
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        const rowAssessment = row.dataset.assessment;
+        const rowType = row.dataset.type;
+        const isNoPred = row.dataset.nopred === '1';
+        let show = true;
+        if (search && !text.includes(search)) show = false;
+        if (assessment && rowAssessment !== assessment) show = false;
+        if (termType && rowType !== termType) show = false;
+        if (hideNoPred && isNoPred) show = false;
+        row.style.display = show ? '' : 'none';
+    });
+}
+
+let sortCol = -1, sortAsc = true;
+function sortTable(col) {
+    if (sortCol === col) { sortAsc = !sortAsc; } else { sortCol = col; sortAsc = true; }
+    const tbody = document.querySelector('#evalTable tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    rows.sort((a, b) => {
+        const aVal = (a.children[col] || {}).textContent || '';
+        const bVal = (b.children[col] || {}).textContent || '';
+        const cmp = aVal.localeCompare(bVal, undefined, {numeric: true});
+        return sortAsc ? cmp : -cmp;
+    });
+    rows.forEach(r => tbody.appendChild(r));
+}
+</script>
+
+</body>
+</html>

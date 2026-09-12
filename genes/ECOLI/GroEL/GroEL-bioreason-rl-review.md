@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: GroEL (E. coli)
 
-Source: GroEL-deep-research-bioreason-rl.md
+Source: GroEL-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 4/5

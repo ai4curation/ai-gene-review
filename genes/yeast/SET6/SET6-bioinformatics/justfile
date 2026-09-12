@@ -1,0 +1,32 @@
+# SET6 (YPL165C / Q12529) SET-domain integrity analysis
+# Reproducible pipeline. Requires: uv, mafft, hmmer (hmmsearch/hmmalign), curl.
+
+# Fetch SET6 (local) + reference panel (UniProt) sequences
+fetch:
+    uv run python scripts/fetch_sequences.py
+
+# Download the Pfam SET-domain HMM (PF00856) from InterPro
+hmm:
+    curl -sL "https://www.ebi.ac.uk/interpro/wwwapi/entry/pfam/PF00856?annotation=hmm" -o data/PF00856_SET.hmm.gz
+    gunzip -kf data/PF00856_SET.hmm.gz
+
+# hmmsearch: confirm SET-domain presence/boundaries across the panel
+hmmsearch:
+    hmmsearch --domtblout results/set_domain_hmmsearch.domtbl data/PF00856_SET.hmm data/reference_sequences.fasta > results/set_domain_hmmsearch.txt
+
+# Extract diagnostic catalytic / SAM-binding motif residues via MAFFT MSA
+motifs:
+    uv run python scripts/motif_from_mafft.py
+
+# hmmalign-based motif read-out (secondary; --trim can collapse SMYD inserts)
+motifs-hmm:
+    uv run python scripts/analyze_set_motifs.py
+
+# Pairwise identity (full-length and SET-domain-restricted)
+identity:
+    uv run python scripts/pairwise_identity.py
+    uv run python scripts/set_domain_identity.py
+
+# Run everything
+all: fetch hmm hmmsearch motifs identity
+    @echo "Done. See results/ and RESULTS.md"

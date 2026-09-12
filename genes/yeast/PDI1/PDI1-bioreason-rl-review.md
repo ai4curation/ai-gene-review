@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: PDI1 (S. cerevisiae)
 
-Source: PDI1-deep-research-bioreason-rl.md
+Source: PDI1-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 3/5

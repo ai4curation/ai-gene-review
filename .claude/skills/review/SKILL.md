@@ -1,6 +1,7 @@
 ---
+name: review
 description: Review, either de-novo, or augment the review of an existing one. A list of deep research providers may be specified.
-argument-hint: [ORGANISM] [GENE_SYMBOL] ( using [DEEP_RESEARCH_PROVIDER] )
+argument-hint: "[ORGANISM] [GENE_SYMBOL] (using [DEEP_RESEARCH_PROVIDER])"
 ---
 
 Review the gene specified in $ARGUMENTS.
@@ -43,3 +44,18 @@ The annotation-reviewer agent will use this data as additional evidence when rev
 ## Step 4: Run annotation review
 
 Invoke the annotation-reviewer subagent to systematically review all annotations.
+
+Two standing rules from the annotation-reviewer skill that apply to every review:
+
+- **Do not second-guess deterministic pipeline outputs.** Term ids, labels, evidence
+  codes, qualifiers and obsoletion status come from deterministic tooling; never assert
+  from memory that a term is obsolete, merged, or renamed — verify via OLS/QuickGO
+  before any rationale depends on it.
+- **Review from the YAML; the GOA tsv is just its seed.** The reviewer works from the
+  review YAML's `existing_annotations` (seeded deterministically from the tsv) and
+  judges each row on "does this gene product execute a function in this process". The
+  tsv never needs to be opened; if it is, ignore the gene-product-to-term relationship
+  type (QUALIFIER column). The only annotation flags that matter are NOT
+  (`negated: true`) and `qualifier: contributes_to`, which must be respected.
+  Ortholog source reviews (e.g. `genes/human/<GENE>/`) are in scope when the defect
+  is on the donor side.

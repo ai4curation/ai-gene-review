@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: pgl-1 (C. elegans)
 
-Source: pgl-1-deep-research-bioreason-rl.md
+Source: pgl-1-bioreason-rl-predictions.md
 
 - **Correctness**: 1/5
 - **Completeness**: 1/5

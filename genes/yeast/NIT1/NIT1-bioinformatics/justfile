@@ -1,0 +1,39 @@
+# NIT1 (P40447, YIL164C) bioinformatics analysis
+# Reproducible pipeline. Run `just all`.
+
+# Show recipes
+default:
+    @just --list
+
+# Check residues at PROSITE-predicted catalytic positions in NIT1 itself
+triad:
+    uv run python scripts/catalytic_triad.py --fasta data/NIT1_yeast.fasta \
+        --positions 44,135,169 --expected E,K,C | tee results/nit1_triad.tsv
+
+# Positive control: run the triad script on human NIT2 at ITS OWN UniProt
+# active-site positions (E43,K112,C153) to confirm the script correctly reads
+# residues from whatever sequence/positions it is given (i.e. not hardcoded).
+triad-control:
+    uv run python scripts/catalytic_triad.py --fasta data/Q9NQR4.fasta \
+        --positions 43,112,153 --expected E,K,C | tee results/nit2_triad_control.tsv
+
+# Multiple sequence alignment (NIT1, YIL165C, human NIT1/NIT2, Arabidopsis NIT1)
+align:
+    mafft --auto --anysymbol data/combined.fasta > results/combined.aln.fasta 2> results/mafft.log
+
+# Analyse the alignment: triad conservation + coverage/truncation
+analyze: align
+    uv run python scripts/analyze_alignment.py --alignment results/combined.aln.fasta \
+        --ref P40447 --ref-positions 44,135,169 --labels E,K,C | tee results/alignment_analysis.txt
+
+# Concatenate NIT1 + YIL165C and align vs full-length family to test the
+# "split ORF" hypothesis
+split-test:
+    uv run python scripts/test_split.py | tee results/split_test.txt
+
+# Pairwise % identity of NIT1 vs each homolog (from the combined alignment)
+identity: align
+    uv run python scripts/pairwise_identity.py --alignment results/combined.aln.fasta \
+        --ref P40447 | tee results/pairwise_identity.tsv
+
+all: triad triad-control analyze split-test identity

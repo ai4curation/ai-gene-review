@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: pink-1 (C. elegans)
 
-Source: pink-1-deep-research-bioreason-rl.md
+Source: pink-1-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

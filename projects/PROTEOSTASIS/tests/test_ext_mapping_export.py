@@ -39,6 +39,23 @@ def test_export_builds_biologist_friendly_workbook(tmp_path: Path) -> None:
                 "rationale": "Test mapping.",
                 "notes": "Test note.",
                 "references": ["proteostasis-ms1"],
+                "ontology_gap": {
+                    "status": "ntr_candidate",
+                    "gap_type": "missing_specific_process",
+                    "proposed_label": "test ribosome remodeling",
+                    "go_aspect": "biological_process",
+                    "why_existing_mapping_is_insufficient": "The current target is too broad.",
+                    "candidate_parent_terms": [
+                        {
+                            "id": "GO:0022626",
+                            "label": "cytosolic ribosome",
+                        }
+                    ],
+                    "example_genes": ["EIF2S1"],
+                    "anti_scope_notes": "Not for generic ribosome membership.",
+                    "recommended_action": "request_expert_input",
+                    "priority": "medium",
+                },
             },
             {
                 "subject_code": "Translation|Mitochondrial translation|Ribosome",
@@ -78,6 +95,7 @@ def test_export_builds_biologist_friendly_workbook(tmp_path: Path) -> None:
     assert summary["E2"].value == "1"
 
     mappings = reopened["Mappings"]
+    mapping_headers = [cell.value for cell in mappings[1]]
     assert mappings["E2"].value == "Translation|Cytosolic translation|Ribosome"
     assert mappings["F2"].value == "mapped"
     assert mappings["G2"].value == "Translation"
@@ -87,6 +105,15 @@ def test_export_builds_biologist_friendly_workbook(tmp_path: Path) -> None:
     assert mappings["N2"].value == "cytosolic ribosome"
     assert mappings["O2"].value == "EIF2S1; EIF2S2"
     assert mappings["P2"].value == "branch=Translation"
+    assert mappings.cell(2, mapping_headers.index("ontology_gap_status") + 1).value == "ntr_candidate"
+    assert (
+        mappings.cell(2, mapping_headers.index("ontology_gap_candidate_parent_terms") + 1).value
+        == "GO:0022626 cytosolic ribosome"
+    )
+    assert (
+        mappings.cell(2, mapping_headers.index("ontology_gap_recommended_action") + 1).value
+        == "request_expert_input"
+    )
 
     unmapped = reopened["Unmapped"]
     assert unmapped["E2"].value == "Translation|Mitochondrial translation|Ribosome"

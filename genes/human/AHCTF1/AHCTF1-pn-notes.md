@@ -1,0 +1,75 @@
+# AHCTF1 PN Consistency Notes
+
+- Generated: 2026-06-18
+- Project: PROTEOSTASIS
+- Scope: PN consistency rereview against local AIGR review and available deep-research artifacts
+- UniProt: Q8WYP5
+- AIGR review status: COMPLETE
+- Review batch: proteostasis-batch-2026-06-03 (PR 1352)
+- Batch change status: added
+
+## Source Files Checked
+
+- AIGR review YAML: present - [genes/human/AHCTF1/AHCTF1-ai-review.yaml](AHCTF1-ai-review.yaml)
+- AIGR review HTML: present - [genes/human/AHCTF1/AHCTF1-ai-review.html](AHCTF1-ai-review.html)
+- Gene notes: present - [genes/human/AHCTF1/AHCTF1-notes.md](AHCTF1-notes.md)
+- GOA TSV: present - [genes/human/AHCTF1/AHCTF1-goa.tsv](AHCTF1-goa.tsv)
+- UniProt record: present - [genes/human/AHCTF1/AHCTF1-uniprot.txt](AHCTF1-uniprot.txt)
+- PN dossier: [projects/PROTEOSTASIS/reports/phase1_dossiers/AHCTF1.md](../../../projects/PROTEOSTASIS/reports/phase1_dossiers/AHCTF1.md)
+- PN consistency section: [projects/PROTEOSTASIS/reports/phase1_dossiers/_sections/AHCTF1.md](../../../projects/PROTEOSTASIS/reports/phase1_dossiers/_sections/AHCTF1.md)
+- PN projection report: [projects/PROTEOSTASIS/reports/pn_projection/pn_projected_gene_go_summary.tsv](../../../projects/PROTEOSTASIS/reports/pn_projection/pn_projected_gene_go_summary.tsv)
+- PN mapping audit: [projects/PROTEOSTASIS/reports/pn_mapping_audit/current_mapping_scrutiny.tsv](../../../projects/PROTEOSTASIS/reports/pn_mapping_audit/current_mapping_scrutiny.tsv)
+
+### Deep Research Files
+
+- [genes/human/AHCTF1/AHCTF1-deep-research-falcon.md](AHCTF1-deep-research-falcon.md)
+
+## AIGR Review Snapshot
+
+- Description: AHCTF1 encodes ELYS/MEL-28, a large metazoan nucleoporin and chromatin-associated assembly factor for nuclear pore complexes. ELYS binds chromatin during nuclear reformation, recruits the Nup107-160/Y-complex scaffold to nascent nuclear pores, and localizes to nuclear pores, the nuclear envelope, chromatin, and kinetochores in a cell-cycle-dependent manner. Loss or perturbation of ELYS disrupts post-mitotic NPC assembly and produces chromosome segregation and cytokinesis defects, consistent with a core role in rebuilding the nuclear pore scaffold after open mitosis.
+- Existing/core annotation action counts: ACCEPT: 12; KEEP_AS_NON_CORE: 8; MARK_AS_OVER_ANNOTATED: 21; MODIFY: 1; NEW: 1
+
+## PN Consistency Summary
+
+- **Consistency:** Deep research (falcon), review, and PN agree AHCTF1/ELYS is a chromatin-binding nucleoporin that seeds post-mitotic NPC reassembly by recruiting the Nup107-160/Y-complex; also has kinetochore/cytokinesis roles. No contradictions. The review trims ~17 mis-seeded Reactome cytosol rows (mitotic-checkpoint/NPC-assembly pathway context, not AHCTF1 localization) — orthogonal to and compatible with PN's NPC framing.
+- **PN story / NEW pressure:** PN group GO:0005643 nuclear pore is already in GOA (confirmed: IEA/NAS/IDA rows) and accepted. PN class projects GO:0015031 protein transport as new-to-GOA, but the review reframes the BP from generic transport to GO:0051292 nuclear pore complex assembly (MODIFY of GO:0006913 nucleocytoplasmic transport; already an IMP annotation) and adds a NEW MF GO:0003682 chromatin binding (IDA, PMID:27341616). Verdict: PN nuclear-pore captured; PN "protein transport" over-reaches — AHCTF1 is an assembly factor, not a transport carrier. The review even questions whether AHCTF1 belongs in a proteostasis source list at all (only via broad NPC/transport projection).
+- **Evidence alignment:** PN dossier lists no reference titles. Review anchors on PMID:17098863 (ELYS dual nucleoporin/kinetochore), 27341616 (conserved MEL-28/ELYS domains, chromatin binding), 24315095/27016207 (NPC scaffold), Reactome:R-HSA-9615901 (chromatin+Nup107-160 seeding). No PMID conflicts.
+- **Verdict:** Consistent; PN nuclear pore (GO:0005643) adopted; PN class GO:0015031 protein transport over-reaches for an NPC-assembly factor — review's GO:0051292 + GO:0003682 are the correct calls. **Recommended edits:** none required. [MAP]: flag class-level GO:0015031 for the Nuclear proteostasis|Protein transport node as too broad for structural NPC-assembly factors; consider gene-gating. [WB]: optionally reconsider AHCTF1's inclusion in the PN source list (assembly factor, weak proteostasis link).
+
+## Full Consistency Review
+
+- **UniProt:** Q8WYP5 · **batch:** proteostasis-batch-2026-06-03 · **review status:** COMPLETE
+- **PN placement:** `Nuclear proteostasis|Protein transport|Nuclear pore complex` ; **PN-node mapping:** group (NPC) `mapped` ok_for_propagation GO:0005643 nuclear pore (already_in_goa_exact); class (Protein transport) `mapped` GO:0015031 protein transport (new_to_goa); branch `no_mapping`.
+- **Consistency:** Deep research (falcon), review, and PN agree AHCTF1/ELYS is a chromatin-binding nucleoporin that seeds post-mitotic NPC reassembly by recruiting the Nup107-160/Y-complex; also has kinetochore/cytokinesis roles. No contradictions. The review trims ~17 mis-seeded Reactome cytosol rows (mitotic-checkpoint/NPC-assembly pathway context, not AHCTF1 localization) — orthogonal to and compatible with PN's NPC framing.
+- **PN story / NEW pressure:** PN group GO:0005643 nuclear pore is already in GOA (confirmed: IEA/NAS/IDA rows) and accepted. PN class projects GO:0015031 protein transport as new-to-GOA, but the review reframes the BP from generic transport to GO:0051292 nuclear pore complex assembly (MODIFY of GO:0006913 nucleocytoplasmic transport; already an IMP annotation) and adds a NEW MF GO:0003682 chromatin binding (IDA, PMID:27341616). Verdict: PN nuclear-pore captured; PN "protein transport" over-reaches — AHCTF1 is an assembly factor, not a transport carrier. The review even questions whether AHCTF1 belongs in a proteostasis source list at all (only via broad NPC/transport projection).
+- **Mapping strategy:** Gene does not change the node; it argues against the class-level GO:0015031 projection. AHCTF1 builds the pore rather than transporting cargo, so generic protein transport is biologically the wrong BP — clearer mis-projection than the TOMM20/HSPA8/RAB7A "merely broader" cases.
+- **Evidence alignment:** PN dossier lists no reference titles. Review anchors on PMID:17098863 (ELYS dual nucleoporin/kinetochore), 27341616 (conserved MEL-28/ELYS domains, chromatin binding), 24315095/27016207 (NPC scaffold), Reactome:R-HSA-9615901 (chromatin+Nup107-160 seeding). No PMID conflicts.
+- **Verdict:** Consistent; PN nuclear pore (GO:0005643) adopted; PN class GO:0015031 protein transport over-reaches for an NPC-assembly factor — review's GO:0051292 + GO:0003682 are the correct calls. **Recommended edits:** none required. [MAP]: flag class-level GO:0015031 for the Nuclear proteostasis|Protein transport node as too broad for structural NPC-assembly factors; consider gene-gating. [WB]: optionally reconsider AHCTF1's inclusion in the PN source list (assembly factor, weak proteostasis link).
+
+## PN Dossier Context
+
+- review_batch: proteostasis-batch-2026-06-03
+- review_yaml: genes/human/AHCTF1/AHCTF1-ai-review.yaml
+- PN workbook rows: 1
+
+## PN row 1: Nuclear proteostasis | Protein transport | Nuclear pore complex
+- UniProt: Q8WYP5
+- In branches: NU
+- PN-node mapping records (path + ancestors):
+    - [group] Nuclear proteostasis|Protein transport|Nuclear pore complex
+        status=mapped scope=ok_for_propagation_to_go GO=[GO:0005643 nuclear pore]
+        rationale: This PN group denotes core components of the nuclear pore complex. The closest current GO target in the local ontology cache is the cellular-component term nuclear pore.
+    - [class] Nuclear proteostasis|Protein transport
+        status=mapped scope=ok_for_propagation_to_go GO=[GO:0015031 protein transport]
+        rationale: The PN nuclear Protein transport class covers the machinery and routes that move proteins across the nuclear envelope. GO protein transport is the correct propagation target, although the PN class is specialized to the nuclear compartment.
+    - [branch] Nuclear proteostasis
+        status=no_mapping scope= GO=[]
+        rationale: Reviewed as a top-level PN branch. This is a systems/taxonomy umbrella, not a direct GO assertion; narrower child curations carry any propagating GO mappings.
+
+## Projected GO annotations (2)
+- GO:0015031 protein transport | scope=ok_for_propagation_to_go | goa_status=new_to_goa | from=Nuclear proteostasis|Protein transport
+- GO:0005643 nuclear pore | scope=ok_for_propagation_to_go | goa_status=already_in_goa_exact | from=Nuclear proteostasis|Protein transport|Nuclear pore complex
+
+## Note
+
+This file is generated from the current PROTEOSTASIS phase-1 dossier and local gene-review artifacts. Edit the source review, PN mapping, or dossier rather than this generated note when correcting the underlying curation.

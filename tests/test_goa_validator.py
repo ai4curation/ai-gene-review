@@ -38,6 +38,7 @@ def sample_yaml_matching():
                 "term": {"id": "GO:0005515", "label": "protein binding"},
                 "evidence_type": "IPI",
                 "original_reference_id": "PMID:29727692",
+                "supporting_entities": ["UniProtKB:Q9NVR5"],
             },
             {
                 "term": {"id": "GO:0005737", "label": "cytoplasm"},
@@ -80,6 +81,7 @@ def sample_yaml_missing():
                 "term": {"id": "GO:0005515", "label": "protein binding"},
                 "evidence_type": "IPI",
                 "original_reference_id": "PMID:29727692",
+                "supporting_entities": ["UniProtKB:Q9NVR5"],
             },
             {
                 "term": {"id": "GO:0005737", "label": "cytoplasm"},
@@ -108,6 +110,7 @@ def sample_yaml_extra():
                 "term": {"id": "GO:0005515", "label": "protein binding"},
                 "evidence_type": "IPI",
                 "original_reference_id": "PMID:29727692",
+                "supporting_entities": ["UniProtKB:Q9NVR5"],
             },
             {
                 "term": {"id": "GO:0005737", "label": "cytoplasm"},
@@ -158,6 +161,7 @@ def sample_yaml_label_mismatch():
                 },  # Should be 'protein binding'
                 "evidence_type": "IPI",
                 "original_reference_id": "PMID:29727692",
+                "supporting_entities": ["UniProtKB:Q9NVR5"],
             },
             {
                 "term": {"id": "GO:0005737", "label": "cytoplasm"},
@@ -546,7 +550,7 @@ UniProtKB	Q12345	TEST		GO:0009999	test location	CC	ECO:0007322	IEA	PMID:99999		N
 
     try:
         # Seed missing annotations
-        added_count, output_path, refs_added = validator.seed_missing_annotations(
+        added_count, output_path, refs_added, _, _ = validator.seed_missing_annotations(
             yaml_path, goa_path
         )
 
@@ -580,6 +584,388 @@ UniProtKB	Q12345	TEST		GO:0009999	test location	CC	ECO:0007322	IEA	PMID:99999		N
 
     finally:
         # Clean up
+        goa_path.unlink()
+        yaml_path.unlink()
+
+
+def test_seed_missing_annotations_preserves_qualifiers():
+    """Test that seeded annotations preserve GOA qualifier values."""
+    validator = GOAValidator()
+
+    goa_content = """GENE PRODUCT DB	GENE PRODUCT ID	SYMBOL	QUALIFIER	GO TERM	GO NAME	GO ASPECT	ECO ID	GO EVIDENCE CODE	REFERENCE	WITH/FROM	TAXON ID	TAXON NAME	ASSIGNED BY	GENE NAME	DATE
+UniProtKB	Q12345	TEST	enables	GO:0001234	test function	MF	ECO:0000353	IPI	PMID:12345		NCBITaxon:9606	Homo sapiens	UniProt	Test protein	20180515
+UniProtKB	Q12345	TEST	involved_in	GO:0005678	test process	BP	ECO:0000250	ISS	PMID:67890		NCBITaxon:9606	Homo sapiens	UniProt	Test protein	20180515
+UniProtKB	Q12345	TEST	is_active_in	GO:0009999	test location	CC	ECO:0007322	IEA	PMID:99999		NCBITaxon:9606	Homo sapiens	UniProt	Test protein	20180515
+UniProtKB	Q12345	TEST	part_of	GO:0008888	test complex	CC	ECO:0000314	IDA	PMID:88888		NCBITaxon:9606	Homo sapiens	UniProt	Test protein	20180515"""
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as goa_file:
+        goa_file.write(goa_content)
+        goa_path = Path(goa_file.name)
+
+    yaml_data = {
+        "id": "Q12345",
+        "gene_symbol": "TEST",
+        "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
+        "description": "Test gene",
+        "existing_annotations": [],
+    }
+
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".yaml", delete=False
+    ) as yaml_file:
+        yaml.dump(yaml_data, yaml_file)
+        yaml_path = Path(yaml_file.name)
+
+    try:
+        added_count, _, _, _, _ = validator.seed_missing_annotations(
+            yaml_path, goa_path
+        )
+
+        assert added_count == 4
+
+        with open(yaml_path, "r") as f:
+            updated_data = yaml.safe_load(f)
+
+        qualifiers_by_go_id = {
+            ann["term"]["id"]: ann.get("qualifier")
+            for ann in updated_data["existing_annotations"]
+        }
+        assert qualifiers_by_go_id == {
+            "GO:0001234": "enables",
+            "GO:0005678": "involved_in",
+            "GO:0009999": "is_active_in",
+            "GO:0008888": "part_of",
+        }
+    finally:
+        goa_path.unlink()
+        yaml_path.unlink()
+
+
+@pytest.mark.parametrize("reverse_sources", [False, True])
+def test_seed_missing_annotations_backfills_and_splits_supporting_entities(tmp_path, reverse_sources):
+    """WITH/FROM-distinct rows must remain distinct in seeded review YAML."""
+    validator = GOAValidator()
+    goa_path = tmp_path / "TEST-goa.tsv"
+    goa_path.write_text(
+        "GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\t"
+        "GO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\t"
+        "TAXON NAME\tASSIGNED BY\tGENE NAME\tDATE\n"
+        "UniProtKB\tQ12345\tTEST\tenables\tGO:0001234\ttest function\tMF\t"
+        "ECO:0000266\tISO\tPMID:12345\tUniProtKB:P11111\tNCBITaxon:9606\t"
+        "Homo sapiens\tUniProt\tTest protein\t20180515\n"
+        "UniProtKB\tQ12345\tTEST\tenables\tGO:0001234\ttest function\tMF\t"
+        "ECO:0000266\tISO\tPMID:12345\tUniProtKB:P22222|UniProtKB:P33333\t"
+        "NCBITaxon:9606\tHomo sapiens\tUniProt\tTest protein\t20180515\n"
+    )
+    yaml_path = tmp_path / "TEST-ai-review.yaml"
+    yaml_path.write_text(
+        "id: Q12345\n"
+        "gene_symbol: TEST\n"
+        "taxon: {id: 'NCBITaxon:9606', label: Homo sapiens}\n"
+        "description: Test gene\n"
+        "existing_annotations:\n"
+        "- term: {id: 'GO:0001234', label: test function}\n"
+        "  evidence_type: ISO\n"
+        "  original_reference_id: PMID:12345\n"
+        "  qualifier: enables\n"
+        "  review: {summary: Already reviewed, action: ACCEPT}\n"
+        "references:\n"
+        "- id: PMID:12345\n"
+        "  title: Existing title\n"
+        "  findings: []\n"
+    )
+
+    if reverse_sources:
+        header, *rows = goa_path.read_text().splitlines()
+        goa_path.write_text("\n".join([header, *reversed(rows)]) + "\n")
+
+    before = validator.validate_against_goa(yaml_path, goa_path)
+    # Validation preserves legacy collapsed-row compatibility. Seeding must
+    # nevertheless expand every distinct source, even when validation passes.
+    assert before.is_valid
+    assert not before.missing_in_yaml
+    assert not before.missing_in_goa
+
+    from typer.testing import CliRunner
+    from ai_gene_review.cli import app
+
+    original = yaml_path.read_bytes()
+    runner = CliRunner()
+    preview = runner.invoke(app, ["seed-goa", str(yaml_path), "--goa", str(goa_path), "--dry-run", "--no-fetch-titles"])
+    assert preview.exit_code == 0, preview.output
+    assert "Would add 1 annotations" in preview.output
+    assert "1 supporting-entity lists" in preview.output
+    assert yaml_path.read_bytes() == original
+    seeded_output = tmp_path / "cli-seeded.yaml"
+    seeded_cli = runner.invoke(app, ["seed-goa", str(yaml_path), "--goa", str(goa_path), "--output", str(seeded_output), "--no-fetch-titles"])
+    assert seeded_cli.exit_code == 0, seeded_cli.output
+    assert seeded_output.exists(), seeded_cli.output
+    assert len(yaml.safe_load(seeded_output.read_text())["existing_annotations"]) == 2
+    assert yaml_path.read_bytes() == original
+
+    added, _, references_added, qualifiers_backfilled, supporting_backfilled = (
+        validator.seed_missing_annotations(yaml_path, goa_path)
+    )
+
+    assert (
+        added,
+        references_added,
+        qualifiers_backfilled,
+        supporting_backfilled,
+    ) == (1, 0, 0, 1)
+    document = yaml.safe_load(yaml_path.read_text())
+    annotations = document["existing_annotations"]
+    assert len(annotations) == 2
+    assert annotations[0]["supporting_entities"] == ["UniProtKB:P11111"]
+    assert annotations[0]["review"]["summary"] == "Already reviewed"
+    assert annotations[1]["supporting_entities"] == [
+        "UniProtKB:P22222",
+        "UniProtKB:P33333",
+    ]
+    assert annotations[1]["review"]["action"] == "PENDING"
+    assert validator.validate_against_goa(yaml_path, goa_path).is_valid
+
+    seeded = yaml_path.read_bytes()
+    assert validator.seed_missing_annotations(yaml_path, goa_path)[::2] == (0, 0, 0)
+    assert yaml_path.read_bytes() == seeded
+
+    # Once sources are explicit, a missing source must be detected and seeded
+    # without changing the other source's curated review.
+    document["existing_annotations"] = annotations[:1]
+    yaml_path.write_text(yaml.safe_dump(document))
+    missing = validator.validate_against_goa(yaml_path, goa_path)
+    assert not missing.is_valid
+    assert len(missing.missing_in_yaml) == 1
+    assert validator.seed_missing_annotations(yaml_path, goa_path)[0] == 1
+    assert yaml.safe_load(yaml_path.read_text())["existing_annotations"][0] == annotations[0]
+
+    # A populated but incorrect source is never rescued by legacy compatibility.
+    annotations[0]["supporting_entities"] = ["UniProtKB:P99999"]
+    document["existing_annotations"] = annotations
+    yaml_path.write_text(yaml.safe_dump(document))
+    wrong = validator.validate_against_goa(yaml_path, goa_path)
+    assert not wrong.is_valid
+    assert len(wrong.missing_in_yaml) == 1
+    assert len(wrong.missing_in_goa) == 1
+
+    # When a source changes, retain its historical review and explicitly retire
+    # it. The current source gets a fresh pending row rather than inheriting it.
+    annotations[0]["retired"] = True
+    yaml_path.write_text(yaml.safe_dump(document))
+    assert validator.seed_missing_annotations(yaml_path, goa_path)[0] == 1
+    refreshed = yaml.safe_load(yaml_path.read_text())
+    assert refreshed["existing_annotations"][0] == annotations[0]
+    assert refreshed["existing_annotations"][-1]["review"]["action"] == "PENDING"
+    assert validator.validate_against_goa(yaml_path, goa_path).is_valid
+
+    # Reappearance of a retired source must also seed a fresh active review.
+    refreshed["existing_annotations"][-1]["retired"] = True
+    yaml_path.write_text(yaml.safe_dump(refreshed))
+    assert validator.seed_missing_annotations(yaml_path, goa_path)[0] == 1
+    assert validator.validate_against_goa(yaml_path, goa_path).is_valid
+
+
+def test_seed_missing_annotations_reports_backfilled_qualifiers(tmp_path):
+    """Report qualifier enrichments separately from newly seeded annotations."""
+    validator = GOAValidator()
+    goa_path = tmp_path / "TEST-goa.tsv"
+    goa_path.write_text(
+        "GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\t"
+        "GO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\t"
+        "TAXON NAME\tASSIGNED BY\tGENE NAME\tDATE\n"
+        "UniProtKB\tQ12345\tTEST\tenables\tGO:0001234\ttest function\tMF\t"
+        "ECO:0000353\tIPI\tPMID:12345\t\tNCBITaxon:9606\tHomo sapiens\t"
+        "UniProt\tTest protein\t20180515\n"
+    )
+    yaml_path = tmp_path / "TEST-ai-review.yaml"
+    yaml_path.write_text(
+        "id: Q12345\n"
+        "gene_symbol: TEST\n"
+        "taxon:\n"
+        "  id: NCBITaxon:9606\n"
+        "  label: Homo sapiens\n"
+        "description: Test gene\n"
+        "existing_annotations:\n"
+        "- term:\n"
+        "    id: GO:0001234\n"
+        "    label: test function\n"
+        "  evidence_type: IPI\n"
+        "  original_reference_id: PMID:12345\n"
+    )
+
+    added, _, references_added, qualifiers_backfilled, supporting_backfilled = (
+        validator.seed_missing_annotations(yaml_path, goa_path)
+    )
+
+    assert (
+        added,
+        references_added,
+        qualifiers_backfilled,
+        supporting_backfilled,
+    ) == (0, 1, 1, 0)
+    document = yaml.safe_load(yaml_path.read_text())
+    assert document["existing_annotations"][0]["qualifier"] == "enables"
+
+
+def test_seed_missing_annotations_true_noop_preserves_yaml_bytes(tmp_path):
+    """A no-op seed must not reserialize a curated review file."""
+    validator = GOAValidator()
+    goa_path = tmp_path / "TEST-goa.tsv"
+    goa_path.write_text(
+        "GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\t"
+        "GO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\t"
+        "TAXON NAME\tASSIGNED BY\tGENE NAME\tDATE\n"
+        "UniProtKB\tQ12345\tTEST\tenables\tGO:0001234\ttest function\tMF\t"
+        "ECO:0000353\tIPI\tPMID:12345\t\tNCBITaxon:9606\tHomo sapiens\t"
+        "UniProt\tTest protein\t20180515\n"
+    )
+    yaml_path = tmp_path / "TEST-ai-review.yaml"
+    original = (
+        "# preserve this curator comment and formatting\n"
+        "id: Q12345\n"
+        "gene_symbol: TEST\n"
+        "taxon: {id: 'NCBITaxon:9606', label: Homo sapiens}\n"
+        "description: Test gene\n"
+        "existing_annotations:\n"
+        "- term: {id: 'GO:0001234', label: test function}\n"
+        "  evidence_type: IPI\n"
+        "  original_reference_id: PMID:12345\n"
+        "  qualifier: enables\n"
+        "references:\n"
+        "- id: PMID:12345\n"
+        "  title: Existing title\n"
+        "  findings: []\n"
+    )
+    yaml_path.write_text(original)
+
+    added, _, references_added, qualifiers_backfilled, supporting_backfilled = (
+        validator.seed_missing_annotations(yaml_path, goa_path)
+    )
+
+    assert (
+        added,
+        references_added,
+        qualifiers_backfilled,
+        supporting_backfilled,
+    ) == (0, 0, 0, 0)
+    assert yaml_path.read_text() == original
+
+
+def test_seed_missing_annotations_noop_writes_requested_output(tmp_path):
+    """A no-op seed still writes a separately requested output file."""
+    validator = GOAValidator()
+    goa_path = tmp_path / "TEST-goa.tsv"
+    goa_path.write_text(
+        "GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\t"
+        "GO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\t"
+        "TAXON NAME\tASSIGNED BY\tGENE NAME\tDATE\n"
+        "UniProtKB\tQ12345\tTEST\tenables\tGO:0001234\ttest function\tMF\t"
+        "ECO:0000353\tIPI\tPMID:12345\t\tNCBITaxon:9606\tHomo sapiens\t"
+        "UniProt\tTest protein\t20180515\n"
+    )
+    yaml_path = tmp_path / "TEST-ai-review.yaml"
+    yaml_path.write_text(
+        "id: Q12345\n"
+        "gene_symbol: TEST\n"
+        "taxon: {id: 'NCBITaxon:9606', label: Homo sapiens}\n"
+        "description: Test gene\n"
+        "existing_annotations:\n"
+        "- term: {id: 'GO:0001234', label: test function}\n"
+        "  evidence_type: IPI\n"
+        "  original_reference_id: PMID:12345\n"
+        "  qualifier: enables\n"
+        "references:\n"
+        "- id: PMID:12345\n"
+        "  title: Existing title\n"
+        "  findings: []\n"
+    )
+    output_path = tmp_path / "copy.yaml"
+
+    (
+        added,
+        returned_path,
+        references_added,
+        qualifiers_backfilled,
+        supporting_backfilled,
+    ) = (
+        validator.seed_missing_annotations(
+            yaml_path, goa_path, output_file=output_path
+        )
+    )
+
+    assert (
+        added,
+        references_added,
+        qualifiers_backfilled,
+        supporting_backfilled,
+    ) == (0, 0, 0, 0)
+    assert returned_path == output_path
+    assert yaml.safe_load(output_path.read_text()) == yaml.safe_load(
+        yaml_path.read_text()
+    )
+
+
+def test_backfill_qualifiers_preserves_all_goa_qualifiers():
+    """Test backfilling qualifiers beyond contributes_to."""
+    validator = GOAValidator()
+
+    goa_content = """GENE PRODUCT DB	GENE PRODUCT ID	SYMBOL	QUALIFIER	GO TERM	GO NAME	GO ASPECT	ECO ID	GO EVIDENCE CODE	REFERENCE	WITH/FROM	TAXON ID	TAXON NAME	ASSIGNED BY	GENE NAME	DATE
+UniProtKB	Q12345	TEST	enables	GO:0001234	test function	MF	ECO:0000353	IPI	PMID:12345		NCBITaxon:9606	Homo sapiens	UniProt	Test protein	20180515
+UniProtKB	Q12345	TEST	acts_upstream_of_or_within	GO:0005678	test process	BP	ECO:0000250	ISS	PMID:67890		NCBITaxon:9606	Homo sapiens	UniProt	Test protein	20180515
+UniProtKB	Q12345	TEST	part_of	GO:0008888	test complex	CC	ECO:0000314	IDA	PMID:88888		NCBITaxon:9606	Homo sapiens	UniProt	Test protein	20180515"""
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as goa_file:
+        goa_file.write(goa_content)
+        goa_path = Path(goa_file.name)
+
+    yaml_data = {
+        "id": "Q12345",
+        "gene_symbol": "TEST",
+        "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
+        "description": "Test gene",
+        "existing_annotations": [
+            {
+                "term": {"id": "GO:0001234", "label": "test function"},
+                "evidence_type": "IPI",
+                "original_reference_id": "PMID:12345",
+            },
+            {
+                "term": {"id": "GO:0005678", "label": "test process"},
+                "evidence_type": "ISS",
+                "original_reference_id": "PMID:67890",
+            },
+            {
+                "term": {"id": "GO:0008888", "label": "test complex"},
+                "evidence_type": "IDA",
+                "original_reference_id": "PMID:88888",
+            },
+        ],
+    }
+
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".yaml", delete=False
+    ) as yaml_file:
+        yaml.dump(yaml_data, yaml_file)
+        yaml_path = Path(yaml_file.name)
+
+    try:
+        updated_count, _ = validator.backfill_qualifiers(yaml_path, goa_path)
+
+        assert updated_count == 3
+
+        with open(yaml_path, "r") as f:
+            updated_data = yaml.safe_load(f)
+
+        qualifiers_by_go_id = {
+            ann["term"]["id"]: ann.get("qualifier")
+            for ann in updated_data["existing_annotations"]
+        }
+        assert qualifiers_by_go_id == {
+            "GO:0001234": "enables",
+            "GO:0005678": "acts_upstream_of_or_within",
+            "GO:0008888": "part_of",
+        }
+    finally:
         goa_path.unlink()
         yaml_path.unlink()
 
@@ -833,6 +1219,95 @@ UniProtKB	Q12345	TEST	involved_in	GO:0050907	detection of chemical stimulus invo
     goa_path.unlink()
 
 
+def test_new_action_with_existing_go_id_different_qualifier_passes():
+    """A relation correction is novel even when the GO term already exists."""
+    validator = GOAValidator()
+
+    goa_content = """GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\tGO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\tTAXON NAME\tASSIGNED BY\tGENE NAME\tDATE
+UniProtKB\tQ12345\tTEST\tenables\tGO:0016491\toxidoreductase activity\tMF\tECO:0000256\tIEA\tGO_REF:0000002\tInterPro:IPR000001\tNCBITaxon:160488\tPseudomonas putida KT2440\tUniProt\tTest protein\t20260813"""
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as goa_file:
+        goa_file.write(goa_content)
+        goa_path = Path(goa_file.name)
+
+    yaml_data = {
+        "id": "Q12345",
+        "gene_symbol": "TEST",
+        "existing_annotations": [
+            {
+                "term": {"id": "GO:0016491", "label": "oxidoreductase activity"},
+                "evidence_type": "IEA",
+                "original_reference_id": "GO_REF:0000002",
+                "qualifier": "enables",
+                "supporting_entities": ["InterPro:IPR000001"],
+                "review": {"summary": "The subunit does not enable the activity alone", "action": "REMOVE"},
+            },
+            {
+                "term": {"id": "GO:0016491", "label": "oxidoreductase activity"},
+                "evidence_type": "ISS",
+                "original_reference_id": "file:PSEPK/TEST/TEST-notes.md",
+                "qualifier": "contributes_to",
+                "review": {"summary": "The subunit contributes to the complex activity", "action": "NEW"},
+            },
+        ],
+    }
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as yaml_file:
+        yaml.dump(yaml_data, yaml_file)
+        yaml_path = Path(yaml_file.name)
+
+    result = validator.validate_against_goa(yaml_path, goa_path)
+
+    assert result.is_valid, result.error_message
+    assert result.missing_in_yaml == []
+    assert result.missing_in_goa == []
+
+    yaml_path.unlink()
+    goa_path.unlink()
+
+
+def test_unpaired_new_action_with_different_qualifier_fails():
+    """A relation difference alone is not enough to bypass duplicate checking."""
+    validator = GOAValidator()
+
+    goa_content = """GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\tGO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\tTAXON NAME\tASSIGNED BY\tGENE NAME\tDATE
+UniProtKB\tQ12345\tTEST\tinvolved_in\tGO:0050907\tdetection of chemical stimulus involved in sensory perception\tBP\tECO:0000318\tIBA\tGO_REF:0000033\tPTN000123456\tNCBITaxon:9606\tHomo sapiens\tGO_Central\tTest protein\t20260428"""
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".tsv", delete=False) as goa_file:
+        goa_file.write(goa_content)
+        goa_path = Path(goa_file.name)
+
+    yaml_data = {
+        "id": "Q12345",
+        "gene_symbol": "TEST",
+        "existing_annotations": [
+            {
+                "term": {
+                    "id": "GO:0050907",
+                    "label": "detection of chemical stimulus involved in sensory perception",
+                },
+                "evidence_type": "IDA",
+                "original_reference_id": "PMID:99999",
+                "qualifier": "acts_upstream_of_or_within",
+                "review": {"summary": "Unpaired relation change", "action": "NEW"},
+            },
+        ],
+    }
+
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as yaml_file:
+        yaml.dump(yaml_data, yaml_file)
+        yaml_path = Path(yaml_file.name)
+
+    result = validator.validate_against_goa(yaml_path, goa_path)
+
+    assert not result.is_valid
+    assert result.error_message is not None
+    assert "qualifier=acts_upstream_of_or_within" in result.error_message
+
+    yaml_path.unlink()
+    goa_path.unlink()
+
+
 def test_validate_gene_review_blocks_new_action_existing_in_goa():
     """Integrated best-practices validation should hard-fail NEW-vs-GOA conflicts."""
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -913,7 +1388,7 @@ UniProtKB	P19544-1	WT1		GO:0045892	negative regulation of DNA-templated transcri
 
     try:
         # Seed annotations
-        added_count, output_path, refs_added = validator.seed_missing_annotations(
+        added_count, output_path, refs_added, _, _ = validator.seed_missing_annotations(
             yaml_path, goa_path
         )
 
@@ -977,7 +1452,7 @@ UniProtKB	P19544-1	WT1	NOT|involved_in	GO:0045893	positive regulation of DNA-tem
 
     try:
         # Seed annotations
-        added_count, output_path, refs_added = validator.seed_missing_annotations(
+        added_count, output_path, refs_added, _, _ = validator.seed_missing_annotations(
             yaml_path, goa_path
         )
 
@@ -1029,7 +1504,7 @@ UniProtKB	Q12345	TEST	enables	GO:0001234	test function	MF	ECO:0000353	IPI	PMID:1
 
     try:
         # Seed should create the file
-        added_count, output_path, refs_added = validator.seed_missing_annotations(
+        added_count, output_path, refs_added, _, _ = validator.seed_missing_annotations(
             yaml_path, goa_path
         )
 
@@ -1048,3 +1523,100 @@ UniProtKB	Q12345	TEST	enables	GO:0001234	test function	MF	ECO:0000353	IPI	PMID:1
         goa_path.unlink()
         if yaml_path.exists():
             yaml_path.unlink()
+
+
+@pytest.mark.parametrize('donors', [('', 'UniProtKB:P11111'), ('UniProtKB:P11111', '')])
+@pytest.mark.parametrize('qualifier', ['', 'enables'])
+def test_seed_mixed_empty_support_is_one_to_one(tmp_path, donors, qualifier):
+    """Empty support cannot steal a curated row already assigned to another source."""
+    goa_path = tmp_path / 'TEST-goa.tsv'
+    header = 'GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\tGO NAME\tGO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\tWITH/FROM\tTAXON ID\tTAXON NAME\tASSIGNED BY\tGENE NAME\tDATE\n'
+    goa_path.write_text(header + ''.join(
+        f'UniProtKB\tQ12345\tTEST\tenables\tGO:0001234\ttest function\tMF\tECO:0000266\tISO\tPMID:12345\t{donor}\tNCBITaxon:9606\tHomo sapiens\tUniProt\tTest\t20180515\n'
+        for donor in donors
+    ))
+    yaml_path = tmp_path / 'TEST-ai-review.yaml'
+    yaml_path.write_text(yaml.safe_dump({'existing_annotations': [{
+        'term': {'id': 'GO:0001234', 'label': 'test function'},
+        'evidence_type': 'ISO', 'original_reference_id': 'PMID:12345',
+        'qualifier': qualifier,
+        'review': {'summary': 'Curated legacy assertion', 'action': 'ACCEPT'},
+    }]}))
+    validator = GOAValidator()
+    added, *_ = validator.seed_missing_annotations(yaml_path, goa_path)
+    assert added == 1
+    rows = yaml.safe_load(yaml_path.read_text())['existing_annotations']
+    assert len(rows) == 2
+    assert {tuple(row.get('supporting_entities', [])) for row in rows} == {(), ('UniProtKB:P11111',)}
+    assert rows[0].get('supporting_entities', []) == []
+    assert rows[0]['review']['summary'] == 'Curated legacy assertion'
+    assert rows[1]['review']['action'] == 'PENDING'
+    assert validator.validate_against_goa(yaml_path, goa_path).is_valid
+    seeded = yaml_path.read_bytes()
+    assert validator.seed_missing_annotations(yaml_path, goa_path)[0] == 0
+    assert yaml_path.read_bytes() == seeded
+
+@pytest.mark.parametrize(
+    'sources, valid, missing',
+    [
+        (['UniProtKB:P11111', 'UniProtKB:P22222', 'UniProtKB:P33333'], True, 0),
+        (['UniProtKB:P11111', 'UniProtKB:P22222'], False, 2),
+        (['UniProtKB:P11111', 'UniProtKB:P22222', 'UniProtKB:P33333', 'UniProtKB:P99999'], False, 2),
+        (['UniProtKB:P11111'], False, 1),
+    ],
+)
+def test_legacy_combined_support_requires_union_of_complete_sources(sources, valid, missing):
+    """Legacy unions are valid, but cannot invent IDs or truncate source groups."""
+    from ai_gene_review.validation.goa_validator import GOAValidationResult
+
+    goa = [GOAAnnotation.from_tsv_row([
+        'UniProtKB', 'Q12345', 'TEST', 'enables', 'GO:0005515',
+        'protein binding', 'MF', '', 'IPI', 'PMID:12345', support,
+    ]) for support in ['UniProtKB:P11111', 'UniProtKB:P22222|UniProtKB:P33333']]
+    annotations = [{
+        'term': {'id': 'GO:0005515', 'label': 'protein binding'},
+        'evidence_type': 'IPI', 'original_reference_id': 'PMID:12345',
+        'supporting_entities': sources, 'review': {'action': 'ACCEPT'},
+    }]
+    validator = GOAValidator()
+    result = validator._validate_strict_tuples(goa, annotations, GOAValidationResult(is_valid=True))
+    assert result.is_valid is valid
+    assert len(result.missing_in_yaml) == missing
+
+
+def test_seeding_preserves_combined_historical_review(tmp_path):
+    """Expanding combined support must not copy its judgment into each source."""
+    import csv
+
+    goa_path = tmp_path / 'TEST-goa.tsv'
+    with goa_path.open('w') as handle:
+        writer = csv.writer(handle, delimiter='\t')
+        writer.writerow(['GENE PRODUCT DB', 'GENE PRODUCT ID', 'SYMBOL', 'QUALIFIER',
+                         'GO TERM', 'GO NAME', 'GO ASPECT', 'ECO ID',
+                         'GO EVIDENCE CODE', 'REFERENCE', 'WITH/FROM'])
+        for source in ['UniProtKB:P11111', 'UniProtKB:P22222']:
+            writer.writerow(['UniProtKB', 'Q12345', 'TEST', 'enables', 'GO:0005515',
+                             'protein binding', 'MF', '', 'IPI', 'PMID:12345', source])
+    yaml_path = tmp_path / 'TEST-ai-review.yaml'
+    historical = {
+        'term': {'id': 'GO:0005515', 'label': 'protein binding'},
+        'evidence_type': 'IPI', 'original_reference_id': 'PMID:12345',
+        'qualifier': 'enables',
+        'supporting_entities': ['UniProtKB:P11111', 'UniProtKB:P22222'],
+        'review': {'action': 'ACCEPT', 'summary': 'Combined historical judgment'},
+    }
+    yaml_path.write_text(yaml.safe_dump({
+        'id': 'Q12345', 'gene_symbol': 'TEST', 'status': 'COMPLETE',
+        'existing_annotations': [historical],
+        'references': [{'id': 'PMID:12345', 'title': 'Existing title'}],
+    }))
+    validator = GOAValidator()
+    added, *_ = validator.seed_missing_annotations(yaml_path, goa_path, fetch_titles=False)
+    assert added == 2
+    assert yaml.safe_load(yaml_path.read_text())['status'] == 'IN_PROGRESS'
+    rows = yaml.safe_load(yaml_path.read_text())['existing_annotations']
+    assert rows[0] == historical
+    assert [row['review']['action'] for row in rows[1:]] == ['PENDING', 'PENDING']
+    assert validator.validate_against_goa(yaml_path, goa_path).is_valid
+    added, *_ = validator.seed_missing_annotations(yaml_path, goa_path, fetch_titles=False)
+    assert added == 0

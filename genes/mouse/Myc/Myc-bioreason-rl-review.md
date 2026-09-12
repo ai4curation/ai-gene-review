@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: Myc (mouse)
 
-Source: Myc-deep-research-bioreason-rl.md
+Source: Myc-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 4/5

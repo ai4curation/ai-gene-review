@@ -157,3 +157,74 @@ def test_ipi_distinct_pmid_consistent_actions_no_warning():
     )
     report = _validate(yaml_data)
     assert not _has_inconsistent_action_warning(report)
+
+
+def test_remove_distinct_citation_divergence_suppressed():
+    """REMOVE rows anchored to a wrong citation are not curator inconsistency.
+
+    The ATF3 GO:0000122 / GO:0001228 / GO:0045944 pattern: the term itself is
+    a valid annotation supported by several genuine ATF3 papers (all ACCEPT),
+    but one GOA row is anchored to a citation that does not substantiate it
+    (a wrong-gene paper, or a review that does not cover the gene). REMOVE on
+    that row is correct per-citation curation, not a term-level disagreement,
+    so the divergence must not be flagged.
+    """
+    yaml_data = _build_yaml(
+        "GO:0000122",
+        [
+            {"evidence_type": "IEA", "pmid": "PMID:7515060", "action": "ACCEPT"},
+            {"evidence_type": "IDA", "pmid": "PMID:8622660", "action": "ACCEPT"},
+            {"evidence_type": "TAS", "pmid": "PMID:14685163", "action": "REMOVE"},
+        ],
+    )
+    report = _validate(yaml_data)
+    assert not _has_inconsistent_action_warning(report), (
+        "A REMOVE row citing a reference distinct from the kept rows should "
+        "not trigger the inconsistent-actions warning"
+    )
+
+
+def test_remove_shared_citation_still_warns():
+    """A REMOVE row sharing a citation with a kept row remains a real defect.
+
+    If a REMOVE row and an ACCEPT row cite the *same* paper, the divergence
+    cannot be a per-citation judgment — it is curator inconsistency over the
+    same evidence and must still warn.
+    """
+    yaml_data = _build_yaml(
+        "GO:0000122",
+        [
+            {"evidence_type": "IDA", "pmid": "PMID:7515060", "action": "ACCEPT"},
+            {"evidence_type": "TAS", "pmid": "PMID:7515060", "action": "REMOVE"},
+        ],
+    )
+    report = _validate(yaml_data)
+    assert _has_inconsistent_action_warning(report), (
+        "A REMOVE row sharing a citation with a kept row should still warn"
+    )
+
+
+def test_remove_with_inconsistent_kept_actions_still_warns():
+    """REMOVE divergence is only exempt when the kept rows agree among themselves.
+
+    If, after setting aside the REMOVE rows, the remaining rows still carry
+    divergent actions (e.g. ACCEPT vs KEEP_AS_NON_CORE), the term-level
+    judgment is itself inconsistent and the warning must still fire.
+    """
+    yaml_data = _build_yaml(
+        "GO:0000122",
+        [
+            {"evidence_type": "IEA", "pmid": "PMID:7515060", "action": "ACCEPT"},
+            {
+                "evidence_type": "IDA",
+                "pmid": "PMID:8622660",
+                "action": "KEEP_AS_NON_CORE",
+            },
+            {"evidence_type": "TAS", "pmid": "PMID:14685163", "action": "REMOVE"},
+        ],
+    )
+    report = _validate(yaml_data)
+    assert _has_inconsistent_action_warning(report), (
+        "Divergent actions among the kept rows should still warn even when a "
+        "distinct-citation REMOVE row is present"
+    )

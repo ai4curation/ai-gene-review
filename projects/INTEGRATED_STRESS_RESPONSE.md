@@ -1,3 +1,10 @@
+---
+title: "Integrated Stress Response (ISR) Project"
+maturity: SCOPING
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [human]
+---
+
 # Integrated Stress Response (ISR) Project
 
 ## Overview

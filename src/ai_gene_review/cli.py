@@ -1,6 +1,12 @@
 """CLI interface for ai-gene-review."""
 
+import re
+import shlex
+import shutil
+import subprocess
+import time
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import List, Optional
 
 import typer
@@ -22,15 +28,41 @@ from ai_gene_review.etl.publication_refresh import (
     find_active_review_pmids,
 )
 from ai_gene_review.validation import (
+    BatchValidationReport,
+    ValidationReport,
     validate_gene_review,
-    validate_multiple_files,
     ValidationSeverity,
 )
 from ai_gene_review.validation.goa_validator import GOAValidator
-from ai_gene_review.validation.validator import get_schema_path
+from ai_gene_review.validation.validator import get_project_root, get_schema_path
 from ai_gene_review.draw import ReviewVisualizer
+from ai_gene_review.litscan.cli import litscan_app
+from ai_gene_review.tools.audit_fulltext_flags import audit as audit_flags
 
 app = typer.Typer(help="ai-gene-review: Gene data ETL and review tool.")
+app.add_typer(litscan_app, name="litscan")
+
+
+@app.command()
+def audit_fulltext_flags(
+    repo_root: Path = typer.Option(Path("."), help="Repository root."),
+    gene_dir: List[Path] = typer.Option(
+        None, help="Limit to specific gene directories; defaults to all of genes/."
+    ),
+    fix: bool = typer.Option(False, "--fix", help="Remove the stale flags, not just report."),
+) -> None:
+    """Report references flagged full_text_unavailable whose cached publication has full text.
+
+    No validator compares that pair, and the flag discourages extracting the evidence an
+    annotation needs, so the defect is silent. A stale flag on a reference with zero findings
+    is the signature: the flag suppressed the extraction. Exits non-zero if any remain.
+    """
+    try:
+        code = audit_flags(repo_root, gene_dir, fix, echo=typer.echo)
+    except FileNotFoundError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    if code:
+        raise typer.Exit(code=code)
 
 
 @app.command()
@@ -151,12 +183,23 @@ def fetch_gene(
                 if (
                     result["annotations_added"] > 0
                     or result.get("references_added", 0) > 0
+                    or result.get("qualifiers_backfilled", 0) > 0
+                    or result.get("supporting_entities_backfilled", 0) > 0
                 ):
                     parts = []
                     if result["annotations_added"] > 0:
                         parts.append(f"{result['annotations_added']} annotations")
                     if result.get("references_added", 0) > 0:
                         parts.append(f"{result.get('references_added', 0)} references")
+                    if result.get("qualifiers_backfilled", 0) > 0:
+                        parts.append(
+                            f"qualifiers on {result.get('qualifiers_backfilled', 0)} annotations"
+                        )
+                    if result.get("supporting_entities_backfilled", 0) > 0:
+                        parts.append(
+                            "supporting entities on "
+                            f"{result.get('supporting_entities_backfilled', 0)} annotations"
+                        )
                     typer.echo(
                         f"  - {file_prefix}-ai-review.yaml (added {' and '.join(parts)})"
                     )
@@ -346,6 +389,377 @@ def batch_fetch(
         raise typer.Exit(code=1)
 
 
+def _tool_command(command_name: str) -> list[str]:
+    """Return a command prefix for an installed validation CLI."""
+    resolved = shutil.which(command_name)
+    if resolved:
+        return [resolved]
+
+    uv = shutil.which("uv")
+    if uv:
+        return [uv, "run", command_name]
+
+    return [command_name]
+
+
+def _summarize_validator_output(output: str, max_chars: int = 1800) -> str:
+    """Keep the actionable lines from external validator output."""
+    lines = [line.strip() for line in output.splitlines() if line.strip()]
+    if not lines:
+        return "no output"
+
+    interesting = [
+        line
+        for line in lines
+        if re.search(
+            r"error|warn|mismatch|required|not of type|additional propert"
+            r"|invalid|failed|not valid|not found",
+            line,
+            re.IGNORECASE,
+        )
+    ]
+    selected = interesting or lines[-8:]
+    summary = "; ".join(selected)
+    if len(summary) > max_chars:
+        return summary[: max_chars - 3] + "..."
+    return summary
+
+
+def _warning_lines(output: str) -> list[str]:
+    # Matches both the linkml-reference-validator "[WARN]" / leading "WARN" style
+    # and the linkml-term-validator "⚠️  WARN:" emoji style (ontology label drift).
+    return [
+        line.strip()
+        for line in output.splitlines()
+        if re.search(r"(^|\[)(WARN|WARNING)\b", line.strip(), re.IGNORECASE)
+        or "⚠" in line
+    ]
+
+
+def _has_error_output(output: str) -> bool:
+    # "❌ ERROR" is the linkml-term-validator error marker; the "❌ ... issue(s):"
+    # header (also emitted for warning-only results) intentionally does not match.
+    return bool(
+        re.search(
+            r"^\s*\[ERROR\]|❌\s*ERROR|Traceback|^Error:",
+            output,
+            re.IGNORECASE | re.MULTILINE,
+        )
+    )
+
+
+def _run_validation_command(
+    report: ValidationReport,
+    phase: str,
+    command: list[str],
+    validation_category: str,
+    check_type: str,
+    cwd: Path,
+    show_timing: bool = False,
+) -> None:
+    start = time.perf_counter()
+    try:
+        completed = subprocess.run(
+            command,
+            cwd=cwd,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except FileNotFoundError:
+        report.add_issue(
+            ValidationSeverity.ERROR,
+            f"{phase} command not found: {command[0]}",
+            path=str(report.file_path) if report.file_path else None,
+            validation_category=validation_category,
+            check_type=check_type,
+        )
+        return
+
+    output = "\n".join(
+        part for part in [completed.stdout, completed.stderr] if part
+    ).strip()
+    command_text = " ".join(shlex.quote(part) for part in command)
+    details = {
+        "command": command_text,
+        "return_code": completed.returncode,
+        "output": output,
+    }
+
+    warnings = _warning_lines(output)
+
+    has_error_output = _has_error_output(output)
+
+    if completed.returncode != 0 and (has_error_output or not warnings):
+        report.add_issue(
+            ValidationSeverity.ERROR,
+            f"{phase} failed: {_summarize_validator_output(output)}",
+            path=str(report.file_path) if report.file_path else None,
+            details=details,
+            validation_category=validation_category,
+            check_type=check_type,
+        )
+    elif has_error_output:
+        report.add_issue(
+            ValidationSeverity.WARNING,
+            f"{phase} reported error-like output despite exit code 0: {_summarize_validator_output(output)}",
+            path=str(report.file_path) if report.file_path else None,
+            details=details,
+            validation_category=validation_category,
+            check_type=check_type,
+        )
+    else:
+        if warnings:
+            report.add_issue(
+                ValidationSeverity.WARNING,
+                f"{phase} reported warnings: {_summarize_validator_output(chr(10).join(warnings))}",
+                path=str(report.file_path) if report.file_path else None,
+                details=details,
+                validation_category=validation_category,
+                check_type=check_type,
+            )
+
+    if show_timing:
+        typer.echo(f"  {phase}: {time.perf_counter() - start:.2f}s")
+
+
+def _merge_report(target: ValidationReport, source: ValidationReport) -> None:
+    target.issues.extend(source.issues)
+    if source.has_errors:
+        target.is_valid = False
+
+
+def _validate_gene_review_cli(
+    yaml_file: Path,
+    schema_path: Path,
+    check_best_practices: bool,
+    check_goa: bool,
+    check_references: bool,
+    check_schema: bool,
+    check_terms: bool,
+    show_timing: bool = False,
+) -> ValidationReport:
+    yaml_file = yaml_file.resolve()
+    schema_path = schema_path.resolve()
+    report = ValidationReport(file_path=yaml_file, is_valid=True)
+
+    if not yaml_file.exists():
+        report.add_issue(
+            ValidationSeverity.ERROR,
+            f"File not found: {yaml_file}",
+            path=None,
+            validation_category="FileValidator",
+            check_type="file_exists",
+        )
+        return report
+
+    project_root = get_project_root()
+
+    if check_schema:
+        _run_validation_command(
+            report,
+            "Schema validation",
+            [
+                *_tool_command("linkml-validate"),
+                "--schema",
+                str(schema_path),
+                "--target-class",
+                "GeneReview",
+                str(yaml_file),
+            ],
+            "SchemaValidator",
+            "linkml_validate",
+            cwd=project_root,
+            show_timing=show_timing,
+        )
+
+    if check_terms:
+        term_wrapper = project_root / "scripts" / "run_term_validator.sh"
+        oak_config = project_root / "conf" / "oak_config.yaml"
+        term_command = (
+            [str(term_wrapper)]
+            if term_wrapper.exists()
+            else _tool_command("linkml-term-validator")
+        )
+        command = [
+            *term_command,
+            "validate-data",
+            str(yaml_file),
+            "-s",
+            str(schema_path),
+            "-t",
+            "GeneReview",
+            "--labels",
+        ]
+        if oak_config.exists():
+            command.extend(["-c", str(oak_config)])
+        _run_validation_command(
+            report,
+            "Term validation",
+            command,
+            "TermValidator",
+            "linkml_term_validator",
+            cwd=project_root,
+            show_timing=show_timing,
+        )
+
+    if check_references:
+        reference_wrapper = project_root / "scripts" / "run_reference_validator.sh"
+        reference_config = project_root / "conf" / "reference_validator_config.yaml"
+        reference_command = (
+            [str(reference_wrapper)]
+            if reference_wrapper.exists()
+            else _tool_command("linkml-reference-validator")
+        )
+        command = [
+            *reference_command,
+            "validate",
+            "data",
+            str(yaml_file),
+            "--schema",
+            str(schema_path),
+            "--target-class",
+            "GeneReview",
+        ]
+        if reference_config.exists():
+            command.extend(["--config", str(reference_config)])
+        _run_validation_command(
+            report,
+            "Reference validation",
+            command,
+            "ReferenceValidator",
+            "linkml_reference_validator",
+            cwd=project_root,
+            show_timing=show_timing,
+        )
+
+    if check_best_practices:
+        try:
+            best_practices_report = validate_gene_review(
+                yaml_file,
+                schema_path,
+                check_best_practices=True,
+                check_goa=check_goa,
+                check_supporting_text=check_references,
+            )
+            _merge_report(report, best_practices_report)
+        except Exception as e:
+            report.add_issue(
+                ValidationSeverity.ERROR,
+                f"Best practices validation failed: {e}",
+                path=str(yaml_file),
+                validation_category="BestPracticeValidator",
+                check_type="custom_rules",
+            )
+
+    return report
+
+
+def _validate_rule_review_cli(
+    yaml_file: Path,
+    schema_path: Path,
+) -> ValidationReport:
+    """Validate one rule review with the standard LinkML CLI tools."""
+    yaml_file = yaml_file.resolve()
+    schema_path = schema_path.resolve()
+    report = ValidationReport(file_path=yaml_file, is_valid=True)
+
+    if not yaml_file.exists():
+        report.add_issue(
+            ValidationSeverity.ERROR,
+            f"File not found: {yaml_file}",
+            path=None,
+            validation_category="FileValidator",
+            check_type="file_exists",
+        )
+        return report
+
+    project_root = get_project_root()
+    _run_validation_command(
+        report,
+        "Schema validation",
+        [
+            *_tool_command("linkml-validate"),
+            "--schema",
+            str(schema_path),
+            "--target-class",
+            "RuleReview",
+            str(yaml_file),
+        ],
+        "SchemaValidator",
+        "linkml_validate",
+        cwd=project_root,
+    )
+
+    return report
+
+
+def _validate_multiple_files_cli(
+    yaml_files: list[Path],
+    schema_path: Path,
+    check_best_practices: bool,
+    check_goa: bool,
+    check_references: bool,
+    check_schema: bool,
+    check_terms: bool,
+    show_progress: bool = False,
+    show_timing: bool = False,
+) -> BatchValidationReport:
+    batch_report = BatchValidationReport()
+
+    if show_progress and len(yaml_files) > 1:
+        from rich.progress import (
+            BarColumn,
+            Progress,
+            SpinnerColumn,
+            TaskProgressColumn,
+            TextColumn,
+            TimeElapsedColumn,
+        )
+
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            TaskProgressColumn(),
+            TimeElapsedColumn(),
+            console=None,
+        ) as progress:
+            main_task = progress.add_task("Validating files...", total=len(yaml_files))
+
+            for yaml_file in yaml_files:
+                progress.update(main_task, description=f"Validating {yaml_file.name}")
+                batch_report.reports.append(
+                    _validate_gene_review_cli(
+                        yaml_file,
+                        schema_path,
+                        check_best_practices,
+                        check_goa,
+                        check_references,
+                        check_schema,
+                        check_terms,
+                        show_timing=show_timing,
+                    )
+                )
+                progress.advance(main_task)
+    else:
+        for yaml_file in yaml_files:
+            batch_report.reports.append(
+                _validate_gene_review_cli(
+                    yaml_file,
+                    schema_path,
+                    check_best_practices,
+                    check_goa,
+                    check_references,
+                    check_schema,
+                    check_terms,
+                    show_timing=show_timing,
+                )
+            )
+
+    return batch_report
+
+
 @app.command()
 def validate(
     yaml_files: Annotated[list[Path], typer.Argument(help="YAML file(s) to validate")],
@@ -369,14 +783,25 @@ def validate(
     no_best_practices: Annotated[
         bool, typer.Option("--no-best-practices", help="Skip best practices checks")
     ] = False,
+    no_schema: Annotated[
+        bool, typer.Option("--no-schema", help="Skip LinkML schema validation")
+    ] = False,
+    terms: Annotated[
+        bool,
+        typer.Option(
+            "--terms",
+            help="Run ontology term/label validation with linkml-term-validator",
+        ),
+    ] = False,
     no_goa: Annotated[
         bool, typer.Option("--no-goa", help="Skip GOA validation")
     ] = False,
-    no_supporting_text: Annotated[
+    no_references: Annotated[
         bool,
         typer.Option(
+            "--no-references",
             "--no-supporting-text",
-            help="Skip supporting_text validation against cached publications",
+            help="Skip reference title and supporting_text validation",
         ),
     ] = False,
     tsv_output: Annotated[
@@ -390,12 +815,18 @@ def validate(
         bool, typer.Option("--show-timing", help="Show timing information for validation steps")
     ] = False,
 ):
-    """Validate gene review YAML files against the LinkML schema.
+    """Validate gene review YAML files.
+
+    By default this runs strict LinkML schema validation, reference validation
+    for publication titles and supporting_text snippets, and custom
+    best-practices checks. Use --terms to also run ontology term/label
+    validation.
 
     Examples:
         ai-gene-review validate genes/human/CFAP300/CFAP300-ai-review.yaml
         ai-gene-review validate genes/human/*/*.yaml
         ai-gene-review validate test.yaml --schema custom_schema.yaml --verbose
+        ai-gene-review validate test.yaml --terms
         ai-gene-review validate test.yaml --strict  # Fail on warnings too
     """
     # Handle glob patterns
@@ -418,15 +849,24 @@ def validate(
 
     check_best_practices = not no_best_practices
     check_goa = not no_goa
-    check_supporting_text = not no_supporting_text
+    check_references = not no_references
+    check_schema = not no_schema
+    schema_path = Path(schema).resolve() if schema else get_schema_path()
 
     # Validate single file or multiple files
     if len(all_files) == 1:
         yaml_file = all_files[0]
         typer.echo(f"Validating {yaml_file}...")
 
-        report = validate_gene_review(
-            yaml_file, schema, check_best_practices, check_goa, check_supporting_text
+        report = _validate_gene_review_cli(
+            yaml_file,
+            schema_path,
+            check_best_practices,
+            check_goa,
+            check_references,
+            check_schema,
+            terms,
+            show_timing=show_timing,
         )
 
         # Determine status symbol and color
@@ -488,15 +928,16 @@ def validate(
         # Multiple files
         typer.echo(f"Validating {len(all_files)} files...")
 
-        # Cast to List[Path | str] for type compatibility
-        files_to_validate: list[Path | str] = [f for f in all_files]
-        batch_report = validate_multiple_files(
-            files_to_validate,
-            schema,
+        batch_report = _validate_multiple_files_cli(
+            all_files,
+            schema_path,
             check_best_practices,
             check_goa,
-            check_supporting_text,
+            check_references,
+            check_schema,
+            terms,
             show_progress=True,  # Enable progress bar for multiple files
+            show_timing=show_timing,
         )
 
         # Show summary
@@ -855,41 +1296,55 @@ def seed_goa(
     # Initialize validator
     validator = GOAValidator()
 
-    # First check what's missing
-    if yaml_file.exists():
-        typer.echo(f"Checking {yaml_file.name} for missing annotations...")
-        result = validator.validate_against_goa(yaml_file, goa_file)
-
-        if not result.missing_in_yaml:
-            typer.echo(
-                "✓ No missing annotations to seed - YAML already contains all GOA annotations"
-            )
-            return
-
-        typer.echo(f"Found {len(result.missing_in_yaml)} missing annotations to seed:")
-        for ann in result.missing_in_yaml[:5]:  # Show first 5
-            typer.echo(f"  - {ann.go_id} ({ann.go_term})")
-        if len(result.missing_in_yaml) > 5:
-            typer.echo(f"  ... and {len(result.missing_in_yaml) - 5} more")
-    else:
-        typer.echo("Creating new YAML file with all GOA annotations...")
-
-    if dry_run:
-        typer.echo("\n--dry-run specified, no changes will be made")
-        return
+    # Validation permits historical source collapse. Always ask the seeder what
+    # needs expansion/backfill instead of treating validation success as a no-op.
+    typer.echo(f"Checking {yaml_file.name} for missing annotations and source metadata...")
 
     # Perform the seeding
     try:
-        added_count, output_path, refs_added = validator.seed_missing_annotations(
-            yaml_file, goa_file, output, fetch_titles=fetch_titles
+        if dry_run:
+            with TemporaryDirectory(prefix="aigr-seed-preview-") as preview_dir:
+                added, _, refs, qualifiers, sources = validator.seed_missing_annotations(
+                    yaml_file, goa_file, Path(preview_dir) / "preview.yaml",
+                    fetch_titles=False,
+                )
+            typer.echo(
+                f"Would add {added} annotations and {refs} references; "
+                f"backfill {qualifiers} qualifiers and {sources} supporting-entity lists."
+            )
+            typer.echo("--dry-run specified, no changes will be made")
+            return
+
+        (
+            added_count,
+            output_path,
+            refs_added,
+            qualifiers_backfilled,
+            supporting_entities_backfilled,
+        ) = (
+            validator.seed_missing_annotations(
+                yaml_file, goa_file, output, fetch_titles=fetch_titles
+            )
         )
 
-        if added_count > 0 or refs_added > 0:
+        if (
+            added_count > 0
+            or refs_added > 0
+            or qualifiers_backfilled > 0
+            or supporting_entities_backfilled > 0
+        ):
             parts = []
             if added_count > 0:
                 parts.append(f"{added_count} annotations")
             if refs_added > 0:
                 parts.append(f"{refs_added} references")
+            if qualifiers_backfilled > 0:
+                parts.append(f"qualifiers on {qualifiers_backfilled} annotations")
+            if supporting_entities_backfilled > 0:
+                parts.append(
+                    "supporting entities on "
+                    f"{supporting_entities_backfilled} annotations"
+                )
             typer.echo(f"\n✓ Successfully added {' and '.join(parts)} to {output_path}")
             typer.echo("\nNote: Review sections left empty for AI to complete")
         else:
@@ -995,9 +1450,8 @@ def backfill_qualifiers(
         ),
     ] = False,
 ):
-    """Backfill contributes_to qualifier on MF annotations from GOA data.
+    """Backfill GOA qualifier values on existing annotations from GOA data.
 
-    Only records 'contributes_to' -- no qualifier means 'enables' (the default).
     Does NOT modify annotations that already have a qualifier field.
 
     Examples:
@@ -1026,17 +1480,21 @@ def backfill_qualifiers(
                     raise typer.Exit(code=1)
 
             goa_annotations = validator.parse_goa_file(goa_path)
-            contributes = [
-                a for a in goa_annotations
-                if validator._is_contributes_to(a.qualifier, a.go_aspect)
+            qualified = [
+                (a, qualifier)
+                for a in goa_annotations
+                if (qualifier := validator._parse_qualifier(a.qualifier))
             ]
-            if not contributes:
-                typer.echo("No contributes_to annotations found in GOA file")
+            if not qualified:
+                typer.echo("No recognized qualifiers found in GOA file")
                 return
 
-            typer.echo(f"Found {len(contributes)} contributes_to annotations:")
-            for ann in contributes:
-                typer.echo(f"  {ann.go_id} {ann.go_term} ({ann.evidence_code}, {ann.reference})")
+            typer.echo(f"Found {len(qualified)} GOA annotations with recognized qualifiers:")
+            for ann, qualifier in qualified:
+                typer.echo(
+                    f"  {qualifier} {ann.go_id} {ann.go_term} "
+                    f"({ann.evidence_code}, {ann.reference})"
+                )
 
             typer.echo("\nUse without --dry-run to apply these updates")
         except (ValueError, FileNotFoundError) as e:
@@ -2281,6 +2739,27 @@ def rules_export(
     typer.echo(f"✓ GO summary written to {summary_path}")
 
 
+@app.command("init-rule-review")
+def init_rule_review_cli(
+    rule_id: Annotated[
+        str,
+        typer.Argument(help="ARBA or UniRule identifier"),
+    ],
+    cache_dir: Annotated[
+        Path,
+        typer.Option(
+            "--cache-dir",
+            "-d",
+            help="Family-specific rules cache directory",
+        ),
+    ] = Path("rules/arba"),
+) -> None:
+    """Create a rule-review YAML stub without overwriting an existing review."""
+    from ai_gene_review.etl.rule_review_init import init_rule_review
+
+    init_rule_review(rule_id, cache_dir=cache_dir)
+
+
 @app.command()
 def rules_validate(
     files: Annotated[
@@ -2302,9 +2781,7 @@ def rules_validate(
 ):
     """Validate rule review YAML files against the LinkML schema.
 
-    Validates RuleReview files including:
-    - Schema compliance (RuleReview class)
-    - PMID title verification (catches hallucinated references)
+    Validates RuleReview files for schema compliance with the RuleReview class.
 
     Examples:
         # Validate a specific review
@@ -2316,8 +2793,6 @@ def rules_validate(
         # Validate with verbose output
         ai-gene-review rules-validate --all -v
     """
-    from ai_gene_review.validation.validator import validate_rule_review
-
     # Collect files to validate
     all_files: list[Path] = []
 
@@ -2338,14 +2813,17 @@ def rules_validate(
     # Track results
     valid_count = 0
     invalid_count = 0
+    schema_path = get_schema_path()
 
     for yaml_file in all_files:
-        report = validate_rule_review(yaml_file)
+        report = _validate_rule_review_cli(yaml_file, schema_path)
 
         if report.is_valid:
             valid_count += 1
             if verbose:
                 typer.echo(f"✓ {yaml_file}")
+                for issue in report.issues:
+                    _print_issue(issue)
         else:
             invalid_count += 1
             typer.echo(f"✗ {yaml_file}", err=True)
@@ -2491,10 +2969,17 @@ def render_projects(
         # Render a specific project
         ai-gene-review render-projects projects/FERROPTOSIS.md
 
+        # Rendering projects/FOO.md also renders markdown under projects/FOO/
+        # converts linked notebooks, and copies referenced local assets into
+        # the mirrored output tree.
+
         # Render to custom output directory
         ai-gene-review render-projects --all -o docs/projects
     """
-    from ai_gene_review.render_projects import render_project, render_all_projects
+    from ai_gene_review.render_projects import (
+        render_all_projects,
+        render_project_bundle,
+    )
 
     if all_projects:
         typer.echo("Rendering all project markdown files...")
@@ -2519,20 +3004,33 @@ def render_projects(
                 continue
 
             try:
-                output_path, warnings = render_project(
+                output_paths, warnings = render_project_bundle(
                     md_file,
                     output_dir=output_dir,
                     genes_dir=genes_dir,
+                    projects_dir=Path("projects"),
                 )
                 total_warnings.extend(warnings)
+                rendered_pages = [
+                    path for path in output_paths if path.suffix.lower() == ".html"
+                ]
+                copied_assets = [
+                    path for path in output_paths if path.suffix.lower() != ".html"
+                ]
 
                 if warnings:
-                    typer.echo(f"✓ {md_file.name} -> {output_path} ({len(warnings)} warnings)")
+                    typer.echo(
+                        f"✓ {md_file.name} -> {len(rendered_pages)} page(s), "
+                        f"{len(copied_assets)} asset(s) ({len(warnings)} warnings)"
+                    )
                     if verbose:
                         for w in warnings:
                             typer.echo(f"    - {w}")
                 else:
-                    typer.echo(f"✓ {md_file.name} -> {output_path}")
+                    typer.echo(
+                        f"✓ {md_file.name} -> {len(rendered_pages)} page(s), "
+                        f"{len(copied_assets)} asset(s)"
+                    )
 
             except Exception as e:
                 typer.echo(f"✗ {md_file.name}: {e}", err=True)
@@ -2543,6 +3041,221 @@ def render_projects(
     else:
         typer.echo("Please specify file(s) or use --all to render all projects", err=True)
         raise typer.Exit(code=1)
+
+
+@app.command()
+def render_modules(
+    files: Annotated[
+        Optional[List[Path]],
+        typer.Argument(help="Module YAML file(s) to render"),
+    ] = None,
+    output_dir: Annotated[
+        Path,
+        typer.Option("--output-dir", "-o", help="Output directory for module HTML files"),
+    ] = Path("pages/modules"),
+    modules_dir: Annotated[
+        Path,
+        typer.Option("--modules-dir", "-m", help="Directory containing module YAML files"),
+    ] = Path("modules"),
+    all_modules: Annotated[
+        bool,
+        typer.Option("--all", "-a", help="Render all module YAML files in modules/"),
+    ] = False,
+    verbose: Annotated[
+        bool,
+        typer.Option("--verbose", "-v", help="Show detailed output including warnings"),
+    ] = False,
+):
+    """Render module YAML files to HTML pages with an inline tree browser.
+
+    Examples:
+        # Render all modules and an index page
+        ai-gene-review render-modules --all
+
+        # Render a specific module
+        ai-gene-review render-modules modules/gluconeogenesis.yaml
+    """
+    from ai_gene_review.render_modules import render_all_modules, render_module
+
+    if all_modules:
+        typer.echo("Rendering all module YAML files...")
+        output_paths, warnings = render_all_modules(
+            modules_dir=modules_dir,
+            output_dir=output_dir,
+        )
+
+        if verbose and warnings:
+            typer.echo("\nAll warnings:")
+            for warning in warnings:
+                typer.echo(f"  - {warning}")
+
+        typer.echo(f"\nRendered {len(output_paths)} module page(s) to {output_dir}")
+    elif files:
+        total_warnings = []
+        had_errors = False
+        for requested_file in files:
+            module_file = requested_file
+            if not module_file.exists() and module_file.parent == Path("."):
+                filename = (
+                    module_file.name
+                    if module_file.suffix == ".yaml"
+                    else f"{module_file.name}.yaml"
+                )
+                candidate = modules_dir / filename
+                if candidate.exists():
+                    module_file = candidate
+
+            if not module_file.exists():
+                typer.echo(f"Error: File not found: {requested_file}", err=True)
+                had_errors = True
+                continue
+
+            try:
+                output_path, warnings = render_module(
+                    module_file,
+                    output_dir=output_dir,
+                    modules_dir=modules_dir,
+                )
+                total_warnings.extend(warnings)
+                if warnings:
+                    typer.echo(f"Rendered {module_file} -> {output_path} ({len(warnings)} warnings)")
+                    if verbose:
+                        for warning in warnings:
+                            typer.echo(f"    - {warning}")
+                else:
+                    typer.echo(f"Rendered {module_file} -> {output_path}")
+            except Exception as error:
+                typer.echo(f"Error rendering {module_file}: {error}", err=True)
+                had_errors = True
+
+        if total_warnings and not verbose:
+            typer.echo(f"\n{len(total_warnings)} warnings total (use --verbose to see all)")
+        if had_errors:
+            raise typer.Exit(code=1)
+    else:
+        typer.echo("Please specify file(s) or use --all to render all modules", err=True)
+        raise typer.Exit(code=1)
+
+
+@app.command()
+def render_module_notation(
+    files: Annotated[
+        Optional[List[Path]],
+        typer.Argument(help="Module YAML file(s) to project into compact notation"),
+    ] = None,
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--output-dir",
+            "-o",
+            help="Write <stem>-notation.txt per module here; if omitted, print to stdout",
+        ),
+    ] = None,
+    modules_dir: Annotated[
+        Path,
+        typer.Option("--modules-dir", "-m", help="Directory containing module YAML files"),
+    ] = Path("modules"),
+    all_modules: Annotated[
+        bool,
+        typer.Option("--all", "-a", help="Project all module YAML files in modules/"),
+    ] = False,
+):
+    """Project module YAML into a compact, human-readable symbol notation.
+
+    This is a read-only view of the canonical YAML: a legend mapping short symbols
+    to grounded entities (GO/ChEBI), a reactions block, and a regulation block in
+    which the arrow encodes sign (-o activation, -| inhibition) and the bracketed
+    tag encodes the SBO-grounded mechanism (competitive vs allosteric).
+
+    Examples:
+        # Print one module's notation to stdout
+        ai-gene-review render-module-notation modules/methionine_cycle.yaml
+
+        # Write notation files for every module
+        ai-gene-review render-module-notation --all -o pages/modules
+    """
+    from ai_gene_review.module_notation import render_module_notation_file
+    from ai_gene_review.render_modules import iter_module_files
+
+    if all_modules:
+        targets = iter_module_files(modules_dir)
+    elif files:
+        targets = list(files)
+    else:
+        typer.echo("Please specify file(s) or use --all", err=True)
+        raise typer.Exit(code=1)
+
+    for module_file in targets:
+        if not module_file.exists():
+            typer.echo(f"Error: File not found: {module_file}", err=True)
+            continue
+        notation = render_module_notation_file(module_file)
+        if output_dir is None:
+            typer.echo(notation)
+        else:
+            output_dir.mkdir(parents=True, exist_ok=True)
+            out_path = output_dir / f"{module_file.stem}-notation.txt"
+            out_path.write_text(notation)
+            typer.echo(f"Wrote {module_file} -> {out_path}")
+
+
+@app.command()
+def compare_module_regulation(
+    module_file: Annotated[
+        Path, typer.Argument(help="Curated module YAML (e.g. modules/methionine_cycle.yaml)")
+    ],
+    maud_toml: Annotated[
+        Path, typer.Argument(help="Maud model TOML to ingest as a regulatory source")
+    ],
+    mapping: Annotated[
+        Optional[Path],
+        typer.Option("--mapping", "-m", help="Reviewed id-mapping (source ids -> module symbols)"),
+    ] = None,
+    emit_candidates: Annotated[
+        bool,
+        typer.Option(
+            "--emit-candidates",
+            help="Also print source edges as candidate module connections (YAML)",
+        ),
+    ] = False,
+):
+    """Diff a curated module's regulation against a Maud model's regulatory tables.
+
+    Reduces both sides to canonical (effector, enzyme, sign, mechanism) edges and
+    reports agreements, missing/extra edges, and sign/mechanism conflicts. The Maud
+    source is treated as evidence (mediated by the reviewed --mapping), not merged.
+
+    Example:
+        ai-gene-review compare-module-regulation \\
+            modules/methionine_cycle.yaml \\
+            models/methionine/methionine_cycle.regulation.toml \\
+            -m models/methionine/maud_methionine_mapping.yaml
+    """
+    import yaml as _yaml
+
+    from ai_gene_review.maud_ingest import candidate_connections, maud_edges_from_files
+    from ai_gene_review.regulation_compare import (
+        diff_edges,
+        format_edge_diff,
+        module_regulatory_edges,
+    )
+
+    if not module_file.exists():
+        typer.echo(f"Error: module file not found: {module_file}", err=True)
+        raise typer.Exit(code=1)
+    if not maud_toml.exists():
+        typer.echo(f"Error: TOML file not found: {maud_toml}", err=True)
+        raise typer.Exit(code=1)
+
+    curated = module_regulatory_edges(_yaml.safe_load(module_file.read_text()))
+    source = maud_edges_from_files(maud_toml, mapping)
+    diff = diff_edges(curated, source)
+    typer.echo(format_edge_diff(diff, module_file.name, maud_toml.name))
+
+    if emit_candidates:
+        candidates = candidate_connections(source, source_id=f"file:{maud_toml}")
+        typer.echo("# candidate connections (review before adding to a module):")
+        typer.echo(_yaml.safe_dump(candidates, sort_keys=False))
 
 
 @app.command()
@@ -2660,6 +3373,1264 @@ def descriptions_status(
 
     if update:
         typer.echo("\nStatus fields updated in YAML files.")
+
+
+@app.command()
+def analyze_evidence_sources(
+    organism: Annotated[
+        str, typer.Option("--organism", "-o", help="Organism subdirectory under genes/")
+    ] = "human",
+    genes_dir: Annotated[
+        Path, typer.Option("--genes-dir", help="Root genes directory")
+    ] = Path("genes"),
+    cache_path: Annotated[
+        Path,
+        typer.Option(
+            "--type-cache", help="TSV cache of PMID -> PubMed publication types"
+        ),
+    ] = Path("publications/publication_types.tsv"),
+    output_dir: Annotated[
+        Path, typer.Option("--output-dir", help="Directory for the report and TSVs")
+    ] = Path("reports/evidence_sources"),
+    refresh: Annotated[
+        bool, typer.Option("--refresh", help="Re-fetch all publication types from PubMed")
+    ] = False,
+    no_network: Annotated[
+        bool,
+        typer.Option(
+            "--no-network", help="Do not query PubMed; classify only from the cache"
+        ),
+    ] = False,
+):
+    """Analyze which evidence sources support GO annotation review decisions.
+
+    Cross-tabulates reference publication_type (review vs primary vs deep
+    research, inferred from PubMed PT metadata) against the manuscript section
+    of each supporting-text snippet and the curator's review action, to test
+    hypotheses about whether reviews / abstracts / deep research suffice.
+
+    Examples:
+        ai-gene-review analyze-evidence-sources --organism human
+        ai-gene-review analyze-evidence-sources -o human --no-network
+    """
+    from ai_gene_review.tools.analyze_evidence_sources import (
+        analyze_evidence_sources as _run,
+    )
+
+    report_path = _run(
+        organism=organism,
+        genes_dir=genes_dir,
+        cache_path=cache_path,
+        output_dir=output_dir,
+        refresh=refresh,
+        network=not no_network,
+    )
+    typer.echo(f"Report written to {report_path}")
+
+
+@app.command()
+def fetch_panther_paint(
+    family: Annotated[
+        Optional[str],
+        typer.Argument(help="PANTHER family id (e.g., PTHR10177). Omit with --all."),
+    ] = None,
+    all_families: Annotated[
+        bool,
+        typer.Option(
+            "--all",
+            help="Process every cached family under interpro/panther/ in a single "
+            "leaf-GAF pass (skips families with no node annotations).",
+        ),
+    ] = False,
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--output-dir",
+            "-o",
+            help="Repo root (default: current directory). Slice is written to "
+            "interpro/panther/<FAMILY>/.",
+        ),
+    ] = None,
+    cache_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--cache-dir",
+            help="Where to cache the downloaded PAINT GAFs (default: <repo>/.cache/panther).",
+        ),
+    ] = None,
+    extra_uniprot: Annotated[
+        Optional[List[str]],
+        typer.Option(
+            "--extra-uniprot",
+            help="Extra member UniProt id(s) to include when resolving nodes "
+            "(repeatable). Single-family mode only.",
+        ),
+    ] = None,
+    force_download: Annotated[
+        bool,
+        typer.Option("--force-download", help="Re-download source GAFs even if cached."),
+    ] = False,
+):
+    """Fetch PANTHER PAINT (PTN node-level) annotations for a family (or --all).
+
+    Resolves the family's PTN tree nodes (from its cached ``<FAM>-entries.csv``
+    member list joined against the leaf IBA GAF), then slices the node-level
+    ``IBD.gaf`` (IBD/IRD/IKR annotations) for those nodes. Writes:
+
+        interpro/panther/<FAMILY>/<FAMILY>-paint.tsv   (one row per node annotation)
+
+    Run ``fetch-gene`` for a member first (or otherwise populate the family's
+    ``<FAMILY>-entries.csv``) so the member list is available.
+
+    Examples:
+        ai-gene-review fetch-panther-paint PTHR10177
+        ai-gene-review fetch-panther-paint PTHR35730 --extra-uniprot Q67XT3
+        ai-gene-review fetch-panther-paint --all
+    """
+    from ai_gene_review.etl.panther_paint import (
+        fetch_family_paint,
+        fetch_all_family_paint,
+    )
+
+    repo_root = output_dir or Path.cwd()
+    cache = cache_dir or (repo_root / ".cache" / "panther")
+    panther_root = repo_root / "interpro" / "panther"
+
+    if all_families:
+        if family:
+            typer.echo("❌ Pass either a FAMILY or --all, not both.")
+            raise typer.Exit(code=1)
+        typer.echo(
+            "Resolving PTN nodes for ALL cached families (single leaf-GAF pass; "
+            "this downloads/caches PAINT GAFs)..."
+        )
+        counts, removed = fetch_all_family_paint(
+            panther_root, cache_dir=cache, force_download=force_download
+        )
+        total = sum(counts.values())
+        typer.echo(
+            f"✓ Wrote PAINT slices for {len(counts)} family/families "
+            f"({total} node-level annotations total)."
+        )
+        if removed:
+            typer.echo(
+                f"  Removed {len(removed)} stale slice(s): {', '.join(removed)}"
+            )
+        return
+
+    if not family:
+        typer.echo("❌ Provide a FAMILY id or use --all.")
+        raise typer.Exit(code=1)
+
+    family_dir = panther_root / family
+    entries_csv = family_dir / f"{family}-entries.csv"
+    if not entries_csv.exists():
+        typer.echo(
+            f"❌ {entries_csv} not found. Fetch the family first "
+            f"(e.g. via fetch-gene for a member of {family})."
+        )
+        raise typer.Exit(code=1)
+
+    typer.echo(f"Resolving PTN nodes for {family} (this downloads/caches PAINT GAFs)...")
+    tsv_path, nodes = fetch_family_paint(
+        family,
+        entries_csv=entries_csv,
+        out_dir=family_dir,
+        cache_dir=cache,
+        extra_uniprot=extra_uniprot,
+        force_download=force_download,
+    )
+    if tsv_path is None:
+        typer.echo(f"✓ {family}: {len(nodes)} node(s), no node-level annotations")
+        typer.echo("  No PAINT slice retained; any stale slice was removed.")
+        return
+    n_annotations = sum(1 for _ in tsv_path.read_text().splitlines()) - 1
+    typer.echo(
+        f"✓ {family}: {len(nodes)} node(s), {n_annotations} node-level annotation(s)"
+    )
+    typer.echo(f"  {tsv_path}")
+
+
+@app.command()
+def fetch_gocam(
+    model_id: Annotated[
+        str,
+        typer.Argument(
+            help="GO-CAM model id (bare, gomodel: CURIE, or model URL)"
+        ),
+    ],
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", help="Top-level GO-CAM cache directory"),
+    ] = Path("gocams"),
+    force: Annotated[
+        bool,
+        typer.Option("--force", "-f", help="Re-fetch even if already cached"),
+    ] = False,
+):
+    """Fetch and cache a single GO-CAM model as gocams/<id>/<id>-src.yaml.
+
+    The model is downloaded as low-level Minerva JSON and translated into the
+    activity-centric gocam-py YAML representation.
+
+    Examples:
+        ai-gene-review fetch-gocam gomodel:568b0f9600000284
+        ai-gene-review fetch-gocam 568b0f9600000284 --force
+    """
+    from ai_gene_review.etl.gocam import cache_gocam_model, normalize_gocam_id
+
+    mid = normalize_gocam_id(model_id)
+    out = cache_gocam_model(mid, cache_dir=cache_dir, force=force)
+    typer.echo(f"✓ Cached GO-CAM {mid}: {out}")
+
+
+@app.command()
+def cache_gocams(
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", help="Top-level GO-CAM cache directory"),
+    ] = Path("gocams"),
+    force: Annotated[
+        bool,
+        typer.Option("--force", "-f", help="Re-fetch models already cached"),
+    ] = False,
+    limit: Annotated[
+        Optional[int],
+        typer.Option("--limit", help="Only fetch the first N models (for testing)"),
+    ] = None,
+    no_index: Annotated[
+        bool,
+        typer.Option("--no-index", help="Skip rebuilding gocams/index.tsv afterwards"),
+    ] = False,
+):
+    """Cache all ~2k production GO-CAM models, then rebuild the gene index.
+
+    Each model is written to gocams/<id>/<id>-src.yaml. After caching, a
+    gocams/index.tsv mapping gene products to GO-CAM activities is rebuilt
+    (unless --no-index is given).
+
+    Examples:
+        ai-gene-review cache-gocams
+        ai-gene-review cache-gocams --limit 50
+    """
+    from ai_gene_review.etl.gocam import (
+        build_gene_index,
+        cache_all_production_models,
+    )
+
+    def progress(done: int, total: int, ok: int, failed: int) -> None:
+        if done % 50 == 0 or done == total:
+            typer.echo(f"  {done}/{total} (ok={ok}, failed={failed})")
+
+    summary = cache_all_production_models(
+        cache_dir=cache_dir, force=force, limit=limit, progress=progress
+    )
+    typer.echo(
+        f"✓ Cached {summary['ok']}/{summary['total']} GO-CAM models"
+        f" ({summary['failed']} failed)"
+    )
+    for mid, err in summary["failures"][:20]:
+        typer.echo(f"  ✗ {mid}: {err}")
+
+    if not no_index:
+        index = build_gene_index(cache_dir=cache_dir)
+        n_rows = len(index.read_text().strip().splitlines()) - 1
+        typer.echo(f"✓ Wrote {index} ({n_rows} activity rows)")
+
+
+@app.command()
+def seed_gocam_review(
+    model_id: Annotated[
+        str,
+        typer.Argument(help="GO-CAM model id (must already be cached)"),
+    ],
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", help="Top-level GO-CAM cache directory"),
+    ] = Path("gocams"),
+    force: Annotated[
+        bool,
+        typer.Option("--force", "-f", help="Overwrite an existing review stub"),
+    ] = False,
+):
+    """Seed a GoCamReview stub at gocams/<id>/<id>-review.yaml.
+
+    One activity_reviews entry is created per cached annoton, pre-filled with the
+    gene product / MF / BP / CC and PENDING assessments to be completed by a
+    reviewer. Validate with:
+    `uv run linkml-validate -s src/ai_gene_review/schema/gene_review.yaml -C GoCamReview <file>`
+    """
+    from ai_gene_review.etl.gocam import seed_gocam_review as _seed
+
+    out = _seed(model_id, cache_dir=cache_dir, force=force)
+    typer.echo(f"✓ Seeded GO-CAM review stub: {out}")
+
+
+@app.command()
+def gocam_index(
+    cache_dir: Annotated[
+        Path,
+        typer.Option("--cache-dir", help="Top-level GO-CAM cache directory"),
+    ] = Path("gocams"),
+):
+    """Rebuild gocams/index.tsv from the cached GO-CAM models.
+
+    Produces one row per activity (annoton): gene product, model, taxon,
+    molecular function, biological process, and cellular component.
+    """
+    from ai_gene_review.etl.gocam import build_gene_index
+
+    index = build_gene_index(cache_dir=cache_dir)
+    n_rows = len(index.read_text().strip().splitlines()) - 1
+    typer.echo(f"✓ Wrote {index} ({n_rows} activity rows)")
+
+
+@app.command()
+def subtraction_report(
+    paths: Annotated[
+        Optional[List[Path]],
+        typer.Argument(help="Gene review YAML files or directories (default: genes/)"),
+    ] = None,
+    reference: Annotated[
+        Optional[List[str]],
+        typer.Option(
+            "--ref",
+            "-r",
+            help="Reference id(s) to subtract, e.g. GO_REF:0000033 (repeatable)",
+        ),
+    ] = None,
+    evidence: Annotated[
+        Optional[List[str]],
+        typer.Option(
+            "--evidence",
+            "-e",
+            help="Evidence code(s) to subtract, e.g. IBA (repeatable)",
+        ),
+    ] = None,
+    mode: Annotated[
+        str,
+        typer.Option(
+            help="When both --ref and --evidence are given: 'any' (match either) or 'all' (match both)"
+        ),
+    ] = "any",
+    keep_only: Annotated[
+        bool,
+        typer.Option(
+            "--keep-only",
+            help="Invert: subtract everything EXCEPT the filter (e.g. --keep-only -e IBA "
+            "removes all non-IBA annotations, showing what is lost if IBA were the only "
+            "evidence -- i.e. where IBA is too conservative)",
+        ),
+    ] = False,
+    exclude_branch: Annotated[
+        Optional[List[str]],
+        typer.Option(
+            "--exclude-branch",
+            help="Drop terms under this branch from the report, e.g. GO:0005488 to "
+            "suppress low-information 'binding' molecular functions (repeatable)",
+        ),
+    ] = None,
+    output: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--output",
+            "-o",
+            help="Output path. For markdown a file; for tsv a prefix "
+            "(writes <prefix>-lost-annotations.tsv and <prefix>-core-functions.tsv)",
+        ),
+    ] = None,
+    output_format: Annotated[
+        str,
+        typer.Option("--format", "-f", help="Output format: markdown or tsv"),
+    ] = "markdown",
+    adapter: Annotated[
+        str,
+        typer.Option(help="OAK adapter for GO closure"),
+    ] = "sqlite:obo:go",
+    no_closure: Annotated[
+        bool,
+        typer.Option(
+            "--no-closure",
+            help="Disable ontology closure (exact-term matching only)",
+        ),
+    ] = False,
+    max_detail_genes: Annotated[
+        Optional[int],
+        typer.Option(help="Limit per-gene detail in the markdown report"),
+    ] = None,
+):
+    """Report what is lost if a REF/evidence-code is removed from reviews.
+
+    For the chosen reference id(s) and/or evidence code(s) (e.g. IBA /
+    GO_REF:0000033), simulates removing the matching annotations and reports:
+
+    \b
+    1. Endorsed (ACCEPT/KEEP_AS_NON_CORE) annotations that disappear, flagged
+       UNIQUE (no survivor covers the term) or REDUNDANT (a surviving annotation
+       still asserts the term or a more specific descendant).
+    2. Each core_functions GO term as RETAINED (still grounded by a survivor),
+       LOST (only the subtracted evidence grounded it), or UNSUPPORTED.
+
+    Closure (is_a + part_of) is applied so a specific surviving annotation can
+    ground a more general core-function term.
+
+    Use --keep-only to invert the scenario: subtract everything EXCEPT the
+    filter. ``--keep-only -e IBA`` removes all non-IBA annotations, so LOST
+    core_functions are the biology that IBA alone would miss (IBA too
+    conservative).
+
+    Examples:
+
+    \b
+        ai-gene-review subtraction-report -e IBA
+        ai-gene-review subtraction-report -r GO_REF:0000033 -o reports/iba --format tsv
+        ai-gene-review subtraction-report genes/human -e IBA -e ISS
+        ai-gene-review subtraction-report genes/human --keep-only -e IBA
+    """
+    from ai_gene_review.analysis.subtraction_report import (
+        SubtractionFilter,
+        SubtractionReporter,
+        iter_review_files,
+        make_go_ancestor_fn,
+        render_markdown,
+        summarize,
+        write_tsv_reports,
+    )
+
+    if not reference and not evidence:
+        typer.echo(
+            "Error: provide at least one --ref or --evidence to subtract.", err=True
+        )
+        raise typer.Exit(code=1)
+
+    filt = SubtractionFilter.create(
+        reference_ids=reference or [],
+        evidence_codes=evidence or [],
+        mode=mode,
+        complement=keep_only,
+    )
+
+    search_paths = paths if paths else [Path("genes")]
+    files = iter_review_files(search_paths)
+    if not files:
+        typer.echo("Error: no *-ai-review.yaml files found.", err=True)
+        raise typer.Exit(code=1)
+    typer.echo(
+        f"Analyzing {len(files)} review files (filter: {filt.describe()})...", err=True
+    )
+
+    exclude_branches = frozenset(exclude_branch or [])
+    if no_closure:
+        if exclude_branches:
+            typer.echo(
+                "Error: --exclude-branch requires ontology closure (drop --no-closure).",
+                err=True,
+            )
+            raise typer.Exit(code=1)
+        reporter = SubtractionReporter()
+    else:
+        reporter = SubtractionReporter(
+            ancestors=make_go_ancestor_fn(adapter),
+            exclude_branches=exclude_branches,
+        )
+
+    results = reporter.analyze_files(files, filt)
+
+    if output_format == "tsv":
+        prefix = output if output else Path("reports/subtraction")
+        lost_path, cf_path = write_tsv_reports(results, prefix)
+        typer.echo(f"✓ Wrote {lost_path}")
+        typer.echo(f"✓ Wrote {cf_path}")
+    elif output_format == "markdown":
+        md = render_markdown(results, filt, max_detail_genes=max_detail_genes)
+        if output:
+            output.parent.mkdir(parents=True, exist_ok=True)
+            output.write_text(md)
+            typer.echo(f"✓ Wrote {output}")
+        else:
+            typer.echo(md)
+    else:
+        typer.echo(f"Error: unknown format {output_format!r}", err=True)
+        raise typer.Exit(code=1)
+
+    summary = summarize(results, filt)
+    sc = summary["core_function_status_counts"]
+    typer.echo(
+        f"Summary: {summary['n_subtracted_annotations']} annotations subtracted; "
+        f"{summary['n_lost_endorsed']} endorsed lost "
+        f"({summary['n_lost_endorsed_unique']} unique); "
+        f"core_functions terms RETAINED {sc['RETAINED']} / LOST {sc['LOST']} / "
+        f"UNSUPPORTED {sc['UNSUPPORTED']}",
+        err=True,
+    )
+
+
+@app.command()
+def scan_module(
+    module_path: Annotated[
+        Path, typer.Argument(help="ModuleReview YAML (e.g. modules/septal_junction.yaml)")
+    ],
+    taxa: Annotated[
+        Optional[str],
+        typer.Option("--taxa", help="Comma-separated NCBI taxon ids to scan"),
+    ] = None,
+    targets: Annotated[
+        Optional[Path],
+        typer.Option("--targets", help="JSON file of target genomes colocated with the "
+                     "module: list of {taxon, label, class} objects"),
+    ] = None,
+    homology: Annotated[
+        bool, typer.Option("--homology", help="Also run phmmer homology (needs pyhmmer)")
+    ] = False,
+    rbh: Annotated[
+        bool, typer.Option("--rbh", help="Reciprocal-best-hit ortholog assignment "
+                           "(disambiguates paralogs; needs --source-taxon and pyhmmer)")
+    ] = False,
+    source_taxon: Annotated[
+        Optional[str],
+        typer.Option("--source-taxon", help="Taxon id of the module's exemplar organism "
+                     "(required for --rbh; e.g. 103690 for Nostoc PCC 7120)"),
+    ] = None,
+    out_dir: Annotated[
+        Optional[Path],
+        typer.Option("--out", "-o", help="Directory for result TSVs (default: alongside module)"),
+    ] = None,
+):
+    """Scan target genomes for members of a module, using the module's own family
+    terms and representative-member exemplars (generic gap-filling / member detection).
+
+    Examples:
+        ai-gene-review scan-module modules/septal_junction.yaml --taxa 63737,1111708
+        ai-gene-review scan-module modules/septal_junction.yaml \\
+            --targets modules/septal_junction/scan_targets.json --homology
+    """
+    import json as _json
+    from ai_gene_review.module_scan import scan_module as _scan, organism_name as _org
+
+    labels: dict[str, str] = {}
+    tax_list: list[str] = []
+    if targets:
+        spec = _json.loads(Path(targets).read_text())
+        for t in spec:
+            tid = str(t["taxon"])
+            tax_list.append(tid)
+            labels[tid] = f"{t.get('class', '')}:{t.get('label', tid)}".strip(":")
+    if taxa:
+        tax_list += [t.strip() for t in taxa.split(",") if t.strip()]
+    tax_list = list(dict.fromkeys(tax_list))
+    if not tax_list:
+        typer.echo("Provide --taxa and/or --targets", err=True)
+        raise typer.Exit(code=1)
+
+    # Guard rail: show the organism each taxon actually resolves to, so a wrong-taxon id
+    # (e.g. a fungus taxon pasted for a cyanobacterium) is obvious before trusting results.
+    typer.echo("Resolved target organisms:")
+    for tid in tax_list:
+        typer.echo(f"  {tid}\t{_org(tid) or '(unknown taxon!)'}")
+
+    tables = _scan(Path(module_path), tax_list, homology=homology,
+                   rbh=rbh, source_taxon=source_taxon)
+
+    def _lab(tid: str) -> str:
+        return labels.get(tid, tid)
+
+    typer.echo(f"Components grounded in {module_path}:")
+    for c in tables["components"]:
+        typer.echo(f"  - {c['component']}: family={c['family_terms']} exemplars={c['exemplars']}")
+
+    typer.echo("\nMethod A - InterPro family membership (n members per taxon):")
+    fam = tables["family_membership"]
+    comps = list(dict.fromkeys(r["component"] for r in fam))
+    typer.echo("component\tinterpro\t" + "\t".join(_lab(t) for t in tax_list))
+    for comp in comps:
+        rs = [r for r in fam if r["component"] == comp]
+        ipr = rs[0]["interpro"]
+        cells = [str(next((r["n_members"] for r in rs if r["taxon"] == t), "")) for t in tax_list]
+        typer.echo(f"{comp}\t{ipr}\t" + "\t".join(cells))
+
+    if homology:
+        gated = source_taxon is not None
+        legend = "O = reciprocal ortholog, h = homolog only (not reciprocal)" if gated else "Y = E<=1e-5"
+        typer.echo(f"\nMethod B - phmmer homology ({legend}):")
+        hom = tables["homology"]
+        typer.echo("component\t" + "\t".join(_lab(t) for t in tax_list))
+        for comp in comps:
+            cells = []
+            for t in tax_list:
+                r = next((x for x in hom if x["component"] == comp and x["taxon"] == t), None)
+                if not r or r["best_hit"] == "-":
+                    cells.append("none")
+                elif gated and t != source_taxon:
+                    mark = "O" if r.get("ortholog") else ("h" if r["detected"] else "n")
+                    cells.append(f"{mark}({r['best_hit']},{r['evalue']},{r['pct_id']}%)")
+                else:
+                    cells.append(f"{'Y' if r['detected'] else 'n'}({r['best_hit']},{r['evalue']},{r['pct_id']}%)")
+            typer.echo(comp + "\t" + "\t".join(cells))
+
+    if rbh:
+        typer.echo("\nReciprocal best hits (reciprocal = true 1:1 ortholog):")
+        typer.echo("exemplar\ttaxon\tfwd_hit\tfwd_E\trev_hit\treciprocal")
+        for r in tables.get("rbh", []):
+            typer.echo(f"{r['exemplar']}\t{r['taxon']}\t{r['fwd_hit']}\t{r['fwd_evalue']}"
+                       f"\t{r['rev_hit']}\t{r['reciprocal']}")
+
+    out = out_dir or Path(module_path).with_suffix("")
+    out = Path(out)
+    out.mkdir(parents=True, exist_ok=True)
+    for name, rows in tables.items():
+        if not rows:
+            continue
+        cols = list(rows[0].keys())
+        p = out / f"scan_{name}.tsv"
+        p.write_text("\t".join(cols) + "\n" + "\n".join(
+            "\t".join(str(r[c]) for c in cols) for r in rows) + "\n")
+        typer.echo(f"wrote {p}", err=True)
+
+
+@app.command()
+def build_panther_obo(
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option("--output-dir", help="Repository root (default: cwd)."),
+    ] = None,
+    cache_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            help="Where to cache the download (default: <repo>/.cache/panther)."
+        ),
+    ] = None,
+    force_download: Annotated[
+        bool, typer.Option("--force-download", help="Re-download even if cached.")
+    ] = False,
+):
+    """Build interpro/panther/panther.obo from PANTHER HMM classifications.
+
+    PANTHER family/subfamily ids have no ontology to validate against, and
+    InterPro indexes only families (204 for every :SF accession). This converts
+    PANTHER's own classification file into an OBO that OAK reads via the
+    ``simpleobo:`` adapter, giving existence and label checking for both module
+    and gene-review validation.
+
+    Example:
+        ai-gene-review build-panther-obo
+    """
+    from ai_gene_review.etl.panther_families import (
+        fetch_hmm_classifications,
+        parse_hmm_classifications,
+        write_panther_obo,
+    )
+
+    repo_root = output_dir or Path.cwd()
+    cache = cache_dir or (repo_root / ".cache" / "panther")
+    source = fetch_hmm_classifications(cache, force_download=force_download)
+    entries = parse_hmm_classifications(source.read_text().splitlines())
+    out_path = write_panther_obo(
+        entries, repo_root / "interpro" / "panther" / "panther.obo"
+    )
+    families = sum(1 for e in entries if not e.is_subfamily)
+    typer.echo(
+        f"✓ Wrote {out_path} ({families} families, "
+        f"{len(entries) - families} subfamilies)."
+    )
+
+
+@app.command()
+def refresh_panther_members(
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option("--output-dir", help="Repository root (default: cwd)."),
+    ] = None,
+    cache_dir: Annotated[
+        Optional[Path],
+        typer.Option(help="Where to cache downloads (default: <repo>/.cache/panther)."),
+    ] = None,
+    organism: Annotated[
+        Optional[List[str]],
+        typer.Option(
+            "--organism",
+            help="PANTHER organism slug to include (repeatable). Defaults to the "
+            "set covering species curated in this repository.",
+        ),
+    ] = None,
+    no_uniprot_fallback: Annotated[
+        bool,
+        typer.Option(
+            "--no-uniprot-fallback",
+            help="Skip the UniProt lookup for accessions PANTHER's per-organism "
+            "files do not cover (offline / faster, but lower coverage).",
+        ),
+    ] = False,
+):
+    """Refresh interpro/panther/panther-members.tsv from PANTHER classifications.
+
+    Builds a pruned UniProt-accession -> PANTHER-family index covering every
+    accession cited in modules/: all ``representative_members`` whether or not
+    their descriptor carries a family id (an ungrounded descriptor is precisely
+    the one whose members need resolving), plus accessions appearing only in
+    prose. Accessions that resolve nowhere are recorded in the file. This is what
+    catches a mis-grounded family (as opposed to a merely mislabelled one): the
+    declared family must actually contain the protein the descriptor names.
+
+    Example:
+        ai-gene-review refresh-panther-members --organism human --organism e_coli
+    """
+    from ai_gene_review.etl.panther_families import (
+        DEFAULT_ORGANISMS,
+        build_member_index,
+        fetch_panther_from_uniprot,
+        fetch_sequence_classification,
+        write_member_index,
+    )
+    import yaml
+
+    from ai_gene_review.validation.module_validator import (
+        iter_all_representative_accessions,
+    )
+    from ai_gene_review.validation.prose_panther_scan import collect_claims
+
+    repo_root = output_dir or Path.cwd()
+    cache = cache_dir or (repo_root / ".cache" / "panther")
+    organisms = list(organism) if organism else list(DEFAULT_ORGANISMS)
+
+    # Every representative member, grounded or not -- an ungrounded descriptor's
+    # members are the ones whose real family most needs resolving -- plus the
+    # accessions cited only in prose, which the prose scan checks.
+    accessions: set[str] = set()
+    for path in sorted((repo_root / "modules").rglob("*.yaml")):
+        doc = yaml.safe_load(path.read_text())
+        accessions.update(iter_all_representative_accessions(doc))
+    prose = {c.accession for c in collect_claims(repo_root / "modules")}
+    accessions.update(prose)
+    typer.echo(
+        f"{len(accessions)} accessions cited in modules/ "
+        f"({len(prose)} of them appearing in prose)"
+    )
+
+    # Family reviews name proteins under a declared subfamily -- representative
+    # members and the positive/negative controls that make a residue site
+    # falsifiable. Those are exactly the assertions the member index exists to
+    # check, so they must be indexed too or the check reports UNRESOLVED forever.
+    family_accessions: set[str] = set()
+    for path in sorted((repo_root / "interpro" / "panther").glob("PTHR*/PTHR*-review.yaml")):
+        doc = yaml.safe_load(path.read_text()) or {}
+        for sub in doc.get("subfamilies") or []:
+            for member in sub.get("representative_members") or []:
+                if isinstance(member, dict) and member.get("id"):
+                    family_accessions.add(member["id"].split(":")[-1])
+        for site in doc.get("residue_sites") or []:
+            for key in ("positive_controls", "negative_controls"):
+                for ctl in site.get(key) or []:
+                    if isinstance(ctl, dict) and ctl.get("id"):
+                        family_accessions.add(ctl["id"].split(":")[-1])
+            anchor = site.get("anchor")
+            if isinstance(anchor, dict) and anchor.get("id"):
+                family_accessions.add(anchor["id"].split(":")[-1])
+    if family_accessions:
+        typer.echo(
+            f"{len(family_accessions)} accessions cited in family reviews "
+            f"({len(family_accessions - accessions)} not already covered)"
+        )
+    accessions.update(family_accessions)
+
+    paths = []
+    for slug in organisms:
+        classification = fetch_sequence_classification(slug, cache)
+        if classification is None:
+            typer.echo(f"  ⚠ no PANTHER classification for organism '{slug}'")
+            continue
+        paths.append(classification)
+
+    index = build_member_index(accessions, paths)
+    from_files = len(index)
+
+    if not no_uniprot_fallback:
+        unresolved = accessions - set(index)
+        if unresolved:
+            typer.echo(
+                f"resolving {len(unresolved)} remaining accession(s) via UniProt..."
+            )
+            index.update(fetch_panther_from_uniprot(unresolved))
+
+    unresolved = accessions - set(index)
+    out_path = write_member_index(
+        index,
+        repo_root / "interpro" / "panther" / "panther-members.tsv",
+        unresolved,
+        consulted_uniprot=not no_uniprot_fallback,
+    )
+    typer.echo(
+        f"✓ Wrote {out_path}: {len(index)}/{len(accessions)} accessions resolved "
+        f"({from_files} from {len(paths)} organism classification(s), "
+        f"{len(index) - from_files} from UniProt); "
+        f"{len(unresolved)} unresolved, recorded in the file."
+    )
+
+
+@app.command()
+def verify_panther_paint(
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option("--output-dir", help="Repository root (default: cwd)."),
+    ] = None,
+    cache_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            help="Where to cache the download (default: <repo>/.cache/panther)."
+        ),
+    ] = None,
+):
+    """Verify committed PAINT slices against PANTHER's upstream IBD.gaf.
+
+    PTN claims are validated against ``interpro/panther/*/*-paint.tsv`` slices
+    that curation PRs commit alongside the claim, so the check is self-certifying
+    unless something independently confirms those slices are genuine. This
+    re-derives them from upstream and checks BOTH directions: no committed row
+    may be absent upstream (fabrication), and no slice may omit a row upstream
+    records for a node it already carries (pruning). The second matters most --
+    the loss check can only fire when the slice contains the IRD/IKR row, so a
+    slice with its loss rows removed would defeat it while every remaining row
+    still verified as genuine.
+
+    Example:
+        ai-gene-review verify-panther-paint
+    """
+    from ai_gene_review.etl.panther_families import (
+        fetch_ibd_gaf,
+        find_pruned_paint_rows,
+        load_committed_paint_rows,
+        parse_ibd_row_keys,
+    )
+
+    repo_root = output_dir or Path.cwd()
+    cache = cache_dir or (repo_root / ".cache" / "panther")
+    upstream = parse_ibd_row_keys(fetch_ibd_gaf(cache).read_text().splitlines())
+    committed = load_committed_paint_rows(repo_root / "interpro" / "panther")
+
+    unbacked = sorted(
+        (source, key)
+        for key, sources in committed.items()
+        if key not in upstream
+        for source in sources
+    )
+    typer.echo(
+        f"upstream IBD.gaf: {len(upstream)} node annotations; "
+        f"committed slices: {len(committed)} rows"
+    )
+    pruned = find_pruned_paint_rows(committed, upstream)
+    failed = False
+
+    if unbacked:
+        for source, key in unbacked[:50]:
+            typer.echo(f"❌ {source}: {key} is not present upstream")
+        typer.echo(
+            f"❌ {len(unbacked)} committed PAINT row(s) have no upstream backing."
+        )
+        failed = True
+
+    if pruned:
+        for node, rows in sorted(pruned.items())[:50]:
+            lost = sorted(r for r in rows if r[3] or r[2] in ("IRD", "IKR"))
+            typer.echo(
+                f"❌ {node}: slice omits {len(rows)} upstream row(s)"
+                + (f", including {len(lost)} loss row(s): {lost[:3]}" if lost else "")
+            )
+        typer.echo(
+            f"❌ {len(pruned)} node(s) have upstream rows missing from their "
+            "committed slice; re-fetch with `just fetch-panther-paint <FAMILY>`."
+        )
+        failed = True
+
+    if failed:
+        raise typer.Exit(code=1)
+    nodes_checked = len({key[0] for key in committed})
+    typer.echo(
+        f"✓ All {len(committed)} committed rows are backed by upstream IBD.gaf, "
+        f"and each of the {nodes_checked} nodes present in a slice carries every "
+        "upstream row for that node."
+    )
+
+
+@app.command()
+def fix_panther_labels(
+    files: Annotated[
+        Optional[List[Path]],
+        typer.Argument(help="Module YAML files (default: all of modules/)."),
+    ] = None,
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option("--output-dir", help="Repository root (default: cwd)."),
+    ] = None,
+    apply: Annotated[
+        bool, typer.Option("--apply", help="Write changes (default: dry run).")
+    ] = False,
+    allow_divergent: Annotated[
+        bool,
+        typer.Option(
+            "--allow-divergent",
+            help="Also rewrite labels that describe a different protein than the "
+            "id's official name. Held back by default because that pattern "
+            "usually means the ID is wrong; only pass this after checking.",
+        ),
+    ] = False,
+):
+    """Rewrite PANTHER family/subfamily labels to their official PANTHER names.
+
+    `term.label` on a PANTHER id must be PANTHER's own name so it can be
+    verified; the curator's readable description belongs in `preferred_term`.
+    Descriptors whose declared family does not contain their representative
+    member are deliberately SKIPPED -- relabelling those would hide a wrong
+    family id behind an authoritative-looking name. Fix the id first.
+
+    Example:
+        ai-gene-review fix-panther-labels --apply
+    """
+    import yaml
+
+    from ai_gene_review.etl.panther_families import (
+        load_obo_names,
+        rewrite_panther_labels,
+    )
+    from ai_gene_review.validation.module_validator import (
+        iter_family_member_uses,
+        load_member_index,
+        load_paint_index,
+        validate_family_members,
+    )
+
+    repo_root = output_dir or Path.cwd()
+    names = load_obo_names(repo_root / "interpro" / "panther" / "panther.obo")
+    member_index = load_member_index(
+        repo_root / "interpro" / "panther" / "panther-members.tsv"
+    )
+    # Same PAINT-corroboration rule the validator applies, so a grounding the
+    # validator merely warns about is not treated here as disputed.
+    paint_index = load_paint_index(repo_root / "interpro" / "panther")
+    targets = list(files) if files else sorted((repo_root / "modules").rglob("*.yaml"))
+
+    total = 0
+    held_back: list[tuple[Path, str, str, str, bool]] = []
+    for path in targets:
+        text = path.read_text()
+        doc = yaml.safe_load(text)
+        skip: set[str] = set()
+        corroborated: set[str] = set()
+        for use in iter_family_member_uses(doc):
+            errors, _ = validate_family_members([use], member_index, paint_index)
+            if errors:
+                skip.update(use.declared_family_curies)
+            elif any(a in member_index for a in use.representative_accessions):
+                corroborated.update(use.declared_family_curies)
+        new_text, changes, deferred = rewrite_panther_labels(
+            text, names, skip, allow_divergent=allow_divergent
+        )
+        held_back.extend(
+            (path, curie, old, new, curie in corroborated)
+            for curie, old, new in deferred
+        )
+        if not changes:
+            continue
+        total += len(changes)
+        typer.echo(f"{path}:")
+        for curie, old, new in changes:
+            typer.echo(f"  {curie}: {old!r} -> {new!r}")
+        if skip:
+            typer.echo(f"  (skipped {len(skip)} id(s) with disputed grounding)")
+        if apply:
+            path.write_text(new_text)
+
+    if held_back:
+        typer.echo(
+            f"\n⚠  {len(held_back)} label(s) NOT rewritten: the current label "
+            "describes a different protein than the id's official name, which "
+            "usually means the ID is wrong, not the label. A guessed id that "
+            "happens to resolve is still a hallucination; rewriting its label "
+            "would hide that. Check each id, then re-run with --allow-divergent "
+            "for any that are genuinely just mislabelled."
+        )
+        for path, curie, old, new, is_corroborated in held_back:
+            verdict = (
+                "id confirmed by its representative member"
+                if is_corroborated
+                else "NO representative member confirms this id"
+            )
+            typer.echo(f"  {path.name}: {curie}  [{verdict}]")
+            typer.echo(f"      label says : {old!r}")
+            typer.echo(f"      PANTHER    : {new!r}")
+
+    typer.echo(
+        f"{'Applied' if apply else 'Would apply'} {total} label correction(s)"
+        + ("" if apply else "; re-run with --apply")
+    )
+
+
+@app.command()
+def panther_report_stats(
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option("--output-dir", help="Repository root (default: cwd)."),
+    ] = None,
+):
+    """Print every row of the PANTHER review report's scope table.
+
+    That table has gone stale four times in this branch's history, each time
+    because its rows had no committed derivation and had to be hand-edited
+    after a merge. Prescribing "run validate-modules and scan-prose-panther"
+    covered three of eight rows, so the next merger would see no discrepancy
+    and leave the rest stale. This derives all of them.
+
+    Example:
+        just panther-report-stats
+    """
+    import collections
+    import re
+
+    import yaml
+
+    from ai_gene_review.etl.panther_families import (
+        load_member_index,
+        load_member_index_gaps,
+        load_subfamily_counts,
+    )
+    from ai_gene_review.validation.module_validator import (
+        HETEROGENEOUS_FAMILY_SUBFAMILIES,
+        count_ungrounded_families,
+        iter_ancestral_node_uses,
+        iter_family_member_uses,
+        load_paint_index,
+        SubfamilyPrecision,
+        subfamily_precision_case,
+    )
+    from ai_gene_review.validation.prose_panther_scan import collect_claims
+
+    repo_root = output_dir or Path.cwd()
+    family_re = re.compile(r"^PANTHER:(PTHR\d+)(?::(SF\d+))?$")
+
+    files = sorted((repo_root / "modules").rglob("*.yaml"))
+    family_level = subfamily_level = ungrounded = nodes = 0
+    ungrounded_modules: set[str] = set()
+    distinct_nodes: set[str] = set()
+    thin_annotations = total_annotations = 0
+    family_uses: list = []
+    divergent_reported: set[tuple[str, str, str]] = set()
+    annotation_depth: dict[tuple[str, str, str], bool] = {}
+    paint_index = load_paint_index(repo_root / "interpro" / "panther")
+
+    def _seed_tokens(row) -> set:
+        """Seeds as written, one token per protein.
+
+        Not unioned with row.uniprot_seed_accessions: that property strips the
+        "UniProtKB:" prefix, so the union counts every UniProt seed twice and
+        makes thin nodes look well-supported.
+        """
+        return {s.strip() for s in row.seeds.split("|") if s.strip()}
+
+    for path in files:
+        document = yaml.safe_load(path.read_text())
+        count = count_ungrounded_families(document)
+        if count:
+            ungrounded += count
+            ungrounded_modules.add(path.name)
+        for node_use in iter_ancestral_node_uses(document):
+            nodes += 1
+            distinct_nodes.add(node_use.ptn_curie)
+            rows = [
+                r
+                for r in paint_index.get(node_use.ptn_curie, [])
+                if r.evidence == "IBD" and not r.negated
+            ]
+            if not rows:
+                continue
+            # Counted per ANNOTATION, which is the unit the figure is about:
+            # each row's with/from is the seed set backing that one term, and
+            # "weak support for propagating a specific function" is a claim
+            # about a term, not about a node. Aggregating to the node first
+            # forces a quantifier choice that changes the answer a lot (every
+            # annotation thin vs some annotation thin differ by ~1.6x on the
+            # node count) and either way credits or blames a term with evidence
+            # that does not back it.
+            #
+            # An annotation is (aspect, term), NOT a row. The same PAINT
+            # annotation is committed once per family slice whose tree contains
+            # the node -- PTN000010968's GO:0008168 sits in three -- and
+            # load_paint_index appends across slices. Counting rows would let
+            # "how many slices we happened to commit" masquerade as citation
+            # frequency, inflating the denominator by 120 and, because the
+            # duplicates are overwhelmingly thick, deflating the thin fraction.
+            depth: dict[tuple[str, str], int] = {}
+            for row in rows:
+                key = (row.aspect, row.go_id)
+                seeds = len(_seed_tokens(row))
+                if (
+                    depth.get(key, seeds) != seeds
+                    and (node_use.ptn_curie, *key) not in divergent_reported
+                ):
+                    divergent_reported.add((node_use.ptn_curie, *key))
+                    # Byte-identical across slices today, so this is unreachable
+                    # now; without it a future release shipping divergent copies
+                    # would make the figure depend on glob order, silently.
+                    typer.echo(
+                        f"note: {node_use.ptn_curie} {row.go_id} carries "
+                        f"differing seed counts across family slices "
+                        f"({depth[key]} vs {seeds}); using the larger",
+                        err=True,
+                    )
+                depth[key] = max(depth.get(key, 0), seeds)
+            for (aspect, go_id), seeds in depth.items():
+                total_annotations += 1
+                thin = seeds <= 3
+                annotation_depth[(node_use.ptn_curie, aspect, go_id)] = thin
+                if thin:
+                    thin_annotations += 1
+        for use in iter_family_member_uses(document):
+            match = family_re.match(sorted(use.declared_family_curies)[0])
+            if not match:
+                continue
+            declared_at_subfamily = bool(match.group(2))
+            if declared_at_subfamily:
+                subfamily_level += 1
+            else:
+                family_level += 1
+            family_uses.append((use, declared_at_subfamily))
+
+    members = repo_root / "interpro" / "panther" / "panther-members.tsv"
+    index = load_member_index(members)
+    subfamily_counts = load_subfamily_counts(
+        repo_root / "interpro" / "panther" / "panther.obo"
+    )
+
+    # Section 1's precision figures, from the validator's own predicate rather
+    # than a second implementation of it. Counting these independently is how
+    # the report came to publish 206 where the sweep warned 199.
+    single_subfamily = heterogeneous = precision_checkable = 0
+    precision_status: collections.Counter = collections.Counter()
+    proteins_by_family: dict[str, set] = {}
+    for use, _declared_at_subfamily in family_uses:
+        # Attribute each member to the family the committed index says it is in,
+        # not to every family its descriptor declares. A descriptor may span
+        # families deliberately -- peroxisome-lifecycle declares PTHR12652 and
+        # PTHR20990 because PANTHER splits those paralogs, and says so in its own
+        # prose -- and unioning made each family look ambiguous on the other's
+        # proteins. That counted the descriptors most explicit about the split as
+        # evidence that ids cannot distinguish between them.
+        declared_bases = {
+            base_match.group(1)
+            for curie in use.declared_family_curies
+            if (base_match := family_re.match(curie)) and not base_match.group(2)
+        }
+        for accession in use.representative_accessions:
+            family_sf = index.get(accession)
+            if family_sf is None:
+                continue
+            base = family_sf.split(":", 1)[0]
+            if base in declared_bases:
+                # The index settles which declared family this member belongs to.
+                credit = {base}
+            else:
+                # The index places it outside every declared family. That is the
+                # UniProt/PAINT disagreement the sweep warns about separately
+                # (P08887 in PTHR23036 against a PAINT node in PTHR23037), not a
+                # multi-family split, and the module's grounding is the only
+                # claim available -- so it still counts toward what the declared
+                # id is being asked to cover. Dropping it would understate.
+                credit = declared_bases
+            for family in credit:
+                proteins_by_family.setdefault(family, set()).add(accession)
+        # Ask the predicate which of its outcomes this was rather than
+        # reconstructing a partial version of it here. Family-level-plus-a-
+        # resolvable-member is NOT the same as checkable: it also admits
+        # grounding-inconsistent descriptors (a correctness finding the sweep
+        # reports separately) and members with no subfamily recorded, so its
+        # complement was not the members-spread population it claimed to be.
+        case = subfamily_precision_case(use, index, subfamily_counts)
+        precision_status[case.status.value] += 1
+        if case.status.is_checkable:
+            precision_checkable += 1
+        if case.status is not SubfamilyPrecision.SINGLE_SUBFAMILY:
+            continue
+        single_subfamily += 1
+        if case.subfamily_count >= HETEROGENEOUS_FAMILY_SUBFAMILIES:
+            heterogeneous += 1
+    ambiguous = {b: p for b, p in proteins_by_family.items() if len(p) > 1}
+    gaps = load_member_index_gaps(members)
+    collected = len(index) + len(gaps.absent) + len(gaps.unchecked)
+    claims = collect_claims(repo_root / "modules")
+    checked = sum(1 for c in claims if c.accession in index)
+
+    typer.echo("| | count |")
+    typer.echo("|---|---|")
+    typer.echo(f"| module files | {len(files)} |")
+    typer.echo(
+        "| family/subfamily descriptors with an id and a representative member | "
+        f"{family_level + subfamily_level:,} |"
+    )
+    typer.echo(f"| declared at family level | {family_level} |")
+    typer.echo(f"| declared at subfamily level | {subfamily_level} |")
+    typer.echo(
+        f"| family descriptors asserting no id | {ungrounded} "
+        f"(across {len(ungrounded_modules)} modules) |"
+    )
+    # Named "citations" because iter_ancestral_node_uses yields once per
+    # ancestral_nodes[] entry: PTN001230349 alone is cited 29 times. A ratio
+    # whose numerator counts distinct nodes and whose denominator counts
+    # citations would silently mix populations.
+    typer.echo(
+        f"| PAINT node citations | {nodes} (of {len(distinct_nodes)} distinct nodes) |"
+    )
+    # Two aggregations of the same per-annotation measure. The distinct count
+    # describes the evidence base; the citation-weighted one describes how much
+    # of the propagation in use rests on it. Reporting one silently would pick
+    # a headline (52% vs 37%) without saying which question it answers.
+    distinct_thin = sum(1 for thin in annotation_depth.values() if thin)
+    typer.echo(
+        f"| PAINT annotations resting on <=3 seeds | {distinct_thin} / "
+        f"{len(annotation_depth)} distinct (node, term) "
+        f"= {thin_annotations} / {total_annotations} citation-weighted |"
+    )
+    typer.echo(
+        f"| family-level groundings with all members in one subfamily | "
+        f"{single_subfamily} / {precision_checkable} checkable "
+        f"(of {family_level} declared) |"
+    )
+    typer.echo(
+        f"| ...in families split into {HETEROGENEOUS_FAMILY_SUBFAMILIES}+ subfamilies "
+        f"(the advisory) | {heterogeneous} |"
+    )
+    # Emitting the whole partition keeps the report from quoting a breakdown
+    # that nothing computes -- the exact failure this command exists to stop.
+    # Family-level statuses only: declared-at-subfamily descriptors are excluded
+    # before the denominator is formed, so listing them beside the others mixes
+    # populations. They also happen to number 101, exactly the same as the rest
+    # of the 907, so the row would read as arithmetically consistent while its
+    # leading term came from a different set.
+    rest = {
+        status: count
+        for status, count in precision_status.items()
+        if status
+        not in (
+            SubfamilyPrecision.SINGLE_SUBFAMILY.value,
+            SubfamilyPrecision.DECLARED_AT_SUBFAMILY.value,
+        )
+    }
+    typer.echo(
+        f"| ...why the other {sum(rest.values())} family-level ones are not | "
+        + ", ".join(
+            f"{count} {status.replace('_', ' ')}"
+            # Secondary key on the status name: without it, equal counts fall
+            # back to Counter insertion order, so the row would depend on the
+            # order descriptors happen to appear in the tree.
+            for status, count in sorted(rest.items(), key=lambda kv: (-kv[1], kv[0]))
+        )
+        + " |"
+    )
+    typer.echo(
+        f"| family ids covering more than one distinct protein | {len(ambiguous)} "
+        f"(over {len(set().union(*ambiguous.values())) if ambiguous else 0} proteins) |"
+    )
+    typer.echo(f"| prose PANTHER claims checked | {checked} / {len(claims)} |")
+    typer.echo(
+        "| cited accessions resolved to a PANTHER family | "
+        f"{len(index):,} / {collected:,} |"
+    )
 
 
 def main():

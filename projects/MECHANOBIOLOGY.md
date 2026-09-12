@@ -1,3 +1,10 @@
+---
+title: "Mechanobiology Gene Review Project"
+maturity: IN_PROGRESS
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [human]
+---
+
 # Mechanobiology Gene Review Project
 
 ## Scope

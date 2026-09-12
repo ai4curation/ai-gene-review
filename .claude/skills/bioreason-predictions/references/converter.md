@@ -11,7 +11,7 @@ python ~/.openclaw/workspace/scripts/bioreason_to_yaml.py --model rl [--dry-run]
 
 ## What it does
 
-1. Reads `*-deep-research-bioreason.md` from `~/worktrees/agr-bioreason/genes/`
+1. Reads `*-bioreason-rl-predictions.md` from `~/worktrees/agr-bioreason/genes/`
 2. Parses GO terms from the `### GO Terms` section (raw GO-GPT output)
 3. Filters to leaf terms via OAK IS_A ancestor removal (~65% reduction)
 4. Writes PredictionReview-conformant YAML with `source_method: GO-GPT`
@@ -29,7 +29,7 @@ python ~/.openclaw/workspace/scripts/bioreason_to_yaml.py --model rl [--dry-run]
 
 ## Output
 
-`{GENE}-bioreason-{rl|sft}-predictions.yaml` in the gene directory.
+`{GENE}-gogpt-leaf-predictions.yaml` in the gene directory.
 
 ## Note
 

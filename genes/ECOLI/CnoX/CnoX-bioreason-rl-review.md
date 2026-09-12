@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: CnoX (E. coli)
 
-Source: CnoX-deep-research-bioreason-rl.md
+Source: CnoX-bioreason-rl-predictions.md
 
 - **Correctness**: 2/5
 - **Completeness**: 2/5

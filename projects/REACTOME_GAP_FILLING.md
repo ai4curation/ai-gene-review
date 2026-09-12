@@ -1,3 +1,9 @@
+---
+title: "Reactome Black Box Event Gap-Filling"
+maturity: IN_PROGRESS
+tags: [PIPELINE]
+---
+
 # Reactome Black Box Event Gap-Filling
 
 ## Overview

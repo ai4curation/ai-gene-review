@@ -1,0 +1,25 @@
+| Property | Summary |
+|---|---|
+| Gene name | **nphp-2** (C. elegans); identified as the ciliary inversin/NPHP2 ortholog used in sensory-cilia studies, distinct from **mlt-4** (pqac-00000032, pqac-00000033, pqac-00000034) |
+| ORF name | **Y32G9A.6** / CELE_Y32G9A.6 (matches the UniProt target context and literature assignment) (pqac-00000035, pqac-00000037) |
+| Mammalian ortholog | Ortholog of mammalian **INVS/NPHP2 (inversin)** (pqac-00000001, pqac-00000034, pqac-00000036) |
+| Human disease association | Human INVS/NPHP2 is associated with **nephronophthisis type 2 / infantile nephronophthisis** (pqac-00000000) |
+| Protein isoforms | Two isoforms are described: **NPHP-2L** (full-length) and **NPHP-2S** (shorter isoform lacking a 22 aa region) (pqac-00000003, pqac-00000029, pqac-00000030) |
+| Domain structure | Conserved **ankyrin repeat region**, **nuclear localization sequences (NLSs)**, **destruction box (D-box)**, **coil region**, and predicted **EF-hand Ca2+-binding domain**; ankyrin repeats are a defining feature and EF-hand is functionally important in several cilia types (pqac-00000028, pqac-00000029, pqac-00000030, pqac-00000031) |
+| Role of ankyrin repeats | Ankyrin-repeat region contributes to **ciliary targeting**, including evidence from AWB neurons (pqac-00000013, pqac-00000016) |
+| Role of EF-hand | EF-hand is required for robust **ciliary localization and function** in amphid channel and phasmid cilia; deletion causes faint/absent localization and poor rescue of mutant phenotypes, indicating Ca2+-dependent regulation (pqac-00000012, pqac-00000028, pqac-00000031) |
+| Localization: NPHP-2L | Localizes mainly to the **ciliary middle segment / Inversin compartment (InvC)** of amphid and phasmid sensory cilia; this compartment is distinct from the transition zone (TZ) (pqac-00000003, pqac-00000004, pqac-00000011) |
+| Localization: NPHP-2S | Broader localization throughout the **cell body, axon, dendrite, and cilium**, while being excluded from the **nucleus** and **transition zone** (pqac-00000003, pqac-00000029) |
+| Expression pattern | Expressed in **ciliated sensory neurons** of C. elegans (including amphid and phasmid neurons) (pqac-00000003, pqac-00000004, pqac-00000035) |
+| Primary biological function | Functions in **ciliogenesis**, **cilia placement/orientation**, **transition zone placement**, and organization of the proximal ciliary shaft/Inv compartment rather than as a core IFT factor (pqac-00000001, pqac-00000004, pqac-00000005, pqac-00000009) |
+| Relationship to IFT | NPHP-2 is **not required for gross IFT function**; IFT velocities were not significantly altered in nphp-2 mutants, arguing its primary role is structural/organizational rather than IFT cargo transport (pqac-00000001, pqac-00000005) |
+| Key genetic interactions: NPHP module | Shows partially redundant interactions with **nphp-1** and **nphp-4** for cilia placement and ciliogenesis; **nphp-2; nphp-4** double mutants are strongly synthetic (pqac-00000001, pqac-00000003, pqac-00000008) |
+| Key genetic interactions: MKS/TZ module | Genetically interacts with **mks-1, mks-3, mks-6, mksr-1, mksr-2** and other TZ-associated components in a sensillum-dependent manner (pqac-00000001, pqac-00000002, pqac-00000008) |
+| Key genetic interactions: ARL-13/doublet-region module | Interacts with **arl-13, klp-11, unc-119**, with modules organized as **nphp-2 + klp-11** and **arl-13 + unc-119**, antagonized by **hdac-6**; these modules regulate ciliary microtubule patterning and compartment size (pqac-00000009, pqac-00000011) |
+| Ciliary signaling/protein localization roles | Required for localization of **TAX-2** and partially for **TAX-4** to the proximal cilium/InvC; also linked to compartmentalization of signaling proteins in cilia (pqac-00000013, pqac-00000015, pqac-00000016) |
+| Mutant phenotypes | **Dye-filling (Dyf) defects**, **transition zone/cilia displacement**, **mispositioned phasmid cilia**, **defective cilia orientation**, and **shorter phasmid dendrites**; double mutants can show severe loss of cilia and major microtubule ultrastructural defects (pqac-00000004, pqac-00000006, pqac-00000008, pqac-00000012) |
+| Microtubule/ultrastructure effects | Required for proper **microtubule patterning**, including alignment of doublet/singlet regions, Y-link organization, and regulation of **tubulin glutamylation** together with the ARL-13 module (pqac-00000009, pqac-00000011, pqac-00000012) |
+| Subcompartment control | The **MKS-5/RPGRIP1L-dependent transition zone/CIZE** helps confine NPHP-2 and other signaling proteins to appropriate ciliary subdomains, supporting stable ciliary compartmentalization (pqac-00000017, pqac-00000018) |
+
+
+*Table: This table summarizes the verified identity, domains, localization, genetic interactions, and mutant phenotypes of the C. elegans ciliary protein NPHP-2/Y32G9A.6. It is useful as a compact reference for functional annotation and for distinguishing nphp-2 from other ankyrin-repeat proteins such as mlt-4.*

@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: PTEN (human)
 
-Source: PTEN-deep-research-bioreason-rl.md
+Source: PTEN-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 4/5

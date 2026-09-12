@@ -11,6 +11,7 @@ the proposed curation decision.
 - **Taxon:** {taxon_label} ({taxon_id})
 - **Gene directory:** {gene}
 - **Gene symbol:** {gene_symbol}
+- **UniProt accession:** {uniprot_accession}
 
 ## Focus
 
@@ -53,11 +54,24 @@ should affect the gene review. Address the focus type directly:
 4. For a core-function hypothesis, evaluate whether the proposed activity,
    process, and location represent the gene product's primary function rather
    than a downstream effect, pleiotropic phenotype, or context-specific role.
+5. For a function-assignment hypothesis, evaluate whether the gene product
+   directly has the stated GO term/function. Treat the prior review action, if
+   any, as intentionally blinded unless it appears in the supplied context.
 
 Use primary literature whenever possible. Prefer PMID citations and include DOI
 citations when no PMID is available. Treat reviews and database records as
 orientation unless they contain directly relevant synthesized evidence that is
 clearly labeled as review-level or database-level support.
+
+Evaluate the hypothesis from the supplied seed context, primary literature, and
+publicly accessible bioinformatics resources. Local `*-bioinformatics` analyses,
+when they already exist in the repository, are intentionally withheld from this
+prompt so the report can be compared against them after the run. Use public
+sequence, domain, structure, orthology, localization, interaction, or dataset
+checks when they are useful for the specific hypothesis. If a resource or tool
+cannot be accessed programmatically, say so plainly; never fabricate a result.
+Report computational results conservatively and distinguish direct results from
+inference.
 
 ## Required Output
 
@@ -120,6 +134,10 @@ curator verification. Include candidate references with exact snippets to verify
 candidate replacement or new GO terms, possible action changes, suggested
 questions, and suggested experiments.
 
-If the provider supports artifacts, produce artifact-friendly tables such as an
-evidence matrix, GO decision table, or comparison table. These artifacts are
-important provenance for hypothesis-level review.
+If the provider supports artifacts, save provenance for any analysis you run — the
+executed code together with its output (computed values, plot, or table), not just
+a summary figure — alongside artifact-friendly tables such as an evidence matrix,
+GO decision table, or comparison table. Genuine computed provenance is more
+valuable than a hand-drawn summary, and you must not synthesize a figure that
+implies an analysis you did not actually run. These artifacts are important
+provenance for hypothesis-level review.

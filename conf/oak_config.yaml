@@ -2,8 +2,17 @@
 # Maps ontology prefixes to OAK adapter strings
 #
 # Adapter types:
-#   sqlite:obo:<name>  - Pre-built SQLite databases (fast, offline, recommended)
+#   ols:<name>         - EBI Ontology Lookup Service (online, no local download)
+#   sqlite:obo:<name>  - Pre-built SQLite databases (fast, offline)
 #   null               - Skip validation for this prefix
+#
+# Most OBO ontologies use the OLS adapter (ols:<slug>) so validation queries
+# the EBI Ontology Lookup Service directly instead of downloading large SQLite
+# builds. GO stays on sqlite:obo:go: it drives the dynamic-enum / branch
+# reachability checks (molecular_function, in_complex, locations, ...), and the
+# OLS adapter's ancestor traversal is unreliable for that (it raises on obsolete
+# / detached terms and can return incomplete closures). RHEA is not hosted in
+# OLS, so it also stays on sqlite:obo:rhea.
 #
 # Note: ONLY prefixes listed here are validated. Unlisted prefixes are skipped
 # with a warning. Use null to explicitly skip without warning.
@@ -26,16 +35,45 @@ ontology_adapters:
   file: null        # File path references
   GO_REF: null      # Gene Ontology reference collection
   Reactome: null    # Reactome pathway database
+  skos: null        # SKOS mapping predicates (e.g. skos:relatedMatch) - not ontology-validated
+  semapv: null      # SSSOM mapping-justification vocabulary - not ontology-validated
+  RO: null          # Relation Ontology predicates (e.g. RO:0002327 enables) - not label-validated here
 
-  # Standard ontology prefixes - use default sqlite:obo: adapter
-  GO: sqlite:obo:go
-  CHEBI: sqlite:obo:chebi
-  UBERON: sqlite:obo:uberon
-  CL: sqlite:obo:cl
-  HP: sqlite:obo:hp
-  MONDO: sqlite:obo:mondo
-  PR: sqlite:obo:pr
-  SO: sqlite:obo:so
-  PATO: sqlite:obo:pato
-  NCBITaxon: sqlite:obo:ncbitaxon
-  RHEA: sqlite:obo:rhea
+  # Standard OBO ontology prefixes - use the OLS adapter (ols:<slug>)
+  GO: sqlite:obo:go  # stays on SQLite: needed for dynamic-enum branch reachability
+  ARO: ols:aro  # Antibiotic Resistance Ontology (CARD) - for ARO->GO mapping validation
+  CHEBI: ols:chebi
+  UBERON: ols:uberon
+  CL: ols:cl
+  HP: ols:hp
+  MONDO: ols:mondo
+  PR: ols:pr
+  SO: ols:so
+  PATO: ols:pato
+  NCBITaxon: ols:ncbitaxon
+  RHEA: sqlite:obo:rhea  # RHEA is not hosted in OLS; keep the SQLite build
+  PO: ols:po  # Plant Ontology - anatomical locations in plant modules (e.g. root)
+  SBO: null  # Systems Biology Ontology (module regulation predicates) - no working
+             # offline sqlite:obo build (labels resolve to None), so not label-validated here
+  MetaCyc: null  # MetaCyc pathway/reaction ids - not OBO label-validated here
+  MIBiG: null  # Minimum Info about a Biosynthetic Gene cluster - not label-validated here
+  # PANTHER family/subfamily ids (PTHR12345, PTHR12345:SF7) are validated against
+  # a local OBO built from PANTHER's own HMM classifications (see
+  # ai_gene_review.etl.panther_families; rebuild with `just build-panther-obo`).
+  # PANTHER publishes no term-lookup service and InterPro indexes only families
+  # -- it returns 204 for every :SF accession -- so this local artifact is the
+  # only way to check subfamily ids at all. The path is resolved relative to the
+  # repository root. PTN ancestral-node ids share this prefix but are NOT routed
+  # here: they carry stronger PAINT/IBD evidence checks (see validate_paint_ptns).
+  PANTHER: simpleobo:interpro/panther/panther.obo
+
+# Reviewed labels from the authoritative live service that are newer than the
+# sqlite:obo:go snapshot. Remove entries once the snapshot exposes each label
+# as its primary label or a synonym.
+term_label_aliases:
+  GO:0008883:
+    - glutamyl-tRNA reductase (NADP+) activity
+  GO:0070819:
+    - protoporphyrinogen oxidase activity, quinone as acceptor
+  GO:0004729:
+    - protoporphyrinogen oxidase activity, oxygen as acceptor

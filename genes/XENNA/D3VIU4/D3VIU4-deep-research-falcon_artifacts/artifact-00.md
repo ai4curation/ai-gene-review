@@ -1,0 +1,15 @@
+| Property | Description | Evidence/Citation |
+|---|---|---|
+| Protein Function | Periplasmic substrate-binding protein component of the FliY-YecSC ABC importer; captures extracellular cystine and delivers it to the membrane transporter for ATP-dependent uptake. Loss of both fliY and ydjN abolishes detectable cystine import and prevents growth on cystine as sole sulfur source. | (pqac-00000004, pqac-00000006) |
+| Substrate Specificity | Primary physiological substrate is L-cystine (oxidized cysteine). FliY-YecSC can also transport diaminopimelate (DAP), indicating broader specificity for related diamino compounds, but cystine is the key sulfur-acquisition substrate. | (pqac-00000002, pqac-00000008) |
+| Binding Affinity (Km) | Apparent half-maximal transport for FliY-YecSC is ~30 nM cystine, about 100-fold lower than YdjN (~2 µM), making FliY-YecSC the high-affinity system used when cystine is scarce. | (pqac-00000008) |
+| Transport Partners | Functions with YecS and YecC as an ABC transport system: FliY is the periplasmic binding protein, YecS the ATPase-associated component, and YecC the membrane-spanning transport component. yecS mutation phenocopies loss of the FliY system. | (pqac-00000006) |
+| Cellular Localization | Soluble periplasmic binding protein in Gram-negative bacteria; operates in the periplasm to bind cystine before transfer to the inner-membrane YecSC complex. | (pqac-00000006, pqac-00000007) |
+| Protein Family | Member of the bacterial solute-binding protein family associated with ABC importers; specifically the high-affinity cystine-binding component of the FliY-YecSC/TcyJLN system. | (pqac-00000002, pqac-00000006) |
+| Regulation | fliY transcription is induced ~3- to 10-fold in sulfate medium versus cystine medium and is controlled by the sulfur starvation regulator CysB. Constitutively active CysB upregulates fliY even in cystine medium. | (pqac-00000007) |
+| Biological Pathway | Participates in sulfur assimilation: cystine import under sulfur limitation, followed by intracellular reduction to cysteine, which feeds synthesis of methionine, glutathione, iron-sulfur clusters, and other sulfur-containing metabolites. It is especially important at nanomolar cystine concentrations. | (pqac-00000000, pqac-00000002, pqac-00000008) |
+| Alternative Names | Proposed renaming in E. coli: FliY-YecSC as TcyJLN, where “Tcy” denotes transport of cystine. The system is also described as the FliY-YecSC cystine ABC transporter. | (pqac-00000002) |
+| Gene Name Origin | The name fliY comes from its chromosomal position downstream of flagellar genes, but functional evidence shows it is not a flagellar structural/regulatory gene; its main role is cystine transport. | (pqac-00000006) |
+
+
+*Table: This table summarizes experimentally supported properties of FliY based mainly on E. coli and related bacterial evidence, highlighting its role as a high-affinity periplasmic cystine-binding protein. It is useful for inferring the likely function of the Xenorhabdus nematophila ortholog when direct species-specific studies are lacking.*

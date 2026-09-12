@@ -2,6 +2,9 @@
 
 **UniProt:** Q96EA4 | **Gene:** SPDL1 (CCDC99) | **Organism:** Homo sapiens
 
+- **Correctness**: 3/5
+- **Completeness**: 3/5
+
 ## Overall Assessment
 
 BioReason's SFT model analysis of SPDL1 captures the broad functional profile correctly but contains several specific factual errors about binding partners and molecular mechanisms that are not supported by the published literature.

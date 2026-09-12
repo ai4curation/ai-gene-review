@@ -1,0 +1,14 @@
+> LEE1/YPL054W from *Saccharomyces cerevisiae* encodes a poorly characterized protein with MKRN-like and tandem CCCH zinc finger features, placing it within or near the makorin-like class of RNA-binding regulatory proteins; in yeast transcriptome studies it was specifically highlighted as a zinc-finger protein of unknown function regulated by nitrogen source quality (pqac-00000010, pqac-00000011, pqac-00000016).
+>
+> Across eukaryotes, makorin/MKRN proteins are defined by CCCH-type zinc fingers linked to ubiquitin-ligase-associated architecture, and these domains are interpreted functionally as coupling RNA recognition with post-translational regulation. In MKRN family proteins, CCCH zinc fingers support RNA binding, while the RING region in characterized metazoan homologs confers E3 ubiquitin ligase activity (pqac-00000013, pqac-00000015, pqac-00000017).
+>
+> In metazoans, MKRN1 has been experimentally shown to act as an RNA-binding E3 ubiquitin ligase in ribosome-associated quality control (RQC): it binds PABPC1, is positioned upstream of poly(A) tails and A-rich stretches, associates with polysomes, and promotes ribosome stalling at poly(A) sequences to prevent erroneous translation of prematurely polyadenylated transcripts (pqac-00000019, pqac-00000022, pqac-00000023).
+>
+> Mechanistically, MKRN1 ubiquitylates ribosomal protein RPS10 as well as PABPC1, thereby helping create the translational block that prevents damaging poly(A) translation and triggers downstream quality-control responses (pqac-00000018, pqac-00000020, pqac-00000024).
+>
+> Whether yeast Lee1 performs an equivalent RQC role has not been experimentally demonstrated. No dedicated biochemical study of Lee1 was found, so any assignment to RQC remains inferential rather than proven; however, its domain architecture is consistent with an RNA-binding regulatory protein and potentially with ubiquitin-ligase-related function by homology to MKRN proteins (pqac-00000010, pqac-00000016, pqac-00000025).
+>
+> In budding yeast, the best-established RQC ubiquitin ligase is Hel2, the functional homolog of metazoan ZNF598, whereas Lee1’s possible contribution to this pathway remains unexplored. At present, the strongest direct evidence for Lee1 in yeast is its nitrogen-responsive expression and its appearance in a stationary-phase minisatellite-stability screen, not a defined RQC assay (pqac-00000021, pqac-00000027).
+
+
+*Blockquote: This blockquote summarizes what is directly known about yeast LEE1/YPL054W and what can be inferred from its MKRN-like, CCCH zinc finger architecture. It is useful because it clearly separates experimentally supported facts from homology-based functional hypotheses.*

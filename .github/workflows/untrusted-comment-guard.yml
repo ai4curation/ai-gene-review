@@ -1,0 +1,83 @@
+name: Untrusted Comment Guard
+
+# Hides comments from untrusted authors that carry either a risky attachment
+# (archive / executable / GitHub user-attachment link) or one of this repo's
+# agent-trigger phrases. Agentic workflows read issue and PR comments, so an
+# untrusted comment is attacker-controlled text entering an agent's context;
+# minimizing it keeps it out of the way and off the trigger path.
+#
+# The decision is made by a deterministic allowlist + pattern check in
+# .github/scripts/github-trust-gate.js — no model is involved, so the text being
+# inspected cannot argue its way past the gate.
+
+on:
+  issue_comment:
+    types: [created, edited]
+  pull_request_review_comment:
+    types: [created, edited]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  guard-comment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the trust gate from the default branch
+        uses: actions/checkout@v7
+        with:
+          # SECURITY: on `pull_request_review_comment` the default GITHUB_REF is
+          # the PR merge ref, so a bare checkout would fetch fork-authored code
+          # and github-script would then `require()` it with a write-scoped
+          # token. Always take the gate from the trusted default branch.
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Minimize risky untrusted comment
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ github.token }}
+          script: |
+            const trustGate = require('./.github/scripts/github-trust-gate.js');
+
+            const comment = context.payload.comment || {};
+            const login = comment.user?.login || comment.author?.login || '';
+            const [owner, repo] = [context.repo.owner, context.repo.repo];
+
+            if (!comment.node_id) {
+              core.info('Comment does not expose a GraphQL node_id; skipping moderation.');
+              return;
+            }
+
+            const trusted = await trustGate.isTrustedLogin({
+              github,
+              owner,
+              repo,
+              login,
+              controllers: trustGate.loadControllers(),
+            });
+
+            if (trusted) {
+              core.info(`Comment author ${login || '<unknown>'} is trusted; leaving comment visible.`);
+              return;
+            }
+
+            const risk = trustGate.classifyCommentRisk(comment.body || '');
+            if (!risk.shouldMinimize) {
+              core.info(
+                `Comment author ${login || '<unknown>'} is untrusted, but no risky attachment or agent-trigger pattern was detected.`,
+              );
+              return;
+            }
+
+            core.warning(
+              `Minimizing untrusted comment ${comment.html_url || comment.node_id}; reasons: ${risk.reasons.join(', ')}`,
+            );
+            await trustGate.minimizeComment({
+              github,
+              subjectId: comment.node_id,
+              classifier: risk.classifier,
+            });

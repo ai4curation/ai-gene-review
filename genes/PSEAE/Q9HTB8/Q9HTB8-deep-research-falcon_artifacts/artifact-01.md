@@ -1,0 +1,15 @@
+| Gene | PA locus (PAO1) | Function | Role in CPA pathway |
+|---|---|---|---|
+| wbpL | PA3146 | Undecaprenyl-phosphate HexNAc-1-phosphate transferase that initiates O-polysaccharide assembly on the lipid carrier | Initiates CPA synthesis on the cytoplasmic face of the inner membrane by adding the first sugar-phosphate to UndP; also required for initiation of OSA synthesis (pqac-00000017) |
+| algC | not specified in retrieved evidence | Phosphomannomutase/phosphoglucomutase contributing precursor formation for GDP-D-rhamnose biosynthesis | Supplies mannose-1-phosphate precursor used upstream in GDP-D-rhamnose production for CPA assembly (pqac-00000012) |
+| wbpW | not specified in retrieved evidence | Phosphomannose isomerase | Converts fructose-6-phosphate to mannose-6-phosphate in the precursor pathway leading to GDP-D-rhamnose for CPA biosynthesis (pqac-00000012, pqac-00000015) |
+| gmd | not specified in retrieved evidence | GDP-mannose 4,6-dehydratase | Converts GDP-mannose toward GDP-4-keto-6-deoxymannose in the GDP-D-rhamnose biosynthetic pathway that supplies CPA sugar donor (pqac-00000012, pqac-00000015) |
+| rmd | not specified in retrieved evidence | GDP-4-keto-6-deoxymannose reductase | Completes GDP-D-rhamnose synthesis, generating the activated sugar donor required for the D-rhamnan CPA polymer (pqac-00000012, pqac-00000015) |
+| wbpX | not specified in retrieved evidence | Rhamnosyltransferase | Adds D-rhamnose residues during assembly of the CPA trisaccharide repeat/polymer on the lipid carrier (pqac-00000012, pqac-00000014) |
+| wbpY | not specified in retrieved evidence | Rhamnosyltransferase | Adds D-rhamnose residues during assembly of the CPA trisaccharide repeat/polymer on the lipid carrier (pqac-00000012, pqac-00000014) |
+| wbpZ | not specified in retrieved evidence | Rhamnosyltransferase | Adds D-rhamnose residues during assembly of the CPA trisaccharide repeat/polymer on the lipid carrier; together with WbpX/WbpY builds the characteristic α-linked D-rhamnan structure (pqac-00000012, pqac-00000014) |
+| wzm | PA5451 | ABC transporter permease / transmembrane domain (TMD) subunit | Exports completed UndPP-linked CPA across the inner membrane to the periplasmic face for ligation to lipid A-core; loss blocks export but not polymer synthesis (pqac-00000001, pqac-00000002, pqac-00000019) |
+| wzt | not specified in retrieved evidence | ABC transporter ATP-binding cassette ATPase / nucleotide-binding domain (NBD) subunit | Provides ATP-driven energy for Wzm-Wzt-mediated export of completed CPA across the inner membrane; loss phenocopies wzm mutants with intracellular accumulation of lipid-linked CPA (pqac-00000001, pqac-00000002, pqac-00000019) |
+
+
+*Table: This table summarizes the core genes requested for CPA/A-band O-antigen biosynthesis in P. aeruginosa PAO1, linking each gene to its enzymatic or transport role in the pathway. It is useful for mapping Wzm into the broader precursor synthesis, polymer assembly, and export steps of CPA production.*

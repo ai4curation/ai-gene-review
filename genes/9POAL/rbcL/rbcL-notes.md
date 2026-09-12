@@ -67,3 +67,9 @@ function, and the Calvin cycle as the specific pathway context.
 GO:0009536 (plastid) and GO:0009507 (chloroplast) are both annotated. Chloroplast is a subtype of 
 plastid. Having both is somewhat redundant; chloroplast is more specific and informative. The plastid 
 annotation could be considered redundant but is not incorrect.
+
+## Description cleanup note
+
+The YAML `description` field was revised to keep it as a standalone biological summary. Project-specific curation framing moved here instead.
+
+- Moved out of the YAML description: this review uses the rice (Oryza sativa subsp. japonica, P0C512) entry as a representative for Poales.

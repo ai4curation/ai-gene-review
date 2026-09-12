@@ -1,0 +1,9 @@
+# Citations
+
+OpenScientist job: `e266a58a-dede-4b59-b0c1-2f6f4867a1ef`
+
+- PMID:12939278
+- PMID:14990996
+- PMID:18203720
+- PMID:26460611
+- PMID:28298444

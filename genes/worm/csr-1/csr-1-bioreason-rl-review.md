@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: csr-1 (C. elegans)
 
-Source: csr-1-deep-research-bioreason-rl.md
+Source: csr-1-bioreason-rl-predictions.md
 
 - **Correctness**: 1/5
 - **Completeness**: 1/5
@@ -21,6 +21,11 @@ This summary is **fundamentally wrong**. CSR-1 is not a nuclear hormone receptor
 The curated review documents a critical data issue: the original GOA/UniProt files for csr-1 contained data for the wrong gene -- nhr-47 (Q17370), an orphan nuclear hormone receptor. The BioReason system was given the nhr-47 sequence, not the CSR-1 Argonaute sequence (Q21992). Consequently, BioReason produced a perfectly logical but entirely incorrect description of a nuclear hormone receptor when it should have described an RNA-binding Argonaute protein.
 
 This is an input data error rather than a reasoning error on BioReason's part. The InterPro domains listed (zinc finger NHR-type, nuclear hormone receptor ligand-binding domain) are those of nhr-47, not csr-1.
+
+**Benchmark handling:** exclude this case from model-performance aggregates and report it
+in a wrong-input/data-pipeline stratum. The 1/1 scores describe the mismatch between the
+generated paragraph and CSR-1 biology; they must not be interpreted as a BioReason
+reasoning failure on the sequence it actually received.
 
 Comparison with interpro2go:
 

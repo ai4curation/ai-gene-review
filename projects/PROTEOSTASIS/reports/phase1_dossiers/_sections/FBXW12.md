@@ -1,0 +1,8 @@
+## FBXW12
+- **UniProt:** Q6X9E4 · **batch:** proteostasis-batch-2026-06-13 · **review status:** COMPLETE
+- **PN placement:** `UPS|E3 ubiquitin and UBL ligases|Cul1 substrate receptor|F-box|WD40` ; **PN-node mapping:** group=mapped, ok_for_propagation_to_go, GO:1990756; subtype/type=no_mapping; projected GO:1990756 goa_status=new_to_goa.
+- **Consistency:** Fully consistent. Deep research, review YAML, PN annotation and PN-node mapping all agree FBXW12 is an SCF F-box/WD40 substrate receptor. Better characterized than FBXW10: experimentally binds SKP1/CUL1 and reconstitutes IL22RA1 ubiquitination in a cell-free SCF system. Review proposes GO:1990756, matching the PN projection. No contradictions.
+- **PN story / NEW pressure:** PN asserts GO:1990756 (substrate-adaptor MF), absent from GOA (goa.tsv has only generic GO:0016567 IEA, no MF adaptor term). GO:1990756 verified real (OLS). Verdict: ADD GO:1990756 — strongly supported (direct IL22RA1 substrate, in vitro SCF reconstitution) and already proposed in the review.
+- **Mapping strategy:** Correct. FBXW12 is a Cul1/SCF F-box receptor; GO:1990756 is the right MF category (receptor, not scaffold/catalytic). Scope ok_for_propagation. Class-level GO:0061630 correctly held context_only/too_broad.
+- **Evidence alignment:** Aligned. PN ref 15340381 (Jin et al. F-box family review) is generic family context. The review's load-bearing PMID is 26171402 (Franz et al., IL-22R / FBXW12 growth suppressor), full-text-available, relevance HIGH / VERIFIED — stronger and more specific than the PN's cited reference. Falcon corroborates; circ-FBXW12 correctly excluded as distinct gene product.
+- **Verdict:** Consistent; PN GO:1990756 add well-supported and already mirrored in the review. No changes needed.

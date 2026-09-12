@@ -1,3 +1,7 @@
+---
+title: "Vampirome Table 4 Extract (DESRO)"
+---
+
 # Vampirome Table 4 Extract (DESRO)
 
 Source: Table 4 and surrounding text from the Vampirome transcriptome/proteome paper on Desmodus rotundus salivary glands. [PMC3685427](https://pmc.ncbi.nlm.nih.gov/articles/PMC3685427/)

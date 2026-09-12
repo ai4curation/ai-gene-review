@@ -1,0 +1,10 @@
+## CDC37L1
+- **UniProt:** Q7L3B6 · **batch:** proteostasis-batch-2026-06-07 · **review status:** COMPLETE
+- **PN placement:** `Cytonuclear proteostasis|Chaperone|HSP90 system|HSP90 cochaperone|no characteristic domain` ; **PN-node mapping:** leaf/`group`/`class`/branch all `no_mapping`; `[type] HSP90 cochaperone` → `mapped` GO:0051879 Hsp90 protein binding (`more_specific_than_existing_goa`).
+- **Consistency:** Consistent. Notes, YAML, and PN all frame CDC37L1 (Harc) as a cytoplasmic HSP90/HSP70 co-chaperone (CDC37 paralog). GO:0051879 verified real. The review's repeated MODIFY of bare GO:0005515 IPI rows (WITH HSP90AA1/AB1) → GO:0051879 directly matches the PN projection. No contradictions.
+- **PN story / NEW pressure:** PN asserts Hsp90 binding (GO:0051879), which is not present verbatim in GOA (GOA has GO:0031072 heat shock protein binding IBA + bare GO:0005515 IPI to HSP90AA1/AB1). The review already proposes GO:0051879 via MODIFY of the IPI rows, so the PN story is captured by the review and defensibly more specific than the existing heat-shock-protein-binding parent. ADD is effectively already in the review; no over-reach.
+- **Mapping strategy:** No change. PN maps conservatively at the `[type]` altitude (cochaperone), with the family/system containers left unmapped — appropriate given CDC37 vs CDC37L1 client divergence. `more_specific_than_existing_goa` is accurate (GO:0051879 is a child concept of the generic heat shock / protein binding annotations).
+- **Evidence alignment:** PN listed no reference titles for this row. Review evidence is genome-scale interactome screens (PMID:25036637 Taipale chaperome map is the most informative; PMID:21988832/25416956/33961781/40205054). WITH partners (HSP90AA1 P07900, HSP90AB1 P08238, STIP1 P31948) underpin the GO:0051879 call. No divergence.
+- **Verdict:** Consistent; PN's GO:0051879 is defensible and already operationalized in the review (MODIFY of IPI rows). No new pressure beyond the review.
+
+**Recommended edits:** None required. (Review already maps the HSP90-binding IPI evidence to GO:0051879, aligning with the PN node.)

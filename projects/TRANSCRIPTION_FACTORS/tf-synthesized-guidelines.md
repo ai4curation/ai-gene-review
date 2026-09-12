@@ -1,3 +1,7 @@
+---
+title: "Transcription Factor Annotation Guidelines (Synthesized)"
+---
+
 # Transcription Factor Annotation Guidelines (Synthesized)
 
 Operational guidelines for GO annotation of transcription regulators, synthesized from:

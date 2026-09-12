@@ -23,6 +23,7 @@ journal: Proceedings of the National Academy of Sciences
 year: '2016'
 doi: 10.1073/pnas.1605256113
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # RIM-binding protein 2 regulates release probability by fine-tuning calcium channel localization at murine hippocampal synapses

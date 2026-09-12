@@ -1,3 +1,9 @@
+---
+title: "Succinate Dehydrogenase (Complex II) — gp2term Relation Review (`enables` → `contributes_to`)"
+maturity: IN_PROGRESS
+tags: [PIPELINE, FLAGSHIP]
+---
+
 # Succinate Dehydrogenase (Complex II) — gp2term Relation Review (`enables` → `contributes_to`)
 
 ## Overview

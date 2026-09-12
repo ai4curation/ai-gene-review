@@ -41,7 +41,7 @@ import time
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, cast
 
 import requests
 import yaml
@@ -166,6 +166,21 @@ class Publication:
     pmcid: Optional[str] = None
     doi: Optional[str] = None
     keywords: Optional[List[str]] = None
+    pubmed_publication_types: Optional[List[str]] = None  # raw PubMed PT list
+
+    @property
+    def publication_type(self) -> Optional[str]:
+        """Classified PublicationTypeEnum value inferred from PubMed PT metadata.
+
+        Returns ``None`` if no PubMed publication-type metadata is available.
+        """
+        if not self.pubmed_publication_types:
+            return None
+        from ai_gene_review.etl.publication_type import (
+            classify_pubmed_publication_type,
+        )
+
+        return classify_pubmed_publication_type(self.pubmed_publication_types)
 
     def to_frontmatter_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for YAML frontmatter."""
@@ -185,6 +200,9 @@ class Publication:
             data["doi"] = self.doi
         if self.keywords:
             data["keywords"] = self.keywords
+        if self.pubmed_publication_types:
+            data["pubmed_publication_types"] = self.pubmed_publication_types
+            data["publication_type"] = self.publication_type
         return data
 
     def to_markdown(self) -> str:
@@ -218,7 +236,11 @@ class Publication:
         if self.full_text:
             body_parts.append(f"\n## Full Text\n\n{self.full_text}\n")
 
-        return f"---\n{frontmatter}---\n\n{''.join(body_parts)}"
+        markdown = f"---\n{frontmatter}---\n\n{''.join(body_parts)}"
+        # PubMed's plain-text records can contain spaces before line breaks.
+        # Generated caches intentionally do not preserve Markdown hard-break
+        # whitespace; keep their content and indentation clean for Git tooling.
+        return re.sub(r"[ \t]+(?=\r?$)", "", markdown, flags=re.MULTILINE)
 
 
 def extract_pmid(pmid_str: str) -> str:
@@ -430,6 +452,9 @@ def fetch_pubmed_data(
         )
         doi = str(record.get("DOI", "")) if record.get("DOI") else None
 
+        # PubMed publication types (PT), e.g. ["Journal Article", "Review"].
+        pub_types = [str(pt) for pt in record.get("PubTypeList", [])] or None
+
         # Check for PMC ID with override support
         pmcid = None
         
@@ -491,6 +516,7 @@ def fetch_pubmed_data(
             abstract=abstract,
             pmcid=pmcid,
             doi=doi,
+            pubmed_publication_types=pub_types,
         )
 
         # Try to fetch full text from PMC if available
@@ -625,192 +651,147 @@ def fetch_pmc_fulltext(pmcid: str) -> FullTextResult:
         return FullTextResult(content=None, available=False, extraction_method=None, is_complete=False)
 
 
+_PMC_BOILERPLATE_PREFIXES = (
+    "PMCID:",
+    "PMID:",
+    "DOI:",
+    "COPYRIGHT",
+    "DOWNLOAD PDF",
+    "CITE THIS ARTICLE",
+    "SHARE THIS ARTICLE",
+    "AUTHOR INFORMATION",
+    "FUNDING STATEMENT",
+    "ETHICS STATEMENT",
+    "DECLARATION OF INTERESTS",
+    "DATA AVAILABILITY",
+    "AUTHOR CONTRIBUTIONS",
+)
+
+_PMC_TERMINAL_HEADINGS = {
+    "ACKNOWLEDGMENTS",
+    "ACKNOWLEDGEMENTS",
+    "CITED BY",
+    "REFERENCES",
+    "SIMILAR ARTICLES",
+    "SUPPLEMENTARY MATERIAL",
+}
+
+
+def _extract_pmc_article_text(html: bytes | str) -> Optional[str]:
+    """Extract body headings and paragraphs from current and legacy PMC HTML."""
+    soup = BeautifulSoup(html, "html.parser")
+    article_content = cast(
+        Optional[Tag], soup.select_one("section.body.main-article-body")
+    )
+    if not article_content:
+        article_content = cast(
+            Optional[Tag], soup.select_one("section[aria-label='Article content']")
+        )
+    if not article_content:
+        article_content = cast(Optional[Tag], soup.find("article"))
+    if not article_content:
+        article_content = cast(
+            Optional[Tag],
+            soup.find("div", class_="article") or soup.find("div", class_="tsec"),
+        )
+    if not article_content:
+        article_content = cast(
+            Optional[Tag], soup.find("div", id="article-body") or soup.find("main")
+        )
+    if not article_content:
+        for div in soup.find_all("div"):
+            if isinstance(div, Tag) and len(div.find_all("p", recursive=False)) >= 3:
+                article_content = div
+                break
+    if not article_content:
+        article_content = cast(Tag, soup)
+
+    parts: List[str] = []
+    pending_headings: List[str] = []
+    for element in article_content.find_all(["h1", "h2", "h3", "h4", "p"]):
+        if not isinstance(element, Tag):
+            continue
+        if element.find_parent(["figcaption", "table", "nav", "aside", "footer"]):
+            continue
+
+        text = element.get_text(separator=" ", strip=True)
+        if element.name in ["h1", "h2", "h3", "h4"]:
+            normalized_heading = re.sub(r"\s+", " ", text).strip().upper()
+            if normalized_heading in _PMC_TERMINAL_HEADINGS:
+                break
+            if text:
+                pending_headings.append(text)
+            continue
+
+        upper_text = text.lstrip().upper()
+        if len(text) <= 30 or upper_text.startswith(_PMC_BOILERPLATE_PREFIXES):
+            continue
+
+        parts.extend(pending_headings)
+        pending_headings.clear()
+        parts.append(text)
+
+    if not parts:
+        return None
+
+    return "\n\n".join(dict.fromkeys(parts))
+
+
+def _classify_pmc_html_content(content: Optional[str]) -> Optional[FullTextResult]:
+    """Classify extracted HTML without inflating headings-only fragments."""
+    if content and len(content) > 3000:
+        return FullTextResult(
+            content=content,
+            available=True,
+            extraction_method="html",
+            is_complete=True,
+        )
+    if content and len(content) > 500:
+        return FullTextResult(
+            content=content,
+            available=True,
+            extraction_method="html_abstract_only",
+            is_complete=False,
+        )
+    return None
+
+
 def fetch_pmc_html_fallback(pmcid: str) -> FullTextResult:
-    """Fallback method to scrape PMC HTML when XML API is publisher-restricted.
-
-    This method is used when publishers allow PMC to host articles for web access
-    but restrict programmatic XML API access. Since all PMC articles provide
-    HTML versions regardless of XML restrictions, this approach successfully
-    retrieves content from publisher-restricted journals.
-
-    Uses multiple strategies to locate main article content and filters out
-    navigation, metadata, and supplementary sections.
-
-    Args:
-        pmcid: PMC ID (with or without PMC prefix)
-
-    Returns:
-        FullTextResult object with content from HTML scraping.
-        Typically achieves 85-90% success rate on restricted articles.
-    """
+    """Scrape PMC HTML when XML access is publisher-restricted."""
     try:
-        # Ensure PMC prefix
         if not pmcid.startswith("PMC"):
             pmcid = f"PMC{pmcid}"
 
         url = f"https://pmc.ncbi.nlm.nih.gov/articles/{pmcid}/"
-
-        # Add user agent to avoid blocking
         headers = {
             "User-Agent": "Mozilla/5.0 (compatible; ai-gene-review/1.0; +https://github.com/monarch-initiative/ai-gene-review)"
         }
-
         response = requests.get(url, headers=headers, timeout=30)
         response.raise_for_status()
 
-        soup = BeautifulSoup(response.content, "html.parser")
+        content = _extract_pmc_article_text(response.content)
+        result = _classify_pmc_html_content(content)
+        if result:
+            return result
 
-        # Extract main article content
-        content_parts = []
-
-        # Try multiple strategies to find the main article content
-
-        # Strategy 1: Look for PMC's article content structure
-        article_content = soup.find("div", class_="tsec") or soup.find(
-            "div", class_="article"
-        )
-
-        # Strategy 2: Look for sections with typical academic paper structure
-        if not article_content:
-            article_content = soup.find("div", id="article-body") or soup.find("main")
-
-        # Strategy 3: Find div containing multiple paragraphs
-        if not article_content:
-            # Look for a div that contains multiple paragraphs (likely main content)
-            divs_with_paragraphs = soup.find_all("div")
-            for div in divs_with_paragraphs:
-                if hasattr(div, "find_all"):  # Type guard for Tag objects
-                    paragraphs = div.find_all("p", recursive=False)
-                    if (
-                        len(paragraphs) >= 3
-                    ):  # Likely main content if has multiple paragraphs
-                        article_content = div
-                        break
-
-        # Strategy 4: Fallback to entire body
-        if not article_content:
-            article_content = soup
-
-        # Look for section headers and content
-        sections = []
-
-        # Find sections with headers (Introduction, Methods, Results, etc.)
-        header_tags = []
-        if hasattr(article_content, "find_all"):  # Type guard for Tag objects
-            # Find header tags that contain relevant section names
-            for tag in article_content.find_all(["h1", "h2", "h3", "h4"]):
-                if isinstance(tag, Tag):
-                    header_text = tag.get_text(strip=True)
-                    if re.search(
-                        r"(Introduction|Abstract|Methods?|Results?|Discussion|Conclusion)",
-                        header_text,
-                        re.I,
-                    ):
-                        header_tags.append(tag)
-
-        for header in header_tags:
-            section_content = []
-            section_content.append(header.get_text(strip=True))
-
-            # Get content following the header
-            for sibling in header.find_next_siblings():
-                if isinstance(sibling, Tag) and sibling.name in [
-                    "h1",
-                    "h2",
-                    "h3",
-                    "h4",
-                ]:
-                    break  # Stop at next header
-                if isinstance(sibling, Tag) and sibling.name == "p":
-                    text = sibling.get_text(separator=" ", strip=True)
-                    if len(text) > 30:
-                        section_content.append(text)
-
-            if len(section_content) > 1:  # Has header and content
-                sections.extend(section_content)
-
-        # If no structured sections found, get all substantial paragraphs
-        if not sections:
-            if hasattr(article_content, "find_all"):  # Type guard for Tag objects
-                paragraphs = article_content.find_all("p")
-            else:
-                paragraphs = []
-            for p in paragraphs:
-                text = p.get_text(separator=" ", strip=True)
-
-                # Filter out metadata and short snippets
-                if (
-                    len(text) > 50
-                    and not any(
-                        keyword in text.upper()
-                        for keyword in [
-                            "PMCID:",
-                            "PMID:",
-                            "DOI:",
-                            "COPYRIGHT",
-                            "DOWNLOAD PDF",
-                            "SUPPLEMENTARY DATA",
-                            "CITE THIS ARTICLE",
-                            "SHARE THIS ARTICLE",
-                            "AUTHOR INFORMATION",
-                            "FUNDING STATEMENT",
-                            "ETHICS STATEMENT",
-                            "DECLARATION OF INTERESTS",
-                            "SUPPLEMENTAL INFORMATION",
-                            "DATA AVAILABILITY",
-                            "AUTHOR CONTRIBUTIONS",
-                        ]
-                    )
-                    and "Fig." not in text
-                    and "Table" not in text[:20]
-                ):  # Skip figure/table captions
-                    sections.append(text)
-
-        content_parts = sections
-
-        if content_parts:
-            # Remove duplicates while preserving order
-            seen = set()
-            unique_parts = []
-            for part in content_parts:
-                if part not in seen:
-                    seen.add(part)
-                    unique_parts.append(part)
-
-            content = "\n\n".join(unique_parts)
-
-            # Check if we got substantial content (not just abstract repetition)
-            if len(content) > 3000:  # Reasonable threshold for full article
-                return FullTextResult(
-                    content=content,
-                    available=True,
-                    extraction_method="html",
-                    is_complete=True
-                )
-            elif len(content) > 500:  # Got something, but probably just abstract
-                return FullTextResult(
-                    content=content,
-                    available=True,
-                    extraction_method="html_abstract_only",
-                    is_complete=False
-                )
-            else:
-                print(
-                    f"{pmcid}: HTML content too short ({len(content)} chars), trying PDF fallback..."
-                )
-                return fetch_pmc_pdf_fallback(pmcid)
-        else:
+        if content:
             print(
-                f"{pmcid}: No substantial content found in HTML, trying PDF fallback..."
+                f"{pmcid}: HTML content too short ({len(content)} chars), trying PDF fallback..."
             )
-            return fetch_pmc_pdf_fallback(pmcid)
+        else:
+            print(f"{pmcid}: No substantial content found in HTML, trying PDF fallback...")
+        return fetch_pmc_pdf_fallback(pmcid)
 
     except requests.RequestException as e:
         print(f"{pmcid}: HTTP request failed - {e}")
-        return FullTextResult(content=None, available=False, extraction_method=None, is_complete=False)
+        return FullTextResult(
+            content=None, available=False, extraction_method=None, is_complete=False
+        )
     except Exception as e:
         print(f"{pmcid}: HTML scraping error - {e}")
-        return FullTextResult(content=None, available=False, extraction_method=None, is_complete=False)
+        return FullTextResult(
+            content=None, available=False, extraction_method=None, is_complete=False
+        )
 
 
 def fetch_pmc_pdf_fallback(pmcid: str) -> FullTextResult:

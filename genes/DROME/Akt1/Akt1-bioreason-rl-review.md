@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: Akt1 (DROME)
 
-Source: Akt1-deep-research-bioreason-rl.md
+Source: Akt1-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

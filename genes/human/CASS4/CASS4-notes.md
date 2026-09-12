@@ -1,0 +1,17 @@
+# CASS4 notes
+
+Automated deep research was attempted with `just deep-research-falcon human CASS4 --fallback perplexity-lite`, but the run timed out before producing a deep-research file. This review therefore uses cached GOA publications, the UniProt record, and the PANTHER family fetch.
+
+CASS4 encodes Cas scaffolding protein family member 4, also called HEPL. UniProt describes CASS4 as a docking protein involved in tyrosine kinase-based signaling related to cell adhesion and spreading, regulating PTK2/FAK1 activity, focal adhesion integrity, and cell spreading. The local PANTHER fetch places CASS4 in `PTHR10654:SF19`, the CAS scaffolding protein family member 4 subfamily.
+
+The core CASS4 evidence comes from the original HEPL paper. Although only the abstract is cached, it directly supports the family context and focal-adhesion/FAK/spreading function: "Cas proteins mediate integrin-dependent signals at focal adhesions, regulating cell invasion and survival" and "HEPL maintains Cas family function in localization to focal adhesions, as well as regulation of FAK activity, focal adhesion integrity, and cell spreading" [PMID:18256281 "Cas proteins mediate integrin-dependent signals at focal adhesions, regulating cell invasion and survival"; PMID:18256281 "HEPL maintains Cas family function in localization to focal adhesions, as well as regulation of FAK activity, focal adhesion integrity, and cell spreading"].
+
+The NSCLC expression paper supports cytoplasmic accumulation and a disease-context migration/metastasis association. The abstract says Hepl is the fourth CAS family member, varies in migration effects by cell type, and is overexpressed/cytoplasmically accumulated in NSCLC [PMID:23001926 "Hepl, first described in 2008, is the fourth member of the Crk-associated substrate (CAS) family"; PMID:23001926 "Compared to other CAS proteins, Hepl has a varying effect on cell migration in different cell types"; PMID:23001926 "cytoplasmic accumulation of Hepl was observed in a high metastatic potential lung cancer cell lines"].
+
+The later NSCLC paper supports positive regulation of invasion/migration and AKT signaling in a cancer-specific context. Its abstract reports that CASS4 overexpression enhanced invasion, CASS4 depletion inhibited invasion, and CASS4 facilitated AKT phosphorylation [PMID:27677288 "CASS4 overexpression inhibited E-cadherin expression and enhanced invasion in NSCLC cell line"; PMID:27677288 "CASS4 depletion upregulated E-cadherin expression and inhibited invasion"; PMID:27677288 "CASS4 facilitated AKT (Ser473) phosphorylation"].
+
+For curation, accept focal adhesion, cytoplasm/cytoskeleton, protein tyrosine kinase binding, FAK activity regulation, spreading, and migration annotations as the central Cas-scaffold biology. Keep AKT-pathway activation as non-core because it is a downstream NSCLC invasion phenotype. Modify the broad `cell surface receptor protein tyrosine kinase signaling pathway` IBA to `integrin-mediated signaling pathway`, which better matches the Cas/focal-adhesion evidence and avoids implying a canonical receptor tyrosine kinase pathway.
+
+## 2026-06-20 second-pass audit
+
+The second-pass audit confirmed the existing CASS4 review and manual reference metadata. No annotation action changes were needed: CASS4 remains curated as a CAS-family focal-adhesion scaffold regulating FAK/integrin-linked spreading and migration, with AKT-pathway and cancer-invasion annotations retained as downstream context rather than the core molecular role.

@@ -1,0 +1,85 @@
+# eryCII (A4F7P2, SACE_0725) — review notes
+
+Part of the **BGC exemplar curation project** (`projects/BGC.md`). MIBiG BGC0000055
+(*Saccharopolyspora erythraea*, erythromycin PKS). GenBank CAM00066.1 → UniProt
+**A4F7P2** (ERYC2_SACEN), gene *eryCII* / SACE_0725. Also relevant to
+`projects/PSEUDOENZYMES.md`.
+
+## Function — a P450 PSEUDOENZYME that activates a glycosyltransferase
+
+EryCII is a **cytochrome-P450-family homologue that has lost catalytic competence**
+and instead serves as the **activating partner of the desosaminyl transferase
+EryCIII** in erythromycin biosynthesis.
+
+- UniProt A4F7P2 CAUTION: "Although related to the cytochrome P450 family, lacks the
+  heme-binding sites." (ECO:0000305) — note this is a *curator inference*, so it needs
+  corroboration (below).
+- **Beyond the assertion — primary structural evidence (PMID:22056329 full text):**
+  - "...lacks the essential cysteine residue that coordinates the heme iron."
+  - "the conserved cysteine is absent (Supplementary Fig. S5); thus, they are not
+    active P450 enzymes." (structure-based alignment vs P450 Cyp125)
+  - "Having lost the heme group in the central core, the protein may be more
+    conformationally dynamic..."
+  - **PDB 2YJN is apo:** the RCSB entry has zero non-polymer entities (no heme ligand).
+  - Activation mechanism: EryCIII activity "is almost completely rescued by the
+    addition of soluble EryCII... able to induce a catalytically active structure in
+    EryCIII."
+
+  So the no-heme / no-catalysis conclusion rests on (1) the absent conserved Cys in a
+  structure-based alignment, and (2) an apo crystal structure — not merely UniProt.
+- UniProt FUNCTION: "Involved in the erythromycin biosynthesis pathway. Acts by
+  forming a complex and stabilizing the desosaminyl transferase EryCIII."
+  (ECO:0000269|PubMed:22056329); SUBUNIT: "Heterotetramer composed of EryCII and EryCIII."
+- Structure (PDB 2YJN): "EryCIII, in concert with its partner EryCII, attaches a
+  nucleotide-activated sugar to the macrolide scaffold... a heterotetramer...
+  EryCII stabilizes EryCIII and also functions as an allosteric activator of the GT."
+  [PMID:22056329]
+- **EryCII is required for EryCIII catalysis** (not merely an enhancer): purified
+  EryCIII "was inactive under all conditions tried"; combining EryCIII + EryCII
+  extracts "restored" GT activity [PMID:22056329 full text]. Stoichiometry is
+  α2β2 (dimer of heterodimers, ~188 kDa); activation is allosteric via EryCII's
+  N-terminal A″ helix, which contacts EryCIII's acceptor domain.
+
+## Annotation issues — domain-based over-annotation of a pseudoenzyme
+
+All four GOA molecular-function terms are IEA from the P450 sequence signature and are
+**incorrect for this catalytically dead homologue**:
+
+- GO:0004497 monooxygenase activity → REMOVE
+- GO:0005506 iron ion binding → REMOVE
+- GO:0016705 oxidoreductase activity (paired donors, O2) → REMOVE
+- GO:0020037 heme binding → REMOVE (UniProt: "lacks the heme-binding sites")
+
+Accurate roles to assert instead: **GO:0008047 enzyme activator activity** (allosteric
+activator of EryCIII; added as a NEW annotation), **GO:0050821 protein stabilization**
+(stabilizes EryCIII's fold/quaternary structure), **GO:1901115 erythromycin
+biosynthetic process** (BP), **GO:0032991 protein-containing complex** (EryCII-EryCIII
+heterotetramer).
+
+### "Conformational chaperone"?
+
+Mechanistically EryCII templates/stabilizes the catalytically competent conformation of
+EryCIII, which is chaperone-like. But it is **not** annotated as a `protein folding
+chaperone` (GO:0044183): a chaperone acts transiently and is released, and its client
+stays active afterwards; EryCII is a **stably bound stoichiometric subunit** and EryCIII
+is **inactive without it** (PMID:22056329). So the stabilizing aspect is captured by
+`protein stabilization` (GO:0050821) and the activating aspect by `enzyme activator
+activity` (GO:0008047) - not a chaperone MF. (The older fold-and-release / "does not
+bind tightly" model, ref 13, was superseded by the stable-complex structure.)
+
+### Capturing absence of function (NOT annotations)
+
+A "NEW NOT" (negated: true + action: NEW) can only be used for a term NOT already in
+GOA. Here the erroneous P450 functions (monooxygenase, heme binding, iron binding,
+oxidoreductase) are already present in GOA, so they are handled by REMOVE; there is no
+review action to convert an existing positive annotation into a NOT.
+
+## Predicted-complex evidence (BGC project)
+
+Moriwaki et al. (bioRxiv 2025.10.26.684697) predict the EryCII-EryCIII interaction
+(BGC0000055; CAM00066.1/CAM00067.1) at **ipTM 0.92**, matching PDB 2YJN (hetero 4-mer).
+
+## References
+- PMID:22056329 — Moncrieffe et al. 2012, J Mol Biol (EryCIII·EryCII structure, PDB
+  2YJN; EryCII stabilizes and allosterically activates EryCIII). VERIFIED.
+- UniProt A4F7P2 (CAUTION: lacks heme-binding sites).

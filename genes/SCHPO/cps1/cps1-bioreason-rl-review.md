@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: cps1 (S. pombe)
 
-Source: cps1-deep-research-bioreason-rl.md
+Source: cps1-bioreason-rl-predictions.md
 
 - **Correctness**: 3/5
 - **Completeness**: 3/5

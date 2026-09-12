@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: BRI1 (ARATH)
 
-Source: BRI1-deep-research-bioreason-rl.md
+Source: BRI1-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 4/5

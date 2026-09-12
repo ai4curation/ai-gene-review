@@ -14,7 +14,7 @@ serine/threonine phosphorylation of downstream substrates [UniProt:P31750
 BioReason report supports the same architecture-based conclusion:
 PH-domain membrane recruitment plus an AGC kinase domain explains
 ATP-dependent serine/threonine kinase activity
-[file:mouse/Akt1/Akt1-deep-research-bioreason.md "A cytoplasmic AGC-type
+[file:mouse/Akt1/Akt1-bioreason-rl-predictions.md "A cytoplasmic AGC-type
 serine/threonine kinase"].
 
 Key local evidence for process calls includes insulin-stimulated GLUT4

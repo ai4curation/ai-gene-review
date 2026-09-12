@@ -1,0 +1,3715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sws2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>sws2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O59772" target="_blank" class="term-link">
+                        O59772
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Schizosaccharomyces pombe (strain 972 / ATCC 24843)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "sws2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">14</span> Annotations</a>
+
+
+
+        <a href="#review-research" title="Deep research and hypothesis research reports"><span class="nav-count">1</span> Research</a>
+
+
+
+        <a href="#external-predictions" title="External predictions assessed separately from GOA annotations" class="nav-external"><span class="nav-count">4</span> External</a>
+
+
+
+        <a href="#review-core-functions" title="Core biological functions"><span class="nav-count">1</span> Core Function</a>
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">9</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">2</span> Documents</a>
+
+
+
+
+
+
+
+
+
+
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O59772" data-a="DESCRIPTION: Sws2 is the mitochondrial small-subunit ribosomal ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Sws2 is the mitochondrial small-subunit ribosomal protein uS13m. Its conserved uS13 RNA-binding fold and mitochondrial localization support a structural role in the mitoribosome and mitochondrial protein synthesis.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003676" target="_blank" class="term-link">
+                                    GO:0003676
+                                </a>
+                            </span>
+                            <span class="term-label">nucleic acid binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O59772" data-a="GO:0003676" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> nucleic acid binding is reviewed in the context of sws2.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The broad nucleic acid binding annotation is compatible with the biology, but RNA binding captures the supported sws2 function more precisely.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                                    RNA binding
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/sws2/sws2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001892; Ribosomal_uS13.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/sws2/sws2-28154081-supplement.txt
+
+                                </span>
+
+                                <div class="support-text">uS13m!     Sws2!         P53937!     MM!      14143!       16,089! 24121!               ! ... mB13!      uS13m:!34,!37B38,!41!                       H62:!1657B1658!</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                                    GO:0003723
+                                </a>
+                            </span>
+                            <span class="term-label">RNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O59772" data-a="GO:0003723" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RNA binding is supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target has the diagnostic uS13 family domain and a mitochondrial localization record. The S. cerevisiae structural supplementary table identifies Sws2/P53937 as uS13m and its contact with rRNA helix H62. This grounds transfer of the conserved RNA-associated mitoribosomal role while leaving exact S. pombe bridge geometry unresolved.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/sws2/sws2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001892; Ribosomal_uS13.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/sws2/sws2-28154081-supplement.txt
+
+                                </span>
+
+                                <div class="support-text">uS13m!     Sws2!         P53937!     MM!      14143!       16,089! 24121!               ! ... mB13!      uS13m:!34,!37B38,!41!                       H62:!1657B1658!</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003735" target="_blank" class="term-link">
+                                    GO:0003735
+                                </a>
+                            </span>
+                            <span class="term-label">structural constituent of ribosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O59772" data-a="GO:0003735" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> structural constituent of ribosome is supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target has the diagnostic uS13 family domain and a mitochondrial localization record. The S. cerevisiae structural supplementary table identifies Sws2/P53937 as uS13m and its contact with rRNA helix H62. This grounds transfer of the conserved RNA-associated mitoribosomal role while leaving exact S. pombe bridge geometry unresolved.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/sws2/sws2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001892; Ribosomal_uS13.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/sws2/sws2-28154081-supplement.txt
+
+                                </span>
+
+                                <div class="support-text">uS13m!     Sws2!         P53937!     MM!      14143!       16,089! 24121!               ! ... mB13!      uS13m:!34,!37B38,!41!                       H62:!1657B1658!</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003735" target="_blank" class="term-link">
+                                    GO:0003735
+                                </a>
+                            </span>
+                            <span class="term-label">structural constituent of ribosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O59772" data-a="GO:0003735" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> structural constituent of ribosome is supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target has the diagnostic uS13 family domain and a mitochondrial localization record. The S. cerevisiae structural supplementary table identifies Sws2/P53937 as uS13m and its contact with rRNA helix H62. This grounds transfer of the conserved RNA-associated mitoribosomal role while leaving exact S. pombe bridge geometry unresolved.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/sws2/sws2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001892; Ribosomal_uS13.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/sws2/sws2-28154081-supplement.txt
+
+                                </span>
+
+                                <div class="support-text">uS13m!     Sws2!         P53937!     MM!      14143!       16,089! 24121!               ! ... mB13!      uS13m:!34,!37B38,!41!                       H62:!1657B1658!</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16823372
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ORFeome cloning and global analysis of protein localization ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O59772" data-a="GO:0005739" data-r="PMID:16823372" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> mitochondrion is supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Mitochondrial localization is concordant with the conserved mitochondrial ribosomal ortholog assignment. Retain the PomBase genome-scale localization annotation (PMID:16823372); the available abstract describes the screen but does not expose the target image. The source excerpt records the target HDA/IC annotation, not a reinspection of the individual microscopy image.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/sws2/sws2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   GO; GO:0005739; C:mitochondrion; HDA:PomBase.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O59772" data-a="GO:0005739" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> mitochondrion is supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Mitochondrial localization is concordant with the conserved mitochondrial ribosomal ortholog assignment. Retain the PomBase genome-scale localization annotation (PMID:16823372); the available abstract describes the screen but does not expose the target image.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/sws2/sws2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   GO; GO:0005739; C:mitochondrion; HDA:PomBase.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                    GO:0005739
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrion</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O59772" data-a="GO:0005739" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> mitochondrion is supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Mitochondrial localization is concordant with the conserved mitochondrial ribosomal ortholog assignment. Retain the PomBase genome-scale localization annotation (PMID:16823372); the available abstract describes the screen but does not expose the target image.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/sws2/sws2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   GO; GO:0005739; C:mitochondrion; HDA:PomBase.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005763" target="_blank" class="term-link">
+                                    GO:0005763
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial small ribosomal subunit</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISO</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O59772" data-a="GO:0005763" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> mitochondrial small ribosomal subunit is supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target has the diagnostic uS13 family domain and a mitochondrial localization record. The S. cerevisiae structural supplementary table identifies Sws2/P53937 as uS13m and its contact with rRNA helix H62. This grounds transfer of the conserved RNA-associated mitoribosomal role while leaving exact S. pombe bridge geometry unresolved.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/sws2/sws2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001892; Ribosomal_uS13.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/sws2/sws2-28154081-supplement.txt
+
+                                </span>
+
+                                <div class="support-text">uS13m!     Sws2!         P53937!     MM!      14143!       16,089! 24121!               ! ... mB13!      uS13m:!34,!37B38,!41!                       H62:!1657B1658!</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005763" target="_blank" class="term-link">
+                                    GO:0005763
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial small ribosomal subunit</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18245278" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18245278
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Bot1p is required for mitochondrial translation, respiratory...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O59772" data-a="GO:0005763" data-r="PMID:18245278" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> mitochondrial small ribosomal subunit is supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target has the diagnostic uS13 family domain and a mitochondrial localization record. The S. cerevisiae structural supplementary table identifies Sws2/P53937 as uS13m and its contact with rRNA helix H62. This grounds transfer of the conserved RNA-associated mitoribosomal role while leaving exact S. pombe bridge geometry unresolved.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/sws2/sws2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001892; Ribosomal_uS13.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/sws2/sws2-28154081-supplement.txt
+
+                                </span>
+
+                                <div class="support-text">uS13m!     Sws2!         P53937!     MM!      14143!       16,089! 24121!               ! ... mB13!      uS13m:!34,!37B38,!41!                       H62:!1657B1658!</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005840" target="_blank" class="term-link">
+                                    GO:0005840
+                                </a>
+                            </span>
+                            <span class="term-label">ribosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O59772" data-a="GO:0005840" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ribosome is reviewed in the context of sws2.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The broad ribosome annotation is compatible with the biology, but mitochondrial small ribosomal subunit captures the supported sws2 function more precisely.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005763" target="_blank" class="term-link">
+                                    mitochondrial small ribosomal subunit
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/sws2/sws2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001892; Ribosomal_uS13.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/sws2/sws2-28154081-supplement.txt
+
+                                </span>
+
+                                <div class="support-text">uS13m!     Sws2!         P53937!     MM!      14143!       16,089! 24121!               ! ... mB13!      uS13m:!34,!37B38,!41!                       H62:!1657B1658!</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006412" target="_blank" class="term-link">
+                                    GO:0006412
+                                </a>
+                            </span>
+                            <span class="term-label">translation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O59772" data-a="GO:0006412" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> translation is reviewed in the context of sws2.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The broad translation annotation is compatible with the biology, but mitochondrial translation captures the supported sws2 function more precisely.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032543" target="_blank" class="term-link">
+                                    mitochondrial translation
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/sws2/sws2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001892; Ribosomal_uS13.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/sws2/sws2-28154081-supplement.txt
+
+                                </span>
+
+                                <div class="support-text">uS13m!     Sws2!         P53937!     MM!      14143!       16,089! 24121!               ! ... mB13!      uS13m:!34,!37B38,!41!                       H62:!1657B1658!</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015935" target="_blank" class="term-link">
+                                    GO:0015935
+                                </a>
+                            </span>
+                            <span class="term-label">small ribosomal subunit</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O59772" data-a="GO:0015935" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> small ribosomal subunit is reviewed in the context of sws2.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The broad small ribosomal subunit annotation is compatible with the biology, but mitochondrial small ribosomal subunit captures the supported sws2 function more precisely.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005763" target="_blank" class="term-link">
+                                    mitochondrial small ribosomal subunit
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/sws2/sws2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001892; Ribosomal_uS13.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/sws2/sws2-28154081-supplement.txt
+
+                                </span>
+
+                                <div class="support-text">uS13m!     Sws2!         P53937!     MM!      14143!       16,089! 24121!               ! ... mB13!      uS13m:!34,!37B38,!41!                       H62:!1657B1658!</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032543" target="_blank" class="term-link">
+                                    GO:0032543
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial translation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISO</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O59772" data-a="GO:0032543" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> mitochondrial translation is supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target has the diagnostic uS13 family domain and a mitochondrial localization record. The S. cerevisiae structural supplementary table identifies Sws2/P53937 as uS13m and its contact with rRNA helix H62. This grounds transfer of the conserved RNA-associated mitoribosomal role while leaving exact S. pombe bridge geometry unresolved.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/sws2/sws2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001892; Ribosomal_uS13.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/sws2/sws2-28154081-supplement.txt
+
+                                </span>
+
+                                <div class="support-text">uS13m!     Sws2!         P53937!     MM!      14143!       16,089! 24121!               ! ... mB13!      uS13m:!34,!37B38,!41!                       H62:!1657B1658!</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032543" target="_blank" class="term-link">
+                                    GO:0032543
+                                </a>
+                            </span>
+                            <span class="term-label">mitochondrial translation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18245278" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18245278
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Bot1p is required for mitochondrial translation, respiratory...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O59772" data-a="GO:0032543" data-r="PMID:18245278" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> mitochondrial translation is supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target has the diagnostic uS13 family domain and a mitochondrial localization record. The S. cerevisiae structural supplementary table identifies Sws2/P53937 as uS13m and its contact with rRNA helix H62. This grounds transfer of the conserved RNA-associated mitoribosomal role while leaving exact S. pombe bridge geometry unresolved.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/sws2/sws2-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001892; Ribosomal_uS13.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/sws2/sws2-28154081-supplement.txt
+
+                                </span>
+
+                                <div class="support-text">uS13m!     Sws2!         P53937!     MM!      14143!       16,089! 24121!               ! ... mB13!      uS13m:!34,!37B38,!41!                       H62:!1657B1658!</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section" id="review-core-functions">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Provides the conserved uS13m small-subunit structural role in mitochondrial translation.</h3>
+                <span class="vote-buttons" data-g="O59772" data-a="FUNCTION: Provides the conserved uS13m small-subunit structu..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003735" target="_blank" class="term-link">
+                            structural constituent of ribosome
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032543" target="_blank" class="term-link">
+                                mitochondrial translation
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005739" target="_blank" class="term-link">
+                                mitochondrion
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005763" target="_blank" class="term-link">
+                            mitochondrial small ribosomal subunit
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:SCHPO/sws2/sws2-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   InterPro; IPR001892; Ribosomal_uS13.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:SCHPO/sws2/sws2-28154081-supplement.txt
+
+                        </span>
+
+                        <div class="finding-text">uS13m!     Sws2!         P53937!     MM!      14143!       16,089! 24121!               ! ... mB13!      uS13m:!34,!37B38,!41!                       H62:!1657B1658!</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link">
+                            PMID:16823372
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ORFeome cloning and global analysis of protein localization in the fission yeast Schizosaccharomyces pombe.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18245278" target="_blank" class="term-link">
+                            PMID:18245278
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Bot1p is required for mitochondrial translation, respiratory function, and normal cell morphology in the fission yeast Schizosaccharomyces pombe.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28154081" target="_blank" class="term-link">
+                            PMID:28154081
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The structure of the yeast mitochondrial ribosome.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:SCHPO/sws2/sws2-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">sws2 UniProt sequence/domain and annotation record</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:SCHPO/sws2/sws2-28154081-supplement.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Supplementary tables of the S. cerevisiae mitoribosome structure (PMID:28154081)</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+    <section class="section external-predictions" id="external-predictions" aria-labelledby="external-predictions-title">
+        <h2 class="section-title" id="external-predictions-title">External Prediction Reviews</h2>
+        <p class="prediction-notice">These computational predictions are reviewed separately from the GOA annotation set used for this review.
+            The assessments below are from this project and do not constitute official GO annotations or endorsement by GO/UniProt.
+            They are not included in the existing annotation review above.</p>
+
+
+        <article class="prediction-review">
+        <h3>ProtNLM2 <span class="badge">External predictions</span></h3>
+        <p class="prediction-source"><a href="sws2-protnlm-predictions-review.yaml">View prediction review YAML</a> &middot; sws2-protnlm-predictions-review.yaml
+            &middot; Review status: COMPLETE</p>
+
+        <p>The broad GO predictions describe established biology; RNA binding is CNN and the remaining predictions are LSP.</p>
+
+        <p class="prediction-source">Review score: 2 = concordant with evidence; 1 = uncertain; 0 = discordant with evidence. This is an assessment score, not a model probability.</p>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006412" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:0006412
+                    </a>
+                    <span class="term-label">translation</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_BP</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-lsp">
+                        LSP — Less precise than existing annotation
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 2/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM2
+                 &middot; Version: pre-release post-processed-2026_02_28k.xml
+
+                 &middot; <a href="#" target="_blank" class="term-link">file:SCHPO/sws2/sws2-protnlm-source.xml</a>
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> The target has the diagnostic uS13m family domain and mitochondrial localization. Characterized S. cerevisiae mitoribosome structures support transfer of the conserved mitochondrial ribosomal role. Translation is therefore supported, and the existing mitochondrial translation annotation (GO:0032543) is more specific within the biological-process aspect. The generic prediction is LSP.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="sws2-uniprot.txt" target="_blank" class="term-link">file:SCHPO/sws2/sws2-uniprot.txt</a>:
+
+
+                        <span class="finding-text">"DR   InterPro; IPR001892; Ribosomal_uS13."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="sws2-28154081-supplement.txt" target="_blank" class="term-link">file:SCHPO/sws2/sws2-28154081-supplement.txt</a>:
+
+
+                        <span class="finding-text">"uS13m!     Sws2!         P53937!     MM!      14143!       16,089! 24121!               ! ... mB13!      uS13m:!34,!37B38,!41!                       H62:!1657B1658!"</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005840" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:0005840
+                    </a>
+                    <span class="term-label">ribosome</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_CC</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-lsp">
+                        LSP — Less precise than existing annotation
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 2/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM2
+                 &middot; Version: pre-release post-processed-2026_02_28k.xml
+
+                 &middot; <a href="#" target="_blank" class="term-link">file:SCHPO/sws2/sws2-protnlm-source.xml</a>
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> The target has the diagnostic uS13m family domain and mitochondrial localization. Characterized S. cerevisiae mitoribosome structures support transfer of the conserved mitochondrial ribosomal role. Membership in the mitochondrial small ribosomal subunit is a supported cellular-component annotation and is more specific than ribosome. The predicted broad complex membership is LSP.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="sws2-uniprot.txt" target="_blank" class="term-link">file:SCHPO/sws2/sws2-uniprot.txt</a>:
+
+
+                        <span class="finding-text">"DR   InterPro; IPR001892; Ribosomal_uS13."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="sws2-28154081-supplement.txt" target="_blank" class="term-link">file:SCHPO/sws2/sws2-28154081-supplement.txt</a>:
+
+
+                        <span class="finding-text">"uS13m!     Sws2!         P53937!     MM!      14143!       16,089! 24121!               ! ... mB13!      uS13m:!34,!37B38,!41!                       H62:!1657B1658!"</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:0003723
+                    </a>
+                    <span class="term-label">RNA binding</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_MF</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-cnn">
+                        CNN — Correct but not novel
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 2/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM2
+                 &middot; Version: pre-release post-processed-2026_02_28k.xml
+
+                 &middot; <a href="#" target="_blank" class="term-link">file:SCHPO/sws2/sws2-protnlm-source.xml</a>
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> The target carries the diagnostic uS13 domain. In the experimentally determined S. cerevisiae mitoribosome, the homolog Sws2/P53937 is uS13m and contacts rRNA helix H62 (PMID:28154081, supplementary tables S2 and bridge table). This supports transfer of conserved RNA binding to fission-yeast Sws2, without asserting identical bridge geometry. The equivalent RNA-binding annotation already exists in target GOA, so CNN applies.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="sws2-uniprot.txt" target="_blank" class="term-link">file:SCHPO/sws2/sws2-uniprot.txt</a>:
+
+
+                        <span class="finding-text">"DR   InterPro; IPR001892; Ribosomal_uS13."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="sws2-28154081-supplement.txt" target="_blank" class="term-link">file:SCHPO/sws2/sws2-28154081-supplement.txt</a>:
+
+
+                        <span class="finding-text">"uS13m!     Sws2!         P53937!     MM!      14143!       16,089! 24121!               ! ... mB13!      uS13m:!34,!37B38,!41!                       H62:!1657B1658!"</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1990904" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:1990904
+                    </a>
+                    <span class="term-label">ribonucleoprotein complex</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_CC</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-lsp">
+                        LSP — Less precise than existing annotation
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 2/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM2
+                 &middot; Version: pre-release post-processed-2026_02_28k.xml
+
+                 &middot; <a href="#" target="_blank" class="term-link">file:SCHPO/sws2/sws2-protnlm-source.xml</a>
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> The target has the diagnostic uS13m family domain and mitochondrial localization. Characterized S. cerevisiae mitoribosome structures support transfer of the conserved mitochondrial ribosomal role. Membership in the mitochondrial small ribosomal subunit is a supported cellular-component annotation and is more specific than ribonucleoprotein complex. The predicted broad complex membership is LSP.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="sws2-uniprot.txt" target="_blank" class="term-link">file:SCHPO/sws2/sws2-uniprot.txt</a>:
+
+
+                        <span class="finding-text">"DR   InterPro; IPR001892; Ribosomal_uS13."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="sws2-28154081-supplement.txt" target="_blank" class="term-link">file:SCHPO/sws2/sws2-28154081-supplement.txt</a>:
+
+
+                        <span class="finding-text">"uS13m!     Sws2!         P53937!     MM!      14143!       16,089! 24121!               ! ... mB13!      uS13m:!34,!37B38,!41!                       H62:!1657B1658!"</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        </article>
+
+    </section>
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section" id="review-research">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(sws2-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O59772" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional annotation report: *Schizosaccharomyces pombe sws2* (UniProt O59772)</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">16 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-08T19:12:34.492008</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="sws2-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="functional-annotation-report-schizosaccharomyces-pombe-sws2-uniprot-o59772">Functional annotation report: <em>Schizosaccharomyces pombe sws2</em> (UniProt O59772)</h1>
+<h2 id="executive-conclusion">Executive conclusion</h2>
+<p>The gene symbol <strong>sws2 is ambiguous in the wider literature, and literature is limited for this specific protein</strong>. For the requested target, it denotes <em>S. pombe</em> strain 972/ATCC 24843 ORF <strong>SPCC1795.07</strong>, annotated by UniProt as <strong>small mitochondrial ribosomal-subunit protein uS13m</strong>, also called <strong>37S ribosomal protein Sws2</strong>. Exact searches using <em>sws2</em>, SPCC1795.07, O59772, uS13m, the organism, and the protein description found no primary publication directly characterizing this protein. No result concerning a similarly named gene in another organism was used.</p>
+<p>The most defensible functional annotation is therefore that Sws2 is a <strong>non-enzymatic structural protein of the mitochondrial small ribosomal subunit</strong>, participating in translation of mitochondrially encoded proteins. This assignment is strong at the protein-family level but remains incompletely validated for O59772 itself. There is no evidence in the retrieved literature for a catalytic reaction, transported substrate, signaling activity, transcript-specific regulatory role, mutant phenotype, or exact submitochondrial position unique to Sws2.</p>
+<table>
+<thead>
+<tr>
+<th>Annotation aspect</th>
+<th>Best conclusion</th>
+<th>Evidence type and strength</th>
+<th>Key limitation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity</td>
+<td><strong>sws2</strong>, ORF <strong>SPCC1795.07</strong>, UniProt <strong>O59772</strong>, is annotated in <em>Schizosaccharomyces pombe</em> strain 972 / ATCC 24843 as mitochondrial small-subunit protein <strong>uS13m</strong>, also called 37S ribosomal protein subunit Sws2.</td>
+<td><strong>Supplied UniProt annotation; strong identifier-level assignment.</strong> The accession, ORF, organism, description, and family are internally consistent.</td>
+<td>No retrieved primary paper explicitly named O59772, SPCC1795.07, or sws2; evidence concerning similarly named genes in other organisms was excluded.</td>
+</tr>
+<tr>
+<td>Protein family and domains</td>
+<td>The protein belongs to the universal ribosomal protein <strong>uS13 family</strong> and has the supplied Rbsml_uS13_C, Ribosomal_uS13, Ribosomal_uS13-like_H2TH, Ribosomal_uS13_CS, and PF00416 Ribosomal_S13 signatures.</td>
+<td><strong>Supplied UniProt/domain annotation plus comparative inference; moderate-to-strong.</strong> S13 is among conserved mitochondrial small-subunit proteins of alphaproteobacterial ancestry (gray2020thedraftnuclear pages 12-13).</td>
+<td>No O59772-specific domain mutagenesis, biochemical validation, or experimental structure was found.</td>
+</tr>
+<tr>
+<td>Primary molecular role</td>
+<td>Sws2 is best annotated as a <strong>non-enzymatic structural component of the mitochondrial small ribosomal subunit</strong> that supports mitochondrial protein synthesis. No catalytic reaction, enzymatic substrate, or transported substrate applies.</td>
+<td><strong>Family-based functional inference; moderate.</strong> Comparative evidence assigns S13 to the mitochondrial small subunit rather than to an enzyme class (gray2020thedraftnuclear pages 12-13).</td>
+<td>No direct <em>S. pombe</em> experiment establishes Sws2 stoichiometry, RNA contacts, assembly role, or effect on a specific translation step.</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Sws2 is expected to function in the <strong>mitochondrion</strong> as part of the small mitoribosomal subunit. Mitochondrial translation is generally associated with the inner membrane to facilitate synthesis and insertion of respiratory proteins (herbert2021translationalactivatorsand pages 1-2).</td>
+<td><strong>Supplied UniProt annotation plus organism-level pathway context; moderate.</strong></td>
+<td>No Sws2-specific microscopy, mitochondrial fractionation, import assay, protease-protection experiment, or submitochondrial localization measurement was found.</td>
+</tr>
+<tr>
+<td>Pathway and products</td>
+<td>Sws2 is assigned to <strong>mitochondrial translation</strong>, which produces mitochondrially encoded respiratory-chain and ATP-synthase subunits. The 19-kb <em>S. pombe</em> mitochondrial genome contains two rRNAs and eight major protein genes: <em>cox1</em>, <em>cox2</em>, <em>cox3</em>, <em>cytb</em>, <em>atp6</em>, <em>atp8</em>, <em>atp9</em>, and <em>rps3</em> (herbert2021translationalactivatorsand pages 1-2, kuhl2011agenomewide pages 1-2).</td>
+<td><strong>Direct organism-level genomic evidence; strong for pathway context but indirect for Sws2.</strong> Products including Cox1, Cox2, cytochrome b, and Atp6 have been monitored experimentally in <em>S. pombe</em> (herbert2021translationalactivatorsand pages 5-6).</td>
+<td>No study tested whether Sws2 preferentially affects a particular mitochondrial transcript or translation product.</td>
+</tr>
+<tr>
+<td>Broader mitoribosome organization</td>
+<td><em>S. pombe</em> has functionally heterogeneous mitoribosomes: mutually exclusive bS1m isoforms and associated factors influence Cytb or Cox1 synthesis. Sws2 should conservatively be treated as a core uS13-family component, not as a demonstrated specificity factor (herbert2021translationalactivatorsand pages 18-19, herbert2021translationalactivatorsand pages 1-1).</td>
+<td><strong>Direct <em>S. pombe</em> evidence for mitoribosome heterogeneity, but no direct Sws2 evidence.</strong></td>
+<td>Findings for bS1m cannot be transferred to Sws2; no evidence shows that Sws2 varies among ribosomal isoforms or controls transcript specificity.</td>
+</tr>
+<tr>
+<td>Phenotype and essentiality</td>
+<td><strong>Unknown for this exact gene in the retrieved evidence.</strong> A Sws2-specific respiratory, growth, or viability phenotype cannot presently be asserted.</td>
+<td><strong>No direct Sws2 evidence.</strong> Other <em>S. pombe</em> mitochondrial gene-expression mutants cause respiratory deficiency and altered mitochondrial translation, but this is contextual only (kuhl2011agenomewide pages 1-2).</td>
+<td>No verified sws2 deletion, conditional allele, complementation, respiratory-growth assay, mitochondrial-labeling experiment, or essentiality study was found.</td>
+</tr>
+<tr>
+<td>Recent literature status</td>
+<td>Targeted searches found <strong>no Sws2/O59772-specific publication from 2023–2024</strong>. The newest directly relevant <em>S. pombe</em> mitoribosome study retrieved was published in October 2021 and examined other proteins and ribosomal isoforms (herbert2021translationalactivatorsand pages 18-19, herbert2021translationalactivatorsand pages 1-1).</td>
+<td><strong>Explicit literature-gap finding; high within the retrieved search set.</strong></td>
+<td>Search absence does not prove that no unindexed study or high-throughput dataset exists; the annotation remains dominated by database and comparative inference.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Evidence-grading summary for </em>S. pombe<em> sws2/O59772, separating supplied UniProt annotation, direct organism-level experiments, and comparative inference. It highlights strong family assignment but limited protein-specific validation.</em></p>
+<h2 id="1-identity-and-family-verification">1. Identity and family verification</h2>
+<p>The supplied identity is internally coherent:</p>
+<ul>
+<li><strong>Organism:</strong> <em>Schizosaccharomyces pombe</em> strain 972 / ATCC 24843.</li>
+<li><strong>Gene:</strong> <em>sws2</em>; systematic ORF <strong>SPCC1795.07</strong>.</li>
+<li><strong>Protein:</strong> mitochondrial small-subunit protein <strong>uS13m</strong>; alternative designation 37S ribosomal protein Sws2.</li>
+<li><strong>UniProt:</strong> <a href="https://www.uniprot.org/uniprotkb/O59772/entry">O59772</a>.</li>
+<li><strong>Family/domains:</strong> universal ribosomal protein uS13 family; Rbsml_uS13_C (IPR027437), Ribosomal_uS13 (IPR001892), Ribosomal_uS13-like H2TH (IPR010979), Ribosomal_uS13 conserved site (IPR018269), and Pfam Ribosomal_S13 (PF00416).</li>
+</ul>
+<p>These mutually consistent ribosomal signatures align with the description of a uS13-family protein rather than an enzyme or transporter. Comparative mitochondrial-proteome analysis independently places S13 among mitochondrial small-subunit proteins and traces this conserved complement to the alphaproteobacterial ancestor of mitochondria. In the deeply branching protist <em>Andalucia godoyi</em>, S13 is one of 20 identified mitochondrial SSU proteins and one of 12 SSU proteins still encoded by mitochondrial DNA, supporting an ancient mitochondrial-ribosome assignment for this family (Gray et al., March 2020; <a href="https://doi.org/10.1186/s12915-020-0741-6">DOI</a>) (gray2020thedraftnuclear pages 12-13).</p>
+<p>This comparative evidence supports the family assignment but does <strong>not</strong> experimentally prove O59772’s incorporation, stoichiometry, RNA contacts, or structural position in the <em>S. pombe</em> mitoribosome.</p>
+<h2 id="2-primary-molecular-function">2. Primary molecular function</h2>
+<h3 id="best-supported-annotation">Best-supported annotation</h3>
+<p>Sws2 should be annotated as a <strong>structural constituent of the mitochondrial ribosomal small subunit involved in mitochondrial translation</strong>. It is not presently supported as an enzyme, and consequently no catalytic reaction, substrate specificity, cofactor requirement, or kinetic parameter should be assigned. Nor is it a transporter with a defined substrate.</p>
+<p>The terminology <strong>uS13m</strong> indicates a mitochondrial homolog of the universally conserved S13 family. The supplied H2TH, conserved-site, C-terminal, and PF00416 signatures reinforce the inference that the protein contributes to ribosome architecture and translation. However, the retrieved texts did not establish whether <em>S. pombe</em> Sws2 directly binds 15S rRNA, contacts tRNA or translation factors, assists assembly, or participates in a particular translation stage. Such mechanistic details should therefore remain predictions rather than protein-specific facts.</p>
+<h3 id="structural-role-versus-regulatory-specificity">Structural role versus regulatory specificity</h3>
+<p>Recent <em>S. pombe</em> work demonstrates that mitochondrial small subunits can be compositionally heterogeneous: two mutually exclusive bS1m isoforms, Mrp51 and Mug178, influence translation of particular mitochondrial messages. Mrp51-containing ribosomes can translate <em>cytb</em>, whereas Mug178-containing ribosomes were inferred to be principal sites of Cox3 synthesis; Cox1/Cox2 appeared to use a different ribosome population from Cox3/Cytb (Herbert et al., October 2021; <a href="https://doi.org/10.1093/nar/gkab789">DOI</a>) (herbert2021translationalactivatorsand pages 18-19, herbert2021translationalactivatorsand pages 1-1). These findings are important current context, but they concern <strong>bS1m isoforms—not Sws2</strong>. There is no evidence that Sws2 is an isoform-switching or mRNA-specific component, so it should conservatively be treated as a predicted core uS13-family constituent.</p>
+<h2 id="3-cellular-and-submitochondrial-localization">3. Cellular and submitochondrial localization</h2>
+<p>The supported cellular localization is the <strong>mitochondrion</strong>, where Sws2 is predicted to assemble into the small mitoribosomal subunit. This follows from the supplied UniProt designation and the mitochondrial uS13-family assignment.</p>
+<p>At the pathway level, mitochondrial translation is generally positioned at or near the <strong>inner mitochondrial membrane</strong>, facilitating cotranslational insertion and early assembly of hydrophobic oxidative-phosphorylation subunits. The <em>S. pombe</em> literature discusses this membrane-coupled arrangement but does not provide Sws2-specific localization experiments (herbert2021translationalactivatorsand pages 1-2). Accordingly:</p>
+<ul>
+<li><strong>High confidence:</strong> mitochondrion and mitoribosomal small subunit.</li>
+<li><strong>Moderate inference:</strong> mitochondrial matrix-facing translation apparatus associated with the inner membrane.</li>
+<li><strong>Not established:</strong> stable membrane anchoring, precise matrix/membrane partition, import-presequence processing, or localization to mitochondrial RNA granules.</li>
+</ul>
+<p>No Sws2-specific fluorescence microscopy, mitochondrial fractionation, import assay, protease protection, carbonate extraction, or cryo-EM placement was found.</p>
+<h2 id="4-biological-process-and-biochemical-pathway">4. Biological process and biochemical pathway</h2>
+<p>Sws2’s principal pathway is <strong>mitochondrial gene expression—specifically mitochondrial translation</strong>. In <em>S. pombe</em>, the approximately <strong>19-kb mitochondrial genome</strong> contains the small- and large-subunit rRNAs (15S <em>rns</em> and 21S <em>rnl</em>), a complete mitochondrial tRNA set, RNase P RNA, and genes encoding respiratory/ATP-synthase proteins plus the ribosomal protein Rps3 (Herbert et al., 2021) (herbert2021translationalactivatorsand pages 1-2).</p>
+<p>A complementary genome-wide study enumerated <strong>eight major mitochondrially encoded proteins</strong>: Cox1, Cox2, Cox3, cytochrome b, Atp6, Atp8, Atp9, and Rps3, together with two rRNAs, RNase P RNA, and <strong>25 tRNAs</strong> (Kühl et al., June 2011; <a href="https://doi.org/10.1093/nar/gkr511">DOI</a>) (kuhl2011agenomewide pages 1-2). Thus, the physiological output of a Sws2-containing mitoribosome is expected to include:</p>
+<ul>
+<li>cytochrome-c oxidase subunits Cox1–Cox3;</li>
+<li>cytochrome <em>b</em>, the mitochondrially encoded core subunit of respiratory complex III;</li>
+<li>ATP-synthase subunits Atp6, Atp8, and Atp9;</li>
+<li>mitochondrial Rps3.</li>
+</ul>
+<p>These products connect mitochondrial translation to respiratory complexes III and IV and ATP synthase. Their synthesis is experimentally measurable in <em>S. pombe</em>: one study labeled mitochondrial translation products for <strong>3 hours at 30°C</strong> with ^35S-methionine/cysteine while inhibiting cytosolic translation and followed synthesis/turnover for as long as <strong>20 hours</strong>. Cox1, Cox2, cytochrome b, and Atp6 were among the monitored products (herbert2021translationalactivatorsand pages 5-6). Nevertheless, no experiment in that work manipulated Sws2, so it does not reveal whether Sws2 affects all products uniformly or a particular mRNA.</p>
+<p>This is primarily a <strong>biochemical gene-expression pathway</strong>, not a canonical signaling pathway. Any downstream effect on respiration, ATP generation, redox state, or growth would be secondary to mitochondrial protein synthesis and cannot presently be attributed specifically to Sws2.</p>
+<h2 id="5-experimental-evidence-in-the-organism">5. Experimental evidence in the organism</h2>
+<p>The strongest direct <em>S. pombe</em> evidence concerns the surrounding mitochondrial-translation system rather than Sws2 itself:</p>
+<ol>
+<li><strong>Mitoribosome heterogeneity.</strong> Genetic, biochemical, translation-labeling, and interaction experiments showed that alternative bS1m-containing ribosomes and translational activator complexes can impose message specificity (herbert2021translationalactivatorsand pages 18-19, herbert2021translationalactivatorsand pages 1-1).</li>
+<li><strong>Cox1 translation complex.</strong> Reciprocal immunoprecipitation and LC–MS/MS identified Mrh5, Ppr4, Mtf2, and Sls1 as a stable Cox1-translation complex associated with mitoribosomes. The two immunoprecipitation datasets detected <strong>2,386 proteins</strong>, and Mrh5 enriched almost all proteins from both ribosomal subunits. Deleting <em>sls1</em> caused respiratory deficiency, loss of Cox1, and severe Cox2 depletion (herbert2021translationalactivatorsand pages 16-16).</li>
+<li><strong>Mitochondrial RNA regulators.</strong> A genome-wide analysis identified the mitochondrial RNA polymerase and eight PPR proteins; all eight PPR proteins localized to mitochondria, and loss of all but one produced respiratory deficiency and altered mitochondrial RNAs or translation products. Ppr4 activates <em>cox1</em> translation, whereas Ppr5 acts as a general negative regulator of mitochondrial translation (kuhl2011agenomewide pages 1-2).</li>
+</ol>
+<p>These studies establish the biological setting in which Sws2 is expected to function. They do not establish Sws2’s individual interactions or phenotype.</p>
+<h2 id="6-phenotype-essentiality-and-regulation">6. Phenotype, essentiality, and regulation</h2>
+<p>No verified <strong>sws2/SPCC1795.07-specific</strong> deletion, conditional allele, rescue experiment, respiratory-growth assay, mitochondrial labeling experiment, or essentiality result was found. It would therefore be inappropriate to claim that <em>sws2</em> is essential, that its deletion causes respiratory deficiency, or that it selectively controls a mitochondrial transcript.</p>
+<p>Likewise, no authoritative protein-specific evidence was found for:</p>
+<ul>
+<li>transcriptional or translational regulation of <em>sws2</em>;</li>
+<li>phosphorylation or other post-translational modification;</li>
+<li>stress-, nutrient-, or cell-cycle-dependent abundance;</li>
+<li>physical interactors;</li>
+<li>disease relevance or biotechnology applications.</li>
+</ul>
+<p>The respiratory defects produced by other mitochondrial gene-expression mutants show what can happen when this pathway is disrupted, but those phenotypes cannot be transferred directly to Sws2 (kuhl2011agenomewide pages 1-2).</p>
+<h2 id="7-recent-developments-and-state-of-the-field">7. Recent developments and state of the field</h2>
+<p>Targeted searches restricted to <strong>2023–2024</strong> found no publication directly addressing <em>S. pombe sws2</em>, O59772, SPCC1795.07, or <em>S. pombe</em> uS13m. Therefore, there is no defensible protein-specific 2023–2024 development to report.</p>
+<p>The newest directly relevant mechanistic study retrieved was Herbert et al., published <strong>October 2021</strong>. Its major advance was evidence that <em>S. pombe</em> mitochondrial ribosomes are not necessarily a uniform population: alternative bS1m isoforms cooperate with translation factors to tune synthesis of different mitochondrial proteins (herbert2021translationalactivatorsand pages 18-19, herbert2021translationalactivatorsand pages 1-1). This revises the simplistic view of a single invariant mitoribosome, but it does not alter Sws2’s conservative annotation as a uS13-family core component absent direct evidence to the contrary.</p>
+<h2 id="8-current-applications-and-real-world-implementation">8. Current applications and real-world implementation</h2>
+<p>No real-world application is documented for Sws2 itself. Its current value is principally as:</p>
+<ul>
+<li>a candidate component for completing the <em>S. pombe</em> mitoribosome parts list;</li>
+<li>a target for genetic or structural dissection of mitochondrial translation;</li>
+<li>a comparative marker for evolution of bacterial-derived ribosomal proteins in mitochondria;</li>
+<li>a potential experimental handle for testing whether core mitoribosomal proteins participate in the transcript-selective ribosome populations reported in <em>S. pombe</em>.</li>
+</ul>
+<p>These are research uses or opportunities, not established industrial, clinical, or diagnostic implementations.</p>
+<h2 id="9-evidence-weighted-annotation-and-research-priorities">9. Evidence-weighted annotation and research priorities</h2>
+<p><strong>Recommended concise annotation:</strong></p>
+<blockquote>
+<p><em>sws2</em> encodes a predicted mitochondrial small-ribosomal-subunit protein, uS13m. Its conserved uS13/S13 domains support a non-enzymatic structural role in the mitoribosome and participation in translation of mitochondrially encoded respiratory-chain and ATP-synthase proteins. Mitochondrial localization and small-subunit membership are strongly supported by database and evolutionary annotation, but direct O59772-specific localization, structural, interaction, mutant, and biochemical evidence is currently lacking.</p>
+</blockquote>
+<p>The highest-value validation experiments would be endogenous fluorescent tagging plus mitochondrial colocalization; mitochondrial import and protease-protection assays; sedimentation or affinity purification demonstrating small-subunit incorporation; cryo-EM placement; and conditional depletion followed by ^35S mitochondrial translation, respiratory-complex assembly, oxygen-consumption, and transcript-specific ribosome-profiling measurements. Until such evidence exists, substrate specificity, transcript selectivity, essentiality, and detailed structural contacts should remain unassigned.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(gray2020thedraftnuclear pages 12-13): Michael W. Gray, Gertraud Burger, Romain Derelle, Vladimír Klimeš, Michelle M. Leger, Matt Sarrasin, Čestmír Vlček, Andrew J. Roger, Marek Eliáš, and B. Franz Lang. The draft nuclear genome sequence and predicted mitochondrial proteome of andalucia godoyi, a protist with the most gene-rich and bacteria-like mitochondrial genome. BMC Biology, Mar 2020. URL: https://doi.org/10.1186/s12915-020-0741-6, doi:10.1186/s12915-020-0741-6. This article has 65 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(herbert2021translationalactivatorsand pages 1-2): Christopher J Herbert, Sylvie Labarre-Mariotte, David Cornu, Cyrielle Sophie, Cristina Panozzo, Thomas Michel, Geneviève Dujardin, and Nathalie Bonnefoy. Translational activators and mitoribosomal isoforms cooperate to mediate mrna-specific translation in schizosaccharomyces pombe mitochondria. Nucleic Acids Research, 49:11145-11166, Oct 2021. URL: https://doi.org/10.1093/nar/gkab789, doi:10.1093/nar/gkab789. This article has 20 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kuhl2011agenomewide pages 1-2): Inge Kühl, Laurent Dujeancourt, Mauricette Gaisne, Christopher J. Herbert, and Nathalie Bonnefoy. A genome wide study in fission yeast reveals nine ppr proteins that regulate mitochondrial gene expression. Nucleic Acids Research, 39:8029-8041, Jun 2011. URL: https://doi.org/10.1093/nar/gkr511, doi:10.1093/nar/gkr511. This article has 81 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(herbert2021translationalactivatorsand pages 5-6): Christopher J Herbert, Sylvie Labarre-Mariotte, David Cornu, Cyrielle Sophie, Cristina Panozzo, Thomas Michel, Geneviève Dujardin, and Nathalie Bonnefoy. Translational activators and mitoribosomal isoforms cooperate to mediate mrna-specific translation in schizosaccharomyces pombe mitochondria. Nucleic Acids Research, 49:11145-11166, Oct 2021. URL: https://doi.org/10.1093/nar/gkab789, doi:10.1093/nar/gkab789. This article has 20 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(herbert2021translationalactivatorsand pages 18-19): Christopher J Herbert, Sylvie Labarre-Mariotte, David Cornu, Cyrielle Sophie, Cristina Panozzo, Thomas Michel, Geneviève Dujardin, and Nathalie Bonnefoy. Translational activators and mitoribosomal isoforms cooperate to mediate mrna-specific translation in schizosaccharomyces pombe mitochondria. Nucleic Acids Research, 49:11145-11166, Oct 2021. URL: https://doi.org/10.1093/nar/gkab789, doi:10.1093/nar/gkab789. This article has 20 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(herbert2021translationalactivatorsand pages 1-1): Christopher J Herbert, Sylvie Labarre-Mariotte, David Cornu, Cyrielle Sophie, Cristina Panozzo, Thomas Michel, Geneviève Dujardin, and Nathalie Bonnefoy. Translational activators and mitoribosomal isoforms cooperate to mediate mrna-specific translation in schizosaccharomyces pombe mitochondria. Nucleic Acids Research, 49:11145-11166, Oct 2021. URL: https://doi.org/10.1093/nar/gkab789, doi:10.1093/nar/gkab789. This article has 20 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(herbert2021translationalactivatorsand pages 16-16): Christopher J Herbert, Sylvie Labarre-Mariotte, David Cornu, Cyrielle Sophie, Cristina Panozzo, Thomas Michel, Geneviève Dujardin, and Nathalie Bonnefoy. Translational activators and mitoribosomal isoforms cooperate to mediate mrna-specific translation in schizosaccharomyces pombe mitochondria. Nucleic Acids Research, 49:11145-11166, Oct 2021. URL: https://doi.org/10.1093/nar/gkab789, doi:10.1093/nar/gkab789. This article has 20 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="sws2-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>gray2020thedraftnuclear pages 12-13</li>
+<li>herbert2021translationalactivatorsand pages 1-2</li>
+<li>herbert2021translationalactivatorsand pages 5-6</li>
+<li>kuhl2011agenomewide pages 1-2</li>
+<li>herbert2021translationalactivatorsand pages 16-16</li>
+<li>herbert2021translationalactivatorsand pages 18-19</li>
+<li>herbert2021translationalactivatorsand pages 1-1</li>
+<li>O59772</li>
+<li>DOI</li>
+<li>https://www.uniprot.org/uniprotkb/O59772/entry</li>
+<li>https://doi.org/10.1186/s12915-020-0741-6</li>
+<li>https://doi.org/10.1093/nar/gkab789</li>
+<li>https://doi.org/10.1093/nar/gkr511</li>
+<li>https://doi.org/10.1186/s12915-020-0741-6,</li>
+<li>https://doi.org/10.1093/nar/gkab789,</li>
+<li>https://doi.org/10.1093/nar/gkr511,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(sws2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O59772" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="sws2-functional-evidence">sws2: functional evidence</h1>
+<p>Sws2 is the mitochondrial small-subunit ribosomal protein uS13m. Its conserved uS13 RNA-binding fold and mitochondrial localization support a structural role in the mitoribosome and mitochondrial protein synthesis. Detailed bacterial intersubunit contacts cannot be assumed for this mitochondrial protein.</p>
+<ul>
+<li>[file:SCHPO/sws2/sws2-uniprot.txt] "DR   InterPro; IPR001892; Ribosomal_uS13."</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/28154081">PMID:28154081</a> "The mitoribosomal<br />
+small subunit has been built de novo and includes 15S ribosomal RNA (rRNA) and<br />
+34 proteins, including 14 without homologs in the evolutionarily related<br />
+bacterial ribosome."</li>
+</ul>
+<p>Evidence interpretation: sequence/domain records are used for family placement; AI descriptions and ARBA labels are not independent validation. Family transfer is limited to conserved properties and is identified as inference. Genome-scale localization annotations are retained where consistent with the biology; an abstract does not expose every individual observation. All original annotation rows are preserved.</p>
+<p>ProtNLM provenance: pre-release <code>post-processed-2026_02_28k.xml</code>, exact entry and all evidence keys preserved in the source XML/JSON. These current Swiss-Prot entries are absent from the public TrEMBL pilot. Known-function overlap does not establish model training membership. See the function sidecar for atom-by-atom paragraph assessments.</p>
+<p>Research provenance: the gene-focused Falcon report was generated concurrently with publication caching. The report was inspected for source leads; the biological decisions above rely on the cited primary records and specified family evidence.</p>
+<p>The completed Falcon search has retrieval gaps: its inability to locate target-level localization is not used to override PomBase’s HDA records. Curated genomic-screen observations and the directly inspected papers take precedence over an empty literature-search result.</p>
+            </div>
+        </details>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Protnlm Function Review</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(sws2-protnlm-function-review.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O59772" data-a="DOC: Protnlm Function Review" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="sws2-protnlm2-function-description-review">sws2: ProtNLM2 function-description review</h1>
+<p>Source: <strong>pre-release <code>post-processed-2026_02_28k.xml</code></strong>, accession <code>O59772</code>. The exact entry is preserved in <a href="sws2-protnlm-source.xml">sws2-protnlm-source.xml</a>; all original evidence elements and model scores are retained in <a href="sws2-protnlm-source.json">sws2-protnlm-source.json</a>. This record is currently Swiss-Prot and is absent from the published 26,856-record TrEMBL pilot list. The current public ProtNLM endpoint returns this record; API availability is distinct from membership in the published pilot list. No training-membership inference is made.</p>
+<h2 id="original-paragraph-1">Original paragraph 1</h2>
+<blockquote>
+<p>Located at the top of the head of the 30S subunit, it contacts several helices of the 16S rRNA. In the 70S ribosome it contacts the 23S rRNA (bridge B1a) and protein L5 of the 50S subunit (bridge B1b), connecting the 2 subunits; these bridges are implicated in subunit movement. Contacts the tRNAs in the A and P-sites.</p>
+</blockquote>
+<p>Original evidence key(s): <code>2</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Atomic claim</th>
+<th>Assessment</th>
+<th>Evidence and limit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Position at the small-subunit head and RNA binding</td>
+<td>CNN for the conserved general role; UNC for the exact target contacts</td>
+<td>Sws2 is a supported uS13m protein, whose family has an RNA-binding structural role. The exact target head orientation and contacted helices have not been verified in an S. pombe structure.</td>
+</tr>
+<tr>
+<td>16S and 23S rRNA designations</td>
+<td>NPI for literal target rRNA identity</td>
+<td>The direct S. pombe study PMID:21357609 identifies mitochondrial small and large rRNAs as 15S and 21S, respectively. Assigning literal bacterial 16S/23S rRNAs to Sws2’s native mitochondrial ribosome is incorrect.</td>
+</tr>
+<tr>
+<td>30S, 50S and 70S subunit/particle designations</td>
+<td>UNC for exact sedimentation values</td>
+<td>The target is mitochondrial uS13m. No target sedimentation measurement was inspected that validates these bacterial particle names; the S. cerevisiae 37S/54S/74S assignments are related-species observations.</td>
+</tr>
+<tr>
+<td>Contacts with 23S rRNA and L5 through bridges B1a and B1b</td>
+<td>UNC</td>
+<td>The S. cerevisiae structure explicitly lacks bacterial B1a/b bridges (PMID:28154081), so universal uS13 family membership cannot validate the exact bridge assignments. A target or sufficiently conserved fission-yeast structure is missing. This is a concrete counterexample to unconditional transfer, not proof of a missing bridge in S. pombe.</td>
+</tr>
+<tr>
+<td>Bridges connect subunits and participate in movement</td>
+<td>UNC for these specified bridges</td>
+<td>Intersubunit contacts and motions are general ribosome properties, but the paragraph specifically assigns this role to the unverified B1a/B1b contacts. Evidence for ribosome membership does not resolve that mechanism.</td>
+</tr>
+<tr>
+<td>Contacts tRNAs in the A and P sites</td>
+<td>UNC</td>
+<td>The target’s exact tRNA contacts and conformational states have not been established from the available evidence. Conserved ribosomal function alone is insufficient to validate both specified contacts.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="primary-evidence">Primary evidence</h2>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/21357609">PMID:21357609</a>(https://pubmed.ncbi.nlm.nih.gov/21357609/) establishes the target organism’s mitochondrial rRNA identities.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/28154081">PMID:28154081</a>(https://pubmed.ncbi.nlm.nih.gov/28154081/) (cached as <code>publications/PMID_28154081.md</code>).</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/18245278">PMID:18245278</a>(https://pubmed.ncbi.nlm.nih.gov/18245278/) (cached as <code>publications/PMID_18245278.md</code>).</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/16823372">PMID:16823372</a>(https://pubmed.ncbi.nlm.nih.gov/16823372/) (cached as <code>publications/PMID_16823372.md</code>).</li>
+</ul>
+<p>Family and feature provenance: <a href="sws2-uniprot.txt">sws2-uniprot.txt</a>.</p>
+<p>Decisive counterexample to blanket bacterial transfer, PMID:28154081: “Most of the bridges present in the bacterial ribosome, with the exception of bridges B1a/b and B4, are also present in the yeast mitoribosome (fig. S9).” The yeast in this structural study is S. cerevisiae.</p>
+<p>Target rRNA identity, PMID:21357609: “Transcripts were detected for the mitochondrial large (21S) and small (15S) ribosomal RNAs”. The paper studies S. pombe; this supports the rRNA-specific judgment independently of budding-yeast structure transfer.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O59772
+gene_symbol: sws2
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:284812
+  label: Schizosaccharomyces pombe (strain 972 / ATCC 24843)
+description: Sws2 is the mitochondrial small-subunit ribosomal protein uS13m. Its conserved uS13 RNA-binding
+  fold and mitochondrial localization support a structural role in the mitoribosome and mitochondrial
+  protein synthesis.
+existing_annotations:
+- term:
+    id: GO:0003676
+    label: nucleic acid binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  supporting_entities:
+  - InterPro:IPR010979
+  review:
+    summary: nucleic acid binding is reviewed in the context of sws2.
+    action: MODIFY
+    reason: The broad nucleic acid binding annotation is compatible with the biology, but RNA binding
+      captures the supported sws2 function more precisely.
+    supported_by:
+    - reference_id: file:SCHPO/sws2/sws2-uniprot.txt
+      supporting_text: DR   InterPro; IPR001892; Ribosomal_uS13.
+    - &amp;id001
+      reference_id: file:SCHPO/sws2/sws2-28154081-supplement.txt
+      supporting_text: uS13m!     Sws2!         P53937!     MM!      14143!       16,089! 24121!               !
+        ... mB13!      uS13m:!34,!37B38,!41!                       H62:!1657B1658!
+    proposed_replacement_terms:
+    - id: GO:0003723
+      label: RNA binding
+- term:
+    id: GO:0003723
+    label: RNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  supporting_entities:
+  - InterPro:IPR001892
+  - InterPro:IPR018269
+  review:
+    summary: RNA binding is supported.
+    action: ACCEPT
+    reason: The target has the diagnostic uS13 family domain and a mitochondrial localization record.
+      The S. cerevisiae structural supplementary table identifies Sws2/P53937 as uS13m and its contact
+      with rRNA helix H62. This grounds transfer of the conserved RNA-associated mitoribosomal role while
+      leaving exact S. pombe bridge geometry unresolved.
+    supported_by:
+    - reference_id: file:SCHPO/sws2/sws2-uniprot.txt
+      supporting_text: DR   InterPro; IPR001892; Ribosomal_uS13.
+    - *id001
+- term: &amp;id002
+    id: GO:0003735
+    label: structural constituent of ribosome
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  supporting_entities:
+  - AGI_LocusCode:AT1G22780
+  - FB:FBgn0010411
+  - MGI:MGI:98146
+  - PANTHER:PTN000093238
+  - SGD:S000005025
+  - UniProtKB:P62269
+  review:
+    summary: structural constituent of ribosome is supported.
+    action: ACCEPT
+    reason: The target has the diagnostic uS13 family domain and a mitochondrial localization record.
+      The S. cerevisiae structural supplementary table identifies Sws2/P53937 as uS13m and its contact
+      with rRNA helix H62. This grounds transfer of the conserved RNA-associated mitoribosomal role while
+      leaving exact S. pombe bridge geometry unresolved.
+    supported_by:
+    - reference_id: file:SCHPO/sws2/sws2-uniprot.txt
+      supporting_text: DR   InterPro; IPR001892; Ribosomal_uS13.
+    - *id001
+- term:
+    id: GO:0003735
+    label: structural constituent of ribosome
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  supporting_entities:
+  - InterPro:IPR001892
+  - InterPro:IPR018269
+  review:
+    summary: structural constituent of ribosome is supported.
+    action: ACCEPT
+    reason: The target has the diagnostic uS13 family domain and a mitochondrial localization record.
+      The S. cerevisiae structural supplementary table identifies Sws2/P53937 as uS13m and its contact
+      with rRNA helix H62. This grounds transfer of the conserved RNA-associated mitoribosomal role while
+      leaving exact S. pombe bridge geometry unresolved.
+    supported_by:
+    - reference_id: file:SCHPO/sws2/sws2-uniprot.txt
+      supporting_text: DR   InterPro; IPR001892; Ribosomal_uS13.
+    - *id001
+- term: &amp;id004
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: HDA
+  original_reference_id: PMID:16823372
+  qualifier: is_active_in
+  review:
+    summary: mitochondrion is supported.
+    action: ACCEPT
+    reason: Mitochondrial localization is concordant with the conserved mitochondrial ribosomal ortholog
+      assignment. Retain the PomBase genome-scale localization annotation (PMID:16823372); the available
+      abstract describes the screen but does not expose the target image. The source excerpt records the
+      target HDA/IC annotation, not a reinspection of the individual microscopy image.
+    supported_by:
+    - reference_id: file:SCHPO/sws2/sws2-uniprot.txt
+      supporting_text: DR   GO; GO:0005739; C:mitochondrion; HDA:PomBase.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  supporting_entities:
+  - AGI_LocusCode:AT1G77750
+  - PANTHER:PTN000093341
+  - SGD:S000005025
+  - UniProtKB:Q7S2C2
+  review:
+    summary: mitochondrion is supported.
+    action: ACCEPT
+    reason: Mitochondrial localization is concordant with the conserved mitochondrial ribosomal ortholog
+      assignment. Retain the PomBase genome-scale localization annotation (PMID:16823372); the available
+      abstract describes the screen but does not expose the target image.
+    supported_by:
+    - reference_id: file:SCHPO/sws2/sws2-uniprot.txt
+      supporting_text: DR   GO; GO:0005739; C:mitochondrion; HDA:PomBase.
+- term:
+    id: GO:0005739
+    label: mitochondrion
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB-SubCell:SL-0173
+  review:
+    summary: mitochondrion is supported.
+    action: ACCEPT
+    reason: Mitochondrial localization is concordant with the conserved mitochondrial ribosomal ortholog
+      assignment. Retain the PomBase genome-scale localization annotation (PMID:16823372); the available
+      abstract describes the screen but does not expose the target image.
+    supported_by:
+    - reference_id: file:SCHPO/sws2/sws2-uniprot.txt
+      supporting_text: DR   GO; GO:0005739; C:mitochondrion; HDA:PomBase.
+- term: &amp;id005
+    id: GO:0005763
+    label: mitochondrial small ribosomal subunit
+  evidence_type: ISO
+  original_reference_id: GO_REF:0000024
+  qualifier: part_of
+  supporting_entities:
+  - SGD:S000005025
+  review:
+    summary: mitochondrial small ribosomal subunit is supported.
+    action: ACCEPT
+    reason: The target has the diagnostic uS13 family domain and a mitochondrial localization record.
+      The S. cerevisiae structural supplementary table identifies Sws2/P53937 as uS13m and its contact
+      with rRNA helix H62. This grounds transfer of the conserved RNA-associated mitoribosomal role while
+      leaving exact S. pombe bridge geometry unresolved.
+    supported_by:
+    - reference_id: file:SCHPO/sws2/sws2-uniprot.txt
+      supporting_text: DR   InterPro; IPR001892; Ribosomal_uS13.
+    - *id001
+- term:
+    id: GO:0005763
+    label: mitochondrial small ribosomal subunit
+  evidence_type: NAS
+  original_reference_id: PMID:18245278
+  qualifier: part_of
+  review:
+    summary: mitochondrial small ribosomal subunit is supported.
+    action: ACCEPT
+    reason: The target has the diagnostic uS13 family domain and a mitochondrial localization record.
+      The S. cerevisiae structural supplementary table identifies Sws2/P53937 as uS13m and its contact
+      with rRNA helix H62. This grounds transfer of the conserved RNA-associated mitoribosomal role while
+      leaving exact S. pombe bridge geometry unresolved.
+    supported_by:
+    - reference_id: file:SCHPO/sws2/sws2-uniprot.txt
+      supporting_text: DR   InterPro; IPR001892; Ribosomal_uS13.
+    - *id001
+- term:
+    id: GO:0005840
+    label: ribosome
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  supporting_entities:
+  - InterPro:IPR001892
+  - InterPro:IPR018269
+  review:
+    summary: ribosome is reviewed in the context of sws2.
+    action: MODIFY
+    reason: The broad ribosome annotation is compatible with the biology, but mitochondrial small ribosomal
+      subunit captures the supported sws2 function more precisely.
+    supported_by:
+    - reference_id: file:SCHPO/sws2/sws2-uniprot.txt
+      supporting_text: DR   InterPro; IPR001892; Ribosomal_uS13.
+    - *id001
+    proposed_replacement_terms:
+    - id: GO:0005763
+      label: mitochondrial small ribosomal subunit
+- term:
+    id: GO:0006412
+    label: translation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  supporting_entities:
+  - InterPro:IPR001892
+  - InterPro:IPR018269
+  review:
+    summary: translation is reviewed in the context of sws2.
+    action: MODIFY
+    reason: The broad translation annotation is compatible with the biology, but mitochondrial translation
+      captures the supported sws2 function more precisely.
+    supported_by:
+    - reference_id: file:SCHPO/sws2/sws2-uniprot.txt
+      supporting_text: DR   InterPro; IPR001892; Ribosomal_uS13.
+    - *id001
+    proposed_replacement_terms:
+    - id: GO:0032543
+      label: mitochondrial translation
+- term:
+    id: GO:0015935
+    label: small ribosomal subunit
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  supporting_entities:
+  - MGI:MGI:98146
+  - PANTHER:PTN000093238
+  - PomBase:SPCC1259.01c
+  - RGD:3595
+  - SGD:S000005025
+  - UniProtKB:P0A7S9
+  - UniProtKB:P62269
+  - UniProtKB:P62272
+  review:
+    summary: small ribosomal subunit is reviewed in the context of sws2.
+    action: MODIFY
+    reason: The broad small ribosomal subunit annotation is compatible with the biology, but mitochondrial
+      small ribosomal subunit captures the supported sws2 function more precisely.
+    supported_by:
+    - reference_id: file:SCHPO/sws2/sws2-uniprot.txt
+      supporting_text: DR   InterPro; IPR001892; Ribosomal_uS13.
+    - *id001
+    proposed_replacement_terms:
+    - id: GO:0005763
+      label: mitochondrial small ribosomal subunit
+- term: &amp;id003
+    id: GO:0032543
+    label: mitochondrial translation
+  evidence_type: ISO
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  supporting_entities:
+  - SGD:S000005025
+  review:
+    summary: mitochondrial translation is supported.
+    action: ACCEPT
+    reason: The target has the diagnostic uS13 family domain and a mitochondrial localization record.
+      The S. cerevisiae structural supplementary table identifies Sws2/P53937 as uS13m and its contact
+      with rRNA helix H62. This grounds transfer of the conserved RNA-associated mitoribosomal role while
+      leaving exact S. pombe bridge geometry unresolved.
+    supported_by:
+    - reference_id: file:SCHPO/sws2/sws2-uniprot.txt
+      supporting_text: DR   InterPro; IPR001892; Ribosomal_uS13.
+    - *id001
+- term:
+    id: GO:0032543
+    label: mitochondrial translation
+  evidence_type: NAS
+  original_reference_id: PMID:18245278
+  qualifier: involved_in
+  review:
+    summary: mitochondrial translation is supported.
+    action: ACCEPT
+    reason: The target has the diagnostic uS13 family domain and a mitochondrial localization record.
+      The S. cerevisiae structural supplementary table identifies Sws2/P53937 as uS13m and its contact
+      with rRNA helix H62. This grounds transfer of the conserved RNA-associated mitoribosomal role while
+      leaving exact S. pombe bridge geometry unresolved.
+    supported_by:
+    - reference_id: file:SCHPO/sws2/sws2-uniprot.txt
+      supporting_text: DR   InterPro; IPR001892; Ribosomal_uS13.
+    - *id001
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator
+    judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping,
+    accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: PMID:16823372
+  title: ORFeome cloning and global analysis of protein localization in the fission yeast Schizosaccharomyces
+    pombe.
+  findings: []
+- id: PMID:18245278
+  title: Bot1p is required for mitochondrial translation, respiratory function, and normal cell morphology
+    in the fission yeast Schizosaccharomyces pombe.
+  findings: []
+- id: PMID:28154081
+  title: The structure of the yeast mitochondrial ribosome.
+  findings: []
+- id: file:SCHPO/sws2/sws2-uniprot.txt
+  title: sws2 UniProt sequence/domain and annotation record
+  findings: []
+- id: file:SCHPO/sws2/sws2-28154081-supplement.txt
+  title: Supplementary tables of the S. cerevisiae mitoribosome structure (PMID:28154081)
+  findings: []
+core_functions:
+- description: Provides the conserved uS13m small-subunit structural role in mitochondrial translation.
+  molecular_function: *id002
+  directly_involved_in:
+  - *id003
+  locations:
+  - *id004
+  in_complex: *id005
+  supported_by:
+  - reference_id: file:SCHPO/sws2/sws2-uniprot.txt
+    supporting_text: DR   InterPro; IPR001892; Ribosomal_uS13.
+  - *id001
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

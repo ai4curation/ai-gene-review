@@ -7,6 +7,7 @@ authors:
 year: '2023'
 doi: 10.1101/2023.03.20.533583
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Different mechanisms of synapsin-induced vesicle clustering at inhibitory and excitatory synapses

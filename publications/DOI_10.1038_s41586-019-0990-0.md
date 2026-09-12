@@ -10,6 +10,7 @@ journal: Nature
 year: '2019'
 doi: 10.1038/s41586-019-0990-0
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # Structural basis for KCTD-mediated rapid desensitization of GABAB signalling

@@ -1,0 +1,12 @@
+| Substrate | Organism | AMPylation Site | Biological Function | Reference |
+|---|---|---|---|---|
+| Glutaredoxin A (GrxA/Grx) | *Escherichia coli*; conserved mechanism also supported in yeast | Tyr13 | Thioredoxin-like redoxin that catalyzes deglutathionylation; SelO-mediated AMPylation inhibits Grx activity and helps maintain protein S-glutathionylation during oxidative stress | (pqac-00000006, pqac-00000016, pqac-00000034) |
+| sucA (α-ketoglutarate dehydrogenase E1 component homolog) | Bacteria | Thr405 | Oxidative metabolism/TCA-linked enzyme component; identified as a SelO substrate connected to redox homeostasis and oxidative phosphorylation | (pqac-00000006, pqac-00000007) |
+| Trx3 (thioredoxin 3) | *Saccharomyces cerevisiae* | Thr66 | Mitochondrial thioredoxin/redoxin; AMPylation at T66 is important for proper protein level and maturation during mitochondrial import | (pqac-00000018, pqac-00000023) |
+| Prx1 (peroxiredoxin) | *Saccharomyces cerevisiae* | Not specified in available evidence | Mitochondrial peroxiredoxin involved in peroxide detoxification/redox homeostasis; identified as an in vivo Fmp40/SelO-interacting substrate | (pqac-00000018) |
+| Grx2 (glutaredoxin 2) | *Saccharomyces cerevisiae* | Not specified in available evidence | Mitochondrial glutaredoxin involved in redox regulation/glutathione chemistry; reported as one of the few known yeast Fmp40/SelO substrates prior to global AMPylome profiling | (pqac-00000019) |
+| Glutamate dehydrogenase | Mammals (SelO/SELENOO study) | Not specified in available evidence | Mitochondrial metabolic enzyme; SelO substrate implicated in regulation of metabolic flux and linked to TCA/2-oxocarboxylic acid metabolism | (pqac-00000024, pqac-00000025) |
+| Pyruvate dehydrogenase | Mammals (SelO/SELENOO study) | Not specified in available evidence | Central mitochondrial enzyme linking glycolysis to the TCA cycle; identified as a SelO substrate involved in metabolic regulation by AMPylation | (pqac-00000025) |
+
+
+*Table: This table summarizes experimentally reported SelO/Fmp40 substrates across organisms, the known AMPylation sites where available, and the biological roles of those target proteins. It is useful for comparing conserved redox-related targets with more recently identified metabolic substrates.*

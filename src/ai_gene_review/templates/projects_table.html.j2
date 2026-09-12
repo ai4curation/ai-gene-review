@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Projects - AI Gene Review</title>
+    <style>
+        :root {
+            --color-primary: #3498db;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .breadcrumb { margin-bottom: 1.5rem; font-size: 0.875rem; color: var(--text-muted); }
+        .breadcrumb a { color: var(--color-primary); text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .header { border-bottom: 2px solid var(--border-color); padding-bottom: 1.5rem; margin-bottom: 1.5rem; }
+        h1 { font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem; color: #1f2937; }
+        .subtitle { color: var(--text-muted); font-size: 1.05rem; }
+        .meta-note { color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1rem; }
+
+        .controls { display: flex; flex-wrap: wrap; gap: 1.25rem; margin-bottom: 1rem; align-items: flex-start; }
+        .control-group { display: flex; flex-direction: column; gap: 0.35rem; }
+        .control-group .label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600; }
+        .chips { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+        .chip {
+            border: 1px solid var(--border-color); background: #fff; border-radius: 999px;
+            padding: 0.15rem 0.7rem; font-size: 0.8rem; cursor: pointer; user-select: none; color: var(--text-primary);
+        }
+        .chip:hover { border-color: var(--color-primary); }
+        .chip.active { background: var(--color-primary); border-color: var(--color-primary); color: #fff; }
+        #search { padding: 0.4rem 0.6rem; border: 1px solid var(--border-color); border-radius: 6px; font-size: 0.9rem; min-width: 220px; }
+
+        table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+        thead th {
+            text-align: left; border-bottom: 2px solid var(--border-color);
+            padding: 0.6rem 0.6rem; position: sticky; top: 0; background: #ffffff;
+        }
+        tbody td { padding: 0.55rem 0.6rem; border-bottom: 1px solid var(--border-color); vertical-align: top; }
+        tbody tr:nth-child(even) { background: var(--bg-light); }
+        td a { color: var(--color-primary); text-decoration: none; }
+        td a:hover { text-decoration: underline; }
+        .muted { color: var(--text-muted); }
+        code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85em; }
+
+        .badge { display: inline-block; padding: 0.1rem 0.5rem; border-radius: 999px; font-size: 0.72rem; font-weight: 600; white-space: nowrap; }
+        /* maturity */
+        .m-SCOPING     { background: #fef3c7; color: #92400e; }
+        .m-IN_PROGRESS { background: #dbeafe; color: #1e40af; }
+        .m-MATURE      { background: #dcfce7; color: #166534; }
+        .m-COMPLETE    { background: #d1fae5; color: #065f46; border: 1px solid #34d399; }
+        .m-ARCHIVED    { background: #f3f4f6; color: #6b7280; }
+        /* tags */
+        .tag { display: inline-block; padding: 0.05rem 0.45rem; border-radius: 4px; font-size: 0.7rem; font-weight: 600; margin: 0 0.15rem 0.15rem 0; }
+        .t-FLAGSHIP       { background: #fae8ff; color: #86198f; }
+        .t-BIOLOGY_DOMAIN { background: #e0f2fe; color: #075985; }
+        .t-PIPELINE       { background: #ede9fe; color: #5b21b6; }
+        .t-OBSOLETION     { background: #fee2e2; color: #991b1b; }
+        .sp { display: inline-block; background: #f3f4f6; color: #374151; border-radius: 4px; padding: 0.05rem 0.4rem; font-size: 0.72rem; margin: 0 0.15rem 0.15rem 0; }
+        /* manual review status */
+        .r-READY              { background: #dcfce7; color: #166534; border: 1px solid #34d399; }
+        .r-CHANGES_REQUESTED  { background: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
+    </style>
+</head>
+<body>
+    <nav class="breadcrumb">
+        <a href="../index.html">Home</a> / <a href="index.html">Projects</a> / All Projects
+    </nav>
+
+    <div class="header">
+        <h1>All Projects</h1>
+        <p class="subtitle">Complete, automatically generated index of every project page in <code>projects/</code></p>
+    </div>
+
+    <p class="meta-note"><span id="visible-count">{{ rows | length }}</span> of {{ rows | length }} projects.
+    Derived from each project's YAML frontmatter; the <a href="index.html">curated index</a> is the hand-organized entry point.
+    Filters combine (AND across groups, OR within a group).</p>
+
+    <div class="controls">
+        <div class="control-group">
+            <span class="label">Search</span>
+            <input id="search" type="text" placeholder="title or slug…" autocomplete="off">
+        </div>
+        <div class="control-group">
+            <span class="label">Tags</span>
+            <div class="chips" data-filter="tag">
+                {% for t in all_tags %}<span class="chip" data-value="{{ t }}">{{ t }}</span>{% endfor %}
+            </div>
+        </div>
+        <div class="control-group">
+            <span class="label">Maturity</span>
+            <div class="chips" data-filter="maturity">
+                {% for m in all_maturities %}<span class="chip" data-value="{{ m }}">{{ m }}</span>{% endfor %}
+            </div>
+        </div>
+        <div class="control-group">
+            <span class="label">Species</span>
+            <div class="chips" data-filter="species">
+                {% for s in all_species %}<span class="chip" data-value="{{ s }}">{{ s }}</span>{% endfor %}
+            </div>
+        </div>
+        {% if all_review_statuses %}
+        <div class="control-group">
+            <span class="label">Review</span>
+            <div class="chips" data-filter="review">
+                {% for s in all_review_statuses %}<span class="chip" data-value="{{ s }}">{{ s }}</span>{% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Project</th>
+                <th>Maturity</th>
+                <th>Review</th>
+                <th>Tags</th>
+                <th>Species</th>
+                <th>Genes</th>
+                <th>Docs</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for row in rows %}
+            <tr
+                data-title="{{ row.title | lower }}"
+                data-slug="{{ row.slug | lower }}"
+                data-maturity="{{ row.maturity or '' }}"
+                data-review="{{ row.review_status or '' }}"
+                data-tags="{{ row.tags | join(' ') }}"
+                data-species="{{ row.species | join(' ') }}">
+                <td><a href="{{ row.url }}">{{ row.title }}</a><br><code class="muted">{{ row.slug }}</code></td>
+                <td>{% if row.maturity %}<span class="badge m-{{ row.maturity }}">{{ row.maturity }}</span>{% else %}<span class="muted">&mdash;</span>{% endif %}</td>
+                <td>{% if row.review_status %}<span class="badge r-{{ row.review_status }}" title="{{ row.review_count }} manual review(s)">{{ row.review_status }}</span>{% else %}<span class="muted">&mdash;</span>{% endif %}</td>
+                <td>{% if row.tags %}{% for t in row.tags %}<span class="tag t-{{ t }}">{{ t }}</span>{% endfor %}{% else %}<span class="muted">&mdash;</span>{% endif %}</td>
+                <td>{% if row.species %}{% for s in row.species %}<span class="sp">{{ s }}</span>{% endfor %}{% else %}<span class="muted">&mdash;</span>{% endif %}</td>
+                <td>{% if row.genes %}<span title="{{ row.genes | join(', ') }}">{{ row.genes | length }}</span>{% else %}<span class="muted">&mdash;</span>{% endif %}</td>
+                <td>{% if row.support_count %}{{ row.support_count }}{% else %}<span class="muted">&mdash;</span>{% endif %}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        const state = { tag: new Set(), maturity: new Set(), species: new Set(), review: new Set(), q: "" };
+        const rows = Array.from(document.querySelectorAll("tbody tr"));
+        const countEl = document.getElementById("visible-count");
+
+        function matches(tr) {
+            if (state.q) {
+                const hay = tr.dataset.title + " " + tr.dataset.slug;
+                if (!hay.includes(state.q)) return false;
+            }
+            if (state.maturity.size && !state.maturity.has(tr.dataset.maturity)) return false;
+            if (state.review.size && !state.review.has(tr.dataset.review)) return false;
+            const tags = tr.dataset.tags.split(" ").filter(Boolean);
+            if (state.tag.size && !tags.some(t => state.tag.has(t))) return false;
+            const sp = tr.dataset.species.split(" ").filter(Boolean);
+            if (state.species.size && !sp.some(s => state.species.has(s))) return false;
+            return true;
+        }
+        function apply() {
+            let n = 0;
+            rows.forEach(tr => { const ok = matches(tr); tr.style.display = ok ? "" : "none"; if (ok) n++; });
+            countEl.textContent = n;
+        }
+        document.querySelectorAll(".chips").forEach(group => {
+            const key = group.dataset.filter;
+            group.querySelectorAll(".chip").forEach(chip => {
+                chip.addEventListener("click", () => {
+                    const v = chip.dataset.value;
+                    if (state[key].has(v)) { state[key].delete(v); chip.classList.remove("active"); }
+                    else { state[key].add(v); chip.classList.add("active"); }
+                    apply();
+                });
+            });
+        });
+        document.getElementById("search").addEventListener("input", e => {
+            state.q = e.target.value.trim().toLowerCase();
+            apply();
+        });
+    </script>
+</body>
+</html>

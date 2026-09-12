@@ -1,0 +1,21 @@
+| Module Step Number | Step Name | Status | Key Gene(s) | Notes |
+|---|---|---|---|---|
+| 1 | Glucose phosphorylation | covered | glk (PP_1011) | Candidate-list gene; consistent with KT2440 glucose entry into phosphorylative route, though most glucose flux enters via periplasmic oxidation rather than direct phosphorylation (pqac-00000020, pqac-00000022) |
+| 2a | Glucose-6-phosphate dehydrogenase | covered | zwf-1 (PP_1022) | High-confidence core step; experimentally used in KT2440 mutant/flux analyses; notably missing from supplied candidate list. Additional paralogs zwf-2 (PP_4042) and zwf-3 (PP_5351) exist but zwf-1 is the clearest module gene (pqac-00000010, pqac-00000012, pqac-00000015) |
+| 2b | 6-Phosphogluconolactonase | covered | pgl (PP_1023) | Core upper ED/oxidative PP step expected in KT2440 pathway reconstructions and recent pathway summaries; missing from supplied candidate list; step presence is strong, gene-level confirmation is more reconstruction-based than mutant-based in the retrieved evidence (pqac-00000016, pqac-00000020) |
+| 3a | Phosphogluconate dehydratase | covered | edd (PP_1010) | High-confidence ED commitment step; direct KT2440 mutant evidence shows requirement for glucose growth; missing from supplied candidate list (pqac-00000012, pqac-00000029) |
+| 3b | KDPG aldolase | covered | eda (PP_1024) | High-confidence ED commitment step; directly assigned and tested in KT2440; missing from supplied candidate list (pqac-00000012, pqac-00000018) |
+| 4a | Triose-phosphate isomerase | covered | tpiA (PP_4715) | Directly implicated in the EDEMP cycle and required for full integration of ED and gluconeogenic recycling in KT2440 (pqac-00000002, pqac-00000012) |
+| 4b | GAPDH | candidate_uncertain | gapA (PP_1009), gapB (PP_2149) | Lower EMP step is present, but there is paralog ambiguity; KT2440 also encodes additional GAPDH-like proteins (including PP_0665 and PP_3443), so exact division of labor needs gene-level curation (pqac-00000010, pqac-00000015) |
+| 4c | Phosphoglycerate kinase | covered | pgk (PP_4963) | Candidate-list gene; standard lower EMP trunk assignment in KT2440 central-carbon reconstructions (pqac-00000017, pqac-00000019) |
+| 4d | Phosphoglycerate mutase | covered | gpmI (PP_5056) | Candidate-list gene; appropriate lower EMP/gluconeogenesis trunk enzyme in KT2440 reconstructions (pqac-00000017, pqac-00000019) |
+| 4e | Enolase | covered | eno (PP_1612) | Candidate-list gene; standard lower EMP/gluconeogenesis trunk assignment (pqac-00000017, pqac-00000019) |
+| 4f | Pyruvate kinase | candidate_uncertain | pykA (PP_1362), pyk (PP_4301) | Step is present, but paralog-specific assignment is unresolved from retrieved species-specific evidence; both genes are plausible contributors (pqac-00000017, pqac-00000019) |
+| 5a | PEP synthase | covered | ppsA (PP_2082) | Satisfies pyruvate-to-PEP gluconeogenic bypass in KT2440; consistent with gluconeogenic growth and central-carbon maps (pqac-00000017, pqac-00000027) |
+| 5b | PEP carboxykinase | gap | not resolved | No convincing species-specific support retrieved for a required PEPCK route in this module review; treat as gap in the generic template but effectively not required if PpsA is accepted as the operative bypass (pqac-00000027, pqac-00000030) |
+| 5c | FBP aldolase | covered | fba (PP_4960) | Candidate-list gene; literature often refers to Fda activity; functionally supported in KT2440 EDEMP recycling (pqac-00000014, pqac-00000022) |
+| 5d | FBP phosphatase | covered | fbp (PP_5040) | Candidate-list gene; directly supported as part of gluconeogenic recycling that converts triose-derived carbon back to hexose phosphates in the EDEMP cycle (pqac-00000014, pqac-00000022) |
+| 5e | G6P isomerase | covered | pgi1 (PP_1808), pgi2 (PP_4701) | Step clearly present with two paralogs; both genes were explicitly tracked in KT2440 mutant/flux work, so step is covered though paralog-specific dominance remains unresolved (pqac-00000012, pqac-00000018) |
+
+
+*Table: This table summarizes step-by-step satisfiability of the Entner-Doudoroff glycolysis and gluconeogenesis module in Pseudomonas putida KT2440. It highlights which steps are covered, which have paralog ambiguity, and which critical genes are missing from the supplied candidate list.*

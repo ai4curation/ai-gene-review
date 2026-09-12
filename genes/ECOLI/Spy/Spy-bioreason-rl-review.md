@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: Spy (E. coli)
 
-Source: Spy-deep-research-bioreason-rl.md
+Source: Spy-bioreason-rl-predictions.md
 
 - **Correctness**: 2/5
 - **Completeness**: 2/5

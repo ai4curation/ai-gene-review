@@ -1,3 +1,10 @@
+---
+title: "Tardigrade Stress Response Protein Curation Project"
+maturity: IN_PROGRESS
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [RAMVA]
+---
+
 # Tardigrade Stress Response Protein Curation Project
 
 **Project Start Date:** 2026-04-09
@@ -139,6 +146,10 @@ The original GO:0003677 (DNA binding) annotation was initially proposed for MODI
 
 ### SAHS proteins have FABP-like folds
 SAHS1 and SAHS2 adopt beta-barrel folds homologous to fatty acid-binding proteins, with crystal structures available. Lipid binding was annotated for SAHS1 but not SAHS2 - proposed to add for SAHS2.
+
+## Slides
+
+- [Slides](TARDIGRADE_STRESS_RESPONSE/slides/TARDIGRADE_STRESS_RESPONSE-slides.html) (Marp source: [TARDIGRADE_STRESS_RESPONSE-slides.md](TARDIGRADE_STRESS_RESPONSE/slides/TARDIGRADE_STRESS_RESPONSE-slides.md)) — AI generated
 
 ## Key References
 

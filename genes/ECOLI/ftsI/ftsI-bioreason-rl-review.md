@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: ftsI (E. coli)
 
-Source: ftsI-deep-research-bioreason-rl.md
+Source: ftsI-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 4/5

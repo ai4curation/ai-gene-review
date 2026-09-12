@@ -1,6 +1,93 @@
+---
+title: "IBA Annotation Quality Project"
+maturity: MATURE
+tags: [PIPELINE, FLAGSHIP]
+species: [human, CANAL, MYCTU, VIBCH, SCHPO, ECOLI, mouse, rat, worm, yeast, ANOGA, POPTR, DANRE, DICDI, NEUCR]
+genes:
+  - cao-1
+  - NQO2
+  - Epe1
+  - cds1
+  - LPL1
+  - UBA7
+  - RIMBP2
+  - arnF
+  - DPYSL2
+  - CRMP1
+  - DPYSL3
+  - AGO4
+  - UBAC2
+  - CAPG
+  - CRYAA
+  - BCL2
+  - Bcl2
+  - BCL2L1
+  - EIF4E2
+  - Aldh1l1
+  - Hmgcs2
+  - PEX2
+  - AGK
+  - AKTIP
+  - DPYSL4
+  - SAMD8
+  - CPT1C
+  - NTN1
+  - NTN3
+  - NOTCH1
+  - IL23R
+  - ABRAXAS1
+  - PIWIL1
+  - prg-1
+  - wago-1
+  - EIF2AK3
+  - BIRC6
+  - SSB2
+  - SSZ1
+  - BAIAP2L2
+  - PIK3C3
+  - SCGB1A1
+  - rqh1
+  - HDA1
+  - TOLL9
+  - ndhA
+  - ndhD
+  - ndhK
+  - che-3
+  - D7r2
+  - D7r4
+  - D7r5
+  - D7L1
+  - sta-2
+  - fshr-1
+  - opa1
+  - eat-3
+  - hsp-12.3
+  - hsp-12.6
+  - YAR1
+  - ACL4
+  - SIR3
+  - lys-7
+  - UBP3
+  - CASP12
+  - carD
+  - rasC
+  - pten
+  - regA
+  - pdsA
+  - acgA
+  - yakA
+  - statA
+  - statC
+---
+
 # IBA Annotation Quality Project
 
 ## Overview
+
+> Project log, per-pass verification narrative, and lessons learned: [IBA_REVIEW/HISTORY.md](IBA_REVIEW/HISTORY.md).
+>
+> Consistency audit of the structured `propagation_review` blocks across all 1843 rows:
+> [IBA_REVIEW/propagation-review-audit.md](IBA_REVIEW/propagation-review-audit.md).
 
 This project examines the quality of IBA (Inferred from Biological Aspect of Ancestor) annotations discovered through AI-assisted gene review. IBA annotations use phylogenetic trees to transfer function from characterized proteins to uncharacterized orthologs.
 
@@ -9,6 +96,731 @@ While IBA is a powerful curation tool, it can produce problematic annotations wh
 2. **Pseudo-enzymes** - Catalytic function lost despite domain retention
 3. **Context-specific function** - Function differs between organisms/tissues
 4. **Over-generalization** - Broad terms transferred when specific functions differ
+
+This project covers **both directions** of IBA quality: most of the page catalogs
+where IBA is *wrong* (over-annotation, patterns 1–15), while
+[IBA Incompleteness](#iba-incompleteness-core-function-that-iba-fails-to-propagate)
+quantifies where IBA *under-calls* established biology — 511 curated human core
+molecular functions that IBA alone would miss.
+
+## Propagation Taxonomy and Checklist
+
+The patterns below are biological failure modes, but IBA review also needs a
+root-cause call: is the source annotation bad, or is the propagation bad? Use the
+same `review.propagation_review` structure as the
+[ISO review project](ISO.md#failure-taxonomy): `root_cause`, optional
+`failure_modes`, and per-source `source_entities` with short source-specific
+comments.
+
+### Root-cause classes
+
+These are the schema values for `propagation_review.root_cause`.
+
+| Code | IBA interpretation |
+|---|---|
+| `NO_FAILURE_CORE` | The ancestral/family inference is correct and core for the target. |
+| `NO_FAILURE_NON_CORE` | The inference is defensible but contextual, secondary, or generic. |
+| `SOURCE_BAD` | A seed/source annotation or family-node assertion is itself wrong, miscited, homonym-confused, or contradicted. |
+| `SOURCE_STALE_OR_MISSING` | The transferred term no longer appears on the current source record, or the donor trace cannot recover it. |
+| `SOURCE_WEAK_OR_INFERRED` | The source exists but is only inferred, statement-level, or otherwise weak for confident propagation. |
+| `EVIDENCE_CIRCULAR_OR_REDUNDANT` | The chain transfers from another transfer, or the target already has stronger direct evidence. |
+| `PROPAGATION_BAD` | The source biology is real, but the PANTHER node propagated it to the wrong target, subfamily, lineage, compartment, or role. |
+| `TERM_SCOPING_PROBLEM` | The propagated biology is related, but the GO term is too broad, too specific, or has the wrong role/qualifier. |
+| `UNRESOLVED` | The propagation issue was investigated but cannot yet be classified confidently. |
+
+### Biological subtypes
+
+These are the schema values for `propagation_review.failure_modes`.
+
+| Code | IBA signal |
+|---|---|
+| `WRONG_ORTHOLOG_OR_PARALOG` | Donor/source is a paralog, expanded family member, or wrong subfamily. |
+| `FUNCTIONAL_DIVERGENCE` | Target retained fold or orthology but changed substrate, product, activity, or pathway role. |
+| `PSEUDO_OR_SUBACTIVITY_LOSS` | Catalytic residues or a specific sub-activity are lost even though the domain remains. |
+| `CONTEXT_OR_TISSUE_MISMATCH` | Donor evidence is tissue, developmental, organismal, or disease-context specific. |
+| `LINEAGE_OR_TAXON_MISMATCH` | Process does not occur in the target lineage or organelle system. |
+| `COMPARTMENT_OR_COMPLEX_MISMATCH` | Localization, complex membership, or pathway compartment does not transfer. |
+| `REGULATORY_SIGN_INVERSION` | Family contains activators and inhibitors, and a positive/negative regulatory term leaks across members. |
+| `ROLE_CONFLATION` | Substrate, regulator, effector, or specificity subunit is annotated as the agent or core machinery. |
+| `GRANULARITY_MISMATCH` | Parent term is true but uninformative, or child term overstates specificity. |
+| `SOURCE_MISCITATION` | Source evidence points to the wrong gene, organism, publication, or homonym. |
+| `SOURCE_EVIDENCE_WEAK` | Source evidence is inferred, statement-level, stale, or otherwise too weak for confident propagation. |
+| `CIRCULAR_PROPAGATION` | Propagation chain depends on another propagated annotation rather than independent source evidence. |
+
+### Source status values
+
+These are the schema values for `propagation_review.source_entities[].source_status`.
+
+| Code | Source-level interpretation |
+|---|---|
+| `SUPPORTS_TRANSFER` | Source evidence supports the term and the transfer to the target. |
+| `SUPPORTS_SOURCE_BUT_NOT_TARGET` | Source evidence supports the source annotation, but propagation to the target is unsafe. |
+| `SOURCE_BAD` | Source annotation or source citation is itself wrong. |
+| `SOURCE_STALE_OR_MISSING` | Current source record no longer carries the transferred term, or tracing cannot recover it. |
+| `SOURCE_WEAK_OR_INFERRED` | Source exists but is only inferred, statement-level, or otherwise weak. |
+| `CIRCULAR_OR_REDUNDANT` | Source participates in a circular transfer chain or adds no independent support. |
+| `NOT_RELEVANT` | Source was inspected but is not relevant to the target annotation. |
+| `UNRESOLVED` | Source could not be classified confidently. |
+
+### How many sources to enumerate
+
+`source_entities` is a **curated subset, not an exhaustive mirror** of the row's
+`WITH/FROM`. Enumerate the sources the review's argument actually rests on; where a
+column carries dozens of donors, characterise the span in prose and name the ones that
+matter. In mouse alone, `Mapk1 GO:0035556` has 53 donors, `Ccnb1 GO:0005634` has 45 and
+`Egfr GO:0005886` has 67 — listing all of them is noise, not rigour, and it buries the
+two or three that carry the reasoning.
+
+The rule that does bind: **no sentence may claim more than the enumeration shows.**
+A block that names one seed and calls it *"the* IBD seed" asserts a sole-donor fact the
+`WITH/FROM` may contradict, and that is a defect regardless of how many sources are
+listed. Definite singulars — "the IBD seed", "the sole donor", "the only seed" — must be
+checked against the donor count before use; prefer "one of the IBD seeds" whenever more
+than one gene-level donor exists.
+
+Two traps when counting donors:
+
+- The `PANTHER:PTN…` entry is the **node**, not a donor. A row whose `WITH/FROM` is
+  `MGI:MGI:95407|PANTHER:PTN002571322` has exactly one donor, so "the IBD seed" is
+  correct there.
+- The same entity can appear twice under different identifiers — `RGD:2275` and
+  `UniProtKB:P55213` are both rat caspase-3. Two entries, one donor.
+
+Two mouse blocks were corrected under this rule, both by rewording the claim and adding
+the co-donors: `Grpel2 GO:0051082` said "the IBD seed" while the row carries a human
+GRPEL1 co-donor, and `Gulo GO:0016491` said the same while carrying seven gene donors
+spanning fungi, plants and bacteria. Both now enumerate their full `WITH/FROM`.
+
+### Resolving a donor before calling it unresolvable
+
+`interpro/panther/<FAMILY>/<FAMILY>-entries.csv` is keyed on **UniProt accession** and
+covers the whole family, not just `representative_members`. It gives the protein name,
+gene symbol and source organism, so it resolves donors that a `grep` over `genes/` will
+not:
+
+```
+$ grep '^P9WIT3,' interpro/panther/PTHR43762/PTHR43762-entries.csv
+P9WIT3,"L-gulono-1,4-lactone dehydrogenase",protein,83332,
+       Mycobacterium tuberculosis (strain ATCC 25618 / H37Rv),…,Rv1771,…
+```
+
+Check it before writing "the local index does not resolve this". The `CLAUDE.md`
+restraint is *assert nothing you cannot establish* — not *assert nothing about UniProt
+ids*, and a resolved donor usually strengthens the block's argument rather than being
+mere bookkeeping. Note the limits: it is accession-keyed, so `FB:`/`SGD:`/`RGD:`/`MGI:`
+identifiers are **not** lookups in it, and a family whose directory is absent from
+`interpro/panther/` resolves nothing.
+
+**Search every family's index, not just the node's own.** A seed can sit in one family's
+IBD while PANTHER classifies the protein into a *different* family, so the node's own
+`entries.csv` will not contain it and a family-scoped lookup files it unresolvable when it
+is in fact resolvable. `Acadl`'s bacterial seeds are the worked case: both are seeds of
+`PTN002535634` in `PTHR43884`, but only `P60584` (*caiA*) is in `PTHR43884-entries.csv` —
+`Q47146` (*fadE*) resolves in `PTHR48083-entries.csv`. The reason is one column away in
+that row: `Q47146` is classified into `PTHR48083:SF18` ("ACYL-COENZYME A DEHYDROGENASE"),
+so PANTHER's classification and the node it seeds simply are not the same family. So the
+lookup is
+
+```
+grep -l '<ACC>' interpro/panther/*/*-entries.csv
+```
+
+rather than a single family's file. This is the same widening the WITH/FROM route already
+gets below: "the family has no index" and "the node's family has no index" are both
+weaker than "no index has it".
+
+**A MOD-id seed can therefore only be name-matched, and a name match returns every
+species' ortholog — so check the taxon column.** `PTHR10836` carries `Gapdh2` for
+*D. melanogaster* (`P07487`), *D. pseudoobscura* (`O44104`) and *D. subobscura*
+(`O44105`); matching on the gene name alone picks whichever comes first. A name match
+corroborates that the family contains such a gene; it does not establish that the
+`FB:`/`SGD:` id in the `WITH/FROM` **is** that entry. Say "corroborated", not
+"resolved", when that is what happened.
+
+In this corpus **"corroborated through the UniProt cross-reference for this MOD id
+(ACC)"** is the standard phrasing for that situation: the family index confirms `ACC`
+is the named protein, while the MOD-id-to-accession step is an inference rather than a
+lookup. Reserve "resolved" for a step some file in the repository actually performs. And there
+is a third state the substitution above can fall through: the family has no local directory
+and the accession appears nowhere, so **nothing corroborates it either**. Say that
+explicitly — "asserted from external knowledge, not corroborable here" — rather than
+reaching for the weaker verb, which still implies a check that did not happen.
+
+The mechanical test for which of the three verbs applies is **whether any family's index
+resolves the accession** — the widened `grep -l` above, not the node's own family, for the
+reason that paragraph gives — so check that before choosing the wording, not after. The
+narrower question (does the node's family have a directory under `interpro/panther/`?)
+settles it only when the answer is yes; a no leaves the seed still possibly resolvable
+elsewhere, which is exactly the case `Acadl`'s `Q47146` turned out to be.
+
+**Before re-checking any existing "the local index does not resolve it" comment, work out
+which seed it is about, and scope whatever you then claim to the comments you actually
+identified.** Two ways of assembling that set have already failed here, in opposite
+directions, so the instruction comes before the criterion rather than after it:
+
+- **Grepping the prose under-counts and mis-classifies.** The wording varies ("could not be
+  resolved to a named gene product", "do not resolve against the local caches", "not
+  resolved to a protein"), and three reasonable patterns return three different sets. That
+  is how a claim that every such comment cites a MOD id got written here, when two of them
+  cite accessions.
+- **Keying on the comment's own `source_id` misses the node-level ones.** A comment can
+  make an unresolvability claim about seeds it is *not* attached to: `Gulo`'s self-seed
+  comment sits under an `MGI:` id while naming `UniProtKB:Q57ZU1` among donors that "do not
+  resolve against the local caches", `Ghr`'s sits under a `PANTHER:PTN…` id while saying
+  "several" of the row's further accessions could not be resolved, and `Notch1`'s sits
+  under a `PANTHER:PTN…` id while naming four donors — a `WB:`, a `FB:` and two `ZFIN:`
+  ids — that "resolve nowhere in the local caches". Three blocks, so this is the pattern
+  rather than a pair: read the comment's content, not just its key.
+
+The criterion itself is a property, not a list of the prefixes anyone has happened to see:
+**a seed is an index lookup iff it is a `UniProtKB:` accession.** Nothing else is a key in
+an accession-keyed file, so running the widened `grep` on anything else returns nothing
+for a reason that says nothing about the seed — MOD identifiers (`MGI:`, `SGD:`, `FB:`,
+`RGD:`, `PomBase:`, `ZFIN:`, `CGD:`, `TAIR:`, `WB:`, `dictyBase:`, `AGI_LocusCode:`) and
+the non-MOD namespaces a `WITH/FROM` also carries (`PANTHER:`, `InterPro:` and `ensembl:`
+among many more) alike. No count or per-directory scope is given for those prefixes on
+purpose: an earlier revision said which seven `genes/mouse` used and was wrong by one
+(`Cftr` cites a `TAIR:` id) — a list offered as illustration, read back as the set to
+match against, which is the failure this whole passage exists to prevent. Match on the
+property. `ensembl:` is the one worth a second sentence, not as an exception but because
+it is the case a reader cannot settle from the prefix: an Ensembl protein accession
+*looks* like something an accession-keyed index might carry, and what actually excludes it
+is that no `ENS…P…` identifier is a key in any `*-entries.csv`. For anything that is not a
+`UniProtKB:` accession the routes are instead the name match described above and the
+target's own UniProt `DR` cross-reference line. The consequence for re-checking: such a
+comment is correct under the widening without being re-run, while an accession-cited one
+is exactly what the widened grep can move. `Ccnt1`'s are the accession-cited ones this
+sweep found, and they still resolve nowhere.
+
+That is what separates `Gulo` (`P9WIT3` resolves to *M. tuberculosis* Rv1771) from `Bcl2`
+(`PTHR11256`) and `Ednra` (`PTHR46099`), whose accessions resolve in **no** family's
+index, so no amount of grepping can corroborate the MOD-id-to-accession step. A bare `grep`
+for the accession is not a substitute: a hit may be an unnamed `ECO:0000250` or `WITH/FROM`
+reference, or a substring collision with an EMBL id (`AAP97287.1` matches `P97287`), and a
+miss tells you only that the repository is silent. Check the route, not the grep.
+
+The middle verb has a worked example too, and it is the one place all three states
+appear in a single claim. `genes/mouse/Bcl2` cites `Q64373` as mouse Bcl2l1: the
+accession is **named in no cached record** (so "resolved" is unavailable), *and* the
+identification is nonetheless **corroborated**, because `BCL2L1-goa.tsv` carries it as
+the mouse-ortholog donor (`UniProtKB:Q64373|ensembl:ENSMUSP00000105445`) in the
+`GO_REF:0000107` Ensembl-compara rows on human BCL2L1 — an orthology assertion is not a
+name, but it establishes which gene the accession is. Note the route: an accession absent
+from every `entries.csv` can still be corroborated by a **GOA `WITH/FROM` column in
+another gene's file**, which is why "the family has no index" settles the first verb but
+not the second.
+
+Finally, do not assert the lookup in the same breath as disclaiming it. "The UniProt
+cross-reference for this MOD id **points to** `ACC`" states the mapping as fact — which is
+the step the sentence exists to say is uncheckable. Write "the accession `ACC` **is asserted
+from** external knowledge" instead.
+
+Universal quantifiers over a seed set need the same care as a definite singular:
+"seeded entirely by X" or "every seed is an X" claims something about donors the block
+may not have identified. Scope it — "every seed this review identified" — or name the
+unidentified ones and say no claim is made about them.
+
+### When a REMOVE overrules a curator, and when it does not
+
+`CLAUDE.md` forbids using `REMOVE` on an experimental annotation (IDA/IMP/IPI/IGI/IEP/EXP)
+just because the cached title or abstract is about a different gene — the full text the
+curator read is usually not in `publications/`. Applying that across `genes/mouse` needed a
+test sharper than "is the reason biological?", and the two ways of getting it wrong are both
+on the record here.
+
+**The condition, not the phrasing — but that is necessary, not sufficient.** A first pass
+selected rows by matching phrases in the reason and missed a row whose immediate neighbour it
+caught — same gene, same PMID, same evidence code, same argument, differing only in that one
+said "The paper concerns" and the other "This physiology belongs to". Key on the condition
+instead: an experimental evidence code, a cited PMID whose cache is
+`full_text_available: false`, and a reason that turns on **what the paper contains or which
+gene it studies**. That took the class from the 25 the phrase list found to 42.
+
+The class is actually **48 rows across 17 genes**. The last six were routed into the *keep*
+bucket because their shared reason cited biology — and it took reading each row's qualifier
+to get them out. So the residual error does not live in the sweep; it lives in the triage of
+what the sweep keeps, which is what the table below is for.
+
+**Then ask whether the cited biology contradicts *this* annotation, given its qualifier and
+aspect.** This is the step that separates a sound `REMOVE` from one that only sounds sound:
+
+| Keep the `REMOVE` | Convert to `UNDECIDED` |
+|---|---|
+| `GO:0005515` protein binding — policy against the term, independent of any text | the reason asserts what the paper is about |
+| the biology is stated **in the cached abstract itself** — Uox's abstract gives the enzyme's real reaction, which is what makes the deoxynucleoside-catabolism terms wrong | the reason turns on unread full text |
+| the argument is about the gene's molecular identity — a protease that cleaves a CDK inhibitor is not one, so `GO:0004861` goes | the argument answers a claim the annotation does not make |
+
+The last row is the trap. Six Bcl2 rows carried "…or describes an enzymatic/molecular
+activity not enabled by Bcl2" — true of Bcl2, and irrelevant to every row it was applied to.
+Four were qualified `acts_upstream_of_or_within`, which asserts **regulation**, not
+catalysis; two were `located_in` cellular-component calls, which assert neither. **Read the
+qualifier and the aspect before accepting that a biological argument bites.**
+
+**A shared reason is suspicious only under a corrective action.** Reuse alone is not a
+signal: a reason string whose rows span ≥3 distinct terms occurs in **201 groups** across
+`genes/mouse`, up to 243 rows on one string. Where those groups sit is the whole point:
+
+| action | groups | rows | largest |
+|---|---:|---:|---:|
+| `KEEP_AS_NON_CORE` | 83 | 2952 | 228 |
+| `ACCEPT` | 60 | 1648 | 139 |
+| `MARK_AS_OVER_ANNOTATED` | 30 | **587** | 202 |
+| `MODIFY` | 14 | 108 | 18 |
+| `REMOVE` | 10 | **93** | 23 |
+| `UNDECIDED` | 3 | 21 | 9 |
+
+(Neither column sums to the unscoped total — 200 groups against 201, and 5409 rows against
+5432. Qualification is per-scope: a group can clear ≥3 terms overall and not within one
+action, or the reverse. The clearest case is `Secondary or downstream function`, 243 rows
+that split 228 `KEEP_AS_NON_CORE` + 15 `ACCEPT`, qualifying in one scope and not the other.)
+
+Reproduce every figure here, as of the commit that ships the script
+(`git log --oneline -1 -- projects/IBA_REVIEW/shared_reason_groups.py`):
+
+```
+S=projects/IBA_REVIEW/shared_reason_groups.py
+python3 $S
+for a in ACCEPT KEEP_AS_NON_CORE MARK_AS_OVER_ANNOTATED MODIFY REMOVE UNDECIDED; do
+    python3 $S --action "$a"
+done
+python3 $S --action REMOVE --list
+python3 $S --action MARK_AS_OVER_ANNOTATED --list
+```
+
+**`REMOVE` is not the whole of "corrective", and scoping to it hid the larger half.** An
+earlier revision of this paragraph reported only the `REMOVE` row — 10 groups over 93 —
+and called the rest "nearly all `KEEP_AS_NON_CORE` or `ACCEPT`". `MARK_AS_OVER_ANNOTATED` is
+corrective too, and carries **587 rows, six times as many**, with a single string on 202 of
+them. "Nearly all" was also wrong on its own terms: `KEEP_AS_NON_CORE` and `ACCEPT` together
+are 85% of scoped rows and 72% of groups, not nearly all.
+
+The lesson is about operationalization, not arithmetic. The rule names a *property*
+("corrective"); the measurement named *one action*; and because the narrower figure was the
+one that made the point cleanly, nothing prompted a check that the two matched. When a rule
+and its measurement are worded differently, the gap is where the finding hides.
+
+The `REMOVE` breakdown, for reference, is Casp3 23; Ang2 18, 8, 4 and 3; Uox 12; Hsp90aa1 8;
+Cyp1a1 7; Agtr1a 5; Ednra 5.
+
+**A caveat that the `MARK_AS_OVER_ANNOTATED` figure does not settle.** The two actions are
+not equally exposed to the objection. `REMOVE` withdraws an annotation, so its reason has to
+carry a per-annotation verdict; `MARK_AS_OVER_ANNOTATED` withdraws nothing and records a
+scoping judgement, where one class rationale across many terms is more often the honest
+description. So the 587 is not 587 defects. But it is 587 rows the rule as stated reaches and
+the measurement did not — and the second-largest group is a clear instance: `Bcl2`'s 35 rows
+over 19 terms on *"this term is too indirect, broad, or mechanistically ambiguous"*, a
+three-way disjunction that never says which disjunct applies, which is the shape dismantled
+under `REMOVE` in that same file.
+
+Apply this section's own qualifier-and-aspect test and the disjunction visibly breaks. Those
+19 terms span **all three aspects and five qualifiers** in `Bcl2-goa.tsv`: 3 `enables` MF, 21
+`involved_in` and 8 `acts_upstream_of_or_within` BP, 2 `located_in` and 2 `part_of` CC (36
+GOA rows for 35 review rows — one term carries a duplicate). So *"mechanistically ambiguous"*
+cannot be what is wrong with `GO:0043209 myelin sheath`, a curated `located_in` IDA on
+PMID:7953633; and *"too indirect"* cannot be what is wrong with `GO:0015267 channel activity`,
+an `enables` MF claim. Each row probably has one fitting disjunct and the reader is never told
+which. That is the argument **for** the follow-up, recorded here so the deferral is not
+mistaken for a judgement that the group is fine. The Bcl2 group is measured and recorded,
+**not repaired**: doing it properly is per-term work across its 19 terms, and this
+paragraph's own history is a warning against opportunistic rewrites (see the Ang2 note
+below).
+
+The largest group, 202 rows on *"This overstates the direct role of the gene product; the
+curated model…"*, is a separate case — a cross-file class rationale spanning far more terms,
+and mostly though not wholly outside this review: Edn1 114, Ednra 32, Tnfrsf1a 31, Agtr1a 25,
+so 88 of the 202 sit in files edited here.
+
+**That script exists because these figures had been wrong twice before it did**, the second
+time in a way no reader could have caught. The published pair — 160 groups, and 7 over 63
+under `REMOVE` — turned out to come from three mutually inconsistent predicates in a single
+sentence: the `REMOVE` breakdown reproduces only with a ≥40-character minimum on the reason
+string, the "177 rows" figure only with rows deduplicated by (file, term), and 160 reproduces
+under neither. `grep`-able counts of a folded scalar need a parser, and a figure a reader
+cannot reproduce does not go wrong quietly — it goes wrong invisibly. State the predicate,
+ship the command, and quote no number you cannot re-run.
+
+The length cutoff was not a harmless tuning choice either. It hid Ang2's three largest
+`REMOVE` groups — 20, 8 and 4 rows on "No direct mouse evidence.", "Stale ISO transfer." and
+"Do not stack inference on inference." — the most boilerplate-looking rows in the corpus and
+exactly the ones the paragraph wants counted. So no minimum length is applied here, and
+counting those 32 rows is what turned up the finding below.
+
+### What the count is for: a pointer, not a verdict
+
+All 32 are `ISO` or `IEA` — no experimental row among them — and inspection split them in two.
+The question that separates them is **what the reason is about**:
+
+- **12 rows** (8 + 4) shared one string in `reason` *and* one in `summary`, and are
+  **legitimately** shared: "the current human source no longer carries this term", "the
+  current human source is itself inferred-only (IBA)". Those are claims about the
+  **transfer**, and one `GO_REF:0000119` transfer from one human source fails the same way
+  for every term it carried. Restating it eight times would be duplication, not diligence.
+- **20 rows** were the real defect, and not the one a shared string suggests. Their `reason`
+  said only "No direct mouse evidence." — which is not an argument against an `ISO` at all,
+  since transferred-without-mouse-data is precisely what `ISO` asserts. The row-specific
+  material sat in `summary` ("Transferred heparin binding from human ANG, not shown for mouse
+  Ang2"), which restates the same absence. So 20 corrective verdicts rested on a
+  **tautology**, while the file's neighbouring rows carried the real argument — the functional
+  divergence `PMID:8633065` documents. Those 20 now carry it (18 `ISO` rows share the
+  transfer-level wording; the 2 `IEA` rows name the automated import instead). **No action
+  changed**; what changed is that the reason now says something that could be wrong.
+
+  And the first repair got the paper wrong, which is the part worth keeping. It said
+  `PMID:8633065` showed Angrp "lacks Ang's angiogenic activity, **the one function directly
+  compared**". The abstract compares three things: Angrp is not angiogenic; that is *not* a
+  catalytic deficiency, because Angrp's ribonucleolytic activity toward tRNA is somewhat
+  *greater* than Ang's; and an inability to bind cellular receptors is implicated, with poor
+  conservation of the receptor recognition sequence 58-69. The middle finding is quoted as
+  `supporting_text` **six times in the same file** — on four `ACCEPT`ed rows (`GO:0004540` as
+  IBA, IEA and ISO, and the narrower `GO:0004549 tRNA-specific ribonuclease` as ISO), in
+  `core_functions`, and in the `reference_review.findings` — so one document was
+  simultaneously accepting that Angrp is the *better* RNase, on a *more specific* RNase term,
+  and removing RNase-driven terms on the ground that it had lost activity. The reasons now
+  state all three findings and rest on the receptor-binding defect, which is what actually
+  blocks the receptor-mediated uptake that ANG's nuclear and stress-response biology depends
+  on.
+
+  Note where the right reading already lived: the file's own `references[].findings` for
+  this PMID recorded all three results, including that the angiogenic loss is "attributed to
+  defective cellular receptor binding rather than loss of RNase catalytic capacity" — while 20
+  `reason` fields citing the same paper said otherwise. A `reference_review` is the curator's
+  reading of the paper; when a `reason` citing that paper disagrees with it, the `reason` is
+  the thing to check first.
+
+  The `summary` fields were left as they are, deliberately. "Transferred heparin binding from
+  human ANG, not shown for mouse Ang2" is an accurate *description* of the annotation and its
+  status; it was only a defect while it was also the whole argument. Summary describes, reason
+  argues — and conflating the two is what produced the tautology in the first place.
+
+Note what the two groups have in common after the fix: the repaired reason is *also* one
+shared string across 18 rows, and belongs there. Sharing was never the defect. A claim about
+the term must be per-term; a claim about the source or the transfer covers every term that
+transfer moved; and a claim that merely restates the evidence code is not a claim.
+
+**`source_label` is perspectival, and the three-verb standard does not reach it.** The verbs
+(*resolved* / *corroborated* / *asserted from external knowledge*) govern provenance claims in
+prose, where the `comment` says how an identity was established. `source_label` is a readable
+handle for the source *as it stands to this target* — the same role `preferred_term` plays
+beside a PANTHER `term.label`, which `CLAUDE.md` already separates from the checked field.
+
+That makes a cross-file consistency check on it actively wrong. Of **64 distinct MOD ids**
+carrying a label in `genes/mouse` (89 labelled sources; MOD = `MGI`/`RGD`/`SGD`/`FB`/`WB`/
+`ZFIN`/`TAIR`/`PomBase`/`dictyBase`/`CGD`/`Xenbase`), three are labelled differently in
+different files, and all three are correct:
+
+| id | in one file | in the other |
+|---|---|---|
+| `MGI:MGI:1346858` | `mouse Mapk1 (the review target itself)` | `mouse Mapk1 (ERK2, the target's closest paralog)` |
+| `MGI:MGI:1346859` | `mouse Mapk3 (ERK1, the target's closest paralog)` | `mouse Mapk3 (the review target itself)` |
+| `MGI:MGI:88316` | `mouse Ccne1 (cyclin E1)` | `mouse Ccne1 (this gene)` |
+
+The **identity half agrees in all three**; only the relationship clause differs, because the
+relationship differs. So check the symbol, leave the parenthetical alone.
+
+Where to check it needs saying, because the obvious answer does not reach most rows. When
+this was first measured only **26 of the 89** labelled sources had a `comment` carrying a
+provenance verb (**32** at the time of writing, after the repairs below); on the rest the
+comment is biological commentary ("A mammalian D-type cyclin seed at the same node") and the
+symbol is asserted in the label alone, with nothing to check it against. So the rule
+is not *check the label against the comment* — it is that **the symbol is an identity claim
+wherever it is written**, and is owed the same standard there: establish it from the local
+index (PAINT seeds, `*-entries.csv`, the GOA `WITH/FROM`) or write no label. A label whose
+symbol you cannot establish is a reason to write no label, not to invent one; the
+`SGD:S000004812` seed in `Ccnb1 GO:0005737` is cited by bare identifier for exactly that
+reason, three lines below a labelled row whose comment makes no identity claim at all.
+
+**A self-label is not an identity claim, and does not need establishing.** Of the 89, **27**
+name the review target itself — "mouse Ccnb1 (this gene)", "the review target itself", or the
+bare symbol — where the symbol is the file's own `gene_symbol` and there is nothing to look
+up. The rule reaches the other **62**: labels naming a *different* gene, where the symbol
+asserts something a reader could not otherwise check. **31 of those carry a provenance
+clause; 31 do not**, across ten files: Sox2 6, Mapk1 5, Ifi204 4, Mapk3 4, Drd1 3, Frmpd2 3,
+Nf1 3, Agtr1a 1, Aldh2 1, Ccne1 1.
+
+Reproduce the split, and the residual by file:
+
+```
+python3 projects/IBA_REVIEW/shared_reason_groups.py --classify-labels
+python3 projects/IBA_REVIEW/shared_reason_groups.py --classify-labels --list
+```
+
+**The classifier has to be stricter than "contains the target's symbol", and the first
+version was not.** An earlier revision matched the `gene_symbol` as a word anywhere in the
+label and published 32/57/28/29 — five rows too many on the self side, every one of them a
+*cross-species ortholog*: "rat Casp3" ×2, "rat Aldh2", "Drosophila Nf1", and a `Fbxo2` label
+whose whole point is *"not mouse Fbxo2, whose own record is MGI:2446216"*. Those are exactly
+the identity claims the rule exists for — "rat Casp3" in a mouse file asserts something about
+a rat gene a reader cannot check — and the loose match filed them under "nothing to
+establish". A label is a self-label only when it carries a self-marker ("this gene", "the
+review target itself") or *is* the bare symbol (optionally "mouse "-prefixed and with a
+parenthetical), and carries no other-species qualifier and no negation. `Ednra`'s "zebrafish
+ednraa" is why the symbol test must be an exact match rather than a substring.
+
+That predicate is now `is_self_label()` in the script rather than prose, with the boundary
+cases as self-test arms — because the bare-symbol form is the only one classified by
+comparison rather than by a visible marker, and so the first thing a refactor breaks.
+`Hsp90aa1`'s "Hsp90aa1" and `Grb2`'s "Grb2" are the self side of that boundary; `Ccnb1`'s
+"budding-yeast CLB5" is the foreign side. Substituting the old word-boundary predicate now
+fails the self-test rather than silently republishing 32/57.
+
+Two of the five were unprovenanced, so the residual gained a file. **`Aldh2 RGD:69219` is the
+highest-leverage entry**: `genes/rat/Aldh2` does not exist, the accession appears nowhere
+name-carrying in the repository, and it is the ISO donor for nine further rows in that same
+file — one establish would ground ten rows.
+
+**The label is the weaker signal, and the accession is the stronger one.** Two further
+misclassifications of the same shape turned up outside mouse — `ACRBP` and `ADAMTSL5` each
+cite a mouse ortholog whose label the species list did not cover — and chasing them
+through that list was the wrong layer. A MOD accession names a gene in exactly one
+species, so `MGI:` in `genes/human` is the mouse ortholog *however the label reads* — and
+because `MOD_PREFIXES` is derived from a `MOD_ORGANISM` map rather than listed separately,
+every prefix in that map resolves. `mod_source_is_foreign()` applies that first; of the
+825 labelled species-scoped sources across the whole corpus it settles **708**, leaving **117**
+same-species rows to `is_self_label()`, whose live remaining job is separating the target
+from its own **paralogs** ("mouse Bax" in `Bcl2`, "Dictyostelium cAR1-type paralog" in
+`carD`: 77 of the 117). The word list is now the fallback, not the decision.
+
+That matters because the label can be silent. Four rows move corpus-wide, all in
+`genes/human`, and **two of them no word list could ever have reached**:
+`genes/human/FEN1` cites `MGI:MGI:102779` as bare **"Fen1"** — case-insensitively equal to
+its own `gene_symbol` FEN1, with no species word present to match. `ACRBP`'s "Acrbp (Mus
+musculus)" and `ADAMTSL5`'s "Adamtsl5 (M. musculus)" the word list does now catch, but the
+accession catches them too and would have without the patch. Afterwards `genes/human` has
+**0** MOD self-labels, which is right *by construction*: no MOD namespace maps to human, so a
+human review's own annotation can never arrive under one.
+
+**Deriving one list from another checks it against nothing.** `MOD_PREFIXES` is derived
+from `MOD_ORGANISM`, which makes the two agree with *each other* and neither with the
+corpus — and `MOD_ORGANISM` was itself written from a roster of model-organism databases.
+It was wrong in both directions. `AGI_LocusCode` is used **22 times, 15 of them on labelled
+sources**, and was absent: because the derived `MOD_PREFIXES` gates `classify_labels`'
+`startswith` filter, those rows were discarded *before* `mod_source_is_foreign()` could
+see them, so they were missing from all four buckets and from the denominator. It is not
+an exotic namespace — it is the Arabidopsis locus spelling of the species `TAIR` already
+maps to (`AGI_LocusCode:AT2G17800` where GOA writes `TAIR:locus:2827916`), i.e. the same
+both-written-forms problem as `Mus musculus` / `M. musculus`, one field over. In the other
+direction `Xenbase` sat in the map with **0** uses and a `genes/XENLA` value that is not a
+directory — the identical invented-entry defect described below, in the map the gate
+derives everything from, and the arm written to catch that class checked only the sibling
+map. Adding the one and dropping the other moves the corpus denominator 714 → **729**
+(gate 597 → 612) and leaves mouse untouched.
+
+The same grep then caught the roster one level up. `ensembl:` was excluded on the stated
+ground that it "names no gene in exactly one species" — true of `UniProtKB`, `PANTHER`,
+`InterPro`, `GO`, `RHEA` and `EC`, and **false of `ensembl`**: all 312 of its sources are
+`ENSMUSP` (216) or `ENSRNOP` (96), so the species is readable from the accession string,
+which is more than `UniProtKB` offers. That left **96 labelled sources** outside the gate —
+and the hole is precisely the `FEN1` case, since a bare-symbol `ensembl:ENSMUSP…` label in
+`genes/human` would have no namespace to catch it. Not live today (none of the 96 is filed
+self by the label predicate), but closed rather than documented, because all 96 sit in
+`genes/human` and none in `genes/mouse`, so nothing published moves: denominator 729 →
+**825**, gate 612 → **708**, the 117 same-species rows and their 77 paralogs unchanged.
+
+`--check-coverage` now also **prints the prefixes it declines** instead of skipping them.
+The roster deciding what counts as a gap was itself hand-written, so it could silently
+narrow what the checker was allowed to find — which is exactly how `ensembl` stayed outside
+the gate while the checker reported zero gaps. Printing the declined list puts that
+judgement in front of the reader on every run.
+
+`--check-coverage` now runs the corpus greps for all three lists and reports gaps in both
+directions, so "the list matches the corpus" is something to run rather than something to
+trust:
+
+```
+python3 projects/IBA_REVIEW/shared_reason_groups.py --check-coverage
+```
+
+It reports 0 gaps, and re-introducing any of the four original defects makes either it or
+the self-test fail.
+
+**Its scan is always the whole corpus, not the glob**, unlike every other mode here.
+The maps it audits are global objects, and one of its two directions — "the roster carries
+an entry the corpus never uses" — is simply false over a subset: under this script's default
+mouse glob it reported four such gaps for `AGI_LocusCode`, `WB`, `dictyBase` and `ensembl`,
+every one of which `genes/ARATH`, `genes/worm`, `genes/DICDI` or `genes/human` does use. A
+roster audit whose answer depends on which files you happened to pass is not an audit, so
+this mode does not scope its scan by the glob. (A glob matching nothing is still an error,
+as in every mode — that catches the typo, it does not narrow the audit.)
+
+`ORGANISM_WORDS` is keyed by directory, and its scope is the directories that carry a
+`source_label`, enumerable with
+
+```
+grep -rl 'source_label:' genes/ --include='*-ai-review.yaml' | cut -d/ -f2 | sort -u
+```
+
+— every one of which must be a key, which `--check-coverage` enforces on each run. The
+count is deliberately not written down here: it was, and it went stale the first time a
+new organism gained a labelled source (`POPTR`, added as a key for exactly that reason). A
+first pass at that list was assembled from a taxonomy rather than from the corpus and got
+it wrong in both directions: it omitted `VIBCH`, `PSEPK`, `NEUCR` and `ANOGA`, which do
+carry labels (`PSEPK` is the second-largest gene directory in the repo), while adding
+`PIG` and `XENLA`, which are **not directories in this repository at all**. A self-test arm now requires every key to name a real `genes/<key>`
+directory, which is what catches the invented half; the species names for the four real ones
+are read off each directory's own `taxon.label`. `CHICK` is kept as a key with no labels
+yet, because that directory does exist.
+
+**None of this moves mouse.** Every mouse self-label is MGI-sourced — mouse's own MOD — so
+the gate is a no-op there and the 27 / 62 / 31 / 31 figures above are unaffected. The
+composition is named `is_target_source()` rather than inlined, so a self-test arm can bite on
+the gate being *applied*; testing `mod_source_is_foreign()` alone would stay green if the call
+were dropped from the caller.
+
+Beware two numerical coincidences in the 27 / 62 / 31 / 31 split above, since they are the
+kind that hide an error. **31 appears twice** and means different things — 31 third-party
+labels carry a provenance clause and 31 do not. And **32** is the count of *all* labelled
+MOD sources whose comment carries one of the three verbs, which is 31 third-party **plus
+one self-label** (`Gulo`), so 31 and 32 are both right about different sets rather than
+one being a correction of the other.
+
+The reason the split matters is that it stops the count from being read as a defect count.
+Sixty-two unprovenanced labels would be alarming; 31 third-party labels in ten files is a
+chore. Measuring the wrong denominator turns a chore into an alarm, or the reverse — and the
+32/57 revision above did the second thing to itself.
+
+**A `propagation_review` with no `source_entities` is the norm in at least one file, not an
+anomaly.** 16 of the 76 blocks carry none — 15 in `Mapk1`, 1 in `Scgb1a1` — so "no sources at
+all" is not the tell for the stale-block defect this document catalogues. The tell was the
+*accepting action* under a failure-asserting root cause, which is what the auditor's third
+arm keys on; a corrective action with no sources trips nothing, and should not.
+
+**A `propagation_review` block is not owed symmetrically across paralogs; the *action* is.**
+`Mapk1` carries **18** blocks against `Mapk3`'s **2**, and 11 of Mapk1's ISO-row blocks sit
+on a (term, evidence) pair whose `Mapk3` twin row has none — the ciliary trio
+(`GO:0005929`, `GO:0036064`, `GO:0097542`) is the clean case: same term, same ISO evidence,
+same `GO_REF:0000119`, same `MARK_AS_OVER_ANNOTATED` in both files, diagnosis recorded on one.
+
+That asymmetry is not a divergence and `--pair` is right to report clean. A block is optional
+on an ISO row by construction — 528 such rows corpus-wide carry none, because ISO is pairwise
+ortholog transfer with no PANTHER node behind it — so its *presence* tracks which rows a
+reviewer happened to work, while the *verdict* is what must agree. Mirroring a subset would
+make things worse rather than better: filling the three ciliary blocks leaves eight twins
+still bare, and a reader who saw the file made symmetric on three would reasonably infer it
+was symmetric on all. Either do all 11 or state the convention. This states it — and names
+the 11, so choosing the other option does not start with a re-derivation.
+
+Mapk1's 18 blocks are **2 IBA + 16 ISO**, and the 16 split **11 with a bare `Mapk3` twin**
+plus **5 whose term has no `Mapk3` row at all**, which is what lets the paragraph be checked
+against the files:
+
+- **the 11**: `GO:0005929`, `GO:0010759`, `GO:0032206`, `GO:0032991`, `GO:0034198`,
+  `GO:0036064`, `GO:0046697`, `GO:0051403`, `GO:0061514`, `GO:0097542`, `GO:0120041`
+- **the 5**: `GO:0010800`, `GO:0042307`, `GO:0043627`, `GO:0045542`, `GO:0045893`
+
+Every figure above comes from a parse of `propagation_review.source_entities`, not a `grep`:
+159 of the 234 sources in `genes/mouse` carry a label, of which 89 are MOD-prefixed, split
+27 self / 62 third-party, and 32 of the 89 carry a `comment` matching one of the three
+provenance verbs (*resolved* / *corroborated* / *asserted from external knowledge*) — the
+same regex that returned 26 before the repairs. Where a count here moves between revisions it
+is usually the corpus that moved; where the split moved, it was the classifier. An
+earlier revision of this paragraph said 66 ids over 91 sources, which is the same sweep run
+as *not-`UniProtKB`, not-`PANTHER`* — a filter that also admits the two `InterPro:` sources in
+`Serpinh1`. Same finding either way; different set.
+
+**A self-seed marks node membership always; it marks independent grounding only when the
+target's own experimental annotation behind the IBD is itself RETAINED by this review.**
+The operative word is *retained*, not *same-term*. An earlier revision of this sentence said
+"same-term", which is narrower than both PAINT semantics and the practice underneath it: an
+IBD seed is a gene whose experimental evidence the curator judged relevant to the node, which
+routinely means a **descendant or mechanistically adjacent** term rather than the propagated
+one. Of the eleven blocks in `genes/mouse` carrying the canonical gloss
+(`grep -rn "grounding exists on the target" genes/mouse`), only three ground on the block's
+own term; **six legitimately ground on a different one** — `Mapk1 GO:0035556` and `GO:0007166`
+on `GO:0000165`, `Mapk3`'s pair on `GO:0070371`, `Nf1 GO:1902531` on `GO:0005096` and
+`GO:0007265` (its comment says so outright: "which are among the descendant evidences behind
+the IBD"), and `Sox2 GO:0030182` on `GO:0045665`. A literal same-term check would report all
+six as defects, and a rule that mostly flags correct work is a rule that gets ignored.
+
+`Acadl GO:0005737` is the cleanest case: it has **no** experimental `GO:0005737` row at all —
+the only one is the IBA itself — and its grounding is the `located_in GO:0005739 mitochondrion`
+IDA (`ECO:0000314`, PMID:26767982), which QuickGO confirms has `GO:0005737` among its
+`is_a`/`part_of` ancestors and which this review retains as `KEEP_AS_NON_CORE`. Textbook under
+the descendant reading; a defect under "same-term".
+
+`CLAUDE.md` glosses a self-seed as "a marker that experimental grounding exists on the target
+itself", and that is the usual case — but it presumes this review still stands behind that
+annotation. Where the experimental row the self-seed rests on is one this review removes, the
+self-seed still shows the target is inside the clade and `SUPPORTS_TRANSFER` is still right
+(`CIRCULAR_OR_REDUNDANT` is forbidden for a self-seed), yet citing it as grounding leans on
+evidence the same file rejects. Say node membership and say explicitly that grounding is
+not claimed. One block in `genes/mouse` needed this — `Agtr1a GO:0006954`, whose own IGI
+is `REMOVE`d on full text that *is* available. Its comment asserted the canonical gloss
+until `9ce63aa88`, so the block as it now stands is the corrected form, not the defect.
+The other twelve self-seed claims cite annotations their files retain, so the canonical
+gloss holds for them.
+
+Note what carries the `Agtr1a` example: the IGI being **removed**, not the term matching.
+The retained test also catches a case a same-term test would wave through. `Grb2`'s block
+sits on `GO:0007165`, and the experimental row nearest it by term is `GO:0008180 COP9
+signalosome` (IDA, PMID:22561606) — which this very file marks `MARK_AS_OVER_ANNOTATED`,
+so it is precisely what must **not** be cited as grounding. What does ground the block is
+`GO:0005091 guanyl-nucleotide exchange factor adaptor activity` (IDA ×3, all `ACCEPT`), a
+*different* term: the SOS1-recruitment adapter activity that couples receptors to Ras,
+matching the block's own `GO:0007165` → `GO:0007265` refinement.
+
+**Finally, keep the row's own evidence pointing the same way as its verdict.** When an action
+is withdrawn, the `summary` and the `supported_by` have to move with it; otherwise the block
+asserts a conclusion its action has given up. Both have been missed here — 42 summaries that
+still argued for removal, and six `supported_by` entries citing the very argument the new
+reason withdrew. A `propagation_review` self-seed comment is the same hazard in another
+place: do not cite, as the target's experimental grounding, an annotation this review
+elsewhere removes. Of 13 such grounding claims in `genes/mouse`, one (`Agtr1a GO:0006954`)
+did exactly that, until `9ce63aa88` rewrote it to the node-membership form above.
+
+### What an IBA actually asserts, and two ways to misread the WITH/FROM
+
+An IBA is not a similarity transfer from one gene to another. Behind every IBA is a
+**PAINT curator's IBD** (Inferred from Biological aspect of Descendant): the curator
+inspected the family tree and the multiple sequence alignment, read the experimental
+annotations of *all* extant members, decided at which node the function arose — sometimes
+recent, sometimes as deep as LUCA — and placed the assertion there. The IBA rows are then
+the mechanical consequence of descent from that node. So an IBA carries a considered
+phylogenetic judgment that no pairwise transfer does, and reviewing it means arguing with
+that judgment, not with a similarity score.
+
+Two corollaries, both of which are easy to get backwards:
+
+**A small donor list does not mean weak support.** A node seeded by a single well-characterized
+MOD or human gene can be perfectly strong, because the curator's claim is about where the
+function arose, and they made that call with the whole alignment and the whole tree in view.
+Counting donor genes is not a measure of evidential strength. If you want to challenge an IBA,
+challenge the node placement — is the target inside or outside the clade that inherited the
+function, and is there target-specific evidence of loss or divergence?
+
+**The target appearing in its own `WITH/FROM` is correct and expected.** When a gene has its
+own experimental annotation for the term, that annotation is one of the descendant evidences
+the curator used to place the IBD, so the gene legitimately appears among the sources of the
+IBA it later receives. This is **not** circular and **not** self-citation. It means the target's
+own experimental data helped establish that the function is ancestral, and the IBA is then
+saying something additional: that the function is inherited rather than lineage-specific.
+Do **not** mark such a source `CIRCULAR_OR_REDUNDANT` and do not describe it as inflating
+support.
+
+`CIRCULAR_OR_REDUNDANT` is for genuine circularity — a propagation whose source is *itself*
+a propagated annotation with no experimental grounding anywhere in the chain, or a source
+that adds nothing because the target already has stronger direct evidence for the same claim.
+Target-in-own-`WITH/FROM` is the opposite situation: it is a marker that experimental
+grounding exists, and on the target itself.
+
+Before a strong `REMOVE` on an IBA row, record that these checks were done:
+
+- The GO term definition, aspect, qualifier, and taxon constraints were checked.
+- The GOA `WITH/FROM` field was read and the PANTHER `PTN...` node and seed
+  proteins were recorded.
+- The target and seed proteins were placed in their PANTHER family/subfamily
+  context. Cross-subfamily propagation is triage evidence, not a verdict.
+- The source annotation or family-node assertion was checked separately from the
+  propagation decision.
+- Target-specific evidence was checked where relevant: direct experiments,
+  curated `NOT` rows, active-site residues, domain architecture, localization,
+  isoforms, organismal context, and lineage constraints.
+- `review.reason` states the biological rationale, while
+  `review.propagation_review` records the mechanical root cause, failure modes,
+  and source entities.
+
+## Slides
+
+- [Slides](IBA_REVIEW/slides/IBA_REVIEW-slides.html) (Marp source: [IBA_REVIEW-slides.md](IBA_REVIEW/slides/IBA_REVIEW-slides.md)) — AI generated
 
 ## IBA Quality Issues
 
@@ -22,16 +834,27 @@ While IBA is a powerful curation tool, it can produce problematic annotations wh
 - Reality: Epe1 has degenerate active site (HVD vs HXD), no detectable activity
 - **Impact**: Misleading annotation propagated via phylogenetic inference
 
-### 2. Ubiquitin-Like Modifier Confusion
+### 2. Ubiquitin-Like Modifier Specificity: IBA as a Positive Control
 
-**The Problem**: Function from ubiquitin E1 transferred to ISG15-specific E1.
+**The contrast**: UBA7 shows the opposite of an IBA failure. The IBA rows correctly
+capture the conserved ISGylation pathway, while naive domain propagation and some
+non-IBA annotations blur ISG15-specific E1 activity into generic ubiquitin-like or
+ubiquitin terms.
 
 **Example - UBA7 (human)**:
-- IBA annotations from ubiquitin pathway:
-  - `GO:0008641` (ubiquitin-like modifier activating enzyme activity) - too general
-  - Various ubiquitin-related terms
-- Reality: UBA7 specifically activates ISG15, not ubiquitin, in mammals
-- **Impact**: Generic terms obscure specific function
+- Correct IBA annotations:
+  - `GO:0019782` (ISG15 activating enzyme activity)
+  - `GO:0032020` (ISG15-protein conjugation)
+  - `GO:0045087` (innate immune response)
+- Over-generic or wrong non-IBA rows:
+  - `GO:0008641` (ubiquitin-like modifier activating enzyme activity) - `IEA`
+    from InterPro2GO; technically related but too general.
+  - `GO:0004842` (ubiquitin-protein transferase activity) and
+    `GO:0016567` (protein ubiquitination) - non-IBA ubiquitin terms that should
+    be redirected to ISG15 activation/conjugation.
+- Reality: UBA7 specifically activates ISG15, not ubiquitin, in mammals.
+- **Impact**: IBA provides a useful specific annotation that corrects the less
+  discriminating domain/keyword propagation.
 
 ### 3. Substrate Specificity Transfer
 
@@ -66,14 +889,23 @@ While IBA is a powerful curation tool, it can produce problematic annotations wh
 
 The subfamily SF135 shares only 24% identity with synthases - less than synthases share with each other (43%). The longest branch length indicates maximum divergence and neo-functionalization.
 
-### 5. Secondary Activity Promotion
+### 5. Paralog/Secondary Activity Transfer
 
-**The Problem**: Non-core activities from well-characterized orthologs promoted to uncharacterized proteins.
+**The Problem**: A real activity in one paralog or source subfamily can be
+promoted to a related but distinct target whose closest characterized comparator
+supports a different substrate class. This should not be called
+`KEEP_AS_NON_CORE` unless there is evidence the target actually has the activity
+as a secondary function.
 
 **Example - LPL1 (C. albicans)**:
 - IBA annotation: `GO:0047372` (monoacylglycerol lipase activity)
-- This is likely substrate promiscuity, not core function
-- **Action**: KEEP_AS_NON_CORE rather than ACCEPT
+- Source trace: `PANTHER:PTN000773837|SGD:S000003112`, corresponding to the
+  S. cerevisiae ROG1 monoacylglycerol lipase source
+- Closest characterized LPL1 comparator: S. cerevisiae LPL1, a lipid-droplet
+  phospholipase B acting on glycerophospholipids
+- **Action**: UNDECIDED for C. albicans LPL1 pending source-tree and substrate
+  review; do not mark as non-core without evidence that Candida LPL1 hydrolyzes
+  monoacylglycerols
 
 ### 6. Organism/Tissue Context Transfer
 
@@ -85,6 +917,144 @@ The subfamily SF135 shares only 24% identity with synthases - less than synthase
 - Reality: Human RIMBP2 functions mainly at CNS synapses (hippocampal, auditory)
 - **Impact**: Term implies NMJ function when actual function is at central synapses
 - **Root cause**: IBA quality limited by organism-specific biases in source annotations
+
+### 7. Pseudo-Enzyme Propagation Is a Recurring Human Pattern
+
+**The Problem**: The Epe1 pseudo-demethylase case is not isolated. Catalytic-residue loss with fold retention recurs across human families, and IBA repeatedly transfers the ancestral enzymatic activity to the catalytically dead member. These are the **most defensible** REMOVE calls, because the catalytic deficiency is independently documented in UniProt.
+
+**Examples (REMOVE — each verified against the UniProt record, not just the review)**:
+- **DPYSL2 / CRMP1 / DPYSL3** — `GO:0016812` (metallo-hydrolase activity, cyclic amides): the CRMP/dihydropyrimidinase-like proteins are explicitly flagged by UniProt CAUTION — *"Lacks most of the conserved residues that are essential for binding the metal cofactor and hence for dihydropyrimidinase activity."* **Confirmed first-hand by MSA** ([msa/RESULTS.md](IBA_REVIEW/msa/RESULTS.md)): aligned against active dihydropyrimidinase (DPYS), all five CRMP/DPYSL paralogs have lost the carbamylated catalytic Lys (K159→L/M/Q) plus multiple Zn-coordinating His/Asp. They are non-catalytic cytoskeletal regulators.
+- **AGO4** — `GO:0004521` (RNA endonuclease activity): UniProt FUNCTION states directly that AGO4 *"Lacks endonuclease activity and does not appear to cleave target mRNAs"* — only AGO2 is the catalytic slicer in humans. **MSA confirms** ([msa/RESULTS.md](IBA_REVIEW/msa/RESULTS.md)) AGO4 carries two substitutions in the catalytic tetrad (D669G, H807R) vs intact AGO2; usefully, the same alignment shows AGO3 *retains* the tetrad, so the "non-slicer" story is residue-specific, not a blanket family claim.
+- **UBAC2** — `GO:0004252` (serine-type endopeptidase activity): UBAC2 has a rhomboid-**like** fold (a known inactive-rhomboid/pseudoprotease clan) but UniProt attributes no protease function — its curated roles are as an ERAD/ER-phagy adaptor. **Now confirmed by MSA** ([msa/RESULTS.md](IBA_REVIEW/msa/RESULTS.md)): against active GlpG/RHBDL2/PARL, UBAC2 has lost *both* residues of the Ser-His catalytic dyad (S→L131, H→A183). *(This supersedes the earlier caveat that the residue loss was only inferred from the inactive-rhomboid classification.)*
+- **AKTIP** — `GO:0061631` (ubiquitin-conjugating enzyme activity): UniProt CAUTION states it *"Lacks the conserved Cys residue necessary for ubiquitin-[conjugating]"* activity. It is in the E2 PANTHER family (PTHR24067) and the IBA is inferred from many genuine UBE2 enzymes, but as a UEV-domain protein it is a catalytically dead pseudo-E2 (a component of the FTS/Hook/FHIP complex). A second annotation even records the NOT form.
+- **DPYSL4** — `GO:0016812`: a fourth CRMP-family member (Dihydropyrimidinase-related protein 4) carrying the same metallo-hydrolase IBA on the same basis as DPYSL2/3/CRMP1 — the whole CRMP/dihydropyrimidinase-*related* clade is non-catalytic (see the MSA above); only true dihydropyrimidinase (DPYS) retains the activity.
+- **CASP12 (human)** — `GO:0004197` (cysteine-type endopeptidase activity): UniProt RecName is literally *"Inactive caspase-12."* Most humans carry a truncated, catalytically dead variant; the caspase-family protease IBA is over-propagated. **Note the mechanism is truncation, not site degeneracy** — MSA shows the full-length Csp12-L variant retains an intact His-Cys dyad and the canonical QACRG motif ([msa/RESULTS.md](IBA_REVIEW/msa/RESULTS.md)). The inactivity comes from a nonsense variant at codon 125 in the reference allele, upstream of the catalytic domain.
+- **Serpinh1/HSP47 (mouse)** — `GO:0004867` (serine-type endopeptidase inhibitor activity): the textbook **non-inhibitory serpin** — UniProt describes a collagen-specific ER molecular chaperone (*"Collagen-binding protein"*), not a protease inhibitor. The serpin-fold IBA propagates inhibitory activity HSP47 does not have.
+- **Lesson**: a degenerate/absent active site, **independently documented** (UniProt CAUTION/FUNCTION, an "Inactive"/non-inhibitory RecName, or — best — the missing catalytic residue seen in an MSA), is the strongest single signal that an enzymatic IBA is wrong. Residue-verified by alignment: Epe1 (Fe-ligand His370→Tyr, against its own KDM2A/KDM2B IBA donors), the CRMP family DPYSL2/3/4/CRMP1 (amidohydrolase), AGO4 and worm wago-4 (slicer), UBAC2 (protease), AKTIP (E2 ligase), ADGB (calpain), ADPRHL1 (ARH2), SEPHS1 (selenophosphate synthetase), CPS1 (GATase half-reaction), KDX1 (pseudokinase), SSZ1 (Hsp70 ATPase), cts2 (GH18 chitinase), PGRPLC (PGRP amidase), and *Arabidopsis* CRY1 (photolyase). HSP47 (protease inhibitor) rests on the non-inhibitory RecName.
+- **Counter-lesson — check the mechanism, not just the conclusion.** A systematic residue pass over this pattern found **4 of 17 targets with a fully intact catalytic site**: CASP12 (truncation), LPA (blocked zymogen activation junction), AZIN1 (loses *substrate* contacts, keeps the catalytic Cys — while its paralog AZIN2 does the opposite), and HSPA13 (intact nucleotide site; the issue is the substrate-binding domain). Each conclusion survives, but the stated reason did not. "Lacks the catalytic residues" is cheap to assert and was wrong about a quarter of the time here — see [msa/RESULTS.md](IBA_REVIEW/msa/RESULTS.md).
+
+### 8. Partial Sub-Activity Loss Within a Multidomain Family
+
+**The Problem**: Distinct from full pseudo-enzymes — the protein **retains part of the ancestral activity but lost a specific sub-activity**, and IBA transfers the lost sub-activity.
+
+**Examples (REMOVE — verified)**:
+- **CAPG (human)** — `GO:0051014` (actin filament **severing**): CAPG caps but does **not** sever. The original characterization (cached PMID:1322908) states verbatim that CAPG *"reversibly blocks the barbed ends of actin filaments but does not sever preformed actin"*. The severing term over-extends from the gelsolin/villin family; CAPG retains capping only.
+- **human/CRYAA** — `GO:0042026` (protein **refolding**): αA-crystallin is an ATP-independent **holdase** that prevents aggregation but cannot refold clients. This one is corroborated **inside GOA itself**: there is an explicit curated `NOT|involved_in` (ISS) annotation to GO:0042026, which the IBA directly contradicts. UniProt describes only aggregation-prevention chaperone activity, no refolding.
+- **Worm small heat-shock proteins** — `GO:0042026` (protein refolding): a stronger version of the CRYAA case. hsp-16.2 is a holdase, not a foldase; and **hsp-12.3 / hsp-12.6 have *no* chaperone activity at all** — the title of PMID:9744800 is literally *"…Hsp12.2 and Hsp12.3 form tetramers and have no chaperone-like activity."* They are pseudo-sHSPs (tetramers/monomers rather than the large oligomers holdase function needs), so the family-level refolding IBA is fully refuted.
+- **Lesson**: capping≠severing and holdase≠foldase are sub-activity distinctions that family-level IBA flattens. The CRYAA and hsp-12.3 cases are especially clean because a curator negated the term (CRYAA) or a paper demonstrated zero activity (hsp-12.3).
+
+### 9. Regulatory-Sign Inversion Within a Family
+
+**The Problem**: When a protein family contains members with **opposite regulatory signs** (activators vs inhibitors of the same process), a family-node IBA can transfer the wrong sign.
+
+**Example - BCL2 (human and mouse)**:
+- IBA annotation: `GO:0043065` (**positive** regulation of apoptotic process)
+- Reality: BCL2 is the prototypical **anti-apoptotic** guardian; it inhibits MOMP and cytochrome c release (PMID:9027314, PMID:9219694).
+- **Root cause (verified from GOA WITH/FROM)**: the IBA for GO:0043065 is inferred from a PANTHER node (PTN000135648) whose WITH/FROM list **mixes pro- and anti-apoptotic BCL2-family members** — pro-apoptotic BAX (Q07812) and BAK1 (Q16611) alongside anti-apoptotic members. The shared BH-domain fold unites activators and inhibitors of apoptosis under one family, so the "positive regulation" sign can leak onto BCL2.
+- **Caveat (why this is "non-core" rather than flatly "wrong")**: BCL2 *does* have documented context-dependent pro-apoptotic behavior (e.g. caspase-cleaved BCL2), and GOA additionally carries a separate **NAS** annotation (PMID:14634621, ComplexPortal) to the very same GO:0043065. So the honest framing is that the *IBA family-node inference is unreliable for sign* (verified mechanism), not that positive regulation is impossible for BCL2. The companion review more confidently re-points related terms to their negative-regulation children (e.g. `GO:0001836` release of cytochrome c → `GO:0090201` *negative* regulation of release of cytochrome c).
+
+### 10. Complex / Compartment / Pathway Membership Over-Transfer
+
+**The Problem**: A family-level IBA asserts membership in a **specific complex, compartment, or pathway** that the target protein does not actually occupy, even though the catalytic fold or sequence homology is real. Compartment-split paralogs are the classic trap: they share a fold but route their product to different destinations.
+
+**Examples (verified across multiple lines of evidence)**:
+- **EIF4E2 (human)** — `GO:0016281` (eIF4F complex): 4EHP/EIF4E2 binds the cap but UniProt states it *"is unable to bind eIF4G"* and *"Does not interact with eIF4G"*; it is a translational repressor (4EHP-GYF2 complex), never an eIF4F subunit. A clear family-level over-transfer from EIF4E.
+- **ALDH1L1 (rat)** — `GO:0005739` (mitochondrion): UniProt names it *Cytosolic 10-formyltetrahydrofolate dehydrogenase* with `SUBCELLULAR LOCATION: Cytoplasm, cytosol` and a cytosol IDA. Mitochondrial one-carbon oxidation is the job of the distinct paralog **ALDH1L2**.
+- **HMGCS2 (rat)** — `GO:0010142` (farnesyl-PP biosynthesis, mevalonate pathway): a **paralog-pathway conflation**. The IBA comes from a PANTHER node (PTN000222418) that lumps the HMGCS paralogs. The cytosolic paralog **HMGCS1** feeds mevalonate→FPP→sterol/isoprenoid synthesis; mitochondrial HMGCS2's HMG-CoA is cleaved by HMG-CoA lyase to acetoacetate (ketogenesis). The shared HMG-CoA-synthase *reaction* is correctly classified under mevalonate biosynthesis (UniProt UniPathway tag), but assigning HMGCS2 to **FPP/isoprenoid** biosynthesis follows the wrong paralog's flux — an over-annotation. *(Nuance: the enzymatic step is real, so this is paralog over-annotation, not a fabricated activity.)*
+- **PEX2 (human)** — `GO:0016593` (Cdc73/Paf1 complex): PEX2 is a peroxisomal RING E3 ligase for PEX5 retrotranslocation (UniProt) and has no role in RNA Pol II transcription elongation, so membership in the Cdc73/Paf1 complex is clearly wrong. *(Caveat: the cause is unconfirmed — the IBA WITH/FROM is a PANTHER node, not a PAF1 gene. A legacy synonym collision — PEX2's old name "PAF1"/Peroxisome Assembly Factor 1 vs the unrelated transcription factor PAF1 — is a plausible but unverified explanation.)*
+- **CIRBP (human)** — `GO:0005681` (spliceosomal complex) + `GO:0000398` (mRNA splicing, via spliceosome): the cold-inducible RNA-binding protein CIRBP shares only the N-terminal RRM with the transformer-2/RBMX splicing factors that anchor these terms. PANTHER PAINT shows the splicing IBD sits at ancestral node **PTN000391532** (seeded by TRA2A, TRA2B, RBMX, *Drosophila* tra2, rat Tra2 — all bona fide splicing factors), while CIRBP's own subfamily node **PTN008729690** carries only `mRNA binding`. CIRBP has no experimental splicing evidence; its function is 3'-UTR binding, mRNA stabilization and translational control. A non-enzyme instance of complex-membership over-transfer across a functional-divergence boundary. *(See Featured Example and `families/PTHR48034/PTHR48034-review.md`.)*
+- **Lesson**: complex membership, compartment, and downstream pathway are not conserved across paralogs even when the fold/reaction is; verify the protein actually occupies the annotated complex/compartment and that its product reaches the annotated pathway.
+
+### 11. Substrate Over-Propagation From a Multi-Specificity Enzyme Family
+
+**The Problem**: A PANTHER family lumps enzymes of **different substrate specificities**; a substrate-specific term is then propagated to a member that experimentally lacks that activity. Unlike LPL1 (a real but secondary/broader specificity), here the propagated activity is **absent** in the target.
+
+**Example - AGK (human)** — `GO:0001729` (ceramide kinase), `GO:0046513`/`GO:0046512` (ceramide/sphingosine biosynthesis):
+- AGK sits in PANTHER **PTHR12358**, which lumps "ACYLGLYCEROL KINASE" with "SPHINGOSINE KINASE." The ceramide-kinase IBA is propagated from a family node (Drosophila + mouse + node PTN008994514); the IEA/ISS variants both trace to one rodent ortholog (Q9ESW4).
+- **Three independent lines refute the activity in human AGK**, outweighing the family inference:
+  1. The direct human enzymology paper (the one UniProt itself cites): *"Significant phosphorylated products were only detected with monoacylglycerols and diacylglycerols as substrates, but not with any other lipid tested, including ceramide and sphingosine"* (PMID:15939762).
+  2. A second study: *"No evidence for phosphorylation of ceramide by the recently described multiple lipid kinase was found"* (PMID:16269826).
+  3. UniProt's own FUNCTION line states *"Does not phosphorylate sphingosine (PubMed:15939762)"*; its sole ceramide claim is a weak **"By similarity"** tag (propagated from Q9ESW4), not direct evidence.
+- The dedicated ceramide kinase is the **separate** enzyme CERK. AGK's verified activity is MAG/DAG kinase (plus a kinase-independent TIM22 structural role).
+
+**Example - SAMD8/SMSr (human)** — `GO:0033188` (sphingomyelin synthase activity):
+- SAMD8 is in the sphingomyelin-synthase PANTHER family (PTHR21290), but UniProt's experimentally-supported FUNCTION says it makes **ceramide phosphoethanolamine (CPE)**, transferring a phospho**ethanolamine** head group from PE to ceramide — explicitly *not* the phospho**choline**-from-PC reaction that defines sphingomyelin synthases SMS1/SMS2: *"The larger PC prevents an efficient fit in the enzyme's catalytic pocket."* So the family-level sphingomyelin-synthase term is the wrong product/substrate; this is also accompanied by mislocalization IBAs (Golgi, plasma membrane) that belong to SMS1/SMS2, whereas SMSr is ER-retained.
+
+**Example - CPT1C (human)** — `GO:0006631` (fatty acid metabolic process), `GO:0009437` (carnitine metabolic process):
+- A **neofunctionalization** case: UniProt's RecName is literally *"Palmitoyl thioesterase CPT1C."* Although it sits in the carnitine O-acyltransferase family (PTHR22589) with CPT1A/B, experimental work shows CPT1C **lacks the canonical carnitine palmitoyltransferase activity** (it binds malonyl-CoA but does not catalyze carnitine-dependent acyl transfer). The IBA propagates the ancestral CPT1A/B fatty-acid/carnitine metabolism that CPT1C no longer performs.
+**Example - cao-1 / CAO-1 (*Neurospora crassa*)** — `GO:0010436` (carotenoid dioxygenase activity), `GO:0016121` (carotene catabolic process):
+- CAO-1 sits in PANTHER **PTHR10543** subfamily **SF89** (labelled *"carotenoid 9,10(9',10')-cleavage dioxygenase 1"*), a node that is functionally heterogeneous: it lumps genuine carotenoid cleavers (*Arabidopsis* CCD1, *Synechocystis* apocarotenoid oxygenase, *M. tuberculosis* Rv0654), **stilbenoid/resveratrol cleavers** (*U. maydis* RCO1, *Botrytis* rco1, and CAO-1 itself), and **phenylpropanoid cleavers** (*Pseudomonas* isoeugenol monooxygenase). The carotenoid-dioxygenase IBA propagates from node **`PTN001631894`**, whose `WITH/FROM` includes the *M. tuberculosis* carotenoid cleaver `UniProtKB:P9WPR5`.
+- Direct experimental evidence **refutes carotenoid activity**: heterologously expressed CAO-1 did not convert β-carotene or any carotenoid/apocarotenoid tested, while it cleaves the interphenyl Cα–Cβ double bond of **resveratrol and piceatannol** (PMID:23893079). GOA already carries the corrective experimental **`NOT` carotenoid metabolic process** (GO:0016116, IDA, PMID:23893079). Crystal structures show the conserved four-His non-heme Fe(II) center but a **stilbenoid-adapted substrate cleft** (PMID:28493664).
+- A **blinded OpenScientist** function-assignment run — given only the neutral hypothesis *"cao-1 has carotenoid dioxygenase activity"* — independently returned **"REFUTED (over-annotated)"** and likewise attributed the error to CCO/RPE65 (PTHR10543) family IBA, an independent confirmation of the manual call.
+- **Positive-control paralog (the decisive contrast):** the *N. crassa* paralog **CAO-2 (A7UXI1, NCU11424)** carries the **identical** family IBAs — `GO:0010436` and `GO:0016121`, both from `GO_REF:0000033` — but for CAO-2 they are **correct**: CAO-2 is a genuine torulene dioxygenase (EC 1.13.11.59, KEGG KO K17842) and an integral step of the **carotenoid biosynthesis pathway** (KEGG `ncr00906`), whereas cao-1 (KO K28521) is mapped to **no pathway**. Same family term, same GO_REF, one genome — **right for one paralog, wrong for the other**, distinguishable only by target-specific experimental evidence (the direct assay + curated `NOT` on cao-1). The two sit in different PTHR10543 subfamilies (cao-1 SF89, cao-2 SF24) yet inherited the same ancestral carotenoid annotation.
+- Action: **REMOVE** the carotenoid MF IBA; **MODIFY** the carotene-catabolic BP IBA to `GO:0046272` (stilbene catabolic process). The accurate MF (`GO:0016702` dioxygenase) is already present by IDA, and a class-level *stilbenoid α,β-dioxygenase activity* grouping term is proposed. `root_cause: PROPAGATION_BAD`, `failure_modes: [FUNCTIONAL_DIVERGENCE]`.
+
+**Example - NQO2 (human)** — `GO:0003955` (NAD(P)H dehydrogenase (quinone) activity):
+- NQO2 sits with NQO1 in the NAD(P)H:quinone oxidoreductase family (PANTHER **PTHR10204**). The family IBA transfers `GO:0003955`, which maps to **EC 1.6.5.2** and specifies **NAD(P)H** as the electron donor — but NQO2 characteristically **does not use NAD(P)H**; it uses **dihydronicotinamide riboside (NRH)** (PMID:10945627). The divergence here is in the **cofactor / co-substrate**, not the cleaved-substrate class or the fold.
+- A **blinded OpenScientist** run (neutral hypothesis *"NQO2 has NAD(P)H dehydrogenase (quinone) activity"*) independently returned **over-annotated → the NAD(P)H term is substrate-incorrect**, citing Wu et al. 1997 (PMID:9367528) that NQO2 uses NRH "rather than NAD(P)H," and noting the correct term GO:0001512 is already annotated by IDA.
+- Action: **MODIFY** to the NRH-specific `GO:0001512` (dihydronicotinamide riboside quinone reductase activity; **EC 1.10.5.1**, **RHEA:12364**), already supported by IDA. `root_cause: PROPAGATION_BAD`, `failure_modes: [FUNCTIONAL_DIVERGENCE]`.
+
+- **Lesson**: a "By similarity"/propagated annotation is weak evidence; when direct experimental papers in the target species report the activity is **absent or different in product** (AGK no ceramide; SAMD8 makes CPE not SM; CPT1C is a thioesterase not a transferase; CAO-1 cleaves stilbenes not carotenoids; NQO2 uses NRH not NAD(P)H), the substrate/activity-specific IBA is an over-propagation. A family node that mixes substrate specificities (acylglycerol+sphingosine kinases; SM+CPE synthases; carotenoid+stilbenoid+phenylpropanoid cleavage oxygenases) leaks substrate terms across specificity boundaries — and the leak can be in the **cleaved substrate** (CAO-1) or the **cofactor/co-substrate** (NQO2). Where a subfamily label itself names one specificity (`PTHR10543:SF89` = "carotenoid … cleavage dioxygenase") while spanning several, that label is the mechanical origin of the leak.
+
+### 12. Mis-Grouping Revealed by the WITH/FROM Column
+
+**The Problem**: The IBA `WITH/FROM` field names the exact source proteins the function was transferred *from*. Reading it frequently reveals the error directly — the source is either the **wrong family entirely** or the **wrong paralog**. This is the single most useful diagnostic in this whole catalog.
+
+**Tier A — wrong family / over-broad superfamily** (egregious; the source proteins are functionally unrelated):
+- **NTN1 / NTN3 (human)** — `GO:0000981`/`GO:0006357`/`GO:0000978` (DNA-binding transcription-factor activity, Pol II transcription regulation, cis-regulatory DNA binding): Netrins are **secreted** axon-guidance cues (UniProt: extracellular; PANTHER PTHR10574 Netrin/Laminin) with no DNA-binding domain — yet they carry nuclear **POU-domain transcription-factor** IBAs. The WITH/FROM proves it: the source list is POU-domain TFs (POU2F1 P14859, POU1F1 P28069, POU4F1 Q12837, POU4F3 Q15319, …). A secreted protein cannot be a Pol II transcription factor; this is a phylogenetic grouping error.
+- **NOTCH1 (human)** — `GO:0007411` (axon guidance): the WITH/FROM is **SLIT1/2/3** (O75093, O94813, O75094). NOTCH1 signals in neurogenesis but axon guidance is a SLIT function transferred across an over-broad node.
+- **IL23R (human)** — `GO:0004925` (prolactin receptor activity), `GO:0017046` (peptide hormone binding): the WITH/FROM is **PRLR** (P16471). IL23R is a type-I cytokine receptor that binds the cytokine IL-23, not the hormone prolactin; the superfamily node is too broad.
+
+**Tier B — wrong paralog** (subtle; the source is a close relative with a different function):
+- **ABRAXAS1 (human)** — `GO:0090307`/`GO:0008608`/`GO:0008017` (mitotic spindle assembly, spindle–kinetochore attachment, microtubule binding): every one of these IBAs traces via WITH/FROM to **`UniProtKB:Q15018` = ABRAXAS2** (ABRO1, the BRISC-complex paralog). ABRAXAS1 is a nuclear BRCA1-A DNA-damage scaffold; the spindle/MT biology belongs to ABRAXAS2.
+- **HINT2 (human)** — `GO:0005737` (cytoplasm): HINT2 has a mitochondrial targeting sequence and is mitochondrial; the cytoplasm term reflects the **HINT1** paralog.
+- **CPT1C** (above) similarly inherits CPT1A/B metabolism it no longer performs.
+- **opa1 (zebrafish) / eat-3 (worm)** — `GO:0016559` (peroxisome fission): both are UniProt *"Dynamin-like GTPase OPA1, mitochondrial"* inner-membrane **fusion** proteins. Peroxisome fission is done by the DRP1/DNM1L branch of the dynamin superfamily; the term is a within-superfamily mis-transfer (wrong organelle *and* wrong direction).
+- **YAR1 (yeast)** — `GO:0045944` (positive regulation of transcription): YAR1 is an RPS3-binding 40S-ribosome-biogenesis factor (UniProt: interacts with RPS3), not a transcription activator; **ACL4 (yeast)** likewise gets mitochondrial-import terms by TOM70-family over-transfer despite being an Rpl4 chaperone.
+- **Lesson**: **always read the WITH/FROM before flagging.** It tells you whether the IBA is a defensible family-level transfer or a traceable mis-grouping — and if a single paralog or out-of-family protein is the source, that is strong, near-mechanical evidence of error.
+
+### 13. Generic / Mutually-Exclusive Compartment Over-Propagation
+
+**The Problem**: Localization is one of the most frequently over-propagated IBA categories — but whether a flag is valid depends entirely on the **GO compartment hierarchy**, which makes this a two-sided pattern. Mutually-exclusive compartments are valid REMOVE grounds; broad *subsuming* terms are not.
+
+**Tier A — valid REMOVE: a mutually-exclusive specific compartment on a protein that lives elsewhere.** `GO:0005634` nucleus is the one compartment the cytoplasm definition explicitly **excludes**, and plasma membrane / peroxisome / a specific organelle are likewise non-overlapping — so these are genuine errors:
+- **Cytoplasmic PIWI/Argonaute & germ-granule proteins given `GO:0005634` nucleus** — PIWIL1 (human), and worm prg-1, wago-1, glh-1. All are cytoplasmic nuage/P-granule/chromatoid-body proteins (UniProt: cytoplasmic granule, no nucleus). The WITH/FROM nodes include **nuclear-acting Piwi orthologs** (e.g. *Drosophila* Piwi is nuclear; nuclear PIWIL4/MIWI2), so the nuclear compartment leaks onto the cytoplasmic members.
+- **EIF2AK3/PERK → nucleus** (UniProt: ER membrane kinase) and **BIRC6 → nucleus** (UniProt: TGN/endosome/cytoskeleton/midbody — no nuclear pool).
+- **Ribosome-associated chaperones SSB2 / SSZ1 (yeast) → `GO:0005886` plasma membrane** (UniProt: cytoplasmic, ribosome-associated) — PM propagated across the HSP70 family node.
+- **BAIAP2L2 → `GO:0005654` nucleoplasm** (UniProt: plasma membrane / cell junction; I-BAR family) and **PIK3C3/VPS34 → `GO:0005777` peroxisome** (UniProt: autophagosome/endosome/midbody).
+- **Inverse** — strictly **nuclear** proteins given `GO:0005737` cytoplasm: rqh1 (RecQ helicase) and HDA1 (HDAC) are nucleus-only, and nucleus is excluded from cytoplasm, so cytoplasm is wrong. And the genuinely **extracellular** SCGB1A1 given cytoplasm (secreted = outside the cell).
+
+**Tier B — anti-pattern (do NOT flag; these reviewer REMOVEs were over-reaches).** `GO:0005737` cytoplasm **subsumes** mitochondrion, ER, Golgi, and lysosome (all `part_of` cytoplasm), so "cytoplasm" is defensible — if imprecise — for an organellar protein:
+- "cytoplasm" REMOVE on **Aga / GLA** (lysosome), **DHCR24** (ER membrane, catalytic domain faces the cytosol), **ISCA1 / ATP5IF1 / gtpbp3** (mitochondrion) — all should be UNDECIDED/KEEP, not REMOVE.
+- "membrane" (`GO:0016020`) REMOVE on **flvcr2a** is wrong — it is a multi-pass membrane transporter.
+- **Self-correction**: HINT2's "cytoplasm" flag (added in the WITH/FROM pass) belongs here too — HINT2 is mitochondrial, but mitochondrion ⊂ cytoplasm, so cytoplasm is not strictly wrong; downgraded from the findings.
+
+**Lesson**: before a localization REMOVE, place both compartments in the GO hierarchy. Mutually-exclusive (nucleus vs cytoplasm; PM vs internal; one organelle vs another) → valid. A broad subsuming term over a more specific true location (cytoplasm over any organelle; membrane over a membrane protein) → leave it.
+
+### 14. Lineage-Inappropriate (Cross-Kingdom) Process Transfer
+
+**The Problem**: Phylogenetic inference crosses kingdom/clade boundaries and lands a biological-process term on an organism where **the process does not exist** — or where the homolog was repurposed into a different system. The WITH/FROM typically names a vertebrate or *Drosophila* source. This is one of the largest and cleanest BP error classes.
+
+**Examples (REMOVE — verified via UniProt + WITH/FROM):**
+- **TOLL9 (mosquito, ANOGA)** — `GO:0006954` (inflammatory response): the IBA traces to **human TLR4 (O00206)** and other mammalian TLRs. Insects have Toll-pathway innate immunity but no vertebrate inflammation (no vasculature, immune-cell infiltration); the term is lineage-inappropriate.
+- **ndhA / ndhD / ndhK (poplar, POPTR)** — `GO:0009060` (aerobic respiration): UniProt labels these *"NAD(P)H-quinone oxidoreductase, **chloroplastic**"* (`OG Plastid; Chloroplast`). They are photosynthetic plastid NDH subunits homologous to mitochondrial complex I — an **organelle-system swap**, not mitochondrial respiration.
+- **che-3 (worm)** — `GO:0060294` (cilium movement involved in cell motility): che-3 is cytoplasmic **dynein-2** (retrograde IFT motor); *C. elegans* sensory cilia are **non-motile**. The motility term comes from axonemal-dynein orthologs in organisms with motile cilia.
+- **D7 salivary proteins (mosquito, ANOGA: D7r2/D7r4/D7r5/D7L1)** — `GO:0007608` (sensory perception of smell): UniProt calls D7r4 a *"salivary protein… modulates blood feeding,"* female-saliva-specific. The OBP/PBP-GOBP fold was repurposed for binding biogenic amines/eicosanoids in saliva — these proteins are not expressed in antennae and have no olfactory role.
+- **sta-2 (worm)** — `GO:0007259` (JAK-STAT signaling): transferred from fly/mammalian STATs, but *C. elegans* has **no JAK kinases**; STA-2 is activated via SNF-12/hemidesmosomes.
+- **fshr-1 (worm)** — `GO:0009755` (hormone-mediated signaling): *C. elegans* lacks gonadotropins (FSH/LH/TSH); FSHR-1 functions in innate immunity/stress.
+- **HEN1 (Arabidopsis)** — `GO:0034587` (piRNA processing): piRNAs are metazoan; plant HEN1 methylates miRNA/siRNA duplexes. Over-transfer from the metazoan HEN1/HENMT1 context.
+- **Lesson**: check **taxon appropriateness** — does the process even occur in this lineage? GO taxon constraints catch some of these; the WITH/FROM naming a vertebrate/insect source is the tell. Watch especially for organelle-system swaps (plastid↔mitochondrion; cytoplasmic↔axonemal dynein).
+
+### 15. Regulator / Effector and Direct / Downstream Conflation
+
+**The Problem**: IBA (and curation generally) can blur the line between a **regulator or effector** of a process and the **core machinery**, or between a **downstream consequence** and the **direct function**.
+
+**Examples (verified):**
+- **lys-7 (worm)** — `GO:0007165` (signal transduction): LYS-7 is an antimicrobial **effector** whose expression is regulated *by* signaling; it is not itself a signaling component. (Same logical error as arnF's "response to iron" — see §arnF.)
+- **SIR3 (yeast)** — `GO:0006270` (DNA replication initiation): SIR3 **represses** origin firing (negative regulation of MCM loading), the opposite of being part of the initiation machinery (ORC/CDC6/CDT1/MCM2-7).
+- **UBP3 (yeast)** — `GO:0031647` (regulation of protein stability): a downstream *consequence* of its deubiquitinase activity (`GO:0004843`, the direct function), not a separate function.
+- **sigF / sigG / sigK (*B. subtilis*)** — `GO:0003899` (DNA-directed RNA polymerase activity): these are **sigma initiation factors** (UniProt: *"initiation factors that promote…"* promoter recognition) — they confer promoter specificity to RNA polymerase but have **no catalytic polymerase activity**, which belongs to the core enzyme (RpoB/RpoC). A regulatory subunit assigned the **holoenzyme's** catalytic activity.
+- **Lesson**: distinguish "does X" from "regulates/enables/results-in X." Effectors are not signal transducers; repressors are not part of the machinery they inhibit; a specificity subunit does not carry the catalytic activity of the complex it joins; downstream consequences are not direct molecular functions.
 
 ## Featured Examples
 
@@ -108,16 +1078,21 @@ The subfamily SF135 shares only 24% identity with synthases - less than synthase
 **Species**: human
 **Status**: COMPLETE
 
-**IBA Annotations Flagged**:
+**Annotations reviewed**:
 | Term | Issue | Action |
 |------|-------|--------|
-| GO:0005737 cytoplasm | Correct | ACCEPT |
-| GO:0019782 ISG15 activating enzyme activity | Correct, specific | ACCEPT |
-| GO:0032020 ISG15-protein conjugation | Correct | ACCEPT |
-| GO:0045087 innate immune response | Correct | ACCEPT |
-| GO:0006974 DNA damage response | Correct | ACCEPT |
+| GO:0005737 cytoplasm | IBA, correct | ACCEPT |
+| GO:0019782 ISG15 activating enzyme activity | IBA, correct and specific | ACCEPT |
+| GO:0032020 ISG15-protein conjugation | IBA, correct | ACCEPT |
+| GO:0045087 innate immune response | IBA, correct | ACCEPT |
+| GO:0006974 DNA damage response | IBA, correct | ACCEPT |
+| GO:0008641 ubiquitin-like modifier activating enzyme activity | InterPro2GO IEA, too general | MODIFY to GO:0019782 |
+| GO:0004842 ubiquitin-protein transferase activity | Non-IBA ubiquitin term, wrong activity class | MODIFY to GO:0019782 |
+| GO:0016567 protein ubiquitination | UniPathway IEA, wrong modifier process | MODIFY to GO:0032020 |
 
-**Note**: UBA7 IBA annotations are largely correct because the ISGylation pathway is conserved.
+**Lesson**: UBA7 should be highlighted as a positive-control case for IBA
+specificity. The bad rows are not IBA propagation errors; they are generic or
+ubiquitin-biased non-IBA mappings that the IBA annotations help correct.
 
 ### LPL1 - Phospholipase Specificity
 
@@ -130,7 +1105,7 @@ The subfamily SF135 shares only 24% identity with synthases - less than synthase
 | GO:0006629 lipid metabolic process | Correct | ACCEPT |
 | GO:0004622 PC lysophospholipase activity | Too narrow | MODIFY |
 | GO:0005811 lipid droplet | Correct | ACCEPT |
-| GO:0047372 monoacylglycerol lipase activity | Secondary activity | KEEP_AS_NON_CORE |
+| GO:0047372 monoacylglycerol lipase activity | ROG1-paralog/substrate-specificity transfer; target evidence absent | UNDECIDED |
 
 ### RIMBP2 - Context-Specific Term Transfer
 
@@ -222,6 +1197,105 @@ The IBA inference of "transmembrane transporter activity" comes from propagating
 
 See detailed family analysis: `interpro/panther/PTHR10314/PTHR10314-notes.md`
 
+### CIRBP (PTHR48034) - Splicing Terms Over-Propagated to a Cold-Shock mRNA-Stability Subfamily
+
+**Species**: human (Q14011); applies equally to the RBM3/CIRBP branch (mouse Cirbp P60824, RBM3, *Xenopus* cirbp-a)
+**Status**: COMPLETE
+**Family**: PTHR48034 (RNA-binding motif / RBM; InterPro IPR050441)
+
+**IBA Annotations Flagged**:
+| Term | Issue | Action |
+|------|-------|--------|
+| GO:0000398 mRNA splicing, via spliceosome | No splicing evidence for CIRBP; seeded by transformer-2/RBMX splicing factors | MARK_AS_OVER_ANNOTATED |
+| GO:0005681 spliceosomal complex | CIRBP is not a spliceosome component; co-purification only | MARK_AS_OVER_ANNOTATED |
+
+**Lesson**: PTHR48034 is a heterogeneous RRM family that lumps two functionally divergent groups sharing only the N-terminal RRM: (i) **transformer-2/RBMX/SR-type splicing regulators** (RS-domain C-terminus) and (ii) **cold-inducible mRNA-stability/translation proteins** CIRBP and RBM3 (glycine-rich/RGG C-terminus). The splicing terms are real for group (i) but were propagated across the divergence boundary into group (ii). This is the RNA-biology analogue of the arnF case — homology correctly identifies the fold, but the annotation does not track the functional split (pre-mRNA splicing → mRNA stabilization/translational control). CIRBP's verified activities are 3'-UTR binding (IDA: RPA2, TXN), mRNA stabilization, and translational control, with stress-granule recruitment — none of which is splicing.
+
+**Root Cause Analysis** (PANTHER PAINT, `interpro/panther/PTHR48034/PTHR48034-paint.tsv`):
+1. Splicing IBD is anchored at **internal node PTN000391532**, seeded *only* by splicing factors: `GO:0000398` from TRA2A (Q13595), TRA2B (P62995), *Drosophila* tra2 (FBgn0003742), rat Tra2 (RGD:1306751, RGD:1565256); `GO:0005681` from TRA2B (P62995), RBMX (P38159), rat Tra2 (RGD:1306751).
+2. The node's annotations descend as IBA to **all** descendants, including the cold-shock branch.
+3. CIRBP's own subfamily node **PTN008729690** carries only `GO:0003729` mRNA binding (and lists CIRBP, Q14011, as a seed) — the correct, generic call.
+4. CIRBP's GOA WITH/FROM names the source node explicitly: `PANTHER:PTN000391532|...|UniProtKB:P62995|UniProtKB:Q13595` — a textbook case of mis-grouping revealed by the WITH/FROM column (pattern 12).
+5. PAINT already prunes other branches of this family (node PTN001924395 carries IRD/NOT records blocking `GO:0003729`, `GO:0000381`, `GO:0016607`), so the gap is the absence of an equivalent pruning on the CIRBP/RBM3 branch.
+
+**Seed (mod) genes verified as bona fide splicing factors** (no change needed):
+- TRA2B (P62995): UniProt "participates in the control of pre-mRNA splicing"; direct IDA GO:0000398 (PMID:9546399); controls SMN2 exon 7 / MAPT exon 10. Falcon: "Belongs to the splicing factor SR family."
+- TRA2A (Q13595), RBMX (P38159), *Drosophila* tra2 (P19018), rat Tra2b (P62997): all UniProt-confirmed pre-mRNA / alternative splicing regulators.
+
+**Recommendation for PANTHER Curators**:
+- Add an IRD/NOT (or restrictive re-annotation) for GO:0000398 and GO:0005681 on the CIRBP/RBM3 subfamily branch (node PTN008729690 and descendants), so the splicing terms stop descending to the cold-inducible mRNA-stability members.
+
+See detailed family analysis: `families/PTHR48034/PTHR48034-review.md`
+
+### DICDI cAMP / STAT developmental families — Stage-Specific Paralog & Lineage Over-Propagation
+
+*Dictyostelium discoideum* development is driven by several **paralog families whose
+members do the same molecular job at different developmental stages** (the cAMP
+receptors cAR1–4, the adenylate cyclases ACA/ACG/ACR, the Ras GTPases RasC/RasG,
+the STATs Dd-STATa/c). Reviewing one representative per family alongside its
+sisters exposed IBA transferring a **family-node consensus onto the wrong member,
+stage, compartment, or lineage** — the same failure classes catalogued above, now
+in a social amoeba:
+
+- **Stage/paralog leakage (`PROPAGATION_BAD` · `WRONG_ORTHOLOG_OR_PARALOG`).**
+  The aggregation-stage "adenylate cyclase-activating cAMP receptor signaling"
+  role (`GO:0007189`) is propagated by the cAR family node onto the *later*,
+  lower-affinity receptor **cAR4/carD**, whose characterised output is the
+  PTP/GSK3 axis, not adenylate-cyclase activation. Likewise **rasC** carries
+  `GO:0000281` mitotic cytokinesis, but rasC-null cells divide normally — cytokinesis
+  is **RasG's** job in this family.
+- **Lineage-inappropriate process transfer (`LINEAGE_OR_TAXON_MISMATCH`).** The STAT
+  family node **PTN000927860** transfers metazoan STAT roles — `GO:0006952` defense
+  response and `GO:0042127` regulation of cell population proliferation — onto both
+  **Dd-STATa** and **Dd-STATc** from all-metazoan seeds (human/mouse/rat/fly/worm
+  STAT1/2/5…). This mirrors the existing worm `sta-2`/`fshr-1` cross-kingdom row.
+- **Term-scoping across a lineage gap (`TERM_SCOPING_PROBLEM`).** Both Dictyostelium
+  STATs are annotated `GO:0007259` "signaling via **JAK**-STAT", yet *Dictyostelium*
+  has **no JAK** (they are activated by the TKL kinases Pyk2/Pyk3); the term is
+  rescoped to `GO:0097696` STAT signaling.
+- **Functional divergence with fold retained (`FUNCTIONAL_DIVERGENCE`).** **regA**
+  inherits `GO:0047555` cGMP-phosphodiesterase activity from the cyclic-nucleotide
+  PDE family node, but RegA is **cAMP-specific** (>200-fold selectivity). **yakA**
+  (a dual-specificity DYRK) carries the family's generic `GO:0004713` protein
+  **tyrosine** kinase activity.
+- **Compartment mismatch (`COMPARTMENT_OR_COMPLEX_MISMATCH`).** **pten** inherits
+  `GO:0005634` nucleus (a mammalian-PTEN behaviour) although all Dictyostelium
+  evidence places it at the membrane/cortex/cytosol; **spiA** (a demonstrated
+  spore-coat protein) inherits the canonical SCAMP `trans-Golgi`/`recycling
+  endosome` localisations.
+
+Each of these rows carries a structured `review.propagation_review`
+(`root_cause` + `failure_modes` + the real GOA `WITH/FROM` PANTHER `PTN…` node
+and a representative seed) in the corresponding
+`genes/DICDI/<gene>/<gene>-ai-review.yaml`. Full module and paralog context:
+[Dictyostelium Development Project](DICTYOSTELIUM_DEVELOPMENT.md).
+
+> **Connection to pathway satisfiability.** The JAK-STAT case is the clearest
+> instance of a broader, *automatable* rule. `GO:0007259` "signaling via
+> **JAK**-STAT" names an obligate component — a Janus kinase — that the
+> *Dictyostelium* genome does not encode (the Dd-STATs are activated by the TKL
+> kinases Pyk2/Pyk3). Read as a boolean formula over required components under a
+> **genome-content oracle**, the annotation is *unsatisfiable* and the IBA
+> transfer is unsupportable — so it is rescoped to the JAK-independent parent
+> `GO:0097696` STAT signaling. This is the signaling-domain analogue of the
+> genome-content check in the
+> [Pathway satisfiability project](PATHWAY_SATISFIABILITY.md): a process/pathway
+> term whose definition entails a component **absent from the target's genome**
+> is a candidate `LINEAGE_OR_TAXON_MISMATCH` over-propagation. A runnable
+> prototype of exactly this check —
+> [taxon-absent-component detector](PATHWAY_SATISFIABILITY/taxon_absent_component/README.md)
+> — confirms JAK is genome-absent in *Dictyostelium* (`GO:0007259` unsatisfiable
+> → `GO:0097696`). It uses **two oracles**: an InterPro domain signature and,
+> primarily, **PANTHER family (`PTHR…`) membership** — the divergence-robust one,
+> since IBA propagates along the PANTHER tree. That distinction matters: an
+> InterPro-only screen falsely calls STAT and P2X *absent* in *Dictyostelium*
+> (both diverged past their metazoan domain signature), whereas PANTHER correctly
+> recovers the 4 Dd-STATs and the ~5 divergent P2X receptors — so the organism
+> **does** have (ionotropic) P2X, and only the metabotropic **P2Y (GPCR)**
+> component that `GO:0035589` specifically requires is genuinely absent. Even at
+> HIGH confidence an `ABSENT` verdict is a strong lead for review, not an
+> automatic `REMOVE`.
+
 ## Genes with IBA Issues
 
 | Gene | Species | IBA Issue Type | Severity | Status |
@@ -229,9 +1303,140 @@ See detailed family analysis: `interpro/panther/PTHR10314/PTHR10314-notes.md`
 | Epe1 | pombe | Pseudo-enzyme propagation | HIGH | COMPLETE |
 | cds1 | MYCTU, VIBCH | **Neo-functionalization (opposite reaction)** | **CRITICAL** | COMPLETE |
 | LPL1 | CANAL | Substrate specificity | MEDIUM | COMPLETE |
-| UBA7 | human | Generic vs specific terms | LOW | COMPLETE |
+| UBA7 | human | Positive control: IBA corrects generic/domain propagation | N/A | COMPLETE |
 | RIMBP2 | human | Context-specific term transfer | MEDIUM | COMPLETE |
 | arnF | ECOLI | Functional divergence within SMR superfamily | MEDIUM | COMPLETE |
+| DPYSL2/CRMP1/DPYSL3 | human | Pseudo-enzyme (UniProt CAUTION: metallo-hydrolase residues absent) | HIGH | COMPLETE |
+| AGO4 | human | Pseudo-enzyme (UniProt: lacks endonuclease activity) | HIGH | COMPLETE |
+| UBAC2 | human | Pseudo-enzyme (rhomboid-like, no curated protease activity) | MEDIUM | COMPLETE |
+| CAPG | human | Partial sub-activity loss (caps but does not sever actin; PMID:1322908) | MEDIUM | COMPLETE |
+| CRYAA | human | Partial sub-activity loss (holdase not foldase; curated NOT(refolding)) | MEDIUM | COMPLETE |
+| BCL2 | human, mouse | Regulatory-sign inversion (anti-apoptotic; family-node mixes pro-/anti-) | MEDIUM | COMPLETE |
+| EIF4E2 | human | Complex over-transfer (UniProt: does not bind eIF4G, no eIF4F) | MEDIUM | COMPLETE |
+| ALDH1L1 | rat | Compartment conflation (UniProt cytosolic; mito is ALDH1L2) | MEDIUM | COMPLETE |
+| HMGCS2 | rat | Paralog-pathway over-annotation (ketogenic; FPP synthesis is HMGCS1) | MEDIUM | COMPLETE |
+| PEX2 | human | Complex over-transfer (peroxisomal E3, not Cdc73/Paf1 complex) | MEDIUM | COMPLETE |
+| AGK | human | Substrate over-propagation (no ceramide/sphingosine kinase activity; 2 papers) | MEDIUM | COMPLETE |
+| cao-1 | NEUCR | Substrate over-propagation (cleaves stilbenes not carotenoids; PTHR10543:SF89 mixes specificities; blinded-confirmed) | MEDIUM | COMPLETE |
+| NQO2 | human | Cofactor over-propagation (uses NRH not NAD(P)H; MODIFY to NRH:quinone reductase; blinded-confirmed) | MEDIUM | COMPLETE |
+| AKTIP | human | Pseudo-enzyme (UniProt CAUTION: lacks catalytic Cys for E2 activity) | HIGH | COMPLETE |
+| DPYSL4 | human | Pseudo-enzyme (CRMP-family metallo-hydrolase, non-catalytic) | HIGH | COMPLETE |
+| SAMD8 | human | Substrate neofunctionalization (CPE synthase, not sphingomyelin synthase) | MEDIUM | COMPLETE |
+| CPT1C | human | Neofunctionalization (palmitoyl thioesterase; lost carnitine transferase) | MEDIUM | COMPLETE |
+| NTN1/NTN3 | human | Wrong-family grouping (secreted Netrin → POU-domain TF activity) | HIGH | COMPLETE |
+| NOTCH1 | human | Wrong-source transfer (axon guidance from SLIT1-3) | MEDIUM | COMPLETE |
+| IL23R | human | Over-broad superfamily (prolactin-receptor activity from PRLR) | MEDIUM | COMPLETE |
+| ABRAXAS1 | human | Wrong-paralog (spindle/MT terms trace to ABRAXAS2) | MEDIUM | COMPLETE |
+| PIWIL1 / prg-1 / wago-1 | human, worm | Nucleus on cytoplasmic PIWI/Argonaute (mutually-exclusive compartment) | MEDIUM | COMPLETE |
+| EIF2AK3, BIRC6 | human | Nucleus on ER-membrane / TGN-cytoskeletal protein | MEDIUM | COMPLETE |
+| SSB2 / SSZ1 | yeast | Plasma membrane on cytoplasmic ribosome-associated chaperone | LOW | COMPLETE |
+| BAIAP2L2, PIK3C3 | human | Nucleoplasm / peroxisome on membrane / autophagy protein | LOW | COMPLETE |
+| SCGB1A1 | human | Cytoplasm on a secreted (extracellular) protein | LOW | COMPLETE |
+| rqh1, HDA1 | SCHPO, yeast | Cytoplasm on strictly nuclear proteins | LOW | COMPLETE |
+| TOLL9 | ANOGA | Cross-kingdom: inflammatory response from vertebrate TLR4 | MEDIUM | COMPLETE |
+| ndhA/ndhD/ndhK | POPTR | Organelle swap: chloroplast NDH annotated as mito respiration | MEDIUM | COMPLETE |
+| che-3 | worm | Cross-lineage: cilium motility on non-motile sensory cilia (IFT dynein) | MEDIUM | COMPLETE |
+| D7r2/D7r4/D7r5/D7L1 | ANOGA | Cross-function: smell perception on repurposed salivary OBP-fold | MEDIUM | COMPLETE |
+| sta-2, fshr-1 | worm | Cross-kingdom: JAK-STAT / hormone signaling absent in nematodes | MEDIUM | COMPLETE |
+| opa1, eat-3 | DANRE, worm | Mis-grouping: peroxisome fission on mito-fusion OPA1 | MEDIUM | COMPLETE |
+| hsp-12.3/hsp-12.6 | worm | Pseudo-sHSP: refolding, but "no chaperone-like activity" (PMID:9744800) | HIGH | COMPLETE |
+| YAR1, ACL4 | yeast | Family over-transfer (Rps3 biogenesis factor; Rpl4 chaperone) | LOW | COMPLETE |
+| SIR3, lys-7, UBP3 | yeast, worm | Regulator/effector & downstream conflation | LOW | COMPLETE |
+| CASP12 | human | Pseudo-enzyme (UniProt "Inactive caspase-12") | MEDIUM | COMPLETE |
+| Serpinh1/HSP47 | mouse | Pseudo-inhibitor (non-inhibitory serpin; collagen chaperone) | MEDIUM | COMPLETE |
+| sigF/sigG/sigK | BACSU | Subunit assigned holoenzyme catalytic activity (sigma ≠ RNA pol) | LOW | COMPLETE |
+| CIRBP / RBM3 | human | Functional divergence within RRM family (splicing terms on cold-shock mRNA-stability subfamily; PTHR48034 node PTN000391532) | MEDIUM | COMPLETE |
+| statA / statC | DICDI | Cross-kingdom: metazoan STAT defense/proliferation + JAK-STAT (no JAK in amoebae); node PTN000927860 | MEDIUM | COMPLETE |
+| carD (cAR4) | DICDI | Stage-specific paralog: aggregation adenylate-cyclase-activating role leaked onto a late low-affinity cAMP receptor | MEDIUM | COMPLETE |
+| rasC | DICDI | Wrong-paralog: mitotic cytokinesis (RasG's role; rasC-null divides normally) | MEDIUM | COMPLETE |
+| regA | DICDI | Functional divergence: cGMP-PDE activity on a cAMP-specific phosphodiesterase | MEDIUM | COMPLETE |
+| pten | DICDI | Compartment mismatch: nucleus on a membrane/cortex PtdIns(3,4,5)P3 phosphatase | LOW | COMPLETE |
+| spiA | DICDI | Compartment mismatch: SCAMP TGN/recycling-endosome on a spore-coat protein | LOW | COMPLETE |
+| acgA, pdsA, yakA | DICDI | Role/granularity conflation (peptide-receptor, neg-reg cAMP/PKA, generic Tyr-kinase) | LOW | COMPLETE |
+
+## IBA Incompleteness: core function that IBA fails to propagate
+
+All the patterns above concern IBA being *wrong* (over-annotation). The opposite
+failure mode is just as real: IBA is frequently **incomplete** — it under-calls
+well-established biology. Phylogenetic propagation is conservative by
+construction (it only transfers what a curated ancestor already carries, at the
+granularity the ancestor was annotated), so a great deal of experimentally
+defined molecular function never reaches the leaf.
+
+We quantified this with a generic **evidence-subtraction** tool
+(`ai-gene-review subtraction-report`; see
+[docs](https://ai4curation.io/ai-gene-review/subtraction_report/)). Running it in
+"keep only IBA" mode over the 1015 reviewed human genes — i.e. asking *if IBA
+were the sole evidence, what curated biology would we lose?* — and applying
+ontology closure so that an IBA call to a **more general parent still counts** as
+covering its ancestors:
+
+- **62%** of annotation-grounded `core_functions` terms (4516 / 7278) would be
+  lost if IBA were the only evidence.
+- Restricting to **molecular function** and excluding low-information `binding`
+  terms (GO:0005488, incl. `protein binding`): **511 curated core molecular
+  functions across 423 genes** have **no IBA support at all**, **401** of them
+  grounded by experimental/traceable evidence (IDA/IMP/IPI/EXP/TAS).
+
+Because a term is only counted when it sits in a gene's `core_functions` — the
+curator's distilled, highest-confidence judgement of what the protein *does* —
+these are not annotation noise; they are the central activities a leaf-level
+review would lose by trusting IBA alone. Two mechanisms recur:
+
+### A. Activity absent from IBA entirely
+
+The experimentally characterised activity is simply not propagated to the leaf —
+no IBA annotation touches that branch — even though it is the protein's defining
+biochemistry. These are clean, single-line losses (each verified: strong
+non-IBA evidence, **zero** IBA at the term or any descendant):
+
+| Gene | Core molecular function IBA misses | Evidence |
+|------|-------------------------------------|----------|
+| **USP21** | cysteine-type deubiquitinase activity (GO:0004843); deNEDDylase (GO:0019784) | IDA (PMID:10799498, PMID:32011234), IMP (PMID:26100909) |
+| **P4HB** (PDI) | protein disulfide isomerase (GO:0003756); protein-disulfide reductase (GO:0015035) | EXP, IDA |
+| **INPP5D** (SHIP1) | inositol-polyphosphate / PI(3,4,5)P3 5-phosphatase (GO:0004445, GO:0034485) | EXP, IDA |
+| **FTH1** | ferroxidase activity (GO:0004322) | IMP |
+| **PLD3** | single-stranded DNA 5′→3′ exonuclease (GO:0045145) | IDA |
+| **NPM1** | histone chaperone activity (GO:0140713) | IDA |
+| **PARK7** (DJ-1) | superoxide dismutase copper chaperone activity (GO:0016532) | IDA |
+| **LRRK2** | GTPase activity (GO:0003924) | IDA |
+| **SIRT2** | NAD-dependent demyristoylase (GO:0140773); tubulin deacetylase (GO:0042903) | IDA (PMID:25704306, PMID:32103017) |
+
+### B. IBA stops at a general parent (true "too conservative")
+
+Here IBA *does* annotate the gene with a broad term, but the experimentally
+established **specific** activity — the exact substrate, regioselectivity, or
+sub-activity — is never propagated. Closure confirms the IBA term is a strict
+ancestor of the missed term, so this is genuine loss of resolution, not absence:
+
+| Gene | IBA gives (general) | Experiment establishes (specific, IBA misses) |
+|------|---------------------|------------------------------------------------|
+| **HDAC6** | protein deacetylase (family) | tubulin deacetylase (GO:0042903); protein-lysine deacetylase (GO:0033558) — EXP/IDA/IMP |
+| **SIRT2** | NAD-dependent deacetylase | histone **H4K16** deacetylase (GO:0046970) — IDA |
+| **DPEP1** | (peptidase) | metallodipeptidase activity (GO:0070573) — IDA |
+| **PARK7** (DJ-1) | (broader) | glyoxalase, glycolic-acid-forming (GO:1990422) — IDA |
+
+**Caveat — IBA is not always the laggard.** Many of these genes are exceptionally
+well studied; IBA legitimately covers their *canonical* function and only misses
+secondary or recently characterised activities. **PTEN** is the clearest example:
+its textbook PIP3 3-phosphatase activity (GO:0016314) *is* carried by IBA; what
+IBA misses is the secondary protein-serine/threonine phosphatase (GO:0004722,
+IDA PMID:9256433) and PI(3,4)P2 3-phosphatase (GO:0051800) activities. So
+"incompleteness" should be read as *resolution and coverage gaps*, not as IBA
+being useless — the same tool's forward direction shows IBA is the **sole**
+support for 66 human core molecular functions (e.g. AKIRIN2 transcription
+coregulator, GET1 protein-membrane adaptor, ATG14 PI3K regulator), so the two
+analyses bound IBA's value from both sides.
+
+**Reproduce:** `just subtraction-report-iba-conservative-core-mf` (writes
+`reports/iba-too-conservative-core-mf.md`, the full ranked, evidence-enriched
+table for all 423 genes); the raw keep-only TSVs come from
+`just subtraction-report-iba-only-tsv`.
+
+**Lesson for curators:** a leaf with only IBA annotations is very likely
+*under*-annotated, not fully annotated. When IBA supplies only a broad
+molecular-function term, treat it as a prompt to look for the specific
+experimentally defined activity rather than as a finished call.
 
 ## Recommendations for IBA Curation
 
@@ -243,6 +1448,12 @@ See detailed family analysis: `interpro/panther/PTHR10314/PTHR10314-notes.md`
 6. **Check for functional divergence**: Especially in rapidly evolving families
 7. **Consider organism-specific biases**: Source annotations may reflect experimental systems (e.g., NMJ in flies) that don't apply to target species
 8. **Validate annotations at family root**: Root-level annotations propagate everywhere - ensure they're truly universal to ALL subfamilies
+9. **Synthesize multiple lines of evidence before flagging — never a single keyword**: a UniProt keyword (especially "By similarity"), a PANTHER node label, and a review assertion are each *individually* weak. Cross-check the term definition, direct experimental papers in the target species, the IBA WITH/FROM provenance, the MSA/active-site residues, and phylogenetic placement, and reason over the whole picture. The strongest REMOVE cases pair an explicit UniProt CAUTION/NOT with direct enzymology (DPYSL2, AGO4, CRYAA, AGK)
+10. **Watch for opposite-sign family members**: When a family contains both activators and inhibitors (e.g., BCL2 family), a family-node IBA can transfer the wrong regulatory sign — inspect the WITH/FROM list for mixed members (but check whether independent non-IBA evidence also supports the term before calling it flatly wrong)
+11. **Distinguish sub-activities**: capping vs severing, holdase vs foldase, slicing vs non-slicing — family-level IBA flattens these distinctions
+12. **Don't inherit a paralog's compartment/complex**: family members share folds but not localization or complex membership — verify the protein actually occupies the annotated complex/compartment (EIF4E2, ALDH1L1, PEX2)
+13. **Check the GO term's definition, not just its label, before calling an IBA directionally wrong**: e.g. "copper ion import" (GO:0015677) covers movement into a cell *or organelle*, so a Golgi-loading copper exporter can still satisfy it — a label that *looks* opposite may not be
+14. **Read the WITH/FROM column first**: it names the exact source proteins. If they are the wrong family (NTN1←POU TFs; NOTCH1←SLITs) or a single wrong paralog (ABRAXAS1←ABRAXAS2; HINT2←HINT1), that is near-mechanical evidence of error. If they are a broad, coherent set of true orthologs, the transfer is probably defensible — slow down before flagging
 
 ## Quality Indicators
 
@@ -254,6 +1465,15 @@ See detailed family analysis: `interpro/panther/PTHR10314/PTHR10314-notes.md`
 - Process annotations that don't match organism biology
 - Multiple conflicting IBA annotations
 - **Superfamily contains members with different transport mechanisms** (e.g., solute export vs lipid flipping in SMR family)
+- **Enzymatic terms on proteins with a UniProt-documented degenerate/absent active site** (the strongest signal; e.g. DPYSL2, AGO4)
+- **Family unites opposite-sign regulators** (activators + inhibitors of the same process; check WITH/FROM for mixed members — but confirm against non-IBA evidence)
+- **Complex-membership or compartment terms on a protein whose paralog/relative occupies it instead** (cytosolic vs mitochondrial; eIF4F vs 4EHP repressor)
+
+**NOT reliable grounds for flagging — verify with reasoning, not a single keyword**:
+- A label that merely *looks* opposite — check the term **definition**. GO:0015677 "copper ion import" covers movement into a cell *or organelle*, so a Golgi-loading copper exporter (ATP7B) still satisfies it. (This is why ATP7B was **not** flagged.)
+- A shared reaction that is *classified* under a pathway does not prove pathway membership in vivo — but it does mean the activity is real, so prefer "over-annotation/non-core" over "absent" (HMGCS2: the HMG-CoA-synthase step is genuine; only the FPP-pathway *flux* belongs to the other paralog).
+- **Neither** a UniProt keyword **nor** a review assertion is sufficient on its own. Weigh all lines: a UniProt "By similarity" tag is weak and can be overturned by direct experimental papers (AGK: "ceramide By similarity" is refuted by two papers reporting no ceramide/sphingosine phosphorylation — so AGK *was* flagged); an explicit UniProt CAUTION or a curated NOT annotation is strong (DPYSL2, CRYAA).
+- A broad **subsuming compartment** is not wrong just because a more specific location is known. `GO:0005737` cytoplasm includes mitochondrion, ER, Golgi, and lysosome (`part_of` cytoplasm), so "cytoplasm" is defensible for an organellar protein; only nucleus, plasma membrane, the extracellular space, or a *different* organelle are mutually exclusive enough to justify a localization REMOVE (see Pattern 13).
 
 **Signs of reliable IBA**:
 - Core metabolic enzymes with conserved mechanism
@@ -262,114 +1482,181 @@ See detailed family analysis: `interpro/panther/PTHR10314/PTHR10314-notes.md`
 - Process/location terms that are organism-agnostic
 - **Subfamilies with high sequence identity and same EC number**
 
+**Writing the `reason` field — things nothing enforces**:
+- **A quotation inside `reason` is not validated — nor inside `comment` or `summary`.** The
+  substring check runs over `supporting_text` only (`linkml_reference_validator`'s
+  supporting-text validator; `grep -rn reason src/ai_gene_review/validation/*.py` returns
+  one unrelated docstring). So a quote in any free-prose field — a `review.reason`, a
+  `propagation_review.source_entities[].comment`, a `summary` — can be paraphrased,
+  mis-attributed or invented and still pass. `comment` is the easiest to forget, because
+  it sits inside a structured block that looks validated and is not. Sweep all three
+  together, and take one of three paths for each span, saying which: mirror it into
+  `supported_by`, where the substring validator checks it; name its source with a locator in
+  the prose itself (`projects/FOO.md:14`, `Ccne1-uniprot.txt:96`), which is checkable by a
+  reader even though no tool enforces it; or state in the text that it is unchecked. The
+  middle path is the right one for a term label or a file this review does not cite as a
+  reference, and it is not the same as saying nothing - a source named without a locator is
+  the third path wearing the second one's clothes.
+- **Never state what an abstract-only paper "records".** Check
+  `full_text_available:` first. A reason on this project asserted that PMID:12492473
+  "records Casp3 proteolytically cleaving iPLA2"; that cache is abstract-only, contains no
+  cleavage assay (`grep -ic cleav` -> 0), and names the enzyme a *plasmalogen-selective
+  phospholipase A2*, never iPLA2 — both the mechanism and the enzyme identity were inferred
+  and shipped. The conclusion survived on grounds the abstract does support (inhibitor
+  epistasis placing the protein upstream, typed as an `enables` MF), which is the form to
+  reach for. A sentence that claims what a paper contains **and** claims to need no full
+  text is self-refuting; one half has to go.
+- **Normalize before you decide a quote is fabricated.** Every layout assumption
+  listed below - whitespace and markup alike - has produced a confident false negative on
+  this project, and every one fails toward "this quote is invented" -- the most expensive wrong answer available here.
+  A single-line `grep` misses any quote that wraps. A flat string match misses text inside a
+  folded YAML scalar. `tr '\n' ' '` misses text whose source lines carry trailing spaces
+  (squeeze with `tr -s` instead). And a match against a flat-file source misses text carrying
+  structural line prefixes -- UniProt `CC`/`FT`, a `#` comment. Join and squeeze
+  (`re.sub(r'\s+', ' ', ...)`) AND strip the source's line prefixes before concluding
+  anything is absent. Better still, put the quote in `supported_by` and let the substring
+  validator answer.
+  Markdown emphasis is the widest of them, because every
+  `file:*-deep-research-*.md` citation in this corpus is markdown: `Predominantly
+  **nuclear** transcription factor` will not match the quote `predominantly nuclear`
+  under any prefix-stripping, because the markup sits INSIDE the phrase rather than at
+  the line start. Strip `[*_`]` too, or match permissively
+  (`predominantly[^A-Za-z]{0,40}nuclear`) before concluding anything.
+
+- **Quoted spans in prose are content-verbatim; strictness lives in `supporting_text`.**
+  Terminal sentence punctuation may sit inside the closing quote (American convention),
+  and an elision may be marked with `...` - both are ordinary typography, not claims about
+  the source, and the corpus uses them: `Dnaja3` closes a quote on a period where its
+  source writes a comma, `Sox2` closes one where the source sentence runs on past a
+  semicolon, `Fbxo2` elides mid-quote. What is *not* allowed is dropping
+  source words silently: the same `Fbxo2` row quoted GO:1990756's definition with the
+  parenthetical "(including ubiquitin ligase and UFM1 ligase)" removed and no ellipsis,
+  which reads as the whole definition and is not - that one is a defect and was fixed. So
+  a sweep must strip a trailing `[.,]` and split on `...` before calling a span unmatched,
+  or it will report the convention as fabrication; and any span that must be
+  machine-checked belongs in `supporting_text`, where the substring validator applies the
+  strict reading. This holds for `reason`, `summary` and `comment` alike — the surrounding
+  bullets are phrased around `reason` because that is where the first instances were found,
+  but the exemplars here are spread across all three, and the ISO backlog will write far
+  more `comment` and `summary` than `reason`. One span type has no local source at all: a
+  **GO term definition**. The only tracked `.obo` here is `interpro/panther/panther.obo`,
+  `cache/go/terms.csv` and `cache/ontologies/go.tsv` carry labels but no definitions, and
+  `cache/ontologies/*.obo` is gitignored - so a definition verified against a working-tree
+  obo is not reproducible from a fresh checkout. Quote it if it earns its place, but take
+  the third path explicitly and say the check needs a GO lookup.
+
+- **"Nothing local says this" is a claim about where you looked.** Before writing that an
+  assertion cannot be checked from the repository, enumerate the places the repository
+  keeps that kind of fact. A reason on this project stated that GO:0051082's obsoletion
+  was "not checkable from this repository" on the strength of two ontology caches —
+  while `projects/UNFOLDED_PROTEIN_BINDING.md` records it explicitly, verified live
+  against QuickGO and OLS, and the same review file asserted it plainly twelve lines
+  further down. `projects/` is where this repo records ontology decisions postdating a
+  cache snapshot, so a cache-only search will systematically miss them; `cache/ontologies/README.md`
+  says the caches are sparse by design, holding only terms used in annotations. Absence
+  from a cache means "not cached", never "not real" and never "not recorded here". Search
+  the gene directory, cited publications, the caches, `interpro/`, `projects/`, and the
+  file's own `origin/main` text before concluding anything is unprovable.
+- **A quoted-span sweep is only as good as its corpus — and a bad corpus fails toward
+  "fabricated".** Three rules, each learned by getting it wrong on this project's mouse
+  pass. (i) **Exclude the file under test.** A corpus that walks the gene directory picks up
+  `GENE-ai-review.yaml` itself, so every quote proves itself and the sweep reports a clean
+  pass it did not earn; dropping that one file turned a zero-miss run into a list of misses.
+  (ii) **Every miss that survived was a corpus gap, not a fabrication** — the *other* gene
+  directory named in the comment (a `DR   MGI; ...` line quoted from `Ccne1-uniprot.txt`
+  inside a `Ccnb1` review), the per-family `interpro/panther/PTHR*/*-entries.csv` rather
+  than just `panther.obo`, and a PMID cited only in `supported_by` rather than in the
+  top-level `references` list the extractor read. Widen the corpus before you widen the
+  accusation. (iii) **Strip prefixes on both sides, or neither.** A quote that itself
+  carries `DR   ` will not match a source you have stripped `DR   ` out of; test the raw
+  and stripped forms of each.
+- **`origin/main` is not a source.** Listing "present in this file's own `origin/main`
+  text" among the places a span may be proven against silently exempts every pre-existing
+  quote, because that is where pre-existing quotes live. It answers *was this introduced by
+  this PR* and gets read as *is this verified* - two different questions, and the corpus
+  sweep on this branch reported one unmatched span with the clause and ten without it. Keep
+  the scope question if you need it, but keep it in a separate column. The exception is a
+  span the prose explicitly presents as the file's own superseded text ("the previous shared
+  reason offered a disjunction, ..."): there `origin/main` genuinely is the source.
+- **A minimum length on the quote regex mis-pairs quotation marks.** `"([^"]{12,400})"`
+  skips a short quoted phrase and then matches from *its* closing mark to the next opening
+  one, so the span reported is the prose between two quotations rather than either of them.
+  A sentence naming both a "Par complex" and a "Par3" produced exactly that. Match every
+  quoted span, then filter by length.
+- **Sweep on the property, not on the phrasings you have seen.** A tell list is built from
+  the instances already found, so it cannot find the ones worded differently — and it reports
+  a clean pass when it runs out of tells, not when it runs out of instances. This project has
+  now shipped that mistake in six places (the abstract-only pass keyed on "The paper concerns"
+  and missed "This physiology belongs to"; a MOD-prefix list; the `Araport`/`araport11`
+  spelling; the PAINT namespace enumeration; a `-B30` extraction; and a `description` sweep
+  keyed on `Falcon` / `best curated with` / `retained as non-core`, which missed
+  `over-extensions`, `GOA rows`, `not treated here` and `conflate` — two of them in
+  descriptions the same commit had just rewritten). For `description` the property is one
+  sentence: **it must be readable by someone who does not know this repository exists**, so
+  any sentence whose grammatical subject is *an annotation* rather than *the gene* belongs in
+  `review.reason`, `core_functions` or the notes file. Operationalize that **grammatically, not
+  lexically** — split the field into sentences and judge each one's subject, object and
+  predicate, flagging any where an annotation, an evidence record or a curation artifact
+  appears as *subject or object*, **or** where the *predicate* is a curation act. Read each hit
+  and judge; the result is a set you can defend, because what it missed is a judgement you made
+  rather than a word you had not thought of.
+
+  **Do not read any example below as the set to match against** — that is this bullet's whole
+  subject, and the examples fail the test themselves. Every curation-act instance in this
+  corpus is plural (`are treated as`, `are retained as`, `are curated as`), so the singular
+  forms that come to mind first — `is treated as`, `is kept as` — match **zero** of the ten
+  occurrences, spread over eight files (`Calm3` alone carries three). One of
+  the ten is `are **best** treated as`, which no fixed phrase reaches at all. Say which unit a
+  count is in: at *file* scope those same singular forms return over three hundred hits, all of
+  them outside any `description`, so the figure inverts if the scope is left implicit. Object
+  position is the same trap one step further out: `Cdk5r1` says the p35/p25 distribution explains
+  *"the mixed cellular localization annotations"*, where subject and predicate are both clean and
+  the annotation sits in a trailing participial clause. An outside reader still asks *what
+  annotations?*, so it is an instance — which is why the test is a judgement about roles, not a
+  list of strings.
+
+  **Expect the screen to produce hits that clear** — that is the `read each hit and judge` step
+  working, not a sign it is too wide. The Dnajb11 sentence written for this very bullet (*"the
+  **observation** used an N-terminally tagged construct…"*) is itself a hit, with an evidence
+  record as its subject, and it clears: a biologist who has never seen this repository reads it
+  as ordinary writing about a published experiment. Counting hits as defects is what pulls a
+  screen back toward being a tell list.
+
+  This bullet got that wrong on its first writing, which is the sharpest case in the file: it
+  diagnosed tell-list sweeping and then **specified the remedy as a tell list** (`annotat`,
+  `GOA`, `GO_REF`, an evidence code, `curat`, `term`, `non-core`, `over-`, `treated here`, a
+  provider name). Run that vocabulary over `Dnajb11`'s *"The reported APOBEC1/apoB
+  mRNA-editing interaction **is treated as** unsupported"* and it returns **zero** hits —
+  `treated as` is not `treated here`, and none of the other nine appears. `Tert` (*"are
+  treated as context-dependent **non-canonical** activities"*) and `Syk` (*"rather than the
+  **core** molecular function"*) escape identically, on one word each. A vocabulary is always
+  built from the instances already found, so specifying one as the cure for that very failure
+  reproduces it at one remove. The grammar is what generalizes: a curation act has a doer, and
+  in a `description` the doer is always this review.
+- **A scare quote is not a quotation.** `"FB:FBgn0001091 is Gapdh1"` in a Gapdh comment is
+  a proposition the sentence goes on to call "an inference from organism and gene name
+  rather than a lookup", not a span lifted from a source. Read the surrounding prose
+  before treating an unmatched span as a citation defect.
+- **If a block's prose argues its own action may be under-strength, say so in the prose.**
+  `root_cause` and `failure_modes` are a fixed vocabulary and cannot carry "the objection
+  reaches further than the action I am leaving in place". A consumer reading the structured
+  fields alone gets only the coded story, so the tension belongs in the comment, with the
+  reason it is being left (e.g. re-typing an inherited action is a separate judgement).
+
+**Name the fault with its own action's vocabulary.** Calling a defect "the over-annotation"
+in a row whose action is `REMOVE` — beside a sibling row carrying
+`MARK_AS_OVER_ANNOTATED` — reads as an argument for the other action. The disjunctive
+reason class this project dismantled (Casp3, Ghr) failed the same way: the limb that made
+the text defensible was the limb arguing against the action it sat on.
+
 ---
 
-# STATUS
+## Project history & methodology
 
-## Analyzed Genes
-- [x] pombe/Epe1 - Pseudo-enzyme propagation (HIGH severity)
-- [x] MYCTU/cds1 - Neo-functionalization opposite reaction (CRITICAL severity)
-- [x] VIBCH/cds1 - Neo-functionalization opposite reaction (CRITICAL severity)
-- [x] CANAL/LPL1 - Substrate specificity (MEDIUM severity)
-- [x] human/UBA7 - Generic vs specific terms (LOW severity)
-- [x] human/RIMBP2 - Organism/tissue context transfer (MEDIUM severity)
-- [x] ECOLI/arnF - Mechanism divergence in SMR superfamily (MEDIUM severity)
+This page records the **synthesized findings**. The dated project log, the per-pass
+verification narrative (what was added, what was retracted and why), and the
+**lessons learned** are kept separately in [IBA_REVIEW/HISTORY.md](IBA_REVIEW/HISTORY.md).
 
-## Patterns Identified
-- [x] Pseudo-enzyme IBA propagation
-- [x] **Neo-functionalization: opposite reaction in subfamily** (NEW - most severe type)
-- [x] Substrate specificity over-transfer
-- [x] Secondary activity promotion
-- [x] Organism/tissue context transfer
-- [x] Mechanism divergence within structural superfamily (same fold, different transport mechanism)
-
-Last updated: 2026-03-04
-
-# NOTES
-
-## 2026-03-04
-
-**Added ECOLI/arnF - Mechanism Divergence Within SMR Superfamily**
-
-arnF illustrates a new pattern: **mechanism divergence within a structural superfamily**. The PANTHER family PTHR30561 groups the entire SMR/DMT superfamily — EmrE (drug efflux), MdtI/J (spermidine export), Gdx (guanidinium export), Mmr (multidrug resistance), and ArnE/ArnF (lipid flipping). All share the same 4-TM-helix fold, but ArnE/ArnF evolved a fundamentally different transport mechanism: intramembrane lipid translocation rather than transmembrane solute export.
-
-The IBA WITH/FROM field reveals the problem directly:
-- GO:0022857 (transmembrane transporter activity): inferred from EmrE (P23895), MdtI (P69210), MdtJ (P69212), Gdx (P69937), Mmr (P9WGF1), ArnE (Q47377), and ArnF itself
-- All the non-ArnE/ArnF proteins are genuine solute exporters; the annotation is correct for them but misleading for arnF
-
-**Comparison with other IBA issue types**:
-- Epe1: function **lost** (pseudo-enzyme) — HIGH severity
-- cds1: function **inverted** (opposite reaction) — CRITICAL severity
-- arnF: function **diverged in mechanism** (flip vs export) — MEDIUM severity
-
-arnF sits in a middle ground: the IBA isn't wrong (it IS a transporter), but it mischaracterizes the mechanism. The correct term GO:0140303 (intramembrane lipid transporter activity) captures the flippase specificity.
-
-**EcoCyc annotation quality**: EcoCyc contributed 5 of 18 annotations. The two "response to iron(III) ion" annotations (IGI + IEP) are classic over-annotations — they annotate based on transcriptional regulation rather than direct function. Iron activates BasS-BasR → induces arn operon → ArnF is expressed. But ArnF doesn't sense, bind, or respond to iron. EcoCyc's IMP annotations (carbohydrate derivative transport/transporter activity) and IDA (plasma membrane) are well-supported and accurate.
-
-## 2026-01-26
-
-**Added PTHR10314/cds1 - Neo-Functionalization (Opposite Reaction) Pattern**
-
-This is arguably the most informative example for the IBA quality review project. The cds1 case (subfamily SF135 of PTHR10314) demonstrates the **most severe type of IBA error**: annotation of the exact **opposite biological function**.
-
-Key findings from family analysis:
-- GO:0019344 (cysteine biosynthetic process) is annotated at family root and propagates to all descendants
-- Subfamily SF135 (Cds1/desulfhydrases) underwent neo-functionalization: same fold, opposite reaction
-- Cds1 catalyzes cysteine **CATABOLISM** (EC 4.4.1.1): L-Cys → H2S + pyruvate + NH3
-- IBA says cysteine **BIOSYNTHESIS** - directionally wrong!
-
-Evidence of neo-functionalization in SF135:
-1. Longest branch length (0.528) from root = most sequence divergence
-2. Different EC class: 4.4.1.1 vs 2.5.1.47
-3. Only 24% identity with synthases (synthases share 43% with each other)
-4. Different active site motif: ASSGST vs PTSGNTG
-
-Detailed analysis in: `interpro/panther/PTHR10314/PTHR10314-notes.md`
-
-This pattern represents a new category beyond the previously identified issues:
-- Pseudo-enzyme (Epe1): function lost, but domain retained
-- Neo-functionalization (cds1): function **inverted**, same fold
-
-Both reviewed genes (MYCTU/cds1, VIBCH/cds1) have comprehensive reviews with experimental evidence from PMID:34439535 and PMID:34283874.
-
----
-
-**Added RIMBP2 - Organism Context Transfer Pattern**
-
-RIMBP2 illustrates a subtle but important IBA quality issue: **context-specific term transfer**. The IBA annotation `GO:0007274` (neuromuscular synaptic transmission) was transferred from the Drosophila ortholog (FB:FBgn0262483), where NMJ is a primary experimental system for studying synaptic function.
-
-However, human RIMBP2 functions primarily at:
-- Hippocampal mossy fiber synapses
-- CA3-CA1 synapses
-- Auditory ribbon synapses
-
-Not at neuromuscular junctions. The annotation isn't "wrong" in the sense that RIMBP2 is involved in synaptic transmission, but it's misleading because it implies NMJ function.
-
-**Key Insight**: IBAs are only as good as the manual annotations on orthologs. When source organisms have biased annotation (e.g., flies are heavily annotated at NMJ because that's the accessible synapse type), this bias propagates through phylogenetic inference.
-
-**Family-Level Analysis (PTHR14234)**: The PANTHER family analysis provides additional context:
-- Representative structure is *Drosophila* RIM-BP (PDB 4z8a) - fly-centric
-- Family includes RIMBP3 (SF21) which is **non-synaptic** (testis/spermiogenesis)
-- Family research warns: "Avoid propagating 'regulation of neurotransmitter release' to RIMBP3 paralogs"
-- This shows IBA issues can affect entire subfamilies when root annotations don't apply universally
-
-See: `interpro/panther/PTHR14234/PTHR14234-deep-research-falcon.md`
-
-**Recommendation**: For synaptic genes, consider whether the specific synapse type in the term (NMJ, CNS, etc.) actually applies to the target species, or whether a more general synaptic transmission term would be more accurate.
-
-## 2026-01-22
-
-**Project Creation**
-
-Documented IBA quality issues discovered through AI review.
-
-**Key Finding**: The most severe IBA quality issue is **pseudo-enzyme propagation** - transferring enzymatic activity to proteins that have lost catalytic function while retaining the domain fold.
-
-**Epe1 Case Study**:
-- JmjC domain → IBA from active demethylases
-- Epe1 has HVD motif (not HXD), missing Fe(II) coordination
-- Mass spec assays: NO demethylation detected
-- H297A catalytic mutant: retains anti-silencing function
-- **Conclusion**: All enzymatic IBA annotations should be REMOVE
-
-**Recommendation**: Develop automated pipeline to flag IBA annotations for proteins with degenerate active site motifs.
+A reproducible **multiple-sequence-alignment check** of the two central pseudo-enzyme
+claims (Argonaute catalytic tetrad; CRMP/DPYSL metal-coordinating residues) lives in
+[IBA_REVIEW/msa/](IBA_REVIEW/msa/RESULTS.md) — `uv run python catalytic_residue_msa.py`.

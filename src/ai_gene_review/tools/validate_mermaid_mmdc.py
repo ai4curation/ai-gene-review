@@ -30,7 +30,7 @@ def find_mermaid_blocks(file_path: Path) -> List[Tuple[str, int, str]]:
 
 def get_puppeteer_config() -> Optional[Path]:
     """Get the puppeteer configuration file path."""
-    config_path = Path(__file__).parent.parent.parent.parent / "config" / "puppeteer-config.json"
+    config_path = Path(__file__).parent.parent.parent.parent / "conf" / "puppeteer-config.json"
     if config_path.exists():
         return config_path
     return None

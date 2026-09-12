@@ -1,0 +1,121 @@
+id: https://ai4curation.io/ai-gene-review/schema/ncbifam_go_mapping
+name: ncbifam_go_mapping
+title: NCBIFAM to GO Mapping Schema (term-validatable)
+description: >-
+  Sidecar LinkML schema for the curated NCBIFAM->GO mapping set whose canonical SSSOM source is
+  projects/NCBIFam/ncbifam2go.sssom.yaml. The object (GO) is modeled as an id/label tuple with a
+  binding so that linkml-term-validator can check, for every mapping, that the GO CURIE resolves AND
+  that the supplied label matches the ontology label. Unlike the RHEA sidecar (which binds the object
+  to the molecular-function branch), NCBIFAM is a whole-protein family resource whose go_terms span
+  all three GO aspects, so the object is bound to the full GO graph (MF + BP + CC roots). The subject
+  (NCBIFAM family) is a curated id/label tuple (label = family product name + family_type) that is NOT
+  bound to an ontology enum, so only the GO side is hard-validated. The nested data file
+  (projects/NCBIFam/ncbifam2go.terms.yaml) is generated from the SSSOM file by
+  projects/NCBIFam/sssom_to_terms.py.
+
+prefixes:
+  linkml: https://w3id.org/linkml/
+  ncbifamgo: https://ai4curation.io/ai-gene-review/ncbifam_go_mapping/
+  NCBIFAM: https://www.ncbi.nlm.nih.gov/protfam/
+  GO: http://purl.obolibrary.org/obo/GO_
+  skos: http://www.w3.org/2004/02/skos/core#
+  semapv: https://w3id.org/semapv/vocab/
+  rdfs: http://www.w3.org/2000/01/rdf-schema#
+
+imports:
+  - linkml:types
+
+default_prefix: ncbifamgo
+default_range: string
+
+slots:
+  id:
+    identifier: true
+    description: CURIE of the term.
+  label:
+    slot_uri: rdfs:label
+    description: Human-readable label for the term (validated against the ontology where bound).
+  subject:
+    range: NCBIFAMTerm
+    inlined: true
+    required: true
+    description: NCBIFAM source family as an id/label tuple (label = product name + family_type; not enum-bound).
+  predicate:
+    range: PredicateTerm
+    inlined: true
+    required: true
+    description: Mapping predicate (id/label tuple; SKOS, not ontology-label-validated).
+  object:
+    range: GOTerm
+    inlined: true
+    required: true
+    description: GO target term (any aspect) as an id/label tuple.
+    bindings:
+      - binds_value_of: id
+        range: GOTermEnum
+        obligation_level: REQUIRED
+  mapping_justification:
+    range: string
+    required: true
+    description: SSSOM mapping justification (e.g. semapv:ManualMappingCuration).
+  comment:
+    range: string
+    description: Free-text note on the mapping.
+  mappings:
+    range: NCBIFAMGOMapping
+    multivalued: true
+    inlined_as_list: true
+    description: The curated NCBIFAM->GO mappings.
+
+classes:
+  NCBIFAMTerm:
+    description: An NCBIFAM family represented as an id/label (product name) pair.
+    slots:
+      - id
+      - label
+    slot_usage:
+      label:
+        required: true
+
+  GOTerm:
+    description: A GO term represented as an id/label pair.
+    slots:
+      - id
+      - label
+    slot_usage:
+      label:
+        required: true
+
+  PredicateTerm:
+    description: A mapping predicate represented as an id/label pair (SKOS).
+    slots:
+      - id
+      - label
+
+  NCBIFAMGOMapping:
+    description: One curated mapping from an NCBIFAM family to a GO term.
+    slots:
+      - subject
+      - predicate
+      - object
+      - mapping_justification
+      - comment
+
+  NCBIFAMGOMappingSet:
+    tree_root: true
+    description: The set of curated NCBIFAM->GO mappings (nested term-tuple form).
+    slots:
+      - mappings
+
+enums:
+  GOTermEnum:
+    description: Any term in the Gene Ontology (molecular-function, biological-process, or cellular-component branch).
+    reachable_from:
+      source_nodes:
+        - GO:0003674
+        - GO:0008150
+        - GO:0005575
+      is_direct: false
+      include_self: true
+      relationship_types:
+        - rdfs:subClassOf

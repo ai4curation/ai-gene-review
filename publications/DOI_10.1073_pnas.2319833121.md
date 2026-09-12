@@ -14,6 +14,7 @@ journal: Proceedings of the National Academy of Sciences
 year: '2024'
 doi: 10.1073/pnas.2319833121
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Sirt2 inhibition improves gut epithelial barrier integrity and protects mice from colitis

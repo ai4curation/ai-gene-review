@@ -14,6 +14,7 @@ authors:
 year: '2023'
 doi: 10.1101/2023.08.08.549335
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # The synapsin-dependent vesicle cluster is crucial for presynaptic plasticity at a glutamatergic synapse in male mice

@@ -12,6 +12,7 @@ journal: International Journal of Molecular Sciences
 year: '2024'
 doi: 10.3390/ijms25052998
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Emerging Role of GCN1 in Disease and Homeostasis

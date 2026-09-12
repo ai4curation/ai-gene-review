@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: Akt1 (rat)
 
-Source: Akt1-deep-research-bioreason-rl.md
+Source: Akt1-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 4/5

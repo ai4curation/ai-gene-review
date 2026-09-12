@@ -1,0 +1,10 @@
+| Protein Name | Organism | Domain Architecture | Subcellular Localization | Known Function | Relationship to DSF2 |
+|---|---|---|---|---|---|
+| **Dsf2** | *Saccharomyces cerevisiae* | Sel1-like repeats; TPR-like helical domain; Mitotic_Regulator domain | Bud neck; relocalizes to cytoplasm upon DNA replication stress | Best-supported as a non-enzymatic adaptor/scaffold protein associated with bud-neck/cell-division functions; genetically linked to **MPT5** and inferred to connect to the **Cbk1/RAM** network (pqac-00000004, pqac-00000005, pqac-00000015, pqac-00000030) | Self |
+| **Nif1** | *Schizosaccharomyces pombe* | Sel1-like repeats | Not clearly established in the retrieved evidence | Mitotic inhibitor acting via interaction with **Nim1** protein kinase (pqac-00000011, pqac-00000014) | Ortholog |
+| **SppD** | *Aspergillus oryzae* | 3 SEL1 domain repeats | Septum / septal pore; accumulates at septal structures involved in wound response | Required for septal pore plugging upon wounding; proposed to have evolved in Pezizomycotina by gene duplication from a yeast-like orthologous lineage (pqac-00000012, pqac-00000014) | Ortholog; likely lineage-specialized derivative |
+| **Hrd3** | *Saccharomyces cerevisiae* | 12 Sel1-like repeats | ER membrane / ER lumenal HRD complex | ERAD substrate-recognition adaptor/scaffold in the **Hrd1** complex; Sel1-like repeats mediate substrate and partner recognition (pqac-00000004, pqac-00000006) | Same Sel1-like repeat protein family |
+| **Chs4** | *Saccharomyces cerevisiae* | 7 Sel1-like repeats | Septum / bud neck | Activator and recruitment factor for chitin synthase III during septum formation; adaptor/scaffold role in cytokinetic cell-wall assembly (pqac-00000004, pqac-00000005) | Same Sel1-like repeat protein family |
+
+
+*Table: This table compares DSF2 with orthologous or domain-related fungal Sel1-like repeat proteins to clarify what is directly known about DSF2 versus what can be inferred from better-characterized family members. It is useful for interpreting DSF2 as a likely scaffold/adaptor protein involved in cell division-related processes.*

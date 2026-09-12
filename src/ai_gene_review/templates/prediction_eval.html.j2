@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title | default('Prediction Evaluation') }}</title>
+    <style>
+        :root {
+            --color-cor: #16a34a;
+            --color-cnn: #65a30d;
+            --color-lsp: #ca8a04;
+            --color-unc: #6b7280;
+            --color-pli: #dc2626;
+            --color-npi: #ef4444;
+            --color-rep: #f97316;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: #fff;
+            padding: 2rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+        .subtitle { color: var(--text-muted); margin-bottom: 1.5rem; }
+
+        .summary-bar {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+            padding: 1rem 1.5rem;
+            background: var(--bg-light);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        .summary-stat { text-align: center; }
+        .summary-stat .value { font-size: 1.5rem; font-weight: 700; }
+        .summary-stat .label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .assessment-dist {
+            display: flex;
+            height: 28px;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 2rem;
+            border: 1px solid var(--border-color);
+        }
+        .assessment-dist .seg {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #fff;
+            min-width: 0;
+            transition: flex 0.3s;
+        }
+        .seg-COR { background: var(--color-cor); }
+        .seg-CNN { background: var(--color-cnn); }
+        .seg-LSP { background: var(--color-lsp); }
+        .seg-UNC { background: var(--color-unc); }
+        .seg-PLI { background: var(--color-pli); }
+        .seg-NPI { background: var(--color-npi); }
+        .seg-REP { background: var(--color-rep); }
+
+        .legend {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+            font-size: 0.8rem;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        .legend-swatch {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .controls input[type="text"] {
+            padding: 0.4rem 0.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            width: 250px;
+        }
+        .controls select {
+            padding: 0.4rem 0.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+        th {
+            background: var(--bg-light);
+            padding: 0.6rem 0.8rem;
+            text-align: left;
+            border-bottom: 2px solid var(--border-color);
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+        th:hover { background: #eef2ff; }
+        th .sort-arrow { font-size: 0.65rem; margin-left: 0.3rem; color: var(--text-muted); }
+        td {
+            padding: 0.5rem 0.8rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+        tr:hover { background: #fafbff; }
+
+        .badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        .badge-COR { background: var(--color-cor); }
+        .badge-CNN { background: var(--color-cnn); }
+        .badge-LSP { background: var(--color-lsp); }
+        .badge-UNC { background: var(--color-unc); }
+        .badge-PLI { background: var(--color-pli); }
+        .badge-NPI { background: var(--color-npi); }
+        .badge-REP { background: var(--color-rep); }
+
+        .badge-error {
+            display: inline-block;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .term-type {
+            display: inline-block;
+            padding: 0.1rem 0.35rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 500;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+        }
+
+        .gene-link { color: #2563eb; text-decoration: none; }
+        .gene-link:hover { text-decoration: underline; }
+
+        .summary-cell { max-width: 400px; }
+        .summary-text {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.4;
+            font-size: 0.8rem;
+            color: #374151;
+        }
+        tr.expanded .summary-text {
+            -webkit-line-clamp: unset;
+            overflow: visible;
+        }
+
+        .no-predictions {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .protein-row td { background: #f8fafc; font-weight: 500; }
+
+        footer { margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.75rem; }
+    </style>
+</head>
+<body>
+
+<h1>{{ title | default('Prediction Evaluation') }}</h1>
+<p class="subtitle">{{ subtitle | default('') }}</p>
+
+<div class="summary-bar">
+    <div class="summary-stat">
+        <div class="value">{{ proteins | length }}</div>
+        <div class="label">Proteins</div>
+    </div>
+    <div class="summary-stat">
+        <div class="value">{{ total_predictions }}</div>
+        <div class="label">Predictions</div>
+    </div>
+    {% for code in ['COR','CNN','LSP','UNC','PLI','NPI','REP'] %}
+    {% if counts[code] %}
+    <div class="summary-stat">
+        <div class="value" style="color: var(--color-{{ code | lower }});">{{ counts[code] }}</div>
+        <div class="label">{{ code }}</div>
+    </div>
+    {% endif %}
+    {% endfor %}
+    <div class="summary-stat">
+        <div class="value">{{ "%.1f" | format(mean_cs) }}</div>
+        <div class="label">Mean CS</div>
+    </div>
+</div>
+
+{% if total_predictions > 0 %}
+<div class="assessment-dist">
+    {% for code in ['COR','CNN','LSP','UNC','PLI','NPI','REP'] %}
+    {% if counts[code] %}
+    <div class="seg seg-{{ code }}" style="flex: {{ counts[code] }};" title="{{ code }}: {{ counts[code] }}">
+        {% if counts[code] * 100 / total_predictions > 5 %}{{ code }} ({{ counts[code] }}){% endif %}
+    </div>
+    {% endif %}
+    {% endfor %}
+</div>
+{% endif %}
+
+<div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-cor)"></div>COR — Correct novel</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-cnn)"></div>CNN — Correct, not novel</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-lsp)"></div>LSP — Less precise</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-unc)"></div>UNC — Uncertain</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-pli)"></div>PLI — Paralog incorrect</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-npi)"></div>NPI — Nonparalog incorrect</div>
+    <div class="legend-item"><div class="legend-swatch" style="background:var(--color-rep)"></div>REP — Frequency bias</div>
+</div>
+
+<div class="controls">
+    <input type="text" id="search" placeholder="Filter by protein, term, or text…" oninput="filterTable()">
+    <select id="assessmentFilter" onchange="filterTable()">
+        <option value="">All assessments</option>
+        {% for code in ['COR','CNN','LSP','UNC','PLI','NPI','REP'] %}
+        <option value="{{ code }}">{{ code }}</option>
+        {% endfor %}
+    </select>
+    <select id="typeFilter" onchange="filterTable()">
+        <option value="">All term types</option>
+        {% for t in term_types %}
+        <option value="{{ t }}">{{ t }}</option>
+        {% endfor %}
+    </select>
+    <label style="font-size:0.85rem;">
+        <input type="checkbox" id="hideNoPred" onchange="filterTable()"> Hide no-prediction rows
+    </label>
+</div>
+
+<table id="evalTable">
+<thead>
+<tr>
+    <th onclick="sortTable(0)">Protein <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(1)">Organism <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(2)">Predicted Term <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(3)">Type <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(4)">Assessment <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(5)">CS <span class="sort-arrow">▼</span></th>
+    <th onclick="sortTable(6)">Error <span class="sort-arrow">▼</span></th>
+    <th>Summary</th>
+</tr>
+</thead>
+<tbody>
+{% for protein in proteins %}
+{% if protein.predictions %}
+{% for pred in protein.predictions %}
+<tr data-assessment="{{ pred.review.assessment }}" data-type="{{ pred.predicted_term_type }}" data-nopred="0" onclick="this.classList.toggle('expanded')">
+    <td>
+        {% if protein.review_link %}<a class="gene-link" href="{{ protein.review_link }}">{{ protein.id }}</a>{% else %}{{ protein.id }}{% endif %}
+        {% if protein.gene_symbol and protein.gene_symbol != protein.id %}<br><small style="color:var(--text-muted)">{{ protein.gene_symbol }}</small>{% endif %}
+    </td>
+    <td><small>{{ protein.taxon.label | default('') }}</small></td>
+    <td>
+        {% if pred.predicted_term.id %}<strong>{{ pred.predicted_term.id }}</strong><br>{% endif %}
+        {{ pred.predicted_term.label | default('') }}
+    </td>
+    <td><span class="term-type">{{ pred.predicted_term_type }}</span></td>
+    <td><span class="badge badge-{{ pred.review.assessment }}">{{ pred.review.assessment }}</span></td>
+    <td>{{ pred.review.confidence_score | default('') }}</td>
+    <td>{% if pred.review.error_type %}<span class="badge-error">{{ pred.review.error_type }}</span>{% endif %}</td>
+    <td class="summary-cell"><div class="summary-text">{{ pred.review.summary | default('') }}</div></td>
+</tr>
+{% endfor %}
+{% else %}
+<tr data-assessment="" data-type="" data-nopred="1" class="no-pred-row">
+    <td>
+        {% if protein.review_link %}<a class="gene-link" href="{{ protein.review_link }}">{{ protein.id }}</a>{% else %}{{ protein.id }}{% endif %}
+        {% if protein.gene_symbol and protein.gene_symbol != protein.id %}<br><small style="color:var(--text-muted)">{{ protein.gene_symbol }}</small>{% endif %}
+    </td>
+    <td><small>{{ protein.taxon.label | default('') }}</small></td>
+    <td colspan="6" class="no-predictions">No predictions</td>
+</tr>
+{% endif %}
+{% endfor %}
+</tbody>
+</table>
+
+<footer>
+    Generated from {{ proteins | length }} prediction review YAML files.
+    Assessment categories per de Crécy-Lagard et al. 2025 (PMID:40703034).
+</footer>
+
+<script>
+function filterTable() {
+    const search = document.getElementById('search').value.toLowerCase();
+    const assessment = document.getElementById('assessmentFilter').value;
+    const termType = document.getElementById('typeFilter').value;
+    const hideNoPred = document.getElementById('hideNoPred').checked;
+    const rows = document.querySelectorAll('#evalTable tbody tr');
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        const rowAssessment = row.dataset.assessment;
+        const rowType = row.dataset.type;
+        const isNoPred = row.dataset.nopred === '1';
+        let show = true;
+        if (search && !text.includes(search)) show = false;
+        if (assessment && rowAssessment !== assessment) show = false;
+        if (termType && rowType !== termType) show = false;
+        if (hideNoPred && isNoPred) show = false;
+        row.style.display = show ? '' : 'none';
+    });
+}
+
+let sortCol = -1, sortAsc = true;
+function sortTable(col) {
+    if (sortCol === col) { sortAsc = !sortAsc; } else { sortCol = col; sortAsc = true; }
+    const tbody = document.querySelector('#evalTable tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    rows.sort((a, b) => {
+        const aVal = (a.children[col] || {}).textContent || '';
+        const bVal = (b.children[col] || {}).textContent || '';
+        const cmp = aVal.localeCompare(bVal, undefined, {numeric: true});
+        return sortAsc ? cmp : -cmp;
+    });
+    rows.forEach(r => tbody.appendChild(r));
+}
+</script>
+
+</body>
+</html>

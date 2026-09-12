@@ -1,0 +1,78 @@
+# ERO1B PN Consistency Notes
+
+- Generated: 2026-06-18
+- Project: PROTEOSTASIS
+- Scope: PN consistency rereview against local AIGR review and available deep-research artifacts
+- UniProt: Q86YB8
+- AIGR review status: COMPLETE
+- Review batch: proteostasis-batch-2026-06-07b
+- Batch change status: added
+
+## Source Files Checked
+
+- AIGR review YAML: present - [genes/human/ERO1B/ERO1B-ai-review.yaml](ERO1B-ai-review.yaml)
+- AIGR review HTML: present - [genes/human/ERO1B/ERO1B-ai-review.html](ERO1B-ai-review.html)
+- Gene notes: present - [genes/human/ERO1B/ERO1B-notes.md](ERO1B-notes.md)
+- GOA TSV: present - [genes/human/ERO1B/ERO1B-goa.tsv](ERO1B-goa.tsv)
+- UniProt record: present - [genes/human/ERO1B/ERO1B-uniprot.txt](ERO1B-uniprot.txt)
+- PN dossier: [projects/PROTEOSTASIS/reports/phase1_dossiers/ERO1B.md](../../../projects/PROTEOSTASIS/reports/phase1_dossiers/ERO1B.md)
+- PN consistency section: [projects/PROTEOSTASIS/reports/phase1_dossiers/_sections/ERO1B.md](../../../projects/PROTEOSTASIS/reports/phase1_dossiers/_sections/ERO1B.md)
+- PN projection report: [projects/PROTEOSTASIS/reports/pn_projection/pn_projected_gene_go_summary.tsv](../../../projects/PROTEOSTASIS/reports/pn_projection/pn_projected_gene_go_summary.tsv)
+- PN mapping audit: [projects/PROTEOSTASIS/reports/pn_mapping_audit/current_mapping_scrutiny.tsv](../../../projects/PROTEOSTASIS/reports/pn_mapping_audit/current_mapping_scrutiny.tsv)
+
+### Deep Research Files
+
+- No `*-deep-research*.md` file found in this gene directory.
+
+## AIGR Review Snapshot
+
+- Description: ERO1B (ERO1-like protein beta, formerly ERO1LB; endoplasmic reticulum oxidoreductin-1 beta) is an ER membrane-associated, FAD-dependent flavoprotein sulfhydryl oxidase (EC 1.8.3.2) and a paralog of ERO1A. It drives oxidative protein folding in the endoplasmic reticulum by reoxidizing the protein disulfide isomerase P4HB/PDI (and, less efficiently, other PDI-family members), regenerating their active-site disulfides so they can catalyze further disulfide-bond formation in secretory proteins; the abstracted electrons are passed via bound FAD to molecular oxygen, producing hydrogen peroxide. It is a peripheral membrane protein on the lumenal side of the ER (and is retained there in part through interaction with ERP44), and forms disulfide-linked homodimers as well as heterodimers with ERO1A. Compared with ERO1A it is intrinsically more active and more loosely regulated, consistent with its enrichment in professional secretory tissues - particularly the pancreatic islets of Langerhans, stomach chief cells and digestive tract - where high oxidative folding capacity is required. It is induced during the unfolded protein response and has been implicated in oxidative proinsulin folding and glucose homeostasis.
+- Existing/core annotation action counts: ACCEPT: 15; KEEP_AS_NON_CORE: 6; MARK_AS_OVER_ANNOTATED: 4
+
+## PN Consistency Summary
+
+- **Consistency:** Notes, review YAML, and the corrected PN type mapping agree: ERO1B is an FAD-dependent sulfhydryl OXIDASE (paralog of ERO1A, more active/loosely regulated, secretory-tissue enriched) that reoxidizes PDI. Review core MF = GO:0016971 (EXP PMID:11707400/21091435, ACCEPT) and it **MARK_AS_OVER_ANNOTATED** the GO:0015035 protein-disulfide reductase rows (IEA + three Reactome EXP rows) for wrong directionality. **Same internal PN tension as ERO1A:** the parent group still maps GO:0003756 and the projected list still projects GO:0003756 to ERO1B as new_to_goa, contradicting the corrected type node and the review.
+- **PN story / NEW pressure:** GO:0016971 (OLS-verified) is in GOA (EXP) and ACCEPTed — captured. GO:0003756 (verified real) should NOT be added: ERO1B is an oxidase, not an isomerase (the review never asserts isomerase activity and rejects the reductase mislabel). Conclusion on the group projection: **over-reaches** for ERO1B. One nuance the review surfaces that PN does not: a genuine tissue-specific role in oxidative proinsulin folding (GO:0030070 insulin processing, KEEP_AS_NON_CORE) — enrichment, not conflict.
+- **Evidence alignment:** PN dossier lists no reference titles. Review oxidase evidence (PMID:11707400, 21091435, 10818100; plus the rejected reductase sources PMID:16407158, 21091435 Reactome) is reviewer-supplied. ERO1B↔P4HB relay biology mirrors the P4HB review. Alignment by shared biology, not citation list.
+- **Verdict:** Consistent at the (corrected) gene/type level; GO:0016971 validated and captured. The **group-level GO:0003756 projection over-reaches** and should not land on ERO1B (same fix as ERO1A). **Recommended edits:** [MAP] suppress/override the GO:0003756 projection for ERO1B so PDI-reoxidation oxidase children inherit only GO:0016971 (consistent with the corrected type node and the review's explicit oxidase-not-isomerase / not-reductase stance).
+
+## Full Consistency Review
+
+- **UniProt:** Q86YB8 · **batch:** proteostasis-batch-2026-06-07b · **review status:** COMPLETE
+- **PN placement:** `ER proteostasis|Folding enzyme|Protein disulfide isomerases|Protein disulfide isomerase reoxidation`. **PN-node mapping:** type `PDI reoxidation`=mapped→**GO:0016971 flavin-dependent sulfhydryl oxidase activity** (corrected in batch-5); parent group `Protein disulfide isomerases`=mapped→**GO:0003756 protein disulfide isomerase activity** (new_to_goa); class/branch=no_mapping. (Identical node/mapping structure to ERO1A.)
+- **Consistency:** Notes, review YAML, and the corrected PN type mapping agree: ERO1B is an FAD-dependent sulfhydryl OXIDASE (paralog of ERO1A, more active/loosely regulated, secretory-tissue enriched) that reoxidizes PDI. Review core MF = GO:0016971 (EXP PMID:11707400/21091435, ACCEPT) and it **MARK_AS_OVER_ANNOTATED** the GO:0015035 protein-disulfide reductase rows (IEA + three Reactome EXP rows) for wrong directionality. **Same internal PN tension as ERO1A:** the parent group still maps GO:0003756 and the projected list still projects GO:0003756 to ERO1B as new_to_goa, contradicting the corrected type node and the review.
+- **PN story / NEW pressure:** GO:0016971 (OLS-verified) is in GOA (EXP) and ACCEPTed — captured. GO:0003756 (verified real) should NOT be added: ERO1B is an oxidase, not an isomerase (the review never asserts isomerase activity and rejects the reductase mislabel). Conclusion on the group projection: **over-reaches** for ERO1B. One nuance the review surfaces that PN does not: a genuine tissue-specific role in oxidative proinsulin folding (GO:0030070 insulin processing, KEEP_AS_NON_CORE) — enrichment, not conflict.
+- **Mapping strategy:** Type-level correction (→GO:0016971) is right; the residual group-level GO:0003756 inheritance is the only problem, arising because `Protein disulfide isomerases` mixes catalytic isomerases, non-catalytic members and oxidases. ERO1B is the cleanest illustration: it carries three EXP reductase rows that the review actively rejects on directionality grounds, so propagating the isomerase term to it is doubly inappropriate.
+- **Evidence alignment:** PN dossier lists no reference titles. Review oxidase evidence (PMID:11707400, 21091435, 10818100; plus the rejected reductase sources PMID:16407158, 21091435 Reactome) is reviewer-supplied. ERO1B↔P4HB relay biology mirrors the P4HB review. Alignment by shared biology, not citation list.
+- **Verdict:** Consistent at the (corrected) gene/type level; GO:0016971 validated and captured. The **group-level GO:0003756 projection over-reaches** and should not land on ERO1B (same fix as ERO1A). **Recommended edits:** [MAP] suppress/override the GO:0003756 projection for ERO1B so PDI-reoxidation oxidase children inherit only GO:0016971 (consistent with the corrected type node and the review's explicit oxidase-not-isomerase / not-reductase stance).
+
+## PN Dossier Context
+
+- review_batch: proteostasis-batch-2026-06-07b
+- review_yaml: genes/human/ERO1B/ERO1B-ai-review.yaml
+- PN workbook rows: 1
+
+## PN row 1: ER proteostasis | Folding enzyme | Protein disulfide isomerases | Protein disulfide isomerase reoxidation
+- UniProt: Q86YB8
+- In branches: ER
+- PN-node mapping records (path + ancestors):
+    - [type] ER proteostasis|Folding enzyme|Protein disulfide isomerases|Protein disulfide isomerase reoxidation
+        status=mapped scope=ok_for_propagation_to_go GO=[GO:0016971 flavin-dependent sulfhydryl oxidase activity]
+        rationale: Corrected after gene-level review (proteostasis batch 5). This PN type is the ERO1 "PDI reoxidation" step, whose members (ERO1A/ERO1L, ERO1B/ERO1LB) are FAD-dependent sulfhydryl OXIDASES that reoxidize PDI to regenerate its active site — they do not themselves catalyze protein disulfide isomerization. The previous target GO:0003756 (protein disulfide isomerase activity) was incorrect for this node and would mislabel the oxidases as isomerases (both ERO1A and ERO1B reviews mark the protein-disulfide reductase/isomerase terms as over-annotations). The correct shared molecular function is GO:0016971 flavin-dependent sulfhydryl oxidase activity, which both genes carry with experimental (EXP) evidence in GOA.
+    - [group] ER proteostasis|Folding enzyme|Protein disulfide isomerases
+        status=mapped scope=ok_for_propagation_to_go GO=[GO:0003756 protein disulfide isomerase activity]
+        rationale: This PN group captures the canonical ER protein-disulfide-isomerase folding enzymes. GO protein disulfide isomerase activity is the cleanest propagation target for the catalytically active family members.
+    - [class] ER proteostasis|Folding enzyme
+        status=no_mapping scope= GO=[]
+        rationale: Reviewed as a broad PN category rather than a single GO class. The member genes span multiple activities, complexes, or contexts, so direct propagation from this node would overstate the shared biology.
+    - [branch] ER proteostasis
+        status=no_mapping scope= GO=[]
+        rationale: Reviewed as a top-level PN branch. This is a systems/taxonomy umbrella, not a direct GO assertion; narrower child curations carry any propagating GO mappings.
+
+## Projected GO annotations (2)
+- GO:0003756 protein disulfide isomerase activity | scope=ok_for_propagation_to_go | goa_status=new_to_goa | from=ER proteostasis|Folding enzyme|Protein disulfide isomerases
+- GO:0003756 protein disulfide isomerase activity | scope=ok_for_propagation_to_go | goa_status=new_to_goa | from=ER proteostasis|Folding enzyme|Protein disulfide isomerases|Protein disulfide isomerase reoxidation
+
+## Note
+
+This file is generated from the current PROTEOSTASIS phase-1 dossier and local gene-review artifacts. Edit the source review, PN mapping, or dossier rather than this generated note when correcting the underlying curation.

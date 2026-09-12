@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: Buffy (DROME)
 
-Source: Buffy-deep-research-bioreason-rl.md
+Source: Buffy-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 3/5

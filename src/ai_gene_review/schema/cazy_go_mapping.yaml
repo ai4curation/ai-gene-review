@@ -1,0 +1,118 @@
+id: https://ai4curation.io/ai-gene-review/schema/cazy_go_mapping
+name: cazy_go_mapping
+title: CAZy to GO Mapping Schema (term-validatable)
+description: >-
+  Sidecar LinkML schema for the CAZy-family -> GO molecular-function mapping sets in
+  projects/GLYCOBIOLOGY (cazy2go.sssom.yaml seed, cazy2go.safe.sssom.yaml propagation set, and the
+  cazy2go.generated.sssom.yaml full derivation). The object (GO) is modeled as an id/label tuple with
+  a binding so linkml-term-validator checks, for every mapping, that the GO CURIE resolves AND that
+  the supplied label matches the ontology label, AND that the term is in the molecular-function
+  branch. The subject (CAZy family) is a curated id/label tuple NOT bound to an ontology enum (its
+  label is the family name, not an ontology rdfs:label), so only the GO side is hard-validated. The
+  nested data files (cazy2go*.terms.yaml) are generated from the SSSOM files by
+  projects/GLYCOBIOLOGY/sssom_to_terms.py.
+
+prefixes:
+  linkml: https://w3id.org/linkml/
+  cazygo: https://ai4curation.io/ai-gene-review/cazy_go_mapping/
+  CAZy: http://www.cazy.org/
+  GO: http://purl.obolibrary.org/obo/GO_
+  skos: http://www.w3.org/2004/02/skos/core#
+  semapv: https://w3id.org/semapv/vocab/
+  rdfs: http://www.w3.org/2000/01/rdf-schema#
+
+imports:
+  - linkml:types
+
+default_prefix: cazygo
+default_range: string
+
+slots:
+  id:
+    identifier: true
+    description: CURIE of the term.
+  label:
+    slot_uri: rdfs:label
+    description: Human-readable label for the term (validated against the ontology where bound).
+  subject:
+    range: CAZyTerm
+    inlined: true
+    required: true
+    description: CAZy source family as an id/label tuple (label = family name; not enum-bound).
+  predicate:
+    range: PredicateTerm
+    inlined: true
+    required: true
+    description: Mapping predicate (id/label tuple; SKOS, not ontology-label-validated).
+  object:
+    range: GOTerm
+    inlined: true
+    required: true
+    description: GO molecular-function target term as an id/label tuple.
+    bindings:
+      - binds_value_of: id
+        range: GOTermEnum
+        obligation_level: REQUIRED
+  mapping_justification:
+    range: string
+    required: true
+    description: SSSOM mapping justification (e.g. semapv:ManualMappingCuration, semapv:CompositeMatching).
+  comment:
+    range: string
+    description: Free-text note on the mapping.
+  mappings:
+    range: CAZYGOMapping
+    multivalued: true
+    inlined_as_list: true
+    description: The CAZy->GO mappings.
+
+classes:
+  CAZyTerm:
+    description: A CAZy family represented as an id/label (family name) pair.
+    slots:
+      - id
+      - label
+    slot_usage:
+      label:
+        required: true
+
+  GOTerm:
+    description: A GO term represented as an id/label pair.
+    slots:
+      - id
+      - label
+    slot_usage:
+      label:
+        required: true
+
+  PredicateTerm:
+    description: A mapping predicate represented as an id/label pair (SKOS).
+    slots:
+      - id
+      - label
+
+  CAZYGOMapping:
+    description: One mapping from a CAZy family to a GO molecular-function term.
+    slots:
+      - subject
+      - predicate
+      - object
+      - mapping_justification
+      - comment
+
+  CAZYGOMappingSet:
+    tree_root: true
+    description: The set of CAZy->GO mappings (nested term-tuple form).
+    slots:
+      - mappings
+
+enums:
+  GOTermEnum:
+    description: A term in the Gene Ontology molecular-function branch.
+    reachable_from:
+      source_nodes:
+        - GO:0003674
+      is_direct: false
+      include_self: true
+      relationship_types:
+        - rdfs:subClassOf

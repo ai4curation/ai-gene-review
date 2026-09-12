@@ -1,8 +1,6 @@
 ---
 reference_id: DOI:10.1073/pnas.1903024116
-title: "Structural basis for auxiliary subunit KCTD16 regulation of the GABA
-            <sub>B</sub>
-            receptor"
+title: "Structural basis for auxiliary subunit KCTD16 regulation of the GABA <sub>B</sub> receptor"
 authors:
 - Hao Zuo
 - Ian Glaaser
@@ -23,11 +21,10 @@ journal: Proceedings of the National Academy of Sciences
 year: '2019'
 doi: 10.1073/pnas.1903024116
 content_type: abstract_only
+full_text_attempted: true
 ---
 
-# Structural basis for auxiliary subunit KCTD16 regulation of the GABA
-            <sub>B</sub>
-            receptor
+# Structural basis for auxiliary subunit KCTD16 regulation of the GABA <sub>B</sub> receptor
 **Authors:** Hao Zuo, Ian Glaaser, Yulin Zhao, Igor Kurinov, Lidia Mosyak, Haonan Wang, Jonathan Liu, Jinseo Park, Aurel Frangaj, Emmanuel Sturchler, Ming Zhou, Patricia McDonald, Yong Geng, Paul A. Slesinger, Qing R. Fan
 **Journal:** Proceedings of the National Academy of Sciences (2019)
 **DOI:** [10.1073/pnas.1903024116](https://doi.org/10.1073/pnas.1903024116)

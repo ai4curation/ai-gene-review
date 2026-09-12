@@ -9,9 +9,19 @@ on:
       - 'src/ai_gene_review/schema/**'
       - 'src/ai_gene_review/templates/**'
       - 'src/ai_gene_review/render.py'
-      - 'src/ai_gene_review/export.py'
+      - 'src/ai_gene_review/render_projects.py'
+      - 'src/ai_gene_review/render_modules.py'
+      - 'src/ai_gene_review/export/**'
       - 'src/ai_gene_review/browser/**'
+      - 'src/ai_gene_review/tools/minify_linkml_browser_data.py'
+      - 'src/ai_gene_review/tools/stage_pages.py'
       - 'projects/*.md'
+      - 'projects/**/*.md'
+      - 'projects/**/*.csv'
+      - 'projects/**/*.json'
+      - 'modules/**/*.yaml'
+      - 'project.justfile'
+      - '.github/workflows/generate-pages.yaml'
   workflow_dispatch:
     inputs:
       force:
@@ -26,15 +36,30 @@ concurrency:
 jobs:
   generate-pages:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
     permissions:
-      contents: write
-      pull-requests: write
+      # Scopes the default GITHUB_TOKEN only; the branch push and the PR are made
+      # with the ai4c-agent App token below.
+      contents: read
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
+          # A manual dispatch may select any workflow ref. Generated artifacts
+          # must nevertheless always be built from the trusted default branch.
+          ref: ${{ github.event.repository.default_branch }}
           fetch-depth: 0
+          persist-credentials: false
+
+      # NOTE: The previous "Close stale regeneration PRs" step closed the
+      # regeneration PR if it was older than one hour. Because the PR is created
+      # as a draft and reuses a single branch, it was frequently auto-closed
+      # before anyone merged it -- so newly added gene reviews had their YAML on
+      # main but their rendered HTML never landed, producing 404s for those
+      # pages. That step has been removed; the regeneration PR is now created
+      # ready-for-review with auto-merge enabled so generated pages publish
+      # reliably (see the "Create or update regeneration PR" step below).
 
       - name: Install uv
         uses: astral-sh/setup-uv@v7
@@ -42,7 +67,7 @@ jobs:
           enable-cache: true
 
       - name: Set up Python
-        uses: actions/setup-python@v6.2.0
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -89,8 +114,64 @@ jobs:
       - name: Render project pages
         run: just render-projects
 
+      - name: Validate module YAML files
+        run: just validate-modules
+
+      - name: Render module pages
+        run: just render-modules
+
       - name: Deploy browser app (data.js + index.html)
         run: just deploy-browser
+
+      # Shadow-build the candidate artifact that will replace the current main:/
+      # publishing source.  It is uploaded for inspection but not deployed yet,
+      # so this migration cannot disturb the live site or legacy regeneration
+      # PRs.  The staging command reports the uncompressed 1 GiB Pages budget.
+      # Keep every shadow step non-blocking so failures cannot skip the legacy
+      # regeneration lane. Only summarize/upload a successfully staged tree.
+      - name: Stage GitHub Pages artifact
+        id: shadow-stage
+        continue-on-error: true
+        run: just stage-pages
+
+      - name: Summarize staged Pages site
+        id: shadow-summary
+        if: steps.shadow-stage.outcome == 'success'
+        continue-on-error: true
+        shell: bash
+        run: |
+          {
+            echo "## Shadow GitHub Pages artifact"
+            echo
+            echo "This artifact is not deployed; Pages still publishes from \`main:/\`."
+            echo
+            echo "| Metric | Value |"
+            echo "|---|---:|"
+            echo "| Files | $(jq -r .total_files _site-manifest.json) |"
+            echo "| Uncompressed MiB | $(jq -r '.total_bytes / 1048576 | round' _site-manifest.json) |"
+            echo "| Gene pages | $(jq -r .gene_pages _site-manifest.json) |"
+            echo "| Project pages | $(jq -r .project_pages _site-manifest.json) |"
+            echo "| Module pages | $(jq -r .module_pages _site-manifest.json) |"
+            echo "| Linked source files not staged | $(jq -r .linked_source_files_not_staged _site-manifest.json) |"
+            echo "| Linked source MiB not staged | $(jq -r '.linked_source_bytes_not_staged / 1048576 | round' _site-manifest.json) |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload shadow GitHub Pages artifact
+        id: shadow-upload
+        if: steps.shadow-stage.outcome == 'success'
+        continue-on-error: true
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+          retention-days: 3
+
+      - name: Warn when shadow Pages build fails
+        if: >-
+          ${{ !cancelled() &&
+              (steps.shadow-stage.outcome == 'failure' ||
+               steps.shadow-summary.outcome == 'failure' ||
+               steps.shadow-upload.outcome == 'failure') }}
+        run: echo "::warning title=Shadow Pages build failed::Inspect the shadow staging, summary, and upload steps. Legacy regeneration will continue; the live Pages source is unchanged."
 
       - name: Check for changes
         id: check-changes
@@ -123,80 +204,280 @@ jobs:
           GENE_COUNT=$(find genes -name '*-ai-review.yaml' | wc -l | tr -d ' ')
           HTML_COUNT=$(find genes -name '*-ai-review.html' | wc -l | tr -d ' ')
           PROJECT_COUNT=$(find pages/projects -name '*.html' 2>/dev/null | wc -l | tr -d ' ')
+          MODULE_COUNT=$(find pages/modules -name '*.html' 2>/dev/null | wc -l | tr -d ' ')
 
           {
             echo "branch=auto/generate-pages"
             echo "gene_count=$GENE_COUNT"
             echo "html_count=$HTML_COUNT"
             echo "project_count=$PROJECT_COUNT"
+            echo "module_count=$MODULE_COUNT"
           } >> "$GITHUB_OUTPUT"
 
-      - name: Create or update regeneration PR
-        if: steps.check-changes.outputs.has_changes == 'true'
-        id: create-pr
-        continue-on-error: true
-        uses: peter-evans/create-pull-request@v7
+      # Minted HERE, not at job start. An App installation token lives 60
+      # minutes and does not refresh, and this is the longest job in the repo —
+      # the last completed run took 58 minutes rendering ~1200 gene pages plus
+      # projects, modules and the browser app. A token minted at job start would
+      # expire during the render and 401 on the push below, discarding all of it.
+      # `timeout-minutes: 55` (what the agent workflows use) would be worse still:
+      # it would kill a run that legitimately needs the time. The render needs no
+      # credentials, so the token is minted immediately before the only step that
+      # does.
+      - name: Generate ai4c-agent token
+        id: ai4c-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
-          token: ${{ secrets.PAT_FOR_PR != '' && secrets.PAT_FOR_PR || github.token }}
-          branch-token: ${{ secrets.PAT_FOR_PR != '' && secrets.PAT_FOR_PR || github.token }}
-          branch: ${{ steps.pr-metadata.outputs.branch }}
-          base: main
-          delete-branch: true
-          draft: always-true
-          add-paths: |
-            genes/**/*.html
-            app/index.html
-            app/data.js
-            app/schema.js
-            pages/
+          app-id: ${{ secrets.AI4C_AGENT_APP_ID }}
+          private-key: ${{ secrets.AI4C_AGENT_PRIVATE_KEY }}
+
+      - name: Create or update regeneration PR
+        id: regen-pr
+        if: steps.check-changes.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ steps.ai4c-token.outputs.token }}
+          APP_SLUG: ${{ steps.ai4c-token.outputs.app-slug }}
+        shell: bash
+        run: |
+          # Commit as the ai4c-agent App bot and serve the short-lived token to git
+          # through the gh credential helper, instead of persisting it in .git/config.
+          APP_USER_ID="$(gh api "/users/${APP_SLUG}[bot]" --jq .id)"
+          git config user.name "${APP_SLUG}[bot]"
+          git config user.email "${APP_USER_ID}+${APP_SLUG}[bot]@users.noreply.github.com"
+          gh auth setup-git
+
+          BRANCH_NAME="${{ steps.pr-metadata.outputs.branch }}"
+          git fetch origin "$BRANCH_NAME:refs/remotes/origin/$BRANCH_NAME" || true
+          git checkout -B "$BRANCH_NAME"
+
+          git add \
+            genes/ \
+            app/index.html \
+            app/data.js \
+            app/schema.js \
+            pages/ \
             reports/
-          commit-message: |
+
+          # SAFETY GUARD: this automated commit must only ever contain
+          # generated build artifacts. If anything outside the generated set is
+          # staged (e.g. a gene-review YAML, schema, src/, or projects/*.md
+          # source file), abort rather than risk clobbering hand-authored
+          # content. Allowed: gene-review HTML, everything under pages/, the
+          # three browser-app files, and reports/.
+          DISALLOWED="$(git diff --cached --name-only \
+            | grep -vE '^(genes/[^[:space:]]+\.html|pages/[^[:space:]]+|app/(index\.html|data\.js|schema\.js)|reports/[^[:space:]]+)$' \
+            || true)"
+          if [ -n "$DISALLOWED" ]; then
+            echo "❌ Refusing to commit non-artifact files:"
+            echo "$DISALLOWED"
+            exit 1
+          fi
+
+          git commit -m "$(cat <<EOF
             Regenerate pages, browser app, and reports
 
             - ${{ steps.pr-metadata.outputs.html_count }} gene review HTML pages (from ${{ steps.pr-metadata.outputs.gene_count }} YAML reviews)
             - ${{ steps.pr-metadata.outputs.project_count }} project pages
+            - ${{ steps.pr-metadata.outputs.module_count }} module pages
             - Browser app data.js
             - Validation report
 
             Triggered by changes to gene reviews or templates.
-          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-          title: Regenerate pages and browser app
-          body: |
-            ## Summary
+          EOF
+          )"
 
-            Automated regeneration of static assets after gene review or template changes.
+          git push --force-with-lease origin "$BRANCH_NAME"
 
-            ## Generated Assets
+          PR_BODY="$(mktemp)"
+          {
+            echo "## Summary"
+            echo
+            echo "Automated regeneration of static assets after gene review or template changes."
+            echo
+            echo "## Generated Assets"
+            echo
+            echo "| Asset | Count/Status |"
+            echo "|-------|--------------|"
+            echo "| Gene review YAML files | ${{ steps.pr-metadata.outputs.gene_count }} |"
+            echo "| Gene review HTML pages | ${{ steps.pr-metadata.outputs.html_count }} |"
+            echo "| Project pages | ${{ steps.pr-metadata.outputs.project_count }} |"
+            echo "| Module pages | ${{ steps.pr-metadata.outputs.module_count }} |"
+            echo "| Browser app (data.js) | Updated |"
+            echo "| Validation report | Updated |"
+            echo
+            echo "## Trigger"
+            echo
+            echo "This PR was triggered by changes to:"
+            echo "- genes/**/*.yaml - gene review data files"
+            echo "- src/ai_gene_review/schema/** - LinkML schema files"
+            echo "- src/ai_gene_review/templates/** - Jinja2 templates"
+            echo "- src/ai_gene_review/render.py - rendering code"
+            echo "- src/ai_gene_review/render_modules.py - module rendering code"
+            echo "- src/ai_gene_review/export/** - export code"
+            echo "- src/ai_gene_review/browser/** - browser app assets"
+            echo "- src/ai_gene_review/tools/minify_linkml_browser_data.py - browser data compaction"
+            echo "- projects/*.md - project definitions"
+            echo "- modules/**/*.yaml - module definitions"
+            echo "- project.justfile - just recipes used by CI"
+            echo "- .github/workflows/generate-pages.yaml - workflow definition"
+            echo
+            echo "## Review"
+            echo
+            echo "- [ ] Spot-check a few gene review HTML pages render correctly"
+            echo "- [ ] Spot-check module tree browser pages render correctly"
+            echo "- [ ] Verify browser app loads and filters work"
+            echo "- [ ] Check validation report for new issues"
+          } > "$PR_BODY"
 
-            | Asset | Count/Status |
-            |-------|--------------|
-            | Gene review YAML files | ${{ steps.pr-metadata.outputs.gene_count }} |
-            | Gene review HTML pages | ${{ steps.pr-metadata.outputs.html_count }} |
-            | Project pages | ${{ steps.pr-metadata.outputs.project_count }} |
-            | Browser app (data.js) | Updated |
-            | Validation report | Updated |
+          PR_NUMBER="$(gh pr list \
+            --repo "$GITHUB_REPOSITORY" \
+            --head "$BRANCH_NAME" \
+            --base main \
+            --state open \
+            --author app/ai4c-agent \
+            --json number \
+            --limit 1 \
+            --jq '.[0].number // empty')"
 
-            ## Trigger
+          if [ -n "$PR_NUMBER" ]; then
+            gh api \
+              --method PATCH \
+              "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" \
+              -f body="$(cat "$PR_BODY")" \
+              >/dev/null
+            echo "Updated existing regeneration PR #$PR_NUMBER."
+          else
+            gh pr create \
+              --repo "$GITHUB_REPOSITORY" \
+              --base main \
+              --head "$BRANCH_NAME" \
+              --title "Regenerate pages and browser app" \
+              --body-file "$PR_BODY"
 
-            This PR was triggered by changes to:
-            - `genes/**/*.yaml` - gene review data files
-            - `src/ai_gene_review/schema/**` - LinkML schema files
-            - `src/ai_gene_review/templates/**` - Jinja2 templates
-            - `src/ai_gene_review/render.py` - rendering code
-            - `src/ai_gene_review/export.py` - export code
-            - `src/ai_gene_review/browser/**` - browser app assets
-            - `projects/*.md` - project definitions
+            PR_NUMBER="$(gh pr list \
+              --repo "$GITHUB_REPOSITORY" \
+              --head "$BRANCH_NAME" \
+              --base main \
+              --state open \
+              --author app/ai4c-agent \
+              --json number \
+              --limit 1 \
+              --jq '.[0].number // empty')"
 
-            ## Review
+            if [ -z "$PR_NUMBER" ]; then
+              echo "Failed to resolve regeneration PR number for $BRANCH_NAME."
+              echo "Compare URL: https://github.com/${GITHUB_REPOSITORY}/compare/main...${BRANCH_NAME}?expand=1"
+              exit 1
+            fi
+            echo "Created regeneration PR #$PR_NUMBER."
+          fi
 
-            - [ ] Spot-check a few gene review HTML pages render correctly
-            - [ ] Verify browser app loads and filters work
-            - [ ] Check validation report for new issues
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "head_sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-      - name: Report manual PR fallback
-        if: steps.create-pr.outcome == 'failure'
+      - name: Approve exact generated commit
+        id: approve-generated
+        if: steps.check-changes.outputs.has_changes == 'true'
+        # Approval is a fail-safe convenience after the expensive render and
+        # push. The later step will not arm auto-merge when the reviewer App is
+        # unavailable, so preserve the artifacts and emit a loud warning below.
+        continue-on-error: true
+        uses: ./.github/actions/approve-regen-pr
+        with:
+          pr-number: ${{ steps.regen-pr.outputs.pr_number }}
+          branch-name: auto/generate-pages
+          base-branch: main
+          expected-author: app/ai4c-agent
+          app-id: ${{ secrets.AI4C_REVIEWER_APP_ID }}
+          private-key: ${{ secrets.AI4C_REVIEWER_PRIVATE_KEY }}
+
+      - name: Warn when generated approval is unavailable
+        if: >-
+          ${{ always() &&
+              steps.check-changes.outputs.has_changes == 'true' &&
+              steps.approve-generated.outcome == 'failure' }}
+        env:
+          PR_NUMBER: ${{ steps.regen-pr.outputs.pr_number }}
         shell: bash
         run: |
-          echo "::warning::Automated PR creation was skipped or blocked. Generated changes remain on branch '${{ steps.pr-metadata.outputs.branch }}'."
-          echo "::notice title=Open PR manually::https://github.com/${GITHUB_REPOSITORY}/compare/main...${{ steps.pr-metadata.outputs.branch }}?expand=1"
+          echo "::warning title=Generated PR approval unavailable::The exact-head approval for regeneration PR #${PR_NUMBER:-unknown} failed. Generated artifacts were already pushed; the later step will not arm auto-merge. Retry the workflow or inspect the ai4c-reviewer App."
+
+      # Approval is deliberately a separate, earlier step. A protection-read or
+      # rollout-guard failure below must never prevent the independent reviewer
+      # App from recording its exact-head decision on the generated PR.
+      - name: Validate protection and arm generated auto-merge
+        if: >-
+          ${{ !cancelled() &&
+              steps.check-changes.outputs.has_changes == 'true' &&
+              steps.regen-pr.outcome == 'success' }}
+        env:
+          GH_TOKEN: ${{ steps.ai4c-token.outputs.token }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          MERGE_ENABLED: ${{ vars.PR_SHEPHERD_MERGE_ENABLED }}
+          PR_NUMBER: ${{ steps.regen-pr.outputs.pr_number }}
+          EXPECTED_HEAD: ${{ steps.regen-pr.outputs.head_sha }}
+          APPROVAL_OUTCOME: ${{ steps.approve-generated.outcome }}
+        shell: bash
+        run: |
+          # Share the Shepherd rollout flag as the generated lane's kill switch.
+          # Flag-off still leaves the already-created and reviewed PR open.
+          if [ "$MERGE_ENABLED" != "true" ]; then
+            echo "Auto-merge is rollout-disabled; PR #$PR_NUMBER remains open."
+            exit 0
+          fi
+
+          # The generated PR and approval action both use literal base `main`.
+          # Refuse a renamed/default-branch mismatch rather than checking one
+          # branch and arming auto-merge against another.
+          if [ "$DEFAULT_BRANCH" != "main" ]; then
+            echo "::error title=Generated auto-merge base mismatch::Repository default branch is $DEFAULT_BRANCH, but the generated lane targets literal base main. Refusing to arm auto-merge."
+            exit 1
+          fi
+          pr_base=""
+          if ! pr_base="$(gh pr view "$PR_NUMBER" \
+            --repo "$GITHUB_REPOSITORY" \
+            --json baseRefName \
+            --jq '.baseRefName')"; then
+            echo "::error title=Generated auto-merge base check failed::Could not read the current base for PR #$PR_NUMBER; refusing to arm auto-merge."
+            exit 1
+          fi
+          if [ "$pr_base" != "main" ]; then
+            echo "::error title=Generated auto-merge base mismatch::PR #$PR_NUMBER targets $pr_base, not literal base main. Refusing to arm auto-merge."
+            exit 1
+          fi
+
+          # Mirror the Shepherd's protected-branch existence smoke check with
+          # the current App token. This intentionally does not claim to verify
+          # the exact classic-protection settings in the rollout checklist.
+          protected=""
+          if ! protected="$(gh api \
+            "repos/$GITHUB_REPOSITORY/branches/main" \
+            --jq '.protected')"; then
+            echo "::error title=Generated auto-merge protection check failed::Could not read protection for literal base main; refusing to arm auto-merge."
+            exit 1
+          fi
+          if [ "$protected" != "true" ]; then
+            echo "::error title=Generated auto-merge requires protected main::Literal base main reports protected=$protected; refusing to arm auto-merge."
+            exit 1
+          fi
+
+          # Do not arm a PR whose independent exact-head approval was not
+          # recorded. The warning step above reports the fail-safe outcome.
+          if [ "$APPROVAL_OUTCOME" != "success" ]; then
+            echo "Auto-merge was not armed because exact-head approval is unavailable."
+            exit 0
+          fi
+          if [ -z "$EXPECTED_HEAD" ]; then
+            echo "::error title=Generated auto-merge head pin missing::The generated head SHA is empty; refusing to arm auto-merge."
+            exit 1
+          fi
+
+          # Arm auto-merge rather than issue a direct merge. Protected main must
+          # enforce the exact-head reviewer approval and required test check.
+          # The staged-path allowlist guarantees derived artifacts only.
+          echo "Arming auto-merge for regeneration PR #$PR_NUMBER."
+          gh pr merge "$PR_NUMBER" \
+            --repo "$GITHUB_REPOSITORY" \
+            --auto \
+            --squash \
+            --match-head-commit "$EXPECTED_HEAD" \
+            || echo "Auto-merge could not be enabled; PR #$PR_NUMBER left open for manual merge."

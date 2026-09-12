@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: ETR1 (ARATH)
 
-Source: ETR1-deep-research-bioreason-rl.md
+Source: ETR1-bioreason-rl-predictions.md
 
 - **Correctness**: 3/5
 - **Completeness**: 3/5

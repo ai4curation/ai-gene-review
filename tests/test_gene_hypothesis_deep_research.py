@@ -1,5 +1,7 @@
+import subprocess
 from pathlib import Path
 
+import pytest
 import yaml
 
 from scripts import gene_hypothesis_deep_research as ghr
@@ -13,6 +15,14 @@ def make_gene_workspace(tmp_path: Path) -> Path:
     genes_root = tmp_path / "genes"
     gene_dir = genes_root / "human" / "TEST"
     gene_dir.mkdir(parents=True)
+    bioinformatics_dir = gene_dir / "TEST-bioinformatics"
+    bioinformatics_dir.mkdir()
+    (bioinformatics_dir / "RESULTS.md").write_text(
+        "# TEST Bioinformatics Results\n\n"
+        "Local analysis supports replacing generic protein binding with a more "
+        "specific adaptor-function hypothesis.\n",
+        encoding="utf-8",
+    )
     write_yaml(
         gene_dir / "TEST-ai-review.yaml",
         {
@@ -32,6 +42,13 @@ def make_gene_workspace(tmp_path: Path) -> Path:
                             {
                                 "reference_id": "PMID:2",
                                 "supporting_text": "Interacts with a pathway component.",
+                            },
+                            {
+                                "reference_id": "file:human/TEST/TEST-bioinformatics/RESULTS.md",
+                                "supporting_text": (
+                                    "Local analysis supports replacing generic "
+                                    "protein binding."
+                                ),
                             }
                         ],
                     },
@@ -99,6 +116,251 @@ def make_gene_workspace(tmp_path: Path) -> Path:
     return genes_root
 
 
+def make_iba_workspace(tmp_path: Path) -> Path:
+    """Gene workspace with a mix of supported and unsupported IBA annotations."""
+    genes_root = tmp_path / "genes"
+    gene_dir = genes_root / "human" / "IBAT"
+    gene_dir.mkdir(parents=True)
+    write_yaml(
+        gene_dir / "IBAT-ai-review.yaml",
+        {
+            "id": "Q99999",
+            "gene_symbol": "IBAT",
+            "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
+            "existing_annotations": [
+                {
+                    # IBA with NO independent support -> a candidate
+                    "term": {"id": "GO:0005737", "label": "cytoplasm"},
+                    "evidence_type": "IBA",
+                    "original_reference_id": "GO_REF:0000033",
+                    "review": {"action": "ACCEPT", "summary": "Plausible location."},
+                },
+                {
+                    # IBA WITH independent PMID support -> skipped by default
+                    "term": {"id": "GO:0005515", "label": "protein binding"},
+                    "evidence_type": "IBA",
+                    "original_reference_id": "GO_REF:0000033",
+                    "review": {
+                        "action": "KEEP_AS_NON_CORE",
+                        "summary": "Has an interaction paper.",
+                        "supported_by": [
+                            {
+                                "reference_id": "PMID:111",
+                                "supporting_text": "Interacts with partner X.",
+                            }
+                        ],
+                    },
+                },
+                {
+                    # Non-IBA annotation -> never a candidate
+                    "term": {"id": "GO:0003674", "label": "molecular_function"},
+                    "evidence_type": "IEA",
+                    "original_reference_id": "GO_REF:0000002",
+                    "review": {"action": "ACCEPT"},
+                },
+            ],
+        },
+    )
+    return genes_root
+
+
+def test_annotation_independent_literature_refs_excludes_original() -> None:
+    supported = {
+        "original_reference_id": "GO_REF:0000033",
+        "review": {
+            "supported_by": [{"reference_id": "PMID:111"}],
+            "additional_reference_ids": ["GO_REF:0000033", "file:x.md"],
+        },
+    }
+    unsupported = {
+        "original_reference_id": "GO_REF:0000033",
+        "review": {"supported_by": [{"reference_id": "file:local.md"}]},
+    }
+    assert ghr.annotation_independent_literature_refs(supported) == ["PMID:111"]
+    assert ghr.annotation_independent_literature_refs(unsupported) == []
+
+
+def test_iba_support_records_default_only_unsupported(tmp_path: Path) -> None:
+    genes_root = make_iba_workspace(tmp_path)
+    records = ghr.iba_support_records(genes_root, "human", "IBAT")
+    slugs = {record.slug for record in records}
+    assert slugs == {"function-support-go-0005737"}
+    record = records[0]
+    # IBA is a thin wrapper that produces neutral function-support records.
+    assert record.focus_type == "function_support"
+    assert record.source_selector == "existing_annotations[1]"
+    assert record.hypothesis_text == "IBAT has cytoplasm (GO:0005737)."
+
+
+def test_iba_support_records_include_supported(tmp_path: Path) -> None:
+    genes_root = make_iba_workspace(tmp_path)
+    records = ghr.iba_support_records(
+        genes_root, "human", "IBAT", only_unsupported=False
+    )
+    slugs = {record.slug for record in records}
+    assert slugs == {"function-support-go-0005737", "function-support-go-0005515"}
+
+
+def test_iba_support_record_blinds_prior_review_action(tmp_path: Path) -> None:
+    genes_root = make_iba_workspace(tmp_path)
+    record = ghr.iba_support_records(genes_root, "human", "IBAT")[0]
+    command_text = "\n".join(
+        ghr.build_command(
+            record,
+            provider="asta",
+            genes_root=genes_root,
+            template=ghr.DEFAULT_FUNCTION_SUPPORT_TEMPLATE,
+            extra_args=[],
+        )
+    )
+    # The existing curation action/summary must not leak into the prompt.
+    assert "ACCEPT" not in command_text
+    assert "Plausible location" not in command_text
+
+
+def test_function_support_build_command_slug_and_template(tmp_path: Path) -> None:
+    genes_root = make_iba_workspace(tmp_path)
+    record = ghr.iba_support_records(genes_root, "human", "IBAT")[0]
+    command = ghr.build_command(
+        record,
+        provider="asta",
+        genes_root=genes_root,
+        template=ghr.DEFAULT_FUNCTION_SUPPORT_TEMPLATE,
+        extra_args=[],
+    )
+    output_path = (
+        genes_root
+        / "human"
+        / "IBAT"
+        / "IBAT-hypotheses"
+        / "function-support-go-0005737"
+        / "asta.md"
+    )
+    assert ["--provider", "asta"] == command[-6:-4]
+    assert ["--output", str(output_path)] == command[-4:-2]
+
+
+def test_run_iba_support_dry_run(tmp_path: Path) -> None:
+    genes_root = make_iba_workspace(tmp_path)
+    exit_code = ghr.main(
+        [
+            "run-iba-support",
+            "human",
+            "IBAT",
+            "asta",
+            "--genes-root",
+            str(genes_root),
+            "--dry-run",
+        ]
+    )
+    assert exit_code == 0
+    assert not (genes_root / "human" / "IBAT" / "IBAT-hypotheses").exists()
+
+
+def test_function_support_free_text_hypothesis(tmp_path: Path) -> None:
+    genes_root = make_iba_workspace(tmp_path)
+    args = ghr.parse_args(
+        [
+            "run-function-support",
+            "human",
+            "IBAT",
+            "asta",
+            "--genes-root",
+            str(genes_root),
+            "--hypothesis",
+            "IBAT is a cytoskeletal adaptor",
+        ]
+    )
+    record = ghr.function_support_record_from_args(args)
+    assert record.focus_type == "function_support"
+    assert record.hypothesis_text == "IBAT is a cytoskeletal adaptor"
+    assert record.source_selector == "free-text"
+
+
+def test_template_vars_use_explicit_placeholders_for_missing_source(
+    tmp_path: Path,
+) -> None:
+    genes_root = make_iba_workspace(tmp_path)
+    record = ghr.make_record(
+        organism="human",
+        gene="IBAT",
+        gene_symbol="IBAT",
+        taxon_id="NCBITaxon:9606",
+        taxon_label="Homo sapiens",
+        focus_type="core_function",
+        slug="free-text-hypothesis",
+        hypothesis_text="IBAT has a test function",
+    )
+
+    variables = ghr.template_vars(record, genes_root=genes_root)
+
+    assert variables["source_file"] == ghr.UNSPECIFIED_SOURCE
+    assert variables["source_selector"] == ghr.UNSPECIFIED_SOURCE
+    assert all(variables.values())
+
+
+def test_direct_free_text_record_tracks_review_source(tmp_path: Path) -> None:
+    genes_root = make_iba_workspace(tmp_path)
+    args = ghr.parse_args(
+        [
+            "run",
+            "human",
+            "IBAT",
+            "asta",
+            "--genes-root",
+            str(genes_root),
+            "--focus-type",
+            "core_function",
+            "--hypothesis",
+            "IBAT has a test function",
+        ]
+    )
+
+    record = ghr.direct_record_from_args(args)
+
+    assert record.source_file == genes_root / "human" / "IBAT" / "IBAT-ai-review.yaml"
+    assert record.source_selector == "free-text"
+
+
+def test_function_support_from_term_id(tmp_path: Path) -> None:
+    genes_root = make_iba_workspace(tmp_path)
+    args = ghr.parse_args(
+        [
+            "run-function-support",
+            "human",
+            "IBAT",
+            "asta",
+            "--genes-root",
+            str(genes_root),
+            "--term-id",
+            "GO:0003700",
+            "--term-label",
+            "DNA-binding transcription factor activity",
+        ]
+    )
+    record = ghr.function_support_record_from_args(args)
+    assert record.slug == "function-support-go-0003700"
+    assert record.hypothesis_text == (
+        "IBAT has DNA-binding transcription factor activity (GO:0003700)."
+    )
+
+
+def test_function_support_requires_exactly_one_selector(tmp_path: Path) -> None:
+    genes_root = make_iba_workspace(tmp_path)
+    args = ghr.parse_args(
+        [
+            "run-function-support",
+            "human",
+            "IBAT",
+            "asta",
+            "--genes-root",
+            str(genes_root),
+        ]
+    )
+    with pytest.raises(ValueError):
+        ghr.function_support_record_from_args(args)
+
+
 def test_slugify_normalizes_identifiers() -> None:
     assert ghr.slugify("GO:0005515") == "go-0005515"
     assert ghr.slugify("  Core function: DNA binding! ") == "core-function-dna-binding"
@@ -119,6 +381,64 @@ def test_candidate_records_cover_review_and_prediction_sources(tmp_path: Path) -
         "computational_prediction"
     )
     assert "PMID:4" in by_slug["core-function-1-go-0003677"].reference_context
+
+
+def test_provider_prompt_redacts_cited_local_bioinformatics(tmp_path: Path) -> None:
+    genes_root = make_gene_workspace(tmp_path)
+    records = ghr.candidate_records(genes_root, "human", "TEST")
+    record = ghr.select_record(records, annotation_term_id="GO:0005515")
+    reference_ids = ghr.reference_ids_from_context(record.reference_context)
+
+    comparison_context = ghr.format_local_bioinformatics_context(
+        reference_ids,
+        genes_root=genes_root,
+    )
+
+    assert "file:human/TEST/TEST-bioinformatics/RESULTS.md" in comparison_context
+    assert "# TEST Bioinformatics Results" in comparison_context
+    assert "Included full local report" in comparison_context
+
+    command = ghr.build_command(
+        record,
+        provider="openscientist",
+        genes_root=genes_root,
+        template=Path("templates/gene_hypothesis_deep_research.md"),
+        extra_args=[],
+    )
+    command_text = "\n".join(command)
+
+    assert "file:human/TEST/TEST-bioinformatics/RESULTS.md" not in command_text
+    assert "# TEST Bioinformatics Results" not in command_text
+    assert "Local analysis supports replacing generic protein binding" not in command_text
+    assert "reference_context=- PMID:1\n- PMID:2" in command
+
+
+def test_function_assignment_prompt_blinds_prior_review_decision(
+    tmp_path: Path,
+) -> None:
+    genes_root = make_gene_workspace(tmp_path)
+    records = ghr.candidate_records(genes_root, "human", "TEST")
+    decision_record = ghr.select_record(records, annotation_term_id="GO:0005515")
+
+    record = ghr.function_assignment_record(decision_record)
+    command = ghr.build_command(
+        record,
+        provider="openscientist",
+        genes_root=genes_root,
+        template=Path("templates/gene_hypothesis_deep_research.md"),
+        extra_args=[],
+    )
+    command_text = "\n".join(command)
+
+    assert record.focus_type == "function_assignment"
+    assert record.slug == "function-hypothesis-go-0005515"
+    assert record.hypothesis_text == "TEST has protein binding (GO:0005515)."
+    assert "review action REMOVE" not in command_text
+    assert "Generic binding is not informative" not in command_text
+    assert "specific adapter or assembly role" not in command_text
+    assert "file:human/TEST/TEST-bioinformatics/RESULTS.md" not in command_text
+    assert "# TEST Bioinformatics Results" not in command_text
+    assert "hypothesis_text=TEST has protein binding (GO:0005515)." in command
 
 
 def test_select_record_and_build_command_use_sidecar_output(tmp_path: Path) -> None:
@@ -180,3 +500,266 @@ def test_dry_run_does_not_create_output_directory(tmp_path: Path) -> None:
     assert result.status == "DRY_RUN"
     assert result.output_file.name == "perplexity-lite.md"
     assert not result.output_file.parent.exists()
+
+
+@pytest.mark.parametrize(
+    ("run_status", "citations_text", "expected_status"),
+    [
+        ("DRY_RUN", None, "planned"),
+        ("OK", None, "missing"),
+        ("OK", "citation list\n", "present"),
+    ],
+)
+def test_print_run_result_reports_citations_status(
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+    run_status: str,
+    citations_text: str | None,
+    expected_status: str,
+) -> None:
+    genes_root = make_gene_workspace(tmp_path)
+    record = ghr.candidate_records(genes_root, "human", "TEST")[0]
+    output_file = tmp_path / "output.md"
+    citations_file = Path(f"{output_file}.citations.md")
+    if citations_text is not None:
+        citations_file.write_text(citations_text, encoding="utf-8")
+
+    result = ghr.RunResult(
+        record=record,
+        provider="openscientist",
+        status=run_status,
+        returncode=0,
+        duration_seconds=1.0,
+        output_file=output_file,
+        citations_file=citations_file,
+        command=["deep-research-client", "research"],
+        detail="",
+    )
+
+    ghr.print_run_result(result)
+
+    output = capsys.readouterr().out
+    assert f"citations={citations_file}\n" in output
+    assert f"citations_status={expected_status}\n" in output
+
+
+def test_just_wrapper_preserves_quoted_free_text_arguments(tmp_path: Path) -> None:
+    """The public Just wrapper must not flatten quoted variadic arguments."""
+    genes_root = make_gene_workspace(tmp_path / "workspace with spaces")
+    hypothesis = (
+        "Native TEST asks A -- B (or C)? max_iterations is prose; keep punctuation."
+    )
+    context = (
+        "The token timeout= is prose; distinguish native activity from engineered variants."
+    )
+    repo_root = Path(__file__).resolve().parents[1]
+
+    result = subprocess.run(
+        [
+            "just",
+            "gene-hypothesis-research",
+            "openscientist",
+            "human",
+            "TEST",
+            "--genes-root",
+            str(genes_root),
+            "--focus-type",
+            "function-assignment",
+            "--hypothesis",
+            hypothesis,
+            "--slug",
+            "quoted-args",
+            "--term-id",
+            "GO:0003756",
+            "--term-label",
+            "protein disulfide isomerase activity",
+            "--context",
+            context,
+            "--dry-run",
+        ],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=30,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert f"hypothesis_text={hypothesis}" in result.stdout
+    assert context in result.stdout
+    assert "max_iterations=3" in result.stdout
+    assert "timeout=7200" in result.stdout
+
+
+@pytest.mark.parametrize(
+    ("recipe", "iba_workspace", "selector_args", "expects_timeout"),
+    [
+        ("gene-hypothesis-research-all-core", False, [], True),
+        ("gene-hypothesis-research-combined-core", False, [], True),
+        (
+            "gene-function-support",
+            False,
+            ["--hypothesis", "TEST has a function (variant A, or B)?"],
+            False,
+        ),
+        ("gene-iba-support-research", True, [], False),
+    ],
+)
+def test_just_wrappers_preserve_arguments_before_and_after_separator(
+    tmp_path: Path,
+    recipe: str,
+    iba_workspace: bool,
+    selector_args: list[str],
+    expects_timeout: bool,
+) -> None:
+    """Every shebang wrapper must forward exact positional argument boundaries."""
+    workspace = tmp_path / "workspace (quoted)"
+    if iba_workspace:
+        genes_root = make_iba_workspace(workspace)
+        gene = "IBAT"
+    else:
+        genes_root = make_gene_workspace(workspace)
+        gene = "TEST"
+    template = tmp_path / "template (review), v1?.md"
+    provider_value = "note=A -- B, with spaces (exact)?"
+    repo_root = Path(__file__).resolve().parents[1]
+
+    result = subprocess.run(
+        [
+            "just",
+            recipe,
+            "openscientist",
+            "human",
+            gene,
+            "--genes-root",
+            str(genes_root),
+            "--template",
+            str(template),
+            *selector_args,
+            "--dry-run",
+            "--",
+            "--param",
+            provider_value,
+        ],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=30,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert str(template) in result.stdout
+    assert provider_value in result.stdout
+    assert "max_iterations=3" in result.stdout
+    assert ("timeout=7200" in result.stdout) is expects_timeout
+
+
+def test_just_wrapper_respects_exact_openscientist_param_overrides(
+    tmp_path: Path,
+) -> None:
+    """Explicit provider params suppress only their matching defaults."""
+    genes_root = make_gene_workspace(tmp_path)
+    repo_root = Path(__file__).resolve().parents[1]
+
+    result = subprocess.run(
+        [
+            "just",
+            "gene-hypothesis-research",
+            "openscientist",
+            "human",
+            "TEST",
+            "--genes-root",
+            str(genes_root),
+            "--focus-type",
+            "function-assignment",
+            "--hypothesis",
+            "TEST has an exact function.",
+            "--slug",
+            "explicit-params",
+            "--dry-run",
+            "--",
+            "--param",
+            "max_iterations=7",
+            "--param=timeout=6000",
+        ],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=30,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "max_iterations=7" in result.stdout
+    assert "timeout=6000" in result.stdout
+    assert "max_iterations=3" not in result.stdout
+    assert "timeout=7200" not in result.stdout
+
+
+@pytest.mark.parametrize(
+    ("recipe", "iba_workspace", "gene"),
+    [
+        ("gene-hypothesis-list", False, "TEST"),
+        ("gene-iba-support-list", True, "IBAT"),
+    ],
+)
+def test_just_list_wrappers_preserve_genes_root_with_spaces(
+    tmp_path: Path,
+    recipe: str,
+    iba_workspace: bool,
+    gene: str,
+) -> None:
+    """List wrappers must preserve a multiword genes-root argument."""
+    workspace = tmp_path / "workspace with spaces"
+    genes_root = (
+        make_iba_workspace(workspace)
+        if iba_workspace
+        else make_gene_workspace(workspace)
+    )
+    repo_root = Path(__file__).resolve().parents[1]
+
+    result = subprocess.run(
+        [
+            "just",
+            recipe,
+            "human",
+            gene,
+            "--genes-root",
+            str(genes_root),
+        ],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=30,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert gene in result.stdout
+
+
+@pytest.mark.parametrize("provider", ["falcon", "openscientist"])
+def test_just_research_wrapper_handles_empty_variadic_tail(provider: str) -> None:
+    """A zero-length variadic tail must reach Python without an empty argument."""
+    repo_root = Path(__file__).resolve().parents[1]
+
+    result = subprocess.run(
+        [
+            "just",
+            "gene-hypothesis-research",
+            provider,
+            "human",
+            "AIGR_NO_SUCH_GENE",
+        ],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=30,
+    )
+
+    assert result.returncode == 2
+    assert "--hypothesis is required" in result.stderr
+    assert "unbound variable" not in result.stderr
+    assert "unrecognized arguments" not in result.stderr

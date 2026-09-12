@@ -1,0 +1,30 @@
+# YFH7 (P43591 / YFR007W) bioinformatics analysis
+# Reproducible pipeline. Requires `uv` (deps in pyproject.toml) and network access
+# for the domain/orthology/conservation steps (public EBI/UniProt REST APIs).
+
+ACC := "P43591"
+FASTA := "YFH7.fasta"
+
+# Run everything
+all: motifs domains conservation
+
+# Walker A / Walker B / P-loop motif scan (offline; sequence only)
+motifs:
+    uv run python analyze_motifs.py {{FASTA}} results_motifs.json
+
+# Domain architecture + orthology cross-refs (UniProt + InterPro REST)
+domains:
+    uv run python analyze_domains_orthology.py {{ACC}} results_domains.json
+
+# Taxonomic span via UniRef50/90 clusters (UniProt REST)
+conservation:
+    uv run python analyze_conservation.py {{ACC}} results_conservation.json
+
+# Control tests confirming scripts are not hardcoded (see RESULTS.md checklist)
+test-controls:
+    @echo "P-loop positive control (E. coli uridine kinase):"
+    uv run python analyze_motifs.py test_controls/udk_ecoli.fasta
+    @echo "Non-P-loop negative control (yeast histone H4):"
+    uv run python analyze_motifs.py test_controls/h4_yeast.fasta
+    @echo "Deeply-conserved control (yeast actin ACT1, P60010):"
+    uv run python analyze_conservation.py P60010

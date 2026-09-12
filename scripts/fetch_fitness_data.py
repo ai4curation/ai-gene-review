@@ -24,6 +24,31 @@ ORGANISM_TO_FEBA = {
 
 FEBA_REPO = Path.home() / "repos" / "feba"
 FEBA_DB = FEBA_REPO / "cgi_data" / "feba.db"
+REQUIRED_HTML_FILES = (
+    "fit_logratios_good.tab",
+    "fit_t.tab",
+    "expsUsed",
+)
+
+
+def html_source_ready(directory: Path) -> bool:
+    """Return whether a BarSeqR directory has all required input tables."""
+    return all((directory / filename).exists() for filename in REQUIRED_HTML_FILES)
+
+
+def sqlite_source_ready() -> bool:
+    """Return whether the local FEBA database has a queryable Gene table."""
+    if not FEBA_DB.exists():
+        return False
+    try:
+        conn = sqlite3.connect(str(FEBA_DB))
+        conn.execute("SELECT 1 FROM Gene LIMIT 1").fetchone()
+    except sqlite3.Error:
+        return False
+    finally:
+        if "conn" in locals():
+            conn.close()
+    return True
 
 
 def find_feba_html_dir(org_id: str) -> Path | None:
@@ -31,63 +56,71 @@ def find_feba_html_dir(org_id: str) -> Path | None:
     # BarSeqR output is typically in html/{orgId}/ with fit_logratios_good.tab etc.
     for parent in [FEBA_REPO / "html", FEBA_REPO / "htmlresults", FEBA_REPO]:
         candidate = parent / org_id
-        if (candidate / "fit_logratios_good.tab").exists():
+        if html_source_ready(candidate):
             return candidate
     return None
 
 
+def has_usable_local_source(org_id: str) -> bool:
+    """Return whether a local FEBA source is present and queryable."""
+    return sqlite_source_ready() or find_feba_html_dir(org_id) is not None
+
+
 def query_sqlite(org_id: str, locus_tag: str) -> dict | None:
     """Query fitness data from the local FEBA SQLite database."""
-    if not FEBA_DB.exists():
+    if not sqlite_source_ready():
         return None
 
-    conn = sqlite3.connect(str(FEBA_DB))
-    conn.row_factory = sqlite3.Row
+    try:
+        conn = sqlite3.connect(str(FEBA_DB))
+        conn.row_factory = sqlite3.Row
 
-    # Look up gene info
-    gene_row = conn.execute(
-        "SELECT * FROM Gene WHERE orgId = ? AND (locusId = ? OR sysName = ? OR gene = ?)",
-        (org_id, locus_tag, locus_tag, locus_tag),
-    ).fetchone()
-    if not gene_row:
-        conn.close()
+        # Look up gene info
+        gene_row = conn.execute(
+            "SELECT * FROM Gene WHERE orgId = ? AND (locusId = ? OR sysName = ? OR gene = ?)",
+            (org_id, locus_tag, locus_tag, locus_tag),
+        ).fetchone()
+        if not gene_row:
+            return None
+
+        locus_id = gene_row["locusId"]
+
+        # Get fitness values with experiment descriptions
+        fitness_rows = conn.execute(
+            """SELECT gf.expName, gf.fit, gf.t, e.expDesc, e.expGroup,
+                      e.condition_1, e.concentration_1, e.units_1,
+                      e.condition_2, e.concentration_2, e.units_2,
+                      e.media
+               FROM GeneFitness gf
+               JOIN Experiment e ON gf.orgId = e.orgId AND gf.expName = e.expName
+               WHERE gf.orgId = ? AND gf.locusId = ?
+               ORDER BY ABS(gf.t) DESC""",
+            (org_id, locus_id),
+        ).fetchall()
+
+        # Get cofitness partners
+        cofit_rows = conn.execute(
+            """SELECT c.hitId, c.cofit, c.rank, g.sysName, g.gene, g.desc
+               FROM Cofit c
+               JOIN Gene g ON c.orgId = g.orgId AND c.hitId = g.locusId
+               WHERE c.orgId = ? AND c.locusId = ?
+               ORDER BY c.rank""",
+            (org_id, locus_id),
+        ).fetchall()
+
+        # Get specific phenotypes
+        specific_rows = conn.execute(
+            """SELECT sp.expName, e.expDesc, e.expGroup
+               FROM SpecificPhenotype sp
+               JOIN Experiment e ON sp.orgId = e.orgId AND sp.expName = e.expName
+               WHERE sp.orgId = ? AND sp.locusId = ?""",
+            (org_id, locus_id),
+        ).fetchall()
+    except sqlite3.Error:
         return None
-
-    locus_id = gene_row["locusId"]
-
-    # Get fitness values with experiment descriptions
-    fitness_rows = conn.execute(
-        """SELECT gf.expName, gf.fit, gf.t, e.expDesc, e.expGroup,
-                  e.condition_1, e.concentration_1, e.units_1,
-                  e.condition_2, e.concentration_2, e.units_2,
-                  e.media
-           FROM GeneFitness gf
-           JOIN Experiment e ON gf.orgId = e.orgId AND gf.expName = e.expName
-           WHERE gf.orgId = ? AND gf.locusId = ?
-           ORDER BY ABS(gf.t) DESC""",
-        (org_id, locus_id),
-    ).fetchall()
-
-    # Get cofitness partners
-    cofit_rows = conn.execute(
-        """SELECT c.hitId, c.cofit, c.rank, g.sysName, g.gene, g.desc
-           FROM Cofit c
-           JOIN Gene g ON c.orgId = g.orgId AND c.hitId = g.locusId
-           WHERE c.orgId = ? AND c.locusId = ?
-           ORDER BY c.rank""",
-        (org_id, locus_id),
-    ).fetchall()
-
-    # Get specific phenotypes
-    specific_rows = conn.execute(
-        """SELECT sp.expName, e.expDesc, e.expGroup
-           FROM SpecificPhenotype sp
-           JOIN Experiment e ON sp.orgId = e.orgId AND sp.expName = e.expName
-           WHERE sp.orgId = ? AND sp.locusId = ?""",
-        (org_id, locus_id),
-    ).fetchall()
-
-    conn.close()
+    finally:
+        if "conn" in locals():
+            conn.close()
 
     return {
         "gene": dict(gene_row),
@@ -116,9 +149,6 @@ def query_html_dir(org_id: str, locus_tag: str) -> dict | None:
     fit_file = html_dir / "fit_logratios_good.tab"
     t_file = html_dir / "fit_t.tab"
     exps_file = html_dir / "expsUsed"
-
-    if not all(f.exists() for f in [fit_file, t_file, exps_file]):
-        return None
 
     # Read experiment metadata
     exps = {}
@@ -217,16 +247,23 @@ def try_bulk_download(org_id: str, locus_tag: str) -> dict | None:
         req = urllib.request.Request(fit_url, headers={"User-Agent": "ai-gene-review/1.0"})
         with urllib.request.urlopen(req, timeout=30) as resp:
             content = resp.read().decode("utf-8")
-            if "<!DOCTYPE html>" in content[:100].lower():
+            if "<!doctype html>" in content[:100].lower():
                 # Got HTML instead of TSV — likely Cloudflare challenge
                 return None
             reader = csv.DictReader(io.StringIO(content), delimiter="\t")
+            if not reader.fieldnames or not {"fit", "t"}.issubset(reader.fieldnames):
+                return None
             fitness = []
             for row in reader:
+                try:
+                    fit_value = float(row["fit"])
+                    t_value = float(row["t"])
+                except (KeyError, TypeError, ValueError):
+                    return None
                 fitness.append({
                     "expName": row.get("name", ""),
-                    "fit": float(row.get("fit", 0)),
-                    "t": float(row.get("t", 0)),
+                    "fit": fit_value,
+                    "t": t_value,
                     "expDesc": row.get("short", row.get("desc", "")),
                     "expGroup": row.get("Group", ""),
                     "condition_1": row.get("Condition_1", ""),
@@ -450,6 +487,7 @@ def main():
     print(f"Looking up fitness data for {org_id}/{locus_tag}...")
 
     # Try data sources in order
+    source_available = has_usable_local_source(org_id)
     data = query_sqlite(org_id, locus_tag)
     if data:
         print(f"Found data in local FEBA database ({FEBA_DB})")
@@ -460,21 +498,31 @@ def main():
         else:
             print("No local FEBA data found. Trying bulk download...")
             data = try_bulk_download(org_id, locus_tag)
-            if data:
-                print("Downloaded fitness data from fit.genomics.lbl.gov")
+            if data is not None:
+                source_available = True
+                if data["fitness"]:
+                    print("Downloaded fitness data from fit.genomics.lbl.gov")
 
     if not data or not data["fitness"]:
+        if not source_available:
+            print(
+                "Error: no FEBA data source was reachable; no fitness artifact was written.",
+                file=sys.stderr,
+            )
+            print(
+                f"Install the local FEBA database at {FEBA_DB} or retry when "
+                "fit.genomics.lbl.gov is available. BarSeqR tables under "
+                f"{FEBA_REPO}/html/{org_id}/ are also supported.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
         output_file = gene_dir / f"{gene_symbol}-fitness.md"
         output_file.write_text(
             f"# FEBA/RB-TnSeq Fitness Data: {gene_symbol}\n\n"
             f"No fitness data found for {org_id}/{locus_tag}.\n\n"
             f"Possible reasons:\n"
-            f"- The FEBA database is not available locally (check ~/repos/feba/cgi_data/feba.db)\n"
-            f"- No BarSeqR HTML output directories found\n"
             f"- The organism '{org_id}' may not be in the FEBA database\n"
             f"- The gene may be essential (no viable mutants in the library)\n\n"
-            f"To set up local data, build the FEBA database:\n"
-            f"  cd ~/repos/feba && perl bin/db_setup.pl -db cgi_data/feba.db ...\n"
         )
         print(f"No fitness data found. Wrote placeholder to {output_file}")
         sys.exit(0)

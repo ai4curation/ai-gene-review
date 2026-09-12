@@ -1,3 +1,7 @@
+---
+title: "MicroRNA Degradation Project Sources"
+---
+
 # MicroRNA Degradation Project Sources
 
 This file tracks the seed papers that define project scope. It is intentionally smaller than a full

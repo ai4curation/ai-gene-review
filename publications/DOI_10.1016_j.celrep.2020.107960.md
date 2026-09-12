@@ -13,6 +13,7 @@ journal: Cell Reports
 year: '2020'
 doi: 10.1016/j.celrep.2020.107960
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # A Trio of Active Zone Proteins Comprised of RIM-BPs, RIMs, and Munc13s Governs Neurotransmitter Release

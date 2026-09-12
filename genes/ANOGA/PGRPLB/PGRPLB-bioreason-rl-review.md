@@ -1,9 +1,9 @@
 # BioReason-Pro RL Review: PGRPLB (ANOGA)
 
-Source: PGRPLB-deep-research-bioreason-rl.md
+Source: PGRPLB-bioreason-rl-predictions.md
 
-- **Correctness**: 3/5
-- **Completeness**: 3/5
+- **Correctness**: 2/5
+- **Completeness**: 2/5
 
 ## Functional Summary Review
 

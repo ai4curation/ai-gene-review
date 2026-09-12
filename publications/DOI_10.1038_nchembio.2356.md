@@ -7,6 +7,7 @@ journal: Nature Chemical Biology
 year: '2017'
 doi: 10.1038/nchembio.2356
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # Small-molecule pheromones and hormones controlling nematode development

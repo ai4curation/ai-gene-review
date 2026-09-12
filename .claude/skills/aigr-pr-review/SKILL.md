@@ -46,7 +46,12 @@ evidence quality, and whether the curation narrative is coherent.
 - Do not treat every phenotype, developmental consequence, or systems-level effect as core.
 - Use the combination of review YAML, UniProt annotations, deep research, notes, and cited publications to infer what is core vs peripheral.
 
-4. Annotation action justification
+4. Description quality
+- The top-level `description` should be a standalone biological summary for a biologist.
+- Flag project or workflow framing in `description`, including phrases such as `Proteostasis Network`, `PN`, `this review`, `curation`, `GOA correctly captures`, or `should be annotated`.
+- Project-specific observations, disagreements with a project source list, and annotation-propagation cautions belong in `*-notes.md`, `review.reason`, `core_functions`, or `suggested_questions`, not in `description`.
+
+5. Annotation action justification
 - Every action should have a reason that matches the evidence.
 - `ACCEPT` and `KEEP_AS_NON_CORE` need positive support, not just absence of contradiction.
 - `REMOVE` and `MARK_AS_OVER_ANNOTATED` need a clear explanation of why the current term overshoots the evidence.
@@ -61,6 +66,7 @@ evidence quality, and whether the curation narrative is coherent.
 - `core_functions` sections that mirror phenotypes rather than molecular/cellular function.
 - `review.reason` or `review.summary` text that does not justify the chosen action.
 - UniProt-backed claims that are overstated relative to the actual UniProt entry.
+- Gene descriptions that read like curation notes rather than biology summaries.
 
 ## Things Not To Flag
 

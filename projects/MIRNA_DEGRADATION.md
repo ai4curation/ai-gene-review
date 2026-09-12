@@ -1,4 +1,8 @@
 ---
+title: "MicroRNA Degradation / TDMD Project"
+maturity: MATURE
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+genes: [ZSWIM8, CUL3, ARIH1, ELOB, ELOC, AGO2, AGO1, AGO3, AGO4]
 species: [human, mouse, DROME, worm]
 sidecars:
   genes: MIRNA_DEGRADATION/genes.csv

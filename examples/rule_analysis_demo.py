@@ -21,6 +21,7 @@ Example usage:
 
 import argparse
 import json
+import re
 from pathlib import Path
 
 from ai_gene_review.etl.arba import ARBAClient
@@ -74,6 +75,12 @@ def main():
     )
 
     args = parser.parse_args()
+
+    if re.fullmatch(r"ARBA[0-9]{8}", args.rule_id) is None:
+        parser.error(
+            f"unsupported rule ID {args.rule_id!r}; "
+            "post-enrichment analysis currently supports ARBA######## IDs only"
+        )
 
     # Fetch rule
     print(f"Fetching rule {args.rule_id}...")

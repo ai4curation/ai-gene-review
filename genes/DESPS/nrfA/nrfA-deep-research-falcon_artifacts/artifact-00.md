@@ -1,0 +1,20 @@
+| Topic | Claim | Evidence type | Support |
+|---|---|---|---|
+| Target identity | UniProt Q6ARF1 corresponds to **nrfA / DP0344** in **Desulfotalea psychrophila strain LSv54 (DSM 12343)** | Organism-specific (user-provided UniProt context) | User-provided UniProt context |
+| Protein name | Q6ARF1 is annotated as **cytochrome c-552**; alternative names include **ammonia-forming cytochrome c nitrite reductase** and **cytochrome c nitrite reductase** | Organism-specific (user-provided UniProt context) | User-provided UniProt context |
+| Enzyme class | Q6ARF1 is annotated with **EC 1.7.2.2** | Organism-specific (user-provided UniProt context) | User-provided UniProt context |
+| Family/domain assignment | Q6ARF1 belongs to the **cytochrome c-552 family** and carries domains/signatures **IPR003321, IPR017570, IPR036280, PF02335** | Organism-specific (user-provided UniProt context) | User-provided UniProt context |
+| Ambiguity check | Literature support for **Desulfotalea psychrophila LSv54 nrfA/DP0344** is sparse; available retrieved papers largely support **general NrfA biology** rather than direct characterization of Q6ARF1 | Mixed; direct organism-specific evidence limited | (pqac-00000016) |
+| Core reaction | NrfA enzymes catalyze **nitrite → ammonium** as part of DNRA; the reaction is a **six-electron, eight-proton reduction** | General NrfA property | (pqac-00000002, pqac-00000007, pqac-00000009) |
+| Cellular localization | NrfA is typically a **soluble periplasmic** multiheme **c-type cytochrome** | General NrfA property | (pqac-00000000, pqac-00000002, pqac-00000006, pqac-00000011) |
+| Heme architecture | Canonical NrfA is usually **pentaheme**; solved structures crystallize as **dimers** with **five hemes per monomer** | General NrfA property | (pqac-00000002, pqac-00000007, pqac-00000013) |
+| Active-site motif | The catalytic heme (heme 1) commonly uses a **CXXCK** motif with **proximal Lys** ligation; hemes 2-5 usually use **CXXCH** motifs and are **bis-His ligated** | General NrfA property | (pqac-00000000, pqac-00000006, pqac-00000007) |
+| Catalytic residues/cofactor | Conserved **Arg/Tyr/His** second-sphere residues help bind/activate nitrite; many NrfAs contain a nearby **Ca2+** required for activity, although some lineages replace this with **Arg** | General NrfA property | (pqac-00000000, pqac-00000006) |
+| Electron-transfer partners | Known redox partners include **NrfH** (membrane quinol dehydrogenase), **NrfB** (periplasmic multiheme electron shuttle linked to **NrfCD**), and in some taxa **CymA** | General NrfA property | (pqac-00000000, pqac-00000006, pqac-00000012) |
+| Operon organization | Common genetic organizations include **nrfHA** and **nrfABCDEFG** operons; visual summary of these operon types is provided in the recent review figures/tables | General NrfA property | (pqac-00000005, pqac-00000013, pqac-00000014, pqac-00000015) |
+| Functional role | NrfA is central to **dissimilatory nitrate reduction to ammonium (DNRA)**, helping retain fixed nitrogen in ecosystems | General NrfA property | (pqac-00000002, pqac-00000007) |
+| Quantitative note | Some characterized NrfA enzymes show **very high activity**, with reported specific activities **>1,000 mol NO2- s^-1 per mol NrfA** | General NrfA property | (pqac-00000002, pqac-00000007) |
+| Comparative-genomics note for DESPS | **Desulfotalea psychrophila LSv54** was included as a reference genome in comparative work that also analyzed **nrfA** phylogeny, but the retrieved excerpt does **not** provide direct DP0344/Q6ARF1 functional or operon details | Organism-specific but indirect | (pqac-00000016) |
+
+
+*Table: This table separates what is directly confirmed for the target protein Q6ARF1 from the user-provided UniProt context versus what is supported only by broader NrfA literature. It is useful for keeping organism-specific annotation distinct from general inference when direct Desulfotalea psychrophila evidence is limited.*

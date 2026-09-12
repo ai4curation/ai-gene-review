@@ -1,3 +1,9 @@
+---
+title: "Neural and Glial Cell Fate Determination Project"
+maturity: MATURE
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+---
+
 # Neural and Glial Cell Fate Determination Project
 
 ## Overview

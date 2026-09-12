@@ -1,0 +1,25 @@
+| Property | Summary |
+|---|---|
+| Gene name | **BCKDHA** (branched chain keto acid dehydrogenase E1 subunit alpha) (pqac-00000000) |
+| UniProt ID | **P12694** (user-provided target identity) |
+| Protein name | **2-oxoisovalerate dehydrogenase subunit alpha, mitochondrial**; also called **branched-chain alpha-keto acid dehydrogenase E1 component alpha chain (BCKDH E1α)** (user-provided target identity, pqac-00000001, pqac-00000022) |
+| EC number | **EC 1.2.4.4** (user-provided target identity, pqac-00000001) |
+| Organism | **Homo sapiens (human)** (user-provided target identity, pqac-00000000) |
+| Chromosomal location | **19q13.2**; the gene has historically been assigned to chromosome 19q13 in human BCKDH/MSUD literature and reference databases (pqac-00000000) |
+| Protein length | **445 aa precursor**; includes an N-terminal mitochondrial targeting peptide, with a reported **27-aa targeting signal peptide** for BCKDH pathway proteins in metabolon studies (user-provided target identity, pqac-00000043) |
+| Molecular weight | **~49 kDa precursor** (inferred from 445 aa sequence length; commonly reported for human BCKDHA reference entries) (user-provided target identity) |
+| Subcellular localization | **Mitochondrial matrix / mitochondrial BCKDH complex**. Mitochondrial localization is supported by subcellular fractionation and overlap with MitoTracker in cardiomyocytes; BCKDH functions as a mitochondrial multienzyme complex (pqac-00000006, pqac-00000007, pqac-00000022) |
+| Cofactors | **Thiamine pyrophosphate (TPP/ThDP)** is required by the E1 component; catalysis also depends on the BCKDH multienzyme system using **lipoate/lipoyl-E2, CoA, and NAD+** across E1/E2/E3 steps (pqac-00000004, pqac-00000022, pqac-00000024) |
+| Primary biochemical function | Catalytic **E1α subunit** of the mitochondrial **BCKDH complex**, which performs the **rate-limiting irreversible oxidative decarboxylation** of branched-chain α-ketoacids generated from leucine, isoleucine, and valine catabolism (pqac-00000001, pqac-00000002, pqac-00000004) |
+| Reaction catalyzed | As part of BCKDH, converts branched-chain α-ketoacids to their corresponding **branched-chain acyl-CoA** derivatives with release of **CO2** and production of **NADH** through the coupled E1/E2/E3 reaction sequence (pqac-00000001, pqac-00000003, pqac-00000004) |
+| Complex architecture / partners | BCKDHA forms the **E1 heterotetramer (α2β2)** with **BCKDHB (E1β)**; this E1 component docks to the **E2 core (DBT)** and works with **E3 (DLD)** in the mitochondrial BCKDH complex (pqac-00000022, pqac-00000023, pqac-00000025) |
+| Key regulatory site | **Ser293** on BCKDHA is the canonical inhibitory phosphorylation site best supported by classic mechanistic work; phosphorylation disrupts active-site/TPP-related function and inactivates BCKDH (pqac-00000012, pqac-00000013) |
+| Key regulators | **BCKDK/BDK** phosphorylates and inhibits BCKDHA; **PPM1K/PP2Cm** dephosphorylates and activates BCKDH. These enzymes are major determinants of tissue-specific BCAA oxidative flux (pqac-00000008, pqac-00000009, pqac-00000011) |
+| Substrate specificity | Preferred branched-chain α-ketoacid substrates include **α-ketoisovalerate (KIV, valine-derived; 100%)**, **α-ketoisocaproate (KIC, leucine-derived; ~70%)**, **α-keto-β-methylvalerate (KMV, isoleucine-derived; ~40%)**; broader activity has also been reported toward **α-ketobutyrate (~50%)**, **4-methylthio-α-ketobutyrate (~30%)**, and **pyruvate (~20%)** in comparative analyses of E1b specificity (pqac-00000003, pqac-00000004) |
+| Pathway context | BCKDHA acts after **BCAT2-mediated transamination** and before downstream acyl-CoA oxidation steps; BCAT2 can physically interact with BCKDH to form a **metabolon** that supports substrate channeling (pqac-00000044, pqac-00000045, pqac-00000046) |
+| Associated disease | **Maple syrup urine disease (MSUD), especially type 1A**, plus intermediate and intermittent MSUD forms; Open Targets shows strong disease association scores for hereditary disease and MSUD-related phenotypes (pqac-00000000, pqac-00000014, pqac-00000017) |
+| Representative disease features | Pathogenic BCKDHA variants reduce BCKDH activity, causing accumulation of **BCAAs/BCKAs** and leading to neonatal or infantile encephalopathic disease; **classic MSUD** is typically associated with **<3% residual enzyme activity** (pqac-00000015, pqac-00000017, pqac-00000018) |
+| Recent regulatory insights (2023–2024) | New work shows **mitolnc** can allosterically activate mitochondrial BCKDH independently of phosphorylation in heart, while **BDK inhibitors** lower p-BCKDHA and improve cardiometabolic phenotypes in mouse models (pqac-00000034, pqac-00000035, pqac-00000037) |
+
+
+*Table: This table summarizes the core molecular, biochemical, localization, regulatory, and disease-related properties of human BCKDHA. It is useful as a compact reference for functional annotation and interpretation of BCKDHA in BCAA metabolism and MSUD.*

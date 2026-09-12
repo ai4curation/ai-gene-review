@@ -1,4 +1,8 @@
 ---
+title: "Nicotine Biosynthesis Project"
+maturity: MATURE
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+genes: [NaAO2, NaNAMNH, NaQPT2, NaODC1, NaODC2, NaPMT1.1, NaPMT1.2, NaMPO1, NaUGT1, NaA622, NaBBL1, NaBBL2, NaBGL1, NaBGL2, NaMATE1, NaNUP, NaERF1-like, NaMYC2]
 species: [NICAT]
 sidecars:
   genes: NICOTINE_BIOSYNTHESIS/genes.csv
@@ -196,6 +200,10 @@ Important caveats:
 - [x] Advance all currently launched NICAT aliases beyond `INITIALIZED`.
 - [ ] Resolve a stable public accession for `NaNAMNH`.
 - [ ] Revisit whether `NaNUP` belongs in the core transport batch after the minimal metabolon is reviewed.
+
+## Slides
+
+- [Slides](NICOTINE_BIOSYNTHESIS/slides/NICOTINE_BIOSYNTHESIS-slides.html) (Marp source: [NICOTINE_BIOSYNTHESIS-slides.md](NICOTINE_BIOSYNTHESIS/slides/NICOTINE_BIOSYNTHESIS-slides.md)) — AI generated
 
 ## Sources
 

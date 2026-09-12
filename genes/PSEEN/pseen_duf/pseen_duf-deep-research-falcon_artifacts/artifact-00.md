@@ -1,0 +1,22 @@
+| Component (gene/protein) | Subcellular localization | Functional role | Key supporting citation IDs |
+|---|---|---|---|
+| Flp pilin (Flp/Flp1) | Cell envelope pool before assembly; extracellular pilus filament after assembly | Major structural pilin of the Tad/Flp (type IVc) pilus; polymerized into the surface filament that mediates adherence/aggregation | (pqac-00000001, pqac-00000004, pqac-00000011) |
+| TadV | Cytoplasmic face of the inner/cytoplasmic membrane | Prepilin peptidase that matures Flp1 and minor pilins/pseudopilins TadE/TadF before assembly | (pqac-00000001, pqac-00000004, pqac-00000010, pqac-00000014) |
+| TadA | Cytoplasm, associated with inner-membrane assembly machinery | Traffic ATPase that energizes pilus polymerization/assembly; in Tad systems functions as the main motor driving filament biogenesis | (pqac-00000001, pqac-00000004, pqac-00000011, pqac-00000014) |
+| TadB | Inner membrane | Assembly platform component coupling the ATPase-driven motor to pilin extraction/polymerization | (pqac-00000001, pqac-00000004, pqac-00000008) |
+| TadC | Inner membrane | Assembly platform component working with TadB to transmit energy from TadA to the growing pilus | (pqac-00000001, pqac-00000004, pqac-00000008) |
+| TadZ | Cytoplasmic/peripheral inner-membrane, often polar | ParA/MinD-family assembly/localization factor implicated in polar targeting and spatial organization of Tad biogenesis | (pqac-00000001, pqac-00000004, pqac-00000010) |
+| RcpA | Outer membrane with periplasmic N-domain | Secretin pore through which the Tad pilus crosses the outer membrane; forms OM channel essential for secretion of the filament | (pqac-00000001, pqac-00000004, pqac-00000006, pqac-00000011) |
+| TadD | Outer-membrane lipoprotein | Pilotin required for RcpA localization, multimerization, and secretin assembly in the outer membrane | (pqac-00000001, pqac-00000004, pqac-00000011) |
+| RcpC | Inner membrane-anchored, largely periplasmic | Alignment-complex protein; forms a dodecameric periplasmic conduit linking inner-membrane Tad machinery to the RcpA secretin and is required for efficient Tad-mediated aggregation/biofilm phenotypes | (pqac-00000000, pqac-00000001, pqac-00000002, pqac-00000003, pqac-00000006, pqac-00000008) |
+| RcpB | Likely envelope-associated accessory component; precise localization/function unresolved from the provided evidence | Canonical tad operon member listed in comparative genomics/operon maps, but specific mechanistic assignment is not defined in the retrieved evidence | (pqac-00000017) |
+| TadE | Inner-membrane pilin pool before assembly; likely minor pilus-associated component | Minor pilin/pseudopilin-like component processed by TadV; likely contributes to pilus initiation/assembly | (pqac-00000004, pqac-00000010, pqac-00000015) |
+| TadF | Inner-membrane pilin pool before assembly; likely minor pilus-associated component | Minor pilin/pseudopilin-like component processed by TadV; likely contributes to pilus initiation/assembly | (pqac-00000004, pqac-00000010, pqac-00000017) |
+| TadG | Likely inner-membrane/envelope-associated accessory component; precise localization unresolved from the provided evidence | Canonical tad operon component present in operon lists/schematic models, but exact biochemical role is not resolved in the retrieved evidence | (pqac-00000008, pqac-00000017) |
+| Tekedar 2024 quantitative note: complete tad operon composition in A. hydrophila ML09-119 | Operon/genome-level observation | 13-gene operon listed as flp, tadV, rcpC, rcpA, rcpB, tadZ, tadA, tadB, tadC, tadD, tadE, tadF, tadG | (pqac-00000017) |
+| Tekedar 2024 quantitative note: operon size | Operon/genome-level observation | Tad operon length reported as 10,852 bp | (pqac-00000017) |
+| Tekedar 2024 quantitative note: GC content | Operon/genome-level observation | Tad operon GC content 64.82% versus genome average 60.82% | (pqac-00000017, pqac-00000018) |
+| Tekedar 2024 quantitative note: virulence effect of tad deletion | Whole-organism phenotype | Immersion-challenge mortality in catfish fingerlings decreased from 74.36% (WT) to 14.65% (Δtad) at 72 h | (pqac-00000017) |
+
+
+*Table: This table summarizes canonical Tad/Flp (type IVc) pilus components, their likely subcellular localization, and inferred or demonstrated functions from the retrieved evidence. It also captures key quantitative operon and phenotype data from Tekedar et al. 2024 that are useful for functional annotation.*

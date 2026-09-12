@@ -1,0 +1,7 @@
+# mvaB curation notes
+
+- UniProt evidence: UniProt identifies Q88H25 as hydroxymethylglutaryl-CoA lyase and records the HMG-CoA cleavage reaction. [file:PSEPK/mvaB/mvaB-uniprot.txt "RecName: Full=hydroxymethylglutaryl-CoA lyase"].
+- The close P. aeruginosa LiuE ortholog was biochemically shown to catalyze cleavage of HMG-CoA to acetyl-CoA and acetoacetate. [PMID:19459965 "cleavage of HMG-CoA to acetyl-CoA and acetoacetate."].
+- Bacterial HMG-CoA lyase structures identify the family as divalent-cation-dependent DRE-TIM metallolyases; Q88H25's exact preferred ion remains untested. [PMID:16330546 "the catalytic center contains a divalent cation-binding site formed by a cluster of invariant residues that cap the core of the barrel"].
+- OpenScientist reports 78.6% identity between MvaB and characterized P. aeruginosa LiuE, and 41.8% between MvaB and PP_3394. These provider calculations were not independently reproduced. [file:PSEPK/mvaB/mvaB-deep-research-openscientist.md "| mvaB (PP_3540) vs. *P. aeruginosa* LiuE/PA2011 (characterized HMG-CoA lyase) | **78.6%** |"] [file:PSEPK/mvaB/mvaB-deep-research-openscientist.md "| mvaB vs. KT2440 paralog PP_3394 | 41.8% |"].
+- MvaB/PP_3540 lies apart from the upstream ivd-mccB-liuC-mccA cluster, so coordinated regulation and the relative physiological contribution of PP_3394 remain open questions. [file:PSEPK/mvaB/mvaB-deep-research-openscientist.md "By contrast, **mvaB/PP_3540 is located ~500 genes away** from this cluster"].

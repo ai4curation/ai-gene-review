@@ -1,0 +1,10 @@
+> Rhodopsin-like (Class A) GPCRs are defined by a conserved seven-transmembrane (7TM) α-helical core connected by three extracellular and three intracellular loops, with an extracellular N-terminus and cytoplasmic C-terminus; the orthosteric ligand-binding pocket is formed within the 7TM bundle, while the intracellular face engages transducers such as heterotrimeric G proteins and arrestins (pqac-00000000, pqac-00000002, pqac-00000004).
+>
+> A conserved disulfide bond between extracellular loop 2 (ECL2) and TM3 is a recurrent structural feature that stabilizes the Class A receptor fold and helps support ligand recognition architecture across the family (pqac-00000003).
+>
+> Activation involves rearrangement of conserved Class A “microswitch” motifs, notably CWxP, the PIF network, the E/DRY motif, the NPxxY motif, and the central sodium-binding pocket. In current structural models, agonist sensing promotes collapse or reorganization of the Na+ pocket in the 7TM core, followed by coordinated movements of TM3, TM5, TM6, and TM7; this includes disruption of the DRY ionic interaction, repacking of the NPxxY region, and outward displacement of the intracellular end of TM6 that opens the cytoplasmic cavity for G-protein coupling (pqac-00000003, pqac-00000000).
+>
+> The DRY motif at the TM3/ICL2 boundary is a major activation and coupling element; the NPxxY motif in TM7 and the CWxP/PIF region in the core participate in the allosteric transmission of ligand binding to the intracellular surface. Together these motifs explain why the InterPro signature detects a structurally coherent family of 7TM receptors, even though downstream signaling outputs can diverge among subfamilies (pqac-00000002, pqac-00000003).
+
+
+*Blockquote: This blockquote summarizes the conserved architecture and activation microswitches of rhodopsin-like GPCRs. It is useful as a compact structural foundation for evaluating what the InterPro family signature IPR000276 actually recognizes.*

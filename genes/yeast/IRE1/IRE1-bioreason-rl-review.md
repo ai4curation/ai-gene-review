@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: IRE1 (S. cerevisiae)
 
-Source: IRE1-deep-research-bioreason-rl.md
+Source: IRE1-bioreason-rl-predictions.md
 
 - **Correctness**: 3/5
 - **Completeness**: 3/5

@@ -18,6 +18,7 @@ journal: Neuron
 year: '2014'
 doi: 10.1016/j.neuron.2014.04.015
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # Auxiliary GABAB Receptor Subunits Uncouple G Protein βγ Subunits from Effector Channels to Induce Desensitization

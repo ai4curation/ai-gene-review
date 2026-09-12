@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: catA (P. putida)
 
-Source: catA-deep-research-bioreason-rl.md
+Source: catA-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 4/5

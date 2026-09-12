@@ -1,3 +1,10 @@
+---
+title: "Mitochondrial Import Pathways Project"
+maturity: MATURE
+tags: [BIOLOGY_DOMAIN]
+species: [human]
+---
+
 # Mitochondrial Import Pathways Project
 
 ## Overview

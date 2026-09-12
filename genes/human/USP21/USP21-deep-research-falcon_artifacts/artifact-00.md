@@ -1,0 +1,16 @@
+| Substrate Name | Ubiquitin Chain Type Removed (K48, K63, etc.) | Functional Consequence of Deubiquitination | Cellular Process/Pathway Affected | Key References |
+|---|---|---|---|---|
+| Nanog | Primarily K48-linked polyubiquitin; little effect on K63-linked or monoubiquitination | Stabilizes Nanog protein by preventing proteasomal degradation | Embryonic stem cell pluripotency and self-renewal | (pqac-00000000, pqac-00000010) |
+| MEK2 | K48-linked polyubiquitin, not K63-linked | Stabilizes MEK2 and increases ERK pathway signaling | ERK/MAPK signaling, hepatocellular carcinoma proliferation and tumor growth | (pqac-00000002, pqac-00000012) |
+| RIG-I | K63-linked polyubiquitin on activated RIG-I/RIG-I-CARD | Dampens RIG-I activation, lowers IRF3 phosphorylation and type I IFN production | Antiviral innate immunity / RIG-I–MAVS–IRF3 signaling | (pqac-00000001, pqac-00000008, pqac-00000011) |
+| GATA3 | Reported substrate; chain type not specified in retrieved context | Deubiquitinates and stabilizes GATA3 in vitro/cell-based studies | Transcriptional regulation, T-cell biology, hematopoietic regulation | (pqac-00000009) |
+| RIPK1 | Reported substrate; linked to removal of activating ubiquitin chains, exact linkage not specified in retrieved context | Negative regulation of RIPK1 activity and suppression of downstream signaling | TNFR1/NF-κB inflammatory signaling | (pqac-00000009) |
+| Histone H2A (H2AK119ub) | Monoubiquitin on H2A K119 in chromatin/nucleosomes | Removes repressive histone ubiquitination mark, promoting transcriptional activation | Chromatin regulation / epigenetic control of transcription | (pqac-00000004, pqac-00000009) |
+| MARK3 | Ubiquitin linkage not specified in retrieved context | Stabilizes/maintains MARK3 function, promoting macropinocytosis and restricting YAP/TAZ activity depending on context | Macropinocytosis, cytoskeleton regulation, Hippo pathway | (pqac-00000006, pqac-00000007) |
+| YOD1 | Mutual deubiquitination reported; linkage not specified in retrieved context | USP21 deubiquitinates YOD1, but does not regulate YOD1 stability; reciprocal regulation mainly affects USP21 stability | Hippo pathway-associated DUB network | (pqac-00000007) |
+| IL-33 | Ubiquitin linkage not specified in retrieved context | Reported USP21 substrate/interactor; deubiquitination implicated in nuclear IL-33 regulation | Nuclear cytokine/transcriptional regulation, inflammation | (pqac-00000009) |
+| TCF7 | Ubiquitin linkage not specified in retrieved context | Stabilizes TCF7 in the nucleus | Wnt/TCF transcriptional program, pancreatic cancer stemness | (pqac-00000006) |
+| ISG15-conjugated substrates (cross-reactivity, not a single canonical substrate protein) | ISG15 conjugates | USP21 can cleave ISG15 with lower activity than ubiquitin; demonstrates modifier cross-reactivity | Ubiquitin-like modifier processing / enzyme specificity | (pqac-00000004) |
+
+
+*Table: This table compiles the major reported USP21 substrates and substrate classes, the ubiquitin linkages removed where known, and the functional/pathway consequences of deubiquitination. It is useful for quickly distinguishing well-supported direct activities from cases where the substrate is reported but linkage specificity remains incompletely defined in the retrieved evidence.*

@@ -1,3 +1,7 @@
+---
+title: "Vampirome transcript -> UniProt mapping (auto from NCBI TSA + UniProt)"
+---
+
 # Vampirome transcript -> UniProt mapping (auto from NCBI TSA + UniProt)
 
 Sources used for mapping:

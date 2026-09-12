@@ -1,3 +1,10 @@
+---
+title: "Surveillance Immunity Gene Curation: Implementation Checklist"
+maturity: MATURE
+tags: [BIOLOGY_DOMAIN]
+species: [worm]
+---
+
 # Surveillance Immunity Gene Curation: Implementation Checklist
 
 ## Overview

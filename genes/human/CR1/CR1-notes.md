@@ -1,0 +1,20 @@
+# CR1 curation notes
+
+## 2026-06-19
+
+- Deep-research attempt with `just deep-research-falcon human CR1 --fallback perplexity-lite` timed out after 180 seconds with no generated research artifact, so this manual review uses cached UniProt, GOA, Reactome, PANTHER family, and publication evidence.
+- CR1/CD35 is a large cell-surface complement receptor whose core functions are C3b/C4b binding, immune-adherence clearance, and complement regulation. UniProt summarizes CR1 as a membrane immune adherence receptor for complement-opsonized pathogens/immune complexes and a complement inhibitor/cofactor.
+- C3b/C4b receptor activity is directly supported by deletion-mutagenesis work: recombinant CR1 mediated rosette formation with C3b/C4b-bearing erythrocytes and had factor I cofactor activity [PMID:2972794 "mediated rosette formation with sheep erythrocytes bearing C4b and C3b"].
+- CR1 complement-inhibitory activity is core. The classic receptor-inhibitor paper reports that CR1 promotes dissociation of the alternative pathway C3 convertase, supports C3b/C4b inactivator cleavage, and inactivates classical pathway C3/C5 convertases [PMID:6910481 "CR1 also inactivates the C3 and C5 convertases of the classical pathway"].
+- C5 convertase decay-accelerating activity is supported by domain mapping; site 1 and a properly spaced site 2 are required for efficient activity [PMID:10531307 "Site 1 (CCPs 1-3) alone mediated the decay acceleration of the classical and alternative pathway C3 convertases"].
+- Erythrocyte immune-adherence clearance is a major in vivo role in primates. CR1 on red blood cells binds complement-tagged particles for transport to liver/spleen macrophages, and the paper explicitly names this process immune-adherence clearance [PMID:24022490 "This process is called immune-adherence clearance"].
+- Erythrocyte CR1 cytoskeletal/FAP-1 association and ATP release are real but secondary mechanistic details for immune-adherence transfer, so I kept cytoskeleton, membrane organization, raft, and ATP export annotations non-core [PMID:18684861 "CR1 partitions to the cytoskeleton fraction"].
+- T-cell and B-cell regulatory annotations are real immune-context biology but non-core relative to the general C3b/C4b receptor/cofactor function. T-cell CR1 triggering inhibits proliferation and cytokine protein synthesis [PMID:16360013 "triggering CR1 inhibits proliferation of T-lymphocytes"], and CD35/CR1 engagement can support Treg phenotypes [PMID:25742728 "contributes to generation of regulatory T cells"].
+- CR1 also acts as a B-cell inhibitory receptor in rheumatoid arthritis contexts, reducing BCR-induced proliferation, plasmablast differentiation, and immunoglobulin production [PMID:22962438 "CR1 inhibits the differentiation of B cells to plasmablasts and their immunoglobulin production"].
+- CR1 interactions with C1q, MBL, and ficolins are biologically meaningful complement-recognition interactions, but generic `protein binding` is too broad. I marked the corresponding generic annotations as MODIFY to `complement binding` [PMID:23460739 "ficolins are new CR1 ligands"].
+- CR1 expression in engineered retinal pigment epithelial cells can inhibit C3b/C6 deposition and complement-mediated injury, supporting complement-inhibitory annotations while remaining a therapeutic/model context [PMID:31862673 "CR1 inhibited deposition of complement proteins C3b and C6"].
+- High-throughput extracellular exosome annotations and generic FAP-1 protein binding were marked over-annotated because they do not define CR1 core molecular function compared with complement receptor, complement binding, and complement-regulatory terms.
+
+## 2026-06-20 second-pass audit
+
+The second-pass audit confirmed the existing CR1 review and manual reference metadata. No annotation action changes were needed: CR1 remains curated as a C3b/C4b complement receptor and immune-adherence/complement-regulatory cofactor, with T-cell, B-cell, retinal-therapeutic, cytoskeletal, and generic high-throughput interaction contexts retained as non-core, modified, or over-annotated as already reviewed.

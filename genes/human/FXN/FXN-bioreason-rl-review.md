@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: FXN (human)
 
-Source: FXN-deep-research-bioreason-rl.md
+Source: FXN-bioreason-rl-predictions.md
 
 - **Correctness**: 4/5
 - **Completeness**: 4/5

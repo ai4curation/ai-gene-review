@@ -1,0 +1,22 @@
+| Property | Description/Value |
+|---|---|
+| Gene name | **tam14**; one of the 14 *S. pombe* loci named for having transcripts altered during meiosis in the augmented genome annotation study (pqac-00000014) |
+| Systematic name | **SPCC330.20** (UniProt entry provided by user; also listed in the augmented annotation table as the locus corresponding to tam14) (pqac-00000008) |
+| UniProt accession | **G2TRT3** (user-supplied UniProt identifier) |
+| Organism | *Schizosaccharomyces pombe* strain 972 / ATCC 24843 (fission yeast) (user-supplied target definition) |
+| Protein description | Protein tam14; alternative name: **Transcripts altered in meiosis protein 14** (user-supplied target definition) |
+| Evidence for existence in *S. pombe* | The locus was identified in the 2011 re-annotation of the *S. pombe* genome; transcription was supported by RT-PCR/RNA-seq in the study’s global validation pipeline, but tam14 was not among the genes selected for functional knockout characterization (pqac-00000010, pqac-00000014) |
+| Protein family | **RAMP4 family** / ER stress-associated small membrane proteins; family-level functional inference is supported by RAMP4/SERP1 literature and domain assignment (pqac-00000018, pqac-00000019) |
+| Domain annotations | **RAMP4 / PF06624** and **ER_stress-assoc. / IPR010580**; in the Bitton et al. annotation table tam14 is associated with a Pfam-supported novel locus (pqac-00000008, pqac-00000014) |
+| Predicted molecular role | Likely a **small ER membrane accessory factor** of the **Sec61 ribosome-translocon complex**, inferred from the conserved RAMP4 family: RAMP4/SERP1 associates near-stoichiometrically with ER-localized ribosome-Sec61 complexes and can contact translocating nascent chains (pqac-00000000, pqac-00000019) |
+| Predicted mechanistic function | By family inference, likely helps **optimize membrane protein biogenesis at the ER**, especially during or after translocon remodeling for membrane protein insertion; RAMP4 is recruited when a TM segment enters the ribosome exit tunnel and can facilitate the switch to membrane integration mode (pqac-00000001, pqac-00000015, pqac-00000017) |
+| Predicted structural behavior | RAMP4-family proteins contain a **ribosome-binding region** and a **tail-anchored/kinked TM segment** that occupies the **Sec61 lateral gate**, widens the central pore, and contributes to the channel’s hydrophilic interior; tam14 is therefore plausibly a very small ER membrane protein with analogous architecture (pqac-00000002, pqac-00000018) |
+| Predicted subcellular localization | **Endoplasmic reticulum membrane**, specifically the **ribosome-associated Sec61 translocon** at rough ER, by conserved family function (pqac-00000018, pqac-00000019, pqac-00000023) |
+| Pathway context | Likely functions in **co-translational ER protein translocation/membrane insertion** and broader **ER proteostasis** rather than a meiosis-specific biochemical pathway; the meiosis-linked name reflects expression behavior, not proven primary function (pqac-00000014, pqac-00000023) |
+| Relation to ER stress | Family inference suggests involvement in **ER stress adaptation**: mammalian RAMP4/SERP1 is ER-stress inducible and loss causes secretion/UPR phenotypes in secretory tissues; however, this has **not been directly demonstrated for tam14 in *S. pombe*** (pqac-00000001, pqac-00000015, pqac-00000019) |
+| Orthologs / homologous family members | **Mammals:** RAMP4 / SERP1; **budding yeast:** Ysy6; these are the relevant family comparators for functional inference to tam14 (pqac-00000019, pqac-00000023) |
+| Functional confidence level | **Moderate for family-level annotation, low for gene-specific detail**: there is strong domain/family evidence, but little direct experimental characterization specific to tam14/SPCC330.20 itself (pqac-00000014, pqac-00000018, pqac-00000019) |
+| Key evidence sources | Primary *S. pombe* identification: Bitton et al. 2011 genome re-annotation (pqac-00000010, pqac-00000014); mechanistic family context: Pool 2009 and Lewis et al. 2024 on RAMP4/Sec61 structure-function (pqac-00000001, pqac-00000002, pqac-00000018, pqac-00000019) |
+
+
+*Table: This table summarizes the verified identity, annotation, predicted function, and likely localization of tam14/SPCC330.20 in fission yeast. It distinguishes direct evidence for the *S. pombe* gene from family-based inference drawn from better-characterized RAMP4/SERP1 proteins.*

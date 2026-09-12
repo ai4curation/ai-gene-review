@@ -1,0 +1,6 @@
+# recC curation notes
+
+- Q88DZ4 is the RecC subunit of the contiguous KT2440 `recD-recB-recC` locus. The target UniProt record assigns DNA binding, RecB-processivity stimulation, and signal recognition to RecC, while RecB and RecD provide the helicase motors [UniProtKB:Q88DZ4, "All subunits contribute to DNA-binding"; "RecC stimulates the ATPase and processivity of the RecB helicase"].
+- The transferred ATP-binding and DNA-catalytic annotations were removed because the target record provides neither a nucleotide-binding site nor an intrinsic catalytic reaction for RecC. This is an explicit override of the transferred ATP-binding keyword, not an inference that every non-ATPase is unable to bind ATP.
+- Pseudomonas RecBCD-like clones restore recombination and ATP-dependent nuclease activity but do not activate E. coli Chi [PMID:2559208, "proficiency and ATP-dependent nuclease activity, but neither Chi hotspot activity nor Chi-dependent DNA cleavage"]. The corresponding KT2440 regulatory signal is therefore left unresolved.
+- P. syringae genetics is used as comparative pseudomonad evidence, not as a KT2440 experiment; null mutations in recC, recB, or recD cause UV/mitomycin-C sensitivity [PMID:20195537, "syringae, lead to growth inhibition at low temperature, and sensitivity to UV and mitomycin C"].

@@ -92,6 +92,46 @@ def is_deep_research_markdown(path: Path) -> bool:
     )
 
 
+def is_hypothesis_research_markdown(path: Path, gene_dir: Path) -> bool:
+    """Return True for generated hypothesis-research report Markdown files."""
+    if path.suffix != ".md" or path.name.endswith(".citations.md"):
+        return False
+    if path.name.endswith("-citations.md"):
+        return False
+    hypothesis_root = gene_dir / f"{gene_dir.name}-hypotheses"
+    try:
+        relative = path.relative_to(hypothesis_root)
+    except ValueError:
+        return False
+    return len(relative.parts) == 2
+
+
+def iter_research_report_markdown(gene_dir: Path) -> List[Path]:
+    """Return top-level deep-research and nested hypothesis-research reports."""
+    reports = [
+        md_path
+        for md_path in gene_dir.glob("*-deep-research*.md")
+        if md_path.is_file() and is_deep_research_markdown(md_path)
+    ]
+    hypothesis_root = gene_dir / f"{gene_dir.name}-hypotheses"
+    if hypothesis_root.is_dir():
+        reports.extend(
+            md_path
+            for md_path in hypothesis_root.glob("*/*.md")
+            if md_path.is_file()
+            and is_hypothesis_research_markdown(md_path, gene_dir)
+        )
+    return sorted(reports)
+
+
+def report_filename_for_display(md_path: Path, gene_dir: Path) -> str:
+    """Return a report filename that disambiguates nested hypothesis reports."""
+    try:
+        return md_path.relative_to(gene_dir).as_posix()
+    except ValueError:
+        return md_path.name
+
+
 def normalize_embedded_markdown(text: str) -> str:
     """Remove wrapper indentation commonly found in embedded agent transcripts."""
     normalized = text.strip("\n")
@@ -468,13 +508,10 @@ def collect_deep_research_sections(
     gene_dir: Path,
     output_dir: Optional[Path] = None,
 ) -> List[Dict[str, Any]]:
-    """Collect deep-research reports for a gene directory and render them."""
+    """Collect deep-research and hypothesis-research reports for a gene."""
     sections: List[Dict[str, Any]] = []
 
-    for md_path in sorted(gene_dir.glob("*-deep-research*.md")):
-        if not md_path.is_file() or not is_deep_research_markdown(md_path):
-            continue
-
+    for md_path in iter_research_report_markdown(gene_dir):
         try:
             text = md_path.read_text(encoding="utf-8")
         except OSError as e:
@@ -521,7 +558,7 @@ def collect_deep_research_sections(
             {
                 "title": title,
                 "subtitle": subtitle,
-                "filename": md_path.name,
+                "filename": report_filename_for_display(md_path, gene_dir),
                 "content": html_content,
                 "provider": provider,
                 "provider_label": provider_label,
@@ -537,6 +574,62 @@ def collect_deep_research_sections(
             }
         )
 
+    return sections
+
+
+def collect_prediction_reviews(
+    yaml_path: Path, data: Dict[str, Any], output_dir: Path
+) -> List[Dict[str, Any]]:
+    """Load generic and method-specific prediction sidecars for this gene.
+
+    Filenames may use the main review's accession or its biological symbol.
+    Keep each document separate to preserve source provenance and avoid adding
+    external predictions to the GOA annotation review or its statistics.
+    """
+    prefixes = {yaml_path.stem.removesuffix("-ai-review")}
+    if data.get("gene_symbol"):
+        prefixes.add(data["gene_symbol"])
+    sections = []
+    for path in sorted(yaml_path.parent.glob("*-predictions-review.yaml")):
+        stem = path.name.removesuffix("-predictions-review.yaml")
+        if not path.is_file() or not any(
+            stem == prefix or stem.startswith(prefix + "-") for prefix in prefixes
+        ):
+            continue
+        review = load_gene_review(path)
+        if review.get("id") and data.get("id") and review["id"] != data["id"]:
+            raise ValueError(
+                f"Prediction review ID mismatch in {path}: "
+                f"{review['id']} != {data['id']}"
+            )
+        if not review.get("predictions"):
+            continue
+        methods = sorted({
+            pred.get("source_method") or "Unknown method"
+            for pred in review["predictions"]
+        })
+        genes_dir = next(
+            (parent for parent in yaml_path.resolve().parents if parent.name == "genes"),
+            None,
+        )
+        reference_hrefs = {}
+        if genes_dir is not None:
+            for pred in review["predictions"]:
+                for support in (pred.get("review") or {}).get("supported_by") or []:
+                    reference_id = support.get("reference_id") or ""
+                    if reference_id.startswith("file:"):
+                        source_path = genes_dir / reference_id.removeprefix("file:")
+                        if source_path.is_file():
+                            reference_hrefs[reference_id] = os.path.relpath(
+                                source_path.resolve(), output_dir.resolve()
+                            )
+        sections.append({
+            "title": ", ".join(methods),
+            "filename": path.name,
+            "href": os.path.relpath(path.resolve(), output_dir.resolve()),
+            "review": review,
+            "reference_hrefs": reference_hrefs,
+        })
     return sections
 
 
@@ -614,7 +707,7 @@ def render_html(
     template = env.get_template(template_path.name)
     html = template.render(gene=data, yaml_content=yaml_content)
 
-    return html
+    return "\n".join(line.rstrip() for line in html.splitlines()) + "\n"
 
 
 def render_gene_review(
@@ -682,14 +775,11 @@ def render_gene_review(
     )
     data["markdown_sections"] = markdown_sections
 
-    # Load predictions review if it exists
+    # Load external prediction reviews without merging them into GOA annotations.
     gene_symbol = data.get("gene_symbol", yaml_path.stem.replace("-ai-review", ""))
-    predictions_path = gene_dir / f"{gene_symbol}-predictions-review.yaml"
-    if predictions_path.exists():
-        predictions_data = load_gene_review(predictions_path)
-        data["predictions"] = predictions_data
-    else:
-        data["predictions"] = None
+    data["prediction_reviews"] = collect_prediction_reviews(
+        yaml_path, data, output_path.parent
+    )
 
     # Check for pathway HTML file
     pathway_html = gene_dir / f"{gene_symbol}-pathway.html"

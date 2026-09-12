@@ -30,6 +30,21 @@ from ai_gene_review.validation.validation_report import (
     BatchValidationReport,
 )
 from ai_gene_review.validation.goa_validator import GOAValidator
+from ai_gene_review.validation.supporting_text import (
+    LITERATURE_PREFIXES,
+    build_supporting_text_validator,
+    cached_full_text_available,
+    is_unfetchable,
+)
+
+
+PROPAGATION_REVIEW_EVIDENCE_TYPES = {"IBA", "ISO"}
+PROPAGATION_REVIEW_ACTIONS = {
+    "REMOVE",
+    "MODIFY",
+    "MARK_AS_OVER_ANNOTATED",
+    "UNDECIDED",
+}
 
 
 @contextmanager
@@ -64,6 +79,106 @@ def get_schema_path() -> Path:
     return Path(__file__).parent.parent / "schema" / "gene_review.yaml"
 
 
+def validate_reference_finding_supporting_text(
+    data: Dict[str, Any],
+    report: ValidationReport,
+    publications_dir: Optional[Path] = None,
+) -> None:
+    """Validate quotes stored directly on top-level reference findings.
+
+    `references[].findings[].supporting_text` inherits its literature
+    identifier from the parent reference, so the external reference validator
+    does not see it as a normal `supported_by` evidence item. Check these
+    quotes explicitly with the same deterministic substring validator.
+    """
+    if publications_dir is None:
+        publications_dir = get_project_root() / "publications"
+    validator, resolved_publications_dir = build_supporting_text_validator(
+        publications_dir
+    )
+    if validator is None:
+        report.add_issue(
+            ValidationSeverity.WARNING,
+            "Finding supporting text validation dependency is unavailable",
+            path="references",
+            validation_category="ReferenceValidator",
+            check_type="reference_finding_supporting_text",
+        )
+        return
+
+    for i, reference in enumerate(data.get("references", [])):
+        if not isinstance(reference, dict):
+            continue
+        reference_id = reference.get("id")
+        if not isinstance(reference_id, str):
+            continue
+        if reference_id.split(":", 1)[0].upper() not in LITERATURE_PREFIXES:
+            continue
+        reference_declares_unavailable = (
+            reference.get("full_text_unavailable") is True
+        )
+        cache_has_full_text = cached_full_text_available(
+            reference_id,
+            resolved_publications_dir,
+        )
+        for j, finding in enumerate(reference.get("findings", [])):
+            if not isinstance(finding, dict):
+                continue
+            supporting_text = finding.get("supporting_text")
+            if not isinstance(supporting_text, str) or not supporting_text.strip():
+                continue
+            path = f"references[{i}].findings[{j}].supporting_text"
+            try:
+                result = validator.validate(supporting_text, reference_id)
+            except Exception as exc:  # noqa: BLE001 - external publication cache
+                report.add_issue(
+                    ValidationSeverity.WARNING,
+                    (
+                        f"Finding supporting text could not be verified for "
+                        f"{reference_id}: {type(exc).__name__}: {exc}"
+                    ),
+                    path=path,
+                    validation_category="ReferenceValidator",
+                    check_type="reference_finding_supporting_text",
+                )
+                continue
+            if result.is_valid:
+                continue
+            message = str(getattr(result, "message", "") or "")
+            declared_unavailable = (
+                reference_declares_unavailable
+                or finding.get("full_text_unavailable") is True
+            )
+            if is_unfetchable(message):
+                severity = ValidationSeverity.WARNING
+                prefix = "Finding supporting text could not be verified"
+                suggestion = "Verify the quote when the publication text is available"
+            elif declared_unavailable or cache_has_full_text is False:
+                severity = ValidationSeverity.WARNING
+                prefix = (
+                    "Finding supporting text is absent from the available "
+                    "abstract-only cache"
+                )
+                suggestion = (
+                    "Verify the quote against full text; use full_text_unavailable to "
+                    "record that the quoted source text is not cached"
+                )
+            else:
+                severity = ValidationSeverity.ERROR
+                prefix = "Finding supporting text is not a verbatim publication substring"
+                suggestion = (
+                    "Replace the quote with an exact substring from the cached publication"
+                )
+            report.add_issue(
+                severity,
+                f"{prefix} for {reference_id}: {message}",
+                path=path,
+                suggestion=suggestion,
+                validation_category="ReferenceValidator",
+                check_type="reference_finding_supporting_text",
+            )
+
+
 def load_schema() -> SchemaView:
     """Load the LinkML schema.
 
@@ -91,6 +206,7 @@ def validate_gene_review(
     check_goa: bool = True,
     check_supporting_text: bool = True,
     progress_callback: Optional[Callable] = None,
+    publications_dir: Optional[Path] = None,
 ) -> ValidationReport:
     """Run custom best-practices checks on a gene review YAML file.
 
@@ -103,8 +219,9 @@ def validate_gene_review(
         schema_path: Unused (kept for backward compatibility)
         check_best_practices: Whether to check for best practices (soft failures)
         check_goa: Whether to validate against GOA file (enabled by default)
-        check_supporting_text: Unused (handled by linkml-reference-validator CLI)
+        check_supporting_text: Whether to validate inherited quotes on reference findings
         progress_callback: Optional callback function to report progress steps
+        publications_dir: Optional publication-cache directory for quote validation
 
     Returns:
         ValidationReport with detailed validation results
@@ -151,7 +268,9 @@ def validate_gene_review(
             data,
             report,
             yaml_file_path if check_goa else None,
+            check_supporting_text=check_supporting_text,
             progress_callback=progress_callback,
+            publications_dir=publications_dir,
         )
 
     return report
@@ -163,6 +282,7 @@ def check_best_practices_rules(
     yaml_file: Optional[Path] = None,
     check_supporting_text: bool = True,
     progress_callback: Optional[Callable] = None,
+    publications_dir: Optional[Path] = None,
 ) -> None:
     """Check for best practices and add soft failures (warnings).
 
@@ -174,14 +294,18 @@ def check_best_practices_rules(
         data: The parsed YAML data
         report: ValidationReport to add warnings to
         yaml_file: Path to YAML file for GOA validation (if enabled)
-        check_supporting_text: Unused (kept for backward compatibility)
+        check_supporting_text: Whether to validate inherited quotes on reference findings
         progress_callback: Optional callback function to report progress steps
+        publications_dir: Optional publication-cache directory for quote validation
     """
     if progress_callback:
         progress_callback("Running best-practices checks")
 
     # Note: GO branch validation for core_functions is handled by
     # linkml-term-validator CLI (invoked from justfile), not here.
+
+    if check_supporting_text:
+        validate_reference_finding_supporting_text(data, report, publications_dir)
 
     # Check for TODO in description
     if "description" in data and "TODO" in str(data["description"]):
@@ -225,6 +349,38 @@ def check_best_practices_rules(
                         path=f"existing_annotations[{i}].original_reference_id",
                         suggestion=f"Add a reference with ID '{ref_id}' to the references section or correct the reference ID",
                     )
+
+    # Check for structured propagation reviews on corrective IBA/ISO decisions.
+    # These annotations depend on source genes/nodes; corrective calls should
+    # distinguish source-side defects from propagation-side defects mechanically.
+    if "existing_annotations" in data and data["existing_annotations"]:
+        for i, annotation in enumerate(data["existing_annotations"]):
+            if not isinstance(annotation, dict):
+                continue
+            evidence_type = annotation.get("evidence_type")
+            review = annotation.get("review")
+            if not isinstance(review, dict):
+                continue
+            action = review.get("action")
+            if (
+                evidence_type in PROPAGATION_REVIEW_EVIDENCE_TYPES
+                and action in PROPAGATION_REVIEW_ACTIONS
+                and not review.get("propagation_review")
+            ):
+                report.add_issue(
+                    ValidationSeverity.WARNING,
+                    (
+                        f"{evidence_type} annotation with action {action} is missing "
+                        "structured propagation_review metadata"
+                    ),
+                    path=f"existing_annotations[{i}].review.propagation_review",
+                    suggestion=(
+                        "Add propagation_review with root_cause, failure_modes, "
+                        "and source_entities when source genes/nodes were inspected"
+                    ),
+                    validation_category="BestPractices",
+                    check_type="missing_propagation_review",
+                )
 
     # Helper function to validate file references
     def validate_file_reference(ref_id: str, path: str) -> None:
@@ -393,6 +549,43 @@ def check_best_practices_rules(
                             and len(set(references)) == len(references)
                         ):
                             continue
+
+                    # Special case: REMOVE rows anchored to a citation that
+                    # none of the kept rows cite. A REMOVE action means "this
+                    # specific GOA row should not exist"; when it is anchored
+                    # to a reference distinct from every kept row, the
+                    # divergence reflects a citation-specific rejection (e.g. a
+                    # wrong-gene paper wrongly attributed to this gene, or a
+                    # review that does not substantiate the term) rather than a
+                    # term-level judgment. As long as every non-REMOVE row
+                    # shares a single action, the term-level decision is itself
+                    # consistent, so the REMOVE divergence is not curator error.
+                    if "REMOVE" in unique_actions:
+                        non_remove_actions = set(
+                            action
+                            for _, action, _ in actions_list
+                            if action != "REMOVE"
+                        )
+                        if len(non_remove_actions) == 1:
+                            remove_refs = set()
+                            kept_refs = set()
+                            refs_complete = True
+                            for idx, action, _ in actions_list:
+                                annotation = data["existing_annotations"][idx]
+                                ref_id = annotation.get("original_reference_id")
+                                if not ref_id:
+                                    refs_complete = False
+                                    break
+                                if action == "REMOVE":
+                                    remove_refs.add(ref_id)
+                                else:
+                                    kept_refs.add(ref_id)
+                            if (
+                                refs_complete
+                                and remove_refs
+                                and not (remove_refs & kept_refs)
+                            ):
+                                continue
 
                     # Get the term label for better error messages
                     term_label = None
@@ -874,7 +1067,7 @@ def validate_multiple_files(
         schema_path: Unused (kept for backward compatibility)
         check_best_practices: Whether to check for best practices
         check_goa: Whether to validate against GOA files
-        check_supporting_text: Unused (handled by linkml-reference-validator CLI)
+        check_supporting_text: Whether to validate inherited quotes on reference findings
         show_progress: Whether to show a progress bar for multiple files
 
     Returns:

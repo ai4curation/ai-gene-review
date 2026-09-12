@@ -1,3 +1,9 @@
+---
+title: "Cellulosome Project"
+maturity: IN_PROGRESS
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+---
+
 # Cellulosome Project
 
 ## Overview
@@ -123,6 +129,10 @@ or have only TrEMBL entries with incorrect/unverified taxonomy. Focus on the 5 g
 - [Global View of the C. thermocellum Cellulosome](https://jb.asm.org/content/189/19/6787.full)
 - [Enzymatic diversity of the C. thermocellum cellulosome](https://www.nature.com/articles/srep35709)
 - [Cellulosome Wikipedia](https://en.wikipedia.org/wiki/Cellulosome)
+
+## Slides
+
+- [Slides](CELLULOSOME/slides/CELLULOSOME-slides.html) (Marp source: [CELLULOSOME-slides.md](CELLULOSOME/slides/CELLULOSOME-slides.md)) — AI generated
 
 ---
 # STATUS

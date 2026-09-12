@@ -1,0 +1,10 @@
+## FBXO21
+
+- **UniProt:** O94952 · **batch:** proteostasis-batch-2026-06-13 (Falcon DR) · **review status:** COMPLETE
+- **PN placement:** `UPS|E3 ubiquitin and UBL ligases|Cul1 substrate receptor|F-box|other` ; **PN-node mapping:** subtype/type `no_mapping`; group `Cul1 substrate receptor`=`mapped` / `ok_for_propagation_to_go` → GO:1990756 (new_to_goa); class `context_only`/`too_broad` (GO:0061630).
+- **Consistency:** Consistent. Review executes the canonical pattern: NAS GO:0004842 transferase MODIFY → GO:1990756 (verified real), matching the PN projection; REMOVEs a spurious IEA GO:0003677 DNA binding (YccV/IPR011722 fold artifact). DR ↔ YAML agree on EID1 (validated, PMID:26085330) plus ASK1/p85alpha/ABCB1 leads.
+- **PN story / NEW pressure:** PN asserts the adaptor MF; review supplies it via MODIFY — already captured/improved, not over-reach. Extra biology beyond PN: non-proteolytic Lys29 ubiquitination of ASK1 driving innate-immune/IFN signaling (core_function directly_involved_in GO:0045087), and p85alpha/AML degradation — these go beyond simple catabolism but are anchored on the validated EID1 work plus Falcon leads. No additional verified NEW GO term needed beyond GO:1990756. Validated substrate (EID1) present — not substrate-less.
+- **Mapping strategy:** Gene does not change the node; status/scope correct. PN-projected GO:1990756 at correct altitude (= review's MODIFY target). Class GO:0061630 too_broad. The signaling/innate-immune dimension is captured in core_functions, not via the PN UPS node — appropriate.
+- **Evidence alignment:** PN cites only 15340381. Review uses PMID:26085330 (EID1, HIGH), 10531035 (family cloning, source of transferase NAS), 34445249 (SCF), interactome PMIDs (non-core), plus Falcon ASK1/p85alpha/ABCB1 leads. Expansion, no conflict.
+- **Verdict:** Consistent; review implements PN adaptor mapping via MODIFY GO:0004842→GO:1990756 and correctly REMOVEs the IEA DNA-binding artifact.
+- **Recommended edits:** none to FBXO21-ai-review.yaml. [MAP] none — node mapping and review concur.

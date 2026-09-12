@@ -6,7 +6,7 @@ An existing annotation from the GO database, plus a review of the annotation.
 URI: [gene_review:ExistingAnnotation](https://w3id.org/ai4curation/gene_review/ExistingAnnotation)
 
 
-[![img](https://yuml.me/diagram/nofunky;dir:TB/class/[Term],[Review],[Reference],[Review]<review%200..1-++[ExistingAnnotation&#124;negated:boolean%20%3F;evidence_type:EvidenceType;retired:boolean%20%3F;isoform:string%20%3F;supporting_entities:string%20*],[Reference]<original_reference_id%200..1-%20[ExistingAnnotation],[AnnotationExtension]<extensions%200..*-++[ExistingAnnotation],[Term]<term%200..1-++[ExistingAnnotation],[GeneReview]++-%20existing_annotations%200..*>[ExistingAnnotation],[GeneReview],[AnnotationExtension])](https://yuml.me/diagram/nofunky;dir:TB/class/[Term],[Review],[Reference],[Review]<review%200..1-++[ExistingAnnotation&#124;negated:boolean%20%3F;evidence_type:EvidenceType;retired:boolean%20%3F;isoform:string%20%3F;supporting_entities:string%20*],[Reference]<original_reference_id%200..1-%20[ExistingAnnotation],[AnnotationExtension]<extensions%200..*-++[ExistingAnnotation],[Term]<term%200..1-++[ExistingAnnotation],[GeneReview]++-%20existing_annotations%200..*>[ExistingAnnotation],[GeneReview],[AnnotationExtension])
+[![img](https://yuml.me/diagram/nofunky;dir:TB/class/[Term],[Review],[Reference],[Review]<review%200..1-++[ExistingAnnotation&#124;qualifier:AnnotationQualifierEnum%20%3F;negated:boolean%20%3F;evidence_type:EvidenceType;retired:boolean%20%3F;isoform:string%20%3F;supporting_entities:string%20*],[Reference]<original_reference_id%200..1-%20[ExistingAnnotation],[AnnotationExtension]<extensions%200..*-++[ExistingAnnotation],[Term]<term%200..1-++[ExistingAnnotation],[GeneReview]++-%20existing_annotations%200..*>[ExistingAnnotation],[GeneReview],[AnnotationExtension])](https://yuml.me/diagram/nofunky;dir:TB/class/[Term],[Review],[Reference],[Review]<review%200..1-++[ExistingAnnotation&#124;qualifier:AnnotationQualifierEnum%20%3F;negated:boolean%20%3F;evidence_type:EvidenceType;retired:boolean%20%3F;isoform:string%20%3F;supporting_entities:string%20*],[Reference]<original_reference_id%200..1-%20[ExistingAnnotation],[AnnotationExtension]<extensions%200..*-++[ExistingAnnotation],[Term]<term%200..1-++[ExistingAnnotation],[GeneReview]++-%20existing_annotations%200..*>[ExistingAnnotation],[GeneReview],[AnnotationExtension])
 
 ## Referenced by Class
 
@@ -17,9 +17,12 @@ URI: [gene_review:ExistingAnnotation](https://w3id.org/ai4curation/gene_review/E
 
 ### Own
 
- * [ExistingAnnotation➞term](ExistingAnnotation_term.md)  <sub>0..1</sub>
+ * [term](term.md)  <sub>0..1</sub>
      * Description: Term to be annotated
      * Range: [Term](Term.md)
+ * [qualifier](qualifier.md)  <sub>0..1</sub>
+     * Description: The GO annotation qualifier specifying the relationship between the gene product and the term. For MF annotations, distinguishes 'enables' (gene product has the activity independently) from 'contributes_to' (gene product contributes to a complex's activity but does not have the activity alone). For BP, distinguishes 'involved_in', 'acts_upstream_of', etc. For CC, distinguishes 'located_in', 'part_of', 'is_active_in', 'colocalizes_with'.
+     * Range: [AnnotationQualifierEnum](AnnotationQualifierEnum.md)
  * [extensions](extensions.md)  <sub>0..\*</sub>
      * Range: [AnnotationExtension](AnnotationExtension.md)
  * [negated](negated.md)  <sub>0..1</sub>

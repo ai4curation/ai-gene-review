@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: MYC (human)
 
-Source: MYC-deep-research-bioreason-rl.md
+Source: MYC-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 4/5

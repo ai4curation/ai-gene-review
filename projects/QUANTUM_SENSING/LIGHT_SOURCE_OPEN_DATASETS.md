@@ -1,3 +1,7 @@
+---
+title: "Light-Source Open Datasets (Literature-First Seeds)"
+---
+
 # Light-Source Open Datasets (Literature-First Seeds)
 
 ## Method

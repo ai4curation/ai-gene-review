@@ -206,6 +206,39 @@ slots:
     recommended: true
     range: Review
     description: Review of the gene
+  reference_review:
+    range: ReferenceReview
+    description: Manual reviewer assessment of this reference (relevance, and citation
+      correctness / scientific soundness). Reviewer-supplied, distinct from the
+      machine-fetched id/title.
+  relevance:
+    range: ReferenceRelevanceEnum
+    description: Reviewer judgment of how relevant the reference is to the gene's function
+      and this review.
+  correctness:
+    range: ReferenceCorrectnessEnum
+    description: Reviewer's overall assessment of a reference's trustworthiness - both citation
+      correctness (the identifier resolves to the intended paper that supports its use) and
+      scientific soundness of that paper's claim.
+  review_notes:
+    range: string
+    description: Free-text note explaining the relevance/correctness judgment (e.g. what was
+      verified, or why a citation is wrong, disputed, or low quality).
+  finding_review:
+    range: FindingReview
+    description: Manual reviewer assessment of this specific finding - in particular whether the
+      finding remains current, is disputed, or has been overturned/superseded by later evidence.
+      Reviewer-supplied; distinct from the statement/supporting_text that describe the finding itself.
+  finding_status:
+    range: FindingReviewStatusEnum
+    description: Reviewer's assessment of the empirical standing of a specific finding in light of
+      other evidence (e.g. whether it has been disputed or overturned).
+  superseded_by:
+    range: Reference
+    multivalued: true
+    inlined: false
+    description: Reference(s) that dispute, correct, or overturn this finding. Used together with
+      finding_status DISPUTED or OVERTURNED.
   ontology:
     range: string
     description: Ontology of the term. E.g `go`, `cl`, `hp`
@@ -221,6 +254,15 @@ slots:
   is_invalid:
     range: boolean
     description: Whether the reference is invalid (e.g., retracted or replaced)
+  publication_type:
+    range: PublicationTypeEnum
+    description: >-
+      The kind of publication or source this reference is (e.g. primary research article,
+      review, meta-analysis, database record, AI deep-research report). For PMIDs this is
+      normally inferred from the PubMed publication-type ('PT') metadata rather than set by
+      hand; for non-PMID references (GO_REF, Reactome, file:) it is inferred from the
+      identifier. Lets analyses ask, e.g., whether review articles or abstracts alone are
+      sufficient to support a given annotation action.
   reference_section_type:
     range: ManuscriptSection
     description: Type of section in the reference (e.g., 'ABSTRACT', 'METHODS', 'RESULTS', 'DISCUSSION')
@@ -238,6 +280,25 @@ slots:
     range: Experiment
     multivalued: true
     recommended: true
+  knowledge_gaps:
+    range: KnowledgeGap
+    multivalued: true
+    inlined_as_list: true
+    description: >-
+      Curated, literature-grounded statements of what is NOT known — applicable at
+      the level of the whole gene, a single existing annotation, a core function, a
+      whole module, or a single module step/node. The inverse of core_functions:
+      everywhere else the schema records what IS known; here it records, with the
+      same evidentiary discipline, what is not. See the Function Knowledge Gaps
+      project (projects/FUNCTION_KNOWLEDGE_GAPS.md).
+  propagation_review:
+    range: PropagationReview
+    description: >-
+      Mechanical review metadata for annotations whose evidence depends on
+      propagation or inference from source genes, family nodes, orthogroups, or
+      other non-target evidence. Use this to classify source-side vs
+      propagation-side failure modes without duplicating the prose rationale in
+      review.reason.
   status:
     range: GeneReviewStatusEnum
     description: Overall status of the gene review
@@ -266,6 +327,7 @@ classes:
      - proposed_new_terms
      - suggested_questions
      - suggested_experiments
+     - knowledge_gaps
     slot_usage:
       description:
         recommended: true
@@ -382,7 +444,7 @@ classes:
       - ontology
     slot_usage:
       id:
-        description: An OBO CURIE for a term in GO, CL, CHEBI, etc.
+        description: A CURIE for a term or database object in GO, CL, CHEBI, UniProtKB, PANTHER, etc.
       label:
         description: the term name
         required: true
@@ -396,7 +458,22 @@ classes:
       - title
       - findings
       - is_invalid
+      - publication_type
       - full_text_unavailable
+      - reference_review
+    slot_usage:
+      id:
+        implements:
+          - dcterms:references
+
+  ReferenceReview:
+    description: Manual reviewer assessment of a reference - how relevant it is to the gene's
+      function, and whether it is correctly cited and scientifically sound. Distinct from the
+      machine-fetched id/title fields; all fields are optional and reviewer-supplied.
+    slots:
+      - relevance
+      - correctness
+      - review_notes
 
   Finding:
     description: A finding is a statement about a gene, which is supported by a reference.
@@ -406,6 +483,18 @@ classes:
       - supporting_text
       - full_text_unavailable
       - reference_section_type
+      - finding_review
+
+  FindingReview:
+    description: Manual reviewer assessment of a specific finding within a reference - in
+      particular whether it remains current, is disputed, or has been overturned/superseded by
+      later evidence. This is finer-grained than reference_review (which assesses the whole
+      reference); a paper may contain some findings that stand and others that are overturned.
+      All fields optional and reviewer-supplied.
+    slots:
+      - finding_status
+      - superseded_by
+      - review_notes
 
   SupportingTextInReference:
     description: A supporting text in a reference.
@@ -415,7 +504,715 @@ classes:
       - supporting_text_fulltext
       - full_text_unavailable
       - reference_section_type
-        
+
+  # ============== Module KB Classes ==============
+  #
+  # Modules are reusable, recursively decomposable biological sketches. They
+  # intentionally do not try to be GO-CAMs or exports of gene reviews. They
+  # provide a place to bag together functions, processes, locations, variants,
+  # and causal/temporal connections with lightweight provenance.
+
+  EvidenceItem:
+    description: >-
+      A lightweight citable source for module-level assertions. The source may
+      be a PMID, DOI, database record, local file, pathway record, issue, or any
+      other citable artifact. When a literature source_id (PMID/DOI) is paired
+      with a supporting_text, that quote is validated verbatim (normalized
+      substring) against the cached publication by the project's module
+      supporting-text check (ai_gene_review.validation.module_validator), using
+      the same matcher as gene reviews; non-literature source_ids (GO, file:,
+      Reactome, PANTHER, ...) carry no supporting_text quote and are not fetched.
+    attributes:
+      source_id:
+        range: string
+        required: true
+        description: Identifier for the evidence source, e.g. PMID:123456, DOI:..., Reactome:R-HSA-..., MetaCyc:..., file:...
+      title:
+        range: string
+      statement:
+        range: string
+        description: The assertion this evidence supports in this module.
+      supporting_text:
+        range: string
+        description: Optional quote or excerpt from the evidence source.
+      url:
+        range: string
+      notes:
+        range: string
+
+  Descriptor:
+    description: >-
+      A human-friendly descriptor with optional ontology/database grounding.
+      The preferred_term may be more nuanced than the term label, and the term
+      may be absent when no good identifier exists yet.
+    attributes:
+      preferred_term:
+        range: string
+        required: true
+      description:
+        range: string
+      term:
+        range: Term
+        inlined: true
+      evidence:
+        range: EvidenceItem
+        multivalued: true
+        inlined_as_list: true
+      notes:
+        range: string
+
+  ChemicalEntityDescriptor:
+    is_a: Descriptor
+    description: A descriptor for a chemical entity, metabolite, cofactor, ion, or small molecule.
+
+  GeneDescriptor:
+    is_a: Descriptor
+    description: A descriptor for a gene or locus.
+
+  GeneProductDescriptor:
+    is_a: Descriptor
+    description: A descriptor for a gene product, protein, isoform, or gene-product form.
+
+  FamilyDescriptor:
+    is_a: Descriptor
+    description: A descriptor for a protein family, orthogroup, or other evolutionary grouping.
+    attributes:
+      family_terms:
+        range: Term
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Multiple family-level ontology/database groundings when this descriptor
+          intentionally abstracts over more than one family, such as a conserved
+          role split across multiple PANTHER PTHR families. Use the inherited
+          term slot for the ordinary single-family case.
+      representative_members:
+        range: GeneProductDescriptor
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Representative concrete members used to orient the family. These are
+          examples, not an exhaustive member list and not a claim that the
+          module is limited to these proteins.
+      ancestral_nodes:
+        range: AncestralNodeDescriptor
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          PANTHER/PAINT ancestral node(s) at which the associated function is
+          inferred to have arisen (or to have been present in the last common
+          ancestor). Unlike representative_members, which only give orienting
+          examples, an ancestral node makes a clade-level evolutionary claim:
+          extant descendants are inferred to retain the function unless there is
+          evidence of divergence, neofunctionalization, or loss of key residues.
+
+  AncestralNodeDescriptor:
+    is_a: Descriptor
+    description: >-
+      A PANTHER/PAINT ancestral node (a PTN identifier, e.g.
+      PANTHER:PTN000299444) used to ground an evolutionary inference about a
+      function. Asserting an ancestral node states that the function associated
+      with the enclosing annoton is inferred to have arisen at, or been present
+      in, the last common ancestor represented by this node, and is therefore
+      inferred to be retained in extant descendant proteins barring divergence,
+      neofunctionalization, or loss of key residues. This is a stronger,
+      clade-level claim than a representative member. Such nodes can be resolved
+      from the IBA WITH/FROM column (GO_REF:0000033) of a representative
+      member's GOA record rather than guessed.
+
+  DomainDescriptor:
+    is_a: Descriptor
+    description: A descriptor for a protein domain, motif, site, or architectural feature.
+
+  CellularComponentDescriptor:
+    is_a: Descriptor
+    description: A descriptor for a cellular component, organelle, compartment, or complex location.
+
+  ProteinComplexDescriptor:
+    is_a: CellularComponentDescriptor
+    description: A descriptor for a protein-containing complex or subcomplex.
+    attributes:
+      active_units:
+        range: ComplexUnit
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Active units or role-bearing components of the complex. This is used
+          to avoid leaving functionally important complex structure as prose.
+
+  ComplexUnit:
+    description: A role-bearing unit within a protein complex descriptor.
+    attributes:
+      id:
+        range: string
+      label:
+        range: string
+      participant:
+        range: ParticipantSelector
+        inlined: true
+      role:
+        range: string
+      stoichiometry:
+        range: string
+        description: Optional stoichiometry or copy-number statement when known.
+      function:
+        range: MolecularFunctionDescriptor
+        inlined: true
+      evidence:
+        range: EvidenceItem
+        multivalued: true
+        inlined_as_list: true
+      notes:
+        range: string
+
+  CellTypeDescriptor:
+    is_a: Descriptor
+    description: A descriptor for a cell type or cell state.
+
+  AnatomicalEntityDescriptor:
+    is_a: Descriptor
+    description: A descriptor for an anatomical entity, tissue, organismal region, or structure.
+
+  DevelopmentalStageDescriptor:
+    is_a: Descriptor
+    description: A descriptor for a developmental stage, life-cycle stage, or temporal window.
+
+  TaxonDescriptor:
+    is_a: Descriptor
+    description: A descriptor for a taxon or taxonomic scope.
+
+  MolecularFunctionDescriptor:
+    is_a: Descriptor
+    description: >-
+      A descriptor for a molecular function. Extra slots capture common
+      functional nuance without requiring formal post-composition.
+    attributes:
+      substrates:
+        range: Descriptor
+        multivalued: true
+        inlined_as_list: true
+      products:
+        range: Descriptor
+        multivalued: true
+        inlined_as_list: true
+      cofactors:
+        range: Descriptor
+        multivalued: true
+        inlined_as_list: true
+      targets:
+        range: Descriptor
+        multivalued: true
+        inlined_as_list: true
+      cargo:
+        range: Descriptor
+        multivalued: true
+        inlined_as_list: true
+      source_location:
+        range: CellularComponentDescriptor
+        inlined: true
+      destination_location:
+        range: CellularComponentDescriptor
+        inlined: true
+
+  BiologicalProcessDescriptor:
+    is_a: Descriptor
+    description: >-
+      A descriptor for a biological process, pathway, reaction, or process-like
+      module grounding.
+    attributes:
+      inputs:
+        range: Descriptor
+        multivalued: true
+        inlined_as_list: true
+      outputs:
+        range: Descriptor
+        multivalued: true
+        inlined_as_list: true
+      occurs_in:
+        range: Descriptor
+        multivalued: true
+        inlined_as_list: true
+      starts_with:
+        range: Descriptor
+        inlined: true
+      ends_with:
+        range: Descriptor
+        inlined: true
+
+  RelationDescriptor:
+    is_a: Descriptor
+    description: A descriptor for a relation or connection predicate.
+
+  ModuleReview:
+    description: >-
+      Review or curation record for a recursively decomposable biological
+      module. This can describe a pathway, organelle lifecycle, protein complex,
+      molecular function, developmental process, or abstract/evolutionary
+      functional plan.
+    tree_root: true
+    slots:
+      - id
+      - title
+      - description
+      - references
+      - knowledge_gaps
+    attributes:
+      status:
+        range: string
+      scope:
+        range: ModuleScopeEnum
+        description: >-
+          Whether this module is a concrete biological realization or an
+          abstract reusable motif/template. ABSTRACT modules are intentionally
+          gene-free and are not expected to declare representative protein
+          members for every leaf node.
+      module:
+        range: ModuleNode
+        inlined: true
+        required: true
+      evidence:
+        range: EvidenceItem
+        multivalued: true
+        inlined_as_list: true
+      notes:
+        range: string
+
+  ModuleNode:
+    description: >-
+      A node in a module. Nodes can be recursively decomposed using parts and
+      variant_sets, and may also carry leaf annotons and connections.
+    slots:
+      - knowledge_gaps
+    attributes:
+      id:
+        range: string
+        required: true
+        identifier: true
+      label:
+        range: string
+        required: true
+      module_type:
+        range: ModuleTypeEnum
+      description:
+        range: string
+      concepts:
+        range: Descriptor
+        multivalued: true
+        inlined_as_list: true
+        description: Optional ontology/database grounding for this module node.
+      context:
+        range: ModuleContext
+        inlined: true
+      annotons:
+        range: ModuleAnnoton
+        multivalued: true
+        inlined_as_list: true
+      parts:
+        range: ModulePart
+        multivalued: true
+        inlined_as_list: true
+      variant_sets:
+        range: ModuleVariantSet
+        multivalued: true
+        inlined_as_list: true
+      connections:
+        range: ModuleConnection
+        multivalued: true
+        inlined_as_list: true
+      conforms_to:
+        range: Conformance
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Reusable template motifs that this node (together with its parts and
+          connections) is an instance of. Conformance is a compositional,
+          bundle-scoped consistency check: a concrete cascade may freely extend
+          its start and end, while an inner sub-bundle node declares that its
+          parts match a generic motif (e.g. the three-tier MAP kinase relay).
+      gocam_associations:
+        range: GoCamAssociation
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          References to production GO-CAM models (or specific activities) that
+          realize this module node as a whole.
+      evidence:
+        range: EvidenceItem
+        multivalued: true
+        inlined_as_list: true
+      notes:
+        range: string
+
+  Conformance:
+    description: >-
+      Assertion that a module node (together with its parts and connections) is
+      an instance of a reusable template module or motif, optionally recording
+      how it deviates from that template. Modeled after the dismech
+      conforms_to pattern: conformance is a consistency check, not inheritance.
+    attributes:
+      template:
+        range: string
+        required: true
+        description: >-
+          Reference to the template, as a module path relative to modules/ with
+          an optional node id after a hash (e.g. "mapk_relay" or
+          "mapk_relay#map2k"). The referenced template defines the required
+          steps, function terms, and connection topology this node must contain.
+      status:
+        range: ConformanceStatusEnum
+        description: >-
+          Whether the node matches the template exactly, matches with the noted
+          deviations, or matches the core motif while extending it.
+      deviations:
+        range: string
+        multivalued: true
+        description: >-
+          Specific differences from the template (e.g. a missing or merged tier,
+          a substituted function term). Listed deviations are treated as
+          informational rather than errors during conformance QC.
+      notes:
+        range: string
+        description: Free-text rationale or context for the conformance and any deviations.
+
+  ModulePart:
+    description: A conjunctive part or step of a module node.
+    attributes:
+      order:
+        range: integer
+        description: Optional display or temporal order. Equal or absent values imply partial ordering only.
+      role:
+        range: string
+        description: Curator-supplied role of this part within the parent module.
+      optional:
+        range: boolean
+        description: Whether this part is optional in the parent module.
+      node:
+        range: ModuleNode
+        inlined: true
+        required: true
+      evidence:
+        range: EvidenceItem
+        multivalued: true
+        inlined_as_list: true
+      notes:
+        range: string
+
+  ModuleVariantSet:
+    description: >-
+      A set of alternative implementations for a module node or part. Variants
+      may themselves contain parts, annotons, connections, and nested variant sets.
+    attributes:
+      id:
+        range: string
+        required: true
+      label:
+        range: string
+      axis:
+        range: string
+        description: The dimension along which these variants differ, e.g. taxon, cell type, compartment, route, enzyme family.
+      selection:
+        range: VariantSelectionEnum
+        description: How many variants may be selected in a concrete realization.
+      variants:
+        range: ModuleNode
+        multivalued: true
+        inlined_as_list: true
+        required: true
+      evidence:
+        range: EvidenceItem
+        multivalued: true
+        inlined_as_list: true
+      notes:
+        range: string
+
+  ModuleAnnoton:
+    description: >-
+      A leaf role assertion in a module. The participant may be a concrete gene
+      or an abstract selector, and the function/process/location fields are
+      descriptor holders rather than direct GO annotation exports.
+    attributes:
+      id:
+        range: string
+        required: true
+      label:
+        range: string
+      participant:
+        range: ParticipantSelector
+        inlined: true
+      function:
+        range: MolecularFunctionDescriptor
+        inlined: true
+      processes:
+        range: BiologicalProcessDescriptor
+        multivalued: true
+        inlined_as_list: true
+      locations:
+        range: CellularComponentDescriptor
+        multivalued: true
+        inlined_as_list: true
+      role_description:
+        range: string
+      gocam_associations:
+        range: GoCamAssociation
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          References to production GO-CAM model activities (annotons) that
+          realize this module annoton. Used to ground an abstract/non-grounded
+          module role in concrete curated causal activity models.
+      evidence:
+        range: EvidenceItem
+        multivalued: true
+        inlined_as_list: true
+      notes:
+        range: string
+
+  GoCamAssociation:
+    description: >-
+      A reference from a module element to a production GO-CAM (Gene Ontology
+      Causal Activity Model), optionally pinned to a specific activity (annoton)
+      within that model. The referenced model is expected to be cached under
+      gocams/<model_id>/<model_id>-src.yaml.
+    attributes:
+      model:
+        range: string
+        required: true
+        description: >-
+          GO-CAM model id, e.g. gomodel:568b0f9600000284 (or the bare local id
+          568b0f9600000284). Matches the cached gocams/<model_id>/ folder.
+      activity:
+        range: string
+        description: >-
+          Optional activity/annoton id within the model that this element
+          corresponds to, e.g. gomodel:568b0f9600000284/57ec3a7e00000079.
+      title:
+        range: string
+        description: Cached model title, recorded for human readability.
+      description:
+        range: string
+      evidence:
+        range: EvidenceItem
+        multivalued: true
+        inlined_as_list: true
+      notes:
+        range: string
+
+  GoCamReview:
+    description: >-
+      A reviewer's assessment of a cached production GO-CAM model
+      (gocams/<model_id>/<model_id>-src.yaml), recorded alongside it as
+      gocams/<model_id>/<model_id>-review.yaml. Captures a standalone reading of
+      the model, per-activity (annoton) QC against GO-CAM best practice, and the
+      consistency of each activity with the corresponding gene annotation review.
+      Validate standalone with `-C GoCamReview`.
+    tree_root: true
+    slots:
+      - title
+      - description
+      - references
+    attributes:
+      model:
+        range: string
+        required: true
+        identifier: true
+        description: >-
+          GO-CAM model id (gomodel:... or the bare local id) matching the cached
+          gocams/<model_id>/ folder.
+      taxon:
+        range: string
+        description: Primary taxon of the model, e.g. NCBITaxon:6239.
+      summary:
+        range: string
+        description: >-
+          Reviewer's standalone reading of what the model asserts (the causal
+          story), independent of the curation project.
+      status:
+        range: GoCamReviewStatusEnum
+      activity_reviews:
+        range: GoCamActivityReview
+        multivalued: true
+        inlined_as_list: true
+        description: Per-activity (annoton) reviews.
+      notes:
+        range: string
+
+  GoCamActivityReview:
+    description: >-
+      Review of a single GO-CAM activity (annoton): the cached gene
+      product / molecular function / process / location, a best-practice QC
+      verdict, and how the activity relates to the gene's annotation review.
+    attributes:
+      activity_id:
+        range: string
+        required: true
+        description: >-
+          Activity individual id within the model, e.g.
+          gomodel:568b0f9600000284/57ec3a7e00000079.
+      gene_product:
+        range: string
+        description: enabled_by gene product id as cached (e.g. UniProtKB:..., WB:...).
+      molecular_function:
+        range: string
+        description: Molecular function GO id of the activity as cached.
+      biological_process:
+        range: string
+        description: part_of biological process GO id as cached, if any.
+      cellular_component:
+        range: string
+        description: occurs_in cellular component GO id as cached, if any.
+      verdict:
+        range: GoCamClaimVerdictEnum
+        description: >-
+          Overall best-practice/evidence verdict for this activity (mirrors the
+          OK / UNCERTAIN / WRONG forensic-review scale).
+      qc_flags:
+        range: GoCamQcFlagEnum
+        multivalued: true
+        description: Specific GO-CAM best-practice issues observed for this activity.
+      consistency:
+        range: GoCamConsistencyEnum
+        description: >-
+          How this activity relates to the gene's annotation review
+          (genes/**/<gene>-ai-review.yaml).
+      gene_review:
+        range: string
+        description: >-
+          Reference to the gene review compared against, e.g.
+          file:human/TP53/TP53-ai-review.yaml.
+      supporting_text:
+        range: string
+        description: Verbatim supporting text from a cited reference, where applicable.
+      evidence:
+        range: EvidenceItem
+        multivalued: true
+        inlined_as_list: true
+      notes:
+        range: string
+
+  ParticipantSelector:
+    description: >-
+      A selector for a concrete or abstract participant in a module annoton.
+      This can ground to a gene, gene product, complex, family, domain, ortholog,
+      homolog, or any entity satisfying a functional/domain constraint.
+    attributes:
+      selector_type:
+        range: ParticipantSelectorTypeEnum
+        required: true
+      gene:
+        range: GeneDescriptor
+        inlined: true
+      gene_product:
+        range: GeneProductDescriptor
+        inlined: true
+      protein_complex:
+        range: ProteinComplexDescriptor
+        inlined: true
+      family:
+        range: FamilyDescriptor
+        inlined: true
+      domain:
+        range: DomainDescriptor
+        inlined: true
+      homolog_of:
+        range: GeneDescriptor
+        inlined: true
+      ortholog_of:
+        range: GeneDescriptor
+        inlined: true
+      required_function:
+        range: MolecularFunctionDescriptor
+        inlined: true
+      required_domain:
+        range: DomainDescriptor
+        inlined: true
+      taxon:
+        range: TaxonDescriptor
+        inlined: true
+      description:
+        range: string
+      evidence:
+        range: EvidenceItem
+        multivalued: true
+        inlined_as_list: true
+      notes:
+        range: string
+
+  ModuleContext:
+    description: Context that applies to a module node, variant, annoton, or connection.
+    attributes:
+      taxa:
+        range: TaxonDescriptor
+        multivalued: true
+        inlined_as_list: true
+      cell_types:
+        range: CellTypeDescriptor
+        multivalued: true
+        inlined_as_list: true
+      anatomical_locations:
+        range: AnatomicalEntityDescriptor
+        multivalued: true
+        inlined_as_list: true
+      developmental_stages:
+        range: DevelopmentalStageDescriptor
+        multivalued: true
+        inlined_as_list: true
+      cellular_components:
+        range: CellularComponentDescriptor
+        multivalued: true
+        inlined_as_list: true
+      conditions:
+        range: Descriptor
+        multivalued: true
+        inlined_as_list: true
+      evidence:
+        range: EvidenceItem
+        multivalued: true
+        inlined_as_list: true
+      notes:
+        range: string
+
+  ModuleConnection:
+    description: >-
+      A connection between module nodes, annotons, or other named elements.
+      Source and target are IDs scoped to the module document.
+    attributes:
+      source:
+        range: string
+        required: true
+      target:
+        range: string
+        required: true
+      connection_type:
+        range: ModuleConnectionTypeEnum
+      predicate:
+        range: RelationDescriptor
+        inlined: true
+      description:
+        range: string
+      context:
+        range: ModuleContext
+        inlined: true
+      evidence:
+        range: EvidenceItem
+        multivalued: true
+        inlined_as_list: true
+      chaining_status:
+        range: ChainingStatusEnum
+        description: >-
+          Curator adjudication of reaction continuity across this connection:
+          whether the upstream reaction's product is the downstream reaction's
+          substrate. This is an explicit override for the (advisory, non-blocking)
+          automated chaining check, so a known gap can be acknowledged rather than
+          re-reported each run. Leave unset to let the automated check report its
+          finding.
+      chaining_note:
+        range: string
+        description: >-
+          Free-text explanation for the chaining_status, e.g. why a break is a
+          genuine knowledge gap, or which GO/RHEA mapping is missing.
+      notes:
+        range: string
+
 
   ExistingAnnotation:
     description: An existing annotation from the GO database, plus a review of the annotation.
@@ -439,6 +1236,12 @@ classes:
     # As a consequence, linkml-term-validator does not check term IDs or
     # labels in existing_annotations.  Label correctness is instead
     # covered by the GOA comparison in check_best_practices_rules().
+    # These IDs are machine-sourced from GOA (not author-supplied), so there is
+    # no hallucination risk in leaving them unbound.  By contrast, the
+    # author-supplied term IDs in core_functions ARE bound to dynamic enums
+    # (GOMolecularActivityEnum / GOCellularLocationEnum /
+    # GOProteinContainingComplexEnum, ...) and a wrong-branch term there is a
+    # blocking validation error.
 
   Review:
     description: A review of an existing annotation.
@@ -449,6 +1252,8 @@ classes:
       - proposed_replacement_terms
       - additional_reference_ids
       - supported_by
+      - knowledge_gaps
+      - propagation_review
     rules:
       - preconditions:
           slot_conditions:
@@ -458,11 +1263,190 @@ classes:
           slot_conditions:
             proposed_replacement_terms:
               required: true
+
+  PropagationReview:
+    description: >-
+      Structured, mechanical assessment of a propagated or inferred annotation.
+      The detailed biological rationale remains in review.reason; this object
+      records the reusable taxonomy and optional per-source-gene/node comments.
+    attributes:
+      root_cause:
+        range: PropagationRootCauseEnum
+        required: true
+        description: >-
+          Where the issue lies, or that no issue was found: source annotation,
+          propagation decision, term scoping, circular/redundant evidence, or no
+          propagation failure.
+      failure_modes:
+        range: PropagationFailureModeEnum
+        multivalued: true
+        description: >-
+          Biological shape of the propagation issue. Multiple values are allowed
+          when a case combines, for example, paralog transfer and functional
+          divergence.
+      source_entities:
+        range: PropagationSource
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Source genes, gene products, PANTHER nodes, family nodes, or other
+          source entities inspected for the propagated annotation.
+      residue_claims:
+        range: ResidueClaim
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Machine-checkable form of a residue-level argument, e.g. "this protein
+          lost the catalytic cysteine". Optional and additive: the vast majority of
+          existing reviews state such arguments only in review.reason prose, and
+          those are grandfathered, never invalidated. Supply this whenever a NEW
+          review rests on residue gain, loss, or retention, so a validator can
+          resolve the claim against the actual sequences and contradict it.
+
+          This exists because the argument is cheap to assert and hard to check. A
+          survey of 17 "lacks the catalytic residue" claims in this repo found 4
+          where the site was fully intact -- CASP12 (truncated instead), LPA
+          (activation junction), AZIN1 (lost substrate contacts, kept the catalytic
+          Cys) and HSPA13 (a different domain). Each conclusion happened to survive
+          for another reason, so nothing caught the faulty mechanism.
+      residue_claims_not_applicable:
+        range: string
+        description: >-
+          Why this annotation's argument cannot be expressed as a residue claim, for
+          cases that are genuinely not point-residue questions -- capping versus
+          severing (CAPG), holdase versus foldase (CRYAA), or a whole domain absent
+          rather than residues substituted (MEFV, RAD51C). Recording the reason keeps
+          the escape valve honest rather than silent.
+
+  ResidueClaim:
+    description: >-
+      A claim that a specific position in THIS gene's protein does or does not carry
+      the residue an anchor protein has at the corresponding position.
+
+      Both sides carry an explicit position and residue, which is what makes the claim
+      checkable without an alignment: the anchor and target residues are each resolved
+      directly against their own sequences. The alignment is only needed to confirm the
+      two positions genuinely correspond, so a claim remains partially verifiable even
+      when no alignment is pinned.
+
+      Positions are always in each protein's own native numbering, never an alignment
+      column -- columns shift when PANTHER re-releases a family, and a stale column
+      still resolves, to the wrong residue.
+    attributes:
+      claim_type:
+        range: ResidueClaimEnum
+        required: true
+        description: Whether the target lost, retained, or substituted the residue.
+      site_ref:
+        range: string
+        pattern: "^PANTHER:PTHR[0-9]{5}#[a-z0-9_]+$"
+        description: >-
+          Optional reference to a curated family-level residue site, as
+          ``<family_id>#<site_id>`` (e.g. PANTHER:PTHR11022#zn_triad). When given, the
+          validator additionally checks that the site exists in that family review and
+          that the anchor position is one the site declares -- which is what stops a
+          gene review and a family review drifting apart.
+      anchor:
+        range: ResiduePosition
+        inlined: true
+        required: true
+        description: >-
+          The comparator: a protein known to have the functional residue, and where.
+      target:
+        range: ResiduePosition
+        inlined: true
+        description: >-
+          The corresponding position in this gene's own protein. Omit only when the
+          region is unalignable, in which case say so in comment; a missing target is
+          weaker evidence than a stated substitution.
+      role:
+        range: string
+        description: Mechanistic role of the anchor residue (e.g. "metal ligand", "nucleophile").
+      method:
+        range: ResidueClaimMethodEnum
+        required: true
+        description: How the correspondence between anchor and target positions was established.
+      alignment_release:
+        range: string
+        description: >-
+          Version of the alignment *resource* the correspondence was taken from, when
+          one exists -- e.g. "PANTHER 19.0" or "Pfam 37.0". A tool name or a script
+          path is not a release and does not belong here; put that in comment.
+
+          Omit it for an alignment computed ad hoc. That is not a gap: the claim states
+          both positions and both residues, so the alignment is only how the
+          correspondence was *discovered*, while the evidence is the two sequence
+          lookups the validator performs. Pinning matters for a shared resource whose
+          coordinates can shift under you, not for a one-off computation.
+      comment:
+        range: string
+        description: Short note, e.g. why the target position is absent rather than substituted.
+
+  ResiduePosition:
+    description: A single residue in a named protein, in that protein's own numbering.
+    attributes:
+      accession:
+        range: string
+        required: true
+        description: UniProt CURIE, e.g. UniProtKB:Q96PD5.
+      position:
+        range: integer
+        required: true
+        minimum_value: 1
+        description: 1-based position in this protein's own sequence.
+      residue:
+        range: string
+        required: true
+        pattern: "^[ACDEFGHIKLMNPQRSTVWYUO]$"
+        description: >-
+          Single-letter residue expected at that position. U and O are permitted for
+          selenocysteine and pyrrolysine -- a catalytic position can legitimately be
+          selenocysteine, as in SEPHS2.
+      sequence_version: 
+        range: integer
+        minimum_value: 1
+        description: >-
+          UniProt sequence version (the SV in a P49903.2 style citation) the position
+          was read against. Record it: an amino-acid sequence is not immutable. SEPHS2
+          is already on sequence version 3, and a corrected or re-chosen canonical
+          sequence shifts every downstream position, so an unversioned claim can go
+          silently wrong -- or worse, keep passing against a different residue that
+          happens to match.
+
+          The validator compares this against the current record and, when they differ,
+          says so explicitly rather than letting a stale claim look verified.
+
+  PropagationSource:
+    description: >-
+      A source entity considered while reviewing an inferred annotation. This is
+      intentionally compact: use comment for source-specific caveats, not for
+      restating the whole review rationale.
+    attributes:
+      source_id:
+        range: string
+        required: true
+        description: >-
+          Identifier for the source entity, e.g. UniProtKB:P03950,
+          MGI:MGI:104579, PANTHER:PTN002745520, or a GO_REF/source label when
+          no gene product identifier is available.
+      source_label:
+        range: string
+        description: Human-readable source label, such as a gene symbol or node label.
+      source_status:
+        range: PropagationSourceStatusEnum
+        description: Mechanical status of this source with respect to the target annotation.
+      comment:
+        range: string
+        description: >-
+          Short source-specific comment, e.g. "human ANG supports angiogenesis,
+          but mouse Ang2/Angrp is non-angiogenic" or "seed is inferred-only".
         
   CoreFunction:
     description: A core function is a GO-CAM-like annotation of the core evolved functions of a gene.
       This is a synthesis of the reviewed core annotations, brought together into a unified GO-CAM-like
       representation.
+    slots:
+      - knowledge_gaps
     attributes:
       description:
         range: string
@@ -509,6 +1493,11 @@ classes:
         range: Term
         multivalued: true
         inlined_as_list: true
+        description: >-
+          Cellular anatomical entities (e.g. membranes, nucleus, cytosol, organelle
+          parts) where the gene product functions. Do NOT use this for protein-containing
+          complexes (GO:0032991 and its descendants) — record complex membership in
+          in_complex instead.
         bindings:
           - binds_value_of: id
             range: GOCellularLocationEnum
@@ -524,6 +1513,10 @@ classes:
       in_complex:
         range: Term
         inlined: true
+        description: >-
+          The protein-containing complex (GO:0032991 descendant) that this gene product is
+          an active unit of. Use this — not locations — for complex membership (e.g.
+          ribosome, spliceosome, EMC, signal peptidase complex).
         bindings:
           - binds_value_of: id
             range: GOProteinContainingComplexEnum
@@ -581,6 +1574,77 @@ classes:
       supported_by:
         range: SupportingTextInReference
         multivalued: true
+
+  KnowledgeGap:
+    description: >-
+      A curated, literature-grounded statement of what is NOT known about a gene
+      product, core function, module, or step — its molecular activity, mechanism,
+      partner(s), localization, or biological role. A knowledge gap is a reviewer
+      judgment reached by reading the primary literature, NOT a pattern in the
+      annotations: a heavily annotated gene can hide a gaping mechanistic hole, and
+      a sparsely annotated one can be perfectly understood and merely under-curated.
+      Each gap is a small, defensible scholarly object with the same evidentiary
+      discipline used for positive claims. See projects/FUNCTION_KNOWLEDGE_GAPS.md
+      for the methodology and worked exemplars.
+    attributes:
+      gap_statement:
+        range: string
+        required: true
+        description: >-
+          The specific unknown, stated precisely. Not "role unclear" but e.g.
+          "the direct substrate / the catalytic activity / the essential partner is
+          undetermined".
+      boundary:
+        range: string
+        recommended: true
+        description: >-
+          What IS firmly established, so the gap is sharply delimited. The edge of
+          current knowledge against which the gap is defined.
+      gap_kind:
+        range: KnowledgeGapKindEnum
+        multivalued: true
+        recommended: true
+        description: >-
+          The kind(s) of ignorance — biology, curation, and/or ontology — which
+          determines who can resolve it. Multiple values denote a blend (e.g. a
+          biology gap with an ontology shadow).
+      dark_aspect:
+        range: KnowledgeGapAspectEnum
+        description: >-
+          Which GO aspect (or pattern) is dark for this gap. Most "dark" genes are
+          not uniformly dark.
+      status:
+        range: KnowledgeGapStatusEnum
+        description: Lifecycle status of the gap, tracking progress toward resolution.
+      significance:
+        range: string
+        description: Why closing this gap matters.
+      resolution:
+        range: string
+        description: >-
+          What would resolve the gap — the experiment, ontology term, or curation
+          action. For ONTOLOGY gaps, pair with proposed_terms (or the gene's
+          top-level proposed_new_terms).
+      provenance:
+        range: SupportingTextInReference
+        multivalued: true
+        inlined_as_list: true
+        recommended: true
+        description: >-
+          Evidence that the unknown is REAL and not merely uncurated — ideally the
+          field's own admissions of ignorance ("remains to be determined", "the
+          precise role is unknown"). The supporting_text is a verbatim substring of
+          the cited reference and is checked by the reference validator exactly like
+          supported_by. When the only available source is a DOI-only paper or a local
+          analysis, anchor provenance to that reference_id (e.g. a file: path).
+      proposed_terms:
+        range: ProposedOntologyTerm
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          For ONTOLOGY gaps, the new ontology term(s) that would let the knowledge be
+          expressed (e.g. "structural constituent of complex X"). May elaborate the
+          gene's top-level proposed_new_terms.
 
   Experiment:
     description: A suggested experiment to answer a question about the gene
@@ -1225,6 +2289,146 @@ classes:
 
 
 enums:
+  ModuleScopeEnum:
+    description: How concrete the module document is expected to be.
+    permissible_values:
+      CONCRETE:
+        description: >-
+          A module representing a specific pathway, complex, process, or
+          taxon-scoped realization where terminal steps should generally ground
+          to representative members.
+      ABSTRACT:
+        description: >-
+          A reusable motif or template that intentionally uses abstract
+          participant selectors and is not expected to ground each terminal node
+          to concrete representative proteins.
+
+  ModuleTypeEnum:
+    description: Broad type of biological module node.
+    permissible_values:
+      MODULE:
+        description: Generic or unspecified module.
+      BIOLOGICAL_PROCESS:
+        description: Biological-process-like module.
+      MOLECULAR_FUNCTION:
+        description: Molecular-function-like module.
+      METABOLIC_PATHWAY:
+        description: Metabolic pathway or pathway segment.
+      SIGNALING_PATHWAY:
+        description: Signaling pathway or pathway segment.
+      DEVELOPMENTAL_PROCESS:
+        description: Developmental process, stage, or program.
+      CELLULAR_COMPONENT:
+        description: Cellular component or structure viewed as a module.
+      ORGANELLE_LIFECYCLE:
+        description: Assembly, maintenance, operation, and turnover of an organelle.
+      PROTEIN_COMPLEX:
+        description: Protein complex or complex lifecycle.
+      REACTION:
+        description: Reaction-like module step.
+      TRANSPORT_STEP:
+        description: Transport or translocation step.
+      REGULATORY_STEP:
+        description: Regulatory or control step.
+
+  VariantSelectionEnum:
+    description: How variants in a variant set may be selected in a realization.
+    permissible_values:
+      EXACTLY_ONE:
+        description: Exactly one variant applies.
+      ONE_OR_MORE:
+        description: One or more variants may apply.
+      ZERO_OR_MORE:
+        description: Variants are optional and any number may apply.
+
+  ChainingStatusEnum:
+    description: >-
+      Curator adjudication of reaction continuity across a module connection
+      (whether the upstream reaction's product is consumed as the downstream
+      reaction's substrate). Used as an explicit override for the advisory,
+      non-blocking automated chaining check.
+    permissible_values:
+      VERIFIED:
+        description: >-
+          The upstream product is confirmed to be the downstream substrate
+          (curator-confirmed continuity).
+      KNOWLEDGE_GAP:
+        description: >-
+          The connecting intermediate or enzyme is genuinely not known; the break
+          reflects missing biological knowledge, not a modelling error.
+      MAPPING_GAP:
+        description: >-
+          The chemistry is known but the GO/RHEA (or GO/ChEBI) mapping does not
+          yet capture the link, so the automated check cannot see the continuity.
+      NOT_APPLICABLE:
+        description: >-
+          Chaining does not apply to this connection (e.g. a regulatory or
+          non-metabolic edge, or a spiral re-entry handled elsewhere).
+      UNVERIFIED:
+        description: >-
+          Continuity has not been assessed (explicitly, as opposed to simply
+          leaving the field unset).
+
+  ConformanceStatusEnum:
+    description: How closely a module node matches a template motif it conforms to.
+    permissible_values:
+      EXACT:
+        description: >-
+          The node matches the template motif exactly: same steps, function
+          terms, and connection topology, with no recorded deviations.
+      WITH_DEVIATIONS:
+        description: >-
+          The node matches the template motif apart from the differences listed
+          in deviations (e.g. a merged or missing tier, a substituted term).
+      EXTENDS:
+        description: >-
+          The node contains the full template motif and adds further steps or
+          structure beyond it.
+
+  ParticipantSelectorTypeEnum:
+    description: How a module annoton participant is selected.
+    permissible_values:
+      GENE:
+        description: A concrete gene.
+      GENE_PRODUCT:
+        description: A concrete gene product, protein, isoform, or form.
+      PROTEIN_COMPLEX:
+        description: A concrete protein-containing complex or subcomplex.
+      FAMILY:
+        description: Any member of a specified family or orthogroup.
+      DOMAIN:
+        description: Any entity with a specified domain, motif, or site.
+      ORTHOLOG_OF:
+        description: Any ortholog of a specified gene.
+      HOMOLOG_OF:
+        description: Any homolog of a specified gene.
+      ANY_WITH_FUNCTION:
+        description: Any participant satisfying the specified molecular function descriptor.
+      ANY_WITH_DOMAIN:
+        description: Any participant satisfying the specified domain descriptor.
+      ANY_PARTICIPANT:
+        description: An unspecified participant.
+
+  ModuleConnectionTypeEnum:
+    description: Common connection types between module elements.
+    permissible_values:
+      PRECEDES:
+        description: The source occurs before the target.
+      CAUSES:
+        description: The source causally promotes or produces the target.
+      POSITIVELY_REGULATES:
+        description: The source positively regulates the target.
+      NEGATIVELY_REGULATES:
+        description: The source negatively regulates the target.
+      PROVIDES_INPUT_FOR:
+        description: The source provides material, signal, or context used by the target.
+      HAS_INPUT:
+        description: The target has the source as input.
+      HAS_OUTPUT:
+        description: The source has the target as output.
+      PART_OF:
+        description: The source is part of the target.
+
   EvidenceType:
     description: |-
       Gene Ontology evidence codes mapped to Evidence and Conclusion Ontology (ECO) terms
@@ -1341,6 +2545,112 @@ enums:
         description: Inferred from Electronic Annotation
         meaning: ECO:0000501
 
+  PropagationRootCauseEnum:
+    description: >-
+      Mechanical root-cause classification for propagated or inferred
+      annotations. This distinguishes bad source annotations from bad
+      propagation decisions and term-scoping issues.
+    permissible_values:
+      NO_FAILURE_CORE:
+        description: The propagated annotation is correct and core for the target.
+      NO_FAILURE_NON_CORE:
+        description: The propagated annotation is biologically defensible but contextual, secondary, or generic.
+      SOURCE_BAD:
+        description: The source annotation is wrong, miscited, homonym-confused, or contradicted.
+      SOURCE_STALE_OR_MISSING:
+        description: The transferred term no longer appears on the current source record, or donor tracing cannot recover it.
+      SOURCE_WEAK_OR_INFERRED:
+        description: The source exists but is only inferred, statement-level, or otherwise weak for propagation.
+      EVIDENCE_CIRCULAR_OR_REDUNDANT:
+        description: The propagation chain transfers from another transfer, or the target already has stronger direct evidence.
+      PROPAGATION_BAD:
+        description: The source annotation is sound, but the term should not propagate to this target.
+      TERM_SCOPING_PROBLEM:
+        description: The biology is related, but the GO term is too broad, too specific, or has the wrong role or qualifier.
+      UNRESOLVED:
+        description: The propagation issue was investigated but could not be classified confidently.
+
+  PropagationFailureModeEnum:
+    description: Biological subtype for a propagation or inference issue.
+    permissible_values:
+      WRONG_ORTHOLOG_OR_PARALOG:
+        description: Donor/source is a paralog, expanded family member, or wrong subfamily.
+      FUNCTIONAL_DIVERGENCE:
+        description: Target retained fold or orthology but changed substrate, product, activity, or pathway role.
+      PSEUDO_OR_SUBACTIVITY_LOSS:
+        description: Catalytic residues or a specific sub-activity are lost even though the domain remains.
+      CONTEXT_OR_TISSUE_MISMATCH:
+        description: Donor evidence is tissue, developmental, organismal, or disease-context specific.
+      LINEAGE_OR_TAXON_MISMATCH:
+        description: Process does not occur in the target lineage or organelle system.
+      COMPARTMENT_OR_COMPLEX_MISMATCH:
+        description: Localization, complex membership, or pathway compartment does not transfer.
+      REGULATORY_SIGN_INVERSION:
+        description: Family contains activators and inhibitors, and a positive/negative regulatory term leaks across members.
+      ROLE_CONFLATION:
+        description: Substrate, regulator, effector, or specificity subunit is annotated as the agent or core machinery.
+      GRANULARITY_MISMATCH:
+        description: Parent term is true but uninformative, or child term overstates specificity.
+      SOURCE_MISCITATION:
+        description: Source evidence points to the wrong gene, organism, publication, or homonym.
+      SOURCE_EVIDENCE_WEAK:
+        description: Source evidence is inferred, statement-level, stale, or otherwise too weak for confident propagation.
+      CIRCULAR_PROPAGATION:
+        description: Propagation chain depends on another propagated annotation rather than independent source evidence.
+
+  ResidueClaimEnum:
+    description: What a residue claim asserts about the target protein.
+    permissible_values:
+      LOST:
+        description: >-
+          The target does not carry the anchor's functional residue -- it is
+          substituted, or no residue aligns to that position at all.
+      RETAINED:
+        description: >-
+          The target does carry the residue. Worth recording explicitly: a retained
+          site refutes a "lacks the catalytic residue" argument, which is how the
+          CASP12 and LPA errors would have been caught.
+      SUBSTITUTED:
+        description: >-
+          The residue differs but the substitution is conservative or otherwise
+          argued not to abolish function. Distinct from LOST, which asserts the
+          function is gone.
+
+  ResidueClaimMethodEnum:
+    description: How the anchor-to-target position correspondence was established.
+    permissible_values:
+      MSA:
+        description: Multiple sequence alignment; record the alignment_release.
+      STRUCTURE:
+        description: Structural superposition or a solved complex.
+      UNIPROT_FEATURE:
+        description: >-
+          Both positions read from UniProt feature tables on their own records, with
+          no alignment step.
+      LITERATURE:
+        description: >-
+          A publication states the correspondence directly; cite it in
+          review.supported_by.
+
+  PropagationSourceStatusEnum:
+    description: Mechanical status of a source entity with respect to a propagated target annotation.
+    permissible_values:
+      SUPPORTS_TRANSFER:
+        description: Source evidence supports the term and the transfer to the target.
+      SUPPORTS_SOURCE_BUT_NOT_TARGET:
+        description: Source evidence supports the source annotation, but propagation to the target is unsafe.
+      SOURCE_BAD:
+        description: Source annotation or source citation is itself wrong.
+      SOURCE_STALE_OR_MISSING:
+        description: Current source record no longer carries the transferred term, or tracing cannot recover it.
+      SOURCE_WEAK_OR_INFERRED:
+        description: Source exists but is only inferred, statement-level, or otherwise weak.
+      CIRCULAR_OR_REDUNDANT:
+        description: Source participates in a circular transfer chain or adds no independent support.
+      NOT_RELEVANT:
+        description: Source was inspected but is not relevant to the target annotation.
+      UNRESOLVED:
+        description: Source could not be classified confidently.
 
   ActionEnum:
     permissible_values:
@@ -1464,6 +2774,11 @@ enums:
       source_nodes:
         - GO:0032991
       is_direct: false
+      # Accept the root GO:0032991 ("protein-containing complex") itself as a
+      # valid in_complex value (used when the specific complex is unspecified).
+      # linkml-term-validator >= 0.4.1 defaults include_self to false, so this
+      # must be explicit; GOTermEnum sets it for the same reason.
+      include_self: true
       relationship_types:
         - rdfs:subClassOf
 
@@ -1893,8 +3208,11 @@ enums:
 
   PredictionErrorTypeEnum:
     description: >-
-      Types of errors that lead to incorrect functional predictions,
-      based on Table 1 of de Crécy-Lagard et al. 2025 (PMID:40703034).
+      Types of errors that lead to incorrect functional predictions. The first
+      block is based on Table 1 of de Crécy-Lagard et al. 2025 (PMID:40703034);
+      the trailing values capture additional, recurrent failure patterns observed
+      when evaluating sequence- and LLM-based function predictors (e.g. ProtNLM2,
+      BioReason-Pro) that Table 1 does not name explicitly.
     permissible_values:
       FAILURE_TO_CAPTURE_LITERATURE:
         description: >-
@@ -1939,3 +3257,276 @@ enums:
           The predicted activity can be demonstrated in vitro but does not represent
           the in vivo biological function (e.g., promiscuous activity at orders of
           magnitude lower rate than the dedicated enzyme).
+      PSEUDOENZYME_OVERANNOTATION:
+        description: >-
+          The model assigns the ancestral catalytic activity of a domain family to a
+          member that retains the fold but has lost or degraded the catalytic residues
+          (a pseudoenzyme), failing to detect substituted/missing active-site residues.
+          E.g. predicting demethylase activity for a JmjC protein with a degenerate
+          active site, chitinase activity for a member lacking the catalytic glutamate,
+          or peroxidase activity for a peroxiredoxin that has lost its resolving cysteine
+          and instead acts as a chaperone. A special case of MULTIPLE_FUNCTIONS /
+          neofunctionalization where the divergence is specifically loss of catalysis.
+      LOCALIZATION_DEFAULT:
+        description: >-
+          The model defaults to a cytosolic/cytoplasmic subcellular localization when no
+          transmembrane or signal-sequence features are detected, mislocalizing secreted,
+          periplasmic, organellar (mitochondrial, ER, vacuolar), or membrane proteins.
+          Tends to succeed only when a domain/family name explicitly encodes the
+          compartment (e.g. BiP/KAR2 -> ER).
+      TAXON_CONSTRAINT_VIOLATION:
+        description: >-
+          The predicted term is valid only in a lineage/kingdom different from the
+          organism (e.g. animal-specific 'neuronal cell body' or adaptive-immune terms
+          predicted for a plant or bacterial protein), reflecting homology transfer from a
+          better-studied taxon. Distinct from PATHWAY_CONTEXT_IGNORED (a missing metabolic
+          pathway) in that the violated constraint is taxonomic rather than pathway-level.
+      WRONG_INPUT_SEQUENCE:
+        description: >-
+          A data-pipeline error rather than a model-reasoning error: the predictor was
+          supplied the wrong input (e.g. the sequence of a different gene), so every output
+          describes the wrong protein. Recorded to distinguish upstream pipeline mistakes
+          from genuine model mispredictions.
+      DOMAIN_ARCHITECTURE_MISMATCH:
+        description: >-
+          The predicted activity requires a domain, catalytic region, or complete
+          architecture absent from the selected protein. Includes transfer of a
+          multidomain donor's activity through a shared noncatalytic domain.
+          Does not establish that the target is a fold-retaining pseudoenzyme,
+          that its gene model is wrong, or that the historical model input differed.
+      COMPLEX_ACTIVITY_TRANSFER:
+        description: >-
+          Intrinsic catalytic activity of a molecular complex is assigned to a
+          noncatalytic accessory subunit. Participation in the complex or its
+          biological process does not establish that the subunit catalyzes the reaction.
+
+
+  ReferenceRelevanceEnum:
+    description: Reviewer's assessment of how relevant a reference is to the gene's function and review.
+    permissible_values:
+      HIGH:
+        description: Directly establishes or strongly informs the gene's function, mechanism, process, or localization
+      MEDIUM:
+        description: Provides supporting or corroborating evidence for a function or annotation
+      LOW:
+        description: Background or contextual only (e.g. family/pathway reviews, methods, or a passing mention)
+      NONE:
+        description: Not relevant to this gene's function (a candidate for removal from the references)
+
+  ReferenceCorrectnessEnum:
+    description: >-
+      Reviewer's overall manual assessment of a reference's trustworthiness, spanning both citation
+      correctness (does the identifier point to the intended paper that supports its use) and
+      scientific soundness (is that paper's claim reliable). Single-valued: record the most salient
+      issue and elaborate in review_notes. Complements is_invalid (retracted/replaced) and
+      full_text_unavailable.
+    permissible_values:
+      VERIFIED:
+        description: Identifier resolves to the intended paper, which supports how it is used, with no soundness concerns
+      UNVERIFIED:
+        description: Not yet manually checked (the default state)
+      WRONG_IDENTIFIER:
+        description: Identifier resolves to a DIFFERENT paper than intended (e.g. a PMID pointing to an unrelated article)
+      MISCITED:
+        description: Paper is correctly identified but does not actually support the claim it is cited for
+      DISPUTED:
+        description: Correctly cited, but the paper's central claim is contradicted or contested by other evidence
+      LOW_QUALITY:
+        description: Correctly cited, but methodologically weak or preliminary; treat its conclusions with caution
+
+  FindingReviewStatusEnum:
+    description: >-
+      Reviewer's assessment of the empirical standing of a specific finding (a statement extracted
+      from a reference) in light of other evidence. Unlike ReferenceCorrectnessEnum, which judges a
+      whole reference, this applies per finding: a paper may have some findings that stand and
+      others that have been overturned. Use superseded_by to point to the reference(s) responsible.
+    permissible_values:
+      CURRENT:
+        description: The finding is consistent with the body of evidence and can be curated from
+      CORROBORATED:
+        description: The finding is independently supported by additional evidence
+      DISPUTED:
+        description: The finding is contested or contradicted by other evidence, but not definitively refuted; curate with caution
+      OVERTURNED:
+        description: The finding has been refuted or superseded by later, stronger evidence and should NOT be curated from; record the overturning reference(s) in superseded_by
+      UNVERIFIED:
+        description: The finding has not yet been manually assessed (default)
+
+  KnowledgeGapKindEnum:
+    description: >-
+      The kind of ignorance a knowledge gap represents, which determines who can
+      resolve it. A single gap may carry several values when it is a blend.
+    permissible_values:
+      BIOLOGY:
+        description: >-
+          Nobody knows; resolvable only by new experiments. This is the unknome and
+          the primary target of the Function Knowledge Gaps project.
+      CURATION:
+        description: >-
+          The knowledge exists in the literature but is not yet annotated, or is
+          annotated too generically. Resolvable by curation.
+      ONTOLOGY:
+        description: >-
+          The knowledge exists but no GO/ontology term can express it (e.g.
+          "structural subunit of complex X", or a novel activity). Resolvable by
+          ontology development; usually paired with proposed_new_terms.
+
+  KnowledgeGapAspectEnum:
+    description: >-
+      Which GO aspect (or pattern) is dark for a knowledge gap. Most "dark" genes
+      are not uniformly dark.
+    permissible_values:
+      MF_DARK:
+        description: >-
+          Process/location known, molecular mechanism unknown. The most common and
+          most insidious case — rich BP/CC make the gene look known. The
+          "protein binding" smell lives here.
+      BP_DARK:
+        description: An activity is known but not what it is for (common in microbial/plant metabolism).
+      CC_DARK:
+        description: Function known, but where/when unknown.
+      WHOLLY_DARK:
+        description: Only root terms / IEA / "protein binding" survive review (the deep unknome).
+      RESIDUAL_SUBGAP:
+        description: >-
+          The core function is textbook-solid, but one sharp, load-bearing
+          mechanistic hole remains (e.g. an unidentified GEF/GAP, a
+          catalysis-independent scaffolding mechanism, an unidentified recruit).
+          Easy to miss because the gene looks finished.
+
+  KnowledgeGapStatusEnum:
+    description: Lifecycle status of a knowledge gap, tracking progress toward resolution.
+    permissible_values:
+      OPEN:
+        description: Unresolved and not under active, evidence-producing investigation.
+      NARROWING:
+        description: Under active investigation with emerging but still incomplete evidence.
+      CLOSING:
+        description: >-
+          Function-defining evidence exists (e.g. recent preprints) but has not yet
+          propagated to peer-reviewed, GO-curated form.
+      RESOLVED:
+        description: The gap has been closed; retained for provenance/history.
+
+  PublicationTypeEnum:
+    description: >-
+      The kind of publication or source a reference is. For PMIDs this is inferred from the
+      PubMed publication-type ('PT') metadata; for non-literature references it is inferred
+      from the identifier scheme. Used to test hypotheses about which evidence sources
+      (primary papers, reviews, abstracts, deep research) suffice for GO annotation review.
+    permissible_values:
+      PRIMARY_RESEARCH:
+        description: An original/primary research article reporting new experimental or observational
+          results (PubMed 'Journal Article' without a more specific review/secondary type).
+      REVIEW:
+        description: A narrative review article that synthesizes prior literature (PubMed PT 'Review').
+          Reviews often carry phylogenetic/comparative reasoning and broad functional context.
+      SYSTEMATIC_REVIEW:
+        description: A systematic review (PubMed PT 'Systematic Review').
+      META_ANALYSIS:
+        description: A meta-analysis combining results across studies (PubMed PT 'Meta-Analysis').
+      COMMENT_EDITORIAL:
+        description: A comment, editorial, letter, or news item (PubMed PT 'Comment', 'Editorial',
+          'Letter', 'News').
+      CASE_REPORT:
+        description: A clinical case report (PubMed PT 'Case Reports').
+      PREPRINT:
+        description: A preprint or other not-yet-peer-reviewed manuscript (PubMed PT 'Preprint').
+      DATABASE:
+        description: A database record or curated method reference rather than a narrative publication
+          (e.g. a GO_REF, Reactome pathway, or UniProt entry).
+      BIOINFORMATICS:
+        description: A local ad-hoc bioinformatics analysis carried out for this review, referenced
+          via a 'file:' identifier (e.g. a bioinformatics RESULTS.md).
+      DEEP_RESEARCH:
+        description: An AI/LLM deep-research report generated for this review, referenced via a
+          'file:' identifier (e.g. GENE-deep-research-PROVIDER.md).
+      OTHER:
+        description: A publication or source that does not fit the other categories.
+      UNKNOWN:
+        description: The publication type could not be determined (e.g. PubMed metadata unavailable).
+
+  GoCamReviewStatusEnum:
+    description: Progress state of a GO-CAM model review.
+    permissible_values:
+      DRAFT:
+        description: Review started; activities not yet fully assessed.
+      IN_PROGRESS:
+        description: Some activities reviewed; review ongoing.
+      COMPLETE:
+        description: All activities reviewed.
+
+  GoCamClaimVerdictEnum:
+    description: >-
+      Forensic-review verdict for a GO-CAM activity, mirroring the
+      OK / UNCERTAIN / WRONG scale used for claim validation: does the asserted
+      activity hold up against the cited evidence and GO-CAM best practice?
+    permissible_values:
+      OK:
+        description: >-
+          The activity is well supported and follows best practice (correct MF
+          specificity, correct causal/has-input usage, adequate evidence).
+      UNCERTAIN:
+        description: >-
+          Defensible but imprecise or under-supported; a minor best-practice or
+          evidence issue that needs qualification.
+      WRONG:
+        description: >-
+          The activity contradicts the evidence or violates a hard best-practice
+          rule (e.g. binding-as-function, wrong causal directionality).
+
+  GoCamConsistencyEnum:
+    description: >-
+      How a GO-CAM activity relates to the corresponding gene's annotation review
+      (genes/**/<gene>-ai-review.yaml).
+    permissible_values:
+      CONSISTENT:
+        description: The activity's function matches an accepted core function in the gene review.
+      MORE_SPECIFIC:
+        description: The activity asserts a more specific function than the gene review.
+      MORE_GENERAL:
+        description: The activity asserts a more general function than the gene review.
+      RELATED:
+        description: Same general area but neither a clean subsumption nor a match.
+      CONFLICT:
+        description: >-
+          The activity asserts a function the gene review removed, negated, or
+          marked as over-annotated.
+      NOT_IN_REVIEW:
+        description: The function is not represented in the gene review (candidate gap).
+      NO_GENE_REVIEW:
+        description: No gene review exists yet for this gene product.
+
+  GoCamQcFlagEnum:
+    description: >-
+      Specific GO-CAM best-practice issues observed for an activity. Derived from
+      the GO-CAM annotation best-practice checklist (see gocams/BEST_PRACTICE.md).
+    permissible_values:
+      BINDING_AS_FUNCTION:
+        description: >-
+          Molecular function is a bare 'binding' term with no functional
+          consequence specified (use catalytic/receptor/adaptor/sequestering MF).
+      GENERIC_MF:
+        description: An overly generic MF term is used where a specific child term applies.
+      HAS_INPUT_MISUSE:
+        description: >-
+          'has input' used incorrectly, e.g. a receptor's ligand or a TF's DNA
+          instead of the substrate/target gene/downstream effector.
+      DIRECT_VS_INDIRECT_CAUSAL:
+        description: >-
+          Direct regulation asserted for a multi-step (indirect) mechanism, or
+          vice versa.
+      INCORRECT_DIRECTIONALITY:
+        description: Causal edge directionality (subject -> object) appears reversed.
+      MISSING_LOCATION:
+        description: Activity lacks an 'occurs in' cellular component.
+      MISSING_PROCESS:
+        description: Activity is not connected to a biological process via 'part of'.
+      ORPHAN_ACTIVITY:
+        description: Activity has no causal connections to the rest of the model.
+      MISSING_EVIDENCE:
+        description: An activity or relationship lacks an evidence code / reference.
+      COMPLEX_SUBUNIT_REPRESENTATION:
+        description: >-
+          Complex represented with a complex term where a specific active subunit
+          is known (or vice versa).

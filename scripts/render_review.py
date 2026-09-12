@@ -67,7 +67,7 @@ def render_yaml_to_markdown(
         str(input_file),
         "--schema", str(schema_file),
         "--output", str(output_file),
-        "--config", "config/render.yaml",
+        "--config", "conf/render.yaml",
         "--output-format", "html",
         "--root", "GeneReview"
     ]

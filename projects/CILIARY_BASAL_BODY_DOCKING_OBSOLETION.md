@@ -1,3 +1,9 @@
+---
+title: "Ciliary Basal Body-Plasma Membrane Docking — Obsoletion & Replacement"
+maturity: IN_PROGRESS
+tags: [OBSOLETION]
+---
+
 # Ciliary Basal Body-Plasma Membrane Docking — Obsoletion & Replacement
 
 ## Overview

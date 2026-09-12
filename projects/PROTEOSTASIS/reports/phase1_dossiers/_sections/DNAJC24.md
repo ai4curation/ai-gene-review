@@ -1,0 +1,8 @@
+## DNAJC24
+- **UniProt:** Q6P3W2 (DPH4 / ZCSL3) · **batch:** proteostasis-batch-2026-06-07b · **review status:** COMPLETE
+- **PN placement:** `Cytonuclear proteostasis|Chaperone|HSP70 system|J-domain containing HSP70 cochaperone` ; **PN-node mapping:** type=mapped, scope=ok_for_propagation_to_go, GO:0030544 Hsp70 protein binding (projected new_to_goa); group/class/branch=no_mapping.
+- **Consistency:** Deep research, notes, and review YAML are fully self-consistent: DPH4 is a J-domain co-chaperone that stimulates HSP70 ATPase (IDA + IBA, PMID:22367199) and a diphthamide-biosynthesis factor (GO:0017183). The PN "J-domain HSP70 cochaperone" placement agrees with the review's HSP70-cochaperone framing. No contradictions.
+- **PN story / NEW pressure:** PN asserts Hsp70 protein binding (GO:0030544, verified real). GOA does NOT contain GO:0030544; closest is GO:0001671 ATPase activator activity (IDA). DPH4's J-domain HSP70 interaction is experimentally supported, so GO:0030544 is a defensible, specific ADD (J-proteins bind Hsp70). Not over-reaching for this gene — but note GO:0001671 already captures the functional consequence; GO:0030544 would be a complementary, narrower MF.
+- **Mapping strategy:** Does not change node status. Projection (new_to_goa) is accurate — GO:0030544 genuinely absent from GOA. Term is appropriately specific (not over-broad), since DPH4's HSP70 interaction is real.
+- **Evidence alignment:** PN row carries no reference titles; review anchors on PMID:22367199 (structure/iron-mediated moonlighting) and PMID:22509046 (diphthamide/EF2). Both VERIFIED in YAML. No divergence.
+- **Verdict:** Consistent. GO:0030544 is a defensible ADD (new_to_goa). Diphthamide role correctly kept distinct from chaperone family inference.

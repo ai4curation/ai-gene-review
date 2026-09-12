@@ -1,3 +1,10 @@
+---
+title: "Stress Granule Assembly Project"
+maturity: SCOPING
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
+species: [human]
+---
+
 # Stress Granule Assembly Project
 
 ## Overview

@@ -1,7 +1,8 @@
 ---
 title: Cephalopod Neuro Gene Reviews
+maturity: IN_PROGRESS
+tags: [BIOLOGY_DOMAIN, FLAGSHIP]
 species: [OCTVU, OCTBM, DORPE, SEPOF, STHOU, DOROP, EUPSC]
-status: IN_PROGRESS
 ---
 # Project CEPHALOPOD: AI Gene Review for Cephalopod Genes
 
@@ -13,6 +14,10 @@ adaptive camouflage, and remarkable cognitive abilities, cephalopod genes have o
 GO annotations** across all species (0.008% of 333,921 total annotations). This project aims to review
 experimentally characterized cephalopod genes using the ai-gene-review framework, synthesizing
 literature evidence with computational predictions to fill this annotation desert.
+
+## Slides
+
+- [Slides](CEPHALOPOD/slides/CEPHALOPOD-slides.html) (Marp source: [CEPHALOPOD-slides.md](CEPHALOPOD/slides/CEPHALOPOD-slides.md)) — AI generated
 
 ## Genomic Resources
 

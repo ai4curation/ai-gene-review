@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: spo0A (B. subtilis)
 
-Source: spo0A-deep-research-bioreason-rl.md
+Source: spo0A-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 4/5

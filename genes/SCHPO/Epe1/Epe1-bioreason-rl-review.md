@@ -1,8 +1,8 @@
 # BioReason-Pro RL Review: Epe1 (S. pombe)
 
-Source: Epe1-deep-research-bioreason-rl.md
+Source: Epe1-bioreason-rl-predictions.md
 
-- **Correctness**: 2/5
+- **Correctness**: 1/5
 - **Completeness**: 1/5
 
 ## Functional Summary Review

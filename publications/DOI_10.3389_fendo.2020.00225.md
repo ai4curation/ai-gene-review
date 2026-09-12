@@ -8,6 +8,7 @@ journal: Frontiers in Endocrinology
 year: '2020'
 doi: 10.3389/fendo.2020.00225
 content_type: unavailable
+full_text_attempted: true
 ---
 
 # Comparative and Evolutionary Physiology of Vasopressin/ Oxytocin-Type Neuropeptide Signaling in Invertebrates

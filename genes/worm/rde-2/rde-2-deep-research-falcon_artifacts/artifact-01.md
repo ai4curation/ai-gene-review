@@ -1,0 +1,4 @@
+> RDE-2/MUT-8 functions as a bridging adaptor in the *C. elegans* Mutator complex: its N-terminal domain (aa 36-235) contacts the MUT-16 scaffold at residues 584-724, while its C-terminal domain binds the MUT-7 C-terminal domain through an extended ~2140 Å² interface. This architecture links the MUT-7 exoribonuclease to the MUT-16 scaffold, enabling MUT-7 recruitment to Mutator foci and supporting RNAi function; disrupting the MUT-7–MUT-8 interaction causes RNAi-resistant phenotypes. (pqac-00000010, pqac-00000011, pqac-00000015)
+
+
+*Blockquote: This blockquote summarizes the central mechanistic finding from Busetto et al. 2024 on how RDE-2/MUT-8 physically connects MUT-7 to the MUT-16 scaffold. It is useful for clearly stating the current best-supported molecular role of RDE-2 in Mutator complex assembly.*

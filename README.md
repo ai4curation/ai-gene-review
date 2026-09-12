@@ -82,6 +82,10 @@ just stats-open           # Generate and open in browser
 - **Evaluation Form**: [https://go.lbl.gov/gene-eval](https://go.lbl.gov/gene-eval) - Detailed expert feedback form
 - **Project Slides**: [Overview Presentation](https://docs.google.com/presentation/d/1xBFIQE0jt7K6kFg4zFzUwLDHtnDWat2ZVDarhcpA3_4/edit?slide=id.p#slide=id.p)
 
+### Presentations
+
+- **ISMB 2026 (Function COSI)**: Caufield JH, Joachimiak MP, Mungall CJ. *Agentic evaluation of AI function prediction pipelines.* Washington, DC, 14 July 2026. Slides: [doi:10.5281/zenodo.21810552](https://doi.org/10.5281/zenodo.21810552)
+
 ### Documentation Pages
 
 - **Voting System Guide**: Learn how to provide feedback on AI curation decisions
@@ -384,8 +388,18 @@ uv run ai-gene-review batch-fetch <input-file>  # Process multiple genes
 ```bash
 just render human BRCA1        # Render single gene to HTML
 just render-all                # Render all gene reviews to HTML
+just stage-pages               # Assemble existing generated output in _site/
+just build-pages               # Render and assemble the complete publication tree
 python -m ai_gene_review.render --all genes/    # Alternative rendering command
 ```
+
+`stage-pages` is the shadow build for the GitHub Pages artifact migration. It
+preserves current public URL paths, writes an ignored `_site/` directory, and
+reports the uncompressed publication size. Cleanup is restricted to the repository's
+`_site/` directory, and the root is verified with Git before cleanup. The CLI always
+uses `<repo-root>/_site`. Shadow build failures warn
+without blocking regeneration PRs. The live site continues to publish
+from `main:/` until the shadow artifact has been verified.
 
 ## Contributing
 

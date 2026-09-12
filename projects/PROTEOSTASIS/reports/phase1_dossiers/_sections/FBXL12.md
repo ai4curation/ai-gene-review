@@ -1,0 +1,8 @@
+## FBXL12
+- **UniProt:** Q9NXK8 · **batch:** proteostasis-batch-2026-06-13 · **review status:** COMPLETE
+- **PN placement:** `UPS|E3 ubiquitin and UBL ligases|Cul1 substrate receptor|F-box|LRR` ; **PN-node mapping:** group-level `mapped / ok_for_propagation_to_go / GO:1990756`; class `context_only / too_broad / GO:0061630`.
+- **Consistency:** Strong. Deep research (falcon, marked VERIFIED here, cross-checked vs UniProt + cached PMID:18660753), review, PN annotation, and node mapping agree FBXL12 is the SCF(FBXL12) receptor with multiple substrates (p57KIP2/CDKN1C validated IDA PMID:18660753; CAMK1 PMID:23707388; plus falcon leads FANCD2, p27/CDKN1B-K165, ALDH3A1/2, Ku80). No contradictions.
+- **PN story / NEW pressure:** PN asserts the generic adaptor MF. FBXL12 GOA has NO MF beyond `protein binding`. The review adds `GO:1990756` as **action: NEW (IDA, PMID:18660753)** — the batch-correct call, matching the PN-projected new_to_goa term. BPs (`SCF catabolism`, `regulation of cell cycle`) already captured. Conclusion: adaptor MF correctly ADDED as NEW; no over-reach.
+- **Mapping strategy:** Gene does not change the node. Status/scope right; PN-projected GO:1990756 equals the review MF (not broader/narrower). Has a PMID-validated substrate (p57KIP2 IDA) — canonical receptor, NOT an orphan. Cytoplasmic + nuclear/chromatin dual localization is gene-specific and rightly outside the shared node mapping.
+- **Evidence alignment:** PN cites only "15340381/rev"; review uses gene-specific primaries (18660753, 23707388, 33234069) + falcon leads. No overlap with the PN placeholder; review evidence richer. Benign divergence.
+- **Verdict:** CONSISTENT / ACCEPT mapping. Correct NEW→GO:1990756 application with a validated substrate anchor. No edits required.

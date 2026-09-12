@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: drp-1 (C. elegans)
 
-Source: drp-1-deep-research-bioreason-rl.md
+Source: drp-1-bioreason-rl-predictions.md
 
 - **Correctness**: 3/5
 - **Completeness**: 2/5

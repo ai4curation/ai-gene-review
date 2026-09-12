@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: Fyn (mouse)
 
-Source: Fyn-deep-research-bioreason-rl.md
+Source: Fyn-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 3/5

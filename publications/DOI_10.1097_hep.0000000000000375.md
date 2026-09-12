@@ -19,6 +19,7 @@ journal: Hepatology
 year: '2024'
 doi: 10.1097/hep.0000000000000375
 content_type: abstract_only
+full_text_attempted: true
 ---
 
 # Membrane phospholipid remodeling modulates nonalcoholic steatohepatitis progression by regulating mitochondrial homeostasis

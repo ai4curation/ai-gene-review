@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: Uggt1 (rat)
 
-Source: Uggt1-deep-research-bioreason-rl.md
+Source: Uggt1-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 5/5

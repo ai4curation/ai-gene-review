@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: SIR2 (S. cerevisiae)
 
-Source: SIR2-deep-research-bioreason-rl.md
+Source: SIR2-bioreason-rl-predictions.md
 
 - **Correctness**: 5/5
 - **Completeness**: 3/5

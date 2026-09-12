@@ -18,11 +18,17 @@ import yaml
 
 DEFAULT_GENES_ROOT = Path("genes")
 DEFAULT_TEMPLATE = Path("templates/gene_hypothesis_deep_research.md")
+DEFAULT_FUNCTION_SUPPORT_TEMPLATE = Path("templates/function_support_deep_research.md")
+UNSPECIFIED_SOURCE = "Not supplied."
+LOCAL_EVIDENCE_MAX_CHARS_PER_FILE = 12000
+LOCAL_EVIDENCE_MAX_CHARS_TOTAL = 24000
 FOCUS_TYPES = {
     "existing_go_annotation_decision",
+    "function_assignment",
     "proposed_go_term",
     "computational_prediction",
     "core_function",
+    "function_support",
     "free_text",
 }
 FOCUS_TYPE_CHOICES = sorted(
@@ -215,6 +221,156 @@ def format_reference_context(reference_ids: Sequence[str]) -> str:
     return "\n".join(f"- {ref}" for ref in reference_ids)
 
 
+def is_bioinformatics_path(path: Path) -> bool:
+    """Return whether a local path is a bioinformatics analysis artifact."""
+    return any(
+        part == "bioinformatics" or part.endswith("-bioinformatics")
+        for part in path.parts
+    )
+
+
+def resolve_local_bioinformatics_reference(
+    reference_id: str, genes_root: Path
+) -> Path | None:
+    """Resolve file: references that point to local bioinformatics evidence."""
+    if not reference_id.startswith("file:"):
+        return None
+    raw_path = reference_id.removeprefix("file:").strip()
+    if not raw_path:
+        return None
+
+    reference_path = Path(raw_path)
+    candidates: list[Path]
+    if reference_path.is_absolute():
+        candidates = [reference_path]
+    else:
+        candidates = [genes_root / reference_path, reference_path]
+
+    for candidate in candidates:
+        if (
+            candidate.exists()
+            and candidate.is_file()
+            and is_bioinformatics_path(candidate)
+        ):
+            return candidate
+    return None
+
+
+def read_bounded_text(path: Path, max_chars: int) -> tuple[str, bool]:
+    """Read a text file with a character cap; return text and truncation flag."""
+    text = path.read_text(encoding="utf-8", errors="replace")
+    if len(text) <= max_chars:
+        return text.rstrip(), False
+    return text[:max_chars].rstrip(), True
+
+
+def format_local_bioinformatics_context(
+    reference_ids: Sequence[str],
+    *,
+    genes_root: Path,
+    max_chars_per_file: int = LOCAL_EVIDENCE_MAX_CHARS_PER_FILE,
+    max_chars_total: int = LOCAL_EVIDENCE_MAX_CHARS_TOTAL,
+) -> str:
+    """Expand cited local bioinformatics reports for post-run comparison."""
+    included: list[str] = []
+    used_chars = 0
+    seen_paths: set[Path] = set()
+
+    for reference_id in reference_ids:
+        path = resolve_local_bioinformatics_reference(reference_id, genes_root)
+        if path is None:
+            continue
+        resolved = path.resolve()
+        if resolved in seen_paths:
+            continue
+        seen_paths.add(resolved)
+
+        remaining = max_chars_total - used_chars
+        if remaining <= 0:
+            break
+        limit = min(max_chars_per_file, remaining)
+        text, truncated = read_bounded_text(path, limit)
+        used_chars += len(text)
+        truncation_note = (
+            f"Included first {len(text)} characters; file was truncated for prompt size."
+            if truncated
+            else "Included full local report."
+        )
+        included.append(
+            "\n".join(
+                [
+                    f"### {reference_id}",
+                    f"- Local path: `{path}`",
+                    f"- Inclusion: {truncation_note}",
+                    "",
+                    "```markdown",
+                    text,
+                    "```",
+                ]
+            )
+        )
+
+    if not included:
+        return (
+            "No cited local bioinformatics `RESULTS.md` or analysis artifact was "
+            "available for post-run comparison."
+        )
+    return "\n\n".join(included)
+
+
+def is_local_bioinformatics_reference(reference_id: str, genes_root: Path) -> bool:
+    """Return whether a reference id points to a local bioinformatics artifact."""
+    if not reference_id.startswith("file:"):
+        return False
+    raw_path = reference_id.removeprefix("file:").strip()
+    if raw_path and is_bioinformatics_path(Path(raw_path)):
+        return True
+    return resolve_local_bioinformatics_reference(reference_id, genes_root) is not None
+
+
+def visible_reference_ids(
+    reference_ids: Sequence[str], *, genes_root: Path
+) -> list[str]:
+    """Remove local bioinformatics references from provider-visible context."""
+    return [
+        reference_id
+        for reference_id in reference_ids
+        if not is_local_bioinformatics_reference(reference_id, genes_root)
+    ]
+
+
+def redact_local_bioinformatics_context(value: Any, *, genes_root: Path) -> Any:
+    """Remove local bioinformatics references from YAML sent to providers."""
+    if isinstance(value, str):
+        return None if is_local_bioinformatics_reference(value, genes_root) else value
+    if isinstance(value, list):
+        redacted_list = []
+        for item in value:
+            if (
+                isinstance(item, Mapping)
+                and is_local_bioinformatics_reference(
+                    str(item.get("reference_id") or ""), genes_root
+                )
+            ):
+                continue
+            redacted = redact_local_bioinformatics_context(item, genes_root=genes_root)
+            if redacted is not None:
+                redacted_list.append(redacted)
+        return redacted_list
+    if isinstance(value, Mapping):
+        return {
+            key: redacted
+            for key, item in value.items()
+            if (
+                redacted := redact_local_bioinformatics_context(
+                    item, genes_root=genes_root
+                )
+            )
+            is not None
+        }
+    return value
+
+
 def format_annotation_context(annotation: Mapping[str, Any]) -> str:
     review = as_mapping(annotation.get("review"))
     term = as_mapping(annotation.get("term"))
@@ -311,6 +467,15 @@ def core_function_hypothesis(gene_symbol: str, core_function: Mapping[str, Any])
     if description:
         return f"{lead} Current rationale: {description}"
     return lead
+
+
+def function_assignment_hypothesis(
+    gene_symbol: str, annotation: Mapping[str, Any]
+) -> str:
+    term = as_mapping(annotation.get("term"))
+    negated = bool(annotation.get("negated"))
+    relation = "does not have" if negated else "has"
+    return f"{gene_symbol} {relation} {term_label(term)}."
 
 
 def proposed_term_hypothesis(
@@ -558,6 +723,244 @@ def records_from_predictions(
     return uniquify_records(records)
 
 
+def annotation_independent_literature_refs(annotation: Mapping[str, Any]) -> list[str]:
+    """Return PMID/DOI refs that *independently* support an annotation.
+
+    "Independent" means a literature citation other than the annotation's own
+    ``original_reference_id`` (for an IBA that is the PANTHER ``GO_REF``). These
+    are the refs counted as independent support in
+    ``scripts/analyze_iba_support.py``.
+    """
+    original = str(annotation.get("original_reference_id") or "").strip()
+    refs: list[str] = []
+
+    def consider(ref: Any) -> None:
+        value = str(ref or "").strip()
+        if not (value.startswith("PMID:") or value.startswith("DOI:")):
+            return
+        if value == original or value in refs:
+            return
+        refs.append(value)
+
+    for support in annotation.get("supported_by") or []:
+        if isinstance(support, Mapping):
+            consider(support.get("reference_id"))
+    review = as_mapping(annotation.get("review"))
+    for support in review.get("supported_by") or []:
+        if isinstance(support, Mapping):
+            consider(support.get("reference_id"))
+    for ref in review.get("additional_reference_ids") or []:
+        consider(ref)
+    return refs
+
+
+def function_support_hypothesis(gene_symbol: str, term: Mapping[str, Any]) -> str:
+    """Neutral gene-function hypothesis derived from a GO term.
+
+    Kept concise and biology-forward: retrieval providers (e.g. asta) use the
+    rendered prompt as a literal, length-limited search query, so filler and
+    ontology meta-vocabulary degrade recall. The support-finding *objective*
+    (find independent evidence, expect false positives, quote verbatim snippets)
+    lives in the template, not here.
+    """
+    label = term_label(term)
+    if label:
+        return f"{gene_symbol} has {label}."
+    return f"A specific molecular function or biological role should be assigned to {gene_symbol}."
+
+
+def _neutral_annotation_context(annotation: Mapping[str, Any]) -> tuple[dict[str, Any], str]:
+    """Build a blinded (no prior review decision) context for an annotation.
+
+    Mirrors :func:`function_assignment_record` so a support search is not biased
+    by the existing curation action.
+    """
+    term = as_mapping(annotation.get("term"))
+    neutral_context: dict[str, Any] = {
+        "term": annotation.get("term"),
+        "evidence_type": annotation.get("evidence_type"),
+        "original_reference_id": annotation.get("original_reference_id"),
+    }
+    lines = [
+        f"- Term: {term_label(term) or 'not specified'}",
+        f"- Existing evidence type: {annotation.get('evidence_type') or 'not specified'}",
+        f"- Original reference: {annotation.get('original_reference_id') or 'not specified'}",
+    ]
+    if annotation.get("negated") is not None:
+        neutral_context["negated"] = annotation.get("negated")
+        if annotation.get("negated"):
+            lines.append("- Existing annotation is negated: true")
+    if annotation.get("isoform") is not None:
+        neutral_context["isoform"] = annotation.get("isoform")
+        lines.append(f"- Isoform: {annotation['isoform']}")
+    return neutral_context, "\n".join(lines)
+
+
+def function_support_record_from_annotation(
+    *,
+    organism: str,
+    gene: str,
+    gene_symbol: str,
+    taxon_id: str,
+    taxon_label: str,
+    annotation: Mapping[str, Any],
+    source_selector: str,
+    source_file: Path | None,
+) -> GeneHypothesisRecord:
+    """Build a neutral function-support record from an existing annotation."""
+    term = as_mapping(annotation.get("term"))
+    neutral_context, term_context = _neutral_annotation_context(annotation)
+    return make_record(
+        organism=organism,
+        gene=gene,
+        gene_symbol=gene_symbol,
+        taxon_id=taxon_id,
+        taxon_label=taxon_label,
+        focus_type="function_support",
+        slug=f"function-support-{term_slug(term)}",
+        hypothesis_text=function_support_hypothesis(gene_symbol, term),
+        term_context=term_context,
+        reference_ids=collect_reference_ids(annotation),
+        source_file=source_file,
+        source_selector=source_selector,
+        source_context=neutral_context,
+    )
+
+
+def iba_support_records(
+    genes_root: Path,
+    organism: str,
+    gene: str,
+    *,
+    only_unsupported: bool = True,
+) -> list[GeneHypothesisRecord]:
+    """Thin IBA wrapper: feed each IBA annotation into the function-support flow.
+
+    Produces one neutral ``function_support`` record per IBA annotation. With
+    ``only_unsupported`` (the default), IBAs that already carry independent
+    PMID/DOI support are skipped, focusing the run on annotations still needing
+    confirmation.
+    """
+    gene_dir = gene_dir_for(genes_root, organism, gene)
+    review_path = review_file_for(gene_dir, gene)
+    if not review_path.exists():
+        return []
+    data = load_yaml(review_path)
+    gene_symbol, taxon_id, taxon_label = gene_metadata(data, gene)
+    records: list[GeneHypothesisRecord] = []
+    for index, annotation in enumerate(data.get("existing_annotations") or [], start=1):
+        if not isinstance(annotation, Mapping):
+            continue
+        if str(annotation.get("evidence_type") or "").upper() != "IBA":
+            continue
+        if only_unsupported and annotation_independent_literature_refs(annotation):
+            continue
+        records.append(
+            function_support_record_from_annotation(
+                organism=organism,
+                gene=gene,
+                gene_symbol=gene_symbol,
+                taxon_id=taxon_id,
+                taxon_label=taxon_label,
+                annotation=annotation,
+                source_selector=f"existing_annotations[{index}]",
+                source_file=review_path,
+            )
+        )
+    return uniquify_records(records)
+
+
+def function_support_record_from_args(args: argparse.Namespace) -> GeneHypothesisRecord:
+    """Build a single function-support record from CLI args.
+
+    Accepts exactly one of: a free-text ``--hypothesis``, an
+    ``--annotation-term-id`` (neutralised from the gene review), or a standalone
+    ``--term-id`` (with optional ``--term-label``).
+    """
+    selectors = [
+        bool(args.hypothesis),
+        args.annotation_term_id is not None,
+        args.term_id is not None,
+    ]
+    if sum(selectors) != 1:
+        raise ValueError(
+            "Specify exactly one of --hypothesis, --annotation-term-id, or --term-id."
+        )
+
+    gene_dir = gene_dir_for(args.genes_root, args.organism, args.gene)
+    review_path = review_file_for(gene_dir, args.gene)
+    predictions_path = predictions_file_for(gene_dir, args.gene)
+    metadata: Mapping[str, Any] = {}
+    if review_path.exists():
+        metadata = load_yaml(review_path)
+    elif predictions_path.exists():
+        metadata = load_yaml(predictions_path)
+    gene_symbol, taxon_id, taxon_label = gene_metadata(metadata, args.gene)
+    source_file = review_path if review_path.exists() else None
+
+    if args.annotation_term_id is not None:
+        record = select_record(
+            candidate_records(args.genes_root, args.organism, args.gene),
+            annotation_term_id=args.annotation_term_id,
+        )
+        return function_support_record_from_annotation(
+            organism=record.organism,
+            gene=record.gene,
+            gene_symbol=record.gene_symbol,
+            taxon_id=record.taxon_id,
+            taxon_label=record.taxon_label,
+            annotation=record.source_context,
+            source_selector=record.source_selector,
+            source_file=record.source_file,
+        )
+
+    if args.hypothesis:
+        term_context_lines: list[str] = []
+        if args.term_id or args.term_label:
+            term_context_lines.append(
+                f"- Term: {args.term_label or 'not specified'} ({args.term_id or 'no id'})"
+            )
+        term_context_lines.extend(f"- {item}" for item in args.context)
+        return make_record(
+            organism=args.organism,
+            gene=args.gene,
+            gene_symbol=gene_symbol,
+            taxon_id=taxon_id,
+            taxon_label=taxon_label,
+            focus_type="function_support",
+            slug=args.slug or f"function-support-{args.hypothesis}",
+            hypothesis_text=args.hypothesis,
+            term_context="\n".join(term_context_lines),
+            reference_ids=args.reference_id,
+            source_file=source_file,
+            source_selector="free-text",
+            source_context={
+                "hypothesis": args.hypothesis,
+                "term_id": args.term_id,
+                "term_label": args.term_label,
+                "context": args.context,
+                "reference_id": args.reference_id,
+            },
+        )
+
+    term = {"id": args.term_id, "label": args.term_label or ""}
+    return make_record(
+        organism=args.organism,
+        gene=args.gene,
+        gene_symbol=gene_symbol,
+        taxon_id=taxon_id,
+        taxon_label=taxon_label,
+        focus_type="function_support",
+        slug=args.slug or f"function-support-{term_slug(term)}",
+        hypothesis_text=function_support_hypothesis(gene_symbol, term),
+        term_context=f"- Term: {term_label(term)}",
+        reference_ids=args.reference_id,
+        source_file=source_file,
+        source_selector=f"term:{args.term_id}",
+        source_context={"term": term},
+    )
+
+
 def candidate_records(genes_root: Path, organism: str, gene: str) -> list[GeneHypothesisRecord]:
     gene_dir = gene_dir_for(genes_root, organism, gene)
     review_path = review_file_for(gene_dir, gene)
@@ -576,6 +979,120 @@ def candidate_records(genes_root: Path, organism: str, gene: str) -> list[GeneHy
                 review_fallback_path=review_path,
             ),
         ]
+    )
+
+
+def core_function_records(
+    records: Sequence[GeneHypothesisRecord],
+) -> list[GeneHypothesisRecord]:
+    return [record for record in records if record.focus_type == "core_function"]
+
+
+def reference_ids_from_context(reference_context: str) -> list[str]:
+    refs: list[str] = []
+    for line in reference_context.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("- "):
+            continue
+        ref = stripped[2:].strip()
+        if ref and ref not in refs:
+            refs.append(ref)
+    return refs
+
+
+def combined_core_function_record(
+    records: Sequence[GeneHypothesisRecord],
+    *,
+    slug: str = "combined-core-functions",
+) -> GeneHypothesisRecord:
+    core_records = core_function_records(records)
+    if not core_records:
+        raise ValueError("No core_functions records found for this gene.")
+
+    first = core_records[0]
+    hypothesis_lines = [
+        (
+            f"The current core-function model for {first.gene_symbol} should be evaluated "
+            "as a coherent curation model. Determine which activities/processes are primary "
+            "core functions, which are downstream or non-core, and whether the model should "
+            "be split, merged, or refined."
+        ),
+        "",
+        "Current core-function hypotheses:",
+    ]
+    term_context_lines = ["Current core-function records:"]
+    reference_ids: list[str] = []
+    source_contexts: list[Mapping[str, Any]] = []
+    source_selectors: list[str] = []
+    for index, record in enumerate(core_records, start=1):
+        hypothesis_lines.append(f"{index}. {record.hypothesis_text}")
+        term_context_lines.append(f"\n## Core function {index}: {record.source_selector}")
+        term_context_lines.append(record.term_context)
+        source_contexts.append(record.source_context)
+        source_selectors.append(record.source_selector)
+        for ref in reference_ids_from_context(record.reference_context):
+            if ref not in reference_ids:
+                reference_ids.append(ref)
+
+    return make_record(
+        organism=first.organism,
+        gene=first.gene,
+        gene_symbol=first.gene_symbol,
+        taxon_id=first.taxon_id,
+        taxon_label=first.taxon_label,
+        focus_type="core_function",
+        slug=slug,
+        hypothesis_text="\n".join(hypothesis_lines),
+        term_context="\n".join(term_context_lines),
+        reference_ids=reference_ids,
+        source_file=first.source_file,
+        source_selector=",".join(source_selectors),
+        source_context={"core_functions": source_contexts},
+    )
+
+
+def function_assignment_record(record: GeneHypothesisRecord) -> GeneHypothesisRecord:
+    """Convert an existing annotation decision into a neutral term hypothesis."""
+    if not record.source_selector.startswith("existing_annotations["):
+        raise ValueError(
+            "--as-function-hypothesis requires an existing annotation selector."
+        )
+    annotation = record.source_context
+    term = as_mapping(annotation.get("term"))
+    neutral_context: dict[str, Any] = {
+        "term": annotation.get("term"),
+        "evidence_type": annotation.get("evidence_type"),
+        "original_reference_id": annotation.get("original_reference_id"),
+    }
+    if annotation.get("negated") is not None:
+        neutral_context["negated"] = annotation.get("negated")
+    if annotation.get("isoform") is not None:
+        neutral_context["isoform"] = annotation.get("isoform")
+
+    term_context_lines = [
+        f"- Term: {term_label(term) or 'not specified'}",
+        f"- Evidence type: {annotation.get('evidence_type') or 'not specified'}",
+        f"- Original reference: {annotation.get('original_reference_id') or 'not specified'}",
+    ]
+    if annotation.get("negated"):
+        term_context_lines.append("- Existing annotation is negated: true")
+    if annotation.get("isoform"):
+        term_context_lines.append(f"- Isoform: {annotation['isoform']}")
+
+    return make_record(
+        organism=record.organism,
+        gene=record.gene,
+        gene_symbol=record.gene_symbol,
+        taxon_id=record.taxon_id,
+        taxon_label=record.taxon_label,
+        focus_type="function_assignment",
+        slug=f"function-hypothesis-{term_slug(term)}",
+        hypothesis_text=function_assignment_hypothesis(record.gene_symbol, annotation),
+        term_context="\n".join(term_context_lines),
+        reference_ids=collect_reference_ids(annotation),
+        source_file=record.source_file,
+        source_selector=f"{record.source_selector}.function_hypothesis",
+        source_context=neutral_context,
     )
 
 
@@ -637,21 +1154,44 @@ def build_provider_args(provider: str) -> list[str]:
     return ["--provider", normalized]
 
 
-def template_vars(record: GeneHypothesisRecord) -> dict[str, str]:
+def template_vars(record: GeneHypothesisRecord, *, genes_root: Path) -> dict[str, str]:
+    reference_ids = reference_ids_from_context(record.reference_context)
+    provider_reference_ids = visible_reference_ids(reference_ids, genes_root=genes_root)
+    provider_source_context = redact_local_bioinformatics_context(
+        record.source_context,
+        genes_root=genes_root,
+    )
+    uniprot_accession = record.gene
+    if record.source_file and record.source_file.exists():
+        source_data = load_yaml(record.source_file)
+        uniprot_accession = str(source_data.get("id") or record.gene)
+    else:
+        # Free-text hypotheses carry no source record, so fall back to the gene
+        # review's own UniProt accession (`id:`) rather than the directory name,
+        # which is often a locus tag (e.g. MJ1511) that is not a real accession.
+        review_path = genes_root / record.organism / record.gene / f"{record.gene}-ai-review.yaml"
+        if review_path.exists():
+            review_data = load_yaml(review_path)
+            uniprot_accession = str(review_data.get("id") or record.gene)
+
     return {
         "organism": record.organism,
         "gene": record.gene,
         "gene_symbol": record.gene_symbol,
+        "uniprot_accession": uniprot_accession,
         "taxon_id": record.taxon_id,
         "taxon_label": record.taxon_label,
         "focus_type": record.focus_type,
         "hypothesis_slug": record.slug,
         "hypothesis_text": record.hypothesis_text,
         "term_context": record.term_context,
-        "reference_context": record.reference_context,
-        "source_file": str(record.source_file or ""),
-        "source_selector": record.source_selector,
-        "source_context_yaml": dump_context_yaml(record.source_context),
+        "reference_context": format_reference_context(provider_reference_ids),
+        # Empty substitutions leave trailing spaces in Markdown template lines such as
+        # ``- **Source file:** {source_file}``, which then propagate into every saved
+        # provider report. Use an explicit value for free-text hypotheses instead.
+        "source_file": str(record.source_file) if record.source_file else UNSPECIFIED_SOURCE,
+        "source_selector": record.source_selector or UNSPECIFIED_SOURCE,
+        "source_context_yaml": dump_context_yaml(provider_source_context),
     }
 
 
@@ -675,7 +1215,7 @@ def build_command(
         "--template",
         str(template),
     ]
-    for key, value in template_vars(record).items():
+    for key, value in template_vars(record, genes_root=genes_root).items():
         command.extend(["--var", f"{key}={value}"])
     command.extend(build_provider_args(normalized))
     command.extend(
@@ -929,6 +1469,7 @@ def direct_record_from_args(args: argparse.Namespace) -> GeneHypothesisRecord:
     elif predictions_path.exists():
         metadata = load_yaml(predictions_path)
     gene_symbol, taxon_id, taxon_label = gene_metadata(metadata, args.gene)
+    source_file = review_path if review_path.exists() else None
 
     term_context_lines = []
     if args.term_id or args.term_label:
@@ -948,6 +1489,8 @@ def direct_record_from_args(args: argparse.Namespace) -> GeneHypothesisRecord:
         hypothesis_text=args.hypothesis,
         term_context="\n".join(term_context_lines),
         reference_ids=args.reference_id,
+        source_file=source_file,
+        source_selector="free-text",
         source_context={
             "hypothesis": args.hypothesis,
             "focus_type": normalize_focus_type(args.focus_type),
@@ -971,7 +1514,7 @@ def selected_or_direct_record(args: argparse.Namespace) -> GeneHypothesisRecord:
     ]
     if any(value is not None for value in selector_values):
         records = candidate_records(args.genes_root, args.organism, args.gene)
-        return select_record(
+        record = select_record(
             records,
             slug=args.record_slug,
             annotation_index=args.annotation_index,
@@ -980,6 +1523,13 @@ def selected_or_direct_record(args: argparse.Namespace) -> GeneHypothesisRecord:
             prediction_term_id=args.prediction_term_id,
             core_function_index=args.core_function_index,
             proposed_term_index=args.proposed_term_index,
+        )
+        if args.as_function_hypothesis:
+            return function_assignment_record(record)
+        return record
+    if args.as_function_hypothesis:
+        raise ValueError(
+            "--as-function-hypothesis requires an existing annotation selector."
         )
     return direct_record_from_args(args)
 
@@ -991,9 +1541,64 @@ def print_run_result(result: RunResult) -> None:
     )
     print(f"output={result.output_file}")
     print(f"citations={result.citations_file}")
+    if result.status == "DRY_RUN":
+        citations_status = "planned"
+    elif result.citations_file.exists() and result.citations_file.stat().st_size > 0:
+        citations_status = "present"
+    else:
+        citations_status = "missing"
+    print(f"citations_status={citations_status}")
     print(f"command={shell_join(result.command)}")
     if result.detail:
         print(f"detail={result.detail}")
+
+
+def run_batch(
+    records: Sequence[GeneHypothesisRecord],
+    *,
+    provider: str,
+    genes_root: Path,
+    template: Path,
+    extra_args: Sequence[str],
+    timeout_seconds: int,
+    dry_run: bool,
+    overwrite: bool,
+    stop_on_error: bool,
+) -> list[RunResult]:
+    results: list[RunResult] = []
+    for record in records:
+        result = run_record(
+            record,
+            provider=provider,
+            genes_root=genes_root,
+            template=template,
+            extra_args=extra_args,
+            timeout_seconds=timeout_seconds,
+            dry_run=dry_run,
+            overwrite=overwrite,
+        )
+        print_run_result(result)
+        results.append(result)
+        if stop_on_error and result.status.startswith(("ERROR_", "TIMEOUT", "MISSING_")):
+            break
+    return results
+
+
+def print_batch_summary(results: Sequence[RunResult]) -> None:
+    counts: dict[str, int] = {}
+    for result in results:
+        counts[result.status] = counts.get(result.status, 0) + 1
+    print("# batch_summary")
+    print(f"# records\t{len(results)}")
+    for status in sorted(counts):
+        print(f"# {status}\t{counts[status]}")
+
+
+def has_failed_result(results: Sequence[RunResult]) -> bool:
+    return any(
+        result.status.startswith(("ERROR_", "TIMEOUT", "MISSING_"))
+        for result in results
+    )
 
 
 def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
@@ -1089,10 +1694,132 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         type=int,
         help="Select proposed_new_terms[N] from the gene review, using 1-based indexing",
     )
+    run_parser.add_argument(
+        "--as-function-hypothesis",
+        action="store_true",
+        help=(
+            "Convert a selected existing annotation into a neutral 'gene has term' "
+            "hypothesis, withholding the prior review decision."
+        ),
+    )
     run_parser.add_argument("--template", type=Path, default=DEFAULT_TEMPLATE)
     run_parser.add_argument("--dry-run", action="store_true")
     run_parser.add_argument("--overwrite", action="store_true")
-    run_parser.add_argument("--timeout-seconds", type=int, default=5400)
+    run_parser.add_argument("--timeout-seconds", type=int, default=8100)
+
+    def add_run_options(subparser: argparse.ArgumentParser) -> None:
+        subparser.add_argument("provider", help="Deep research provider")
+        subparser.add_argument("--template", type=Path, default=DEFAULT_TEMPLATE)
+        subparser.add_argument("--dry-run", action="store_true")
+        subparser.add_argument("--overwrite", action="store_true")
+        subparser.add_argument("--timeout-seconds", type=int, default=8100)
+
+    all_core_parser = subparsers.add_parser(
+        "run-all-core",
+        help="Run deep research for each core_functions[*] record in one gene review.",
+    )
+    add_gene_args(all_core_parser)
+    add_run_options(all_core_parser)
+    all_core_parser.add_argument(
+        "--stop-on-error",
+        action="store_true",
+        help="Stop after the first failed core-function run.",
+    )
+
+    combined_core_parser = subparsers.add_parser(
+        "run-combined-core",
+        help="Run one synthesis query over all core_functions[*] records in one gene review.",
+    )
+    add_gene_args(combined_core_parser)
+    add_run_options(combined_core_parser)
+    combined_core_parser.add_argument(
+        "--slug",
+        default="combined-core-functions",
+        help="Output slug for the combined core-function query.",
+    )
+
+    function_support_parser = subparsers.add_parser(
+        "run-function-support",
+        help=(
+            "Find independent literature support for a gene-function hypothesis "
+            "(free text, an existing annotation, or a GO term)."
+        ),
+    )
+    add_gene_args(function_support_parser)
+    function_support_parser.add_argument("provider", help="Deep research provider")
+    function_support_parser.add_argument(
+        "--hypothesis",
+        help="Free-text gene-function hypothesis to find support for.",
+    )
+    function_support_parser.add_argument(
+        "--annotation-term-id",
+        help="Derive a neutral hypothesis from an existing annotation by GO term id.",
+    )
+    function_support_parser.add_argument(
+        "--term-id",
+        help="Derive a neutral 'GENE has TERM' hypothesis from a GO term id.",
+    )
+    function_support_parser.add_argument("--term-label", help="Label for --term-id.")
+    function_support_parser.add_argument(
+        "--context",
+        action="append",
+        default=[],
+        help="Extra context line for the hypothesis (repeatable).",
+    )
+    function_support_parser.add_argument(
+        "--reference-id",
+        action="append",
+        default=[],
+        help="Seed reference id to include as context (repeatable).",
+    )
+    function_support_parser.add_argument("--slug", help="Override the output slug.")
+    function_support_parser.add_argument(
+        "--template", type=Path, default=DEFAULT_FUNCTION_SUPPORT_TEMPLATE
+    )
+    function_support_parser.add_argument("--dry-run", action="store_true")
+    function_support_parser.add_argument("--overwrite", action="store_true")
+    function_support_parser.add_argument("--timeout-seconds", type=int, default=5400)
+
+    list_iba_parser = subparsers.add_parser(
+        "list-iba",
+        help="List IBA annotations that are candidates for support-finding research.",
+    )
+    add_gene_args(list_iba_parser)
+    list_iba_parser.add_argument("--provider")
+    list_iba_parser.add_argument("--missing-provider")
+    list_iba_parser.add_argument(
+        "--include-supported",
+        action="store_true",
+        help="Also list IBAs that already have independent PMID/DOI support.",
+    )
+
+    iba_parser = subparsers.add_parser(
+        "run-iba-support",
+        help=(
+            "Thin IBA wrapper around run-function-support: research each IBA "
+            "annotation as a gene-function hypothesis."
+        ),
+    )
+    add_gene_args(iba_parser)
+    iba_parser.add_argument("provider", help="Deep research provider")
+    iba_parser.add_argument("--template", type=Path, default=DEFAULT_FUNCTION_SUPPORT_TEMPLATE)
+    iba_parser.add_argument("--dry-run", action="store_true")
+    iba_parser.add_argument("--overwrite", action="store_true")
+    iba_parser.add_argument("--timeout-seconds", type=int, default=5400)
+    iba_parser.add_argument(
+        "--include-supported",
+        action="store_true",
+        help="Also research IBAs that already have independent PMID/DOI support.",
+    )
+    iba_parser.add_argument(
+        "--annotation-term-id",
+        help="Restrict to a single IBA annotation by GO term id (e.g. GO:0005737).",
+    )
+    iba_parser.add_argument(
+        "--stop-on-error",
+        action="store_true",
+        help="Stop after the first failed IBA-support run.",
+    )
 
     args = parser.parse_args(argv)
     args.research_args = research_args
@@ -1126,6 +1853,109 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
             print_run_result(result)
             return 1 if result.status.startswith(("ERROR_", "TIMEOUT", "MISSING_")) else 0
+
+        if args.command == "run-all-core":
+            records = core_function_records(
+                candidate_records(args.genes_root, args.organism, args.gene)
+            )
+            if not records:
+                raise ValueError("No core_functions records found for this gene.")
+            results = run_batch(
+                records,
+                provider=args.provider,
+                genes_root=args.genes_root,
+                template=args.template,
+                extra_args=args.research_args,
+                timeout_seconds=args.timeout_seconds,
+                dry_run=args.dry_run,
+                overwrite=args.overwrite,
+                stop_on_error=args.stop_on_error,
+            )
+            print_batch_summary(results)
+            return 1 if has_failed_result(results) else 0
+
+        if args.command == "run-combined-core":
+            record = combined_core_function_record(
+                candidate_records(args.genes_root, args.organism, args.gene),
+                slug=args.slug,
+            )
+            result = run_record(
+                record,
+                provider=args.provider,
+                genes_root=args.genes_root,
+                template=args.template,
+                extra_args=args.research_args,
+                timeout_seconds=args.timeout_seconds,
+                dry_run=args.dry_run,
+                overwrite=args.overwrite,
+            )
+            print_run_result(result)
+            return 1 if result.status.startswith(("ERROR_", "TIMEOUT", "MISSING_")) else 0
+
+        if args.command == "run-function-support":
+            record = function_support_record_from_args(args)
+            result = run_record(
+                record,
+                provider=args.provider,
+                genes_root=args.genes_root,
+                template=args.template,
+                extra_args=args.research_args,
+                timeout_seconds=args.timeout_seconds,
+                dry_run=args.dry_run,
+                overwrite=args.overwrite,
+            )
+            print_run_result(result)
+            return 1 if result.status.startswith(("ERROR_", "TIMEOUT", "MISSING_")) else 0
+
+        if args.command == "list-iba":
+            records = iba_support_records(
+                args.genes_root,
+                args.organism,
+                args.gene,
+                only_unsupported=not args.include_supported,
+            )
+            list_records(
+                records,
+                genes_root=args.genes_root,
+                provider=args.provider,
+                missing_provider=args.missing_provider,
+            )
+            return 0
+
+        if args.command == "run-iba-support":
+            records = iba_support_records(
+                args.genes_root,
+                args.organism,
+                args.gene,
+                only_unsupported=not args.include_supported,
+            )
+            if args.annotation_term_id:
+                wanted = args.annotation_term_id.casefold()
+                records = [
+                    record
+                    for record in records
+                    if isinstance(record.source_context.get("term"), Mapping)
+                    and str(record.source_context["term"].get("id") or "").casefold()
+                    == wanted
+                ]
+            if not records:
+                raise ValueError(
+                    "No matching IBA annotations found "
+                    "(use --include-supported to include already-supported IBAs)."
+                )
+            results = run_batch(
+                records,
+                provider=args.provider,
+                genes_root=args.genes_root,
+                template=args.template,
+                extra_args=args.research_args,
+                timeout_seconds=args.timeout_seconds,
+                dry_run=args.dry_run,
+                overwrite=args.overwrite,
+                stop_on_error=args.stop_on_error,
+            )
+            print_batch_summary(results)
+            return 1 if has_failed_result(results) else 0
     except (FileNotFoundError, ValueError) as err:
         print(f"error: {err}", file=sys.stderr)
         return 2

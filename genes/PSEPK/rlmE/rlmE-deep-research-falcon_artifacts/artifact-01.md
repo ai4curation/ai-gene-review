@@ -1,0 +1,14 @@
+| System/organism | Perturbation | Quantitative outcome | Assay/condition | Citation (include DOI) |
+|---|---|---|---|---|
+| *Escherichia coli* | ΔrlmE (single knockout) | Growth rate decreased by ~2–4-fold | Growth phenotype summarized in a 2024 study of 23S rRNA modification enzymes around the peptidyl transferase center | Ero et al. 2024, DOI: 10.1093/nar/gkae222 (pqac-00000003) |
+| *Escherichia coli* | Absence of RlmE | Cold-sensitive growth; defect is more pronounced at lower temperature | Ribosome biogenesis/growth analysis, including comparison at 30 °C vs 37 °C | Ero et al. 2024, DOI: 10.1093/nar/gkae222 (pqac-00000004, pqac-00000007) |
+| *Escherichia coli* | ΔrlmE / rrmJ deletion | Accumulation of free 30S and 50S subunits at the expense of 70S ribosomes; decreased translational efficiency and growth disadvantage | Ribosome profile and translation phenotype in rrmJ deletion strains | Hager et al. 2004, DOI: 10.1128/JB.186.19.6634-6642.2004 (pqac-00000000) |
+| *Escherichia coli* | Absence of RlmE | Accumulation of incompletely assembled LSU particles; 23S rRNA 5′ ends remain extended by +3 or +7 nt; 45S precursor can lack bL36 | Late LSU assembly and 23S rRNA processing analysis | Ero et al. 2024, DOI: 10.1093/nar/gkae222 (pqac-00000004, pqac-00000006) |
+| *Vibrio cholerae* | rlmE/rrmJ inactivation | CIP: +825, *P* = .003 | TN-seq after 16 generations in sub-MIC ciprofloxacin | Babosan et al. 2022, DOI: 10.1093/femsml/uqac019 (pqac-00000010) |
+| *Vibrio cholerae* | rlmE/rrmJ inactivation | TOB: +1.2, NS | TN-seq after 16 generations in sub-MIC tobramycin | Babosan et al. 2022, DOI: 10.1093/femsml/uqac019 (pqac-00000010) |
+| *Vibrio cholerae* | RNA modification genes (context, not specific to rlmE) | 2.43× enrichment, *P* = 4.56 × 10⁻⁴; 23/80 hits for TOB | TN-seq enrichment of RNA modification genes affecting fitness under sub-MIC tobramycin | Babosan et al. 2022, DOI: 10.1093/femsml/uqac019 (pqac-00000013) |
+| *Vibrio cholerae* | tRNA modification genes (context, not specific to rlmE) | 1.57× enrichment, *P* = 2.3 × 10⁻²; 20/48 hits for CIP | TN-seq enrichment of tRNA/RNA modification genes affecting fitness under sub-MIC ciprofloxacin | Babosan et al. 2022, DOI: 10.1093/femsml/uqac019 (pqac-00000013) |
+| *Escherichia coli* | Δ10 strain lacking 10 23S rRNA modification enzymes around the PTC (context including RlmE pathway) | Strain is viable but shows severely compromised growth and ribosome assembly, especially at lower temperature | Multi-gene deletion analysis of PTC-region modification enzymes | Ero et al. 2024, DOI: 10.1093/nar/gkae222 (pqac-00000005) |
+
+
+*Table: This table compiles the main quantitative and phenotype-level findings relevant to RlmE/FtsJ/RrmJ, including direct ΔrlmE effects in *E. coli* and antibiotic-fitness data from *V. cholerae*. It is useful for functional annotation because it separates direct enzyme-linked evidence from broader RNA-modification context.*

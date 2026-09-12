@@ -7,6 +7,12 @@ on:  # yamllint disable-line rule:truthy
   push:
     branches: [main]
   pull_request:
+  # Weekly full re-validation safety net: per-PR scoping can miss breakage caused by
+  # upstream ontology drift (e.g. a GO term becoming obsolete), so validate everything
+  # once a week and on manual dispatch.
+  schedule:
+    - cron: '17 6 * * 1'
+  workflow_dispatch:
 
 env:
   FORCE_COLOR: "1" # Make tools pretty.
@@ -24,22 +30,105 @@ jobs:
 
     steps:
 
+      # Ontology SQLite DBs (GO, CHEBI, ...) are large; free space before downloads.
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: false
+          large-packages: false
+
       # https://github.com/actions/checkout
       - name: Check out repository
-        uses: actions/checkout@v4.2.2
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
+          fetch-depth: 1
 
       - name: Check for source changes
         uses: dorny/paths-filter@v3
         id: changes
         with:
+          list-files: shell
           filters: |
             src:
               - 'src/**'
               - 'tests/**'
               - 'pyproject.toml'
               - 'uv.lock'
+              # projects/ is here because tests/test_project_frontmatter.py
+              # validates it. Without this the check can only ever fire on a PR
+              # that also touches src/, which project-doc PRs do not -- so it
+              # was structurally unable to catch what it exists to catch, and a
+              # doc with four out-of-vocabulary tags merged green.
+              - 'projects/**'
+            # The agentic-automation surface: workflow definitions, the central
+            # agent config, the composite actions, and the deterministic guard
+            # scripts. Cheap to check, and not otherwise covered when a PR only
+            # touches .github/.
+            agents:
+              - '.github/workflows/**'
+              - '.github/actions/**'
+              - '.github/scripts/**'
+              - '.github/agent-config.yaml'
+              - '.github/cron-profiles.yaml'
+              - 'scripts/auto_merge_ready_prs.py'
+              - 'scripts/apply_cron_profile.py'
+              - 'tests/js/**'
+            genes:
+              - 'genes/**/*-ai-review.yaml'
+            predictions:
+              - 'genes/**/*-predictions-review.yaml'
+            modules:
+              - 'modules/**/*.yaml'
+              - 'modules/**/*.yml'
+            # The curated dirs are here because the history layout test asserts
+            # every record's target.path exists on disk -- an invariant a
+            # gene/module/gocam/project rename or delete can break without
+            # touching history/ itself.
+            history:
+              - 'history/**/*.yaml'
+              - 'src/ai_gene_review/schema/history.yaml'
+              - 'scripts/new_history.py'
+              - 'scripts/backfill_history_from_prs.py'
+              - 'tests/test_history_schema.py'
+              - 'tests/test_backfill_history.py'
+              - 'genes/**'
+              - 'modules/**'
+              - 'gocams/**'
+              - 'projects/**'
+            families:
+              - 'interpro/panther/**/*-review.yaml'
+            # Anything that can change validation behaviour for ALL genes. If any of
+            # these change we cannot trust per-gene scoping, so we validate everything.
+            infra:
+              # This includes the history schema, so editing it triggers full
+              # validate-all it cannot affect. Do NOT "fix" that with a leading-!
+              # entry: dorny/paths-filter compiles each pattern independently
+              # (picomatch) and combines them with some(), so a negated pattern
+              # matches every OTHER path and turns the filter on for every PR.
+              # Real exclusions need predicate-quantifier: every, which would
+              # change the semantics of all the multi-pattern filters above.
+              - 'src/ai_gene_review/schema/**'
+              - 'src/ai_gene_review/validation/**'
+              - 'src/ai_gene_review/cli.py'
+              - 'src/ai_gene_review/tools/validate_pmid_references.py'
+              - 'conf/**'
+              - 'scripts/run_term_validator.sh'
+              - 'scripts/run_reference_validator.sh'
+              - 'justfile'
+              - 'project.justfile'
+
+      - name: Fetch benchmark baseline commit
+        if: steps.changes.outputs.src == 'true'
+        shell: bash
+        run: |
+          benchmark_baseline="$(sed -n 's/^baseline_commit: //p' projects/BIOREASON_COMPARISON/benchmark-policy.yaml)"
+          if [[ ! "$benchmark_baseline" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "Invalid BioReason benchmark baseline_commit: $benchmark_baseline" >&2
+            exit 1
+          fi
+          # persist-credentials is disabled; this targeted fetch uses public read access.
+          git fetch --no-tags --depth=1 origin "$benchmark_baseline"
 
       # https://github.com/astral-sh/setup-uv
       - name: Install uv
@@ -51,7 +140,7 @@ jobs:
 
       # https://github.com/actions/setup-python
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5.6.0
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -62,12 +151,172 @@ jobs:
       - name: Install project
         run: uv sync --dev
 
-      - name: Validate data
-        run: just validate-all
+      # Cache the oaklib ontology SQLite DBs so term validation does not re-download
+      # multi-GB GO/CHEBI/etc. every run. Weekly-rotating key keeps them reasonably fresh.
+      - name: Compute ontology cache week
+        id: ontoweek
+        run: echo "week=$(date -u +%Y%U)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache ontology databases
+        uses: actions/cache@v6
+        with:
+          path: ~/.data/oaklib
+          key: oaklib-${{ runner.os }}-${{ steps.ontoweek.outputs.week }}
+          restore-keys: |
+            oaklib-${{ runner.os }}-
+
+      # Residue validation resolves UniProt sequences. Caching them keeps
+      # validate-families from depending on UniProt being reachable on every run,
+      # which is what lets it stay scoped to gene changes as well as family ones.
+      # Same weekly rotation as above; sequences change far less often than that.
+      - name: Cache UniProt sequences
+        uses: actions/cache@v6
+        with:
+          path: .cache/uniprot_seq
+          key: uniprot-seq-${{ runner.os }}-${{ steps.ontoweek.outputs.week }}
+          restore-keys: |
+            uniprot-seq-${{ runner.os }}-
+
+      # Scope validation to what changed: a change to schema/validators/config could
+      # affect every gene (-> full validate-all); otherwise validate only changed genes.
+      - name: Validate gene reviews (scoped)
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "::notice::Scheduled/manual run -> validating ALL gene reviews."
+            just validate-all
+          elif [ "${{ steps.changes.outputs.infra }}" = "true" ]; then
+            echo "::notice::Validation infrastructure changed -> validating ALL gene reviews."
+            just validate-all
+          elif [ "${{ steps.changes.outputs.genes }}" = "true" ]; then
+            echo "::notice::Validating only changed gene reviews."
+            just validate-changed ${{ steps.changes.outputs.genes_files }}
+          else
+            echo "No gene-review or validation-infrastructure changes; skipping gene validation."
+          fi
+
+      - name: Validate changed prediction reviews and source evidence
+        if: steps.changes.outputs.predictions == 'true'
+        run: just validate-predictions ${{ steps.changes.outputs.predictions_files }}
+
+      - name: Upload prediction evidence validation
+        if: always() && steps.changes.outputs.predictions == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: prediction-evidence-validation
+          path: reports/prediction-evidence.json
+
+      # Module YAMLs are validated against the ModuleReview schema. They are not
+      # covered by validate-all (which is gene-review scoped), so validate them
+      # whenever a module changes, the schema/validators change, or on the weekly
+      # full run.
+      - name: Validate modules (scoped)
+        if: >-
+          github.event_name == 'schedule' ||
+          github.event_name == 'workflow_dispatch' ||
+          steps.changes.outputs.infra == 'true' ||
+          steps.changes.outputs.modules == 'true'
+        run: just validate-modules
+
+      # History records (append-only session provenance under history/, ported
+      # from dismech) validate against src/ai_gene_review/schema/history.yaml.
+      # Cheap, so run whenever they, their tooling, or the curated dirs whose
+      # paths the layout test checks change, or on the full pass.
+      - name: Validate history records (scoped)
+        if: >-
+          github.event_name == 'schedule' ||
+          github.event_name == 'workflow_dispatch' ||
+          steps.changes.outputs.infra == 'true' ||
+          steps.changes.outputs.history == 'true'
+        run: |
+          just validate-history-all
+          uv run pytest tests/test_history_schema.py tests/test_backfill_history.py -q
+
+      # Advisory-only nudge: if a PR edits curated content but adds no matching
+      # history/ record, warn so curation provenance keeps pace with content.
+      # See docs/history.md and `just new-history`. continue-on-error is what
+      # makes "advisory" true: without it a gh api hiccup (rate limit, fork-PR
+      # token scope, >3000-file PR) would fail an unrelated curation PR.
+      - name: Check curation history coverage
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          # GitHub's own PR file list reflects only what the PR itself changes
+          # (a local two-dot diff misblames main's newer commits on branches
+          # behind main). `status == "added"` replaces --diff-filter=A.
+          PR_FILES="repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files"
+          CHANGED=$(gh api --paginate "$PR_FILES" --jq '.[].filename')
+          ADDED_HISTORY=$(gh api --paginate "$PR_FILES" \
+            --jq '.[] | select(.status == "added") | .filename' \
+            | grep -E '^history/.*\.yaml$' || true)
+
+          # Curated content per docs/history.md: gene reviews, modules (nested
+          # included), GO-CAM reviews, and project pages.
+          CURATED=$(echo "$CHANGED" \
+            | grep -E '^(genes/[^/]+/[^/]+/[^/]+-ai-review\.yaml|modules/.+\.ya?ml|gocams/[^/]+/[^/]+-review\.yaml|projects/.+\.md)$' \
+            || true)
+
+          if [ -z "$CURATED" ]; then
+            echo "No curated-content changes; skipping history-coverage nudge."
+            exit 0
+          fi
+
+          if [ -z "$ADDED_HISTORY" ]; then
+            echo "::warning::This PR changes curated content but adds no history/ record." \
+              " Consider scaffolding one with \`just new-history\` (see docs/history.md)."
+            echo "Curated files changed:"
+            echo "$CURATED"
+          else
+            echo "History records added:"
+            echo "$ADDED_HISTORY"
+          fi
+
+      # Family reviews carry residue sites and node assessments that gene reviews
+      # cite, so a change to either side can break the join.
+      #
+      # Also fires on gene changes, because a gene residue_claim can cite a family
+      # site and the join breaks from either side. The UniProt cache restored above is
+      # what makes that affordable: without it every run would resolve each sequence
+      # over the network, and an upstream outage would block curation that cannot have
+      # broken these checks.
+      - name: Validate family reviews (scoped)
+        if: >-
+          github.event_name == 'schedule' ||
+          github.event_name == 'workflow_dispatch' ||
+          steps.changes.outputs.infra == 'true' ||
+          steps.changes.outputs.families == 'true' ||
+          steps.changes.outputs.genes == 'true'
+        run: just validate-families
+
+      # PTN claims are validated against interpro/panther/*/*-paint.tsv slices
+      # that curation PRs commit alongside the claim they justify, so per-PR CI
+      # cannot tell a genuine slice from an authored one. Re-deriving them from
+      # PANTHER's upstream IBD.gaf closes that loop. Network-bound and repo-wide,
+      # so it runs only on the scheduled/manual full pass, not per PR.
+      - name: Verify PAINT slices against upstream (full run only)
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+        run: just verify-panther-paint
 
       - name: Test valid/invalid examples
+        if: steps.changes.outputs.infra == 'true' || steps.changes.outputs.src == 'true'
         run: just test-examples
 
       - name: Run test suite
         if: steps.changes.outputs.src == 'true'
         run: just test
+
+      # Runs even when `src` is false, so a .github-only change still gets its
+      # agent-config consistency and guard-script checks.
+      - name: Check agentic automation
+        if: steps.changes.outputs.agents == 'true'
+        run: |
+          uv run pytest tests/test_agent_config.py tests/test_agent_run_summary.py \
+            tests/test_apply_cron_profile.py tests/test_auto_merge_ready_prs.py \
+            tests/test_pr_shepherd_workflow.py -q
+          uv run ruff check --no-force-exclude scripts/auto_merge_ready_prs.py \
+            tests/test_auto_merge_ready_prs.py tests/test_pr_shepherd_workflow.py
+          just test-js

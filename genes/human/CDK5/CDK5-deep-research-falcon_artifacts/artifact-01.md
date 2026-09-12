@@ -1,0 +1,12 @@
+> CDK5 is an atypical cyclin-dependent kinase: unlike classical CDKs, it is not activated by canonical cyclins and instead requires the non-cyclin regulatory subunits p35 or p39 for kinase activation. These activators are structurally distinct from cyclins and are especially important in post-mitotic neurons (pqac-00000000, pqac-00000001, pqac-00000002, pqac-00000012)
+>
+> Under physiological conditions, p35 and p39 are myristoylated at Gly2, which targets them to membrane fractions and recruits active CDK5 complexes to the cell membrane. Active CDK5/p35 can also be present in the cytoplasm, but membrane association is a key feature of normal spatial regulation (pqac-00000002, pqac-00000005, pqac-00000012)
+>
+> Under pathological calcium-dependent conditions, calpain cleaves p35 to p25 and p39 to p29. These truncated activators lose the N-terminal myristoylated/membrane-targeting region and degradation signal, giving them longer half-lives and allowing CDK5 complexes to relocalize from the membrane to the cytoplasm and nucleus (pqac-00000000, pqac-00000001, pqac-00000007, pqac-00000012)
+>
+> The resulting CDK5/p25 or CDK5/p29 complexes are hyperactive and mislocalized, which broadens substrate access and promotes aberrant phosphorylation of physiological and non-physiological targets. This mechanism is linked to neurotoxicity, tau hyperphosphorylation, mitochondrial dysfunction, and other pathological signaling outputs (pqac-00000000, pqac-00000004, pqac-00000007, pqac-00000008)
+>
+> CDK5 activity is also tuned by post-translational modifications. Phosphorylation at Thr14 is inhibitory, phosphorylation at Tyr15 is generally stimulatory but context-dependent, and phosphorylation at Ser159 promotes p35-dependent activation. S-nitrosylation at Cys83 within the ATP-binding pocket suppresses kinase activity, whereas acetylation at Lys33 impairs ATP binding and reduces catalytic activity (pqac-00000004, pqac-00000005, pqac-00000012)
+
+
+*Blockquote: This blockquote summarizes the core regulatory logic of CDK5, including its non-cyclin activators, normal membrane targeting, pathological p25/p29 generation, and key post-translational modifications. It is useful for quickly explaining how CDK5 shifts from physiological neuronal signaling to disease-associated hyperactivation.*

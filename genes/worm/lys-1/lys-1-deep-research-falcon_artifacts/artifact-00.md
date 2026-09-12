@@ -1,0 +1,21 @@
+| Property | Summary | Evidence |
+|---|---|---|
+| Gene name | **lys-1**; encodes lysozyme-like protein 1 in *Caenorhabditis elegans* | (pqac-00000000, pqac-00000003) |
+| ORF | **Y22F5A.4** | (pqac-00000000) |
+| UniProt ID | **O62415** | (pqac-00000000) |
+| Protein family | Protist-type lysozyme; glycosyl hydrolase family 25 (**GH25**), one of 10 *C. elegans* protist-type lysozymes (lys-1 to lys-10) | (pqac-00000004, pqac-00000025, pqac-00000026) |
+| Enzymatic activity | Predicted **muramidase/lysozyme** that hydrolyzes bacterial peptidoglycan; direct biochemical activity has not been shown for LYS-1 itself, but inferred from GH25 family membership | (pqac-00000004, pqac-00000019, pqac-00000020) |
+| Substrate | Bacterial **peptidoglycan**, specifically the β-1,4 glycosidic bond between **MurNAc/NAM** and **GlcNAc/NAG** in the glycan backbone | (pqac-00000018, pqac-00000019) |
+| Catalytic mechanism | Inferred GH25 mechanism: substrate-assisted catalysis with an **Asp** acting as general acid; the substrate N-acetyl group contributes to catalysis | (pqac-00000020) |
+| Tissue expression | Strongly expressed in **intestinal cells**; also reported in **IL1/IL2 neurons**, head ganglia neurons, and posterior **phasmid chemosensory neurons** in reporter analyses | (pqac-00000000, pqac-00000014, pqac-00000016, pqac-00000017) |
+| Subcellular localization | **Vesicular** localization in intestinal cells, with vesicles concentrated near the **apical surface**; distinct from secondary lysosomes and suggestive of trafficking toward the **intestinal lumen** | (pqac-00000001, pqac-00000014, pqac-00000015) |
+| Likely site of action | Likely acts in or toward the **intestinal lumen**, consistent with defense against ingested bacteria and luminal pathogens | (pqac-00000001, pqac-00000014, pqac-00000015) |
+| Signaling pathways regulating expression | Expression requires **TIR-1/NSY-1** innate immune signaling; lys-1 is also reported to be regulated by **PMK-1/p38 MAPK** and **TGF-β/DBL-1** pathways; lys-1 is additionally described as a **DAF-16/FOXO target** in the insulin-like signaling network | (pqac-00000006, pqac-00000007, pqac-00000010, pqac-00000011, pqac-00000024) |
+| Pathogen induction | Reported as induced during infection by **Serratia marcescens** and **Pseudomonas aeruginosa**; one study found induction by **P. aeruginosa but not S. marcescens**, indicating pathogen- and condition-specific regulation across assays | (pqac-00000000, pqac-00000002, pqac-00000006, pqac-00000008) |
+| Functional evidence: overexpression | Transgenic overexpression/lys-1::GFP animals showed **increased resistance** to the less virulent *S. marcescens* strain **Db1140**, but not to the more virulent strain **Db11** | (pqac-00000002, pqac-00000027) |
+| Functional evidence: knockdown | **lys-1 RNAi** abolished reporter expression but had little effect on survival against *S. marcescens* Db1140, suggesting redundancy; in a separate study, **lys-1 RNAi increased sensitivity to Staphylococcus aureus** and promoted dauer-related phenotypes in a sensitized background | (pqac-00000005, pqac-00000011, pqac-00000012, pqac-00000027) |
+| Biological role | Antibacterial **innate immune effector** positioned at host-environment interfaces, especially the intestine; likely contributes to bacterial cell-wall degradation and host defense in combination with other effectors | (pqac-00000001, pqac-00000003, pqac-00000004) |
+| Evolutionary relationships | LYS-1 is evolutionarily closer to **protist/Entamoeba histolytica** lysozymes than to classical vertebrate chicken-type or insect lysozymes; this supports an ancient **protist-type** lysozyme lineage in nematodes | (pqac-00000000, pqac-00000025, pqac-00000026) |
+
+
+*Table: This table summarizes the main annotated and experimentally supported properties of C. elegans LYS-1, including molecular identity, inferred enzymatic activity, localization, regulation, pathogen responsiveness, and functional evidence. It is useful as a compact evidence map for gene functional annotation.*

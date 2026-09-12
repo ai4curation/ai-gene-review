@@ -1,6 +1,6 @@
 # BioReason-Pro RL Review: SPAC8E11.10 / sou1 (S. pombe)
 
-Source: SPAC8E11.10-deep-research-bioreason-rl.md
+Source: SPAC8E11.10-bioreason-rl-predictions.md
 
 - **Correctness**: 3/5
 - **Completeness**: 2/5
