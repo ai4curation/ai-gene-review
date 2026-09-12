@@ -479,20 +479,45 @@ each reported under its own name so a regression says *which* style broke rather
 one boolean: five narration styles that must be exempt, and three — italics, single quotes, unmatched
 delimiters — that must still fire.
 
-### What ten rounds actually taught
+### What the review rounds actually taught
 
-Rounds 1–4 changed the annotation. **Rounds 5–10 changed nothing a curator would act on** — verified
-each round by diffing the review YAML for `term`, `id: GO:`, `action`, `evidence_type`,
-`supporting_text` and `molecular_function` lines, which return **zero** changes since round 4. Every
-one of those six rounds found a defect *in the previous round's fix*.
+*(Scope note: this section is written to cover every round after the fourth, and is deliberately
+not numbered in its heading — an earlier version said "ten rounds" and was stale within two.)*
 
-**What found them splits cleanly, and the split is the point.** Every defect of *judgement* —
-the one-site metal reading, a mutant that removes the residue it was meant to isolate, a guard
-exempting a whole file, italics counted as quotation — was found by the **reviewer**. Every defect
-of *arithmetic* — the five wrong thresholds in item 2 below — was found by **running the guard**,
-which failed loudly the moment a hand-assigned number met the document. Re-reading my own work found
-neither kind. That is the argument for both halves: an adversarial reader for the claims, and a
-mechanical check for the counts.
+Rounds 1–4 changed the annotation. **Every round after the fourth changed nothing a curator would
+act on** — verified each round by diffing the review YAML for `term`, `id: GO:`, `action`,
+`evidence_type`, `supporting_text` and `molecular_function` lines, which return **zero** changes
+since round 4; the surviving hunks are `knowledge_gaps`, one `suggested_questions` entry and one
+`suggested_experiments` entry. Each of those rounds found a defect *in the previous round's fix*.
+
+Rounds 11–13 were entirely this journal correcting itself: 11 split the self-test so a failure names
+its branch, 12 removed a duplicated closing claim that was false, and 13 corrected the statement
+that replaced it (below).
+
+**What found them does not split cleanly, and the exceptions are the interesting part.** Round 12
+replaced an overclaim ("the reviewer found everything") with a tidy dichotomy — judgement defects
+found by the reviewer, arithmetic defects found by the guard — and round 13 had to correct *that*,
+because it was false in the other direction. The actual tally for the five wrong numbers:
+
+| wrong number | actual | found by |
+|---|---|---|
+| `"proteoglycan binding"` ×2 | 1 | the guard, on first run |
+| `"undecapeptide"` ×4 | 12 | the guard |
+| `"separable"` ×4 | 3 | the guard |
+| `12` IntAct partners | 16 | **me**, recomputing before the first review |
+| `63` `supporting_text` quotes | 71 | **the reviewer** — no guard existed for it yet |
+
+Three guard-caught, one self-caught, one reviewer-caught. The last is the one that matters: **a
+mechanical check only catches what it is pointed at, and someone still has to notice what it is
+not.** The 63/71 drift sat in the file through several rounds precisely because nothing was
+watching that sentence — which is why the guard now reconciles it. The honest summary is not a
+dichotomy but a division of labour with a gap in it, and the gap is where an adversarial reader
+earns its place.
+
+A note on how this paragraph itself went: the overclaim, the tidy dichotomy that replaced it, and
+this correction were three successive attempts to describe *my own process*, each one wrong in a
+different direction, in the section whose only job is being accurate about that. Reasoning about
+what found a defect turns out to be no easier than finding one.
 
 The transferable part is what changed the hit rate, and it was never "be more careful":
 
