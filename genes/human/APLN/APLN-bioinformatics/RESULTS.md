@@ -94,8 +94,9 @@ peptide too.
 `withfrom_resolved.tsv` and the `source_entities.yaml` scaffold that the
 `propagation_review` blocks are built from.
 
-- 18 of 41 rows carry `supporting_entities`.
-- **16** of those require `propagation_review`: IEA ×10, ISS ×5, IBA ×1.
+- 19 of the 43 rows in the finished review carry `supporting_entities` — 18 of the 41
+  GOA-seeded rows, plus the one `NEW` ISS row this review adds.
+- **17** of those require `propagation_review`: IEA ×10, ISS ×6, IBA ×1.
 - The remaining 2 are `IGI` rows (GO:0010629, GO:0040037) whose `supporting_entities`
   are genetic-interaction partners, not propagation donors.
 - 13 distinct identifiers, **0 unresolved**.
@@ -112,6 +113,14 @@ Resolutions that mattered to the review:
 | `RNAcentral:URS00000F0F49_9606` | hsa-miR-424-5p |
 | `RNAcentral:URS00000F6E49_9606` | hsa-miR-503-5p |
 | `InterPro:IPR026155` | 'Apelin', type=family, 345 proteins |
+
+The node resolution is worth spelling out, because it is what the IBA row rests on.
+`PTN001041490` is the **only** node-level annotation in the whole family: an IBD for
+GO:0005576, not negated, placed at `taxon:32523`, which NCBI Taxonomy gives as *Tetrapoda*
+(rank CLADE). Human is inside that clade, so the target inherits. Its three gene-level
+seeds are rat Apln, bovine APLN and human APLN itself — the target appearing in its own
+`WITH/FROM`, which is the expected marker that experimental grounding exists on the target,
+not a circular transfer.
 
 The two RNAcentral ids only resolve informatively with their `_9606` suffix kept: the bare
 URS accessions describe cross-species sequences ("ncRNA from 16 species") and hide which

@@ -22,9 +22,11 @@ recollection of a number.
   with no symbol collision of the AGT/AGXT kind. It is a good map of the modern apelin
   literature and it is where I found the ACE2/NEP metabolism thread, the I109^3.32 bias
   residue, and the ELA-versus-apelin distinct-binding-mode work.
-- **Cached publications.** Seven seeded from GOA; I fetched eleven more (listed in §13). Three of the
+- **Cached publications.** Seven seeded from GOA; I fetched eleven more (listed in §13). Four of the
   seven seeded papers are abstract-only (`full_text_available: false`): PMID:9792798,
-  PMID:10525157, PMID:11359874, and also PMID:38428423.
+  PMID:10525157, PMID:11359874 and PMID:38428423. Of the eleven I fetched, four have full
+  text (PMID:15231996, PMID:19767528, PMID:24251091, PMID:28890073) and seven are
+  abstract-only.
 
 ## 2. What the gene product actually is
 
@@ -195,7 +197,7 @@ PTHR15953  PTN001041490   GO:0005576 C      IBD      false   RGD:620672|UniProtK
 
 What is striking is the **incompleteness**. UniProt's own cross-reference says it:
 `DR PAN-GO; Q9ULZ1; 1 GO annotation based on evolutionary models.` A family in which the
-mature peptide is 98 % invariant across 333 proteins, whose receptor is known, and whose
+mature peptide is 97-98.5 % invariant at every position from R66 to F77 across 333 proteins, whose receptor is known, and whose
 zebrafish member carries experimental `GO:0007507 heart development` (IMP, PMID:17336905 and
 PMID:17336906), `GO:0008078 mesodermal cell migration` (IMP), `GO:0002040 sprouting
 angiogenesis` (IGI) and `GO:0048018 receptor ligand activity` (TAS) — that family propagates
@@ -206,7 +208,8 @@ have raised it as a question for the PAINT curators.
 
 ## 6. Tracing the ISS/IEA chains — the two real defects
 
-All 16 rows requiring `propagation_review` (IEA ×10, ISS ×5, IBA ×1) were traced to the
+All 16 GOA-seeded rows requiring `propagation_review` (IEA ×10, ISS ×5, IBA ×1) — 17 in
+the finished review, counting the one `NEW` ISS row — were traced to the
 donor's *own* GO record via QuickGO/the GO API, not assumed.
 
 | human row | donor | donor evidence | donor reference | verdict |
