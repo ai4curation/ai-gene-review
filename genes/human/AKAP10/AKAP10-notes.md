@@ -406,7 +406,30 @@ domain error propagated into seven places. The provider's assessment belongs in
 it (§12). Inventing an annotation-level citation to clear a warning would be exactly the
 "do NOT invent content to silence them" failure.
 
-## 16. Tooling note: the pre-write hook validates against the WRONG repo root
+## 16. A committed claim lint, and the self-test that was initially fake
+
+`AKAP10-bioinformatics/audit_akap10_claims.py` re-derives every number asserted in the PR
+body from the review file itself, matches each GOA row to an `existing_annotations` entry by
+(term, evidence, reference, WITH/FROM), reconciles raw against parsed `supporting_text`
+counts through a duplicate-key-rejecting loader, and enforces four claim-level invariants
+stated over the **class** of error rather than a list of sites:
+
+- no forbidden term id anywhere in the document (`GO:0005096` GAP activity, `GO:2001137` the
+  inverted direction, `GO:0010738` obsolete, `GO:0017137` merged);
+- no `proposed_replacement_terms` pointing back at the parent it moves away from;
+- no experimental evidence code on a row citing a reference whose experiments were done in
+  another organism;
+- no `supported_by` citing a reference that is not declared.
+
+`--self-test` breaks each one and requires the audit to notice. **It found a defect in
+itself.** The first version of the "inject a GAP term" mutation edited an
+`existing_annotations` term id — and was caught by the *coverage* check, not by the
+forbidden-term check. The guard under test was never exercised, and the self-test still
+printed green. Moving the injection into `core_functions`, where no other check can see it,
+is what made the test real. Exactly the AHI1 pattern: a passing self-test proves the guards
+you thought of fire, and says nothing about the one you failed to write.
+
+## 17. Tooling note: the pre-write hook validates against the WRONG repo root
 
 Worth recording because it cost a round and would mislead any agent working in a worktree.
 `.claude/hooks/validate_ai_review_pretool_hook.py` computes
