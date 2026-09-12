@@ -323,6 +323,56 @@ The three PITPNC1 back-references that do exist on the partner side
 are the same CCSB screens already counted here — reciprocity of the screen, not
 of the targeted study.
 
+## Round 2: MeSH organism indexing settles a species question the abstracts do not
+
+The reviewer flagged a real internal inconsistency: `GO:0031702` was coded `IPI`
+on `PMID:12960423` while `GO:0002092` was coded `ISS` on `PMID:11162453`
+*"because the abstracts do not state the species"* — the same situation, two
+different codes. And it added a fact I had seen and failed to act on: that
+abstract numbers the protein 14-36 / 55-77 / 88-108 with a cytoplasmic tail at
+**109-161**, and 161 aa is mouse Agtrap, not the 159-aa human protein.
+
+The tiebreaker neither of us had used is NLM's own **MeSH organism indexing**,
+which discriminates these papers cleanly:
+
+| paper | MeSH organism terms | used for |
+|---|---|---|
+| `PMID:12960423` | **`Humans`** — no `Animals`, no `Mice` | `GO:0031702` **IPI** |
+| `PMID:10358057` | `Animals`, `Mice` — no `Humans` | corroboration only |
+| `PMID:11162453` | `Animals`, `Rats` — no `Humans` | `GO:0002092` **ISS** |
+| `PMID:15757644` | `Animals`, `Mice` — no `Humans` | corroboration only |
+| `PMID:27015675` | `Animals`, `Humans`, `HEK293 Cells` | `GO:0141109` **ISS** |
+
+So the two codes are consistent once the indexing is consulted rather than the
+abstract alone: 12960423 is indexed as human work, 11162453 as rat work. NLM
+essentially always adds `Animals` when animal material is used, so its absence
+from 12960423 is meaningful, and it agrees with UniProt's `ECO:0000269` on the
+human entry.
+
+**This does not dissolve the numbering conflict**, and the review now says so in
+the row rather than leaving it to be found. The likeliest reconciliation is that
+the authors kept the residue numbering of the sequence first published in
+`PMID:10358057` while working with human constructs — but PMC284805 yields no
+extractable full text (XML restricted, HTML empty, no PDF link), so it cannot be
+confirmed. `IPI` is retained on explicit deference to the curator, with the
+condition stated: if the full text shows rodent constructs, the code becomes
+`ISS` with `Q9WVK0` and **only the code changes, not the term**.
+
+`PMID:27015675` cuts the other way and is recorded as such: it carries `Humans`
+and `HEK293 Cells` alongside `Animals`, so the SERCA2a *binding* measurements may
+have used human constructs even though the calcium-uptake and knockout work did
+not. `ISS` is the conservative reading there, flagged for revisiting.
+
+**Also from round 2:** both ISS rows transfer from a mouse orthologue that holds
+neither term, i.e. ISS from nothing. Rather than silently recode them, the mouse-
+side annotations they should descend from are now requested explicitly in
+`suggested_questions`, and the `GO:0043495` differentia problem is filed as an
+ontology request rather than left as a per-gene caveat. The PITPNC1 rows now say
+why that membrane-anchoring activity is deliberately *not* elevated to a core
+function — one PMA-dependent experiment, no measured consequence for AGTRAP
+itself — which the PR body had described as "the anchor" without the review ever
+saying so.
+
 ## Checks run that came back negative (recorded so the next reviewer knows)
 
 - **Retractions / errata / expressions of concern**: all 21 PMIDs relied on were
