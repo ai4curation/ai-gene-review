@@ -46,9 +46,9 @@ Superposition method: Bio.PDB.cealign.CEAligner (Combinatorial Extension, CA ato
 
 | superposed chain | RMSD (A) | reference CA positions covered within 4 A (of 142) |
 |---|---|---|
-| sigma-5 (8YAB chain C) | 3.53 | 134 |
+| sigma-5 (8YAB chain C) | 3.66 | 135 |
 | positive control: second sigma2 copy (2JKR chain I) | 0.03 | 142 |
-| negative control: beta5 solenoid (8YAB chain B) | 6.08 | 113 |
+| negative control: beta5 solenoid (8YAB chain B) | 6.82 | 113 |
 
 Read the RMSD column, not the coverage column: beta5 is a 551-residue solenoid, so its
 CA atoms are dense enough to fall within 4 A of most reference positions whatever the
@@ -57,25 +57,25 @@ control and the unrelated fold, which is what a divergent homologue should do.
 
 | sigma2 pocket residue | nearest sigma-5 CA | CA-CA distance (A) | structurally equivalent | same residue | that sigma-5 position contacts the zeta N-terminus |
 |---|---|---|---|---|---|
-| N9 | T9 | 1.02 | True | False | False |
-| R10 | L10 | 2.43 | True | False | False |
-| A11 | C21 | 2.09 | True | False | False |
-| R15 | Y25 | 2.16 | True | False | False |
-| Y62 | V117 | 1.28 | True | False | False |
-| A63 | L118 | 1.41 | True | False | False |
-| G64 | S119 | 1.35 | True | False | False |
-| L65 | L120 | 1.05 | True | True | True |
-| F67 | F122 | 0.53 | True | True | False |
-| H85 | R140 | 0.55 | True | False | False |
-| V88 | T143 | 1.51 | True | False | False |
-| E89 | R144 | 1.87 | True | False | False |
-| N92 | D148 | 1.32 | True | False | False |
-| N97 | R151 | 3.86 | True | False | False |
-| V98 | R151 | 2.26 | True | False | False |
-| C99 | L152 | 2.57 | True | False | True |
-| E100 | S156 | 4.24 | False | False | True |
-| L101 | S156 | 1.71 | True | False | True |
-| L103 | L159 | 2.06 | True | True | False |
+| N9 | T9 | 1.3 | True | False | False |
+| R10 | L10 | 2.71 | True | False | False |
+| A11 | C21 | 2.0 | True | False | False |
+| R15 | Y25 | 1.81 | True | False | False |
+| Y62 | V117 | 1.62 | True | False | False |
+| A63 | L118 | 1.86 | True | False | False |
+| G64 | S119 | 1.79 | True | False | False |
+| L65 | L120 | 1.2 | True | True | True |
+| F67 | F122 | 0.41 | True | True | False |
+| H85 | R140 | 0.88 | True | False | False |
+| V88 | T143 | 1.64 | True | False | False |
+| E89 | R144 | 1.9 | True | False | False |
+| N92 | D148 | 1.25 | True | False | False |
+| N97 | R151 | 3.12 | True | False | False |
+| V98 | R151 | 1.92 | True | False | False |
+| C99 | L152 | 2.18 | True | False | True |
+| E100 | S156 | 4.07 | False | False | True |
+| L101 | S156 | 2.18 | True | False | True |
+| L103 | L159 | 1.99 | True | True | False |
 
 Summary: of 19 sigma2 residues that contact the dileucine peptide, 18 have a structurally equivalent position in sigma-5 (CA within 4 A after superposition), 3 of those carry the identical residue, and 3 of them are in contact with the zeta N-terminus in the assembled AP-5 core.
 

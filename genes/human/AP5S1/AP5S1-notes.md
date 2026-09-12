@@ -140,7 +140,7 @@ onto σ5 (8YAB chain C) by sequence-independent structural superposition, with t
 
 * The fold is there —
   [file:human/AP5S1/AP5S1-bioinformatics/RESULTS.md "of 19 sigma2 residues that contact the dileucine peptide, 18 have a structurally equivalent position in sigma-5"] —
-  at RMSD 3.53 Å versus 0.03 Å (identical control) and 6.08 Å (unrelated fold).
+  at RMSD 3.66 Å versus 0.03 Å (identical control) and 6.82 Å (unrelated fold).
 * The chemistry is not. Only 3 of the 18 equivalent positions carry the same residue.
   The substitutions are precisely at the functional positions: σ2 V88 → σ5 T143 and σ2
   V98 → σ5 R151 replace hydrophobic pocket lining with polar and basic side chains, and

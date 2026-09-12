@@ -31,3 +31,14 @@ silently relabelling residues. Nothing is hardcoded and no result is pre-compute
 
 Controls: the second sigma2 copy in 2JKR (positive), the beta5 solenoid (negative), and
 a shuffled-sequence null for the pairwise sequence comparisons.
+
+## Reproducibility note
+
+The committed `RESULTS.md` and `results.json` were produced by the environment pinned in
+`uv.lock` (Biopython 1.88); re-running `uv run python sigma5_structure.py` there
+reproduces them byte for byte. Running under a different Biopython release shifts the CE
+superposition slightly — RMSDs move by ~0.1-0.7 Å and individual CA-CA distances by a few
+tenths of an Ångström — while the residue correspondence (which sigma-5 position each
+sigma2 pocket residue maps to), the buried-surface measurements, and every count reported
+in the conclusion are unchanged. Cite the counts and the mapping; treat the third decimal
+of an RMSD as environment-dependent.
