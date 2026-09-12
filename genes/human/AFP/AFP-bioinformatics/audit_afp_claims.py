@@ -148,7 +148,9 @@ def norm(s: str) -> str:
 #     this file mark the author's own emphasis, so `*phrase*` is an emphasised
 #     ASSERTION and must still fire.
 #   * opener and closer must MATCH. Unpaired sets let `**phrase"` through.
-# Longest first, so `**` is tried before `*` would have been.
+# Every pair below is exercised by its own self-test mutation, and so is every
+# style deliberately EXCLUDED (single-asterisk italics, single quotes), as a
+# negative. No entry here is justified by reasoning alone.
 _NARRATION_PAIRS = (('"', '"'), ("“", "”"), ("**", "**"), ("`", "`"))
 _SENTENCE_PUNCT = (".", ",", ";", ":", "?", "!")
 
@@ -568,24 +570,30 @@ def self_test() -> int:
                 p, _ = check_all(tmp, notes_path=notes_tmp)
                 return any("unquoted" in x for x in p)
 
-            styles = {
+            # Report per style, not as one collapsed pass/fail: an any() over a
+            # dict whose keys are never read short-circuits on the first failure
+            # and cannot say WHICH style regressed.
+            exempt_styles = {
                 "double_quote": f'I wrote "{quoted_phrase}" and was wrong.',
                 "curly_quote": f"I wrote “{quoted_phrase}” and was wrong.",
                 "backtick": f"I wrote `{quoted_phrase}` and was wrong.",
                 "bold": f"I wrote **{quoted_phrase}** and was wrong.",
                 "quote_then_punct": f'I wrote "{quoted_phrase}." Wrong.',
             }
-            fired["all_narration_styles_exempt"] = not any(
-                notes_fires(s) for s in styles.values()
-            )
-            # ...and the two styles deliberately NOT treated as narration, because
-            # italics and single quotes mark this file's own assertions
-            fired["italic_reassertion_still_fires"] = notes_fires(
-                f"AFP really does have *{quoted_phrase}* today."
-            )
-            fired["unmatched_delimiters_still_fire"] = notes_fires(
-                f'AFP really does have **{quoted_phrase}" today.'
-            )
+            for name, snippet in exempt_styles.items():
+                fired[f"narration_exempt__{name}"] = not notes_fires(snippet)
+
+            # Styles deliberately NOT treated as narration here. Italics and single
+            # quotes mark this file's own assertions, so an emphasised or
+            # single-quoted re-assertion must still fire; and an unpaired
+            # opener/closer must not be accepted.
+            must_still_fire = {
+                "italics": f"AFP really does have *{quoted_phrase}* today.",
+                "single_quotes": f"AFP really does have '{quoted_phrase}' today.",
+                "unmatched_delimiters": f'AFP really does have **{quoted_phrase}" today.',
+            }
+            for name, snippet in must_still_fire.items():
+                fired[f"not_narration__{name}"] = notes_fires(snippet)
         finally:
             notes_tmp.unlink(missing_ok=True)
 

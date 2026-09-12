@@ -447,9 +447,11 @@ quoting superseded wording is **backticks and bold** — so a future journal ent
 way would have turned the build red, and *the path of least resistance under a red build is to delete
 the narration.* A guard that makes honest record-keeping expensive buys silence, not correctness.
 
-Recognises backticks, bold, straight quotes, curly quotes and trailing sentence punctuation now, each
-verified directly. Two complementary self-test mutations: a bare re-assertion must fire the guard, and
-the legitimate narration already in this file must **not**.
+Recognises backticks, bold, straight quotes, curly quotes and trailing sentence punctuation now. Two
+complementary self-test mutations were added: a bare re-assertion must fire the guard, and the
+legitimate narration already in this file must **not**. *(Round 10 replaced the rest of this
+sentence's original claim — that the styles were "each verified directly" — with actual mutations.
+Verifying by hand at the REPL and calling it verification is how the italics hole below got written.)*
 
 Also in round 9: the self-test no longer mutates this tracked file. It wrote to the real
 `AFP-notes.md` and restored in a `finally`, which leaves residue if the process is killed between the
@@ -460,3 +462,45 @@ defect *in the previous round's fix*, and every one was found by the reviewer ra
 re-reading. What changed my hit rate was not more care but changing what gets checked — sweeping the
 document instead of the diff, measuring thresholds instead of assigning them, and exercising each
 guard by breaking it. The annotation itself has not moved since round 4.
+
+### Round 10: over-corrected, and the branch nothing broke was the one that broke
+
+Round 9 widened the narration rule by listing openers and closers as two **independent sets**. That
+let two things through:
+
+- **single-asterisk italics counted as narration** — but italics in this file mark the author's own
+  emphasis, so `*phrase*` is an *emphasised re-assertion* and must still fire;
+- **opener and closer did not have to match**, so `**phrase"` was exempt.
+
+Replaced by matched delimiter **pairs**, with single asterisks and single quotes deliberately
+excluded.
+
+**The rule was not the real defect; the testing was.** Round 9 added four narration styles and
+exercised exactly one, leaving the rest "verified directly" at the REPL — which is precisely how the
+italics hole was written and shipped. The self-test now drives a mutation through **every** branch,
+each reported under its own name so a regression says *which* style broke rather than collapsing into
+one boolean: five narration styles that must be exempt, and three — italics, single quotes, unmatched
+delimiters — that must still fire.
+
+### What ten rounds actually taught
+
+Rounds 1–4 changed the annotation. **Rounds 5–10 changed nothing a curator would act on** — verified
+each round by diffing the review YAML for `term`, `id: GO:`, `action`, `evidence_type`,
+`supporting_text` and `molecular_function` lines, which return **zero** changes since round 4. Every
+one of those six rounds found a defect *in the previous round's fix*, and every one was found by the
+reviewer, not by me re-reading my own work.
+
+The transferable part is what changed the hit rate, and it was never "be more careful":
+
+1. **Sweep the document, not the diff.** Three rounds went to one claim retracted at N−1 sites.
+2. **Measure thresholds, never assign them.** Five hand-assigned numbers on this gene, five wrong —
+   `12` partners (actual 16), `63` quotes (71), `"proteoglycan binding"` ×2 (1), `"undecapeptide"` ×4
+   (12), `"separable"` ×4 (3).
+3. **A branch nothing breaks is a branch nothing tests.** Both guard defects lived in branches
+   covered by reasoning rather than a mutation.
+4. **A guard that punishes correct behaviour buys silence.** The strict-quotes rule would have made
+   writing this journal a red build.
+
+An honest coda: items 2 and 3 are both restatements of the campaign brief's own rules, which I had
+read before starting. Knowing a rule and having a mechanism that enforces it are different things,
+and only the second one held.
