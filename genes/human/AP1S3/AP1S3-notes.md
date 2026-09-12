@@ -268,7 +268,7 @@ Counts, produced by `.scratch/reconcile.py` rather than typed: 45 GOA rows recon
 with 45 reviewed YAML entries (identical term/evidence/reference/`supporting_entities`); actions
 are ACCEPT 37, KEEP_AS_NON_CORE 5, MODIFY 3, NEW 2; 11 rows carry a `propagation_review` (1 IBA +
 10 IEA) and every `source_entities` list matches its row's `supporting_entities` exactly; 36
-references, all with a `reference_review`; 149 `supporting_text` quotes, all verified by
+references, all with a `reference_review`; 154 `supporting_text` quotes, all verified by
 `checkquotes.py`; 8 `residue_claims`, 24 checks, 0 failures.
 
 ## 8. What affinage missed, and what it got right
