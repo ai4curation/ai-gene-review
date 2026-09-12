@@ -265,6 +265,23 @@ AIG1 review is self-contained without filing the same request twice.
   `ECO:0000269|PubMed:27018888`. 12 = 12 = 12. (ADTRP's equivalent row lists 11: it lacks
   RHEA:52092, the 5-(9Z-hexadecenoyloxy)-octadecanoate reaction. Recorded as an observed
   difference between the two records, not interpreted.)
+- **interpro2go for IPR006838**, verified independently rather than inherited from the
+  ADTRP review. `https://www.ebi.ac.uk/interpro/api/entry/interpro/IPR006838/` returns
+  `type: family`, `name: ADTRP/AIG1`, member databases `{pfam: PF04750, panther:
+  PTHR10989}`, `proteins: 5902`, and `go_terms: [GO:0016020 membrane (cellular_component)]`
+  — exactly one term, no molecular function. So the family-signature-implies-catalysis
+  error is genuinely absent, and the entry's restraint is a measured fact rather than a
+  relayed claim.
+- **Expression profile is NOT settled, and the review says so.** PMID:27018888's discussion
+  cites biogps for AIG1 being broadest in brain and macrophages with ADTRP restricted to
+  metabolic organs. That conflicts with the gene's own primary expression paper
+  [PMID:11266118 "AIG1 mRNA was expressed at a relatively high level in the heart, ovary,
+  testis, liver, and kidney."] and with UniProt's HPA cross-reference ("Tissue enhanced
+  (liver)"). A first draft of this review used the biogps figures as settled fact in a
+  knowledge-gap boundary and to *choose the tissues for a proposed experiment* — corrected
+  before review to state the disagreement and to make measuring the AIG1:ADTRP activity
+  ratio by competitive ABPP the first step of that experiment rather than an assumption
+  inside it.
 - **affinage record.** `gates_passed: True`, 7 citations, all numeric PMIDs, none a
   `PMID:bio_*` preprint id, and all seven resolve to papers genuinely about AIG1. Its
   recall was good here — it surfaced four papers absent from GOA (PMID:27040980,
