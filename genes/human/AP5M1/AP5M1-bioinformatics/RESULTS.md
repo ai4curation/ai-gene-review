@@ -7,6 +7,7 @@ RCSB and PANTHER data. Nothing is hardcoded; delete `cache/` and re-run.
 ```
 uv run python mu2_cargo_pocket.py   # -> mu2_cargo_pocket.tsv, mu2_cargo_pocket-output.txt
 uv run python mu_alignment.py       # -> mu_alignment.fasta, mu_cargo_pocket_mapping.tsv, mu_alignment-output.txt
+uv run python crosscheck_ap3m1.py   # -> crosscheck_ap3m1-output.txt
 uv run python check_goa_reconciliation.py   # -> goa_reconciliation-output.txt
 ```
 
@@ -99,6 +100,27 @@ been identified for AP-5. This supports annotating AP5M1's molecular contributio
 as structural/assembly within AP-5 rather than as cargo-binding, and it is the
 reason no `GO:0008565 protein transporter activity`-style cargo-recognition term
 is proposed in the review.
+
+### Independent replicate (`crosscheck_ap3m1.py`)
+
+The merged AP3M1 review asked the same question for the AP-3 mu subunit and left a
+machine-readable `results.json` behind. It used the same structure (1BXX) and the
+same 4.5 A cutoff but a different script and a different sequence panel (AP3M2,
+AP1M2 and mouse AP3M1 in place of AP5M1, mouse Ap5m1 and *Arabidopsis* AP5M), so
+everything the two runs share is a replicate. `crosscheck_ap3m1.py` compares them
+and reports the disagreements as well as the agreements:
+
+- **Structure-derived contact set: identical.** Same 14 positions, same residues,
+  same minimum distances to 0.01 A. This half is alignment-free, so a disagreement
+  here would mean one derivation was wrong; the script exits non-zero if it finds one.
+- **Projected assignments: 14/14 identical for AP1M1, 14/14 for AP3M1, 12/14 for
+  AP4M1.** The two AP4M1 differences are gaps in their alignment where mine places
+  P436 and H437, at mu2 V418 and I419 — which are precisely the only two of the
+  fourteen contacts that fall in neither sub-site. Different sequence panels are allowed to align differently, so
+  these are reported rather than failed, and they flag the two columns whose
+  assignment is not robust. Neither affects the conclusion: both runs score AP4M1 as
+  retaining 11 of the 14, and neither of the disputed columns is a tyrosine-subsite
+  residue.
 
 ## 2. Are the reported MUDENG caspase-3 sites real aspartates in the MHD? (`mu_alignment.py`)
 

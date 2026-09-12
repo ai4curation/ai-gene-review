@@ -185,6 +185,17 @@ acidic side chain, no bulk at any of the three. AP4M1 and AP1M1 keep all three;
 even AP3M1, which also works without clathrin, keeps an aromatic and the
 aspartate.
 
+A third check arrived for free. The AP3M1 review merged onto main while this one
+was in progress, and it asked the same question for μ3 using the same structure and
+the same 4.5 Å cutoff, leaving a machine-readable `results.json`. Its script and its
+sequence panel are different from mine, so the overlap is a replicate;
+`crosscheck_ap3m1.py` compares the two and reports disagreements as well as
+agreements. The structure-derived half is **identical** — same 14 positions, same
+residues, same minimum distances to 0.01 Å — and the projected assignments agree
+14/14 for AP1M1, 14/14 for AP3M1 and 12/14 for AP4M1, the two AP4M1 differences
+being gaps in their alignment at mu2 V418 and I419, the only two contacts in neither
+sub-site. Both runs independently score AP4M1 as retaining 11/14.
+
 The obvious objection is that μ5 is simply the most divergent member (18.0%
 identity to AP2M1), so any alignment-based count would look bad. Two controls
 answer it. (i) The alignment reproduces a correspondence published independently
