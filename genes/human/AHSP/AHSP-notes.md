@@ -78,11 +78,18 @@ describes binding a *folded* client, keeping it soluble, and depositing it into
 its final assembly. That is AHSP's mechanism with "nucleosome" replaced by
 "hemoglobin tetramer". Hence the proposal `globin chaperone activity` as a sibling.
 
-AHSP is therefore a fifth kind of victim of the `GO:0051082`/`GO:0140309` gap
-tracked in repo issue #2222 — but note the difference from the sHSP cases: those
-genes hold genuinely unfolded clients and are blocked only by the *carrier*
-clause, whereas AHSP is blocked by **both** clauses (its client is folded and it
-does not translocate).
+AHSP is therefore another gene stranded by the `GO:0051082`/`GO:0140309` gap
+tracked in repo issue #2222 — but the *shape* of its stranding differs from the
+sHSP cases, and the difference is the part worth reporting: those genes hold
+genuinely unfolded clients and are blocked only by the **carrier** clause,
+whereas AHSP is blocked by **both** clauses at once, because its client is folded
+*and* it translocates nothing. A fix that only relaxes "escorts it to an acceptor
+molecule or to a specific location" would free the sHSPs and still leave AHSP
+with no molecular function.
+
+(No count of affected genes is asserted here. The ordinal in the first draft —
+"a fifth kind of victim" — was invented; I have not enumerated the genes on
+issue #2222, and a number I have not derived does not belong in the notes.)
 
 ## 4. The redox / antioxidant framing — tested, and it fails for GO:0016209
 
