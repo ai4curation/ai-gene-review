@@ -1,0 +1,19 @@
+# FLS2 re-review
+
+## 2026-09-11 evidence audit
+
+Reviewed all 51 source annotation rows, literature abstracts, retrieved full text for the critical interaction and trafficking decisions, the UniProt record, and the existing Falcon synthesis. Source IDs, evidence codes, and source row identities were preserved. Replacement terms GO:0038187 and GO:0004675 were checked against QuickGO definitions. Replaced research paraphrases presented as quotations with verbatim primary-source text. Electronic mappings use biological rationale and additional references; snippets are not required merely because the annotation is electronic.
+
+The canonical function remains a plasma-membrane flagellin receptor kinase. Antibacterial defense is core, not a peripheral phenotype: [PMID:18158241 "Plants use receptor kinases, such as FLS2 and EFR, to perceive bacterial pathogens and initiate innate immunity."]. The Rhea serine-kinase mapping is compatible with receptor serine/threonine kinase activity and should not be replaced merely because it captures only one substrate-residue class.
+
+SCD1 interaction was initially inaccessible, but a pipeline refresh obtained full text and resolved it: [PMID:20472560 "Here, we used the same approach to identify a protein with an apparent molecular mass of about 140 kDa that immunoprecipitated with the αFLS2 antibody in a PF22-independent manner from solubilized microsomal membranes of La-er cell culture"]. This is association evidence, not proof of a direct binary interaction. No false SCD1-to-FLS2 attribution claim is warranted.
+
+GRP7 physically associates with FLS2 protein in addition to binding its transcript; transcript regulation does not invalidate the protein interaction: [PMID:23395902 "HopU1 does not affect the protein-protein associations between GRP7, FLS2 and translational components."]. FLS2 self-association is explicitly reported in the interaction network and is retained as non-core, rather than rejected because BAK1 forms a heteromeric complex: [PMID:29320478 "2nd Rank: FLS2 as an internal control but as well as a self-interaction52"].
+
+Primary FLS2 trafficking evidence is distinct from BIK1 internalization: [PMID:23085733 "FLS2 localizes to bona fide endosomes via two distinct endocytic trafficking routes depending on its activation status."]. PMID:32404997 explicitly measures later FLS2 puncta as well as earlier BIK1 puncta; the annotations no longer rely on treating every BIK1 observation as an FLS2 observation. The callose and antibacterial defense annotations are directly supported in refreshed PMID:19095898 full text.
+
+The CLV3p-FLS2 interpretation is disputed. PMID:21499263 reports noncanonical ligand signaling, whereas independent experiments report [PMID:22923673 "FLS2 does not recognize CLV3"]. The associated IPI row is UNDECIDED rather than a confident noncanonical ligand claim; the original reference is marked DISPUTED. The replication paper was identified with Europe PMC and cached through the publication pipeline. This is not a retraction claim.
+
+Validation passes with the advisory warning that annotations do not cite the deep-research report. That report was consulted as context; primary literature supplies the supporting text. There is no reason to add a synthetic report quotation to suppress this warning.
+
+The required research refresh completed successfully with Falcon in 520.96 seconds (2026-09-11T20:48:53–20:57:34 UTC); fallback was not needed. Publication caching ran concurrently and cached all 28 original PMIDs. The new synthesis agrees with the canonical function and highlights 2024 nanodomain and synthetic-ligand studies; those report-level details were not promoted into additional GO annotations without primary-source adjudication. Publication-pipeline refreshes upgraded PMID:20472560 and PMID:19095898 to full text; PMID:22923673 was refreshed as abstract-only and newly added to this review.

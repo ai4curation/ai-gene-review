@@ -1,0 +1,19 @@
+# GL1 re-review
+
+## 2026-09-11 evidence audit
+
+Reviewed all 26 source annotation rows, the cited publication abstracts, relevant available full text, UniProt and the existing Falcon synthesis. Preserved all GOA-sourced fields. QuickGO confirmed the definitions of GO:0090628 (plant epidermal cell fate specification), GO:0000976 (transcription cis-regulatory region binding), and GO:0010154 (fruit development). Electronic corrections use explicit biological rationale and cited primary evidence without a blanket snippet requirement.
+
+GL1 is the DNA-binding MYB component of the nuclear trichome regulatory complex, with direct regulatory-promoter occupancy demonstrated in PMID:18434419. Functional GFP-tagged localization is direct evidence even though the previous Falcon synthesis did not retrieve it: [PMID:14561633 "Analysis of plants expressing functional GFP-tagged versions of GL1, GL3 and TRY show that the proteins are localized in trichome nuclei."]. Core-function support now cites these experiments rather than a generated report or a paper title.
+
+Replaced interchangeable interaction summaries with the actual experiments and partners: GL3 binding (PMID:11063707), EGL3 binding (PMID:12917293), gl3-sst/TRY competition (PMID:14561633), At1g01380 inhibition of GL1-GL3 (PMID:15584952), JAZ interactions (PMID:21551388), DELLA interactions (PMID:24659329), and purified GL1/GL3/PAP1 affinity measurements (PMID:32844153). Direct GL1-TTG1 binary interaction must not be inferred from complex membership: [PMID:11063707 "GL1 and TTG1 do not interact."]. The PAP1 interaction assay does not establish an anthocyanin biosynthetic role for GL1.
+
+The protein-localization annotation specifically concerns GL3 distribution: [PMID:18434419 "The loss of TTG1 and GL1 through mutation, affects the subcellular distribution of GL3."]. Gibberellin and jasmonate contexts are now consistently retained as non-core transcriptional signaling outputs. GA evidence is more than mere correlation: [PMID:9625690 "the gl1-1 glabrous phenotype is epistatic to the spy-5 phenotype"], complemented by direct DELLA interaction evidence in PMID:24659329. Refreshed PMID:21551388 full text directly confirms disruption of JA-induced trichome initiation in gl1 mutants.
+
+The fruit-development citation remains wrong, but the decision is changed from REMOVE to UNDECIDED: a broken citation does not establish absence of the biological phenotype. The cached abstract explicitly concerns Campylobacter plasmids, and a live Europe PMC identifier lookup confirms PMID:3793867 is the 1987 bacteriology paper. The reference is marked WRONG_IDENTIFIER/NONE; no replacement PMID is guessed. Intended plant evidence requires recovery from the source curator.
+
+Broad epidermis development is a true parent of the core trichome role, not automatically peripheral. The overly broad system-development inference is narrowed to the already experimentally supported trichome differentiation term.
+
+Validation passes with an advisory warning that annotation rows do not cite the deep-research report. Primary publications provide the quotations; adding a generated-report paraphrase solely to suppress that warning would reduce evidence quality.
+
+The required fresh research attempt failed: Falcon timed out after 600 seconds, then the requested perplexity-lite fallback returned HTTP 401 with `insufficient_quota`. The pre-existing Falcon report remains unchanged; no manual text was substituted into a provider-named report. Re-review proceeded from existing synthesis and primary publications. Concurrent publication caching succeeded; pipeline refresh obtained full text for PMID:21551388, while PMID:12244266 remains abstract-only. The provider failure does not change the source-supported core conclusions, but no successful new provider synthesis is claimed.
