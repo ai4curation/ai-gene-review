@@ -270,9 +270,10 @@ identifier for UBE3A isoform 2, not a truncated clone; recorded on the row.
 corrects the fourth equation in the "Loss functions" section of the Methods
 (`Ty`/`Sy` → `Tx`/`Sx`) and nothing else. It does not touch the AP-MS interaction
 data, so the AHSP–HBA row stands. Affinage did not cite this paper at all, so the
-provider's failure here is recall, not an unflagged retraction. Twenty-six PMIDs
+provider's failure here is recall, not an unflagged retraction. **Twenty-seven PMIDs**
 were checked via `CommentsCorrections/RefType` on each article's own record (the
-only way a Publisher Correction is discoverable); this was the only flag.
+only way a Publisher Correction is discoverable) — 26 in the first sweep plus
+`PMID:19706593` when it was added later — and this was the only flag.
 
 **Projection test (`reference=PMID:12066189`): negative, and informative.** Eight
 annotations over **two** distinct entities — human AHSP and mouse Ahsp. Not a
@@ -376,8 +377,20 @@ Two consequences, and the second is the point:
 1. **The count was understated by half**, and it is load-bearing — it appears in the
    `ONTOLOGY` knowledge gap ("GO can say only that it binds haemoglobin, despite …"),
    in the proposed complex term's justification, and in the ComplexPortal suggestion.
-   Corrected at all four sites with a script that asserts each anchor is present before
-   replacing and re-greps for the retracted phrasing afterwards.
+   Corrected with a script that asserts each anchor is present before replacing and
+   re-greps for the retracted phrasing afterwards — **and it still landed in 4 of 5
+   sites.** A fifth occurrence in `suggested_questions` read "GO:0030492 has two
+   co-crystal structures", which the post-edit grep missed because the retracted-phrase
+   list contained `"two crystal structures"` and not `"two co-crystal structures"`. This
+   is the campaign's "fixed in N places, landed in N−1" recurrence happening to a script
+   that was written specifically to prevent it: **anchoring on enumerated phrasings
+   inherits whatever the author failed to imagine.** The fix was to lint for the
+   *pattern* — a cardinal number word within 40 characters of a structure noun, across
+   the review, the notes, the history record and the PR body — rather than for
+   sentences. That lint found the miss immediately, and its own first run produced four
+   false positives (digits inside `2.8 A`, PMIDs and GO ids), which is why digits are
+   excluded from the pattern and only count *words* are matched. It is self-tested by
+   mutating `four` back to `two` and requiring the lint to fail.
 2. **Recounting surfaced a paper nothing else had.** `PMID:19706593` (Gell *et al.*,
    JBC 2009) is absent from UniProt's `RN` list, absent from GOA, and absent from the
    affinage report — yet it is a crystal structure *plus* the mutagenesis that
