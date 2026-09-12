@@ -71,3 +71,7 @@ All PMIDs cited in existing GOA annotations verified as real:
 
 PMID:28218250 cited in UniProt (not in GOA):
 - Lee et al. 2017, Nat Commun - Fun30/Fft3 and FACT cooperation - REAL
+
+## ProtNLM pre-release paragraph assessment
+
+The exact source paragraph and eleven atomic claims are recorded in spt16-protnlm-function-review.md. Established complex membership, transcription/replication roles and chromatin reassembly are supported. The asserted dissociation of exactly one H2A-H2B dimer is not required by the mechanistic literature: [PMID:19683499 "Second, increased nuclease sensitivity can occur without displacement of dimers from the nucleosome."]. The main biological description therefore describes nucleosome reorganization without making dimer eviction obligatory.

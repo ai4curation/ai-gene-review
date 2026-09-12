@@ -1,0 +1,3348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>nip7 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>nip7</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q1MTQ9" target="_blank" class="term-link">
+                        Q1MTQ9
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Schizosaccharomyces pombe (strain 972 / ATCC 24843)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "nip7";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">15</span> Annotations</a>
+
+
+
+        <a href="#review-research" title="Deep research and hypothesis research reports"><span class="nav-count">1</span> Research</a>
+
+
+
+
+
+        <a href="#review-core-functions" title="Core biological functions"><span class="nav-count">1</span> Core Function</a>
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">9</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">1</span> Documents</a>
+
+
+
+
+
+
+
+
+
+
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q1MTQ9" data-a="DESCRIPTION: Nip7 is an RNA-binding ribosome-biogenesis factor ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Nip7 is an RNA-binding ribosome-biogenesis factor with pre-PUA and PUA domains. It associates with nascent 60S ribosomal subunits in the nucleolus and supports assembly of the large-subunit preribosome. The fission-yeast protein is present in structurally characterized early pre-60S particles; it is an assembly factor rather than a constitutive structural protein of the mature ribosome.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                                    GO:0003723
+                                </a>
+                            </span>
+                            <span class="term-label">RNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q1MTQ9" data-a="GO:0003723" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nip7 is an RNA-binding pre-60S assembly factor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The conserved PUA RNA-binding architecture and direct presence of Q1MTQ9 in an early pre-60S particle support RNA binding in assembly. This is not an inference of kinase regulation from the broad mixed PANTHER family.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/nip7/nip7-8ESQ-entities.json
+
+                                </span>
+
+                                <div class="support-text">&#34;pdbx_description&#34;: &#34;60S ribosome subunit biogenesis protein nip7&#34;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/nip7/nip7-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR002478; PUA.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                                    GO:0003723
+                                </a>
+                            </span>
+                            <span class="term-label">RNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000051
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q1MTQ9" data-a="GO:0003723" data-r="GO_REF:0000051" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nip7 is an RNA-binding pre-60S assembly factor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The conserved PUA RNA-binding architecture and direct presence of Q1MTQ9 in an early pre-60S particle support RNA binding in assembly. This is not an inference of kinase regulation from the broad mixed PANTHER family.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/nip7/nip7-8ESQ-entities.json
+
+                                </span>
+
+                                <div class="support-text">&#34;pdbx_description&#34;: &#34;60S ribosome subunit biogenesis protein nip7&#34;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/nip7/nip7-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR002478; PUA.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16823372
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ORFeome cloning and global analysis of protein localization ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q1MTQ9" data-a="GO:0005634" data-r="PMID:16823372" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The core nuclear localization is the nucleolus.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target nucleolar HDA annotation and early pre-60S complex establish a more specific site of action than nucleus.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005730" target="_blank" class="term-link">
+                                    nucleolus
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/nip7/nip7-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:16823372}. Nucleus,
+CC       nucleolus {ECO:0000269|PubMed:16823372}.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q1MTQ9" data-a="GO:0005634" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The core nuclear localization is the nucleolus.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target nucleolar HDA annotation and early pre-60S complex establish a more specific site of action than nucleus.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005730" target="_blank" class="term-link">
+                                    nucleolus
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/nip7/nip7-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:16823372}. Nucleus,
+CC       nucleolus {ECO:0000269|PubMed:16823372}.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005730" target="_blank" class="term-link">
+                                    GO:0005730
+                                </a>
+                            </span>
+                            <span class="term-label">nucleolus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16823372
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ORFeome cloning and global analysis of protein localization ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q1MTQ9" data-a="GO:0005730" data-r="PMID:16823372" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nip7 functions in nucleolar pre-60S assembly.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target localization annotation and the primary pre-60S structural study are concordant. The cached localization atlas lacks full text, so the target imaging assignment is accepted as curated rather than independently re-read.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/nip7/nip7-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:16823372}. Nucleus,
+CC       nucleolus {ECO:0000269|PubMed:16823372}.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005730" target="_blank" class="term-link">
+                                    GO:0005730
+                                </a>
+                            </span>
+                            <span class="term-label">nucleolus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q1MTQ9" data-a="GO:0005730" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nip7 functions in nucleolar pre-60S assembly.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target localization annotation and the primary pre-60S structural study are concordant. The cached localization atlas lacks full text, so the target imaging assignment is accepted as curated rather than independently re-read.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/nip7/nip7-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:16823372}. Nucleus,
+CC       nucleolus {ECO:0000269|PubMed:16823372}.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005730" target="_blank" class="term-link">
+                                    GO:0005730
+                                </a>
+                            </span>
+                            <span class="term-label">nucleolus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q1MTQ9" data-a="GO:0005730" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nip7 functions in nucleolar pre-60S assembly.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target localization annotation and the primary pre-60S structural study are concordant. The cached localization atlas lacks full text, so the target imaging assignment is accepted as curated rather than independently re-read.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/nip7/nip7-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:16823372}. Nucleus,
+CC       nucleolus {ECO:0000269|PubMed:16823372}.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q1MTQ9" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A cytoplasmic/cytosolic pool is compatible with the target localization survey.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retain the observation as non-core; the directly characterized role is nucleolar large-subunit assembly, and cytosolic detection alone does not establish a separate translation function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/nip7/nip7-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:16823372}. Nucleus,
+CC       nucleolus {ECO:0000269|PubMed:16823372}.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16823372
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ORFeome cloning and global analysis of protein localization ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q1MTQ9" data-a="GO:0005829" data-r="PMID:16823372" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A cytoplasmic/cytosolic pool is compatible with the target localization survey.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retain the observation as non-core; the directly characterized role is nucleolar large-subunit assembly, and cytosolic detection alone does not establish a separate translation function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/nip7/nip7-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:16823372}. Nucleus,
+CC       nucleolus {ECO:0000269|PubMed:16823372}.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030684" target="_blank" class="term-link">
+                                    GO:0030684
+                                </a>
+                            </span>
+                            <span class="term-label">preribosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36423630" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36423630
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Chromatin localization of nucleophosmin organizes ribosome b...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q1MTQ9" data-a="GO:0030684" data-r="PMID:36423630" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nip7 occurs in an early large-subunit preribosome.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> RCSB entry 8ESQ links author chain l to exact accession Q1MTQ9. Although the paper foregrounds nucleophosmin, its deposited particle includes Nip7; the more specific pre-60S complex is appropriate.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030687" target="_blank" class="term-link">
+                                    preribosome, large subunit precursor
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/nip7/nip7-8ESQ-entities.json
+
+                                </span>
+
+                                <div class="support-text">&#34;pdbx_description&#34;: &#34;60S ribosome subunit biogenesis protein nip7&#34;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030687" target="_blank" class="term-link">
+                                    GO:0030687
+                                </a>
+                            </span>
+                            <span class="term-label">preribosome, large subunit precursor</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q1MTQ9" data-a="GO:0030687" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nip7 is part of the large-subunit preribosome.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The exact target occurs in the deposited early pre-60S particle, independently supporting the ancestral PAINT inference.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/nip7/nip7-8ESQ-entities.json
+
+                                </span>
+
+                                <div class="support-text">&#34;pdbx_description&#34;: &#34;60S ribosome subunit biogenesis protein nip7&#34;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042255" target="_blank" class="term-link">
+                                    GO:0042255
+                                </a>
+                            </span>
+                            <span class="term-label">ribosome assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q1MTQ9" data-a="GO:0042255" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nip7 supports assembly of the large-subunit preribosome.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The direct structural context resolves broad ribosome assembly/biogenesis to the early large-subunit precursor step.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902626" target="_blank" class="term-link">
+                                    assembly of large subunit precursor of preribosome
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/nip7/nip7-8ESQ-entities.json
+
+                                </span>
+
+                                <div class="support-text">&#34;pdbx_description&#34;: &#34;60S ribosome subunit biogenesis protein nip7&#34;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042273" target="_blank" class="term-link">
+                                    GO:0042273
+                                </a>
+                            </span>
+                            <span class="term-label">ribosomal large subunit biogenesis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q1MTQ9" data-a="GO:0042273" data-r="GO_REF:0000033" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nip7 supports assembly of the large-subunit preribosome.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The direct structural context resolves broad ribosome assembly/biogenesis to the early large-subunit precursor step.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902626" target="_blank" class="term-link">
+                                    assembly of large subunit precursor of preribosome
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/nip7/nip7-8ESQ-entities.json
+
+                                </span>
+
+                                <div class="support-text">&#34;pdbx_description&#34;: &#34;60S ribosome subunit biogenesis protein nip7&#34;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902626" target="_blank" class="term-link">
+                                    GO:1902626
+                                </a>
+                            </span>
+                            <span class="term-label">assembly of large subunit precursor of preribosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/36423630" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:36423630
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Chromatin localization of nucleophosmin organizes ribosome b...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q1MTQ9" data-a="GO:1902626" data-r="PMID:36423630" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nip7 contributes to assembly of the large-subunit precursor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The primary study isolates and structures fission-yeast pre-60S particles; exact Q1MTQ9 is a component in 8ESQ. This supports the role independently of ARBA.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/nip7/nip7-8ESQ-entities.json
+
+                                </span>
+
+                                <div class="support-text">&#34;pdbx_description&#34;: &#34;60S ribosome subunit biogenesis protein nip7&#34;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902626" target="_blank" class="term-link">
+                                    GO:1902626
+                                </a>
+                            </span>
+                            <span class="term-label">assembly of large subunit precursor of preribosome</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q1MTQ9" data-a="GO:1902626" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nip7 contributes to assembly of the large-subunit precursor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The primary study isolates and structures fission-yeast pre-60S particles; exact Q1MTQ9 is a component in 8ESQ. This supports the role independently of ARBA.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/nip7/nip7-8ESQ-entities.json
+
+                                </span>
+
+                                <div class="support-text">&#34;pdbx_description&#34;: &#34;60S ribosome subunit biogenesis protein nip7&#34;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section" id="review-core-functions">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds RNA within early pre-60S particles during large-subunit assembly.</h3>
+                <span class="vote-buttons" data-g="Q1MTQ9" data-a="FUNCTION: Binds RNA within early pre-60S particles during la..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                            RNA binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902626" target="_blank" class="term-link">
+                                assembly of large subunit precursor of preribosome
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005730" target="_blank" class="term-link">
+                                nucleolus
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030687" target="_blank" class="term-link">
+                            preribosome, large subunit precursor
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:SCHPO/nip7/nip7-8ESQ-entities.json
+
+                        </span>
+
+                        <div class="finding-text">&#34;pdbx_description&#34;: &#34;60S ribosome subunit biogenesis protein nip7&#34;</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000051.md" target="_blank" class="term-link">
+                            GO_REF:0000051
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">S. pombe keyword mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link">
+                            PMID:16823372
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ORFeome cloning and global analysis of protein localization in the fission yeast Schizosaccharomyces pombe.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/36423630" target="_blank" class="term-link">
+                            PMID:36423630
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Chromatin localization of nucleophosmin organizes ribosome biogenesis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:SCHPO/nip7/nip7-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB Q1MTQ9: curated sequence, features and source attribution</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:SCHPO/nip7/nip7-8ESQ-entities.json
+
+                    </span>
+                </div>
+
+                <div class="reference-title">RCSB PDB 8ESQ polymer-entity metadata: Q1MTQ9 is entity 43, author chain l</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section" id="review-research">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(nip7-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q1MTQ9" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional annotation report: *Schizosaccharomyces pombe nip7* (UniProt Q1MTQ9)</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">17 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-10T14:32:44.583248</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="nip7-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="functional-annotation-report-schizosaccharomyces-pombe-nip7-uniprot-q1mtq9">Functional annotation report: <em>Schizosaccharomyces pombe nip7</em> (UniProt Q1MTQ9)</h1>
+<h2 id="executive-conclusion">Executive conclusion</h2>
+<p>The gene symbol <strong>nip7</strong> in this report refers specifically to <strong>UniProt Q1MTQ9</strong>, from <em>Schizosaccharomyces pombe</em> strain 972/ATCC 24843, with ORF names <strong>SPCC320.11c/SPCC330.18</strong>. The supplied UniProt identity—“60S ribosome subunit biogenesis protein Nip7,” NIP7 family, with NIP7_N and PUA/PUA-like domains—is internally consistent with the conserved Nip7 class of eukaryotic ribosome-assembly factors. No conflicting same-symbol protein was used.</p>
+<p>However, targeted searches retrieved <strong>no primary study directly characterizing Q1MTQ9 or either S. pombe ORF name</strong>. The gene symbol is therefore not ambiguous in the supplied accession context, but literature for this specific protein is limited. The strongest functional interpretation is an orthology- and domain-based annotation: Q1MTQ9 is probably a <strong>nonenzymatic, RNA-associated assembly factor acting on nucleolar pre-60S particles during large-subunit pre-rRNA maturation</strong>. Its likely role is to organize or stabilize an immature preribosomal state, rather than catalyze a chemical reaction. Localization, essentiality, binding specificity, and interaction partners remain to be demonstrated directly in <em>S. pombe</em>.</p>
+<table>
+<thead>
+<tr>
+<th>Conclusion</th>
+<th>Evidence organism/source</th>
+<th>Evidence type</th>
+<th>Confidence / limitations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Q1MTQ9 is <strong>nip7</strong> (ORFs <strong>SPCC320.11c/SPCC330.18</strong>) from <em>Schizosaccharomyces pombe</em> strain 972 and belongs to the NIP7 family.</td>
+<td>Supplied UniProt record for Q1MTQ9</td>
+<td>Curated database identity</td>
+<td><strong>High for identity.</strong> The accession, organism, gene name, ORFs, and protein description are mutually consistent; the supplied record is the primary identity anchor because retrieved papers did not independently name Q1MTQ9 or either ORF.</td>
+</tr>
+<tr>
+<td>Direct, targeted experimental literature on <strong>S. pombe</strong> Q1MTQ9/nip7 is very limited or absent from the retrieved literature.</td>
+<td>Literature searches for Q1MTQ9, nip7, SPCC320.11c, and SPCC330.18</td>
+<td>Evidence-gap assessment</td>
+<td><strong>High confidence in the search result, not proof that no paper exists.</strong> Mechanistic conclusions below derive principally from <em>S. cerevisiae</em> Nip7 and must be labeled as orthology-based inference.</td>
+</tr>
+<tr>
+<td>Q1MTQ9 is most plausibly a <strong>nonenzymatic nucleolar pre-60S assembly and pre-rRNA-processing factor</strong>, not a ribosomal protein or known catalyst.</td>
+<td><em>S. cerevisiae</em> Nip7: nucleolar enrichment, transient association with free 60S particles, absence from 80S/polysomes, and release at 100–250 mM KCl (zanchin1997saccharomycescerevisiaenip7p pages 11-14, zanchin1997saccharomycescerevisiaenip7p pages 10-11)</td>
+<td>Ortholog functional, localization, and biochemical fractionation evidence</td>
+<td><strong>Moderate-to-high inference.</strong> Strongly established for budding yeast and compatible with conserved family/domain annotation, but localization and particle association have not been demonstrated directly for Q1MTQ9. No catalytic reaction, cofactor, or turnover has been shown.</td>
+</tr>
+<tr>
+<td>Nip7 supports production of mature large-subunit rRNAs by enabling <strong>27S pre-rRNA processing</strong>.</td>
+<td><em>S. cerevisiae</em> depletion causes 27S accumulation, delayed production of 25S and 5.8S rRNAs, reduced 60S abundance, halfmer polysomes, and reduced translation (zanchin1997saccharomycescerevisiaenip7p pages 11-14, zanchin1997saccharomycescerevisiaenip7p pages 1-2)</td>
+<td>Conditional depletion, Northern/processing, polysome, and translation phenotypes</td>
+<td><strong>High for the budding-yeast ortholog; moderate for Q1MTQ9.</strong> The principal defect lies after 27SA2, affecting progression toward 27SA3/27SB, but an exact RNA substrate or cleavage reaction attributable directly to Nip7 has not been established.</td>
+</tr>
+<tr>
+<td>Nip7 and Nop2 form an early <strong>B-factor pair</strong> that initiates a hierarchical assembly pathway required before C2 cleavage of 27SB pre-rRNA.</td>
+<td><em>S. cerevisiae</em> nucleolar pre-60S assembly analysis (biedka2018hierarchicalrecruitmentof pages 1-2)</td>
+<td>Genetic depletion, hierarchical recruitment, and structure-guided pathway analysis</td>
+<td><strong>High for pathway placement in budding yeast; moderate ortholog inference.</strong> Nop2 is enzymatic, whereas the evidence does not assign catalytic activity to Nip7. The corresponding Q1MTQ9 interaction has not been tested directly.</td>
+</tr>
+<tr>
+<td>A 2023 model places Nip7 release between pre-60S states <strong>NE1 and NE2</strong>; release of Nip7, Nop2, and Spb1 permits compaction of rRNA domains IV and V and may trigger exit from the nucleolus.</td>
+<td><em>S. cerevisiae</em> pre-LSU analysis integrating mutants, iTRAQ, and cryo-EM states (laperuta2023yeastribosomebiogenesis pages 4-5, laperuta2023yeastribosomebiogenesis pages 1-2)</td>
+<td>Quantitative proteomics plus structure-guided maturation model</td>
+<td><strong>Moderate-to-high for budding yeast.</strong> Increased retention of Nip7/Nop2/Spb1 in stalled particles supports the model, but Nip7 release kinetics and the corresponding transition in <em>S. pombe</em> have not been measured.</td>
+</tr>
+<tr>
+<td>The annotated <strong>PUA/PUA-like domain</strong> makes RNA association mechanistically plausible.</td>
+<td>Supplied Q1MTQ9 InterPro annotations: PUA, PUA-like_sf, and PUA_sf; Nip7 family annotation</td>
+<td>Domain/evolutionary inference</td>
+<td><strong>Moderate.</strong> PUA domains commonly support RNA recognition, but no direct binding affinity, RNA sequence/structure preference, contact nucleotide, or substrate specificity has been established for Q1MTQ9. Domain presence alone does not prove direct RNA binding.</td>
+</tr>
+<tr>
+<td>Nutrient-responsive <strong>TORC1</strong> signaling provides upstream context for ribosome-biogenesis output in <em>S. pombe</em>, but direct regulation of nip7 is unproven.</td>
+<td>2023 <em>S. pombe</em> review: nitrogen starvation reduces rRNA transcription to about one-tenth, glucose starvation represses ribosome-biogenesis genes within 30 minutes, and TORC1 principally controls ribosome-related expression (hirai2023comparativeresearchregulatory pages 1-2, hirai2023comparativeresearchregulatory pages 2-4)</td>
+<td>Recent review of species-specific signaling and transcriptional evidence</td>
+<td><strong>High for broad pathway context; low for a direct nip7 link.</strong> No cited experiment shows Q1MTQ9 abundance, localization, activity, or phosphorylation being controlled by TORC1; evidence for PKA regulation of ribosome-related genes in <em>S. pombe</em> was specifically reported as lacking.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Evidence-tier summary separating verified Q1MTQ9 identity and species-specific pathway context from mechanistic conclusions inferred from budding-yeast Nip7. It highlights where direct experiments on the fission-yeast protein remain necessary.</em></p>
+<h2 id="1-identity-and-domain-verification">1. Identity and domain verification</h2>
+<p>The required identity checks support the intended target:</p>
+<ul>
+<li><strong>Gene/protein match:</strong> nip7 corresponds to the supplied description “60S ribosome subunit biogenesis protein Nip7.”</li>
+<li><strong>Organism:</strong> <em>Schizosaccharomyces pombe</em> strain 972/ATCC 24843, not <em>Saccharomyces cerevisiae</em>, human NIP7, or an unrelated NIP/NIP1 protein.</li>
+<li><strong>Identifiers:</strong> UniProt <strong>Q1MTQ9</strong>; gene <strong>nip7</strong>; ORFs <strong>SPCC320.11c</strong> and <strong>SPCC330.18</strong>.</li>
+<li><strong>Family and architecture:</strong> NIP7 family, containing an N-terminal NIP7_N region and a PUA/PUA-like RNA-binding fold according to the supplied InterPro annotations.</li>
+</ul>
+<p>The domain architecture agrees with the inferred role in ribonucleoprotein assembly. Nevertheless, a PUA annotation alone does not establish which RNA Q1MTQ9 binds, its affinity, or whether recognition is sequence- or structure-specific. No direct Q1MTQ9 RNA-binding assay was found.</p>
+<h2 id="2-primary-molecular-function">2. Primary molecular function</h2>
+<h3 id="best-supported-annotation">Best-supported annotation</h3>
+<p>Q1MTQ9 is best annotated as a <strong>60S ribosomal-subunit assembly factor involved in pre-rRNA processing</strong>, not as an enzyme, transporter, signaling molecule, or permanent structural ribosomal protein. No catalytic reaction, cofactor requirement, turnover number, or chemically defined substrate has been demonstrated for Nip7. Its relevant “substrate” is more appropriately considered an <strong>immature large-subunit preribosomal ribonucleoprotein containing 27S-class pre-rRNA</strong>, based on the budding-yeast ortholog.</p>
+<p>In <em>S. cerevisiae</em>, conditional Nip7 depletion causes accumulation of 27S pre-rRNA, delayed production of mature 25S and 5.8S rRNAs, depletion of 60S subunits, halfmer polysomes, and reduced protein synthesis. The principal processing defect lies after 27SA2, during progression toward 27SA3/27SB and subsequent large-subunit maturation. This establishes Nip7 as necessary for efficient processing and assembly, but not as the nuclease that performs the cleavage (publication: September 1997; https://doi.org/10.1128/MCB.17.9.5001). (zanchin1997saccharomycescerevisiaenip7p pages 11-14, zanchin1997saccharomycescerevisiaenip7p pages 10-11, zanchin1997saccharomycescerevisiaenip7p pages 1-2)</p>
+<p>Biochemical fractionation further shows that budding-yeast Nip7 is transiently associated with free 60S material but absent from mature 80S monosomes and polysomes. Its release at approximately <strong>100–250 mM KCl</strong> supports a reversible assembly-factor interaction rather than incorporation as a stable ribosomal protein. The ortholog is a 181-residue, approximately 21-kDa protein; those dimensions should not be transferred numerically to Q1MTQ9 without checking its sequence. (zanchin1997saccharomycescerevisiaenip7p pages 11-14, zanchin1997saccharomycescerevisiaenip7p pages 1-2)</p>
+<h3 id="mechanistic-placement">Mechanistic placement</h3>
+<p>A 2018 <em>S. cerevisiae</em> study placed Nip7 with Nop2 at the beginning of a hierarchical “B-factor” recruitment pathway. Most factors in this pathway associate before 27SA3 processing and collectively prepare the particle for C2 cleavage of 27SB pre-rRNA; <strong>11 ribosomal proteins and 14 assembly factors</strong> were implicated in this remodeling checkpoint (publication: July 2018; https://doi.org/10.1083/jcb.201711037). Nip7 should therefore be interpreted as a facilitator of ordered assembly and RNA remodeling, whereas the available evidence does not assign it catalytic cleavage activity. (biedka2018hierarchicalrecruitmentof pages 1-2)</p>
+<p>The most plausible molecular model is that Nip7 binds RNA and/or neighboring assembly factors to maintain a productive pre-60S conformation. The PUA fold makes direct RNA association plausible, but Q1MTQ9 substrate specificity remains unknown. Direct binding to a defined ITS2, 25S, or 5.8S sequence should not be asserted from present evidence.</p>
+<h2 id="3-biological-process-and-pathway">3. Biological process and pathway</h2>
+<p>The immediate pathway is <strong>eukaryotic large-ribosomal-subunit biogenesis</strong>:</p>
+<ol>
+<li>Pre-rRNA is transcribed and assembled with ribosomal proteins and numerous transient factors in the nucleolus.</li>
+<li>Nip7 is recruited to an early/intermediate nucleolar pre-60S particle, likely in conjunction with Nop2.</li>
+<li>The factor helps establish an assembly state competent for 27S processing, maturation of the future 25S and 5.8S rRNAs, and later C2 cleavage/ITS2 removal.</li>
+<li>Nip7 is released before or during the transition from late nucleolar to nucleoplasmic maturation and does not remain in translating ribosomes.</li>
+</ol>
+<p>A 2023 study refined this model in budding yeast. Mutant and iTRAQ analyses found increased retention of Nip7, Nop2, and Spb1 on stalled pre-LSUs. Integrated with cryo-EM states, the authors placed their release between states <strong>NE1 and NE2</strong> and proposed that removal of these factors permits compaction of rRNA domains IV and V, helping trigger release of nascent pre-60S particles from the nucleolus (publication: October 2023; https://doi.org/10.1093/nar/gkad794). This is the most recent precise Nip7 mechanistic result retrieved, but it remains an <em>S. cerevisiae</em> model rather than direct evidence for Q1MTQ9. (laperuta2023yeastribosomebiogenesis pages 4-5, laperuta2023yeastribosomebiogenesis pages 1-2)</p>
+<h2 id="4-cellular-localization">4. Cellular localization</h2>
+<p>The predicted functional site for Q1MTQ9 is the <strong>nucleolus</strong>, on immature pre-60S particles. This assignment is strongly supported by budding-yeast ortholog experiments but is not directly verified in <em>S. pombe</em>.</p>
+<p>In <em>S. cerevisiae</em>, Nip7-GFP displays predominantly nuclear, crescent-shaped nucleolar localization. A smaller fraction cosediments with free 60S subunits, leading to an early proposal that Nip7 might accompany nascent subunits beyond the nucleolus and be released during later maturation. It is not detected as a stable component of 80S ribosomes or polysomes. (zanchin1997saccharomycescerevisiaenip7p pages 14-14, zanchin1997saccharomycescerevisiaenip7p pages 10-11)</p>
+<p>Accordingly, the defensible annotation for Q1MTQ9 is <strong>likely nucleolar, potentially with transient nucleoplasmic or cytoplasmic particle-associated pools</strong>. Direct live-cell imaging of endogenously tagged Q1MTQ9 is required before those secondary pools can be assigned in fission yeast.</p>
+<h2 id="5-relationship-to-signaling-and-cellular-regulation">5. Relationship to signaling and cellular regulation</h2>
+<p>Nip7 operates in the biochemical output arm of ribosome biogenesis, not as a demonstrated signaling component. The principal upstream context in <em>S. pombe</em> is nutrient-responsive <strong>TORC1</strong> control of ribosomal-gene expression and rRNA synthesis.</p>
+<p>A 2023 review reports that nitrogen starvation reduces <em>S. pombe</em> rRNA transcription to approximately <strong>one-tenth</strong> of normal levels, while glucose starvation represses ribosome-biogenesis gene expression within <strong>30 minutes</strong>. In fission yeast, TORC1 contains Tor2 and principally controls ribosome-related expression; TORC2 contains Tor1. Importantly, the authors found no evidence that PKA directly regulates ribosome-related genes in <em>S. pombe</em>, despite its broader nutrient-response roles (publication: February 2023; https://doi.org/10.3390/biom13020288). These observations establish pathway context but do <strong>not</strong> demonstrate direct TORC1 or PKA regulation of nip7 transcription, protein abundance, localization, or phosphorylation. (hirai2023comparativeresearchregulatory pages 1-2, hirai2023comparativeresearchregulatory pages 2-4)</p>
+<p>The same review estimates approximately <strong>100–150 rDNA repeats</strong> at the ends of <em>S. pombe</em> chromosome III, illustrating the scale of the rRNA-production system in which Nip7 is expected to act. (hirai2023comparativeresearchregulatory pages 1-2)</p>
+<h2 id="6-recent-developments-and-applications-20232024">6. Recent developments and applications, 2023–2024</h2>
+<h3 id="mechanistic-advance">Mechanistic advance</h3>
+<p>The 2023 NE1-to-NE2 model shifts interpretation of Nip7 from a generic pre-rRNA-processing factor to a component of a defined <strong>late-nucleolar release checkpoint</strong>. Nip7, Nop2, and Spb1 are proposed to sterically restrain domains IV and V until upstream assembly is complete; their ordered removal enables rRNA compaction and nucleolar exit. (laperuta2023yeastribosomebiogenesis pages 4-5, laperuta2023yeastribosomebiogenesis pages 1-2)</p>
+<h3 id="experimental-and-pharmacological-application">Experimental and pharmacological application</h3>
+<p>Ribosome-biogenesis factors such as Nip7 are useful markers and perturbation points for mapping assembly intermediates by affinity purification, quantitative proteomics, RNA processing assays, and cryo-EM. There is no evidence that Q1MTQ9 itself has a deployed industrial, diagnostic, or therapeutic application.</p>
+<p>A relevant 2024 proof of principle showed that the lichen metabolite <strong>usnic acid</strong> chemically blocks nucleolar pre-60S maturation in budding yeast. At a reported minimum inhibitory concentration of <strong>40 µM</strong>, a large-subunit Rpl7a-GFP reporter accumulated in the nucleus within <strong>2 minutes</strong>, whereas a small-subunit Rps9-GFP phenotype appeared only after about <strong>30 minutes</strong>. Quantitative cryo-EM placed the primary block at the transition from Nsa1-associated nucleolar state B to C, with loss of factors including Dbp10 and secondary effects on earlier maturation stages (publication: August 2024; https://doi.org/10.1038/s41467-024-51754-3). This establishes pre-60S maturation as chemically tractable, but usnic acid was not shown to bind or inhibit Nip7. (kofler2024thenovelribosome pages 1-2, kofler2024thenovelribosome pages 14-15)</p>
+<h2 id="7-evidence-based-functional-annotation">7. Evidence-based functional annotation</h2>
+<p>A suitably conservative annotation is:</p>
+<blockquote>
+<p><strong>nip7/Q1MTQ9 encodes a conserved, PUA-domain-containing 60S ribosome-biogenesis factor predicted to associate transiently with nucleolar pre-60S particles. By orthology to budding-yeast Nip7, it likely supports structural maturation and processing of 27S-class pre-rRNA into the precursors of mature 25S and 5.8S rRNAs, probably through RNA/protein binding rather than enzymatic catalysis. It is expected to leave the particle before mature ribosome function.</strong></p>
+</blockquote>
+<h3 id="confidence-by-feature">Confidence by feature</h3>
+<ul>
+<li><strong>Identity, organism, family, and domains:</strong> high, based on the supplied UniProt/InterPro record.</li>
+<li><strong>General role in 60S biogenesis:</strong> moderate-to-high, based on strong conservation and convergent ortholog evidence.</li>
+<li><strong>Nonenzymatic assembly-factor role:</strong> moderate-to-high; no catalytic motif or reaction is established, and ortholog behavior is transient and structural.</li>
+<li><strong>Nucleolar localization:</strong> moderate for Q1MTQ9; high for the budding-yeast ortholog.</li>
+<li><strong>Action at 27S processing and the Nip7–Nop2 hierarchy:</strong> moderate orthology-based inference.</li>
+<li><strong>Specific RNA-binding site or sequence preference:</strong> unknown.</li>
+<li><strong>Essentiality in <em>S. pombe</em>:</strong> not established by the retrieved direct literature and should not be inferred solely from <em>S. cerevisiae</em> essentiality.</li>
+<li><strong>Direct TOR regulation:</strong> unproven.</li>
+</ul>
+<h2 id="8-critical-experiments-needed-in-s-pombe">8. Critical experiments needed in <em>S. pombe</em></h2>
+<p>The highest-value validation would combine: (i) endogenous fluorescent tagging and nucleolar-marker colocalization; (ii) conditional depletion followed by growth, polysome, and 25S:18S measurements; (iii) Northern blotting or long-read RNA analysis of fission-yeast pre-rRNA intermediates; (iv) affinity purification–mass spectrometry to test association with Nop2 and pre-60S factors; (v) UV-crosslinking/CLIP or purified-protein assays to define Q1MTQ9 RNA contacts and PUA-domain dependence; and (vi) complementation with PUA-interface mutants. These experiments would distinguish direct RNA recognition from protein-mediated recruitment and establish whether the mechanistic model inferred from budding yeast is conserved in fission yeast.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(zanchin1997saccharomycescerevisiaenip7p pages 11-14): Nilson I. T. Zanchin, Paul Roberts, Aravinda DeSilva, Fred Sherman, and David S. Goldfarb. Saccharomyces cerevisiae nip7p is required for efficient 60s ribosome subunit biogenesis. Molecular and Cellular Biology, 17:5001-5015, Sep 1997. URL: https://doi.org/10.1128/mcb.17.9.5001, doi:10.1128/mcb.17.9.5001. This article has 150 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zanchin1997saccharomycescerevisiaenip7p pages 10-11): Nilson I. T. Zanchin, Paul Roberts, Aravinda DeSilva, Fred Sherman, and David S. Goldfarb. Saccharomyces cerevisiae nip7p is required for efficient 60s ribosome subunit biogenesis. Molecular and Cellular Biology, 17:5001-5015, Sep 1997. URL: https://doi.org/10.1128/mcb.17.9.5001, doi:10.1128/mcb.17.9.5001. This article has 150 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(zanchin1997saccharomycescerevisiaenip7p pages 1-2): Nilson I. T. Zanchin, Paul Roberts, Aravinda DeSilva, Fred Sherman, and David S. Goldfarb. Saccharomyces cerevisiae nip7p is required for efficient 60s ribosome subunit biogenesis. Molecular and Cellular Biology, 17:5001-5015, Sep 1997. URL: https://doi.org/10.1128/mcb.17.9.5001, doi:10.1128/mcb.17.9.5001. This article has 150 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(biedka2018hierarchicalrecruitmentof pages 1-2): Stephanie Biedka, Jelena Micic, Daniel Wilson, Hailey Brown, Luke Diorio-Toth, and John L. Woolford. Hierarchical recruitment of ribosomal proteins and assembly factors remodels nucleolar pre-60s ribosomes. The Journal of Cell Biology, 217:2503-2518, Jul 2018. URL: https://doi.org/10.1083/jcb.201711037, doi:10.1083/jcb.201711037. This article has 57 citations.</p>
+</li>
+<li>
+<p>(laperuta2023yeastribosomebiogenesis pages 4-5): Amber J LaPeruta, Stefanie Hedayati, Jelena Micic, Fiona Fitzgerald, David Kim, Grace Oualline, and John L Woolford. Yeast ribosome biogenesis factors puf6 and nog2 and ribosomal proteins ul2 and el43 act in concert to facilitate the release of nascent large ribosomal subunits from the nucleolus. Nucleic Acids Research, 51(20):11277-11290, Oct 2023. URL: https://doi.org/10.1093/nar/gkad794, doi:10.1093/nar/gkad794. This article has 7 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(laperuta2023yeastribosomebiogenesis pages 1-2): Amber J LaPeruta, Stefanie Hedayati, Jelena Micic, Fiona Fitzgerald, David Kim, Grace Oualline, and John L Woolford. Yeast ribosome biogenesis factors puf6 and nog2 and ribosomal proteins ul2 and el43 act in concert to facilitate the release of nascent large ribosomal subunits from the nucleolus. Nucleic Acids Research, 51(20):11277-11290, Oct 2023. URL: https://doi.org/10.1093/nar/gkad794, doi:10.1093/nar/gkad794. This article has 7 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hirai2023comparativeresearchregulatory pages 1-2): Hayato Hirai and Kunihiro Ohta. Comparative research: regulatory mechanisms of ribosomal gene transcription in saccharomyces cerevisiae and schizosaccharomyces pombe. Feb 2023. URL: https://doi.org/10.3390/biom13020288, doi:10.3390/biom13020288. This article has 20 citations.</p>
+</li>
+<li>
+<p>(hirai2023comparativeresearchregulatory pages 2-4): Hayato Hirai and Kunihiro Ohta. Comparative research: regulatory mechanisms of ribosomal gene transcription in saccharomyces cerevisiae and schizosaccharomyces pombe. Feb 2023. URL: https://doi.org/10.3390/biom13020288, doi:10.3390/biom13020288. This article has 20 citations.</p>
+</li>
+<li>
+<p>(zanchin1997saccharomycescerevisiaenip7p pages 14-14): Nilson I. T. Zanchin, Paul Roberts, Aravinda DeSilva, Fred Sherman, and David S. Goldfarb. Saccharomyces cerevisiae nip7p is required for efficient 60s ribosome subunit biogenesis. Molecular and Cellular Biology, 17:5001-5015, Sep 1997. URL: https://doi.org/10.1128/mcb.17.9.5001, doi:10.1128/mcb.17.9.5001. This article has 150 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kofler2024thenovelribosome pages 1-2): Lisa Kofler, Lorenz Grundmann, Magdalena Gerhalter, Michael Prattes, Juliane Merl-Pham, Gertrude Zisser, Irina Grishkovskaya, Victor-Valentin Hodirnau, Martin Vareka, Rolf Breinbauer, Stefanie M. Hauck, David Haselbach, and Helmut Bergler. The novel ribosome biogenesis inhibitor usnic acid blocks nucleolar pre-60s maturation. Nature Communications, Aug 2024. URL: https://doi.org/10.1038/s41467-024-51754-3, doi:10.1038/s41467-024-51754-3. This article has 9 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kofler2024thenovelribosome pages 14-15): Lisa Kofler, Lorenz Grundmann, Magdalena Gerhalter, Michael Prattes, Juliane Merl-Pham, Gertrude Zisser, Irina Grishkovskaya, Victor-Valentin Hodirnau, Martin Vareka, Rolf Breinbauer, Stefanie M. Hauck, David Haselbach, and Helmut Bergler. The novel ribosome biogenesis inhibitor usnic acid blocks nucleolar pre-60s maturation. Nature Communications, Aug 2024. URL: https://doi.org/10.1038/s41467-024-51754-3, doi:10.1038/s41467-024-51754-3. This article has 9 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="nip7-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>biedka2018hierarchicalrecruitmentof pages 1-2</li>
+<li>hirai2023comparativeresearchregulatory pages 1-2</li>
+<li>laperuta2023yeastribosomebiogenesis pages 4-5</li>
+<li>laperuta2023yeastribosomebiogenesis pages 1-2</li>
+<li>hirai2023comparativeresearchregulatory pages 2-4</li>
+<li>kofler2024thenovelribosome pages 1-2</li>
+<li>kofler2024thenovelribosome pages 14-15</li>
+<li>https://doi.org/10.1128/MCB.17.9.5001</li>
+<li>https://doi.org/10.1083/jcb.201711037</li>
+<li>https://doi.org/10.1093/nar/gkad794</li>
+<li>https://doi.org/10.3390/biom13020288</li>
+<li>https://doi.org/10.1038/s41467-024-51754-3</li>
+<li>https://doi.org/10.1128/mcb.17.9.5001,</li>
+<li>https://doi.org/10.1083/jcb.201711037,</li>
+<li>https://doi.org/10.1093/nar/gkad794,</li>
+<li>https://doi.org/10.3390/biom13020288,</li>
+<li>https://doi.org/10.1038/s41467-024-51754-3,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(nip7-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q1MTQ9" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="nip7-q1mtq9-evidence-and-prediction-assessment">nip7 (Q1MTQ9) — evidence and prediction assessment</h1>
+<p>Nip7 is an RNA-binding ribosome-biogenesis factor with pre-PUA and PUA domains. It associates with nascent 60S ribosomal subunits in the nucleolus and supports assembly of the large-subunit preribosome. The fission-yeast protein is present in structurally characterized early pre-60S particles; it is an assembly factor rather than a constitutive structural protein of the mature ribosome.</p>
+<h2 id="evidence-and-family-boundary">Evidence and family boundary</h2>
+<p>The <a href="https://pubmed.ncbi.nlm.nih.gov/36423630/">2022 primary paper</a> focuses on Fkbp39/nucleophosmin but reports multiple fission-yeast pre-60S particles. The <a href="https://www.rcsb.org/structure/8ESQ">RCSB8ESQ metadata</a> explicitly identifies Q1MTQ9 as entity43, author chainl; the downloaded <a href="nip7-8ESQ-entities.json">entity response</a> preserves the identity mapping. This directly supports the target’s occurrence in an early large-subunit precursor even though the article prose does not prominently name Nip7.</p>
+<p>The PUA/pre-PUA architecture supports an RNA-binding assembly factor. It neither confers an RNA-cleavage or methyltransferase reaction nor turns Nip7 into a mature ribosomal constituent. PANTHER PTHR23415 has a mixed CKS/Nip7 name; that broad label is not evidence for kinase regulation by this protein. Falcon misses the target structural deposit and HDA nucleolar/cytosolic annotation and consequently understates the direct target evidence.</p>
+<h2 id="external-protnlm-statements">External ProtNLM statements</h2>
+<p><a href="nip7-protnlm-source.json">Exact retained output</a>. These are name/location claims, not emitted GO/EC predictions. CNN denotes overlap with existing supported annotation; it does not establish literal membership in the training set.</p>
+<table>
+<thead>
+<tr>
+<th>Claim type</th>
+<th>Verbatim output</th>
+<th>Assessment</th>
+<th>Evidence and interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>name</td>
+<td>60S ribosome subunit biogenesis protein NIP7</td>
+<td>CNN</td>
+<td>The exact Q1MTQ9 protein is author chain l/entity43 in deposited pre-60S structure8ESQ linked to PMID:36423630. The name accurately identifies an assembly factor, not a mature ribosomal structural constituent.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="source-quotations">Source quotations</h2>
+<h2 id="research-provenance">Research provenance</h2>
+<p>The genuine <a href="nip7-deep-research-falcon.md">Falcon report</a> is retained with its provider metadata and artifact. Its conclusions were checked against the target record, exact accession and primary sources described above. Scientific uncertainties are recorded as UNC/UNDECIDED findings rather than a request for another reviewer to perform this assessment.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q1MTQ9
+gene_symbol: nip7
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:284812
+  label: Schizosaccharomyces pombe (strain 972 / ATCC 24843)
+description: Nip7 is an RNA-binding ribosome-biogenesis factor with pre-PUA and PUA domains. It associates
+  with nascent 60S ribosomal subunits in the nucleolus and supports assembly of the large-subunit preribosome.
+  The fission-yeast protein is present in structurally characterized early pre-60S particles; it is an
+  assembly factor rather than a constitutive structural protein of the mature ribosome.
+existing_annotations:
+- term:
+    id: GO:0003723
+    label: RNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  supporting_entities:
+  - InterPro:IPR002478
+  - InterPro:IPR036974
+  review:
+    summary: Nip7 is an RNA-binding pre-60S assembly factor.
+    action: ACCEPT
+    reason: The conserved PUA RNA-binding architecture and direct presence of Q1MTQ9 in an early pre-60S
+      particle support RNA binding in assembly. This is not an inference of kinase regulation from the
+      broad mixed PANTHER family.
+    supported_by:
+    - &amp;id001
+      reference_id: file:SCHPO/nip7/nip7-8ESQ-entities.json
+      supporting_text: &#39;&#34;pdbx_description&#34;: &#34;60S ribosome subunit biogenesis protein nip7&#34;&#39;
+    - reference_id: file:SCHPO/nip7/nip7-uniprot.txt
+      supporting_text: DR   InterPro; IPR002478; PUA.
+- term:
+    id: GO:0003723
+    label: RNA binding
+  evidence_type: NAS
+  original_reference_id: GO_REF:0000051
+  qualifier: enables
+  review:
+    summary: Nip7 is an RNA-binding pre-60S assembly factor.
+    action: ACCEPT
+    reason: The conserved PUA RNA-binding architecture and direct presence of Q1MTQ9 in an early pre-60S
+      particle support RNA binding in assembly. This is not an inference of kinase regulation from the
+      broad mixed PANTHER family.
+    supported_by:
+    - *id001
+    - reference_id: file:SCHPO/nip7/nip7-uniprot.txt
+      supporting_text: DR   InterPro; IPR002478; PUA.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: HDA
+  original_reference_id: PMID:16823372
+  qualifier: is_active_in
+  review:
+    summary: The core nuclear localization is the nucleolus.
+    action: MODIFY
+    reason: The target nucleolar HDA annotation and early pre-60S complex establish a more specific site
+      of action than nucleus.
+    supported_by:
+    - reference_id: file:SCHPO/nip7/nip7-uniprot.txt
+      supporting_text: &#39;CC   -!- SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:16823372}. Nucleus,
+
+        CC       nucleolus {ECO:0000269|PubMed:16823372}.&#39;
+    proposed_replacement_terms:
+    - id: GO:0005730
+      label: nucleolus
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  supporting_entities:
+  - InterPro:IPR016686
+  review:
+    summary: The core nuclear localization is the nucleolus.
+    action: MODIFY
+    reason: The target nucleolar HDA annotation and early pre-60S complex establish a more specific site
+      of action than nucleus.
+    supported_by:
+    - reference_id: file:SCHPO/nip7/nip7-uniprot.txt
+      supporting_text: &#39;CC   -!- SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:16823372}. Nucleus,
+
+        CC       nucleolus {ECO:0000269|PubMed:16823372}.&#39;
+    proposed_replacement_terms:
+    - id: GO:0005730
+      label: nucleolus
+- term:
+    id: GO:0005730
+    label: nucleolus
+  evidence_type: HDA
+  original_reference_id: PMID:16823372
+  qualifier: is_active_in
+  review:
+    summary: Nip7 functions in nucleolar pre-60S assembly.
+    action: ACCEPT
+    reason: The target localization annotation and the primary pre-60S structural study are concordant.
+      The cached localization atlas lacks full text, so the target imaging assignment is accepted as curated
+      rather than independently re-read.
+    supported_by:
+    - reference_id: file:SCHPO/nip7/nip7-uniprot.txt
+      supporting_text: &#39;CC   -!- SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:16823372}. Nucleus,
+
+        CC       nucleolus {ECO:0000269|PubMed:16823372}.&#39;
+- term:
+    id: GO:0005730
+    label: nucleolus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  supporting_entities:
+  - PANTHER:PTN000602113
+  - UniProtKB:Q389E3
+  - UniProtKB:Q9Y221
+  review:
+    summary: Nip7 functions in nucleolar pre-60S assembly.
+    action: ACCEPT
+    reason: The target localization annotation and the primary pre-60S structural study are concordant.
+      The cached localization atlas lacks full text, so the target imaging assignment is accepted as curated
+      rather than independently re-read.
+    supported_by:
+    - reference_id: file:SCHPO/nip7/nip7-uniprot.txt
+      supporting_text: &#39;CC   -!- SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:16823372}. Nucleus,
+
+        CC       nucleolus {ECO:0000269|PubMed:16823372}.&#39;
+- term:
+    id: GO:0005730
+    label: nucleolus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB-SubCell:SL-0188
+  review:
+    summary: Nip7 functions in nucleolar pre-60S assembly.
+    action: ACCEPT
+    reason: The target localization annotation and the primary pre-60S structural study are concordant.
+      The cached localization atlas lacks full text, so the target imaging assignment is accepted as curated
+      rather than independently re-read.
+    supported_by:
+    - reference_id: file:SCHPO/nip7/nip7-uniprot.txt
+      supporting_text: &#39;CC   -!- SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:16823372}. Nucleus,
+
+        CC       nucleolus {ECO:0000269|PubMed:16823372}.&#39;
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB-SubCell:SL-0086
+  review:
+    summary: A cytoplasmic/cytosolic pool is compatible with the target localization survey.
+    action: KEEP_AS_NON_CORE
+    reason: Retain the observation as non-core; the directly characterized role is nucleolar large-subunit
+      assembly, and cytosolic detection alone does not establish a separate translation function.
+    supported_by:
+    - reference_id: file:SCHPO/nip7/nip7-uniprot.txt
+      supporting_text: &#39;CC   -!- SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:16823372}. Nucleus,
+
+        CC       nucleolus {ECO:0000269|PubMed:16823372}.&#39;
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: HDA
+  original_reference_id: PMID:16823372
+  qualifier: is_active_in
+  review:
+    summary: A cytoplasmic/cytosolic pool is compatible with the target localization survey.
+    action: KEEP_AS_NON_CORE
+    reason: Retain the observation as non-core; the directly characterized role is nucleolar large-subunit
+      assembly, and cytosolic detection alone does not establish a separate translation function.
+    supported_by:
+    - reference_id: file:SCHPO/nip7/nip7-uniprot.txt
+      supporting_text: &#39;CC   -!- SUBCELLULAR LOCATION: Cytoplasm {ECO:0000269|PubMed:16823372}. Nucleus,
+
+        CC       nucleolus {ECO:0000269|PubMed:16823372}.&#39;
+- term:
+    id: GO:0030684
+    label: preribosome
+  evidence_type: IDA
+  original_reference_id: PMID:36423630
+  qualifier: part_of
+  review:
+    summary: Nip7 occurs in an early large-subunit preribosome.
+    action: MODIFY
+    reason: RCSB entry 8ESQ links author chain l to exact accession Q1MTQ9. Although the paper foregrounds
+      nucleophosmin, its deposited particle includes Nip7; the more specific pre-60S complex is appropriate.
+    supported_by:
+    - *id001
+    proposed_replacement_terms:
+    - id: GO:0030687
+      label: preribosome, large subunit precursor
+- term:
+    id: GO:0030687
+    label: preribosome, large subunit precursor
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  supporting_entities:
+  - PANTHER:PTN000602113
+  - SGD:S000006132
+  review:
+    summary: Nip7 is part of the large-subunit preribosome.
+    action: ACCEPT
+    reason: The exact target occurs in the deposited early pre-60S particle, independently supporting
+      the ancestral PAINT inference.
+    supported_by:
+    - *id001
+- term:
+    id: GO:0042255
+    label: ribosome assembly
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  supporting_entities:
+  - InterPro:IPR016686
+  review:
+    summary: Nip7 supports assembly of the large-subunit preribosome.
+    action: MODIFY
+    reason: The direct structural context resolves broad ribosome assembly/biogenesis to the early large-subunit
+      precursor step.
+    supported_by:
+    - *id001
+    proposed_replacement_terms:
+    - &amp;id002
+      id: GO:1902626
+      label: assembly of large subunit precursor of preribosome
+- term:
+    id: GO:0042273
+    label: ribosomal large subunit biogenesis
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  supporting_entities:
+  - PANTHER:PTN000602113
+  - PomBase:SPCC320.11c
+  - SGD:S000006132
+  review:
+    summary: Nip7 supports assembly of the large-subunit preribosome.
+    action: MODIFY
+    reason: The direct structural context resolves broad ribosome assembly/biogenesis to the early large-subunit
+      precursor step.
+    supported_by:
+    - *id001
+    proposed_replacement_terms:
+    - *id002
+- term:
+    id: GO:1902626
+    label: assembly of large subunit precursor of preribosome
+  evidence_type: EXP
+  original_reference_id: PMID:36423630
+  qualifier: involved_in
+  review:
+    summary: Nip7 contributes to assembly of the large-subunit precursor.
+    action: ACCEPT
+    reason: The primary study isolates and structures fission-yeast pre-60S particles; exact Q1MTQ9 is
+      a component in 8ESQ. This supports the role independently of ARBA.
+    supported_by:
+    - *id001
+- term:
+    id: GO:1902626
+    label: assembly of large subunit precursor of preribosome
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  supporting_entities:
+  - ARBA:ARBA00092444
+  review:
+    summary: Nip7 contributes to assembly of the large-subunit precursor.
+    action: ACCEPT
+    reason: The primary study isolates and structures fission-yeast pre-60S particles; exact Q1MTQ9 is
+      a component in 8ESQ. This supports the role independently of ARBA.
+    supported_by:
+    - *id001
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping,
+    accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000051
+  title: S. pombe keyword mapping
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: PMID:16823372
+  title: ORFeome cloning and global analysis of protein localization in the fission yeast Schizosaccharomyces
+    pombe.
+  findings: []
+  full_text_unavailable: true
+- id: PMID:36423630
+  title: Chromatin localization of nucleophosmin organizes ribosome biogenesis.
+  findings: []
+  full_text_unavailable: false
+- id: file:SCHPO/nip7/nip7-uniprot.txt
+  title: &#39;UniProtKB Q1MTQ9: curated sequence, features and source attribution&#39;
+- id: file:SCHPO/nip7/nip7-8ESQ-entities.json
+  title: &#39;RCSB PDB 8ESQ polymer-entity metadata: Q1MTQ9 is entity 43, author chain l&#39;
+core_functions:
+- description: Binds RNA within early pre-60S particles during large-subunit assembly.
+  molecular_function:
+    id: GO:0003723
+    label: RNA binding
+  directly_involved_in:
+  - *id002
+  locations:
+  - id: GO:0005730
+    label: nucleolus
+  in_complex:
+    id: GO:0030687
+    label: preribosome, large subunit precursor
+  supported_by:
+  - *id001
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

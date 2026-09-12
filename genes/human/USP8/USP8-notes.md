@@ -10,3 +10,7 @@ Functional summary: USP8/UBPY is a cysteine-type deubiquitinase. UniProt summari
 
 Annotation decisions: I accepted deubiquitinase, protein deubiquitination, cytosol/cytoplasm, early endosome/endosome membrane, and endosome organization annotations as core or directly supportive. I kept cytokinesis/midbody, Wnt/FZD, BACE1, postsynaptic, and acrosomal contexts as non-core. Generic high-throughput `protein binding`, cadherin binding, dexamethasone response, and amyloid fibril formation were marked as over-annotated because they are indirect or too generic relative to the deubiquitinase/endosomal cargo-sorting mechanism.
 
+
+## Paired horse benchmark evidence review
+
+The human reference supplies mechanistic evidence for the corresponding selected horse protein; the human conclusion alone is not validation of the horse sequence. The exact horse comparison is in `genes/HORSE/USP8/USP8-bioinformatics/RESULTS.md`. Research reports are source leads; annotation decisions cite the underlying publication or experimentally supported UniProt passages. Unresolved source-specific results retain UNDECIDED.
