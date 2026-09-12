@@ -347,10 +347,32 @@ mention is corroboration. A blacklist cannot tell those apart. Replaced with the
 invariant — an experimental code must state the species the experiment was done in — which
 is the claim actually being made.
 
-`scratchpad/akap12_audit_selftest.py` breaks the document six ways (four mutations that must
-trip a guard, two controls that must not), asserting each anchor string is present before
-replacing it so a drifted mutation cannot "pass" by changing nothing, and confirming the file
-is restored byte-identically afterwards. All six behaved as intended.
+`scratchpad/akap12_audit_selftest.py` breaks the document nine ways (seven mutations that
+must trip a guard, two controls that must not), asserting each anchor string is present
+before replacing it so a drifted mutation cannot "pass" by changing nothing, and confirming
+the file is restored byte-identically afterwards.
+
+Two further defects came out of that, both worth recording because neither was found by
+reading:
+
+- **"Fixed in N places, landed in N−1", exactly as the brief predicts.** Removing the
+  unverifiable word *amphipathic* from the `description` left an identical claim standing in
+  a `core_functions` entry. Found by `grep`, not by the edit. The fix was not to enumerate
+  the two sites but to add a **class-level** lint — a regex over the raw document with no
+  site list to go stale — because a hand-enumerated list never terminates that regress.
+  (`amphipathic` is textbook for the AKAP class; it is not stated for AKAP12 in any cached
+  source, and UniProt annotates the 1541-1554 RII-binding region with no secondary-structure
+  claim. A class-level fact asserted as a gene-level one is the same error shape as reading
+  an activity off a domain name.)
+- **A hand-assigned threshold that could not fire.** The first version of the
+  required-claims check asserted `GO:0034237` occurs "at least 4" times. It actually occurs
+  **7** times, mostly in explanatory prose — so swapping one of the two
+  `proposed_replacement_terms` out still left 6 and the check passed a genuinely broken
+  document. The self-test caught it. Replaced with a **structural** assertion over the
+  parsed document (exactly 2 MODIFY rows target `GO:0034237`, exactly 2 target `GO:0008013`,
+  exactly 1 targets `GO:0007188`, and no MODIFY row proposes bare `GO:0005515`), plus a
+  check that the retracted `PMID:27683220` stays `is_invalid` and is never cited as support.
+  Derive thresholds from computed structure, never from a number you chose.
 
 `checkquotes.py` from the shared scratchpad was run after confirming it resolved the correct
 repo root (it prints it; it derived this worktree, not another agent's). 77 quotes, 0
