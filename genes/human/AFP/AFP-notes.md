@@ -144,6 +144,22 @@ Two things this **strengthens** rather than weakens:
   stoichiometry on protein from human tissue, site mapped chemically to histidine. Specific where a
   specific metal was measured; general where only "a metal" was. That asymmetry is now stated in the
   review rather than left implicit.
+
+  **Round 4 sharpens this further, and corrects an inaccuracy I introduced in round 3.** Defending
+  the parent/child pair, I wrote that the general row "carries the structure's finding that *the
+  same site* binds several metals". The reviewer noticed that cannot be right: `PMID:80265`
+  reconstitutes copper binding with a synthetic **amino-terminal undecapeptide** — eleven residues,
+  spanning roughly 19–29 on a mature chain beginning at 19 — which contains His22 but *cannot*
+  contain His264, His268 or Asp280. So copper binding does **not require** three of the four
+  residues of the tetrahedral site. And `PMID:38678117` points the same way from its own data:
+  `[PMID:38678117 "Moreover, the molar ratio of some metal elements with AFP exceeds 1, it suggests
+  the potential for AFP to bind to metal ions at multiple locations."]`
+
+  So the two rows are **not** a general and a specific statement about one site; they are plausibly
+  two separable sites sharing His22. That is a *stronger* answer to the redundancy objection than
+  the one I gave. Stated with the limit made explicit: sufficiency of a peptide does not prove the
+  sites are disjoint in the full-length protein, so the claim is **separability and a shared His22**,
+  not independence.
 - **UniProt's unsourced nickel claim gains support.** Nickel is among the four metals lost in the
   4mut — the first independent measurement on the human protein bearing on it. My own
   `suggested_questions` entry asking where the nickel assertion came from is now partly answered by
