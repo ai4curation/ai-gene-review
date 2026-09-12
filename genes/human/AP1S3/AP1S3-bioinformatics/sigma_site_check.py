@@ -15,11 +15,15 @@ Two things are tested, both by direct sequence lookup (no hardcoded answers):
    paralogue carries at (a) the same integer position and (b) the position
    that actually aligns to the AP1S3 site in a global pairwise alignment.
 
+Exit codes: 0 if every published position resolves to the residue named, 1 if any does not
+(one currently does not -- see RESULTS.md -- so a non-zero exit here is the finding, not a
+broken script), 2 if a fetched sequence is not the expected length. The script is a one-off
+analysis and is deliberately not wired into CI.
+
 Run:  uv run python sigma_site_check.py
 """
 from __future__ import annotations
 
-import io
 import json
 import sys
 from dataclasses import dataclass

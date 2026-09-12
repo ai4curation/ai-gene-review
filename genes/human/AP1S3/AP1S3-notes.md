@@ -94,15 +94,24 @@ subunit in that paper's cell work is AP1S1, and `siAP1S3` appears only in its re
 
 ## 3. Loss-of-function phenotypes that *are* AP1S3's own
 
-**TLR3 delivery to endosomes** (PMID:24791904). Stable shRNA knockdown in HaCaT keratinocytes
-and in HEK293:
+**TLR3 delivery to endosomes** (PMID:24791904). Three knockdown lines, in two backgrounds, and
+it is worth keeping straight which result came from which. The two stable shRNA lines are
+keratinocytes —
+[PMID:24791904 "we generated two stable AP1S3 -knockdown cell lines ( Figure 3 A) through the lentiviral transduction of HaCaT immortalized keratinocytes with targeted small hairpin RNA (shRNA) constructs"]
+— and they carry both the trafficking readout
 [PMID:24791904 "We found that TLR-3 trafficking was disrupted in both knockdown cell lines, where the ratio between endosomal and newly synthesized receptor was markedly reduced."]
-with the functional consequence
+and the interferon readout
 [PMID:24791904 "the induction of IFNB1 transcripts was virtually abolished in one knockdown cell line and significantly reduced in the second"].
-This is knockdown evidence — IMP-grade, not IDA — and GOA codes it IMP, correctly. The
-readout is specifically *where TLR3 ends up*, which is why `protein targeting` (GO:0006605) is
-under-informative for it and `protein localization to endosome` (GO:0036010) is the right
-grain.
+A **third**, separately generated knockdown line is HEK293 —
+[PMID:24791904 "We generated another AP1S3 -knockdown cell line by silencing gene expression in HEK293 cells"]
+— and it reproduces the trafficking defect but not (because it was not measured there) the
+interferon one:
+[PMID:24791904 "In keeping with the results obtained in HaCaT keratinocytes, we were able to show that AP1S3 deficiency resulted in reduced processing of transfected TLR-3"].
+So the localisation defect is **not** keratinocyte-restricted, while the IFNB1 result is a
+keratinocyte measurement. This is knockdown evidence — IMP-grade, not IDA — and GOA codes it
+IMP, correctly. The readout is specifically *where TLR3 ends up*, which is why
+`protein targeting` (GO:0006605) is under-informative for it and `protein localization to
+endosome` (GO:0036010) is the right grain.
 
 **Autophagosome formation** (PMID:27388993). Two independent perturbations plus a rescue:
 [PMID:27388993 "We found that LC3-II levels were significantly reduced in AP1S3 knockdown versus control cell lines"]
@@ -260,16 +269,21 @@ UniProt and Reactome both assert independently. Accepted.
 - NEW: `GO:0000045 autophagosome assembly`, IMP, PMID:27388993 — two perturbations plus a
   variant-discriminating rescue, in two cell backgrounds.
 - NEW: `GO:0005198 structural molecule activity`, IC from the gene's own `GO:0030121`
-  membership, PMID:24791904. This is the only subunit-level MF GO can currently express for
+  membership, PMID:24791904 (the basis term is carried in `supporting_entities`, which is GO's
+  convention for an IC). This is the only subunit-level MF GO can currently express for
   sigma-1C; the activity one would rather state (dileucine sorting-signal binding) is filed
-  under `proposed_new_terms`.
+  under `proposed_new_terms`, together with a second gap the AAGAB rows expose — GO has no
+  `assembly chaperone binding` term, and does not even classify AAGAB itself as a chaperone
+  (its own record carries `protein binding` as its only molecular function), so `GO:0051087` is
+  the best existing home rather than an exact fit.
 
 Counts, produced by `.scratch/reconcile.py` rather than typed: 45 GOA rows reconcile one-for-one
 with 45 reviewed YAML entries (identical term/evidence/reference/`supporting_entities`); actions
-are ACCEPT 37, KEEP_AS_NON_CORE 5, MODIFY 3, NEW 2; 11 rows carry a `propagation_review` (1 IBA +
-10 IEA) and every `source_entities` list matches its row's `supporting_entities` exactly; 36
-references, all with a `reference_review`; 154 `supporting_text` quotes, all verified by
-`checkquotes.py`; 8 `residue_claims`, 24 checks, 0 failures.
+are ACCEPT 37, KEEP_AS_NON_CORE 5, MODIFY 3, NEW 2; 12 rows carry a `propagation_review` (1 IBA,
+10 IEA, and the IC NEW row whose basis term is recorded machine-readably) and every
+`source_entities` list matches its row's `supporting_entities` exactly; 36 references, all with a
+`reference_review`; 162 `supporting_text` quotes, all verified by `checkquotes.py`; 8
+`residue_claims`, 24 checks, 0 failures.
 
 ## 8. What affinage missed, and what it got right
 

@@ -2,7 +2,11 @@
 
 Reproduce with `uv run python sigma_site_check.py` from this directory. Sequences are
 fetched live from the UniProt REST API at run time; nothing is hardcoded, and the script
-exits non-zero if any asserted position fails to resolve.
+exits non-zero if any asserted position fails to resolve. It currently exits 1, and that is
+the point: one published position does not resolve, and the script refuses to hide it. (Exit
+0 = everything resolved, 1 = a published position did not, 2 = a fetched sequence was not
+the expected length. The script is a one-off analysis and is deliberately not wired into CI,
+where a non-zero exit would read as a broken build rather than as a finding.)
 
 ## Question
 
