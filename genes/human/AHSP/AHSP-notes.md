@@ -1,7 +1,7 @@
 # AHSP (human, Q9NZD4) — review notes
 
 Working journal for the GO annotation review. Provenance is recorded inline as a
-bracketed citation followed by a verbatim quotation from that reference. All 15
+bracketed citation followed by a verbatim quotation from that reference. All 16
 such quotes in this file were machine-verified against the cached publications
 with the repo's own `SupportingTextValidator` (the code CI uses for the review
 YAML), because nothing in CI checks a notes file.
@@ -12,9 +12,14 @@ A 102-residue, erythroid-restricted, all-α-helical cytoplasmic protein that bin
 free α-globin 1:1, holds it soluble and folded, drives its heme iron into a
 redox-inert ferric bis-histidyl hexacoordinate state, and releases it to β-globin
 for assembly into HbA. It is one of the best structurally characterised chaperones
-in the genome: eight PDB entries, including two crystal structures of the complex
-with α-globin (1Y01 at 2.8 Å, ferrous; 1Z8U at 2.4 Å, ferric) and four NMR
-structures of the free protein. `PE 1: Evidence at protein level`.
+in the genome: eight PDB entries that split exactly four/four — **four X-ray
+co-crystal structures with α-globin** (1Y01 at 2.8 Å ferrous; 1Z8U at 2.4 Å ferric;
+3IA3 at 3.2 Å, the Pro30 cis-peptidyl structure; 3OVU at 2.83 Å, a ternary complex
+with *S. aureus* IsdH) and four solution-NMR structures of the free protein (1W09,
+1W0A, 1W0B, 1XZY). This count was **derived** by asking PDBe which entries map both
+`Q9NZD4` and `P69905`, not read off UniProt's `RN` labels — the first draft of this
+review said "two", because only 1Y01 and 1Z8U carry an `IN COMPLEX WITH HBA` line.
+See §11b. `PE 1: Evidence at protein level`.
 
 This is the opposite of the usual problem in this campaign. AHSP is not
 over-annotated and it is not dark. The interesting question is whether GO can
@@ -300,7 +305,7 @@ Two reasons, one practical and one principled:
   PMID:12066189's abstract instead.
 
 Both the review YAML and this notes file were then checked with a strict-duplicate-key
-loader plus the repo's own `SupportingTextValidator`: **60 quotes in the YAML and 15 in
+loader plus the repo's own `SupportingTextValidator`: **66 quotes in the YAML and 16 in
 the notes, 0 problems, raw `supporting_text` key count equal to the parsed count** (so no
 duplicate YAML key silently discarded provenance). The checker was tested by breaking
 it - mutating one quoted word made it exit 1 and name the row - before its clean run was
@@ -336,6 +341,9 @@ Missed, and each mattered:
 - **`PMID:12192002`** — the 1:1 stoichiometry and Ka measurement underpinning the
   proposed complex term.
 - **`PMID:15178680`** — the free-protein NMR structure.
+- **`PMID:19706593`** — a *third* co-crystal structure paper (PDB 3IA3), and the one
+  that actually demonstrates the Pro30 mechanism affinage attributes to the later
+  NMR/EXAFS paper. See §11b: this one was found only by recounting the structures.
 - **`PMID:40205054`** and the three interactome papers — i.e. every reference behind
   the eleven `GO:0005515` rows.
 
@@ -347,6 +355,48 @@ inhibit its localization"; AHSP's purpose is the *opposite*, to preserve α-glob
 for its partner) and `GO:0140110` transcription regulator activity (rejected —
 AHSP is a *target* of STAT3 and NRF2/MAFG, not a regulator; PMID:24740453 and
 PMID:35092867 both measure AHSP promoter occupancy *by* those factors).
+
+## 11b. A number I had asserted from a label, recounted from the data — and it was wrong
+
+The first draft said, in four places, that AHSP has "two co-crystal structures". That
+came from reading UniProt's `RN` block, where exactly two entries carry
+`X-RAY CRYSTALLOGRAPHY ... IN COMPLEX WITH HBA`. Deriving the number instead — asking
+PDBe which of the eight entries map **both** `Q9NZD4` and `P69905` — gives **four**:
+
+| PDB | method | resolution | chains mapped | citation |
+|---|---|---|---|---|
+| 1Y01 | X-ray | 2.80 Å | AHSP + HBA | PMID:15550245 |
+| 1Z8U | X-ray | 2.40 Å | AHSP + HBA | PMID:15931225 |
+| 3IA3 | X-ray | 3.20 Å | AHSP + HBA | **PMID:19706593** |
+| 3OVU | X-ray | 2.83 Å | AHSP + HBA + `Q6G8J7` IsdH (*S. aureus*) | unpublished |
+| 1W09, 1W0A, 1W0B, 1XZY | solution NMR | — | AHSP only | PMID:15178680 / PMID:15550245 |
+
+Two consequences, and the second is the point:
+
+1. **The count was understated by half**, and it is load-bearing — it appears in the
+   `ONTOLOGY` knowledge gap ("GO can say only that it binds haemoglobin, despite …"),
+   in the proposed complex term's justification, and in the ComplexPortal suggestion.
+   Corrected at all four sites with a script that asserts each anchor is present before
+   replacing and re-greps for the retracted phrasing afterwards.
+2. **Recounting surfaced a paper nothing else had.** `PMID:19706593` (Gell *et al.*,
+   JBC 2009) is absent from UniProt's `RN` list, absent from GOA, and absent from the
+   affinage report — yet it is a crystal structure *plus* the mutagenesis that
+   establishes the Pro30 mechanism, and its abstract states the ROS claim in one
+   sentence: [PMID:19706593 "AHSP forms a specific complex with alphaHb and suppresses the heme-catalyzed evolution of reactive oxygen species by converting alphaHb to a conformation in which the heme is coordinated at both axial positions by histidine side chains (bis-histidyl coordination)."]
+   It is now cited on the `GO:1903427` row and in `core_functions`.
+
+This is the campaign's "a number that refuses to add up is the bug report" lesson in a
+mild form — nothing disagreed loudly, the number was simply never derived. **A structure
+count taken from a reference list is a claim about the reference list.** The generalisable
+check is one API call: for any gene whose argument leans on structures, ask the structure
+database which entries contain the gene *and its partner*, and reconcile that against
+whatever the review asserts.
+
+The unpublished 3OVU is worth noting separately: it is a ternary complex of AHSP·αHb with
+*Staphylococcus aureus* IsdH, i.e. a bacterial haem-scavenging receptor caught acting on
+the AHSP-protected subunit. Not used for any annotation — there is no paper — but it is a
+further independent determination of the heterodimer, which is why it counts toward the
+proposed complex term.
 
 ## 12. Deliberately not annotated
 
