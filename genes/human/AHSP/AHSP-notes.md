@@ -206,8 +206,18 @@ cannot verify" rule does not engage.
 complex AHSP actually forms. Searching GO for an AHSP/α-globin complex returns
 nothing. The curator had a crystallographically defined, stoichiometrically
 measured heterodimer to record and the nearest available CC term was the tetramer.
-Hence the second proposed new term, `AHSP-alpha-globin complex` under
-`GO:0032991`, is filed *with* the REMOVE rather than instead of it.
+Hence the second proposed new term, `AHSP-hemoglobin alpha complex` under
+`GO:0032991`, is filed *with* the REMOVE rather than instead of it. GO already
+models the analogous case completely — `GO:0031838 haptoglobin-hemoglobin complex`
+is *"A protein complex formed by the stable binding of a haptoglobin to
+hemoglobin"*, a direct child of `GO:0032991`, and its binding counterpart
+`GO:0031720 haptoglobin binding` sits immediately beside `GO:0031721` in the same
+block of ids. For haptoglobin, GO has both the binding function and the complex;
+for AHSP it has only the binding function. The proposal follows `GO:0031838`'s
+wording and uses GO's own "hemoglobin alpha" phrasing rather than "alpha-globin".
+(Found while re-checking the CC absence after the `GO:0031721` miss — the same
+re-check that confirmed the gap is real also produced the precedent that makes
+the fix easy to accept.)
 
 ## 6. `GO:0030492` → `GO:0031721` — and the search error that nearly hid it
 
