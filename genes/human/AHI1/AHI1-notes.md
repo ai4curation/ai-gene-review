@@ -499,6 +499,54 @@ the human protein in human cells; and the `GO:0007169` row now states the line i
 on — whether the annotated process is one the protein's *measured activity acts on* —
 which keeps it while `GO:0045944` and `GO:0050795` fall the other way.
 
+## Review round 2: four over-claims, all in a block I had just added
+
+Round 2 approved and raised four non-blocking items, **all inside the `GO:0042802`
+`core_functions` entry written in response to round 1** — i.e. the newest prose was the
+weakest. All four were verified against the paper and all four were real. They share one
+shape: **I reported the authors' interpretation as their result.**
+
+**The oligomeric state is hedged, and I had asserted it.** I wrote that gel filtration
+"resolves AHI1 dimers and tetramers as discrete species". What PMID:23532844 says is:
+
+[PMID:23532844 "which could correspond to an AHI1 homodimer. However, the molecular weight of the peak is smaller than the expected weight of the dimer"]
+
+— a hedge *followed by an argument against itself*. And the "tetramers and dimers of
+AHI1" phrase I had leaned on occurs in the **V443D mutant** lane, not the wild-type one.
+This is the ACBD3 rule exactly: **quote to the end of the interpreting clause.** Truncating
+before "However…" converts a hedged non-result into a finding. The entry now separates the
+*activity* (established: co-IP of two differently tagged copies in human cells) from the
+*stoichiometry* (not established).
+
+**A quote that supported the neighbouring claim, not the one it was attached to.** The
+entry's second `supporting_text` was the AHI1–NPHP1 co-migration sentence — which
+evidences the heterocomplex, not self-association. Verbatim, correctly attributed, and
+attached to the wrong claim; no quote checker can see this, because every mechanical check
+validates a quote against its *source* and none validates it against the *claim*. Replaced
+with the sentence that actually carries the point, which also carries the separability
+argument:
+
+[PMID:23532844 "These results demonstrate that AHI1 is capable of self-association; however, the V443D mutation in AHI1 did not disrupt the self-association of AHI1"]
+
+**"Retained" asserted a mechanism the data does not distinguish.** I had written that AHI1
+is required for RAB8A "to be retained" at the basal body. PMID:19625297 reports that
+Rab8a levels *fall* and it *cannot be detected* there — which does not separate failed
+recruitment from failed retention, and the total-level drop means part of the effect may
+be stability rather than localisation at all. Now stated as "accumulate", with the
+ambiguity named.
+
+**UniProt's own hedge dropped in transit.** UniProt writes "probably as heterodimers
+and/or AHI1(2):NPHP1(2) heterotetramers" and "probably as AHI1(2):HAP1(2)
+heterotetramers"; my `description` had "assemble into a defined heterotetramer and
+heterodimer". Corrected in all four places where a stoichiometry appears, applied with a
+script that asserts each anchor is present before replacing and absent afterwards, so a
+missed site is an error rather than a silent no-op.
+
+**The generalisable lesson:** the review's oldest, most-checked prose was fine, and every
+defect this round was in text added one round earlier and gated only by "is the quote
+verbatim?". A new block written to satisfy a reviewer deserves the same scepticism as the
+original draft, not less.
+
 ## Committed check
 
 `AHI1-bioinformatics/audit_ahi1_claims.py` (with `--self-test`) enforces the invariants
