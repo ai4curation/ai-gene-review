@@ -68,10 +68,18 @@ BLOSUM62 alignment, run captured in `sigma_cargo_site.out`):
 
 | sigma1A anchor (P61966) | AP1S2 (P56377) | verdict |
 |---|---|---|
-| R15 | **R14** | RETAINED |
+| R15 | **R14** | RETAINED (corroborative only for AP-1) |
 | V88 | **V87** | RETAINED |
 | L101 | **L100** | RETAINED |
 | I103 | **I102** | RETAINED |
+
+A caveat the bot review correctly pressed on: in AP-1 the sigma-side Arg15 is *not* the
+load-bearing basic residue. Mattera et al. state that "interaction with γ1-σ1A depends mainly on
+γ1 Arg 15" and list "σ1A Arg 15 and Leu 101 , which can be substituted with relatively little
+impact on the ability of γ1-σ1A to recognize (D/E) XXX L(L/I) signals" [PMID:21097499]. So R14
+and L100 are corroborative; V87 and I102 are the positions that carry the argument, since their
+sigma1A counterparts (V88D, I103S) do abolish binding. This is recorded in the `role` and
+`comment` of the R14 residue claim.
 
 All four positions whose substitution abolishes or weakens dileucine-signal binding in sigma1A
 ("the loss of signal binding by the sigma2 V88D or L103S substitutions and the homologous

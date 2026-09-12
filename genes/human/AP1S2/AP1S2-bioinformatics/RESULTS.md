@@ -25,7 +25,7 @@ Global pairwise alignment (Biopython `PairwiseAligner`, BLOSUM62, gap open -11, 
 
 | anchor | anchor site | AP1S2 (P56377) position | verdict |
 |---|---|---|---|
-| AP1S1 / sigma1A (P61966) | R15 | **R14** | RETAINED |
+| AP1S1 / sigma1A (P61966) | R15 | **R14** | RETAINED (corroborative only for AP-1: see caveat) |
 | AP1S1 / sigma1A | V88 | **V87** | RETAINED |
 | AP1S1 / sigma1A | L101 | **L100** | RETAINED |
 | AP1S1 / sigma1A | I103 | **I102** | RETAINED |
@@ -45,6 +45,14 @@ is the same Leu/Ile difference that distinguishes the AP-1 sigma1 subfamily from
 sigma1A — which was shown experimentally to bind all three test signals — carries Ile there too.
 There is therefore no residue-level basis for arguing that sigma1B has lost the cargo-signal
 binding site; the sequence evidence agrees with the functional result in PMID:21097499.
+
+Caveat on R14 specifically: in AP-2 and AP-3 the sigma-side Arg15 is load-bearing, but in
+AP-1 it is not. PMID:21097499 reports that "interaction with gamma1-sigma1A depends mainly on
+gamma1 Arg 15", and lists sigma1A Arg15 among the residues "which can be substituted with
+relatively little impact on the ability of gamma1-sigma1A to recognize (D/E)XXXL(L/I) signals".
+Retention of R14 in sigma1B is therefore corroborative rather than decisive; V87 and I102 are
+the positions that carry the argument, since their sigma1A counterparts (V88D, I103S) do
+abolish binding.
 
 Caveat: this establishes that the site is intact, not that the pocket has the same fine
 specificity. PMID:21097499 itself shows fine specificity differs between hemicomplexes
@@ -80,7 +88,7 @@ set aside as "mouse only".
 ## Question 4 — the sigma1 C-terminal extension
 
 Against sigma2 (AP2S1, 142 aa), AP1S2 has 16 positions with no aligned sigma2 residue, of which
-12 are contiguous at the C terminus (AP1S2 142-154, with 133-135 a separate short insertion).
+13 are contiguous at the C terminus (AP1S2 142-154, with 133-135 a separate short insertion).
 This is the "C-terminal extension" that PMID:20203623 notes distinguishes the sigma1 isoforms
 from sigma2, and it is the region in which the three sigma1 isoforms differ most from one
 another. It is not covered by the dileucine-binding site analysed above, so this analysis says

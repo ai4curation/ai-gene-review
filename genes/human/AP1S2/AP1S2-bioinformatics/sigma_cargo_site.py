@@ -20,11 +20,11 @@ UniProt record and asserted against the record's own metadata.
 from __future__ import annotations
 
 import csv
-import io
 import json
 import sys
 import urllib.request
 from dataclasses import dataclass
+from pathlib import Path
 
 from Bio import Align
 from Bio.Align import substitution_matrices
@@ -198,11 +198,12 @@ def main() -> int:
         print(f"    mismatched aligned columns: {len(mismatches)}"
               + (f" {mismatches}" if len(mismatches) <= 12 else ""))
 
-    with open("sigma_cargo_site.tsv", "w", newline="") as fh:
+    out_path = Path(__file__).with_name("sigma_cargo_site.tsv")
+    with out_path.open("w", newline="") as fh:
         w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()), delimiter="\t")
         w.writeheader()
         w.writerows(rows)
-    print("\nwrote sigma_cargo_site.tsv")
+    print(f"\nwrote {out_path.name}")
     return 0
 
 
