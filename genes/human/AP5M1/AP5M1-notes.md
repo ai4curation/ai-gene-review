@@ -65,11 +65,12 @@ relevant sequence of findings, in their own words:
 - AP-5 is ancient but patchily retained: [PMID:22022230 "AP-5 subunits can be
   found in all five eukaryotic supergroups, but they have been co-ordinately lost
   in many organisms."] Hirst 2018 names the losses that matter for model-organism
-  curation: [PMID:29381698 "It is expressed at relatively low levels (only about
-  10,000 copies in a HeLa cell, compared with about 300,000–1,000,000 copies for
-  APs 1, 2, or 3)"] and it *"has been lost from several model organisms,
+  curation — [PMID:29381698 "it has been lost from several model organisms,
   including Drosophila melanogaster, Caenorhabditis elegans, and Saccharomyces
-  cerevisiae"*.
+  cerevisiae"] — and, separately, how little of it there is:
+  [PMID:29381698 "It is expressed at relatively low levels (only about 10,000
+  copies in a HeLa cell, compared with about 300,000–1,000,000 copies for APs 1,
+  2, or 3)"].
 - Not a clathrin adaptor: [PMID:22022230 "AP-5 does not associate with clathrin
   and is insensitive to brefeldin A."] The fractionation behind that:
   [PMID:22022230 "C14orf108 partitions approximately equally between membranes
