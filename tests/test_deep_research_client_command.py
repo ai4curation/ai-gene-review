@@ -19,13 +19,15 @@ def wrapper(request, monkeypatch):
 
 
 def test_uvx_selects_supported_python_despite_ambient_default(wrapper, monkeypatch):
+    # The wrapper emits an explicit request; uv handles precedence over this default.
     monkeypatch.setenv("UV_PYTHON", "3.11")
 
     cmd = wrapper.deep_research_client_command()
 
     assert cmd[0] == "uvx"
-    assert cmd[cmd.index("--python") + 1] == "3.12"
+    assert cmd[cmd.index("--python") + 1] == ">=3.12,<4.0"
     assert cmd[-1] == "deep-research-client"
+    assert cmd.index("--python") < cmd.index("deep-research-client")
 
 
 def test_package_override_preserves_interpreter_selection(wrapper, monkeypatch):
@@ -34,7 +36,7 @@ def test_package_override_preserves_interpreter_selection(wrapper, monkeypatch):
     cmd = wrapper.deep_research_client_command()
 
     assert cmd[cmd.index("--from") + 1] == "custom-client-package"
-    assert cmd[cmd.index("--python") + 1] == "3.12"
+    assert cmd[cmd.index("--python") + 1] == ">=3.12,<4.0"
 
 
 def test_custom_command_controls_its_own_interpreter(wrapper, monkeypatch):
