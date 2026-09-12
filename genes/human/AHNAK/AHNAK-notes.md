@@ -11,9 +11,12 @@ apparent mass on a gel). Architecture from the UniProt feature table:
 - `FT DOMAIN 9..90 /note="PDZ" /evidence="ECO:0000255|PROSITE-ProRule:PRU00143"` — predicted, not
   experimentally solved, but see the holdup finding below, which is functional evidence that it
   really is a PDZ.
-- **No `FT REPEAT` features at all**, despite `KW Repeat`. The ~26 tandem 128-residue central
-  repeat units that the entire literature describes are not modelled in the entry. The 22
-  `FT REGION` features are all MobiDB-lite "Disordered".
+- **No `FT REPEAT` features at all**, despite `KW Repeat`. The tandem 128-residue central repeat
+  units that the entire literature describes are not modelled in the entry. The published counts
+  differ — [PMID:14699089 "a large central region of 4,390 amino acids composed of the 128-aa unit
+  repeated 26 times"] for the 5,643-aa sequence, against [PMID:10318799 "about 30 repeated motifs
+  each 128 amino acids in length"] — so this review says "26 to 30" rather than picking one. The
+  22 `FT REGION` features are all MobiDB-lite "Disordered".
 - Five predicted NLS motifs, all in the C-terminal region (4971-4979, 5019-5027, 5034-5039,
   5706-5716, 5772-5779).
 - 13 VARIANTs, all dbSNP; the I5236T variant that PMID:16319140 characterises functionally is
