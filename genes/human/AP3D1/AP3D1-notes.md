@@ -471,6 +471,37 @@ recovered all of them.
 
 ---
 
+## 7b. Final action tally
+
+Counted by `AP3D1-bioinformatics/goa_reconcile.py`, not tallied by hand
+(64 rows = 59 GOA-derived + 5 NEW):
+
+| action | n | which |
+|---|---|---|
+| ACCEPT | 11 | AP-3 complex (x3), endosome membrane (x3), cytoplasm, vesicle coat assembly, membrane coat, early endosome, protein targeting to vacuole |
+| KEEP_AS_NON_CORE | 38 | every cell-type-specific outcome (melanosome, platelet dense granule, synapse, otolith) and every true-but-general parent |
+| MODIFY | 5 | GO:0005515 -> GO:0140312; GO:0006896 -> GO:0008333; GO:0016183 -> GO:0016182; GO:0035654 -> GO:0035459; GO:0140916 -> GO:0061462 |
+| MARK_AS_OVER_ANNOTATED | 3 | GO:0016020 membrane (HDA, 1142 entities); GO:0032502 developmental process; GO:0035651 AP-3 adaptor complex binding |
+| REMOVE | 2 | GO:0010496 intercellular transport (ARBA, wrong topology); GO:1990742 microvesicle (donor term means an extracellular vesicle) |
+| NEW | 5 | GO:0031267 small GTPase binding; GO:0000149 SNARE binding; GO:0006622 protein targeting to lysosome; GO:0043316 and GO:0043320 degranulation |
+
+`propagation_review` on 42 rows (10 IBA + 32 IEA/ISS/IC with `supporting_entities`),
+of which 14 carry `residue_claims` (51 claims; all pass
+`ai_gene_review.validation.gene_residue_claims`). 47 references, every one with a
+`reference_review`. No `negated` rows and no `contributes_to` qualifier in this
+gene's GOA, so neither special case arises. 131 `supporting_text` quotes, all
+verbatim (`checkquotes.py`).
+
+**One validation warning is left standing on purpose.** `just validate` reports
+"No annotations reference available deep research files". That check is satisfied
+only by an affinage `supporting_text`, and the campaign rule is that an affinage
+sentence is never a `supporting_text` for a mechanistic claim — it is a lead, and
+the claim should be quoted from UniProt or the PMID. The affinage record is cited
+in `additional_reference_ids` on the NEW lysosomal-targeting row, where its
+narrative genuinely bears, and carries a full `reference_review`; no claim in this
+review rests on it. Quoting it to clear the warning would trade a real rule for a
+cosmetic one.
+
 ## 8. Synthesis
 
 AP3D1 is the single, non-redundant large "delta" adaptin of AP-3. Within the
