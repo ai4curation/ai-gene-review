@@ -258,6 +258,13 @@ IBA row is dated 20250902). Resolved via UniProt xref search (size 5, multi-hits
 `WB:WBGene00000157` is not a UniProt xref key; it was resolved through the GO API bioentity
 endpoint to `F02E8.3` and thence to Q19123.
 
+The one ungrounded donor, re-checked directly: FB:FBgn0039132 (fly AP-1sigma, queried
+through Q9VCF4) carries GO:0016192 only by IEA from InterPro2GO (IPR000804, IPR044733) and
+by ISS from SGD:S000004160 — which is itself another donor in this same WITH/FROM, so that
+strand contributes nothing independent. Its `source_status` is therefore
+`SOURCE_WEAK_OR_INFERRED`: the record is neither missing nor untraceable, it simply never
+carries the term experimentally.
+
 *Donor GO records, counted not asserted* (`.scratch/iba_donor_table.py`, QuickGO with
 `goUsage=descendants`): **10 of the 11 donors** carry at least one direct experimental
 annotation to GO:0016192 or to a term GO's `is_a/part_of/occurs_in` closure places beneath
