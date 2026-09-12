@@ -408,9 +408,83 @@ def self_test() -> int:
     return 0 if ok else 1
 
 
+def partner_census() -> dict:
+    """Count AFP's DISTINCT IntAct partners and how many reached GOA.
+
+    Committed because a hand count of exactly this got it wrong: the notes first
+    said "12 distinct partners" and "the other nine", where the true figures are
+    16 and 14. The interaction records (21) outnumber the partners, so counting
+    rows and counting partners give different answers, and eyeballing a printed
+    list conflates them. Network access required; this is not part of `check_all`
+    and does not gate the commit.
+    """
+    import json
+    import urllib.parse
+    import urllib.request
+
+    acc = "P02771"
+    base = "https://www.ebi.ac.uk/intact/ws/interaction/findInteractions/"
+    rows, page, total = [], 0, None
+    while True:
+        url = base + urllib.parse.quote(acc) + f"?page={page}&pageSize=100"
+        with urllib.request.urlopen(url) as r:
+            d = json.load(r)
+        rows.extend(d.get("content", []))
+        total = d.get("totalElements")
+        if page + 1 >= d.get("totalPages", 1):
+            break
+        page += 1
+    # compare against len(rows), never against a page-size constant: a service
+    # that CLAMPS instead of erroring sails past a constant-based guard
+    if total is not None and len(rows) < total:
+        raise SystemExit(f"TRUNCATED IntAct result: {len(rows)} rows for {total} reported")
+
+    partners: dict[str, set[str]] = {}
+    for x in rows:
+        for ident, name in (
+            (x.get("idA", ""), x.get("moleculeA", "")),
+            (x.get("idB", ""), x.get("moleculeB", "")),
+        ):
+            b = ident.split(" ")[0]
+            if b.startswith(acc):
+                continue
+            partners.setdefault(b, set()).add(name)
+
+    goa_txt = GOA.read_text()
+    in_goa = sorted(p for p in partners if p.split("-")[0] in goa_txt or p in goa_txt)
+
+    screens: dict[str, set[str]] = {}
+    for x in rows:
+        if not x.get("detectionMethod", "").startswith("two hybrid"):
+            continue
+        for p in (x.get("publicationIdentifiers") or []):
+            if "pubmed" not in p:
+                continue
+            for ident in (x.get("idA", ""), x.get("idB", "")):
+                b = ident.split(" ")[0]
+                if not b.startswith(acc):
+                    screens.setdefault(p, set()).add(b)
+
+    print(f"  intact_records: {len(rows)}")
+    print(f"  distinct_partners: {len(partners)}")
+    print(f"  partners_in_goa: {len(in_goa)} {in_goa}")
+    print(f"  partners_not_in_goa: {len(partners) - len(in_goa)}")
+    for pub, s in sorted(screens.items()):
+        print(f"  two_hybrid {pub}: {len(s)} partners")
+    return {
+        "records": len(rows),
+        "partners": len(partners),
+        "in_goa": len(in_goa),
+        "not_in_goa": len(partners) - len(in_goa),
+    }
+
+
 def main() -> int:
     if "--self-test" in sys.argv:
         return self_test()
+    if "--partners" in sys.argv:
+        partner_census()
+        return 0
     problems, stats = check_all()
     for k, v in stats.items():
         print(f"  {k}: {v}")

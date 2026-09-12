@@ -207,8 +207,14 @@ records.
 
 ## Per-partner judgement on the three `GO:0005515` rows
 
-Queried IntAct directly (21 interaction records, 12 distinct partners) rather than trusting
+Queried IntAct directly (**21 interaction records over 16 distinct partners**) rather than trusting
 `NbExp`.
+
+*(Correction to myself: I first wrote "12 distinct partners" and "the other nine", both by eye and
+both wrong. The correct figures are 16 and 14, and they are now **computed** by
+`AFP-bioinformatics/audit_afp_claims.py --partners` rather than counted by hand. Recorded rather
+than silently fixed, because this is the campaign's most-confirmed lesson arriving on schedule:
+a number I could not reproduce was the defect.)*
 
 **GPC3 (P51654), `PMID:39822733` — real, and the ACRV1 "one screen counted three ways" check is
 negative.** The three IntAct records are *not* sub-methods of one experiment: `anti bait coip`
@@ -239,12 +245,17 @@ pull-down, and the paper's functional follow-up was on UGT1, not AFP.
 species") is the exact term, and the paralog **ALB already carries it by IDA** — so this is a
 precedented, informative replacement for bare `protein binding`. **MODIFY both rows.**
 
-**The other nine IntAct partners are not in GOA, and should not be.** A single `two hybrid array`
-screen (`PMID:21988832`) contributes seven of them — AP4S1, PIDD1, MED27, EHD4, PHB2, PSMB7,
-GNB1 — every one cytosolic/nuclear/proteasomal, i.e. topologically inaccessible to a
-signal-peptide protein that is constitutively secreted, and all in a *S. cerevisiae* host that
-forces both partners into the yeast nucleus. GOA imported only the two partners their own papers
-validated. **That is good curation and worth saying so.**
+**The other 14 IntAct partners are not in GOA, and should not be.** Two yeast two-hybrid screens
+supply eight of them: `PMID:21988832` (a `two hybrid array`) contributes **seven** — AP4S1, PIDD1,
+MED27, EHD4, PHB2, PSMB7, GNB1 — and `PMID:16169070` (`two hybrid pooling`) contributes SGSM2.
+Every one is cytosolic, nuclear or proteasomal, i.e. topologically inaccessible to a
+signal-peptide protein that is constitutively secreted, and all were assayed in a *S. cerevisiae*
+host that forces both partners into the yeast nucleus. The remaining six (DCUN1D4, KIAA1191,
+MAPT, FGG, STAMBP, HLA-B) come from large-scale AP-MS with intracellular baits.
+
+GOA imported exactly the two partners whose own papers validated them outside the screen.
+**That is good curation, and the check that could have found a defect here came back negative —
+worth saying so explicitly rather than only reporting hits.**
 
 ## `GO:0005737 cytoplasm` — right term, wrong provenance
 
