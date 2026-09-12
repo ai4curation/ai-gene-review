@@ -92,12 +92,29 @@ artefact of one empty search.
 
 On the proposed term's parent: `GO:0005515 protein binding` is normally a term to avoid, so
 the choice was checked rather than defaulted. GO:0089710 — the tyrosine counterpart the
-proposal is modelled on — is itself `is_a` GO:0005515 (is_a ancestors GO:0005515,
+proposal is modelled on — is itself `is_a` GO:0005515 (is_a ancestors: GO:0005515,
 GO:0005488, GO:0003674), so mirroring it puts the two motif-binding siblings in one genus.
-The plausible alternative fails on inspection: GO:0005048 is named "signal sequence
-**receptor** activity", is_a GO:0003674 directly, and is defined around signals for proper
-localization in the cell — it is in the receptor branch, not the binding branch, and is not
-a genus for binding a cytosolic sorting motif.
+
+The plausible alternative, GO:0005048, fails **on parentage**: its complete `is_a` ancestor
+set is itself plus GO:0003674, i.e. it hangs directly off the molecular_function root with
+no binding ancestor at all — neither GO:0005488 nor GO:0005515 — so it cannot be the genus
+of a binding activity.
+
+That term is a label-drift trap and cost a review round, so it is worth recording in full.
+Its three naming artefacts disagree with each other:
+
+| source | says |
+|---|---|
+| current GO name (live QuickGO **and** live OLS, checked 2026-09-12) | `signal sequence receptor activity` |
+| its own definition | "**Binding to** a signal sequence, a short stretch of amino acids…" |
+| narrow synonym | `signal sequence binding` |
+| `cache/ontologies/go.tsv` (2026-03-21) and `cache/go/terms.csv` (2026-05-08) | `signal sequence binding` — **stale** |
+
+The two in-repo GO snapshots agree with each other and are both out of date, which makes
+them look corroborating when they are one stale reading. This is the
+[GO:0140309 lesson](../../../projects/IBA_REVIEW.md) again: never infer a term's scope from
+its label, and when a label is contested, decide on the definition and the `is_a` closure,
+which is what the review now does.
 
 ## 3. Bioinformatics: the site is retained, but retention is not the evidence
 
