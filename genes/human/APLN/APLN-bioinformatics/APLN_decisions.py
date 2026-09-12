@@ -25,6 +25,7 @@ Q = {
     "HAB99_COLOSTRUM": "a large amount of apelin (14-93 pmol/ml) was found to be secreted in the bovine colostrum, and it was still detectable even in commercial bovine milk",
     "HAB99_MAMMARY": "Although apelin mRNA was widely detected in a variety of tissues, the highest expression of apelin mRNA was detected in the mammary gland of pregnant rats.",
     "HAB99_PARTURITION": "In the mammary gland, biologically active apelin and its mRNA considerably increased during pregnancy and lactation, and reached a maximal level around parturition.",
+    "HAB99_APJLIGAND": "we have recently identified a natural ligand, apelin, for the orphan 7TMR, APJ",
     "HAB99_CYTOKINE": "Since apelin partially suppressed cytokine production by mouse spleen cells in response to T cell receptor/CD3 cross-linking, the oral intake of apelin in the colostrum and milk might modulate immune responses in neonates.",
     # PMID:11359874 Reaux 2001 (abstract only)
     "REA01_FRAGMENTS": "Stimulation of this receptor by the apelin fragments K17F (Lys1-Phe-Arg-Arg-Gln-Arg-Pro-Arg-Leu-Ser-His-Lys-Gly-Pro-Met-Pro-Phe17) and pE13F (pGlu5-Arg-Pro-Arg-Leu-Ser-His-Lys-Gly-Pro-Met-Pro-Phe17) resulted in a dose-dependent inhibition of forskolin-induced cAMP production and promoted its internalization.",
@@ -53,6 +54,7 @@ Q = {
     "YAN17_LVHOMOG": "Experiments were conducted in homogenate of human ventricle or Chinese hamster ovary (CHO)-K1 cells expressing the human apelin receptor.",
     "YAN17_CAMP": "completely inhibited forskolin-induced cAMP production in a concentration-dependent manner",
     "YAN17_ARRESTIN": "stimulated β-arrestin recruitment in a concentration-dependent manner",
+    "YAN17_INTERNALIZATION": "Potency (pD2) and Efficacy (EMAX) of ...apelin-13, ELA-32, ELA-21, and ELA-11 in cAMP Inhibition, β-Arrestin Recruitment, and Receptor Internalization Assays",
     "YAN17_INOTROPE": "In heart, apelin is reportedly the most potent inotrope in vitro",
     "YAN17_ERK": "apelin and ELA-32 increased levels of ERK1/2 phosphorylation, and in PAECs there was also a significant increase in phosphorylation of endothelial nitric oxide synthase",
     # PMID:38428423 Wang 2024 (abstract only)
@@ -187,7 +189,7 @@ D("GO:0005102", "TAS", "PMID:10525157",
   action="MODIFY",
   reason=_sigrec_reason,
   proposed_replacement_terms=[{"id": "GO:0031704", "label": "apelin receptor binding"}],
-  supported_by=[("PMID:10525157", "HAB99_COLOSTRUM"), ("PMID:9792798", "TAT98_LIGAND")])
+  supported_by=[("PMID:10525157", "HAB99_APJLIGAND"), ("PMID:9792798", "TAT98_LIGAND")])
 D("GO:0005102", "TAS", "PMID:9792798",
   summary=("Legacy ProtInc statement from the paper that identified apelin as the APJ "
            "ligand. The paper names the receptor, so the annotation can be specific."),
@@ -533,8 +535,8 @@ D("GO:0031704", "IEA", "GO_REF:0000120",
       "residue, so orthology transfer here is not an approximation. The human gene also "
       "has its own IDA in human left ventricle, so the row is redundant but correct, and it "
       "is the right depth."),
-  supported_by=[("PMID:26611206", "PER16_BINDS"), ("PMID:28137936", "YAN17_COMPETE"),
-                (BIOINF, "BIO_PEPTIDE")],
+  supported_by=[("PMID:26611206", "PER16_BINDS"), ("PMID:26611206", "PER16_APELA"),
+                ("PMID:28137936", "YAN17_COMPETE"), (BIOINF, "BIO_PEPTIDE")],
   prop=dict(root_cause="NO_FAILURE_CORE",
             status={"UniProtKB:Q9R0R3": "SUPPORTS_TRANSFER",
                     "ensembl:ENSRNOP00000100018": "SUPPORTS_TRANSFER",
@@ -923,9 +925,14 @@ D("GO:1904022", "IEA", "GO_REF:0000120", ents=RAT_PAIR + MOUSE_PAIR,
       "Both donors hold GO:1904022 as an IDA from the same paper the human IDA row cites, "
       "and the human gene already carries the term directly, so this is a redundant but "
       "correct restatement. Transfer risk is negligible because the peptides are identical "
-      "across the three species; the receptor differs, but internalisation of APLNR by "
-      "apelin has since been shown for the human receptor too (PMID:28137936)."),
-  supported_by=[("PMID:11359874", "REA01_FRAGMENTS"), ("PMID:28137936", "YAN17_ARRESTIN"),
+      "across the three species; the receptor in the donors' experiment is rat, but "
+      "pyroglutamyl-apelin-13 was subsequently run in a receptor-internalisation assay "
+      "against the human apelin receptor in CHO-K1 cells (PMID:28137936), and the mechanism "
+      "- clathrin-coated vesicles, GRK2-, EPS15- and dynamin-dependent, beta-arrestin1-"
+      "independent - has been worked out separately (PMID:27492965)."),
+  supported_by=[("PMID:11359874", "REA01_FRAGMENTS"),
+                ("PMID:28137936", "YAN17_INTERNALIZATION"),
+                ("PMID:28137936", "YAN17_LVHOMOG"), ("PMID:27492965", "POP16_GRK2"),
                 (BIOINF, "BIO_PEPTIDE")],
   prop=dict(root_cause="NO_FAILURE_CORE",
             status={k: "SUPPORTS_TRANSFER" for k in RAT_PAIR + MOUSE_PAIR},
