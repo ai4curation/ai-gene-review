@@ -184,12 +184,16 @@ def main() -> None:
     # the PR reviewer pointed out they could drift -- and the drift would be
     # between what a human reads here and what the guard enforces, i.e. silent.
     m = measure()
-    assert m["dominant"] == len(biggest), (
-        f"measure() says dominant={m['dominant']} but this table shows {len(biggest)}"
-    )
-    assert m["total"] == len(rows), (
-        f"measure() says total={m['total']} but this table shows {len(rows)}"
-    )
+    # Raise, do not assert: `python -O` strips asserts, and a cross-check that can
+    # be compiled away is not a cross-check.
+    if m["dominant"] != len(biggest):
+        raise SystemExit(
+            f"measure() says dominant={m['dominant']} but this table shows {len(biggest)}"
+        )
+    if m["total"] != len(rows):
+        raise SystemExit(
+            f"measure() says total={m['total']} but this table shows {len(rows)}"
+        )
     print(f"Largest single group accounts for {len(biggest)}/{len(rows)} of the papers "
           "this review relies on.")
 
@@ -215,13 +219,15 @@ def main() -> None:
     for pmid, last in independent:
         print(f"    {pmid}  senior {last}")
     indep = [p for p, _ in independent]
-    assert sorted(indep) == m["independent"], (
-        f"measure() says independent={m['independent']} but this table shows "
-        f"{sorted(indep)} -- the two classifications have drifted"
-    )
-    assert len(lineage) == m["lineage"], (
-        f"measure() says lineage={m['lineage']} but this table shows {len(lineage)}"
-    )
+    if sorted(indep) != m["independent"]:
+        raise SystemExit(
+            f"measure() says independent={m['independent']} but this table shows "
+            f"{sorted(indep)} -- the two classifications have drifted"
+        )
+    if len(lineage) != m["lineage"]:
+        raise SystemExit(
+            f"measure() says lineage={m['lineage']} but this table shows {len(lineage)}"
+        )
     print()
 
     # "Independent" by senior author can still share bench authors. Measure the

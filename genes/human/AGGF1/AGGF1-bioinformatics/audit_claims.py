@@ -201,23 +201,29 @@ def check(paths: dict[str, str]) -> list[str]:
     try:
         import lab_independence
 
-        m = lab_independence.measure()
+        meas = lab_independence.measure()
     except Exception as exc:  # noqa: BLE001 - report, never abort the harness
         problems.append(f"could not run lab_independence.measure(): {exc}")
-        m = None
-    if m:
+        meas = None
+    if meas:
         words = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six"}
         ok = {
-            words.get(m["independent_n"], str(m["independent_n"])),
-            str(m["independent_n"]),
-            words.get(m["independent_cited_n"], str(m["independent_cited_n"])),
-            str(m["independent_cited_n"]),
+            words.get(meas["independent_n"], str(meas["independent_n"])),
+            str(meas["independent_n"]),
+            words.get(meas["independent_cited_n"], str(meas["independent_cited_n"])),
+            str(meas["independent_cited_n"]),
         }
         # ONE noun list, shared. The first version gave COUNT_RE and RANK_RE
         # different lists, so "only independent replication" was caught and
         # "one independent replication" was not -- two checks disagreeing about
         # what their own subject is, which is how a scope divergence hides.
-        NOUN = r"(?:group|laborator|lab\b|team|replicat|contribution)"
+        # `labs?\b`, NOT `lab\b`: the latter cannot match "labs", and that exact
+        # element produced this PR's earlier blocking finding. Merging the two
+        # lists removed the divergence between them but kept the broken member --
+        # and COUNT_RE and retracted_patterns are complementary by design (the
+        # latter omits one/two/six because those are COUNT_RE's job), so both
+        # were blind on the same noun.
+        NOUN = r"(?:group|laborator|labs?\b|team|replicat|contribution)"
         COUNT_RE = re.compile(
             r"\b(one|two|three|four|five|six|1|2|3|4|5|6)\s+"
             r"(?:\w+\s+){0,2}independent\s+" + NOUN,
@@ -236,8 +242,8 @@ def check(paths: dict[str, str]) -> list[str]:
                 if mt.group(1).lower() not in ok:
                     problems.append(
                         f"{name}: independent-group count {mt.group(1)!r} disagrees with "
-                        f"lab_independence.measure() ({m['independent_n']} independent, "
-                        f"{m['independent_cited_n']} of them cited): {mt.group(0)[:70]!r}"
+                        f"lab_independence.measure() ({meas['independent_n']} independent, "
+                        f"{meas['independent_cited_n']} of them cited): {mt.group(0)[:70]!r}"
                     )
             for mt in RANK_RE.finditer(flat):
                 problems.append(
@@ -379,6 +385,11 @@ def self_test() -> int:
         ("notes", "Three of the four are used.",
          "There is one independent replication.", 1,
          "a count on the noun COUNT_RE's list used to omit"),
+        # The plural `lab\b` could not match -- the element that produced this
+        # PR's earlier blocking finding and survived the list merge.
+        ("notes", "Three of the four are used.",
+         "There are two independent labs.", 1,
+         "a count on the plural noun `lab\\b` could not match"),
         # One physical line: the YAML wraps at width=100 and a longer span no-ops.
         ("review", "Three of those four are used",
          "Of those four, two are substantive", 1,
