@@ -31,7 +31,7 @@ number or a phrasing asserted in prose and never re-derived from the data it des
 | arithmetic | `entries == GOA rows + NEW rows`, the action tally sums to the entry count, and no `PENDING` survives |
 | retraction | four retracted phrasings must not reappear in the review, the notes or the history record **outside an explicit retraction context** |
 | required claims | five load-bearing claims must appear in the number of files they should |
-| paired claims | one claim must be present in **each** of two named rows' `review.reason`, resolved through the parsed YAML — the justification for weighting the tagged-transgene caveat differently on `GO:0003700` and `GO:0003682`. A missing row is an **error**, not a skip, so deleting the row cannot satisfy the check |
+| paired claims | **two** claims must each be present in **each** of two named rows' `review.reason`, resolved through the parsed YAML — the tagged-transgene weighting justification, and the hexanediol filtering argument, each on both `GO:0003700` and `GO:0003682`. A missing row is an **error**, not a skip, so deleting the row cannot satisfy the check |
 | duplicate keys | the review is loaded with a `SafeLoader` subclass that **raises** on a duplicated mapping key, which PyYAML otherwise resolves silently by keeping the last one |
 
 ## ENCODE replication metadata (`fetch_encode_ahdc1.py`)
@@ -54,10 +54,20 @@ uv run python genes/human/AHDC1/AHDC1-bioinformatics/fetch_encode_ahdc1.py
 | **=> epitope-tagged** | **True** |
 | **=> tag at endogenous locus** | **True** (CRISPR insertion) |
 
-Both conclusions are asserted by the script, not read off by eye, and it prints an
-explicit warning if either flips — an untagged target would invalidate the review's
-"both datasets are tagged" caveat, and a tag introduced by transfection rather than
-knock-in would invalidate the "endogenous levels" claim that does the real work.
+Both conclusions are asserted by the script, not read off by eye, and a run in which
+either flips **exits non-zero** — an untagged target would invalidate the review's "both
+datasets are tagged" caveat, and a tag introduced by transfection rather than knock-in
+would invalidate the "endogenous levels" claim that does the real work. A first version
+printed those as warnings and still returned 0, which is the repo's own
+"a check that reports but does not gate is not a check" failure; a reviewer caught it.
+The gate is exercised on synthetic records:
+
+```bash
+uv run python genes/human/AHDC1/AHDC1-bioinformatics/fetch_encode_ahdc1.py --self-test
+```
+
+covering the real record (must pass), an untagged modification, a tag introduced by
+transfection rather than CRISPR, and no modifications at all (all must fail).
 
 Note the trap the target name sets: an untagged-looking ENCODE target label is
 *necessary but not sufficient* for an untagged experiment, because the tag is recorded

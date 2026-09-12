@@ -500,6 +500,34 @@ before this round. It is a methods-section detail that changes how the primary e
 should be read, and the general lesson is the one this review keeps relearning: read the
 methods for the assay you are annotating, not only the results paragraph that reports it.
 
+**Two corrections to my first attempt at this, both from the pass-6 review.**
+
+*The filtering half was on the wrong row.* I put both halves on `GO:0003682` and wrote
+that filtering was "a third independent reason not to read site specificity off these
+peaks, alongside the ectopic promoter and the authors' own statement" — but **both of those
+arguments live on the `GO:0003700` row**, where hexanediol was never mentioned. A curator
+reading the MODIFY row would have seen four arguments and never learned of the fifth. This
+is the same defect as the tagged-transgene asymmetry one round earlier: an argument that
+bears on two rows, stated on one. The filtering half is now on both, and a **second
+`PAIRED_CLAIMS` entry** lints it, so the two instances of this defect are now both under
+the same guard.
+
+*The reagent is not clean, and the hedge cannot come from this paper.* 1,6-hexanediol is
+not a condensate-specific perturbant — aliphatic alcohols also affect kinase and
+phosphatase activity and alter chromatin compaction directly — so "hexanediol-resistant" is
+not strictly interchangeable with "not condensate-derived". Nothing in the cached text
+speaks to the reagent's selectivity, so this is flagged in the row as a limitation that
+cannot be sourced from the publication. Note it cuts **only against the strengthening
+half**: the filtering half holds whatever the mechanism, because a map collected after a
+disruptive pre-treatment is a filtered map regardless of what the disruption acted on.
+
+*And a "reports but does not gate" bug in my own script.* `fetch_encode_ahdc1.py` printed
+its warnings and still returned `0`, so a future run in which the ENCODE tag turned out to
+be transfected rather than knocked in would have exited clean. That is the repo's own rule
+violated inside a script written to enforce rules. The verdict logic is now a separate
+function, returns non-zero, and has a `--self-test` exercising it on four synthetic records
+(real record passes; untagged, transfected-tag, and no-modifications all fail).
+
 ## 17. A note on the reviews themselves
 
 All four review passes ran in a runner with neither `uv` nor `just` installed (and, by pass

@@ -120,6 +120,16 @@ PAIRED_CLAIMS = {
         re.compile(r"weighted\s+(?:differently|less)", re.I),
         ["GO:0003700", "GO:0003682"],
     ),
+    # The FILTERING half of the hexanediol argument bears on both rows: it limits
+    # what the GO:0003682 peak set shows, and it is a fifth argument against
+    # GO:0003700. A first draft stated it only on GO:0003682 while referring to
+    # "the ectopic promoter and the authors' own statement", both of which live on
+    # the GO:0003700 row -- so a curator reading the MODIFY row would never have
+    # learned of it.
+    "hexanediol_filtering_on_both_rows": (
+        re.compile(r"hexanediol", re.I),
+        ["GO:0003700", "GO:0003682"],
+    ),
 }
 
 

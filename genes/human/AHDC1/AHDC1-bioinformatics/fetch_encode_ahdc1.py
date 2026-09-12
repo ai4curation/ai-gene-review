@@ -105,14 +105,77 @@ def main() -> int:
     print(f"  => epitope-tagged:            {bool(tagged)}")
     print(f"  => tag at endogenous locus:   {bool(knockin)} (CRISPR insertion)")
     print(f"  => cached to:                 {OUT.name}")
-    if not tagged:
-        print("  !! target is NOT tagged - the review's 'both datasets are tagged' "
-              "caveat would need revising")
-    if tagged and not knockin:
-        print("  !! tagged but NOT a CRISPR knock-in - the review's 'endogenous levels' "
-              "claim would need revising")
+
+    problems = verdict_problems(mods)
+    if problems:
+        print()
+        for p in problems:
+            print("  x", p)
+        return 1
     return 0
 
 
+def verdict_problems(mods: dict[str, dict]) -> list[str]:
+    """Return the reasons the review's GO:0003682 claims would need revising.
+
+    Separated from ``main`` so it can be exercised on synthetic inputs. A check
+    that reports but does not gate is not a check: both of these are conclusions
+    the review rests on, so a run in which either flips must exit non-zero rather
+    than print a warning into a log nobody reads.
+    """
+    knockin = [
+        g for g in mods.values()
+        if g.get("method") == "CRISPR" and g.get("category") == "insertion"
+    ]
+    tagged = [g for g in mods.values() if g.get("introduced_tags")]
+    problems: list[str] = []
+    if not tagged:
+        problems.append(
+            "target is NOT tagged - the review's 'both datasets are epitope-tagged' "
+            "caveat would need revising"
+        )
+    if tagged and not knockin:
+        problems.append(
+            "tagged but NOT a CRISPR knock-in at the endogenous locus - the review's "
+            "'native promoter, endogenous level' claim would need revising"
+        )
+    return problems
+
+
+def self_test() -> int:
+    """Break the gate on purpose. Each case must produce the problem it should."""
+    real = json.loads(OUT.read_text())["genetic_modifications"] if OUT.exists() else None
+    assert real, f"{OUT.name} missing - run the fetch first so the baseline is real data"
+
+    cases = {
+        "real_record_passes": (real, 0),
+        "untagged_fails": (
+            {"X": {"method": "CRISPR", "category": "insertion", "introduced_tags": []}},
+            1,
+        ),
+        "transfected_tag_fails": (
+            {
+                "X": {
+                    "method": "transfection",
+                    "category": "insertion",
+                    "introduced_tags": [{"name": "eGFP", "location": "N-terminal"}],
+                }
+            },
+            1,
+        ),
+        "no_modifications_fails": ({}, 1),
+    }
+    ok = True
+    print("self-test:")
+    for name, (mods, want) in cases.items():
+        got = len(verdict_problems(mods))
+        passed = (got > 0) == (want > 0)
+        ok = ok and passed
+        print(f"  {name}: {'OK' if passed else 'BROKEN'} (problems={got}, expected>0={want > 0})")
+    return 0 if ok else 1
+
+
 if __name__ == "__main__":
+    if "--self-test" in sys.argv:
+        sys.exit(self_test())
     sys.exit(main())
