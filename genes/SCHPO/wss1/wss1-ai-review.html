@@ -1,0 +1,2746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>wss1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>wss1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9P7B5" target="_blank" class="term-link">
+                        Q9P7B5
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Schizosaccharomyces pombe (strain 972 / ATCC 24843)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "wss1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">8</span> Annotations</a>
+
+
+
+        <a href="#review-research" title="Deep research and hypothesis research reports"><span class="nav-count">1</span> Research</a>
+
+
+
+        <a href="#external-predictions" title="External predictions assessed separately from GOA annotations" class="nav-external"><span class="nav-count">1</span> External</a>
+
+
+
+        <a href="#review-core-functions" title="Core biological functions"><span class="nav-count">1</span> Core Function</a>
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">6</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">1</span> Documents</a>
+
+
+
+
+
+
+
+
+
+        <a href="#review-questions" title="Suggested questions for experts"><span class="nav-count">1</span> Questions</a>
+
+
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9P7B5" data-a="DESCRIPTION: Wss1 is a nuclear Wss1-like metalloprotease with a..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Wss1 is a nuclear Wss1-like metalloprotease with a conserved WLM catalytic domain and a C-terminal SUMO-interaction motif. Its role in proteolytic repair of covalent DNA-protein cross-links is inferred from the characterized budding-yeast Wss1 family and curated phylogenetic evidence. Removal of the cross-linked protein allows downstream DNA repair or lesion bypass. Direct biochemical characterization of the fission-yeast protein remains limited.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004222" target="_blank" class="term-link">
+                                    GO:0004222
+                                </a>
+                            </span>
+                            <span class="term-label">metalloendopeptidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISO</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P7B5" data-a="GO:0004222" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The target carries the diagnostic WLM domain and conserved metal-binding/catalytic residues.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target carries the diagnostic WLM domain and conserved metal-binding/catalytic residues. Curated orthology and PAINT ancestry support inheritance of the Wss1 protease/DNA-repair function, whose mechanistic foundation is DNA-dependent proteolysis of cross-linked proteins in the characterized yeast homolog. This is a justified family inference, not target-specific experimental proof.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24998930" target="_blank" class="term-link">
+                                        PMID:24998930
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Notably, in vitro assays indicate
+that substrates such as topoisomerase 1 are processed by the metalloprotease
+directly and in a DNA-dependent manner.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/wss1/wss1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   Pfam; PF08325; WLM; 1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16823372
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ORFeome cloning and global analysis of protein localization ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P7B5" data-a="GO:0005634" data-r="PMID:16823372" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nuclear localization is supported by the reviewed record citing target localization measurements (PMID:16823372) and is consistent with conserved Wss1 action on DNA-protein cross-links.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is supported by the reviewed record citing target localization measurements (PMID:16823372) and is consistent with conserved Wss1 action on DNA-protein cross-links. The IBA adds a curated ancestral localization inference.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/wss1/wss1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SUBCELLULAR LOCATION: Nucleus {ECO:0000269|PubMed:16823372}.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P7B5" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nuclear localization is supported by the reviewed record citing target localization measurements (PMID:16823372) and is consistent with conserved Wss1 action on DNA-protein cross-links.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is supported by the reviewed record citing target localization measurements (PMID:16823372) and is consistent with conserved Wss1 action on DNA-protein cross-links. The IBA adds a curated ancestral localization inference.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/wss1/wss1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SUBCELLULAR LOCATION: Nucleus {ECO:0000269|PubMed:16823372}.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P7B5" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nuclear localization is supported by the reviewed record citing target localization measurements (PMID:16823372) and is consistent with conserved Wss1 action on DNA-protein cross-links.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is supported by the reviewed record citing target localization measurements (PMID:16823372) and is consistent with conserved Wss1 action on DNA-protein cross-links. The IBA adds a curated ancestral localization inference.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/wss1/wss1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">CC   -!- SUBCELLULAR LOCATION: Nucleus {ECO:0000269|PubMed:16823372}.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006281" target="_blank" class="term-link">
+                                    GO:0006281
+                                </a>
+                            </span>
+                            <span class="term-label">DNA repair</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P7B5" data-a="GO:0006281" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The target carries the diagnostic WLM domain and conserved metal-binding/catalytic residues.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target carries the diagnostic WLM domain and conserved metal-binding/catalytic residues. Curated orthology and PAINT ancestry support inheritance of the Wss1 protease/DNA-repair function, whose mechanistic foundation is DNA-dependent proteolysis of cross-linked proteins in the characterized yeast homolog. This is a justified family inference, not target-specific experimental proof.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24998930" target="_blank" class="term-link">
+                                        PMID:24998930
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Notably, in vitro assays indicate
+that substrates such as topoisomerase 1 are processed by the metalloprotease
+directly and in a DNA-dependent manner.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/wss1/wss1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   Pfam; PF08325; WLM; 1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008237" target="_blank" class="term-link">
+                                    GO:0008237
+                                </a>
+                            </span>
+                            <span class="term-label">metallopeptidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P7B5" data-a="GO:0008237" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The target carries the diagnostic WLM domain and conserved metal-binding/catalytic residues.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target carries the diagnostic WLM domain and conserved metal-binding/catalytic residues. Curated orthology and PAINT ancestry support inheritance of the Wss1 protease/DNA-repair function, whose mechanistic foundation is DNA-dependent proteolysis of cross-linked proteins in the characterized yeast homolog. This is a justified family inference, not target-specific experimental proof.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24998930" target="_blank" class="term-link">
+                                        PMID:24998930
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Notably, in vitro assays indicate
+that substrates such as topoisomerase 1 are processed by the metalloprotease
+directly and in a DNA-dependent manner.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/wss1/wss1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   Pfam; PF08325; WLM; 1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019985" target="_blank" class="term-link">
+                                    GO:0019985
+                                </a>
+                            </span>
+                            <span class="term-label">translesion synthesis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISO</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P7B5" data-a="GO:0019985" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Wss1-mediated proteolytic removal of DNA-cross-linked proteins can permit downstream lesion bypass; participation in translesion synthesis does not assert that Wss1 is a DNA polymerase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Wss1-mediated proteolytic removal of DNA-cross-linked proteins can permit downstream lesion bypass; participation in translesion synthesis does not assert that Wss1 is a DNA polymerase. Retain the curated orthology inference at that pathway-participation scope.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24998930" target="_blank" class="term-link">
+                                        PMID:24998930
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Notably, in vitro assays indicate
+that substrates such as topoisomerase 1 are processed by the metalloprotease
+directly and in a DNA-dependent manner.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0106300" target="_blank" class="term-link">
+                                    GO:0106300
+                                </a>
+                            </span>
+                            <span class="term-label">protein-DNA covalent cross-linking repair</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISO</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9P7B5" data-a="GO:0106300" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The target carries the diagnostic WLM domain and conserved metal-binding/catalytic residues.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target carries the diagnostic WLM domain and conserved metal-binding/catalytic residues. Curated orthology and PAINT ancestry support inheritance of the Wss1 protease/DNA-repair function, whose mechanistic foundation is DNA-dependent proteolysis of cross-linked proteins in the characterized yeast homolog. This is a justified family inference, not target-specific experimental proof.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24998930" target="_blank" class="term-link">
+                                        PMID:24998930
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Notably, in vitro assays indicate
+that substrates such as topoisomerase 1 are processed by the metalloprotease
+directly and in a DNA-dependent manner.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/wss1/wss1-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   Pfam; PF08325; WLM; 1.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section" id="review-core-functions">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>WLM-family metalloendopeptidase inferred to remove protein components of DNA-protein cross-links and permit downstream repair.</h3>
+                <span class="vote-buttons" data-g="Q9P7B5" data-a="FUNCTION: WLM-family metalloendopeptidase inferred to remove..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004222" target="_blank" class="term-link">
+                            metalloendopeptidase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0106300" target="_blank" class="term-link">
+                                protein-DNA covalent cross-linking repair
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24998930" target="_blank" class="term-link">
+                                PMID:24998930
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Notably, in vitro assays indicate
+that substrates such as topoisomerase 1 are processed by the metalloprotease
+directly and in a DNA-dependent manner.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:SCHPO/wss1/wss1-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">DR   Pfam; PF08325; WLM; 1.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link">
+                            PMID:16823372
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ORFeome cloning and global analysis of protein localization in the fission yeast Schizosaccharomyces pombe.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24998930" target="_blank" class="term-link">
+                            PMID:24998930
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A DNA-dependent protease involved in DNA-protein crosslink repair.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:SCHPO/wss1/wss1-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProt reviewed sequence and feature record</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section" id="review-questions">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does Wss1 associate with any nuclear membrane or membrane-bound complex, or is its nuclear signal restricted to soluble chromatin-associated pools?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9P7B5" data-a="Q: Does Wss1 associate with any nuclear membrane or m..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+    <section class="section external-predictions" id="external-predictions" aria-labelledby="external-predictions-title">
+        <h2 class="section-title" id="external-predictions-title">External Prediction Reviews</h2>
+        <p class="prediction-notice">These computational predictions are reviewed separately from the GOA annotation set used for this review.
+            The assessments below are from this project and do not constitute official GO annotations or endorsement by GO/UniProt.
+            They are not included in the existing annotation review above.</p>
+
+
+        <article class="prediction-review">
+        <h3>ProtNLM2 <span class="badge">External predictions</span></h3>
+        <p class="prediction-source"><a href="wss1-protnlm-predictions-review.yaml">View prediction review YAML</a> &middot; wss1-protnlm-predictions-review.yaml
+            &middot; Review status: COMPLETE</p>
+
+        <p>Membrane residence remains unresolved: the source hydrates it from the Nucleus keyword, which does not establish membrane association.</p>
+
+        <p class="prediction-source">Review score: 2 = concordant with evidence; 1 = uncertain; 0 = discordant with evidence. This is an assessment score, not a model probability.</p>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:0016020
+                    </a>
+                    <span class="term-label">membrane</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_CC</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-unc">
+                        UNC — Uncertain
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 1/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM2
+                 &middot; Version: pre-release post-processed-2026_02_28k.xml
+
+                 &middot; <a href="#" target="_blank" class="term-link">file:SCHPO/wss1/wss1-protnlm-source.xml</a>
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> The reviewed target record places Wss1 in the nucleus and identifies a soluble WLM metalloprotease domain; it does not establish membrane residence. The original XML hydrates the membrane claim from KW-0539, which is the UniProt keyword Nucleus, not a membrane-specific observation. Nuclear residence alone does not entail association with the nuclear envelope, and the family DNA-protein-crosslink repair mechanism does not require a membrane. Nevertheless, lack of a transmembrane helix would not exclude peripheral membrane association, so the broad claim cannot be conclusively refuted solely from these data. Direct membrane fractionation, colocalization or an established membrane-associated complex is missing.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="wss1-uniprot.txt" target="_blank" class="term-link">file:SCHPO/wss1/wss1-uniprot.txt</a>:
+
+
+                        <span class="finding-text">"CC   -!- SUBCELLULAR LOCATION: Nucleus {ECO:0000269|PubMed:16823372}."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="wss1-keyword-KW-0539.json" target="_blank" class="term-link">file:SCHPO/wss1/wss1-keyword-KW-0539.json</a>:
+
+
+                        <span class="finding-text">"&#34;name&#34;: &#34;Nucleus&#34;,
+    &#34;id&#34;: &#34;KW-0539&#34;"</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        </article>
+
+    </section>
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section" id="review-research">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(wss1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9P7B5" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Research report: *Schizosaccharomyces pombe* **wss1** (Q9P7B5; SPAC521.02)</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">17 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-08T19:13:24.065760</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="wss1-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="research-report-schizosaccharomyces-pombe-wss1-q9p7b5-spac52102">Research report: <em>Schizosaccharomyces pombe</em> <strong>wss1</strong> (Q9P7B5; SPAC521.02)</h1>
+<h2 id="executive-conclusion">Executive conclusion</h2>
+<p>The gene symbol <strong>wss1 is ambiguous at the level of the available experimental literature, and literature for this specific protein is limited</strong>. The requested target is the UniProt entry <strong>Q9P7B5</strong>, gene <strong>wss1</strong>, ORF <strong>SPAC521.02</strong>, from <em>Schizosaccharomyces pombe</em> strain 972/ATCC 24843. Its supplied annotation—DNA-dependent Wss1-like metalloprotease, peptidase M3 family, with a WLM domain—is internally coherent with the known Wss1/SPRTN protease family.</p>
+<p>However, the principal structural study describes an <em>S. pombe</em> protein called <strong>Wss1b</strong>, “one of two” SPRTN/Wss1 homologs in this organism, without providing a locus or UniProt accession in the retrieved text. Consequently, it cannot be established from that paper that Wss1b is SPAC521.02/Q9P7B5. Results for Wss1b, budding-yeast Wss1, or mammalian SPRTN are therefore presented below only as homolog-based evidence—not as direct experimental characterization of Q9P7B5. (stingele2016mechanismandregulation pages 7-9)</p>
+<table>
+<thead>
+<tr>
+<th>Annotation topic</th>
+<th>Conclusion</th>
+<th>Evidence level</th>
+<th>Key caveat</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Target identity</td>
+<td>Target is <strong>Q9P7B5</strong>, gene <strong>wss1</strong>, locus <strong>SPAC521.02</strong>, from <em>Schizosaccharomyces pombe</em> strain 972, as specified by UniProt.</td>
+<td><strong>Direct database annotation</strong></td>
+<td>The retrieved primary literature does not independently connect Q9P7B5/SPAC521.02 to the experimentally studied protein called <em>S. pombe</em> Wss1b.</td>
+</tr>
+<tr>
+<td>Family and domain</td>
+<td>Q9P7B5 is annotated as a <strong>Wss1-like peptidase M3 metalloprotease</strong> containing a <strong>WLM domain</strong>. Wss1 proteins belong to a fungal WLM/Wss1 protease family related to SPRTN. (reinking2022substratespecificityofthe pages 104-106, reinking2022substratespecificityofthe pages 20-24)</td>
+<td><strong>High-confidence domain/family inference</strong></td>
+<td>Family membership strongly predicts molecular class but does not prove catalytic activity or physiological function for Q9P7B5.</td>
+</tr>
+<tr>
+<td>Proposed catalytic reaction</td>
+<td>Predicted to catalyze metal-dependent hydrolysis of peptide bonds in DNA-associated proteins: protein–peptide bond + H₂O → cleaved polypeptide products. Wss1-family catalysis uses an HEXXH-type metalloprotease center, with a glutamate activating water for nucleophilic attack. (reinking2022substratespecificityofthe pages 20-24, stingele2016mechanismandregulation pages 7-9)</td>
+<td><strong>Strong orthology/structural inference</strong></td>
+<td>EC 3.4.24.- does not define a sequence-specific reaction, and catalysis has not been demonstrated directly for purified Q9P7B5.</td>
+</tr>
+<tr>
+<td>Substrate specificity</td>
+<td>Most likely recognizes the <strong>DNA-bound state</strong> of a protein rather than a narrow peptide sequence; predicted substrates are covalent DNA–protein crosslinks and tightly trapped DNA-associated proteins. Family studies show DNA-dependent cleavage of histone H1 and other DNA-bound proteins. (reinking2022substratespecificityofthe pages 17-20, stingele2016mechanismandregulation pages 5-7)</td>
+<td><strong>Mechanistic inference from homologs</strong></td>
+<td>Histone H1, Top1, and RNA polymerase II are not established direct substrates of Q9P7B5.</td>
+</tr>
+<tr>
+<td>Biological pathway</td>
+<td>Predicted to function in <strong>DNA–protein crosslink repair</strong> and genome maintenance by proteolytically reducing bulky protein adducts so downstream DNA-repair or lesion-bypass enzymes can access DNA. (acampora2023transcriptioncoupledrepairof pages 36-39, reinking2022substratespecificityofthe pages 17-20)</td>
+<td><strong>High-confidence family-level inference</strong></td>
+<td>No retrieved study directly tested deletion, catalytic mutation, epistasis, or DPC sensitivity for SPAC521.02.</td>
+</tr>
+<tr>
+<td>Cellular localization</td>
+<td>Expected functional site is <strong>nuclear chromatin at DNA lesions</strong>, potentially with transient recruitment to DPC-containing loci.</td>
+<td><strong>Moderate functional inference</strong></td>
+<td>No exact-target microscopy, fractionation, ChIP, or curated experimental localization evidence was retrieved for Q9P7B5; constitutive nuclear localization should not be asserted.</td>
+</tr>
+<tr>
+<td>Structural <em>S. pombe</em> evidence</td>
+<td>An <em>S. pombe</em> homolog termed <strong>Wss1b</strong> was crystallized as residues 17–151: PDB <strong>5JIG</strong>, 1.0 Å resolution, and catalytic mutant <strong>5LN5</strong>, 1.75 Å. His111, His115, and His130 coordinate the active-site metal; E112Q abolishes activity. The solvent-exposed active site is compatible with broad substrate acceptance. (reinking2022substratespecificityofthe pages 20-24, stingele2016mechanismandregulation pages 7-9)</td>
+<td><strong>Direct evidence for an <em>S. pombe</em> Wss1 homolog</strong></td>
+<td>The paper describes Wss1b as one of two <em>S. pombe</em> homologs but does not provide a locus or accession mapping; these results cannot safely be assigned specifically to Q9P7B5/SPAC521.02.</td>
+</tr>
+<tr>
+<td>Biochemical <em>S. pombe</em> Wss1b data</td>
+<td>Wss1b-family assays showed ssDNA-dependent histone-H1 cleavage using 800 nM enzyme, 200 nM substrate, 10 nM DNA, and a 2-hour incubation at 30°C; dsDNA preferentially supported autocleavage rather than substrate digestion. (stingele2016mechanismandregulation pages 7-9, stingele2016mechanismandregulation pages 5-7)</td>
+<td><strong>Direct biochemical evidence for the unmapped homolog</strong></td>
+<td>The construct-to-Q9P7B5 correspondence is unresolved, and the assay does not establish physiological substrate preference in living <em>S. pombe</em>.</td>
+</tr>
+<tr>
+<td>2023 ortholog development</td>
+<td>In <em>Saccharomyces cerevisiae</em>, Ubx5–Cdc48 was shown to assist Wss1 at DPC sites. Without Wss1, Ubx5/Cdc48 accumulated at persistent lesions; deleting <strong>UBX5</strong> promoted Ddi1/proteasome-dependent bypass and improved DPC repair. RNA-polymerase-II subunit Rpb1 was a candidate substrate. Published online <strong>5 May 2023</strong>, DOI: <a href="https://doi.org/10.15252/embj.2023113609">10.15252/embj.2023113609</a>. (noireterre2023ubx5‐cdc48assiststhe pages 9-11, noireterre2023ubx5‐cdc48assiststhe pages 1-2, noireterre2023ubx5‐cdc48assiststhe pages 3-5)</td>
+<td><strong>Recent direct evidence for a budding-yeast ortholog</strong></td>
+<td>This study used <em>S. cerevisiae</em>, not <em>S. pombe</em>; Ubx5–Cdc48 cooperation, Rpb1 processing, and bypass relationships remain hypotheses for Q9P7B5.</td>
+</tr>
+<tr>
+<td>Overall functional annotation</td>
+<td>The most defensible annotation is <strong>predicted DNA-dependent Wss1-like metalloprotease involved in proteolytic processing of DNA-associated protein obstacles and DPCs</strong>.</td>
+<td><strong>High confidence for molecular class; moderate confidence for exact cellular function</strong></td>
+<td>Claims beyond UniProt/domain annotation are transferred principally from an unmapped <em>S. pombe</em> homolog or from <em>S. cerevisiae</em> Wss1 and must be labeled inferred.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Evidence-tier summary for </em>S. pombe<em> Q9P7B5/wss1/SPAC521.02, separating direct annotation from homolog-based inference. It highlights the unresolved mapping between Q9P7B5 and the experimentally characterized </em>S. pombe<em> protein called Wss1b.</em></p>
+<h2 id="1-identity-and-molecular-classification">1. Identity and molecular classification</h2>
+<p>For the exact requested target, the defensible identifiers are those supplied from UniProt: <strong>Q9P7B5</strong>, <strong>wss1</strong>, <strong>SPAC521.02</strong>, <em>S. pombe</em> strain 972. The protein is assigned to the <strong>WLM/Wss1-like branch of peptidase family M3</strong>, including the WLM domain (PF08325/IPR013536) and Wss1-like metalloprotease signature (IPR053000).</p>
+<p>This classification agrees with comparative structural literature: fungal Wss1 proteins form WLM metalloprotease subfamilies related to SPRTN, but Wss1 and SPRTN are not interchangeable proteins. Wss1 lacks the additional zinc-binding domain found in human SPRTN, and its catalytic center is comparatively solvent exposed. (reinking2022substratespecificityofthe pages 104-106, reinking2022substratespecificityofthe pages 20-24)</p>
+<p>The supplied UniProt name includes <strong>EC 3.4.24.-</strong>, an incompletely specified metalloendopeptidase designation. It indicates hydrolysis of internal peptide bonds but does not imply a defined peptide-sequence preference.</p>
+<h2 id="2-predicted-primary-biochemical-function">2. Predicted primary biochemical function</h2>
+<h3 id="catalytic-reaction">Catalytic reaction</h3>
+<p>The best-supported functional annotation is:</p>
+<p><strong>DNA-associated protein + H₂O → shorter protein/peptide products</strong>, catalyzed by a metal-dependent WLM protease.</p>
+<p>In Wss1-family enzymes, histidines coordinate the catalytic metal and a glutamate activates water for nucleophilic peptide-bond hydrolysis. The <em>S. pombe</em> Wss1b protease-domain structure contains a compact metalloprotease fold with a HEXXH-type center; His111, His115, and His130 coordinate the observed metal, while E112 is assigned the catalytic water-activating role. E112Q abolished activity without disrupting the overall structure. Nickel occupied the crystallographic site, probably replacing the physiological zinc during nickel-affinity purification. (stingele2016mechanismandregulation pages 7-9)</p>
+<p>This is strong evidence for the chemistry of an <em>S. pombe</em> Wss1 homolog, but <strong>not direct proof that purified Q9P7B5 catalyzes this reaction</strong>, because the Wss1b–SPAC521.02 mapping was not established.</p>
+<h3 id="substrate-specificity">Substrate specificity</h3>
+<p>Wss1-family substrate selection appears to depend principally on a protein being <strong>DNA-associated</strong>, rather than on a narrow amino-acid recognition sequence. Wss1 and SPRTN homologs are activated by DNA, undergo trans-autoproteolysis, and cleave diverse DNA-binding proteins while sparing proteins that are not DNA bound. A solvent-exposed catalytic center with no deep conventional substrate pocket provides a structural explanation for this broad specificity. (reinking2022substratespecificityofthe pages 20-24, reinking2022substratespecificityofthe pages 17-20)</p>
+<p>For the experimentally studied <em>S. pombe</em> Wss1b domain, histone H1 cleavage was observed under ssDNA-dependent assay conditions using 800 nM enzyme, 200 nM H1, 10 nM DNA, and incubation for two hours at 30°C. ssDNA promoted substrate cleavage, whereas dsDNA preferentially supported autocleavage in the reported comparison. (stingele2016mechanismandregulation pages 7-9, stingele2016mechanismandregulation pages 5-7)</p>
+<p>Thus, Q9P7B5 is most reasonably predicted to attack bulky covalent DNA–protein crosslinks or tightly trapped DNA-associated proteins. Nevertheless, <strong>Top1, histone H1, and RNA polymerase II should not be recorded as experimentally established physiological substrates of Q9P7B5</strong>.</p>
+<h2 id="3-biological-process-and-pathway">3. Biological process and pathway</h2>
+<p>The most likely pathway is <strong>DNA–protein crosslink (DPC) repair</strong>, a genome-maintenance process in which proteolysis reduces a bulky DNA-bound protein to a smaller peptide adduct. This permits subsequent access by DNA-repair, adduct-processing, or translesion-synthesis machinery. Family-level studies place Wss1 in protection against both enzymatic DPCs—especially trapped topoisomerase I cleavage complexes—and nonenzymatic crosslinks induced by formaldehyde. Wss1 and Tdp1 can operate as parallel routes for Top1-crosslink resolution in budding yeast; severe camptothecin sensitivity of the double mutant is rescued by eliminating TOP1. (acampora2023transcriptioncoupledrepairof pages 36-39, reinking2022substratespecificityofthe pages 17-20)</p>
+<p>These pathway assignments are mechanistically compelling for the family but remain <strong>inferred for SPAC521.02</strong>. No retrieved study directly reported an SPAC521.02 deletion phenotype, catalytic-site mutant, epistasis test, DPC burden, or formaldehyde/camptothecin sensitivity in <em>S. pombe</em>.</p>
+<p>Earlier budding-yeast work also connected Wss1 to SUMO-dependent proteolysis. <em>Saccharomyces cerevisiae</em> Wss1 was reported to process poly-SUMO conjugates, interact genetically with the Slx5–Slx8 SUMO-targeted ubiquitin ligase, and associate with proteasomal subunits. These findings helped establish a relationship among Wss1, SUMO/ubiquitin signals, and protein quality control at chromatin, but they concern a different organism and should not be transferred as demonstrated enzymology of Q9P7B5. [Mullen et al., published August 2010, DOI/URL: https://doi.org/10.1128/MCB.01649-09]. (mullen2010wss1isa pages 2-3, mullen2010wss1isa pages 8-10)</p>
+<h2 id="4-cellular-localization-and-site-of-action">4. Cellular localization and site of action</h2>
+<p>The predicted functional site is <strong>nuclear chromatin, transiently at DNA–protein crosslinks or tightly stalled DNA-bound complexes</strong>. That conclusion follows from the requirement for DNA and the family’s DPC-repair role. It does not establish that Q9P7B5 is constitutively nuclear or uniformly chromatin bound.</p>
+<p>No exact-target microscopy, localization proteomics, cellular fractionation, or chromatin-immunoprecipitation evidence was retrieved for SPAC521.02. Accordingly, “nuclear/chromatin-associated at damage sites” should be treated as a <strong>functional localization inference</strong>, not a directly measured localization annotation.</p>
+<h2 id="5-structural-evidence-from-s-pombe">5. Structural evidence from <em>S. pombe</em></h2>
+<p>Stingele and colleagues crystallized residues 17–151 of an <em>S. pombe</em> homolog termed Wss1b. The wild-type structure, PDB <strong>5JIG</strong>, was solved at <strong>1.0 Å resolution</strong> with an R-free of <strong>16.8%</strong>; the catalytically inactive E112Q structure, PDB <strong>5LN5</strong>, was solved at <strong>1.75 Å</strong>. The domain contains four α-helices and a four-stranded antiparallel β-sheet, with a highly accessible active site consistent with broad cleavage of DNA-associated proteins. [Stingele et al., <em>Molecular Cell</em>, published November 2016, DOI/URL: https://doi.org/10.1016/j.molcel.2016.09.031]. (stingele2016mechanismandregulation pages 7-9)</p>
+<p>This is the strongest organism-matched experimental evidence available in the retrieved literature. Its crucial limitation is that the publication text retrieved here neither names SPAC521.02 nor gives Q9P7B5; it also states that Wss1b is one of two <em>S. pombe</em> homologs. It would therefore be unsafe to assign PDB 5JIG or its residue numbering to Q9P7B5 without an independent sequence-to-locus mapping.</p>
+<h2 id="6-recent-development-ubx5cdc48-assistance-of-wss1">6. Recent development: Ubx5–Cdc48 assistance of Wss1</h2>
+<p>The most relevant 2023 primary study investigated <strong>S. cerevisiae</strong>, not <em>S. pombe</em>. Noireterre et al. showed that the Ubx5 adaptor recruits the Cdc48 segregase to persistent DPC lesions and assists Wss1-dependent processing. In Wss1-deficient cells, Ubx5 and Cdc48 accumulated at an inducible Flp–DNA crosslink; unexpectedly, deleting UBX5 or disrupting its Cdc48-binding domain improved formaldehyde, hydroxyurea, and camptothecin-related phenotypes by permitting alternative Ddi1/proteasome-dependent processing. (noireterre2023ubx5‐cdc48assiststhe pages 9-11, noireterre2023ubx5‐cdc48assiststhe pages 1-2, noireterre2023ubx5‐cdc48assiststhe pages 3-5)</p>
+<p>The study also implicated chromatin-bound RNA-polymerase-II subunit Rpb1 as a candidate Wss1 substrate or DPC-like obstacle. Rpb1 turnover was impaired in either <em>ubx5Δ</em> or <em>wss1Δ</em> cells, while the double mutant activated a Ddi1-dependent bypass. Experimental designs included three independent ChIP-qPCR replicates, three to six Rpb1-turnover replicates, and eight chromatin-fractionation replicates; an induced Flp crosslink persisted for 120 minutes in <em>tdp1Δ wss1Δ</em> cells. Treatments included 40 mM formaldehyde and 100–200 mM hydroxyurea, depending on the assay. [Noireterre et al., <em>The EMBO Journal</em>, accepted 24 April and published online <strong>5 May 2023</strong>, DOI/URL: https://doi.org/10.15252/embj.2023113609]. (noireterre2023ubx5‐cdc48assiststhe pages 9-11, noireterre2023ubx5‐cdc48assiststhe pages 3-5, noireterre2023ubx5‐cdc48assiststhe pages 7-8)</p>
+<p>The expert interpretation is that Wss1 does not act in isolation: ubiquitin/SUMO recognition and Cdc48-mediated remodeling can determine whether a DNA-bound protein is presented to Wss1 or diverted to Ddi1 and the proteasome. For Q9P7B5, however, participation in an equivalent Ubx5–Cdc48 pathway is a <strong>testable hypothesis</strong>, not an established fact.</p>
+<p>No 2024 exact-target primary study was identified in the retrieved literature. The recent literature therefore improves the mechanistic family model but does not resolve the identity or cellular function of SPAC521.02 directly.</p>
+<h2 id="7-current-applications-and-real-world-relevance">7. Current applications and real-world relevance</h2>
+<p>Q9P7B5 has no established clinical, industrial, or biotechnological application. Its present value is primarily as a candidate component of the conserved DPC-repair network and as a possible comparative model for understanding human SPRTN biology. DPC proteolysis is medically relevant because endogenous aldehydes and anticancer agents can generate or trap DPCs, while defective SPRTN causes severe genome-instability phenotypes in humans. Nevertheless, therapeutic conclusions cannot be drawn specifically for <em>S. pombe</em> Q9P7B5 from the available evidence.</p>
+<p>Practical research applications include:</p>
+<ol>
+<li><strong>Comparative enzymology:</strong> testing whether Q9P7B5 is DNA activated and whether it prefers ssDNA- or dsDNA-associated substrates.</li>
+<li><strong>DPC-repair genetics:</strong> measuring sensitivity of an authenticated <em>wss1/SPAC521.02</em> deletion or catalytic mutant to formaldehyde and camptothecin.</li>
+<li><strong>Substrate discovery:</strong> DPC-enrichment proteomics after acute aldehyde or Top1-trapping stress.</li>
+<li><strong>Localization:</strong> endogenous fluorescent tagging and lesion-specific ChIP to determine whether the protein enters the nucleus or accumulates transiently at damaged chromatin.</li>
+<li><strong>Pathway mapping:</strong> epistasis with <em>S. pombe</em> Tdp1-, proteasome-, SUMO/ubiquitin-, and Cdc48-associated factors.</li>
+</ol>
+<h2 id="8-recommended-functional-annotation">8. Recommended functional annotation</h2>
+<p>A suitably conservative annotation is:</p>
+<blockquote>
+<p><strong>Predicted DNA-dependent Wss1-like metalloprotease that proteolytically processes DNA-associated protein obstacles, probably including DNA–protein crosslinks, during genome maintenance. Exact physiological substrates, cellular localization, and pathway partners in <em>S. pombe</em> remain unverified.</strong></p>
+</blockquote>
+<p>The confidence is <strong>high</strong> for membership in the WLM/Wss1-like metalloprotease class, <strong>moderate</strong> for a role in DPC proteolysis, and <strong>low to undetermined</strong> for specific substrates, localization dynamics, genetic partners, and phenotypes of Q9P7B5 itself. Most importantly, the experimentally characterized <em>S. pombe</em> “Wss1b” must not be equated with SPAC521.02/Q9P7B5 until accession- or sequence-level mapping confirms that identity.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(stingele2016mechanismandregulation pages 7-9): Julian Stingele, Roberto Bellelli, Ferdinand Alte, Graeme Hewitt, Grzegorz Sarek, Sarah L. Maslen, Susan E. Tsutakawa, Annabel Borg, Svend Kjær, John A. Tainer, J. Mark Skehel, Michael Groll, and Simon J. Boulton. Mechanism and regulation of dna-protein crosslink repair by the dna-dependent metalloprotease sprtn. Molecular Cell, 64:688-703, Nov 2016. URL: https://doi.org/10.1016/j.molcel.2016.09.031, doi:10.1016/j.molcel.2016.09.031. This article has 307 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(reinking2022substratespecificityofthe pages 104-106): Substrate-specificity of the DNA-protein crosslink repair protease SPRTN This article has 0 citations.</p>
+</li>
+<li>
+<p>(reinking2022substratespecificityofthe pages 20-24): Substrate-specificity of the DNA-protein crosslink repair protease SPRTN This article has 0 citations.</p>
+</li>
+<li>
+<p>(reinking2022substratespecificityofthe pages 17-20): Substrate-specificity of the DNA-protein crosslink repair protease SPRTN This article has 0 citations.</p>
+</li>
+<li>
+<p>(stingele2016mechanismandregulation pages 5-7): Julian Stingele, Roberto Bellelli, Ferdinand Alte, Graeme Hewitt, Grzegorz Sarek, Sarah L. Maslen, Susan E. Tsutakawa, Annabel Borg, Svend Kjær, John A. Tainer, J. Mark Skehel, Michael Groll, and Simon J. Boulton. Mechanism and regulation of dna-protein crosslink repair by the dna-dependent metalloprotease sprtn. Molecular Cell, 64:688-703, Nov 2016. URL: https://doi.org/10.1016/j.molcel.2016.09.031, doi:10.1016/j.molcel.2016.09.031. This article has 307 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(acampora2023transcriptioncoupledrepairof pages 36-39): A Acampora. Transcription-coupled repair of dna-protein crosslinks. Unknown journal, 2023.</p>
+</li>
+<li>
+<p>(noireterre2023ubx5‐cdc48assiststhe pages 9-11): Audrey Noireterre, Nataliia Serbyn, Ivona Bagdiul, and Françoise Stutz. Ubx5‐cdc48 assists the protease wss1 at dna‐protein crosslink sites in yeast. May 2023. URL: https://doi.org/10.15252/embj.2023113609, doi:10.15252/embj.2023113609. This article has 18 citations.</p>
+</li>
+<li>
+<p>(noireterre2023ubx5‐cdc48assiststhe pages 1-2): Audrey Noireterre, Nataliia Serbyn, Ivona Bagdiul, and Françoise Stutz. Ubx5‐cdc48 assists the protease wss1 at dna‐protein crosslink sites in yeast. May 2023. URL: https://doi.org/10.15252/embj.2023113609, doi:10.15252/embj.2023113609. This article has 18 citations.</p>
+</li>
+<li>
+<p>(noireterre2023ubx5‐cdc48assiststhe pages 3-5): Audrey Noireterre, Nataliia Serbyn, Ivona Bagdiul, and Françoise Stutz. Ubx5‐cdc48 assists the protease wss1 at dna‐protein crosslink sites in yeast. May 2023. URL: https://doi.org/10.15252/embj.2023113609, doi:10.15252/embj.2023113609. This article has 18 citations.</p>
+</li>
+<li>
+<p>(mullen2010wss1isa pages 2-3): Janet R. Mullen, Chi-Fu Chen, and Steven J. Brill. Wss1 is a sumo-dependent isopeptidase that interacts genetically with the slx5-slx8 sumo-targeted ubiquitin ligase. Aug 2010. URL: https://doi.org/10.1128/mcb.01649-09, doi:10.1128/mcb.01649-09. This article has 75 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mullen2010wss1isa pages 8-10): Janet R. Mullen, Chi-Fu Chen, and Steven J. Brill. Wss1 is a sumo-dependent isopeptidase that interacts genetically with the slx5-slx8 sumo-targeted ubiquitin ligase. Aug 2010. URL: https://doi.org/10.1128/mcb.01649-09, doi:10.1128/mcb.01649-09. This article has 75 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(noireterre2023ubx5‐cdc48assiststhe pages 7-8): Audrey Noireterre, Nataliia Serbyn, Ivona Bagdiul, and Françoise Stutz. Ubx5‐cdc48 assists the protease wss1 at dna‐protein crosslink sites in yeast. May 2023. URL: https://doi.org/10.15252/embj.2023113609, doi:10.15252/embj.2023113609. This article has 18 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="wss1-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>stingele2016mechanismandregulation pages 7-9</li>
+<li>reinking2022substratespecificityofthe pages 104-106</li>
+<li>reinking2022substratespecificityofthe pages 20-24</li>
+<li>reinking2022substratespecificityofthe pages 17-20</li>
+<li>stingele2016mechanismandregulation pages 5-7</li>
+<li>acampora2023transcriptioncoupledrepairof pages 36-39</li>
+<li>10.15252/embj.2023113609</li>
+<li>Mullen et al., published August 2010, DOI/URL: https://doi.org/10.1128/MCB.01649-09</li>
+<li>Stingele et al., <em>Molecular Cell</em>, published November 2016, DOI/URL: https://doi.org/10.1016/j.molcel.2016.09.031</li>
+<li>Noireterre et al., <em>The EMBO Journal</em>, accepted 24 April and published online <strong>5 May 2023</strong>, DOI/URL: https://doi.org/10.15252/embj.2023113609</li>
+<li>https://doi.org/10.15252/embj.2023113609</li>
+<li>https://doi.org/10.1128/MCB.01649-09].</li>
+<li>https://doi.org/10.1016/j.molcel.2016.09.031].</li>
+<li>https://doi.org/10.15252/embj.2023113609].</li>
+<li>https://doi.org/10.1016/j.molcel.2016.09.031,</li>
+<li>https://doi.org/10.15252/embj.2023113609,</li>
+<li>https://doi.org/10.1128/mcb.01649-09,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(wss1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9P7B5" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="wss1-notes">wss1 notes</h1>
+<p>Identity: wss1, UniProt Q9P7B5; current PomBase systematic identifier is recorded in the benchmark cohort. The UniProt sequence is the reviewed current record, whereas the source XML uses placeholder taxonomy and sequence fields. Those placeholders are not biological evidence.</p>
+<h2 id="protnlm-source-provenance">ProtNLM source provenance</h2>
+<p>Source: PRE-RELEASE post-processed-2026_02_28k.xml. The exact entry is in <code>wss1-protnlm-source.xml</code>. No entry belongs to the published 26,856-record pilot list. Current API availability does not change the original source version.</p>
+<p>The XML evidence keys, model scores, string-match hydration metadata and alignment accessions/scores are retained verbatim in that source file. Assessments use current sequence features and primary sources; annotation overlap and ARBA output do not independently validate a prediction.</p>
+<h2 id="biological-evidence-and-interpretation">Biological evidence and interpretation</h2>
+<p>UNC: The reviewed target record places Wss1 in the nucleus and identifies a soluble WLM metalloprotease domain; it does not establish membrane residence. The original XML hydrates the membrane claim from KW-0539, which is the UniProt keyword Nucleus, not a membrane-specific observation. Nuclear residence alone does not entail association with the nuclear envelope, and the family DNA-protein-crosslink repair mechanism does not require a membrane. Nevertheless, lack of a transmembrane helix would not exclude peripheral membrane association, so the broad claim cannot be conclusively refuted solely from these data. Direct membrane fractionation, colocalization or an established membrane-associated complex is missing.</p>
+<p>[file:SCHPO/wss1/wss1-uniprot.txt "CC   -!- SUBCELLULAR LOCATION: Nucleus {ECO:0000269|PubMed:16823372}."]</p>
+<p>[file:SCHPO/wss1/wss1-keyword-KW-0539.json ""name": "Nucleus",     "id": "KW-0539""]</p>
+<h2 id="research-provider-audit">Research-provider audit</h2>
+<p>The Falcon report was read alongside its cited primary studies and the current sequence/GOA evidence. Its negative literature search is not evidence that a curated target-specific observation does not exist. In particular, the report does not recover the target localization evidence in PMID:16823372; the reviewed UniProt record explicitly cites it. The current PomBase identifier mapping and orthology annotations resolve identity or inherited functions more specifically than the report's ambiguous-symbol caveats. The structural Wss1b report cannot be treated as a Q9P7B5 experiment without resolving its paralog mapping. WLM family transfer remains justified by the diagnostic domain and the curated orthology assertion.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9P7B5
+gene_symbol: wss1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:284812
+  label: Schizosaccharomyces pombe (strain 972 / ATCC 24843)
+description: Wss1 is a nuclear Wss1-like metalloprotease with a conserved WLM catalytic domain and a C-terminal
+  SUMO-interaction motif. Its role in proteolytic repair of covalent DNA-protein cross-links is inferred
+  from the characterized budding-yeast Wss1 family and curated phylogenetic evidence. Removal of the cross-linked
+  protein allows downstream DNA repair or lesion bypass. Direct biochemical characterization of the fission-yeast
+  protein remains limited.
+existing_annotations:
+- term:
+    id: GO:0004222
+    label: metalloendopeptidase activity
+  evidence_type: ISO
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  supporting_entities:
+  - SGD:S000001176
+  review:
+    summary: The target carries the diagnostic WLM domain and conserved metal-binding/catalytic residues.
+    action: ACCEPT
+    reason: The target carries the diagnostic WLM domain and conserved metal-binding/catalytic residues.
+      Curated orthology and PAINT ancestry support inheritance of the Wss1 protease/DNA-repair function,
+      whose mechanistic foundation is DNA-dependent proteolysis of cross-linked proteins in the characterized
+      yeast homolog. This is a justified family inference, not target-specific experimental proof.
+    supported_by:
+    - &amp;id001
+      reference_id: PMID:24998930
+      supporting_text: &#39;Notably, in vitro assays indicate
+
+        that substrates such as topoisomerase 1 are processed by the metalloprotease
+
+        directly and in a DNA-dependent manner.&#39;
+    - reference_id: file:SCHPO/wss1/wss1-uniprot.txt
+      supporting_text: DR   Pfam; PF08325; WLM; 1.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: HDA
+  original_reference_id: PMID:16823372
+  qualifier: is_active_in
+  review:
+    summary: Nuclear localization is supported by the reviewed record citing target localization measurements
+      (PMID:16823372) and is consistent with conserved Wss1 action on DNA-protein cross-links.
+    action: ACCEPT
+    reason: Nuclear localization is supported by the reviewed record citing target localization measurements
+      (PMID:16823372) and is consistent with conserved Wss1 action on DNA-protein cross-links. The IBA
+      adds a curated ancestral localization inference.
+    supported_by:
+    - reference_id: file:SCHPO/wss1/wss1-uniprot.txt
+      supporting_text: &#39;CC   -!- SUBCELLULAR LOCATION: Nucleus {ECO:0000269|PubMed:16823372}.&#39;
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  supporting_entities:
+  - PANTHER:PTN001503361
+  - SGD:S000001176
+  - UniProtKB:Q381Y4
+  review:
+    summary: Nuclear localization is supported by the reviewed record citing target localization measurements
+      (PMID:16823372) and is consistent with conserved Wss1 action on DNA-protein cross-links.
+    action: ACCEPT
+    reason: Nuclear localization is supported by the reviewed record citing target localization measurements
+      (PMID:16823372) and is consistent with conserved Wss1 action on DNA-protein cross-links. The IBA
+      adds a curated ancestral localization inference.
+    supported_by:
+    - reference_id: file:SCHPO/wss1/wss1-uniprot.txt
+      supporting_text: &#39;CC   -!- SUBCELLULAR LOCATION: Nucleus {ECO:0000269|PubMed:16823372}.&#39;
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB-SubCell:SL-0191
+  review:
+    summary: Nuclear localization is supported by the reviewed record citing target localization measurements
+      (PMID:16823372) and is consistent with conserved Wss1 action on DNA-protein cross-links.
+    action: ACCEPT
+    reason: Nuclear localization is supported by the reviewed record citing target localization measurements
+      (PMID:16823372) and is consistent with conserved Wss1 action on DNA-protein cross-links. The IBA
+      adds a curated ancestral localization inference.
+    supported_by:
+    - reference_id: file:SCHPO/wss1/wss1-uniprot.txt
+      supporting_text: &#39;CC   -!- SUBCELLULAR LOCATION: Nucleus {ECO:0000269|PubMed:16823372}.&#39;
+- term:
+    id: GO:0006281
+    label: DNA repair
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  supporting_entities:
+  - PANTHER:PTN001503361
+  - SGD:S000001176
+  review:
+    summary: The target carries the diagnostic WLM domain and conserved metal-binding/catalytic residues.
+    action: ACCEPT
+    reason: The target carries the diagnostic WLM domain and conserved metal-binding/catalytic residues.
+      Curated orthology and PAINT ancestry support inheritance of the Wss1 protease/DNA-repair function,
+      whose mechanistic foundation is DNA-dependent proteolysis of cross-linked proteins in the characterized
+      yeast homolog. This is a justified family inference, not target-specific experimental proof.
+    supported_by:
+    - *id001
+    - reference_id: file:SCHPO/wss1/wss1-uniprot.txt
+      supporting_text: DR   Pfam; PF08325; WLM; 1.
+- term:
+    id: GO:0008237
+    label: metallopeptidase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  supporting_entities:
+  - CGD:CAL0000177841
+  - PANTHER:PTN001503361
+  - SGD:S000001176
+  review:
+    summary: The target carries the diagnostic WLM domain and conserved metal-binding/catalytic residues.
+    action: ACCEPT
+    reason: The target carries the diagnostic WLM domain and conserved metal-binding/catalytic residues.
+      Curated orthology and PAINT ancestry support inheritance of the Wss1 protease/DNA-repair function,
+      whose mechanistic foundation is DNA-dependent proteolysis of cross-linked proteins in the characterized
+      yeast homolog. This is a justified family inference, not target-specific experimental proof.
+    supported_by:
+    - *id001
+    - reference_id: file:SCHPO/wss1/wss1-uniprot.txt
+      supporting_text: DR   Pfam; PF08325; WLM; 1.
+- term:
+    id: GO:0019985
+    label: translesion synthesis
+  evidence_type: ISO
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  supporting_entities:
+  - SGD:S000001176
+  review:
+    summary: Wss1-mediated proteolytic removal of DNA-cross-linked proteins can permit downstream lesion
+      bypass; participation in translesion synthesis does not assert that Wss1 is a DNA polymerase.
+    action: ACCEPT
+    reason: Wss1-mediated proteolytic removal of DNA-cross-linked proteins can permit downstream lesion
+      bypass; participation in translesion synthesis does not assert that Wss1 is a DNA polymerase. Retain
+      the curated orthology inference at that pathway-participation scope.
+    supported_by:
+    - *id001
+- term:
+    id: GO:0106300
+    label: protein-DNA covalent cross-linking repair
+  evidence_type: ISO
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  supporting_entities:
+  - SGD:S000001176
+  review:
+    summary: The target carries the diagnostic WLM domain and conserved metal-binding/catalytic residues.
+    action: ACCEPT
+    reason: The target carries the diagnostic WLM domain and conserved metal-binding/catalytic residues.
+      Curated orthology and PAINT ancestry support inheritance of the Wss1 protease/DNA-repair function,
+      whose mechanistic foundation is DNA-dependent proteolysis of cross-linked proteins in the characterized
+      yeast homolog. This is a justified family inference, not target-specific experimental proof.
+    supported_by:
+    - *id001
+    - reference_id: file:SCHPO/wss1/wss1-uniprot.txt
+      supporting_text: DR   Pfam; PF08325; WLM; 1.
+references:
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator
+    judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping,
+    accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: PMID:16823372
+  title: ORFeome cloning and global analysis of protein localization in the fission yeast Schizosaccharomyces
+    pombe.
+  findings: []
+- id: PMID:24998930
+  title: A DNA-dependent protease involved in DNA-protein crosslink repair.
+  findings: []
+  full_text_unavailable: true
+- id: file:SCHPO/wss1/wss1-uniprot.txt
+  title: UniProt reviewed sequence and feature record
+  findings: []
+core_functions:
+- description: WLM-family metalloendopeptidase inferred to remove protein components of DNA-protein cross-links
+    and permit downstream repair.
+  molecular_function:
+    id: GO:0004222
+    label: metalloendopeptidase activity
+  directly_involved_in:
+  - id: GO:0106300
+    label: protein-DNA covalent cross-linking repair
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by:
+  - *id001
+  - reference_id: file:SCHPO/wss1/wss1-uniprot.txt
+    supporting_text: DR   Pfam; PF08325; WLM; 1.
+suggested_questions:
+- question: Does Wss1 associate with any nuclear membrane or membrane-bound complex, or is its nuclear
+    signal restricted to soluble chromatin-associated pools?
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -1,0 +1,3516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>orb - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>orb</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q8IMZ2" target="_blank" class="term-link">
+                        Q8IMZ2
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Drosophila melanogaster</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "orb";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">13</span> Annotations</a>
+
+
+
+        <a href="#review-research" title="Deep research and hypothesis research reports"><span class="nav-count">2</span> Research</a>
+
+
+
+        <a href="#external-predictions" title="External predictions assessed separately from GOA annotations" class="nav-external"><span class="nav-count">1</span> External</a>
+
+
+
+        <a href="#review-core-functions" title="Core biological functions"><span class="nav-count">1</span> Core Function</a>
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">10</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">2</span> Documents</a>
+
+
+
+
+
+
+
+
+
+
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q8IMZ2" data-a="DESCRIPTION: Orb is a cytoplasmic polyadenylation element-bindi..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Orb is a cytoplasmic polyadenylation element-binding protein that recognizes sequences in mRNA 3-prime untranslated regions and controls maternal mRNA translation and localization. It is enriched in the developing oocyte, where its post-transcriptional regulation supports germline development and establishment of oocyte polarity. Its C-terminal RNA-recognition region is conserved in the shorter Q8IMZ2 form.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003676" target="_blank" class="term-link">
+                                    GO:0003676
+                                </a>
+                            </span>
+                            <span class="term-label">nucleic acid binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IMZ2" data-a="GO:0003676" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orb recognizes cytoplasmic polyadenylation elements in mRNA 3-prime untranslated regions. This experimentally defined RNA target makes mRNA 3-prime-UTR binding more informative than the generic nucleic-acid or RNA-binding annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Orb recognizes cytoplasmic polyadenylation elements in mRNA 3-prime untranslated regions. This experimentally defined RNA target makes mRNA 3-prime-UTR binding more informative than the generic nucleic-acid or RNA-binding annotation.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003730" target="_blank" class="term-link">
+                                    mRNA 3&#39;-UTR binding
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27791065" target="_blank" class="term-link">
+                                        PMID:27791065
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both Orb and Orb2 bind linear cytoplasmic polyadenylation element-like sequences in the 3&#39; UTRs of largely overlapping target mRNAs, with Orb2 potentially having a broader specificity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003723" target="_blank" class="term-link">
+                                    GO:0003723
+                                </a>
+                            </span>
+                            <span class="term-label">RNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IMZ2" data-a="GO:0003723" data-r="GO_REF:0000120" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orb recognizes cytoplasmic polyadenylation elements in mRNA 3-prime untranslated regions. This experimentally defined RNA target makes mRNA 3-prime-UTR binding more informative than the generic nucleic-acid or RNA-binding annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Orb recognizes cytoplasmic polyadenylation elements in mRNA 3-prime untranslated regions. This experimentally defined RNA target makes mRNA 3-prime-UTR binding more informative than the generic nucleic-acid or RNA-binding annotation.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003730" target="_blank" class="term-link">
+                                    mRNA 3&#39;-UTR binding
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27791065" target="_blank" class="term-link">
+                                        PMID:27791065
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both Orb and Orb2 bind linear cytoplasmic polyadenylation element-like sequences in the 3&#39; UTRs of largely overlapping target mRNAs, with Orb2 potentially having a broader specificity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003729" target="_blank" class="term-link">
+                                    GO:0003729
+                                </a>
+                            </span>
+                            <span class="term-label">mRNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11700288" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11700288
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Translational regulation and RNA localization in Drosophila ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IMZ2" data-a="GO:0003729" data-r="PMID:11700288" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orb recognizes cytoplasmic polyadenylation elements in mRNA 3-prime untranslated regions. This experimentally defined RNA target makes mRNA 3-prime-UTR binding more informative than the generic nucleic-acid or RNA-binding annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Orb recognizes cytoplasmic polyadenylation elements in mRNA 3-prime untranslated regions. This experimentally defined RNA target makes mRNA 3-prime-UTR binding more informative than the generic nucleic-acid or RNA-binding annotation.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003730" target="_blank" class="term-link">
+                                    mRNA 3&#39;-UTR binding
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27791065" target="_blank" class="term-link">
+                                        PMID:27791065
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both Orb and Orb2 bind linear cytoplasmic polyadenylation element-like sequences in the 3&#39; UTRs of largely overlapping target mRNAs, with Orb2 potentially having a broader specificity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003730" target="_blank" class="term-link">
+                                    GO:0003730
+                                </a>
+                            </span>
+                            <span class="term-label">mRNA 3&#39;-UTR binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IMZ2" data-a="GO:0003730" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct binding profiles establish recognition of CPE-like sequences in mRNA 3-prime UTRs. The selected shorter Orb sequence retains the complete C-terminal RNA-binding region.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct binding profiles establish recognition of CPE-like sequences in mRNA 3-prime UTRs. The selected shorter Orb sequence retains the complete C-terminal RNA-binding region.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27791065" target="_blank" class="term-link">
+                                        PMID:27791065
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both Orb and Orb2 bind linear cytoplasmic polyadenylation element-like sequences in the 3&#39; UTRs of largely overlapping target mRNAs, with Orb2 potentially having a broader specificity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/10101171" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:10101171
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The posterior determinant gene nanos is required for the mai...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IMZ2" data-a="GO:0005737" data-r="PMID:10101171" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Primary imaging localizes Orb to the cytoplasm of the germline cyst and enriches it in the oocyte. This directly supports the broad cytoplasmic localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Primary imaging localizes Orb to the cytoplasm of the germline cyst and enriches it in the oocyte. This directly supports the broad cytoplasmic localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11809824" target="_blank" class="term-link">
+                                        PMID:11809824
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ORB is found in the cytoplasm of each cell of the 16-cell cyst; furthermore, it shows enrichment in the oocyte in late region 2a or early region 2b</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IMZ2" data-a="GO:0005737" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Primary imaging localizes Orb to the cytoplasm of the germline cyst and enriches it in the oocyte. This directly supports the broad cytoplasmic localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Primary imaging localizes Orb to the cytoplasm of the germline cyst and enriches it in the oocyte. This directly supports the broad cytoplasmic localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11809824" target="_blank" class="term-link">
+                                        PMID:11809824
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ORB is found in the cytoplasm of each cell of the 16-cell cyst; furthermore, it shows enrichment in the oocyte in late region 2a or early region 2b</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006417" target="_blank" class="term-link">
+                                    GO:0006417
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of translation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IMZ2" data-a="GO:0006417" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orb binds target mRNAs and controls their translation in the female germline. The conserved RNA-binding machinery in the selected form supports the broad regulator activity, without assuming identical regulation of all isoforms.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Orb binds target mRNAs and controls their translation in the female germline. The conserved RNA-binding machinery in the selected form supports the broad regulator activity, without assuming identical regulation of all isoforms.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15737929" target="_blank" class="term-link">
+                                        PMID:15737929
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Orb is responsible for mediating the translational activation of mRNAs localized within the developing oocyte.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27791065" target="_blank" class="term-link">
+                                        PMID:27791065
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both Orb and Orb2 bind linear cytoplasmic polyadenylation element-like sequences in the 3&#39; UTRs of largely overlapping target mRNAs, with Orb2 potentially having a broader specificity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007281" target="_blank" class="term-link">
+                                    GO:0007281
+                                </a>
+                            </span>
+                            <span class="term-label">germ cell development</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/11809824" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:11809824
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Cytoplasmic localization and evolutionary conservation of ME...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IMZ2" data-a="GO:0007281" data-r="PMID:11809824" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The primary MEI-218 study directly examines orb-mutant germline cysts and supports an Orb requirement in oocyte development. This developmental consequence is retained as noncore relative to sequence-specific translational regulation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The primary MEI-218 study directly examines orb-mutant germline cysts and supports an Orb requirement in oocyte development. This developmental consequence is retained as noncore relative to sequence-specific translational regulation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11809824" target="_blank" class="term-link">
+                                        PMID:11809824
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">ORB is found in the cytoplasm of each cell of the 16-cell cyst; furthermore, it shows enrichment in the oocyte in late region 2a or early region 2b</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15737929" target="_blank" class="term-link">
+                                        PMID:15737929
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Orb is responsible for mediating the translational activation of mRNAs localized within the developing oocyte.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007310" target="_blank" class="term-link">
+                                    GO:0007310
+                                </a>
+                            </span>
+                            <span class="term-label">oocyte dorsal/ventral axis specification</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15737929" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:15737929
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The Drosophila fragile X protein functions as a negative reg...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IMZ2" data-a="GO:0007310" data-r="PMID:15737929" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orb-dependent post-transcriptional regulation supports oocyte polarity and localization of maternal determinants, including oskar RNA. Retain the experimentally supported developmental/localization consequence as noncore relative to its direct RNA-binding and translational-regulatory mechanism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Orb-dependent post-transcriptional regulation supports oocyte polarity and localization of maternal determinants, including oskar RNA. Retain the experimentally supported developmental/localization consequence as noncore relative to its direct RNA-binding and translational-regulatory mechanism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15737929" target="_blank" class="term-link">
+                                        PMID:15737929
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Orb is responsible for mediating the translational activation of mRNAs localized within the developing oocyte.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7926753" target="_blank" class="term-link">
+                                        PMID:7926753
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">orb is required for the asymmetric distribution of oskar and gurken mRNAs within the oocyte during the later stages of oogenesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007310" target="_blank" class="term-link">
+                                    GO:0007310
+                                </a>
+                            </span>
+                            <span class="term-label">oocyte dorsal/ventral axis specification</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7926753" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7926753
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    orb is required for anteroposterior and dorsoventral pattern...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IMZ2" data-a="GO:0007310" data-r="PMID:7926753" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orb-dependent post-transcriptional regulation supports oocyte polarity and localization of maternal determinants, including oskar RNA. Retain the experimentally supported developmental/localization consequence as noncore relative to its direct RNA-binding and translational-regulatory mechanism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Orb-dependent post-transcriptional regulation supports oocyte polarity and localization of maternal determinants, including oskar RNA. Retain the experimentally supported developmental/localization consequence as noncore relative to its direct RNA-binding and translational-regulatory mechanism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15737929" target="_blank" class="term-link">
+                                        PMID:15737929
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Orb is responsible for mediating the translational activation of mRNAs localized within the developing oocyte.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7926753" target="_blank" class="term-link">
+                                        PMID:7926753
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">orb is required for the asymmetric distribution of oskar and gurken mRNAs within the oocyte during the later stages of oogenesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007314" target="_blank" class="term-link">
+                                    GO:0007314
+                                </a>
+                            </span>
+                            <span class="term-label">oocyte anterior/posterior axis specification</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7926753" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7926753
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    orb is required for anteroposterior and dorsoventral pattern...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IMZ2" data-a="GO:0007314" data-r="PMID:7926753" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orb-dependent post-transcriptional regulation supports oocyte polarity and localization of maternal determinants, including oskar RNA. Retain the experimentally supported developmental/localization consequence as noncore relative to its direct RNA-binding and translational-regulatory mechanism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Orb-dependent post-transcriptional regulation supports oocyte polarity and localization of maternal determinants, including oskar RNA. Retain the experimentally supported developmental/localization consequence as noncore relative to its direct RNA-binding and translational-regulatory mechanism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15737929" target="_blank" class="term-link">
+                                        PMID:15737929
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Orb is responsible for mediating the translational activation of mRNAs localized within the developing oocyte.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7926753" target="_blank" class="term-link">
+                                        PMID:7926753
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">orb is required for the asymmetric distribution of oskar and gurken mRNAs within the oocyte during the later stages of oogenesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045182" target="_blank" class="term-link">
+                                    GO:0045182
+                                </a>
+                            </span>
+                            <span class="term-label">translation regulator activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IMZ2" data-a="GO:0045182" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orb binds target mRNAs and controls their translation in the female germline. The conserved RNA-binding machinery in the selected form supports the broad regulator activity, without assuming identical regulation of all isoforms.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Orb binds target mRNAs and controls their translation in the female germline. The conserved RNA-binding machinery in the selected form supports the broad regulator activity, without assuming identical regulation of all isoforms.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15737929" target="_blank" class="term-link">
+                                        PMID:15737929
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Orb is responsible for mediating the translational activation of mRNAs localized within the developing oocyte.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27791065" target="_blank" class="term-link">
+                                        PMID:27791065
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Both Orb and Orb2 bind linear cytoplasmic polyadenylation element-like sequences in the 3&#39; UTRs of largely overlapping target mRNAs, with Orb2 potentially having a broader specificity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045451" target="_blank" class="term-link">
+                                    GO:0045451
+                                </a>
+                            </span>
+                            <span class="term-label">germ plasm oskar mRNA localization</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/7926753" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:7926753
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    orb is required for anteroposterior and dorsoventral pattern...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q8IMZ2" data-a="GO:0045451" data-r="PMID:7926753" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Orb-dependent post-transcriptional regulation supports oocyte polarity and localization of maternal determinants, including oskar RNA. Retain the experimentally supported developmental/localization consequence as noncore relative to its direct RNA-binding and translational-regulatory mechanism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Orb-dependent post-transcriptional regulation supports oocyte polarity and localization of maternal determinants, including oskar RNA. Retain the experimentally supported developmental/localization consequence as noncore relative to its direct RNA-binding and translational-regulatory mechanism.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/15737929" target="_blank" class="term-link">
+                                        PMID:15737929
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Orb is responsible for mediating the translational activation of mRNAs localized within the developing oocyte.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/7926753" target="_blank" class="term-link">
+                                        PMID:7926753
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">orb is required for the asymmetric distribution of oskar and gurken mRNAs within the oocyte during the later stages of oogenesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section" id="review-core-functions">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Recognizes CPE-like elements in target mRNA 3-prime UTRs to regulate cytoplasmic translation.</h3>
+                <span class="vote-buttons" data-g="Q8IMZ2" data-a="FUNCTION: Recognizes CPE-like elements in target mRNA 3-prim..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045182" target="_blank" class="term-link">
+                            translation regulator activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006417" target="_blank" class="term-link">
+                                regulation of translation
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/27791065" target="_blank" class="term-link">
+                                PMID:27791065
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Both Orb and Orb2 bind linear cytoplasmic polyadenylation element-like sequences in the 3&#39; UTRs of largely overlapping target mRNAs, with Orb2 potentially having a broader specificity.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/15737929" target="_blank" class="term-link">
+                                PMID:15737929
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Orb is responsible for mediating the translational activation of mRNAs localized within the developing oocyte.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:DROME/orb/orb-bioinformatics/RESULTS.md
+
+                        </span>
+
+                        <div class="finding-text">The complete 552-residue C-terminal region (target 8–559, reference 364–915) is identical.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10101171" target="_blank" class="term-link">
+                            PMID:10101171
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The posterior determinant gene nanos is required for the maintenance of the adult germline stem cells during Drosophila oogenesis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11700288" target="_blank" class="term-link">
+                            PMID:11700288
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Translational regulation and RNA localization in Drosophila oocytes and embryos.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11809824" target="_blank" class="term-link">
+                            PMID:11809824
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Cytoplasmic localization and evolutionary conservation of MEI-218, a protein required for meiotic crossing-over in Drosophila.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15737929" target="_blank" class="term-link">
+                            PMID:15737929
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The Drosophila fragile X protein functions as a negative regulator in the orb autoregulatory pathway.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7926753" target="_blank" class="term-link">
+                            PMID:7926753
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">orb is required for anteroposterior and dorsoventral patterning during Drosophila oogenesis.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27791065" target="_blank" class="term-link">
+                            PMID:27791065
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">RNA-binding profiles of Drosophila CPEB proteins Orb and Orb2.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:DROME/orb/orb-bioinformatics/RESULTS.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">DROME/orb/orb-bioinformatics/RESULTS.md</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+    <section class="section external-predictions" id="external-predictions" aria-labelledby="external-predictions-title">
+        <h2 class="section-title" id="external-predictions-title">External Prediction Reviews</h2>
+        <p class="prediction-notice">These computational predictions are reviewed separately from the GOA annotation set used for this review.
+            The assessments below are from this project and do not constitute official GO annotations or endorsement by GO/UniProt.
+            They are not included in the existing annotation review above.</p>
+
+
+        <article class="prediction-review">
+        <h3>ProtNLM2 <span class="badge">External predictions</span></h3>
+        <p class="prediction-source"><a href="orb-protnlm-predictions-review.yaml">View prediction review YAML</a> &middot; orb-protnlm-predictions-review.yaml
+            &middot; Review status: COMPLETE</p>
+
+        <p>Orb is an experimentally established CPEB-family RNA-binding translation regulator, and the same GO term already occurs in the selected record.</p>
+
+        <p class="prediction-source">Review score: 2 = concordant with evidence; 1 = uncertain; 0 = discordant with evidence. This is an assessment score, not a model probability.</p>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045182" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:0045182
+                    </a>
+                    <span class="term-label">translation regulator activity</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_MF</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-cnn">
+                        CNN — Correct but not novel
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 2/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM2
+                 &middot; Version: UniProt API snapshot 2026-09-08
+
+                 &middot; <a href="#" target="_blank" class="term-link">file:DROME/orb/orb-predictions-source.json</a>
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> Orb is an experimentally established CPEB-family RNA-binding translation regulator, and the same GO term already occurs in the selected record. Direct RNA-target profiling and germline translational studies support correctness independently of that electronic annotation. Q8IMZ2 is shorter at the N-terminus but retains the complete C-terminal RNA-binding machinery, making transfer of this broad function reasonable. The prediction adds no novel activity.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27791065" target="_blank" class="term-link">PMID:27791065</a>:
+
+
+                        <span class="finding-text">"Both Orb and Orb2 bind linear cytoplasmic polyadenylation element-like sequences in the 3&#39; UTRs of largely overlapping target mRNAs, with Orb2 potentially having a broader specificity."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15737929" target="_blank" class="term-link">PMID:15737929</a>:
+
+
+                        <span class="finding-text">"Orb is responsible for mediating the translational activation of mRNAs localized within the developing oocyte."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="orb-bioinformatics/RESULTS.md" target="_blank" class="term-link">file:DROME/orb/orb-bioinformatics/RESULTS.md</a>:
+
+
+                        <span class="finding-text">"The complete 552-residue C-terminal region (target 8–559, reference 364–915) is identical."</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        </article>
+
+    </section>
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section" id="review-research">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(orb-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8IMZ2" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional annotation report: *Drosophila melanogaster orb* (UniProt Q8IMZ2)</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">34 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-08T18:19:50.795243</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="orb-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="functional-annotation-report-drosophila-melanogaster-orb-uniprot-q8imz2">Functional annotation report: <em>Drosophila melanogaster orb</em> (UniProt Q8IMZ2)</h1>
+<h2 id="executive-summary">Executive summary</h2>
+<p>The requested protein is correctly identified as <strong>Orb/Oo18/CG10868 from <em>Drosophila melanogaster</em></strong>, not the distinct fly protein Orb2 or an ORB-named protein from another organism. The literature explicitly describes Orb as a founding fly homolog of cytoplasmic polyadenylation element-binding protein (<strong>CPEB</strong>), consistent with the supplied UniProt assignment to the RRM-CPEB family and its C-terminal RNA-recognition architecture. The isoform labels C and E in Q8IMZ2 are therefore compatible with the intended <em>orb</em> locus, although the available literature does not resolve isoform-specific functions. (lipshitz2000mechanismsofrna pages 12-13, barr2019thecpebtranslational pages 2-4, chang1999thedrosophilacpeb pages 1-2)</p>
+<p>Orb is <strong>not an enzyme or transporter</strong>. Its primary function is that of a germline-enriched, cytoplasmic RNA-binding translational regulator: it recognizes selected mRNA 3′ untranslated regions and promotes spatially and temporally restricted protein synthesis, often by recruiting or coordinating cytoplasmic poly(A)-tail extension. The strongest direct targets are <em>oskar</em> (<em>osk</em>) and <em>gurken</em> (<em>grk</em>). Orb also regulates its own mRNA through a positive 3′UTR-dependent feedback loop and functions with the Par–actin–microtubule polarity machinery. (sottolano2023anevolutionarystudy pages 30-34, barr2019thedrosophilacpeb pages 1-2, barr2019thecpebtranslational pages 1-2, chang1999thedrosophilacpeb pages 1-2)</p>
+<table>
+<thead>
+<tr>
+<th>Functional claim</th>
+<th>Molecular/cellular site</th>
+<th>Evidence type</th>
+<th>Key quantitative or mechanistic observation</th>
+<th>Confidence/caveat</th>
+<th>Key source DOI/URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Identity and architecture:</strong> Q8IMZ2 is <em>Drosophila melanogaster</em> Orb/Oo18/CG10868, a germline CPEB-family RNA-binding protein with two C-terminal RRM-like domains; supplied InterPro annotations also identify CPEB and CEBP_ZZ-related regions.</td>
+<td>Female germline; predominantly cytoplasmic in germline cysts and oocytes</td>
+<td>Sequence homology, domain annotation, and germline-expression studies</td>
+<td>Literature identifies Orb as the fly homolog of Xenopus CPEB and reports two C-terminal RNA-recognition-motif-like domains. This agrees with the supplied UniProt/InterPro record. (lipshitz2000mechanismsofrna pages 12-13, barr2019thecpebtranslational pages 2-4, chang1999thedrosophilacpeb pages 1-2)</td>
+<td><strong>High</strong> for identity, organism, CPEB membership, and two RRMs. Exact domain boundaries and isoform-specific architecture were not independently validated here. Orb2 and proteins from other organisms are excluded.</td>
+<td><a href="https://doi.org/10.1006/dbio.1999.9444">10.1006/dbio.1999.9444</a>; <a href="https://doi.org/10.1016/S0959-437X(00)00116-7">10.1016/S0959-437X(00)00116-7</a></td>
+</tr>
+<tr>
+<td><strong>Primary molecular function:</strong> Orb binds selected mRNA 3′UTRs and controls translation, commonly by promoting cytoplasmic poly(A)-tail extension rather than catalyzing polymerization itself.</td>
+<td>Cytoplasmic messenger ribonucleoprotein complexes in developing oocytes</td>
+<td>Biochemical association, mutant poly(A)-tail analysis, and CPEB-family inference</td>
+<td>Orb-associated transcripts lose poly(A)-tail length and protein output when Orb activity is impaired; the polymerase activity is supplied by partners such as Wispy, not Orb. (lipshitz2000mechanismsofrna pages 7-8, lipshitz2000mechanismsofrna pages 12-13, sottolano2023anevolutionarystudy pages 30-34)</td>
+<td><strong>High</strong> that Orb is a nonenzymatic translational regulator; target outcome can be context dependent, because CPEBs may activate or repress translation.</td>
+<td><a href="https://doi.org/10.1016/S0959-437X(00)00116-7">10.1016/S0959-437X(00)00116-7</a>; <a href="https://doi.org/10.7282/t3-fftx-nn74">10.7282/t3-fftx-nn74</a></td>
+</tr>
+<tr>
+<td><strong>Direct target—<em>oskar</em>:</strong> Orb binds <em>osk</em> RNA and is required for polyadenylation-dependent Oskar translation.</td>
+<td>Oocyte cytoplasm; ultimately the posterior cortex during mid-to-late oogenesis</td>
+<td>Co-immunoprecipitation, UV cross-linking, poly(A)-tail assays, mutant genetics, and protein localization</td>
+<td><em>osk</em> RNA co-immunoprecipitates with Orb, and its 3′UTR UV-cross-links to Orb in ovarian extract. Strong <em>orb</em> mutants lack detectable Oskar; hypomorphic <em>orb</em> mutants show little or no posterior Oskar and shortened <em>osk</em> poly(A) tails. (lipshitz2000mechanismsofrna pages 7-8, chang1999thedrosophilacpeb pages 1-2)</td>
+<td><strong>Very high</strong> for physical association and functional requirement. Severe alleles also impair <em>osk</em> localization, so some downstream patterning defects combine transport and translation failures.</td>
+<td><a href="https://doi.org/10.1006/dbio.1999.9444">10.1006/dbio.1999.9444</a>; <a href="https://doi.org/10.1016/S0959-437X(00)00116-7">10.1016/S0959-437X(00)00116-7</a></td>
+</tr>
+<tr>
+<td><strong>Direct pathway—<em>gurken</em>–Wispy:</strong> Orb cooperates with the GLD-2-family cytoplasmic poly(A) polymerase Wispy to activate localized <em>grk</em> translation.</td>
+<td>Dorsal-anterior cytoplasm of the oocyte, where localized <em>grk</em> is translated</td>
+<td>Primary-study synthesis involving RNA binding, phosphorylation, poly(A)-tail analysis, and genetic cooperation</td>
+<td>Orb binds the <em>grk</em> 3′UTR; phosphorylated Orb recruits/cooperates with Wispy, increasing the reported tail from about <strong>30 to 90 adenosines</strong>, thereby favoring PABP and translation-initiation-complex recruitment. (sottolano2023anevolutionarystudy pages 30-34, sottolano2023anevolutionarystudy pages 133-136, barr2019thecpebtranslational pages 25-26)</td>
+<td><strong>High</strong> for Orb–Wispy cooperation and localized <em>grk</em> polyadenylation. The numerical tail estimate here is recovered through a 2023 synthesis rather than directly from the primary paper text.</td>
+<td><a href="https://doi.org/10.1002/dvdy.24311">10.1002/dvdy.24311</a>; <a href="https://doi.org/10.7282/t3-fftx-nn74">10.7282/t3-fftx-nn74</a></td>
+</tr>
+<tr>
+<td><strong>Positive autoregulation:</strong> the <em>orb</em> 3′UTR drives localization and Orb-dependent translation of <em>orb</em> mRNA, forming a threshold-dependent positive-feedback loop.</td>
+<td>Initially two pro-oocytes in germarial region 2a; then one selected oocyte in region 2b and later egg chambers</td>
+<td>3′UTR deletion/replacement, reporter assays, dosage tests, localization imaging, and transgenic rescue</td>
+<td>The major ovarian transcript is approximately <strong>4.9 kb</strong> with a <strong>1.2-kb 3′UTR</strong>; an <strong>815-nt</strong> fragment recapitulates localization. Removing the 3′UTR abolishes oocyte enrichment, whereas reducing a partially functional replacement allele to one copy prevents loop activation, supporting an Orb-concentration threshold. (barr2019thedrosophilacpeb pages 13-14, barr2019thedrosophilacpeb pages 4-5)</td>
+<td><strong>Very high</strong> for 3′UTR-dependent autoregulation and dosage sensitivity. The exact direct RNA contacts within the endogenous 3′UTR remain less completely resolved.</td>
+<td><a href="https://doi.org/10.1534/genetics.119.302687">10.1534/genetics.119.302687</a></td>
+</tr>
+<tr>
+<td><strong>Oocyte specification and maintenance:</strong> localized Orb activity selects and continually maintains one oocyte among the 16 cyst cells.</td>
+<td>Germarium and early egg chamber</td>
+<td>Loss-of-function genetics, cell-fate markers, delayed rescue, and full-length cDNA rescue</td>
+<td>Deleting the <em>orb</em> 3′UTR yields chambers with <strong>16 polyploid nurse cells</strong>, sterility, and no eggs. With a partially functional replacement, specification is delayed until stage 2 and occurs in only about <strong>50%</strong> of chambers; full-length <em>orb</em> cDNA restores organization and fertility. (barr2019thedrosophilacpeb pages 4-5, barr2019thedrosophilacpeb pages 1-2)</td>
+<td><strong>Very high</strong> for necessity. Some effects on BicD/Egl/Dynein localization may be downstream of failed fate specification rather than independent direct Orb targets.</td>
+<td><a href="https://doi.org/10.1534/genetics.119.302687">10.1534/genetics.119.302687</a></td>
+</tr>
+<tr>
+<td><strong>Par–actin–microtubule polarity:</strong> Orb functions with aPKC/Cdc42 and Par proteins to establish cortical polarity and repolarize the oocyte microtubule network.</td>
+<td>Anterior/anterior-lateral and posterior oocyte cortex around stage 7</td>
+<td>Genetic interactions, RNA/protein localization, cortical-actin imaging, and microtubule-organization phenotypes</td>
+<td>Orb impairment mislocalizes anterior aPKC and posterior Par-1, fragments cortical actin, and disrupts Shot/Patronin-dependent microtubule repolarization. Ventralized eggs increase from about <strong>5%</strong> in <em>orb</em> heterozygotes to nearly <strong>50%</strong> with an aPKC allele and about <strong>70%</strong> with a <em>cdc42</em> allele. (barr2019thecpebtranslational pages 18-19, barr2019thecpebtranslational pages 1-2)</td>
+<td><strong>High</strong> for pathway-level functional interaction. Direct translational regulation is clearest for aPKC RNA association; several cytoskeletal consequences may be indirect.</td>
+<td><a href="https://doi.org/10.1371/journal.pgen.1008012">10.1371/journal.pgen.1008012</a></td>
+</tr>
+<tr>
+<td><strong>aPKC as a likely direct regulatory target:</strong> Orb associates with CPE-containing aPKC mRNA and is required for its normal oocyte distribution.</td>
+<td>Oocyte cortex and cytoplasm during repolarization</td>
+<td>CPE analysis, binding in ovary extracts, mutant RNA localization, and genetic interaction</td>
+<td>aPKC mRNA contains CPEs, binds Orb in ovarian extracts, and becomes mislocalized when Orb is compromised; aPKC protein localization is also defective. (barr2019thecpebtranslational pages 18-19)</td>
+<td><strong>Moderate-to-high.</strong> Physical association and functional dependence are established, but transcript-specific poly(A)-tail extension and translational activation were not demonstrated as completely as for <em>osk</em> or <em>grk</em>.</td>
+<td><a href="https://doi.org/10.1371/journal.pgen.1008012">10.1371/journal.pgen.1008012</a></td>
+</tr>
+<tr>
+<td><strong>Candidate Orb targets in polarity/cytoskeletal control:</strong> <em>cdc42, baz, par-6, capu, spir, Cip4, WASp, shot,</em> and <em>patronin</em> may be Orb-regulated transcripts.</td>
+<td>Oocyte cortical-polarity, actin, and microtubule-organizing systems</td>
+<td>CPE prediction and binding to ectopically expressed Orb in cultured cells, with genetic/cytological pathway consistency</td>
+<td>These transcripts contain candidate CPEs and associated with ectopically expressed Orb; corresponding pathways are perturbed in <em>orb</em> mutants. (barr2019thecpebtranslational pages 18-19)</td>
+<td><strong>Provisional.</strong> These are candidate—not fully validated direct—targets. Endogenous ovarian binding, Orb-dependent tail changes, target-specific translation effects, and rescue remain necessary for definitive annotation.</td>
+<td><a href="https://doi.org/10.1371/journal.pgen.1008012">10.1371/journal.pgen.1008012</a></td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Evidence-ranked summary of the identity, molecular activity, cellular sites, validated targets, developmental pathways, and candidate targets of Drosophila Orb. It separates direct biochemical and genetic findings from pathway inference and provisional RNA-target assignments.</em></p>
+<h2 id="1-identity-and-domain-verification">1. Identity and domain verification</h2>
+<h3 id="11-correct-gene-and-organism">1.1 Correct gene and organism</h3>
+<p>The identities agree across the supplied record and the retrieved literature:</p>
+<ul>
+<li><strong>Organism:</strong> <em>Drosophila melanogaster</em>.</li>
+<li><strong>Gene:</strong> <em>orb</em>.</li>
+<li><strong>Established aliases:</strong> <em>Oo18/oo18</em>, <em>CG10868</em>, and Orb1.</li>
+<li><strong>Protein class:</strong> CPEB-family RNA-binding protein.</li>
+<li><strong>Distinct paralog to exclude:</strong> <strong>Orb2</strong>, another fly CPEB-family protein with substantially different, especially neuronal, functions.</li>
+</ul>
+<p>The literature explicitly calls Orb a homolog of <em>Xenopus</em> CPEB and a germline-specific CPEB protein. Chang and colleagues further reported two C-terminal RNA-recognition-motif-like domains, matching the supplied RRM/CPEB-family annotation. (lipshitz2000mechanismsofrna pages 12-13, barr2019thecpebtranslational pages 2-4, chang1999thedrosophilacpeb pages 1-2)</p>
+<h3 id="12-architecture-and-biochemical-implications">1.2 Architecture and biochemical implications</h3>
+<p>The supplied UniProt/InterPro annotations—CPEB, CPEB1_RRM1, CEBP_ZZ/CEBP_ZZ_sf, and nucleotide-binding α/β-plait fold—are consistent with the conserved CPEB RNA-binding region. Functionally, the paired C-terminal RRM-like domains provide the structural basis for sequence-selective 3′UTR binding. The available retrieved papers do not independently establish exact residue boundaries or differences between isoforms C and E; those details should therefore remain database-level annotations rather than experimentally demonstrated isoform-specific properties.</p>
+<h2 id="2-primary-molecular-function">2. Primary molecular function</h2>
+<p>Orb is best annotated as a <strong>sequence-selective mRNA 3′UTR-binding regulator of cytoplasmic polyadenylation, translation, RNA localization, and oocyte polarity</strong>. It does not itself catalyze adenylate addition. Instead, it serves as the target-recognition/regulatory component of messenger ribonucleoprotein complexes and can cooperate with a cytoplasmic poly(A) polymerase such as Wispy. Poly(A)-tail extension promotes poly(A)-binding-protein recruitment and productive communication with cap-associated translation-initiation factors. (lipshitz2000mechanismsofrna pages 7-8, sottolano2023anevolutionarystudy pages 30-34)</p>
+<p>CPEB-family activity can be activating or repressive depending on transcript, developmental stage, phosphorylation state, and associated proteins. For Orb, however, the best-characterized ovarian functions are translational activation of localized <em>osk</em> and <em>grk</em> mRNAs. Thus, “RNA-binding translational regulator” is more accurate than assigning Orb a poly(A) polymerase activity. (lipshitz2000mechanismsofrna pages 7-8, sottolano2023anevolutionarystudy pages 30-34, barr2019thedrosophilacpeb pages 1-2)</p>
+<h2 id="3-validated-rna-targets-and-mechanisms">3. Validated RNA targets and mechanisms</h2>
+<h3 id="31-oskar-strongest-direct-target-evidence">3.1 <em>oskar</em>: strongest direct target evidence</h3>
+<p>The case for direct regulation of <em>osk</em> is supported by complementary biochemistry and genetics. Ovarian <em>osk</em> RNA co-immunoprecipitates with Orb, and the <em>osk</em> 3′UTR UV-cross-links to Orb in ovarian extracts. Strong <em>orb</em> mutants have undetectable Oskar protein, whereas the hypomorphic <em>orb^mel</em> allele produces little or no posterior Oskar. These defects correlate with shorter <em>osk</em> poly(A) tails, supporting translational activation through cytoplasmic polyadenylation. (lipshitz2000mechanismsofrna pages 7-8, chang1999thedrosophilacpeb pages 1-2)</p>
+<p>Orb acts within the polarized oocyte: <em>osk</em> normally enters the oocyte, accumulates posteriorly around stage 8, and forms a posterior cap by stage 10. Severe <em>orb</em> disruption can impair both initial RNA localization and subsequent translation, so the final posterior-patterning phenotype is not attributable solely to translational failure. Nonetheless, direct Orb–<em>osk</em> association and Orb-dependent poly(A)-tail length establish a specific translational mechanism. (chang1999thedrosophilacpeb pages 1-2)</p>
+<p><strong>Biological output:</strong> posterior Oskar production establishes posterior embryonic determinants and germ-plasm assembly. Orb therefore connects localized mRNA transport to translation at the correct cortical destination.</p>
+<p><strong>Primary source:</strong> Chang JS, Tan L, Schedl P. “The Drosophila CPEB homolog, Orb, is required for oskar protein expression in oocytes.” <em>Developmental Biology</em>, published November 1999. DOI/URL: https://doi.org/10.1006/dbio.1999.9444. (chang1999thedrosophilacpeb pages 1-2)</p>
+<h3 id="32-gurken-localized-polyadenylation-and-egfr-axis-signaling">3.2 <em>gurken</em>: localized polyadenylation and EGFR-axis signaling</h3>
+<p>Orb cooperates with <strong>Wispy</strong>, the <em>Drosophila</em> GLD-2-related cytoplasmic poly(A) polymerase, in polyadenylating localized <em>grk</em> mRNA. A recent synthesis describes Orb binding the <em>grk</em> 3′UTR and phosphorylated Orb recruiting/cooperating with Wispy, increasing the tail from approximately 30 to 90 adenosines. This favors poly(A)-binding protein and translation-initiation-complex recruitment. (sottolano2023anevolutionarystudy pages 30-34, sottolano2023anevolutionarystudy pages 133-136)</p>
+<p>Spatial regulation is crucial: <em>grk</em> translation is activated in the dorsal-anterior oocyte, where Gurken signals to adjacent follicle cells through the Drosophila EGFR pathway to establish dorsoventral polarity. The 2023 synthesis proposes repression of Orb activity in nurse cells and localized activation, including CK2-associated phosphorylation, in the oocyte. The exact 30-to-90-adenosine value was recovered through this synthesis rather than direct inspection of the 2015 primary paper and should be interpreted accordingly. (sottolano2023anevolutionarystudy pages 30-34)</p>
+<p><strong>Primary source:</strong> Norvell A et al. “Wispy and Orb cooperate in the cytoplasmic polyadenylation of localized gurken mRNA.” <em>Developmental Dynamics</em> 244:1276–1285, published 2015. DOI/URL: https://doi.org/10.1002/dvdy.24311. (sottolano2023anevolutionarystudy pages 133-136, barr2019thecpebtranslational pages 25-26)</p>
+<h3 id="33-autoregulation-of-orb-mrna">3.3 Autoregulation of <em>orb</em> mRNA</h3>
+<p>Orb also regulates its own expression. The major ovarian <em>orb</em> transcript is approximately <strong>4.9 kb</strong>, including an approximately <strong>1.2-kb 3′UTR</strong>. An <strong>815-nt 3′UTR fragment</strong> is sufficient to reproduce the endogenous localization pattern in a reporter, and reporter localization/translation depends on Orb, supporting positive autoregulation. (barr2019thedrosophilacpeb pages 4-5)</p>
+<p>Deleting the endogenous 3′UTR eliminates normal enrichment of <em>orb</em> mRNA and protein in the pro-oocytes and selected oocyte while preserving more basal nurse-cell expression. Full-length <em>orb</em> cDNA rescues localization, egg-chamber organization, and fertility, tying the phenotype specifically to disrupted 3′UTR-dependent regulation. A partially functional 3′UTR replacement delays specification until stage 2, when only approximately <strong>50%</strong> of chambers activate the loop and establish an oocyte. Halving the dose of this replacement prevents loop activation, indicating a threshold-dependent positive-feedback mechanism. (barr2019thedrosophilacpeb pages 13-14, barr2019thedrosophilacpeb pages 4-5, barr2019thedrosophilacpeb pages 1-2)</p>
+<p><strong>Primary source:</strong> Barr J et al. “The Drosophila CPEB Protein Orb Specifies Oocyte Fate by a 3′UTR-Dependent Autoregulatory Loop.” <em>Genetics</em> 213:1431–1446, published December 2019. DOI/URL: https://doi.org/10.1534/genetics.119.302687. (barr2019thedrosophilacpeb pages 13-14, barr2019thedrosophilacpeb pages 4-5, barr2019thedrosophilacpeb pages 1-2)</p>
+<h2 id="4-cellular-and-developmental-localization">4. Cellular and developmental localization</h2>
+<p>Orb carries out its established functions <strong>inside female germline cells</strong>, predominantly in cytoplasmic RNPs rather than as a secreted, membrane, or nuclear structural protein.</p>
+<p>During early oogenesis, a 16-cell cyst contains two pro-oocytes. <em>orb</em> mRNA and Orb protein first become enriched in these cells and then concentrate in one cell in germarial region 2b. This asymmetry coincides with concentration of other oocyte markers and commitment of one cell to oocyte identity, while the remaining 15 become nurse cells. (barr2019thedrosophilacpeb pages 13-14, barr2019thedrosophilacpeb pages 1-2)</p>
+<p>Later, Orb distribution is dynamic rather than uniformly cytoplasmic. During oocyte repolarization, <em>orb</em> mRNA moves from the posterior toward the anterior-lateral margin. Functionally relevant Orb complexes act at localized <em>osk</em> and <em>grk</em> RNA domains—the posterior cortex for Oskar production and dorsal-anterior cytoplasm for Gurken production. (sottolano2023anevolutionarystudy pages 30-34, barr2019thecpebtranslational pages 2-4, chang1999thedrosophilacpeb pages 1-2)</p>
+<p>These data support the annotation <strong>cytoplasm; germline cyst; oocyte; stage-specific cortical RNP compartments</strong>, with localization changing across development.</p>
+<h2 id="5-biological-processes-and-pathways">5. Biological processes and pathways</h2>
+<h3 id="51-oocyte-specification-and-maintenance">5.1 Oocyte specification and maintenance</h3>
+<p>Orb is both an early fate determinant and a continuously required maintenance factor. Removal of its 3′UTR produces chambers containing <strong>16 polyploid nurse cells</strong>, female sterility, and no egg laying. Earlier/stronger alleles can block cyst development or cause degeneration, while alleles that permit formation of a 16-cell cyst may still fail to specify an oocyte. Continuous Orb activity is needed after initial specification, indicating that it maintains the oocyte translation program rather than acting as a one-time developmental switch. (barr2019thedrosophilacpeb pages 4-5, barr2019thecpebtranslational pages 2-4, barr2019thedrosophilacpeb pages 1-2)</p>
+<p>The Orb feedback loop intersects the BicD–Egl–dynein RNA-transport system. Without normal Orb regulation, progressive restriction of BicD, Egl, dynein, <em>osk</em>, and other oocyte markers fails. For example, BicD is unlocalized or retained in two cells in about <strong>60%</strong> of stage-1 mutant chambers; Egl remains abnormal in more than <strong>80%</strong> of late region-2b cysts and <strong>95%</strong> of stage-1 chambers. These effects support reciprocal coupling between Orb-dependent translation and polarized RNA/protein transport, although not every affected component is necessarily a direct Orb target. (barr2019thedrosophilacpeb pages 13-14, barr2019thedrosophilacpeb pages 4-5)</p>
+<h3 id="52-par-polarity-cortical-actin-and-microtubule-repolarization">5.2 Par polarity, cortical actin, and microtubule repolarization</h3>
+<p>Around stage 7, the posterior microtubule-organizing center is dismantled and a centrosome-independent network is established along the anterior and lateral cortex. Orb functions upstream of or in feedback with this transition. Reduced Orb activity mislocalizes posterior Par-1 and anterior/anterior-lateral aPKC, disrupts cortical actin, and prevents proper cortical localization of the spectraplakin Shot and microtubule minus-end factor Patronin. These defects compromise microtubule repolarization and consequently the localization of axis-determining RNAs. (barr2019thecpebtranslational pages 1-2, barr2019thecpebtranslational pages 18-19)</p>
+<p>Genetic interactions are strong. Approximately <strong>5%</strong> of eggs from <em>orb^343/+</em> females are ventralized; combining the sensitized <em>orb</em> background with an aPKC allele increases this to nearly <strong>50%</strong>, and combining it with <em>cdc42</em> raises it to approximately <strong>70%</strong>. aPKC and <em>cdc42</em> single heterozygotes do not produce the phenotype, whereas the aPKC/<em>cdc42</em> double heterozygote yields nearly <strong>40%</strong> ventralized eggs. These nonadditive effects place Orb functionally within the Par–Cdc42 polarity network. (barr2019thecpebtranslational pages 18-19)</p>
+<p><strong>Primary source:</strong> Barr J et al. “The CPEB translational regulator, Orb, functions together with Par proteins to polarize the Drosophila oocyte.” <em>PLOS Genetics</em> 15:e1008012, published March 2019. DOI/URL: https://doi.org/10.1371/journal.pgen.1008012. (barr2019thecpebtranslational pages 18-19, barr2019thecpebtranslational pages 1-2)</p>
+<h3 id="53-direct-versus-candidate-polarity-targets">5.3 Direct versus candidate polarity targets</h3>
+<p>aPKC mRNA is the best-supported polarity-pathway target: it contains candidate CPEs, binds Orb in ovarian extracts, and changes distribution when Orb is compromised. Its protein is also mislocalized, and <em>orb</em> genetically interacts with aPKC. Nevertheless, Orb-dependent aPKC poly(A)-tail extension and transcript-specific translational output are less completely demonstrated than for <em>osk</em> and <em>grk</em>. (barr2019thecpebtranslational pages 18-19)</p>
+<p>Other CPE-containing transcripts—<em>cdc42, baz, par-6, capu, spir, Cip4, WASp, shot</em>, and <em>patronin</em>—associated with ectopically expressed Orb in cultured cells. They are plausible direct links between Orb and cortical polarity, actin assembly, or microtubule organization, but they remain <strong>candidate targets</strong> pending endogenous ovarian binding, Orb-dependent poly(A)-tail measurements, target-specific translation assays, and rescue experiments. (barr2019thecpebtranslational pages 18-19)</p>
+<h2 id="6-phenotypes-and-interpretation">6. Phenotypes and interpretation</h2>
+<p>The classic <em>orb</em> phenotype is female sterility accompanied by failures in germline-cyst development, oocyte selection/maintenance, cytoskeletal polarization, localized determinant translation, and embryonic axis patterning. Classic genetic work identified requirements for both anterior-posterior and dorsoventral patterning. (barr2019thecpebtranslational pages 25-26)</p>
+<p>These broad phenotypes should not obscure the more precise molecular hierarchy:</p>
+<ol>
+<li>Orb binds selected 3′UTRs and regulates their localization and translation.</li>
+<li>Positive regulation of its own 3′UTR amplifies Orb in the selected oocyte.</li>
+<li>Orb-dependent translation supports polarized transport and Par/cytoskeletal organization.</li>
+<li>The polarized cytoplasm positions <em>osk</em> and <em>grk</em> transcripts.</li>
+<li>Orb-dependent cytoplasmic polyadenylation activates local Oskar and Gurken production.</li>
+<li>Oskar establishes posterior/germline determinants, while Gurken–EGFR signaling specifies dorsoventral pattern.</li>
+</ol>
+<p>Thus, the developmental abnormalities are mechanistically coherent consequences of disrupted spatial translational control rather than evidence that Orb is itself a structural cytoskeletal component or signaling ligand.</p>
+<h2 id="7-recent-research-status-20232024">7. Recent research status, 2023–2024</h2>
+<p>A targeted search of 2023–2024 literature did not recover a major new Orb-specific mechanistic primary study comparable to the 1999, 2015, or 2019 papers. Recent work primarily places Orb’s established mechanism into broader analyses of oogenesis, RNA localization, meiosis, or Gurken evolution. A 2023 synthesis reiterates the current model in which phosphorylated Orb acts with Wispy to polyadenylate localized <em>grk</em> and activate translation. (sottolano2023anevolutionarystudy pages 30-34)</p>
+<p>The principal 2023 source retrieved was Christopher J. Sottolano, “An evolutionary study of gurken and its effects on axis formation in Drosophila,” published January 2023, DOI/URL: https://doi.org/10.7282/t3-fftx-nn74. It is useful as a recent synthesis but is not a substitute for the underlying primary Orb–Wispy experiments. (sottolano2023anevolutionarystudy pages 30-34, sottolano2023anevolutionarystudy pages 133-136)</p>
+<p>Accordingly, the <strong>current understanding remains anchored in well-supported foundational and 2015–2019 mechanistic work</strong>, rather than having been materially revised in 2023–2024. This is itself informative: no credible recent evidence was found that changes Orb’s primary annotation as a germline CPEB translational regulator.</p>
+<h2 id="8-real-world-applications-and-research-utility">8. Real-world applications and research utility</h2>
+<p>Orb is chiefly a <strong>basic-research model</strong>, not a current therapeutic or industrial target. Its practical applications include:</p>
+<ul>
+<li>dissecting how CPEB proteins select transcripts and couple poly(A)-tail regulation to translation;</li>
+<li>studying localized translation in a genetically tractable intact tissue;</li>
+<li>modeling symmetry breaking and cell-fate selection through a thresholded positive-feedback loop;</li>
+<li>resolving how RNA regulation interacts with dynein transport, Par polarity, cortical actin, and microtubule organization;</li>
+<li>understanding conserved principles of maternal-mRNA control and oocyte development.</li>
+</ul>
+<p>These applications are supported by precise genetic tools: 3′UTR deletion and replacement alleles, sensitized <em>orb</em> hypomorphs, localization reporters, transgenic rescue, RNA–protein association assays, and quantitative egg-patterning phenotypes. (barr2019thecpebtranslational pages 18-19, barr2019thedrosophilacpeb pages 4-5, barr2019thedrosophilacpeb pages 1-2)</p>
+<h2 id="9-recommended-functional-annotation">9. Recommended functional annotation</h2>
+<p><strong>Molecular function:</strong> cytoplasmic polyadenylation-element/3′UTR RNA binding; translational regulation; recruitment or coordination of cytoplasmic polyadenylation machinery.</p>
+<p><strong>Primary biological role:</strong> spatial activation of maternal-mRNA translation and maintenance of oocyte identity.</p>
+<p><strong>Best-validated substrates/targets:</strong> <em>oskar</em>, <em>gurken</em>, and <em>orb</em> mRNAs. aPKC is a likely additional direct regulatory target; other Par, actin, and microtubule transcripts remain provisional.</p>
+<p><strong>Cellular location:</strong> cytoplasmic RNPs in the female germline, enriched first in pro-oocytes and the selected oocyte and later at developmentally regulated cortical RNA domains.</p>
+<p><strong>Principal pathways:</strong> Orb autoregulatory oocyte-fate circuit; BicD–Egl–dynein polarized transport; Par/aPKC/Cdc42–actin–Shot/Patronin microtubule polarity; Oskar-dependent posterior/germ-plasm specification; Gurken–EGFR dorsoventral signaling.</p>
+<p><strong>Evidence confidence:</strong> high for identity, CPEB/RRM classification, <em>osk</em> binding and translational activation, <em>grk</em>–Wispy cooperation, autoregulation, and oocyte-fate requirement; moderate for aPKC as a direct transcript-level target; provisional for the wider proposed polarity/cytoskeletal target set.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(lipshitz2000mechanismsofrna pages 12-13): Howard D Lipshitz and Craig A Smibert. Mechanisms of rna localization and translational regulation. Current opinion in genetics &amp; development, 10 5:476-88, Oct 2000. URL: https://doi.org/10.1016/s0959-437x(00)00116-7, doi:10.1016/s0959-437x(00)00116-7. This article has 255 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barr2019thecpebtranslational pages 2-4): Justinn Barr, Sofia Charania, Rudolf Gilmutdinov, Konstantin Yakovlev, Yulii Shidlovskii, and Paul Schedl. The cpeb translational regulator, orb, functions together with par proteins to polarize the drosophila oocyte. Mar 2019. URL: https://doi.org/10.1371/journal.pgen.1008012, doi:10.1371/journal.pgen.1008012. This article has 14 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chang1999thedrosophilacpeb pages 1-2): Jacqueline S. Chang, Lihua Tan, and Paul Schedl. The drosophila cpeb homolog, orb, is required for oskar protein expression in oocytes. Developmental biology, 215 1:91-106, Nov 1999. URL: https://doi.org/10.1006/dbio.1999.9444, doi:10.1006/dbio.1999.9444. This article has 167 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sottolano2023anevolutionarystudy pages 30-34): Christopher James Sottolano. An evolutionary study of gurken and its effects on axis formation in drosophila. Text, Jan 2023. URL: https://doi.org/10.7282/t3-fftx-nn74, doi:10.7282/t3-fftx-nn74. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barr2019thedrosophilacpeb pages 1-2): Justinn Barr, Rudolf Gilmutdinov, Linus Wang, Yulii Shidlovskii, and Paul Schedl. The <i>drosophila</i> cpeb protein orb specifies oocyte fate by a 3′utr-dependent autoregulatory loop. Dec 2019. URL: https://doi.org/10.1534/genetics.119.302687, doi:10.1534/genetics.119.302687. This article has 43 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barr2019thecpebtranslational pages 1-2): Justinn Barr, Sofia Charania, Rudolf Gilmutdinov, Konstantin Yakovlev, Yulii Shidlovskii, and Paul Schedl. The cpeb translational regulator, orb, functions together with par proteins to polarize the drosophila oocyte. Mar 2019. URL: https://doi.org/10.1371/journal.pgen.1008012, doi:10.1371/journal.pgen.1008012. This article has 14 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(lipshitz2000mechanismsofrna pages 7-8): Howard D Lipshitz and Craig A Smibert. Mechanisms of rna localization and translational regulation. Current opinion in genetics &amp; development, 10 5:476-88, Oct 2000. URL: https://doi.org/10.1016/s0959-437x(00)00116-7, doi:10.1016/s0959-437x(00)00116-7. This article has 255 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sottolano2023anevolutionarystudy pages 133-136): Christopher James Sottolano. An evolutionary study of gurken and its effects on axis formation in drosophila. Text, Jan 2023. URL: https://doi.org/10.7282/t3-fftx-nn74, doi:10.7282/t3-fftx-nn74. This article has 0 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barr2019thecpebtranslational pages 25-26): Justinn Barr, Sofia Charania, Rudolf Gilmutdinov, Konstantin Yakovlev, Yulii Shidlovskii, and Paul Schedl. The cpeb translational regulator, orb, functions together with par proteins to polarize the drosophila oocyte. Mar 2019. URL: https://doi.org/10.1371/journal.pgen.1008012, doi:10.1371/journal.pgen.1008012. This article has 14 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barr2019thedrosophilacpeb pages 13-14): Justinn Barr, Rudolf Gilmutdinov, Linus Wang, Yulii Shidlovskii, and Paul Schedl. The <i>drosophila</i> cpeb protein orb specifies oocyte fate by a 3′utr-dependent autoregulatory loop. Dec 2019. URL: https://doi.org/10.1534/genetics.119.302687, doi:10.1534/genetics.119.302687. This article has 43 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barr2019thedrosophilacpeb pages 4-5): Justinn Barr, Rudolf Gilmutdinov, Linus Wang, Yulii Shidlovskii, and Paul Schedl. The <i>drosophila</i> cpeb protein orb specifies oocyte fate by a 3′utr-dependent autoregulatory loop. Dec 2019. URL: https://doi.org/10.1534/genetics.119.302687, doi:10.1534/genetics.119.302687. This article has 43 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barr2019thecpebtranslational pages 18-19): Justinn Barr, Sofia Charania, Rudolf Gilmutdinov, Konstantin Yakovlev, Yulii Shidlovskii, and Paul Schedl. The cpeb translational regulator, orb, functions together with par proteins to polarize the drosophila oocyte. Mar 2019. URL: https://doi.org/10.1371/journal.pgen.1008012, doi:10.1371/journal.pgen.1008012. This article has 14 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="orb-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>barr2019thecpebtranslational pages 18-19</li>
+<li>chang1999thedrosophilacpeb pages 1-2</li>
+<li>sottolano2023anevolutionarystudy pages 30-34</li>
+<li>barr2019thedrosophilacpeb pages 4-5</li>
+<li>barr2019thecpebtranslational pages 25-26</li>
+<li>lipshitz2000mechanismsofrna pages 12-13</li>
+<li>barr2019thecpebtranslational pages 2-4</li>
+<li>barr2019thedrosophilacpeb pages 1-2</li>
+<li>barr2019thecpebtranslational pages 1-2</li>
+<li>lipshitz2000mechanismsofrna pages 7-8</li>
+<li>sottolano2023anevolutionarystudy pages 133-136</li>
+<li>barr2019thedrosophilacpeb pages 13-14</li>
+<li>10.1006/dbio.1999.9444</li>
+<li>10.1016/S0959-437X(00)00116-7</li>
+<li>10.7282/t3-fftx-nn74</li>
+<li>10.1002/dvdy.24311</li>
+<li>10.1534/genetics.119.302687</li>
+<li>10.1371/journal.pgen.1008012</li>
+<li>https://doi.org/10.1006/dbio.1999.9444</li>
+<li>https://doi.org/10.1016/S0959-437X(00</li>
+<li>https://doi.org/10.7282/t3-fftx-nn74</li>
+<li>https://doi.org/10.1002/dvdy.24311</li>
+<li>https://doi.org/10.1534/genetics.119.302687</li>
+<li>https://doi.org/10.1371/journal.pgen.1008012</li>
+<li>https://doi.org/10.1006/dbio.1999.9444.</li>
+<li>https://doi.org/10.1002/dvdy.24311.</li>
+<li>https://doi.org/10.1534/genetics.119.302687.</li>
+<li>https://doi.org/10.1371/journal.pgen.1008012.</li>
+<li>https://doi.org/10.7282/t3-fftx-nn74.</li>
+<li>https://doi.org/10.1016/s0959-437x(00</li>
+<li>https://doi.org/10.1371/journal.pgen.1008012,</li>
+<li>https://doi.org/10.1006/dbio.1999.9444,</li>
+<li>https://doi.org/10.7282/t3-fftx-nn74,</li>
+<li>https://doi.org/10.1534/genetics.119.302687,</li>
+</ol>
+            </div>
+        </details>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Manual</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(orb-deep-research-manual.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8IMZ2" data-a="DEEP_RESEARCH: Manual" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Orb manual research synthesis</span>
+
+
+                    <span class="report-badge">Manual</span>
+
+
+
+
+
+
+
+                </div>
+
+
+                <h1 id="orb-manual-research-synthesis">Orb manual research synthesis</h1>
+<p>Falcon timed out after 600 seconds; perplexity-lite returned HTTP 401 insufficient quota. The original Falcon process later returned a completed report, which was inspected alongside independently checked primary literature.</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/27791065">PMID:27791065</a>(https://pubmed.ncbi.nlm.nih.gov/27791065/) experimentally compares Orb and Orb2 binding and establishes recognition of CPE-like mRNA 3-prime-UTR sequences. <a href="https://pubmed.ncbi.nlm.nih.gov/15737929">PMID:15737929</a>(https://pubmed.ncbi.nlm.nih.gov/15737929/) establishes Orb-dependent translational activation, while <a href="https://pubmed.ncbi.nlm.nih.gov/7926753">PMID:7926753</a>(https://pubmed.ncbi.nlm.nih.gov/7926753/) establishes oskar/gurken localization and oocyte axis phenotypes. <a href="https://pubmed.ncbi.nlm.nih.gov/11809824">PMID:11809824</a>(https://pubmed.ncbi.nlm.nih.gov/11809824/) full text directly examines Orb localization and mutant cysts despite its MEI-218 title. PMID:21949709 and PMID:30865627 provide additional full-text context on phosphorylation and oocyte polarity.</p>
+<p>The <a href="orb-bioinformatics/RESULTS.md">reproducible exact-isoform comparison</a> shows target residues 8–559 are identical to long Orb residues 364–915. The intact C-terminal RNA-binding machinery supports the broad translation-regulator claim despite N-terminal differences. The broad claim is already present in GOA, so CNN is appropriate. This does not transfer Orb2-specific memory biology or establish identical regulation among Orb isoforms.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(orb-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8IMZ2" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="orb-q8imz2">orb / Q8IMZ2</h1>
+<p>The selected Q8IMZ2 sequence has 559 residues. <a href="orb-bioinformatics/RESULTS.md">Exact comparison</a> with long Orb Q9VCN7 establishes an identical 552-residue C-terminal region containing the RNA-binding machinery. This supports broad functional transfer, while not proving identical N-terminal regulation. <a href="https://pubmed.ncbi.nlm.nih.gov/27791065">PMID:27791065</a>(https://pubmed.ncbi.nlm.nih.gov/27791065/) directly compares Orb and Orb2 RNA-binding preferences; only Orb findings are transferred. <a href="https://pubmed.ncbi.nlm.nih.gov/15737929">PMID:15737929</a>(https://pubmed.ncbi.nlm.nih.gov/15737929/) establishes Orb-dependent translation and localization. <a href="https://pubmed.ncbi.nlm.nih.gov/11809824">PMID:11809824</a>(https://pubmed.ncbi.nlm.nih.gov/11809824/) full text directly assays Orb expression and mutant cysts despite its MEI-218 title. The 13 GOA rows are reviewed; broad binding annotations are specified, while developmental consequences remain noncore.</p>
+<h2 id="sequence-and-research-provenance">Sequence and research provenance</h2>
+<p>The selected frozen UniProt record is retained in <a href="orb-uniprot-source.json">orb-uniprot-source.json</a>, with the complete original prediction metadata in <a href="orb-predictions-source.json">orb-predictions-source.json</a>. It maps the exact accession to this FlyBase gene; current sequence identity does not establish the historical predictor input. Gene-level experiments support conserved functions unless a relevant isoform difference is established. Falcon research was requested with perplexity-lite fallback alongside publication caching. Primary publications and sequence observations, rather than AI summaries or ARBA assertions, support the curated conclusions.</p>
+<h2 id="completed-provider-readback">Completed provider readback</h2>
+<p>The wrapper timed out and its fallback reported insufficient quota, but the original Falcon job later produced a complete report. The report and primary sources were inspected; no duplicate provider submission was made. The report supports Orb-specific CPEB RNA binding and translational regulation, distinguishing Orb2. It does not establish differences among Q8IMZ2 isoforms; local sequence comparison supports retention of the RNA-binding machinery.</p>
+            </div>
+        </details>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioinformatics Results</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RESULTS.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q8IMZ2" data-a="DOC: Bioinformatics Results" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="orb-exact-sequence-assessment">Orb exact-sequence assessment</h1>
+<p>Q8IMZ2 is 559 residues; long Orb Q9VCN7 is 915 residues. Global alignment yields 559 aligned pairs with 555 identities. The complete 552-residue C-terminal region (target 8–559, reference 364–915) is identical. Differences lie at the N-terminus and comprise two long deletions plus four substitutions in the first seven aligned residues. The conserved RNA-recognition and zinc-binding region is retained.</p>
+<p>The independent CG4793/RefSeq positive control yields 910 identities in 910 aligned residues, with no indel. Full alignments and input hashes are in the JSON outputs.</p>
+<p>This establishes preservation of the RNA-binding machinery, not identical regulation of every Orb isoform. Broad RNA-binding and translation-regulator functions can reasonably transfer from experimentally characterized Orb to the selected shorter form. N-terminal regulatory differences do not provide evidence against the generic activity. Protein names alone are not used to infer identity with the distinct Orb2 gene.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q8IMZ2
+gene_symbol: orb
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:7227
+  label: Drosophila melanogaster
+description: Orb is a cytoplasmic polyadenylation element-binding protein that recognizes sequences in
+  mRNA 3-prime untranslated regions and controls maternal mRNA translation and localization. It is enriched
+  in the developing oocyte, where its post-transcriptional regulation supports germline development and
+  establishment of oocyte polarity. Its C-terminal RNA-recognition region is conserved in the shorter
+  Q8IMZ2 form.
+existing_annotations:
+- term:
+    id: GO:0003676
+    label: nucleic acid binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  supporting_entities:
+  - InterPro:IPR035979
+  review:
+    action: MODIFY
+    summary: Orb recognizes cytoplasmic polyadenylation elements in mRNA 3-prime untranslated regions.
+      This experimentally defined RNA target makes mRNA 3-prime-UTR binding more informative than the
+      generic nucleic-acid or RNA-binding annotation.
+    reason: Orb recognizes cytoplasmic polyadenylation elements in mRNA 3-prime untranslated regions.
+      This experimentally defined RNA target makes mRNA 3-prime-UTR binding more informative than the
+      generic nucleic-acid or RNA-binding annotation.
+    supported_by:
+    - &amp;id001
+      reference_id: PMID:27791065
+      supporting_text: Both Orb and Orb2 bind linear cytoplasmic polyadenylation element-like sequences
+        in the 3&#39; UTRs of largely overlapping target mRNAs, with Orb2 potentially having a broader specificity.
+    proposed_replacement_terms:
+    - &amp;id002
+      id: GO:0003730
+      label: mRNA 3&#39;-UTR binding
+- term:
+    id: GO:0003723
+    label: RNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  supporting_entities:
+  - InterPro:IPR000504
+  - UniRule:UR000414619
+  review:
+    action: MODIFY
+    summary: Orb recognizes cytoplasmic polyadenylation elements in mRNA 3-prime untranslated regions.
+      This experimentally defined RNA target makes mRNA 3-prime-UTR binding more informative than the
+      generic nucleic-acid or RNA-binding annotation.
+    reason: Orb recognizes cytoplasmic polyadenylation elements in mRNA 3-prime untranslated regions.
+      This experimentally defined RNA target makes mRNA 3-prime-UTR binding more informative than the
+      generic nucleic-acid or RNA-binding annotation.
+    supported_by:
+    - *id001
+    proposed_replacement_terms:
+    - *id002
+- term:
+    id: GO:0003729
+    label: mRNA binding
+  evidence_type: TAS
+  original_reference_id: PMID:11700288
+  qualifier: enables
+  review:
+    action: MODIFY
+    summary: Orb recognizes cytoplasmic polyadenylation elements in mRNA 3-prime untranslated regions.
+      This experimentally defined RNA target makes mRNA 3-prime-UTR binding more informative than the
+      generic nucleic-acid or RNA-binding annotation.
+    reason: Orb recognizes cytoplasmic polyadenylation elements in mRNA 3-prime untranslated regions.
+      This experimentally defined RNA target makes mRNA 3-prime-UTR binding more informative than the
+      generic nucleic-acid or RNA-binding annotation.
+    supported_by:
+    - *id001
+    proposed_replacement_terms:
+    - *id002
+- term: *id002
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  supporting_entities:
+  - InterPro:IPR034819
+  review:
+    action: ACCEPT
+    summary: Direct binding profiles establish recognition of CPE-like sequences in mRNA 3-prime UTRs.
+      The selected shorter Orb sequence retains the complete C-terminal RNA-binding region.
+    reason: Direct binding profiles establish recognition of CPE-like sequences in mRNA 3-prime UTRs.
+      The selected shorter Orb sequence retains the complete C-terminal RNA-binding region.
+    supported_by:
+    - *id001
+- term: &amp;id008
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IDA
+  original_reference_id: PMID:10101171
+  qualifier: located_in
+  review:
+    action: ACCEPT
+    summary: Primary imaging localizes Orb to the cytoplasm of the germline cyst and enriches it in the
+      oocyte. This directly supports the broad cytoplasmic localization.
+    reason: Primary imaging localizes Orb to the cytoplasm of the germline cyst and enriches it in the
+      oocyte. This directly supports the broad cytoplasmic localization.
+    supported_by:
+    - &amp;id003
+      reference_id: PMID:11809824
+      supporting_text: ORB is found in the cytoplasm of each cell of the 16-cell cyst; furthermore, it
+        shows enrichment in the oocyte in late region 2a or early region 2b
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB-SubCell:SL-0086
+  review:
+    action: ACCEPT
+    summary: Primary imaging localizes Orb to the cytoplasm of the germline cyst and enriches it in the
+      oocyte. This directly supports the broad cytoplasmic localization.
+    reason: Primary imaging localizes Orb to the cytoplasm of the germline cyst and enriches it in the
+      oocyte. This directly supports the broad cytoplasmic localization.
+    supported_by:
+    - *id003
+- term: &amp;id007
+    id: GO:0006417
+    label: regulation of translation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  supporting_entities:
+  - InterPro:IPR034819
+  review:
+    action: ACCEPT
+    summary: Orb binds target mRNAs and controls their translation in the female germline. The conserved
+      RNA-binding machinery in the selected form supports the broad regulator activity, without assuming
+      identical regulation of all isoforms.
+    reason: Orb binds target mRNAs and controls their translation in the female germline. The conserved
+      RNA-binding machinery in the selected form supports the broad regulator activity, without assuming
+      identical regulation of all isoforms.
+    supported_by:
+    - &amp;id004
+      reference_id: PMID:15737929
+      supporting_text: Orb is responsible for mediating the translational activation of mRNAs localized
+        within the developing oocyte.
+    - *id001
+- term:
+    id: GO:0007281
+    label: germ cell development
+  evidence_type: IMP
+  original_reference_id: PMID:11809824
+  qualifier: involved_in
+  review:
+    action: KEEP_AS_NON_CORE
+    summary: The primary MEI-218 study directly examines orb-mutant germline cysts and supports an Orb
+      requirement in oocyte development. This developmental consequence is retained as noncore relative
+      to sequence-specific translational regulation.
+    reason: The primary MEI-218 study directly examines orb-mutant germline cysts and supports an Orb
+      requirement in oocyte development. This developmental consequence is retained as noncore relative
+      to sequence-specific translational regulation.
+    supported_by:
+    - *id003
+    - *id004
+- term:
+    id: GO:0007310
+    label: oocyte dorsal/ventral axis specification
+  evidence_type: IMP
+  original_reference_id: PMID:15737929
+  qualifier: involved_in
+  review:
+    action: KEEP_AS_NON_CORE
+    summary: Orb-dependent post-transcriptional regulation supports oocyte polarity and localization of
+      maternal determinants, including oskar RNA. Retain the experimentally supported developmental/localization
+      consequence as noncore relative to its direct RNA-binding and translational-regulatory mechanism.
+    reason: Orb-dependent post-transcriptional regulation supports oocyte polarity and localization of
+      maternal determinants, including oskar RNA. Retain the experimentally supported developmental/localization
+      consequence as noncore relative to its direct RNA-binding and translational-regulatory mechanism.
+    supported_by:
+    - *id004
+    - &amp;id005
+      reference_id: PMID:7926753
+      supporting_text: orb is required for the asymmetric distribution of oskar and gurken mRNAs within
+        the oocyte during the later stages of oogenesis.
+- term:
+    id: GO:0007310
+    label: oocyte dorsal/ventral axis specification
+  evidence_type: IMP
+  original_reference_id: PMID:7926753
+  qualifier: involved_in
+  review:
+    action: KEEP_AS_NON_CORE
+    summary: Orb-dependent post-transcriptional regulation supports oocyte polarity and localization of
+      maternal determinants, including oskar RNA. Retain the experimentally supported developmental/localization
+      consequence as noncore relative to its direct RNA-binding and translational-regulatory mechanism.
+    reason: Orb-dependent post-transcriptional regulation supports oocyte polarity and localization of
+      maternal determinants, including oskar RNA. Retain the experimentally supported developmental/localization
+      consequence as noncore relative to its direct RNA-binding and translational-regulatory mechanism.
+    supported_by:
+    - *id004
+    - *id005
+- term:
+    id: GO:0007314
+    label: oocyte anterior/posterior axis specification
+  evidence_type: IMP
+  original_reference_id: PMID:7926753
+  qualifier: involved_in
+  review:
+    action: KEEP_AS_NON_CORE
+    summary: Orb-dependent post-transcriptional regulation supports oocyte polarity and localization of
+      maternal determinants, including oskar RNA. Retain the experimentally supported developmental/localization
+      consequence as noncore relative to its direct RNA-binding and translational-regulatory mechanism.
+    reason: Orb-dependent post-transcriptional regulation supports oocyte polarity and localization of
+      maternal determinants, including oskar RNA. Retain the experimentally supported developmental/localization
+      consequence as noncore relative to its direct RNA-binding and translational-regulatory mechanism.
+    supported_by:
+    - *id004
+    - *id005
+- term: &amp;id006
+    id: GO:0045182
+    label: translation regulator activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  supporting_entities:
+  - InterPro:IPR034819
+  review:
+    action: ACCEPT
+    summary: Orb binds target mRNAs and controls their translation in the female germline. The conserved
+      RNA-binding machinery in the selected form supports the broad regulator activity, without assuming
+      identical regulation of all isoforms.
+    reason: Orb binds target mRNAs and controls their translation in the female germline. The conserved
+      RNA-binding machinery in the selected form supports the broad regulator activity, without assuming
+      identical regulation of all isoforms.
+    supported_by:
+    - *id004
+    - *id001
+- term:
+    id: GO:0045451
+    label: germ plasm oskar mRNA localization
+  evidence_type: IMP
+  original_reference_id: PMID:7926753
+  qualifier: involved_in
+  review:
+    action: KEEP_AS_NON_CORE
+    summary: Orb-dependent post-transcriptional regulation supports oocyte polarity and localization of
+      maternal determinants, including oskar RNA. Retain the experimentally supported developmental/localization
+      consequence as noncore relative to its direct RNA-binding and translational-regulatory mechanism.
+    reason: Orb-dependent post-transcriptional regulation supports oocyte polarity and localization of
+      maternal determinants, including oskar RNA. Retain the experimentally supported developmental/localization
+      consequence as noncore relative to its direct RNA-binding and translational-regulatory mechanism.
+    supported_by:
+    - *id004
+    - *id005
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping,
+    accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:10101171
+  title: The posterior determinant gene nanos is required for the maintenance of the adult germline stem
+    cells during Drosophila oogenesis.
+  findings: []
+  full_text_unavailable: true
+- id: PMID:11700288
+  title: Translational regulation and RNA localization in Drosophila oocytes and embryos.
+  findings: []
+  full_text_unavailable: true
+- id: PMID:11809824
+  title: Cytoplasmic localization and evolutionary conservation of MEI-218, a protein required for meiotic
+    crossing-over in Drosophila.
+  findings: []
+  full_text_unavailable: false
+- id: PMID:15737929
+  title: The Drosophila fragile X protein functions as a negative regulator in the orb autoregulatory
+    pathway.
+  findings: []
+  full_text_unavailable: true
+- id: PMID:7926753
+  title: orb is required for anteroposterior and dorsoventral patterning during Drosophila oogenesis.
+  findings: []
+  full_text_unavailable: true
+- id: PMID:27791065
+  title: RNA-binding profiles of Drosophila CPEB proteins Orb and Orb2.
+  full_text_unavailable: true
+  findings: []
+- id: file:DROME/orb/orb-bioinformatics/RESULTS.md
+  title: DROME/orb/orb-bioinformatics/RESULTS.md
+  findings: []
+core_functions:
+- description: Recognizes CPE-like elements in target mRNA 3-prime UTRs to regulate cytoplasmic translation.
+  molecular_function: *id006
+  directly_involved_in:
+  - *id007
+  locations:
+  - *id008
+  supported_by:
+  - *id001
+  - *id004
+  - reference_id: file:DROME/orb/orb-bioinformatics/RESULTS.md
+    supporting_text: The complete 552-residue C-terminal region (target 8–559, reference 364–915) is identical.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
