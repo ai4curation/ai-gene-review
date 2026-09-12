@@ -265,6 +265,26 @@ AIG1 review is self-contained without filing the same request twice.
   `ECO:0000269|PubMed:27018888`. 12 = 12 = 12. (ADTRP's equivalent row lists 11: it lacks
   RHEA:52092, the 5-(9Z-hexadecenoyloxy)-octadecanoate reaction. Recorded as an observed
   difference between the two records, not interpreted.)
+- **Node reach reproduced before being cited.** The suggested_question about `GO:0042758`
+  sitting at a pan-eukaryotic node relies on numbers first published in the merged ADTRP
+  review, so they were re-derived rather than relayed. QuickGO
+  (`withFrom=PANTHER:PTN001659973&goId=GO:0016787&evidenceCode=ECO:0000318`) returns
+  `numberOfHits` 86 with 86 results collected — complete, not truncated — and 86 distinct
+  gene products, identical for `GO:0042758`. Resolving all 86 accessions against UniProt
+  (0 unresolved) gives **65 Metazoa, 14 Fungi, 5 Viridiplantae, 2 Amoebozoa**, and
+  **7 Swiss-Prot reviewed / 79 TrEMBL** — `entryType` compared with an exact-string match,
+  not a `"reviewed" in …` substring test, and 7 + 79 = 86 with both counts differing from
+  the total. The seven reviewed members are ADTRP (human, mouse, rat), AIG1 (human,
+  mouse), and two uncharacterised fungal proteins, **P38842 `UPF0641 membrane protein
+  YHR140W`** and **Q96WV4 `UPF0641 membrane protein PJ4664.05`**. So the claim that the
+  node's only reviewed non-animal representatives are curated as uncharacterised is
+  verified, and the 5 plant members have no reviewed representative at all. Every figure
+  matches the ADTRP review exactly.
+- **The ADTRP caveolae claim was checked too**, since the whole plasma-membrane divergence
+  turns on it: `publications/PMID_21868574.md` contains "We confirm ADTRP expression and
+  colocalization with TFPI and caveolin-1 in ECs", plus one occurrence each of
+  `lipid raft`, `triton` and `x-114`. ADTRP's independent surface evidence is real, so the
+  divergence from this gene is genuine rather than an artefact of my reading.
 - **interpro2go for IPR006838**, verified independently rather than inherited from the
   ADTRP review. `https://www.ebi.ac.uk/interpro/api/entry/interpro/IPR006838/` returns
   `type: family`, `name: ADTRP/AIG1`, member databases `{pfam: PF04750, panther:
