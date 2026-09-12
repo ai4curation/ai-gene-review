@@ -457,11 +457,8 @@ Also in round 9: the self-test no longer mutates this tracked file. It wrote to 
 `AFP-notes.md` and restored in a `finally`, which leaves residue if the process is killed between the
 two; `check_all` now takes a `notes_path` so the mutation goes to a temp copy like every other one.
 
-**The pattern across rounds 5–9 is worth more than any of the individual fixes:** every round found a
-defect *in the previous round's fix*, and every one was found by the reviewer rather than by me
-re-reading. What changed my hit rate was not more care but changing what gets checked — sweeping the
-document instead of the diff, measuring thresholds instead of assigning them, and exercising each
-guard by breaking it. The annotation itself has not moved since round 4.
+*(The pattern across these rounds is written up once, in the closing section below, rather than
+restated here.)*
 
 ### Round 10: over-corrected, and the branch nothing broke was the one that broke
 
@@ -487,8 +484,15 @@ delimiters — that must still fire.
 Rounds 1–4 changed the annotation. **Rounds 5–10 changed nothing a curator would act on** — verified
 each round by diffing the review YAML for `term`, `id: GO:`, `action`, `evidence_type`,
 `supporting_text` and `molecular_function` lines, which return **zero** changes since round 4. Every
-one of those six rounds found a defect *in the previous round's fix*, and every one was found by the
-reviewer, not by me re-reading my own work.
+one of those six rounds found a defect *in the previous round's fix*.
+
+**What found them splits cleanly, and the split is the point.** Every defect of *judgement* —
+the one-site metal reading, a mutant that removes the residue it was meant to isolate, a guard
+exempting a whole file, italics counted as quotation — was found by the **reviewer**. Every defect
+of *arithmetic* — the five wrong thresholds in item 2 below — was found by **running the guard**,
+which failed loudly the moment a hand-assigned number met the document. Re-reading my own work found
+neither kind. That is the argument for both halves: an adversarial reader for the claims, and a
+mechanical check for the counts.
 
 The transferable part is what changed the hit rate, and it was never "be more careful":
 
