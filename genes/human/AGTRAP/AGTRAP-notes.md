@@ -348,10 +348,29 @@ carry title, authors and abstract but **no MeSH headings**, so this cannot be
 checked from the repo alone — worth capturing in the cache now that the indexing
 has done real curatorial work here):
 
+```sh
+# Per-PMID, because the load-bearing entries are ABSENCES: a single efetch over
+# all five ids yields an unattributed union in which 'Animals' appears (from the
+# other four papers), so a merged query cannot show that 12960423 lacks it.
+for id in 12960423 10358057 11162453 15757644 27015675; do
+  printf 'PMID:%s\t' "$id"
+  curl -s "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=$id&retmode=xml" \
+    | grep -o '<DescriptorName[^>]*>[^<]*</DescriptorName>' \
+    | sed 's/<[^>]*>//g' \
+    | grep -Ex 'Humans|Animals|Mice|Rats|HEK293 Cells' \
+    | paste -sd, -
+  sleep 1
+done
 ```
-curl -s "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed\
-&id=12960423,10358057,11162453,15757644,27015675&retmode=xml" \
-  | grep -o '<DescriptorName[^>]*>[^<]*</DescriptorName>'
+
+Output when run (this is the table above, and it was run before being recorded):
+
+```
+PMID:12960423   Humans
+PMID:10358057   Animals,Mice
+PMID:11162453   Animals,Rats
+PMID:15757644   Animals,Mice
+PMID:27015675   Animals,HEK293 Cells,Humans
 ```
 
 So the two codes are consistent once the indexing is consulted rather than the
