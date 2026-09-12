@@ -39,6 +39,7 @@ Global pairwise alignment (Biopython `PairwiseAligner`, BLOSUM62, gap open -11, 
 | AP2S1 / sigma2 | L103 | I102 | SUBSTITUTED (Leu -> Ile; sigma1A also carries Ile here) |
 | AP3S1 / sigma3A (Q92572) | R15 | R14 | RETAINED |
 | AP3S1 / sigma3A | V94 | V87 | RETAINED |
+| AP3S1 / sigma3A | D98 | D91 | RETAINED |
 | AP3S1 / sigma3A | L107 | L100 | RETAINED |
 | AP3S1 / sigma3A | L109 | I102 | SUBSTITUTED (Leu -> Ile, as for sigma1A) |
 
@@ -63,11 +64,17 @@ the sigma1A counterpart of each rather than assuming it:
 | N92 | **D92** | D91 | Asn->Asp is the AP-1 sigma1 state; sigma1B matches sigma1A |
 | L103 | **I103** | I102 | Leu->Ile is the AP-1 sigma1 state; sigma1B matches sigma1A |
 
+At the first of those two, sigma2's Asn is the outlier of the three complexes rather than AP-1's
+Asp: sigma3A D98 maps to the same AP1S2 position 91 and is also Asp. The scan therefore covers
+every position PMID:21097499 names for any of the three sigma subunits — sigma1A R15/A63/V88/
+L101/I103, sigma2 R15/A63/V88/N92/E100/L101/L103, sigma3A R15/V94/D98/L107/L109 — and finds no
+sigma1B-specific difference at any of them.
+
 So neither difference is sigma1B-specific. The N92 position is in any case a tolerant one in
 sigma2 itself: "the N92A and L101A mutations had no effect on the interaction with the Nef
-signal but decreased the interaction with the tyrosinase signal". The single difference against sigma2 (L103 -> I102)
-is the same Leu/Ile difference that distinguishes the AP-1 sigma1 subfamily from sigma2, and
-sigma1A — which was shown experimentally to bind all three test signals — carries Ile there too.
+signal but decreased the interaction with the tyrosinase signal". And sigma1A — which was shown
+experimentally to bind all three test signals — carries the AP-1 state at both positions.
+
 There is therefore no residue-level basis for arguing that sigma1B has lost the cargo-signal
 binding site; the sequence evidence agrees with the functional result in PMID:21097499.
 

@@ -6,7 +6,7 @@ sigma-side residues whose substitution abolishes or weakens signal binding:
 
     sigma2 (AP2S1): R15, A63, V88, N92, E100, L101, L103
     sigma1A (AP1S1): R15, A63, V88, L101, I103
-    sigma3A (AP3S1): R15, V94, L107, L109
+    sigma3A (AP3S1): R15, V94, D98, L107, L109
 
 The three sigma1A substitutions the paper reports as abolishing the gamma1-sigma1A
 interaction outright are V88D and I103S (for the Nef signal) "and also by A63D (for
@@ -70,6 +70,8 @@ TESTED_SITES = {
     "Q92572": [
         (15, "R", "sigma3A R15"),
         (94, "V", "sigma3A V94; V94D decreases dileucine-signal binding"),
+        (98, "D", "sigma3A D98; one of the two sigma3A substitutions that did NOT reduce "
+                  "binding - D98A was the exception for the tyrosinase signal"),
         (107, "L", "sigma3A L107"),
         (109, "L", "sigma3A L109; L109S decreases dileucine-signal binding"),
     ],

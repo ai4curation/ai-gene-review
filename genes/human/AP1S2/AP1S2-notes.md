@@ -100,7 +100,9 @@ that sigma1B shares with sigma1A rather than sigma1B-specific losses. The N92 po
 tolerant in sigma2 itself ("the N92A and L101A mutations had no effect on the interaction with
 the Nef signal but decreased the interaction with the tyrosinase signal" [PMID:21097499]), and
 it is recorded as a SUBSTITUTED residue claim anchored on sigma2 rather than being left out of
-the scan. **There is no residue-level argument that sigma1B has lost the
+the scan. Sigma2's Asn is in fact the outlier of the three complexes: sigma3A D98 maps to the
+same AP1S2 position 91 and is also Asp. The scan now covers every position the paper names for
+any of the three sigma subunits and finds no sigma1B-specific difference at any of them. **There is no residue-level argument that sigma1B has lost the
 cargo-signal site**, and this is recorded as `residue_claims` on the GO:0035615 row so that the
 "fold without function" mirror error is closed off explicitly.
 
