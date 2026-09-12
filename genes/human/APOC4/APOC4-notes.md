@@ -190,8 +190,9 @@ PAINT), while the human gene carries the broader GO:0019915. Nothing in this rev
 correct. The mechanism proposed for the transgenic phenotype is displacement of apoE, explicitly not
 lipase inhibition: "The mechanism of the elevated VLDL levels in APOC4 transgenic mice was suggested to
 be due to displacement of APOE, resulting in reduced hepatic clearance of VLDL, rather than to a
-reduction in lipase activity" [PMID:37226733]. LPL activation (GO:0060230, GO:0016004) is apoC-II
-biology; LPL inhibition is apoC-III biology. A Europe PMC search for apolipoprotein C-IV together with
+reduction in lipase activity" [PMID:37226733]. Lipase activation is apoC-II biology — QuickGO gives
+APOC2 (P02655) GO:0060230 lipoprotein lipase activator activity and GO:0016004 phospholipase activator
+activity, neither of which appears on APOC4 — and lipase inhibition is apoC-III biology. A Europe PMC search for apolipoprotein C-IV together with
 lipoprotein lipase returns proteomics surveys and reviews, no assay of apoC-IV on lipase.
 
 The apoE-displacement idea is itself a hypothesis in a review ("are believed to slow the clearance of
@@ -219,11 +220,16 @@ binary PPIs". Reference-projection test (QuickGO `downloadSearch?reference=PMID:
 export): **85,343 annotations across 6,769 distinct gene products, of which 84,937 are GO:0005515.**
 APOC4's 23 rows are 23 of those.
 
-Resolving every partner in UniProt (subcellular location field) gives a topologically impossible set for
-a secreted plasma apolipoprotein — nine mitochondrial (IFI27, MICOS10, MICOS13, LETMD1, MAIP1, BCL2L2,
-TIMMDC1, DIABLO, NFU1), ER/Golgi membrane (RSAD2, PORCN, TBC1D20, TMEM14B), cytosolic or nuclear
-(GAD2, TPRG1, APOL2, UBQLN1, UBQLN2, SENP2, SNAP47, SYT16, GSDMA), and one plasma-membrane type-I
-protein (THBD). Not one is a plasma or lipoprotein-associated protein. APOC4 carries a cleaved signal
+Resolving every partner in UniProt (subcellular location field, by script — `.scratch/APOC4_partners.py`)
+gives a topologically impossible set for a secreted plasma apolipoprotein. Counted rather than eyeballed:
+**0 of 23 have a curated Secreted or Extracellular location, 10 of 23 carry a curated mitochondrial
+location** (IFI27, MICOS10, MICOS13, LETMD1, MAIP1, BCL2L2, TIMMDC1, DIABLO, NFU1, RSAD2), **10 of 23
+have a transmembrane segment, 1 (THBD) has a cleaved signal peptide, and 1 (SYT16) has no curated
+location at all**. The remainder are cytosolic, nuclear or endomembrane (GAD2, TPRG1, APOL2, UBQLN1,
+UBQLN2, SENP2, SNAP47, GSDMA, PORCN, TBC1D20, TMEM14B). Not one is a plasma or lipoprotein-associated
+protein. THBD is the single partial exception worth stating: as a single-pass type I membrane protein it
+does present an extracellular domain to flowing blood, so an encounter is not topologically absurd — but
+that is precisely the topology a nuclear Gal4 two-hybrid cannot test. APOC4 carries a cleaved signal
 peptide (`FT   SIGNAL          1..27`) and never occupies the compartment in which any of these was
 tested; in Y2H both partners are expressed as Gal4 fusions in the yeast nucleus, so the assay cannot
 put apoC-IV where its own biology happens. HuRI itself notes "the majority of PPIs in HuRI were found
@@ -240,8 +246,10 @@ See `file:human/APOC4/APOC4-bioinformatics/RESULTS.md`. Two live analyses:
 2. **Amphipathic-helix scan** — Eisenberg hydrophobic moment over 18-residue windows on mature chains.
    The discriminating statistic is the density of non-overlapping μH ≥ 0.35 segments: exchangeable
    apolipoproteins (APOA1, APOC1, APOC2, APOC3, and apoC-IV from human, rabbit and mouse) fall at
-   0.021–0.035 per residue, globular controls (β2-microglobulin, thioredoxin) at 0.010. Human apoC-IV
-   is 0.030, within 0.002 of both APOA1 and rabbit apoC-IV. A single strongest window does not
+   0.0206–0.0351 per residue, globular controls (β2-microglobulin, thioredoxin) at 0.0096–0.0101.
+   The groups do not overlap; the script derives the separation as 2.04× at the narrowest and 3.66×
+   at the widest. Human apoC-IV is 0.0300, about three times the controls (2.97–3.12×), 0.0009 from
+   rabbit apoC-IV and 0.0021 from APOA1. A single strongest window does not
    discriminate — the negative controls reach μH ≈ 0.46–0.48 too — which is why density is the reported
    metric.
 
@@ -251,10 +259,25 @@ assay and cannot substitute for one on the human protein.
 
 ## 7. Curation decisions taken
 
+Propagation verdicts (seven `propagation_review` blocks — four IBA, two IEA-with-WITH/FROM, one
+authored ISS):
+
+| row | root_cause | why |
+|---|---|---|
+| GO:0034361 VLDL, IBA | `NO_FAILURE_CORE` | correct node, correct clade, corroborated by the target's own IDAs |
+| GO:0034364 HDL, IBA | `NO_FAILURE_NON_CORE` | correct, but the minor (<20%) pool |
+| GO:0070328 TG homeostasis, IBA | `NO_FAILURE_NON_CORE` | in vivo phenotype, but gain-of-function at supraphysiological dose |
+| GO:0019915 lipid storage, IBA | `SOURCE_WEAK_OR_INFERRED` / `SOURCE_EVIDENCE_WEAK` | one 2025 IBD from one 2008 Huh-7 transfection, now reaching 11 species |
+| GO:0005576, IEA GO_REF:0000044 | `NO_FAILURE_CORE` | SL-0243 "Secreted" is right and the mapping is right |
+| GO:0034361, IEA GO_REF:0000107 | `EVIDENCE_CIRCULAR_OR_REDUNDANT` | donor's own IDA is the same paper as the target's; and the two WITH/FROM ids are one donor |
+| GO:0005543, NEW ISS | `NO_FAILURE_CORE` | rabbit orthologue, direct measurement, conserved helix architecture |
+
+
 - GO:0005319 lipid carrier activity (TAS): **ACCEPT**. The term was renamed from "lipid transporter
   activity" to "lipid carrier activity" on 2026-02-09 and now carries `apolipoprotein` as a narrow
-  synonym, having absorbed the obsoleted GO:0005320 "apolipoprotein", GO:0005321 and GO:0005323
-  (QuickGO `/ontology/go/terms/GO:0005319/complete`). It is the designated apolipoprotein MF term.
+  synonym; its `replaces` list covers the obsoleted GO:0005321 and GO:0005323 (the old high-density
+  and very-low-density lipoprotein MF terms) and it is the `consider` target for the obsoleted
+  GO:0005320 "apolipoprotein" (QuickGO `/ontology/go/terms/GO:0005319/complete`). It is the designated apolipoprotein MF term.
   The 1995 TAS is prediction-level, but the claim is independently supported by PMID:8827523's
   lipid-binding conclusion and by the plasma isolation.
 - GO:0034361 VLDL particle: **ACCEPT** on all rows; this is the core localisation (>80% of the protein).
@@ -279,11 +302,17 @@ Trust gates cleared (`.affinage.log`: "APOC4: trust gates clear"), `faith_pct: 1
 collision. But recall is the problem, exactly as the campaign brief predicts. Its four citations are
 PMID:8530039, PMID:10996355, PMID:29580721 and PMID:33705959. It therefore missed:
 
+APOC4 has 29 experimental GOA rows, but 23 of those are the single HuRI two-hybrid screen; only six
+(3 IDA + 3 IMP) come from hypothesis-driven work, and they trace to exactly four references. Affinage
+cited **none of those four**:
+
 - **PMID:12700345** — the isolation of apoC-IV from human plasma VLDL and the >80% VLDL / remainder HDL
   distribution. This is the single most important experimental paper on the protein and the basis of
-  three GOA rows.
-- **PMID:8827523** — the transgenic-mouse hypertriglyceridaemia study, basis of two more GOA rows.
-- **PMID:18809223** and **PMID:17154273** — the other two experimentally-cited GOA references.
+  two GOA rows (VLDL IDA, HDL IDA).
+- **PMID:8827523** — the transgenic-mouse hypertriglyceridaemia study, basis of two more (VLDL IMP,
+  triglyceride-homeostasis IMP).
+- **PMID:18809223** and **PMID:17154273** — the remaining two experimental rows (lipid-storage IMP,
+  VLDL IDA).
 - **PMID:8576182** — the rabbit characterisation carrying the only direct lipid-binding measurement in
   the family.
 - **PMID:37226733** — the review that states the apoE-displacement mechanism and the

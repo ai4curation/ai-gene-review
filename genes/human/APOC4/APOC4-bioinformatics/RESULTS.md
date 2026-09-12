@@ -103,14 +103,17 @@ Human apoC-IV's three high-moment segments begin at mature residues 26, 56 and
 negative controls reach μH ≈ 0.46–0.48 somewhere in their sequence, because any
 100-residue protein contains some window with a lopsided hydrophobic face. What
 separates the two classes cleanly is how much of the chain is built that way. The
-seven exchangeable apolipoproteins all fall in 0.021–0.035 high-moment segments
-per residue; both globular controls fall at 0.010, a 2–3.5× gap with no overlap.
-Human apoC-IV sits at 0.0300 — inside the apolipoprotein band, between APOC2/C3
-(0.0253) and APOC1 (0.0351), and within 0.002 of both APOA1 (0.0321) and rabbit
-apoC-IV (0.0309), the orthologue for which discoidal-micelle formation with
-phosphatidylcholine was actually measured. No significance test is offered here:
-with nine proteins and one statistic each, the claim is the group separation, not
-a p-value on any individual pair.
+seven exchangeable apolipoproteins fall in 0.0206–0.0351 high-moment segments per
+residue; the two globular controls fall at 0.0096–0.0101. The groups do not
+overlap, and the script derives the separation rather than asserting it: 2.04× at
+the narrowest (mouse apoC-IV against β2-microglobulin) and 3.66× at the widest
+(APOC1 against thioredoxin). Human apoC-IV sits at 0.0300 — inside the
+apolipoprotein band, between APOC2/C3 (0.0253) and APOC1 (0.0351), about three
+times the controls (2.97–3.12×), and differing by 0.0009 from rabbit apoC-IV
+(0.0309), the orthologue for which discoidal-micelle formation with
+phosphatidylcholine was actually measured, and by 0.0021 from APOA1 (0.0321). No
+significance test is offered here: with nine proteins and one statistic each, the
+claim is the group separation, not a p-value on any individual pair.
 
 This supports, at the sequence level, that human apoC-IV is built like an
 exchangeable, lipid-surface-seeking apolipoprotein, and so supports retaining

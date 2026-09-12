@@ -134,13 +134,35 @@ def main() -> int:
               f"{r['mean_H_whole_chain']:>7} {r['n_segments_muH_ge_0.35']:>5} "
               f"{r['segment_density_per_residue']:>8}  {r['role']}")
 
+    apo = [r for r in rows if "negative control" not in r["role"]]
+    ctl = [r for r in rows if "negative control" in r["role"]]
+    apo_d = [r["segment_density_per_residue"] for r in apo]
+    ctl_d = [r["segment_density_per_residue"] for r in ctl]
+    print(f"\nsegment density, apolipoproteins (n={len(apo)}): "
+          f"{min(apo_d):.4f}-{max(apo_d):.4f}")
+    print(f"segment density, globular controls (n={len(ctl)}): "
+          f"{min(ctl_d):.4f}-{max(ctl_d):.4f}")
+    print(f"group separation: {min(apo_d)/max(ctl_d):.2f}x to {max(apo_d)/min(ctl_d):.2f}x, "
+          f"overlap={'yes' if min(apo_d) <= max(ctl_d) else 'none'}")
+
     tgt = next(r for r in rows if r["accession"] == "P55056")
+    th = tgt["segment_density_per_residue"]
+    print(f"APOC4_HUMAN density {th:.4f} = {th/max(ctl_d):.2f}x-{th/min(ctl_d):.2f}x the controls")
+    for other in ("P55057", "P02647"):
+        o = next(r for r in rows if r["accession"] == other)
+        print(f"  |APOC4_HUMAN - {o['id']}| = "
+              f"{abs(th - o['segment_density_per_residue']):.4f}")
     print(f"\nAPOC4_HUMAN strongest window (mature residue {tgt['max_muH_start']}): {tgt['max_muH_window']}")
     print(f"APOC4_HUMAN segments with muH >= 0.35 starting at mature residues: {tgt['segment_starts']}")
 
     with open("amphipathic_helix_result.json", "w") as fh:
         json.dump({"window": WINDOW, "angle_deg": 100.0,
-                   "scale": "Eisenberg normalized consensus", "rows": rows}, fh, indent=2)
+                   "scale": "Eisenberg normalized consensus",
+                   "apolipoprotein_density_range": [min(apo_d), max(apo_d)],
+                   "control_density_range": [min(ctl_d), max(ctl_d)],
+                   "separation_fold": [round(min(apo_d) / max(ctl_d), 2),
+                                       round(max(apo_d) / min(ctl_d), 2)],
+                   "rows": rows}, fh, indent=2)
     print("\nwrote amphipathic_helix_result.json")
     return 0
 
