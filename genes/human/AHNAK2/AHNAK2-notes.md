@@ -286,8 +286,10 @@ substitutions (the ACRV1 `Q86WV8` failure mode) — reporting the negative.
 plus one unassigned), 118 distinct partners, 11
 detection methods. `two hybrid array` / `two hybrid prey pooling approach` /
 `validated two hybrid` at 19/19/18 is the familiar one-screen-counted-three-ways
-pattern, so UniProt's `NbExp=3` entries are not three experiments. 68 of the 164
-records tested a short isoform (`Q8IVF2-3` 62, `Q8IVF2-2` 6).
+pattern, so UniProt's `NbExp=3` entries are not three experiments. Records by chain: `Q8IVF2` 96,
+`Q8IVF2-3` 62, `Q8IVF2-2` 6 - and only the 6 `Q8IVF2-2` records are a short
+construct (793 aa). `Q8IVF2-3` is 5695 aa with the PDZ intact, so it carries
+no fragment caveat; I had wrongly called both isoforms short.
 
 The inversion: **none of those 118 partners reached GOA.** GOA's two
 `GO:0005515` rows name DYSF and MYOF, and neither appears anywhere in IntAct's
@@ -469,3 +471,66 @@ Two further points recorded for the AHNAK reviewer:
 2. **The PDZ measurement.** `GO:0042803` from PMID:24675079 would be wrong for
    AHNAK — the structure's two chains are PRX and AHNAK2, and AHNAK is not in
    it. Checked: the AHNAK review does not propose it.
+
+## Review round 2 (PR #3000, `ai4c-reviewer`)
+
+**Conceded, and the reviewer was right.** I had written that "68 of the 164
+IntAct records tested a short isoform (`Q8IVF2-3` 62, `Q8IVF2-2` 6)". Only the
+**6** `Q8IVF2-2` records did. Measured from UniProt rather than inferred:
+`Q8IVF2-1` 5795 aa, `Q8IVF2-2` **793 aa**, `Q8IVF2-3` **5695 aa** — isoform 3
+lacks only the N-terminal 100 residues (`VSP_031551`, `VAR_SEQ 1..100`) and
+**retains the PDZ domain**, at 12–93 in its own numbering. So the 62
+`Q8IVF2-3` records carry no fragment caveat at all, and my sentence made the
+interaction data look weaker than it is. Corrected in three places with a script
+that asserts each anchor before replacing and re-greps afterwards; 0 residual
+occurrences.
+
+Note the shape of the error: the review YAML's own isoform argument — the one
+that carries weight, that AHNAK2 has no small *N-terminal* isoform analogous to
+AHNAK's — was correct throughout, because it is about isoform 2. The mistake was
+confined to a side observation where I generalised "isoform accession" to "short
+isoform" without measuring. That is the ACTL10 lesson in miniature: check the
+length before reasoning from it.
+
+**Added:** the `history/` record required by CLAUDE.md
+(`history/genes/human/AHNAK2/`), which I had simply omitted.
+
+**Suggestions taken:**
+
+- `RGD:619960` moved from `CIRCULAR_OR_REDUNDANT` to
+  `SUPPORTS_SOURCE_BUT_NOT_TARGET`. Rat Prx does hold nucleus by EXP, and the
+  target has no stronger evidence, so neither branch of the
+  circular/redundant definition really fits; matching its two periaxin siblings
+  on the same row is the better curation object. The observation that its EXP is
+  the *same paper* as mouse Prx's — so it adds a species rather than an
+  independent characterisation — is kept in the `comment`, where it belongs as a
+  weight note rather than a status.
+- The sarcolemma non-core rationale was inconsistent: I justified it as "not
+  restricted to muscle" while treating costamere, which is *more* muscle-specific,
+  as core. Rewritten to the actual reason — that row's provenance is a
+  non-traceable statement from a paper about AHNAK, and costamere states the same
+  compartment precisely with an AHNAK2-specific reagent behind it.
+- `GO:0009306` ISS: recorded that mouse Ahnak2 carries no `GO:0009306` annotation
+  for the ISS to inherit, so the entity is the sequence anchor and the proposal
+  implicitly proposes the mouse annotation too.
+
+**Not actioned, with reason:** the permanent "no annotations reference available
+deep research files" warning. Adding
+`file:human/AHNAK2/AHNAK2-deep-research-affinage.md` is blocked by the
+pre-write hook, which computes its project root from its own location and so
+validates against the main checkout rather than this agent worktree; any `file:`
+path introduced by this PR fails there while resolving correctly under
+`just validate` and in CI. Tried twice, blocked both times. The substantive point
+— that affinage over-specified the Marg sentence to "no **AHNAK2** expression"
+when the abstract says "no **AHNAK** expression" — is recorded in
+`reference_review` on PMID:20833135, which is the field designed for exactly that
+judgement.
+
+**On the reviewer's own caveat:** it could not run `check_terms.py` (no network),
+and flagged the "costamere is not under sarcolemma" ancestor query as
+load-bearing and unverified on its side. Re-ran it. QuickGO gives `GO:0043034`
+thirteen `is_a`/`part_of` ancestors — `GO:0005575`, `GO:0005622`, `GO:0005737`,
+`GO:0030016`, `GO:0043226`, `GO:0043228`, `GO:0043229`, `GO:0043232`,
+`GO:0043292`, `GO:0099080`, `GO:0099081`, `GO:0099512`, `GO:0110165` — and
+`GO:0042383` is **not** among them, while `GO:0030315 T-tubule` **is** a
+descendant of `GO:0042383`. Both claims hold.

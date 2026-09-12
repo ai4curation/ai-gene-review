@@ -205,8 +205,11 @@ methods (`anti tag coip` 55, `two hybrid array`
 three two-hybrid sub-methods are the familiar one-screen-counted-three-ways
 pattern, so UniProt's `NbExp=3` entries are not three experiments.
 
-68 of the 164 records tested a short isoform (`Q8IVF2-3` 62, `Q8IVF2-2` 6)
-rather than the 5795-aa chain.
+Records by AHNAK2 chain: `Q8IVF2` 96, `Q8IVF2-3` 62, `Q8IVF2-2` 6. Only the
+**6** `Q8IVF2-2` records tested a short construct: that isoform is 793 aa
+(residues 5003-5795). `Q8IVF2-3` is **5695 aa** - the canonical chain minus
+its first 100 residues, PDZ domain intact - so those 62 records are not a
+fragment caveat.
 
 GOA's only two `GO:0005515` rows name `O75923` (DYSF) and `Q9NZM1` (MYOF), and
 **neither appears anywhere in IntAct's AHNAK2 record**. So the usual finding is

@@ -7,8 +7,9 @@ for one experiment. Expand the records and count distinct experiments and
 distinct detection methods instead.
 
 Also records which AHNAK2 isoform each interaction was measured on: UniProt puts
-every one of them on Q8IVF2-2 or Q8IVF2-3, the short isoforms, not on the
-5795-aa canonical chain.
+most of them on an isoform accession rather than on Q8IVF2-1. Only
+Q8IVF2-2 (793 aa) is genuinely short; Q8IVF2-3 is 5695 aa, lacking only the
+N-terminal 100 residues and retaining the PDZ domain.
 
 Run: uv run python intact_partners.py
 """
