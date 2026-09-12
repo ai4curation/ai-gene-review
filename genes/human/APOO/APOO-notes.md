@@ -43,7 +43,9 @@ subunit:
 Koob et al. tried to reconcile the two identities by proposing three coexisting forms
 [PMID:25764979 "We demonstrate that human MIC26 exists in three distinct forms: (1) a glycosylated and secreted 55kDa protein, (2) an ER/Golgi-resident form thereof, and (3) a non-glycosylated 22kDa mitochondrial protein."].
 That three-form model is the direct source of the `Secreted`, `Golgi apparatus membrane` and
-`Endoplasmic reticulum membrane` lines still in the UniProt record, and of six GOA rows.
+`Endoplasmic reticulum membrane` lines still in the UniProt record, and hence of six GOA rows:
+three IDAs cited to this paper and the three `GO_REF:0000044` IEAs generated from those UniProt
+lines.
 
 ### 1.3 The three-form model was retracted in substance in 2023
 
@@ -70,11 +72,10 @@ The tell was already visible in the 2015 companion data paper, unremarked
 — an antibody signal that does not go down when the gene is knocked down is, in hindsight, the
 definition of non-specific.
 
-**Curation consequence.** Six GOA rows assert a secretory/ER/Golgi identity: `GO:0005576` x4,
-`GO:0000139` x2, `GO:0005789` x2 (eight rows in total across the three terms). All of them
-trace to the 55 kDa band, directly (EXP/IDA on PMID:16956892 and PMID:25764979), through
-UniProt's subcellular-location vocabulary (the three `GO_REF:0000044` IEAs), or by ISS from a
-pig proteomics hit. They are marked REMOVE. This is not second-guessing a curator from an
+**Curation consequence.** Eight GOA rows assert a secretory/ER/Golgi identity: `GO:0005576` x4,
+`GO:0000139` x2 and `GO:0005789` x2 — the six above plus the `GO:0005576` EXP on PMID:16956892
+and the `GO:0005576` ISS from pig. All eight trace to the 55 kDa band and all eight are marked
+REMOVE (the ninth REMOVE in this review is the unrelated SAM-complex row, §4). This is not second-guessing a curator from an
 abstract: it is following the primary literature to the paper, by the original authors, that
 withdrew the observation using knockouts.
 
@@ -115,8 +116,9 @@ resolves the assembly ladder
 [PMID:26477565 "We find three main forms of the complex: A) The MICOS complex, containing all the MICOS proteins, B) a membrane bridging subcomplex, containing in addition SAMM50, MTX2 and the previously uncharacterized MTX3, and C) the complete MIB complex containing in addition DNAJC11 and MTX1."].
 MIC26 and MIC27 are the family's late additions in evolution
 [PMID:26477565 "Mic23 and Mic27 appear to be the youngest MICOS proteins, as they only occur in opisthokonts."],
-which is exactly what PANTHER encodes: PTHR14564 contains only opisthokont MIC26/MIC27
-sequences.
+which is exactly what PANTHER encodes: PTHR14564 is named "MICOS COMPLEX SUBUNIT MIC26 /
+MIC27 FAMILY MEMBER" and every one of the nine UniProt-reviewed members in the committed
+`PTHR14564-entries.csv` is a MIC26 or MIC27 orthologue.
 
 ### 2.2 Crista junction formation — core, but partially redundant with MIC27
 
@@ -220,10 +222,11 @@ Donors resolved:
   evidences the PAINT curator weighed when placing the IBD. Not circular, and not to be marked
   `CIRCULAR_OR_REDUNDANT`.
 
-Node placement: PTHR14564 contains only MIC26 and MIC27 orthologues (9 entries in
-`PTHR14564-entries.csv`: human/mouse/bovine MIC26, human/mouse/bovine/orangutan/chicken MIC27,
+Node placement: all nine UniProt-reviewed members in `PTHR14564-entries.csv` are MIC26 or
+MIC27 orthologues (human/mouse/bovine MIC26; human/mouse/bovine/orangutan/chicken MIC27;
 *C. elegans* moma-1). Both human paralogues and the single fly gene receive IBA from
-PTN001803267, so the node sits at or near the family root, before the MIC26/MIC27 duplication.
+PTN001803267 (checked in QuickGO), so the node sits at or near the family root, before the
+MIC26/MIC27 duplication.
 APOO is inside the inheriting clade with its own experimental evidence for both terms, and
 there is no IRD/IKR anywhere in the slice. Both IBAs: `NO_FAILURE_CORE`.
 
