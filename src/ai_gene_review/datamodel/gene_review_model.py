@@ -1374,6 +1374,24 @@ class PredictionErrorTypeEnum(str, Enum):
     """
 
 
+class ReferenceReplacementReasonEnum(str, Enum):
+    """
+    Reason for a manually verified identifier replacement, distinct from the empirical standing of a publication's findings.
+    """
+    DUPLICATE_RECORD = "DUPLICATE_RECORD"
+    """
+    Source record was deleted or merged as a duplicate of the target record.
+    """
+    REPLACED_RECORD = "REPLACED_RECORD"
+    """
+    The source authority explicitly replaced this record with the target record.
+    """
+    WRONG_IDENTIFIER = "WRONG_IDENTIFIER"
+    """
+    The original citation used the wrong identifier; the target identifies the intended paper.
+    """
+
+
 class ReferenceRelevanceEnum(str, Enum):
     """
     Reviewer's assessment of how relevant a reference is to the gene's function and review.
@@ -1977,7 +1995,20 @@ class ReferenceReview(ConfiguredBaseModel):
 
     relevance: Optional[ReferenceRelevanceEnum] = Field(default=None, description="""Reviewer judgment of how relevant the reference is to the gene's function and this review.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReview']} })
     correctness: Optional[ReferenceCorrectnessEnum] = Field(default=None, description="""Reviewer's overall assessment of a reference's trustworthiness - both citation correctness (the identifier resolves to the intended paper that supports its use) and scientific soundness of that paper's claim.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReview']} })
-    review_notes: Optional[str] = Field(default=None, description="""Free-text note explaining the relevance/correctness judgment (e.g. what was verified, or why a citation is wrong, disputed, or low quality).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReview', 'FindingReview']} })
+    review_notes: Optional[str] = Field(default=None, description="""Free-text note explaining the relevance/correctness judgment (e.g. what was verified, or why a citation is wrong, disputed, or low quality).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReview', 'ReferenceReplacement', 'FindingReview']} })
+    replacement: Optional[ReferenceReplacement] = Field(default=None, description="""Manually established replacement for this reference identifier. This records identifier provenance, not a biological contradiction or retraction, and does not implicitly redirect supporting_text to another publication.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReview']} })
+
+
+class ReferenceReplacement(ConfiguredBaseModel):
+    """
+    A curated identifier remapping. Keep the original Reference.id and original_reference_id; declare the target in references and explicitly cite it in supported_by when quoting its text. Record how the mapping was established in review_notes. A duplicate-record deletion is not a retraction of the paper.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
+
+    reference_id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReplacement', 'SupportingTextInReference'],
+         'implements': ['dcterms:references']} })
+    review_notes: Optional[str] = Field(default=None, description="""Free-text note explaining the relevance/correctness judgment (e.g. what was verified, or why a citation is wrong, disputed, or low quality).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReview', 'ReferenceReplacement', 'FindingReview']} })
+    reason: ReferenceReplacementReasonEnum = Field(default=..., description="""Why the source identifier should resolve to the target reference.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReplacement', 'Review']} })
 
 
 class Finding(ConfiguredBaseModel):
@@ -2002,11 +2033,33 @@ class FindingReview(ConfiguredBaseModel):
     """
     Manual reviewer assessment of a specific finding within a reference - in particular whether it remains current, is disputed, or has been overturned/superseded by later evidence. This is finer-grained than reference_review (which assesses the whole reference); a paper may contain some findings that stand and others that are overturned. All fields optional and reviewer-supplied.
     """
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review',
+         'slot_usage': {'supported_by': {'description': 'Evidence for this assessment, '
+                                                        'including exact snippets from '
+                                                        'the papers that contradict, '
+                                                        'overturn, or corroborate the '
+                                                        'original finding. Each '
+                                                        'snippet is attributed to its '
+                                                        'explicit reference_id, not '
+                                                        "the parent finding's "
+                                                        'publication.',
+                                         'name': 'supported_by'}}})
 
     finding_status: Optional[FindingReviewStatusEnum] = Field(default=None, description="""Reviewer's assessment of the empirical standing of a specific finding in light of other evidence (e.g. whether it has been disputed or overturned).""", json_schema_extra = { "linkml_meta": {'domain_of': ['FindingReview']} })
     superseded_by: Optional[list[str]] = Field(default=None, description="""Reference(s) that dispute, correct, or overturn this finding. Used together with finding_status DISPUTED or OVERTURNED.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FindingReview']} })
-    review_notes: Optional[str] = Field(default=None, description="""Free-text note explaining the relevance/correctness judgment (e.g. what was verified, or why a citation is wrong, disputed, or low quality).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReview', 'FindingReview']} })
+    review_notes: Optional[str] = Field(default=None, description="""Free-text note explaining the relevance/correctness judgment (e.g. what was verified, or why a citation is wrong, disputed, or low quality).""", json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReview', 'ReferenceReplacement', 'FindingReview']} })
+    supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Evidence for this assessment, including exact snippets from the papers that contradict, overturn, or corroborate the original finding. Each snippet is attributed to its explicit reference_id, not the parent finding's publication.""", json_schema_extra = { "linkml_meta": {'domain_of': ['FindingReview',
+                       'Review',
+                       'CoreFunction',
+                       'ProposedOntologyTerm',
+                       'RuleReview',
+                       'ParsimonyAssessment',
+                       'LiteratureSupportAssessment',
+                       'ConditionOverlapAssessment',
+                       'GOSpecificityAssessment',
+                       'TaxonomicScopeAssessment',
+                       'PredictionAssessment'],
+         'recommended': True} })
 
 
 class SupportingTextInReference(ConfiguredBaseModel):
@@ -2015,7 +2068,7 @@ class SupportingTextInReference(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://ai4curation.io/ai-gene-review'})
 
-    reference_id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['SupportingTextInReference'],
+    reference_id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReplacement', 'SupportingTextInReference'],
          'implements': ['dcterms:references']} })
     supporting_text: Optional[str] = Field(default=None, description="""Supporting text from the publication. This should be exact substrings. Different substrings can be broken up by '...'s. These substrings will be checked against the actual text of the paper. If editorialization is necessary, put this in square brackets (this is not checked). For example, you can say '...[CFAP300 shows] transport within cilia is IFT dependent...'""", json_schema_extra = { "linkml_meta": {'domain_of': ['Finding',
                        'SupportingTextInReference',
@@ -3858,7 +3911,7 @@ class ExistingAnnotation(ConfiguredBaseModel):
     extensions: Optional[list[AnnotationExtension]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ExistingAnnotation']} })
     negated: Optional[bool] = Field(default=None, description="""Whether the term is negated""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExistingAnnotation', 'RuleCondition']} })
     evidence_type: EvidenceType = Field(default=..., description="""Evidence code (e.g., IDA, IBA, ISS, TAS)""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExistingAnnotation']} })
-    original_reference_id: Optional[str] = Field(default=None, description="""ID of the original reference""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExistingAnnotation']} })
+    original_reference_id: Optional[str] = Field(default=None, description="""ID of the original source reference, preserved as supplied by GOA/UniProt. Curate identifier replacements in references.reference_review.replacement and cite the actual evidence source in review.supported_by; do not rewrite this provenance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExistingAnnotation']} })
     retired: Optional[bool] = Field(default=None, description="""Whether the annotation is retired or replaced""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExistingAnnotation']} })
     isoform: Optional[str] = Field(default=None, description="""UniProt isoform identifier (e.g., \"P19544-1\" for WT1 isoform 1). Only populated when the annotation is specific to a particular isoform rather than the canonical protein sequence. Note that just because an experiment used a particular isoform doesn't mean the annotation is isoform-specific - it may apply to all isoforms. Use this field only when there is clear evidence the annotation is isoform-specific.""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExistingAnnotation']} })
     supporting_entities: Optional[list[str]] = Field(default=None, description="""IDs of the supporting entities""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExistingAnnotation']} })
@@ -3882,12 +3935,13 @@ class Review(ConfiguredBaseModel):
                        'PredictionAssessment'],
          'recommended': True} })
     action: ActionEnum = Field(default=..., description="""Action to be taken""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review', 'RuleReview']} })
-    reason: Optional[str] = Field(default=None, description="""Reason for the action""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review'], 'recommended': True} })
+    reason: Optional[str] = Field(default=None, description="""Reason for the action""", json_schema_extra = { "linkml_meta": {'domain_of': ['ReferenceReplacement', 'Review'], 'recommended': True} })
     proposed_replacement_terms: Optional[list[Term]] = Field(default=None, description="""If the action is MODIFY, then this is a list of proposed replacement terms""", json_schema_extra = { "linkml_meta": {'comments': ['note there is a separate rule that this is required IF the '
                       'action is MODIFY'],
          'domain_of': ['Review']} })
     additional_reference_ids: Optional[list[str]] = Field(default=None, description="""IDs of the references""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review']} })
-    supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Review',
+    supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['FindingReview',
+                       'Review',
                        'CoreFunction',
                        'ProposedOntologyTerm',
                        'RuleReview',
@@ -4018,7 +4072,8 @@ class CoreFunction(ConfiguredBaseModel):
                        'RuleReview',
                        'PredictionReview'],
          'recommended': True} })
-    supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Review',
+    supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['FindingReview',
+                       'Review',
                        'CoreFunction',
                        'ProposedOntologyTerm',
                        'RuleReview',
@@ -4088,7 +4143,8 @@ class ProposedOntologyTerm(ConfiguredBaseModel):
     justification: Optional[str] = Field(default=None, description="""Justification for why this term is needed""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyTerm']} })
     proposed_parent: Optional[Term] = Field(default=None, description="""Proposed parent term in the ontology hierarchy""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyTerm']} })
     proposed_mappings: Optional[list[TermMapping]] = Field(default=None, description="""Proposed mappings to equivalent terms in other ontologies""", json_schema_extra = { "linkml_meta": {'domain_of': ['ProposedOntologyTerm']} })
-    supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Review',
+    supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['FindingReview',
+                       'Review',
                        'CoreFunction',
                        'ProposedOntologyTerm',
                        'RuleReview',
@@ -4220,7 +4276,8 @@ class RuleReview(ConfiguredBaseModel):
     go_specificity: Optional[GOSpecificityAssessment] = Field(default=None, description="""Assessment of GO term specificity""", json_schema_extra = { "linkml_meta": {'domain_of': ['RuleReview']} })
     taxonomic_scope: Optional[TaxonomicScopeAssessment] = Field(default=None, description="""Assessment of taxonomic restriction appropriateness""", json_schema_extra = { "linkml_meta": {'domain_of': ['RuleReview']} })
     confidence: Optional[float] = Field(default=None, description="""Overall confidence in the rule (0.0 to 1.0)""", ge=0.0, le=1.0, json_schema_extra = { "linkml_meta": {'domain_of': ['RuleReview']} })
-    supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this review""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review',
+    supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this review""", json_schema_extra = { "linkml_meta": {'domain_of': ['FindingReview',
+                       'Review',
                        'CoreFunction',
                        'ProposedOntologyTerm',
                        'RuleReview',
@@ -4449,7 +4506,8 @@ class ParsimonyAssessment(ConfiguredBaseModel):
                        'ConditionOverlapAssessment',
                        'GOSpecificityAssessment',
                        'TaxonomicScopeAssessment']} })
-    supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review',
+    supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['FindingReview',
+                       'Review',
                        'CoreFunction',
                        'ProposedOntologyTerm',
                        'RuleReview',
@@ -4494,7 +4552,8 @@ class LiteratureSupportAssessment(ConfiguredBaseModel):
                        'ConditionOverlapAssessment',
                        'GOSpecificityAssessment',
                        'TaxonomicScopeAssessment']} })
-    supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review',
+    supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['FindingReview',
+                       'Review',
                        'CoreFunction',
                        'ProposedOntologyTerm',
                        'RuleReview',
@@ -4539,7 +4598,8 @@ class ConditionOverlapAssessment(ConfiguredBaseModel):
                        'ConditionOverlapAssessment',
                        'GOSpecificityAssessment',
                        'TaxonomicScopeAssessment']} })
-    supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review',
+    supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['FindingReview',
+                       'Review',
                        'CoreFunction',
                        'ProposedOntologyTerm',
                        'RuleReview',
@@ -4584,7 +4644,8 @@ class GOSpecificityAssessment(ConfiguredBaseModel):
                        'ConditionOverlapAssessment',
                        'GOSpecificityAssessment',
                        'TaxonomicScopeAssessment']} })
-    supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review',
+    supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['FindingReview',
+                       'Review',
                        'CoreFunction',
                        'ProposedOntologyTerm',
                        'RuleReview',
@@ -4629,7 +4690,8 @@ class TaxonomicScopeAssessment(ConfiguredBaseModel):
                        'ConditionOverlapAssessment',
                        'GOSpecificityAssessment',
                        'TaxonomicScopeAssessment']} })
-    supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review',
+    supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting text from literature for this assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['FindingReview',
+                       'Review',
                        'CoreFunction',
                        'ProposedOntologyTerm',
                        'RuleReview',
@@ -4738,7 +4800,8 @@ class PredictionAssessment(ConfiguredBaseModel):
                        'Review',
                        'InterPro2GORedundancy',
                        'PredictionAssessment']} })
-    supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting evidence for the assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['Review',
+    supported_by: Optional[list[SupportingTextInReference]] = Field(default=None, description="""Supporting evidence for the assessment""", json_schema_extra = { "linkml_meta": {'domain_of': ['FindingReview',
+                       'Review',
                        'CoreFunction',
                        'ProposedOntologyTerm',
                        'RuleReview',
@@ -4759,6 +4822,7 @@ FunctionalIsoformMapping.model_rebuild()
 Term.model_rebuild()
 Reference.model_rebuild()
 ReferenceReview.model_rebuild()
+ReferenceReplacement.model_rebuild()
 Finding.model_rebuild()
 FindingReview.model_rebuild()
 SupportingTextInReference.model_rebuild()

@@ -189,7 +189,9 @@ slots:
   original_reference_id:
     range: Reference
     inlined: false
-    description: ID of the original reference
+    description: ID of the original source reference, preserved as supplied by GOA/UniProt.
+      Curate identifier replacements in references.reference_review.replacement and cite
+      the actual evidence source in review.supported_by; do not rewrite this provenance.
   retired:
     range: boolean
     description: Whether the annotation is retired or replaced
@@ -211,6 +213,12 @@ slots:
     description: Manual reviewer assessment of this reference (relevance, and citation
       correctness / scientific soundness). Reviewer-supplied, distinct from the
       machine-fetched id/title.
+  replacement:
+    range: ReferenceReplacement
+    inlined: true
+    description: Manually established replacement for this reference identifier. This records
+      identifier provenance, not a biological contradiction or retraction, and does not
+      implicitly redirect supporting_text to another publication.
   relevance:
     range: ReferenceRelevanceEnum
     description: Reviewer judgment of how relevant the reference is to the gene's function
@@ -474,6 +482,21 @@ classes:
       - relevance
       - correctness
       - review_notes
+      - replacement
+
+  ReferenceReplacement:
+    description: A curated identifier remapping. Keep the original Reference.id and
+      original_reference_id; declare the target in references and explicitly cite it in
+      supported_by when quoting its text. Record how the mapping was established in
+      review_notes. A duplicate-record deletion is not a retraction of the paper.
+    slots:
+      - reference_id
+      - review_notes
+    attributes:
+      reason:
+        range: ReferenceReplacementReasonEnum
+        required: true
+        description: Why the source identifier should resolve to the target reference.
 
   Finding:
     description: A finding is a statement about a gene, which is supported by a reference.
@@ -495,6 +518,12 @@ classes:
       - finding_status
       - superseded_by
       - review_notes
+      - supported_by
+    slot_usage:
+      supported_by:
+        description: Evidence for this assessment, including exact snippets from the papers
+          that contradict, overturn, or corroborate the original finding. Each snippet is
+          attributed to its explicit reference_id, not the parent finding's publication.
 
   SupportingTextInReference:
     description: A supporting text in a reference.
@@ -3300,6 +3329,17 @@ enums:
           noncatalytic accessory subunit. Participation in the complex or its
           biological process does not establish that the subunit catalyzes the reaction.
 
+
+  ReferenceReplacementReasonEnum:
+    description: Reason for a manually verified identifier replacement, distinct from
+      the empirical standing of a publication's findings.
+    permissible_values:
+      DUPLICATE_RECORD:
+        description: Source record was deleted or merged as a duplicate of the target record.
+      REPLACED_RECORD:
+        description: The source authority explicitly replaced this record with the target record.
+      WRONG_IDENTIFIER:
+        description: The original citation used the wrong identifier; the target identifies the intended paper.
 
   ReferenceRelevanceEnum:
     description: Reviewer's assessment of how relevant a reference is to the gene's function and review.
