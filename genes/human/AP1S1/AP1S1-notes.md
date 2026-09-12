@@ -111,10 +111,12 @@ Its three naming artefacts disagree with each other:
 | `cache/ontologies/go.tsv` (2026-03-21) and `cache/go/terms.csv` (2026-05-08) | `signal sequence binding` — **stale** |
 
 The two in-repo GO snapshots agree with each other and are both out of date, which makes
-them look corroborating when they are one stale reading. This is the
-[GO:0140309 lesson](../../../projects/IBA_REVIEW.md) again: never infer a term's scope from
-its label, and when a label is contested, decide on the definition and the `is_a` closure,
-which is what the review now does.
+them look corroborating when they are one stale reading. This is the same lesson
+[UNFOLDED_PROTEIN_BINDING.md](../../../projects/UNFOLDED_PROTEIN_BINDING.md) records for
+GO:0140309 — "A relabel is not a redefinition" — reached there from the opposite direction,
+where a synonym was *promoted* to the primary label. Never infer a term's scope from its
+label; when a label is contested, decide on the definition and the `is_a` closure, which is
+what the review now does.
 
 ## 3. Bioinformatics: the site is retained, but retention is not the evidence
 
