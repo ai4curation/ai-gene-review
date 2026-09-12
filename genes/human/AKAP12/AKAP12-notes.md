@@ -139,12 +139,15 @@ labs; UniProt records one of them. Filed as an additive UniProt suggestion, not 
 IntAct `findInteractions/Q02952` returns 128 records over 105 distinct partners, expanded
 and counted by **distinct publication + detection method**, never by `NbExp`.
 
-| partner | rows | independent evidence | verdict |
-|---|---|---|---|
-| PRKAR2A `P13861` | 2 | `filter binding` (PMID:16642035, direct in vitro) + `anti tag coip` (OpenCell) + human region mapping (PMID:9000000) | **MODIFY → `GO:0034237`** |
-| CTNNB1 `P35222` | 2 | `display technology` (mRNA display) + `anti tag coip` (OpenCell) — two orthogonal methods, two groups | **MODIFY → `GO:0008013`** |
-| FHL1 `Q13642` | 3 | Y2H ×2 (different libraries/labs) + OpenCell coIP | `KEEP_AS_NON_CORE` |
-| EGFR `P00533` | 2 | **both** `ub reconstruction` (split-ubiquitin MYTH), overlapping authors (Curak, Stagljar) | **`MARK_AS_OVER_ANNOTATED`** ×2 |
+Partner promiscuity was measured too (total IntAct interaction records, against AKAP12's
+**128**), because "two orthogonal methods recovered it" means much less for a hub:
+
+| partner | rows | IntAct records | independent evidence | verdict |
+|---|---|---|---|---|
+| PRKAR2A `P13861` | 2 | **231** | `filter binding` (PMID:16642035, direct in vitro) + OpenCell coIP + human region mapping (PMID:9000000) | **MODIFY → `GO:0034237`** |
+| FHL1 `Q13642` | 3 | **97** (78 partners) | Y2H ×2 (different libraries/labs) + OpenCell coIP | `KEEP_AS_NON_CORE` |
+| CTNNB1 `P35222` | 2 | **1138** | mRNA display + OpenCell coIP | **`MARK_AS_OVER_ANNOTATED`** |
+| EGFR `P00533` | 2 | **2526** | **both** split-ubiquitin MYTH, overlapping authors (Curak, Stagljar) | **`MARK_AS_OVER_ANNOTATED`** |
 
 All four partners resolve to **reviewed canonical Swiss-Prot entries with the expected
 lengths** — no TrEMBL/ORFeome substitutions of the kind found on ACRV1. Reporting that as a
@@ -152,7 +155,56 @@ negative result of a check that was run.
 
 The EGFR call is the `NbExp` lesson in a new guise: two *publications* but one assay
 platform and an overlapping author group, so they are not independent replication. Neither
-paper names AKAP12 anywhere in its cached text.
+paper names AKAP12 anywhere in its cached text. The 2526 records — a 20-fold hub — make the
+call quantitative rather than merely sceptical.
+
+### I proposed `GO:0008013` for CTNNB1 and then withdrew it
+
+Worth recording as a reversal, not hidden. The first pass reasoned "two orthogonal methods
+from two unrelated groups ⇒ name the partner" and proposed MODIFY → `GO:0008013 beta-catenin
+binding`. Three things then argued against it, and only one of them was new:
+
+1. **Promiscuity, measured**: β-catenin carries **1138** IntAct records against AKAP12's
+   128. Recovery in two abundance-sensitive screens is weak evidence of a specific pairing.
+2. **Neither method shows direct binding**, which is what `GO:0008013` asserts. mRNA display
+   of fragments and IP-MS of endogenous complexes both report co-membership readily.
+3. **A counter-indication I had already written down and then over-ridden**: the only study
+   that examined AKAP binding at endothelial junctions attributes VE-cadherin and β-catenin
+   binding to **AKAP220, not AKAP12** (`PMID:25188285`). I had put that in the reason as a
+   caveat while still proposing the term — which is the shape of rationalising a fact rather
+   than following it.
+
+A corpus cross-check made the first pass look worse: across 4796 merged reviews,
+`PMID:20195357` rows resolve **14 MARK_AS_OVER_ANNOTATED / 7 KEEP_AS_NON_CORE / 3 REMOVE /
+1 MODIFY** — my call was the singleton. Both CTNNB1 rows now share one verdict, because a
+partner split across two verdicts is the AADACL2/3/4 defect.
+
+### Cross-review consistency check (4796 merged reviews)
+
+Since `PTHR23209` is a single-gene orthogroup there is no paralogue to compare against, so
+the analogous check is *by shared reference*. Result after the CTNNB1 correction:
+
+| reference | corpus spread | AKAP12 |
+|---|---|---|
+| `PMID:21423176` `GO:0005925` | 15 KEEP_AS_NON_CORE / 7 over-ann. / 5 ACCEPT / 1 REMOVE | KEEP_AS_NON_CORE — **majority** |
+| `PMID:21900206` `GO:0005515` | 11 KEEP_AS_NON_CORE / 7 over-ann. / 3 REMOVE / 2 MODIFY | KEEP_AS_NON_CORE — **majority** |
+| `PMID:23414517` `GO:0005515` | 6 KEEP_AS_NON_CORE / 5 over-ann. / 2 REMOVE | KEEP_AS_NON_CORE — **majority** |
+| `PMID:31980649` `GO:0005515` | 24 over-ann. / 14 REMOVE / 12 KEEP_AS_NON_CORE | over-annotated — **majority** |
+| `PMID:20195357` `GO:0005515` | 14 over-ann. / 7 KEEP_AS_NON_CORE / 3 REMOVE | over-annotated — **majority** |
+| `GO_REF:0000107` `GO:0043025` | 30 KEEP_AS_NON_CORE / 6 over-ann. / 6 ACCEPT | KEEP_AS_NON_CORE — **majority** |
+| `GO_REF:0000107` `GO:0032496` | 12 KEEP_AS_NON_CORE / 9 over-ann. / 1 ACCEPT | KEEP_AS_NON_CORE — **majority** |
+| `PMID:20029029` `GO:0005515` | 6 KEEP_AS_NON_CORE / 4 over-ann. / 3 UNDECIDED / 2 REMOVE | over-annotated — **minority, deliberate** |
+| `PMID:35271311` `GO:0005515` | 108 over-ann. / 58 KEEP_AS_NON_CORE / 25 REMOVE / 14 MODIFY | MODIFY (PRKAR2A only) — **minority, deliberate** |
+
+Two deliberate divergences, both defensible and both stated rather than silent:
+
+- **`PMID:20029029`**: the corpus leans KEEP_AS_NON_CORE here but leans
+  MARK_AS_OVER_ANNOTATED (24/57) for `PMID:31980649` — **the same assay platform and an
+  overlapping author group**. Treating the two identically is a consistency *improvement*;
+  the corpus's split treatment of one platform is itself the anomaly.
+- **`PMID:35271311`**: MODIFY is a minority but established practice (14/212). It is applied
+  here only to PRKAR2A, where a direct filter-binding assay and a human region mapping exist
+  independently of the screen — not to the other two OpenCell partners.
 
 ## Projection / reference-scale checks
 
