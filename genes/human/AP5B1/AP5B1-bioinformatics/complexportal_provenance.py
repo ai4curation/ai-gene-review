@@ -94,7 +94,7 @@ def main() -> int:
     )
 
     report["detail"] = {}
-    for ac in sorted({KEY_COMPLEX, "CPX-5181"}):
+    for ac in sorted({KEY_COMPLEX, "CPX-5181", "CPX-26503"}):
         report["detail"][ac] = summarise(detail(ac))
 
     key = report["detail"][KEY_COMPLEX]
@@ -110,9 +110,10 @@ def main() -> int:
     print(f"  PubMed: {', '.join(key['pubmed_cross_references']) or 'none'}")
     print(f"  GO cross-references: {go_refs if go_refs else 'NONE'}")
 
-    print(f"\nCPX-5181: {report['detail']['CPX-5181']['name']}")
-    print(f"  GO cross-references: "
-          f"{report['detail']['CPX-5181']['go_cross_references'] or 'NONE'}")
+    for ac in ("CPX-5181", "CPX-26503"):
+        print(f"\n{ac}: {report['detail'][ac]['name']}")
+        print(f"  GO cross-references: "
+              f"{report['detail'][ac]['go_cross_references'] or 'NONE'}")
 
     if go_refs:
         print(

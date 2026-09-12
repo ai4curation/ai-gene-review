@@ -151,9 +151,11 @@ other committed source — `ComplexPortal:CPX-20045`, asserted as a `skos:exactM
   (AP5Z1:CDC123:AP5B1:ZFYVE26:SPG11:AP5M1:AP5S1).
 - CPX-20045 is built from two sub-complexes, `CPX-5181` + `CPX-26503` (Spastizin-spatacsin
   complex), each at 1:1, and cites PMID:40175557, PMID:25365221 and PMID:23825025.
-- **CPX-20045 carries no GO cross-reference.** Neither does CPX-5181, but CPX-5181 has a GO
-  counterpart anyway (`GO:0044599`); CPX-20045 has none, which is precisely the gap the
-  review records.
+- **Neither CPX-20045 nor CPX-26503 carries a GO cross-reference**, and neither does
+  CPX-5181. The asymmetry that matters is one level up and is *not* from these runs: CPX-5181
+  has a GO counterpart anyway, `GO:0044599 AP-5 adaptor complex`, whose definition names
+  beta5 — that term is on this gene in GOA and in the review's `core_functions`. CPX-20045
+  has no counterpart, and that absence is precisely the gap the review records.
 
 The script asserts that CPX-20045 still lists Q2VPB7, and prints a retirement notice if a GO
 cross-reference ever appears — re-running it is how a future curator finds out that the
@@ -163,9 +165,12 @@ proposed term is no longer needed.
 
 AP5B1 is a beta adaptin by fold and by PSI-BLAST/HHpred assignment, but it is not a
 clathrin-recruiting beta adaptin. It lacks the type-II box, the `YQW`, and the `PWxxW`
-W-box outright; its single clathrin-box consensus match is buried in a folded C-terminal
-domain rather than presented in a linker; and the trunk-to-appendage linker that carries
-the box in AP1B1/AP2B1 is a third the length in AP5B1. This is the sequence-level
+W-box outright; its single clathrin-box consensus match is assigned to a folded C-terminal
+domain rather than presented in a linker (on the Pfam assignment alone — see the §1 caveat,
+since residue 841 is unmodelled in 8YAB); and the trunk-to-appendage linker that carries
+the box in AP1B1/AP2B1 is a third the length in AP5B1. Of those three, the last is the load-
+bearing one, and it is the one that rests on measured boundaries rather than model
+assignments. This is the sequence-level
 counterpart of the cell-biological result that AP-5 does not associate with clathrin, and
 it is why the AP-1/AP-2 beta-subunit annotation `GO:0030276 clathrin binding` should not
 be transferred to AP5B1.
