@@ -35,3 +35,20 @@ kept as a non-core regulatory/trafficking aspect rather than promoted into
 
 All other existing annotations, `core_functions`, and the top-level `description` were
 reviewed and found sound and well-supported; no other changes made.
+
+## 2026-09-04 — SFT review consistency after the nuclear-localization re-review
+
+The SFT prediction review still classified GO:0005634 (nucleus) as NPI and asserted
+that IRE1 is never found in the nucleus after the main gene review retained the IDA
+annotation from PMID:17035634 as KEEP_AS_NON_CORE. The benchmark policy treats an
+exact term retained with a positive AIGR action as CNN (correct but not novel), even
+when the function or location is non-core. The standard SFT audit identified this
+single deterministic category conflict across its 95-gene cohort.
+
+The categorical exclusion is also too strong for the cached abstract, which reports
+NLS-dependent localization and mutational effects on signaling [PMID:17035634
+"ER stress-induced HAC1 mRNA splicing, is inhibited by
+point mutations in the Ire1p NLS that inhibit nuclear localization"]. This consistency
+repair follows the existing annotation review; it does not infer that nuclear
+localization is IRE1's principal location or resolve the mechanism of trafficking of
+the intact membrane protein. The reference cache remains abstract-only.

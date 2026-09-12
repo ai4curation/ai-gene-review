@@ -11,7 +11,7 @@ This supplement documents analyses that are useful for reproducibility but are n
 
 The main RL benchmark is ARGO139, a fixed 139-gene set listed in `../genes.csv`. The main SFT term benchmark is ARGO95, the 95-gene ARGO139 subset present in the HuggingFace `wanglab/protein_catalogue` SFT download.
 
-ARGO139 uses agent-adjudicated local AIGR references, not independently expert-signed ground truth: as of the current refresh, 78 are `COMPLETE`, 46 `DRAFT`, 11 `IN_PROGRESS`, and 4 `INITIALIZED`. The RL performance set excludes the wrong-input `csr-1` export (n=138) and separately flags seven retained exports truncated at the 2,000-residue model limit.
+ARGO139 uses agent-adjudicated local AIGR references, not independently expert-signed ground truth: as of the current refresh, 79 are `COMPLETE`, 45 `DRAFT`, 11 `IN_PROGRESS`, and 4 `INITIALIZED`. The RL performance set excludes the wrong-input `csr-1` export (n=138) and separately flags seven retained exports truncated at the 2,000-residue model limit.
 
 **Table S1.** Cohorts emitted by `write_benchmark_sidecars.py`.
 
@@ -34,7 +34,7 @@ The key availability issue is simple: the HuggingFace `wanglab/protein_catalogue
 
 | Benchmark | Genes | Terms | CNN | NPI | PLI | COR | LSP | REP | UNC |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| ARGO95 (HF catalogue) | 95 | 955 | 681 (71.3%) | 115 (12.0%) | 5 (0.5%) | 23 (2.4%) | 43 (4.5%) | 29 (3.0%) | 59 (6.2%) |
+| ARGO95 (HF catalogue) | 95 | 955 | 681 (71.3%) | 114 (11.9%) | 5 (0.5%) | 23 (2.4%) | 43 (4.5%) | 29 (3.0%) | 60 (6.3%) |
 
 For comparison, the mixed-source ARGO139 view is retained as a source-diagnostic table, not as a primary SFT benchmark.
 
@@ -42,9 +42,9 @@ For comparison, the mixed-source ARGO139 view is retained as a source-diagnostic
 
 | Source | Genes | Terms | CNN | NPI | PLI | COR | LSP | REP | UNC |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| HF catalogue / ARGO95 | 95 | 955 | 681 (71.3%) | 115 (12.0%) | 5 (0.5%) | 23 (2.4%) | 43 (4.5%) | 29 (3.0%) | 59 (6.2%) |
+| HF catalogue / ARGO95 | 95 | 955 | 681 (71.3%) | 114 (11.9%) | 5 (0.5%) | 23 (2.4%) | 43 (4.5%) | 29 (3.0%) | 60 (6.3%) |
 | Web export | 44 | 9,742 | 2,321 (23.8%) | 42 (0.4%) | 0 (0.0%) | 7 (0.1%) | 388 (4.0%) | 1 (0.0%) | 6,983 (71.7%) |
-| Mixed-source ARGO139 total | 139 | 10,697 | 3,002 (28.1%) | 157 (1.5%) | 5 (0.0%) | 30 (0.3%) | 431 (4.0%) | 30 (0.3%) | 7,042 (65.8%) |
+| Mixed-source ARGO139 total | 139 | 10,697 | 3,002 (28.1%) | 156 (1.5%) | 5 (0.0%) | 30 (0.3%) | 431 (4.0%) | 30 (0.3%) | 7,043 (65.8%) |
 
 The DnaK comprehensive review moved zinc ion binding (`GO:0008270`) from
 `NPI` to `CNN`: PMID:11985624 directly identifies DnaK in a radioactive
@@ -67,8 +67,8 @@ The all-HF view is still useful as the broadest single-source HF view, but it is
 | Assessment | Count | % |
 |---|---:|---:|
 | CNN | 920 | 67.7 |
-| NPI | 169 | 12.4 |
-| UNC | 145 | 10.7 |
+| NPI | 168 | 12.4 |
+| UNC | 146 | 10.8 |
 | LSP | 56 | 4.1 |
 | COR | 30 | 2.2 |
 | REP | 33 | 2.4 |
@@ -80,10 +80,10 @@ The all-source union is the broadest source-availability view, but it combines A
 
 | Assessment | Count | % |
 |---|---:|---:|
-| UNC | 7,128 | 64.2 |
+| UNC | 7,129 | 64.2 |
 | CNN | 3,241 | 29.2 |
 | LSP | 444 | 4.0 |
-| NPI | 211 | 1.9 |
+| NPI | 210 | 1.9 |
 | COR | 37 | 0.3 |
 | REP | 34 | 0.3 |
 | PLI | 5 | 0.0 |
@@ -96,13 +96,15 @@ We computed a retrospective CAFA-style agreement score for ARGO95 SFT GO-term pr
 
 | Source | Genes | Scored direct predictions | Direct GOA terms | Precision | Recall | F1 |
 |---|---:|---:|---:|---:|---:|---:|
-| ARGO95 / HF catalogue | 95 | 952 | 2,382 | 0.865 | 0.479 | 0.617 |
+| ARGO95 / HF catalogue | 95 | 952 | 2,369 | 0.862 | 0.479 | 0.615 |
 | Web export | 44 | 9,730 | 3,885 | 0.780 | 0.533 | 0.633 |
-| Mixed-source ARGO139 total | 139 | 10,682 | 6,267 | 0.810 | 0.511 | 0.627 |
+| Mixed-source ARGO139 total | 139 | 10,682 | 6,254 | 0.809 | 0.511 | 0.626 |
 
-The score shows why aggregate GOA agreement is useful but incomplete. In the HF catalogue subset, 50/149 terms classified by AI-AUGR as NPI, PLI, or REP are exact matches to current GOA, and 121/149 have propagated overlap with current GOA. A GOA-agreement metric would reward some of these predictions despite evidence-grounded review classifying them as wrong or frequency-biased.
+The score shows why aggregate GOA agreement is useful but incomplete. In the HF catalogue subset, 48/148 terms classified by AI-AUGR as NPI, PLI, or REP are exact matches to current GOA, and 120/148 have propagated overlap with current GOA. A GOA-agreement metric would reward some of these predictions despite evidence-grounded review classifying them as wrong or frequency-biased.
 
 ![CAFA-style propagated F1 by aspect for ARGO95 SFT terms, with mixed-source diagnostics.](figures/cafa_style_argo139_sft.png)
+
+This diagnostic uses current local GOA, whereas the primary non-novelty counts use the frozen baseline. Consequently, 629 CNN terms are exact current-GOA matches here, compared with 634 exact frozen-GOA matches in the primary benchmark. Regeneration incorporates GOA refreshes already present in the repository as well as assessment changes.
 
 Full derived tables are in `../cafa-style/`.
 
