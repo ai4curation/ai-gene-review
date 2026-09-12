@@ -123,6 +123,23 @@ def test_generated_pages_triggers_on_project_data_files():
     assert "projects/**/*.json" in paths
 
 
+def test_shadow_pages_failures_do_not_block_regeneration():
+    """Shadow failures remain observable without failing the legacy PR lane."""
+    job = _workflow(GENERATE_PAGES)["jobs"]["generate-pages"]
+    stage = _step(job, "Stage GitHub Pages artifact")
+    summary = _step(job, "Summarize staged Pages site")
+    upload = _step(job, "Upload shadow GitHub Pages artifact")
+    for step in (stage, summary, upload):
+        assert step["continue-on-error"] is True
+    for step in (summary, upload):
+        assert step["if"] == "steps.shadow-stage.outcome == 'success'"
+    assert stage["id"] == "shadow-stage"
+    warning = _step(job, "Warn when shadow Pages build fails")
+    for step in (stage, summary, upload):
+        assert f"steps.{step['id']}.outcome == 'failure'" in warning["if"]
+    assert "::warning" in warning["run"]
+
+
 def test_generated_pages_waits_for_ci_and_exact_head_approval():
     workflow = _workflow(GENERATE_PAGES)
     job = workflow["jobs"]["generate-pages"]
