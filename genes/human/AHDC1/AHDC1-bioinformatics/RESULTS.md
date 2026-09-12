@@ -1,7 +1,13 @@
-# AHDC1 — claim audit
+# AHDC1 — claim audit and ENCODE replication metadata
 
-This folder holds one thing: a lint that checks the AHDC1 review's **prose against its own
-data**. It is not a bioinformatics analysis and produces no biological result.
+Two things, both in service of making this review's load-bearing claims re-derivable rather
+than transcribed:
+
+- `audit_ahdc1_claims.py` — a lint that checks the review's **prose against its own data**;
+- `fetch_encode_ahdc1.py` — fetches and caches the ENCODE metadata that decides how much
+  the HepG2 replication is worth.
+
+Neither is a biological analysis; neither produces a new biological result.
 
 ## Why it exists
 
@@ -27,6 +33,35 @@ number or a phrasing asserted in prose and never re-derived from the data it des
 | required claims | five load-bearing claims must appear in the number of files they should |
 | paired claims | one claim must be present in **each** of two named rows' `review.reason`, resolved through the parsed YAML — the justification for weighting the tagged-transgene caveat differently on `GO:0003700` and `GO:0003682`. A missing row is an **error**, not a skip, so deleting the row cannot satisfy the check |
 | duplicate keys | the review is loaded with a `SafeLoader` subclass that **raises** on a duplicated mapping key, which PyYAML otherwise resolves silently by keeping the last one |
+
+## ENCODE replication metadata (`fetch_encode_ahdc1.py`)
+
+The `GO:0003682` row leans on one non-obvious fact, so it is fetched rather than
+transcribed. `ENCSR168AUX.json` is the cached record; regenerate with:
+
+```bash
+uv run python genes/human/AHDC1/AHDC1-bioinformatics/fetch_encode_ahdc1.py
+```
+
+| field | value |
+|---|---|
+| experiment | `ENCSR168AUX` — ChIP-Seq on HepG2, lab `/labs/richard-myers/` |
+| target | `/targets/AHDC1-human/`, label `AHDC1` — target name does **not** imply a tag |
+| `investigated_as` | `['transcription factor']` |
+| genetic modification | `ENCGM399CXU` — `category: insertion`, `purpose: tagging`, `method: CRISPR`, `perturbation: False` |
+| introduced tag | `3xFLAG (C-terminal)`, `modified_site` = `/targets/AHDC1-human/` |
+| antibody | `ENCAB697XQW`, targets `FLAG-synthetic_tag` / `3xFLAG-synthetic_tag` |
+| **=> epitope-tagged** | **True** |
+| **=> tag at endogenous locus** | **True** (CRISPR insertion) |
+
+Both conclusions are asserted by the script, not read off by eye, and it prints an
+explicit warning if either flips — an untagged target would invalidate the review's
+"both datasets are tagged" caveat, and a tag introduced by transfection rather than
+knock-in would invalidate the "endogenous levels" claim that does the real work.
+
+Note the trap the target name sets: an untagged-looking ENCODE target label is
+*necessary but not sufficient* for an untagged experiment, because the tag is recorded
+on the **biosample's** `genetic_modifications`, which is exactly the case here.
 
 ## Reproduce
 

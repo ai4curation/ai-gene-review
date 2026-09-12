@@ -433,7 +433,8 @@ made it while arguing against exactly that.
 
 **The ENCODE replication is not "independently generated", and checking turned a hedge into
 the strongest single support on the row.** `ENCSR168AUX` was queried directly rather than
-assumed:
+assumed, and is now fetched by `AHDC1-bioinformatics/fetch_encode_ahdc1.py` and cached as
+`ENCSR168AUX.json` so the table below is re-derivable rather than transcribed:
 
 | field | value |
 |---|---|
@@ -470,7 +471,36 @@ skip, so deleting the row cannot satisfy it. Two new self-test guards exercise i
 `paired_claim_one_side_removed` (mutating through the parser so exactly one side is
 thinned) and `paired_claim_row_deleted`. Six guards now, all firing.
 
-## 16. A note on the reviews themselves
+## 16. The hexanediol pre-treatment, which I had missed entirely
+
+Raised in the pass-5 review and confirmed verbatim in the methods:
+
+> "For Gibbin ChIP-seq, freshly collected cells were treated with 5% 1,6-hexanediol in 5mL
+> PBS in suspension for 60 seconds, upon which the solution was immediately diluted with
+> 25mL PBS and 2mL 16% formaldehyde for crosslinking."
+
+Note "**For Gibbin ChIP-seq**" — this step is applied to that ChIP and not to the GATA3 or
+CTCF ChIPs in the same paper. 1,6-hexanediol disrupts the weak multivalent interactions
+that hold biomolecular condensates together, so what was crosslinked and sequenced is the
+**hexanediol-resistant fraction** of AHDC1 on chromatin.
+
+For this protein specifically that matters, and it cuts both ways:
+
+- **It strengthens the `GO:0003682` call.** A heavily disordered protein (ten MobiDB-lite
+  disordered regions) appearing in a ChIP is exactly the case where condensate
+  co-precipitation is a live alternative explanation for apparent chromatin binding. The
+  occupancy reported survived a condensate-disrupting pre-treatment.
+- **It also filters the map**, since any condensate-dependent occupancy was removed before
+  crosslinking. That is a **third independent** reason not to read site specificity off
+  these peaks, alongside the ectopic promoter and the authors' own statement that occupancy
+  is unrestricted.
+
+The word "hexanediol" appeared **zero** times in the review, the notes and RESULTS.md
+before this round. It is a methods-section detail that changes how the primary evidence
+should be read, and the general lesson is the one this review keeps relearning: read the
+methods for the assay you are annotating, not only the results paragraph that reports it.
+
+## 17. A note on the reviews themselves
 
 All four review passes ran in a runner with neither `uv` nor `just` installed (and, by pass
 4, with Python execution sandbox-blocked), so every reviewer check was manual against
@@ -485,7 +515,7 @@ including two that corrected arguments I had just written, and that it **withdre
 its own** (the `core_functions` restructure) after checking the schema and finding
 `CoreFunction` has exactly one BP slot with no downstream variant.
 
-## 17. Process
+## 18. Process
 
 - Branch `paint/AHDC1` from `origin/main`; own worktree.
 - Every supporting_text pre-verified with a normalising substring check before writing
