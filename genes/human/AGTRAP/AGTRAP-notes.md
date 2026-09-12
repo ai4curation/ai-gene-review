@@ -158,6 +158,23 @@ for a 3-TM ER/Golgi protein. **None of them is in GOA.** GOA imported the assay
 class whose partners are largely implausible and none of the class whose
 partners fit the protein's own cell biology.
 
+### A count that refused to add up, and what it turned out to be
+
+First draft of the `PMID:16189514` reference note said "3 binding rows". The TSV has
+**2**. The 3 was an IntAct *evidence* count, and the extra evidence is a canonical
+`Q6RW13`-`Q6RW13` **self-pair that GOA did not import**. Chasing it corrected a
+second claim: the `GO:0042802` row had been written as a self-interaction "detected
+once, in the HuRI screen", which is true of the GOA row and false of IntAct —
+`PMID:16189514` and `PMID:25416956` also report a canonical self-pair. All three are
+the same CCSB clone collection in the same two-hybrid system, so the verdict
+(`MARK_AS_OVER_ANNOTATED`) is unchanged, but it now rests on "recurrence on one
+platform, never tested by another method" rather than on "seen once", which was
+simply wrong.
+
+Per-reference GOA binding-row counts, re-derived from the TSV rather than from prose:
+`32296183` 91 (90 + the self row) · `25416956` 66 · `31515488` 10 · `26871637` 8 ·
+`21516116` 4 · `25910212` 3 · `16189514` 2 · `19060904` 2 · `29892012` 2 = **188**.
+
 ### Three Y2H partners that survive scrutiny
 
 Searching the partners rather than the symbol (the recall gap affinage cannot
