@@ -14,6 +14,8 @@ uv run python retraction_check.py    # retraction / erratum / EoC
 uv run python check_terms.py         # QuickGO obsoletion + secondaryIds
 uv run python reconcile_goa.py       # GOA rows <-> existing_annotations
 uv run python term_choice_checks.py  # the two MODIFY targets vs GO's own usage
+uv run python lab_independence.py    # which labs produced this literature
+uv run python proposed_term_check.py # proposed term is not a duplicate; projection test
 ```
 
 The gene's own name, *Angiogenic factor with G-patch and FHA domains 1*, makes
@@ -189,6 +191,17 @@ page, so entity counts are reported as unavailable rather than guessed) and
 **exactly two** papers that produced an AGGF1 annotation: `PMID:14961121`
 (Tian 2004, 7 rows) and `PMID:15905966` (a review, 1 TAS row).
 
+`proposed_term_check.py` runs the projection test on the three papers behind the
+`NEW` biological-process rows and finds **no projection pattern** — but it sharpens
+the coverage point rather than merely coming back negative. PMID:27513923 and
+PMID:34551592 produced **zero** GO annotations on any gene product, so there is
+nothing to project. PMID:40035560 produced ten, over ten entities, and **every one
+of them is `GO:0048514` blood vessel morphogenesis in *zebrafish*** — four on
+`aggf1` by IMP, six on `srsf6a`/`srsf6b` by IGI. A paper whose entire finding is
+that AGGF1 is a general splicing factor regulating 436 genes produced ten GO
+annotations, all about vessel morphogenesis in fish, and not one about splicing in
+any species.
+
 Everything mechanistic is in the 22 — integrin α5β1 as the receptor
 (PMID:34551592), integrin α7 on smooth muscle (PMID:35202649, PMID:37081014),
 paraspeckles and NEAT1 RNA binding (PMID:35608889), general splicing regulation
@@ -290,33 +303,61 @@ RecQ **DNA** helicases, not DEAD/H-box at all. So GO already applies this term w
 outside a strict DEAD-box reading; using it for DHX15 is inside existing usage and
 considerably more precise than those rows.
 
-## 11. Almost all of this literature is one laboratory
+## 11. The proposed term is not a duplicate — enumerated, not searched
+
+`proposed_term_check.py` lists **every child** of the three parents under which a
+TNFSF12-binding term could plausibly already sit — `GO:0019955` cytokine binding,
+`GO:0043120` tumor necrosis factor binding (where `GO:0038057 TNFSF11 binding`
+lives), and `GO:0005102` signaling receptor binding — and prints all **90** of
+them. None names or defines TNFSF12 or TWEAK.
+
+This is deliberately an enumeration rather than a search: ontology search is
+token-based, so a query for "TNFSF12 binding" cannot match a term named
+*tumor necrosis factor ligand superfamily member 12 binding*, and a failed search
+would have looked like absence. The script exits non-zero if any child ever does
+match, so the proposal cannot silently become a duplicate.
+
+## 12. Almost all of this literature is one laboratory
 
 `lab_independence.py` reads the senior (last) author out of each cached record
-rather than taking "independent replication" on impression. Of the 13 papers this
-review relies on:
+rather than taking "independent replication" on impression. Its paper set is
+**derived** — GOA references + affinage citations + the review's own references,
+minus the high-throughput screens and the corrections/commentary — because the
+first version used a hand-written list that had silently omitted PMID:29885663
+and therefore reported "exactly one independent group" when the answer is two.
+A list you curate is a list you can under-curate, and the conclusion then
+describes the list rather than the literature.
+
+Over the resulting **27 cached AGGF1 primary studies**:
 
 ```
-  Wang   Q    : 11 paper(s)  14961121, 33069768, 35608889, 34551592, 27513923,
-                             27522498, 40035560, 23197652, 24277077, 35202649, 37081014
-  Tian   XL   :  1 paper(s)  33471274
-  Chen   L    :  1 paper(s)  39905000
+  Wang   Q    : 18 paper(s)
+  Tian   XL   :  2 paper(s)
+  Qi J / Xu Y / Zhou B / Zhang JH / Lu Q / Liao S / Chen L : 1 each
 ```
 
 `Wang Q` and `Wang QK` are merged as initial variants of one name; the merge only
-fires when one initial string is a prefix of the other. Tian XL is the **first
-author of the discovery paper**, so PMID:33471274 is a separate group but the same
-lineage — reported separately from the count because that is a judgement and the
-author list is not.
+fires when one initial string is a prefix of the other. Lineage is then computed,
+not judged — a senior author who also appears in the author list of a
+dominant-group paper is a trainee or collaborator, not an independent
+investigator:
 
-**PMID:39905000 (senior author Chen L) is the only genuinely independent group.**
-That is why the review leans on it for the TNFSF12 interaction and for the
-extracellular pool, and why an earlier draft's hedge — anchoring the nucleus
-proposal on PMID:33069768 because PMID:35608889 was "from the discovery lab" —
-was withdrawn: both papers have the same senior author.
+| | count | |
+|---|---|---|
+| dominant group | **18** | Wang Q / Wang QK |
+| lineage | **5** | Tian XL ×2, Xu Y, Zhou B, Lu Q — each an author on a Wang-group paper |
+| senior author on **no** Wang-group paper | **4** | Qi J (17884784), **Zhang JH (29885663)**, Liao S (33168501), **Chen L (39905000)** |
+
+Two of those four are substantive — **PMID:29885663** (*J Neuroinflammation*) and
+**PMID:39905000** (*Nature Communications*). That is why the review leans on
+PMID:39905000 for the TNFSF12 interaction and the extracellular pool, and cites
+PMID:29885663 on the PI3K/AKT row; and why an earlier draft's hedge — anchoring
+the nucleus proposal on PMID:33069768 because PMID:35608889 was "from the
+discovery lab" — was withdrawn: both papers have the same senior author. The
+paraspeckle and splicing results remain entirely single-group.
 
 One caveat the script reports rather than hides: **Xu C appears on PMID:39905000
-and on 8 of the dominant group's 11 papers.** A shared surname-plus-initial is not
+and on 14 of the dominant group's 18 papers.** A shared surname-plus-initial is not
 proof of the same person, the senior author differs and the affiliations are a
 different institution, so the paper is still counted as independent — but "one
 independent replication" is load-bearing here, so the overlap is printed.

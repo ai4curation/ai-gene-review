@@ -216,18 +216,33 @@ Raised by the PR reviewer and then measured rather than argued
 (`AGGF1-bioinformatics/lab_independence.py`, which reads the senior author out of
 each cached record):
 
+Over the **27 cached AGGF1 primary studies** reachable from this review's own
+inputs (GOA references + affinage citations + review references, minus the
+high-throughput screens and the non-studies):
+
 | senior author | papers |
 |---|---|
-| **Wang Q / Wang QK** | **11 of 13** — 14961121, 33069768, 35608889, 34551592, 27513923, 27522498, 40035560, 23197652, 24277077, 35202649, 37081014 |
-| Tian XL | 1 — 33471274; Tian XL is the **first author of the discovery paper**, so a separate group but the same lineage |
-| Chen L | 1 — **39905000**, the only genuinely independent group |
+| **Wang Q / Wang QK** | **18 of 27** |
+| trainee/collaborator lineage — senior author is themselves an author on a Wang-group paper | **5** — Tian XL (23628701, 33471274), Xu Y (26850475), Zhou B (28958996), Lu Q (32061268) |
+| senior author on **no** Wang-group paper | **4** — Qi J (17884784), **Zhang JH (29885663)**, Liao S (33168501), **Chen L (39905000)** |
 
-One caveat, measured rather than asserted (`lab_independence.py` reports it):
-**Xu C appears on PMID:39905000 and on 8 of the dominant group's 11 papers.** A
-shared surname-plus-initial is not proof of the same person, the senior author
-differs, and PMID:39905000's affiliations are a different institution — so the
-paper is still counted as independent. The overlap is recorded rather than hidden
-because "one independent replication" is load-bearing here.
+Of those four, two are substantive: **PMID:29885663** (*J Neuroinflammation* 2018,
+full text cached) and **PMID:39905000** (*Nature Communications* 2025). The other
+two are single-report papers in low-visibility journals.
+
+**The first version of this table said "exactly one independent group", and it was
+wrong** — because `lab_independence.py` used a hand-written paper list that had
+silently omitted PMID:29885663. A list you curate is a list you can under-curate,
+and the conclusion then describes the list rather than the literature. The script
+now derives its paper set and the lineage test computes "is this senior author an
+author on a dominant-group paper" instead of only checking the discovery paper's
+first author.
+
+One caveat the script reports rather than hides: **Xu C appears on PMID:39905000
+and on 14 of the dominant group's 18 papers.** A shared surname-plus-initial is
+not proof of the same person, the senior author differs, and the affiliations are
+a different institution — so the paper is still counted as independent. The
+overlap is printed because the independence claim is load-bearing here.
 
 This matters for how the review is worded, not for any action. An earlier draft
 credited the nucleus evidence to more distinct laboratories than the author lists
@@ -238,11 +253,12 @@ paraphrased rather than quoted here on purpose: `audit_claims.py` greps for it,
 and a guard that has to tell a retraction apart from a report of one is a guard
 that will eventually let the claim back in.)
 
-The useful version: AGGF1's mechanistic literature is essentially one group's
-programme, and **PMID:39905000 is the single substantive independent replication**
-— which is exactly why the review leans on it for the TNFSF12 interaction and for
-the extracellular pool. Independent replication of the paraspeckle and splicing
-results is the most valuable thing anyone could do for this gene's annotation.
+The useful version: AGGF1's mechanistic literature is overwhelmingly one group's
+programme, with **two substantive independent contributions** — PMID:39905000
+(TNFSF12–FN14, and AGGF1 protein in patient vitreous) and PMID:29885663
+(PI3K/AKT, in rats). Neither touches the paraspeckle or splicing results, which
+remain entirely single-group; independent replication of those is the most
+valuable thing anyone could do for this gene's annotation.
 
 A review that collapses `NbExp` into independent experiments and catches a
 bait-labelling artefact has no business asserting laboratory independence it never
@@ -262,6 +278,18 @@ checked. The check is now committed so the claim stays a measurement.
   errata (PMID:39468017, PMID:41039152). Scope established by reading each
   correction: a missing author affiliation and a Methods-equation subscript typo
   respectively. Neither affects any evidence used here.
+- **Two checks run at the coordinator's suggestion, both clean and both
+  informative.** *Projection*: the three papers behind the `NEW` biological-process
+  rows show no projection pattern — PMID:27513923 and PMID:34551592 produced zero
+  GO annotations anywhere, and PMID:40035560's ten are all `GO:0048514` blood
+  vessel morphogenesis in **zebrafish** (4 × `aggf1` IMP, 6 × `srsf6a`/`srsf6b`
+  IGI). A paper whose finding is that AGGF1 is a general splicing factor produced
+  ten annotations, all about vessel morphogenesis in fish, and none about splicing.
+  *Duplicate term*: before proposing `TNFSF12 binding`, all **90** children of
+  `GO:0019955`, `GO:0043120` and `GO:0005102` were enumerated — not searched,
+  because ontology search is token-based and could not match a term spelling the
+  ligand out in full. None names or defines TNFSF12/TWEAK.
+
 - **Row reconciliation**: `AGGF1-goa.tsv` has 24 data rows; the `fetch-gene` stub
   seeded **24** `existing_annotations`, one per row, with per-partner WITH/FROM
   preserved. No collapse this time. The review adds 9 `NEW` entries on top,

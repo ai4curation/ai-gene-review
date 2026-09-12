@@ -136,8 +136,16 @@ def check(paths: dict[str, str]) -> list[str]:
             "record' is 695 BioID partners, not four)",
         # Laboratory-independence claims the author lists contradict.
         "three laboratories":
-            "a laboratory count contradicted by the author lists: 11 of 13 papers "
-            "share senior author Wang Q/QK and only PMID:39905000 is independent",
+            "a laboratory count contradicted by the author lists: 18 of 27 papers "
+            "share senior author Wang Q/QK",
+        "Exactly one, PMID:39905000":
+            "the superseded 'only one independent group' claim -- the derived "
+            "27-paper set has FOUR senior authors on no Wang-group paper, two of "
+            "them substantive (Zhang JH, Chen L)",
+        "the only genuinely independent group":
+            "the same superseded claim in its other phrasing",
+        "the single substantive independent replication":
+            "the same superseded claim in its third phrasing",
         "three later laboratories":
             "the same laboratory over-count for the extracellular rows",
         "reproduced repeatedly":
@@ -162,8 +170,8 @@ def check(paths: dict[str, str]) -> list[str]:
         # whatever the quantifier.
         (r"\b(?:three|four|five|several|multiple|many|various|numerous|other|later"
          r"|across)\s+(?:\w+\s+){0,2}(?:labs?|laborator\w*|groups?|teams?)\b",
-         "a vague plural-laboratory attribution. 11 of the 13 papers share one "
-         "senior author; only PMID:39905000 is independent. A counted, checkable "
+         "a vague plural-laboratory attribution. 18 of the 27 derived papers share "
+         "one senior author and 5 more are trainee lineage. A counted, checkable "
          "claim naming the papers is fine -- 'two methods from two laboratories' "
          "(Vidal, Gygi) and 'two laboratories report opposite effects' (Wang QK, "
          "Chen L) are both true and deliberately not matched"),
@@ -290,6 +298,9 @@ def self_test() -> int:
         ("review", "confirmed by an independent group's",
          "confirmed by later labs including", 1,
          "'later labs' -- an uncounted plural the count-word pattern let through"),
+        ("notes", "two substantive independent contributions",
+         "the only genuinely independent group", 1,
+         "the superseded 'one independent group' count"),
         ("review", "a benign polymorphism: its gnomAD v4 allele",
          "a benign polymorphism carried by roughly 1.4% of the population: its "
          "gnomAD v4 allele", 1,

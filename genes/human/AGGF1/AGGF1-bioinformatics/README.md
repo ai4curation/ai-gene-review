@@ -14,7 +14,8 @@ uv run python retraction_check.py    # retraction / erratum / expression-of-conc
 uv run python check_terms.py         # QuickGO obsoletion + secondaryIds for every term used
 uv run python reconcile_goa.py       # GOA rows <-> existing_annotations, asserted
 uv run python term_choice_checks.py  # the two MODIFY targets vs GO's own usage
-uv run python lab_independence.py    # how many groups produced this literature
+uv run python lab_independence.py    # which labs produced this literature
+uv run python proposed_term_check.py # proposed term is not a duplicate; projection test
 uv run python audit_claims.py        # the reported numbers match what the scripts produce
 uv run python audit_claims.py --self-test
 ```

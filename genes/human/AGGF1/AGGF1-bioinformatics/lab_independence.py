@@ -27,22 +27,27 @@ HERE = Path(__file__).parent
 PUBS = HERE.parents[3] / "publications"
 REVIEW = HERE.parent / "AGGF1-ai-review.yaml"
 
-# Papers whose provenance the review's independence claims rest on.
-RELEVANT = [
-    "14961121",  # discovery
-    "33069768",  # nucleus / p53 / FHA
-    "35608889",  # paraspeckles / NEAT1 RIP
-    "33471274",  # NLS + FHA/14-3-3 nucleocytoplasmic transport
-    "34551592",  # integrin alpha5beta1 receptor
-    "27513923",  # autophagy
-    "27522498",  # PI3K/AKT
-    "40035560",  # splicing / SRSF6
-    "23197652",  # zebrafish venous identity
-    "24277077",  # zebrafish hemangioblast
-    "39905000",  # retinal angiogenesis / TNFSF12-FN14
-    "35202649",  # integrin alpha7 (mouse)
-    "37081014",  # aortic aneurysm (mouse)
-]
+# The paper set is DERIVED, not hand-listed. A hand-maintained list is how the
+# first version of this script reported "exactly one independent group": it had
+# silently omitted PMID:29885663 (senior author Zhang JH), a second independent
+# group whose full text was cached all along. A list you curate is a list you can
+# under-curate, and the conclusion then describes the list rather than the
+# literature.
+#
+# Sources, unioned then filtered to what is actually cached:
+#   * the REFERENCE column of the GOA file
+#   * the affinage record's Citations section
+#   * every PMID in the review's own references[]
+# High-throughput interaction screens are excluded by accession, not by judgement:
+# they are methods resources, not AGGF1 studies, and their author lists would
+# swamp the measurement.
+SCREENS = {
+    "16189514", "22365833", "25416956", "31515488", "32296183",
+    "33961781", "39251607", "40205054",
+}
+# Corrections/errata and commentary are likewise not AGGF1 studies.
+NOT_STUDIES = {"39468017", "41039152", "14961101", "15905966", "42052570",
+               "32179686", "11106755", "16443853", "17103452", "18564129"}
 
 
 def surname_initials(name: str) -> tuple[str, str]:
@@ -65,9 +70,51 @@ def authors(pmid: str) -> list[str]:
     return a
 
 
+def relevant() -> list[str]:
+    """Every cached AGGF1 primary study reachable from the review's own inputs."""
+    import csv
+
+    found: set[str] = set()
+
+    goa = HERE.parent / "AGGF1-goa.tsv"
+    if not goa.exists():
+        raise SystemExit(f"missing {goa}; run `just fetch-gene human AGGF1` first")
+    with goa.open() as fh:
+        for r in csv.DictReader(fh, delimiter="\t"):
+            ref = r["REFERENCE"]
+            if ref.startswith("PMID:"):
+                found.add(ref.split(":", 1)[1])
+
+    aff = HERE.parent / "AGGF1-deep-research-affinage.md"
+    if not aff.exists():
+        raise SystemExit(f"missing {aff}; run the affinage fetch first")
+    found.update(re.findall(r"^- PMID:(\d+)\s*$", aff.read_text(), re.M))
+
+    doc = yaml.safe_load(REVIEW.read_text())
+    for ref in doc["references"]:
+        if ref["id"].startswith("PMID:"):
+            found.add(ref["id"].split(":", 1)[1])
+
+    studies = sorted(found - SCREENS - NOT_STUDIES)
+    cached = [p for p in studies if (PUBS / f"PMID_{p}.md").exists()]
+    missing = [p for p in studies if p not in cached]
+    if missing:
+        raise SystemExit(
+            f"not cached, cannot read author lists: {missing}. "
+            f"Run `just fetch-pmid {' '.join(missing)}`."
+        )
+    return cached
+
+
 def main() -> None:
+    pmids = relevant()
+    print(f"derived paper set: {len(pmids)} cached AGGF1 primary studies "
+          f"(GOA references + affinage citations + review references, minus "
+          f"{len(SCREENS)} high-throughput screens and {len(NOT_STUDIES)} "
+          "non-studies)")
+    print()
     rows = []
-    for pmid in RELEVANT:
+    for pmid in pmids:
         a = authors(pmid)
         rows.append((pmid, a[0], a[-1]))
 
@@ -99,15 +146,28 @@ def main() -> None:
     print(f"Largest single group accounts for {len(biggest)}/{len(rows)} of the papers "
           "this review relies on.")
 
-    # Lineage note, kept separate from the count because it is a judgement.
-    disc_first, disc_last = rows[0][1], rows[0][2]
-    lineage = [pmid for pmid, _f, last in rows
-               if surname_initials(last)[0] == surname_initials(disc_first)[0]]
-    print(f"Papers whose senior author is the DISCOVERY paper's first author "
-          f"({disc_first}): {lineage or 'none'} -- same lineage, not an independent group.")
-    indep = [pmid for pmid, _f, last in rows
-             if pmid not in biggest and pmid not in lineage]
-    print(f"Papers from neither: {indep}")
+    # Lineage, computed rather than judged: a senior author who also appears in
+    # the author list of one of the dominant group's papers is a trainee or
+    # collaborator of that group, not an independent investigator. Restricting
+    # this to the discovery paper's first author (the earlier version) caught only
+    # Tian XL and missed several others.
+    dominant_names = {a for pmid in biggest for a in authors(pmid)}
+    lineage, independent = [], []
+    for pmid, _first, last in rows:
+        if pmid in biggest:
+            continue
+        (lineage if last in dominant_names else independent).append((pmid, last))
+
+    print(f"Senior author also appears on a paper from the dominant group "
+          f"(trainee/collaborator lineage): {len(lineage)}")
+    for pmid, last in lineage:
+        on = [p for p in biggest if last in authors(p)]
+        print(f"    {pmid}  senior {last:10s} also an author on {len(on)}: {', '.join(on)}")
+    print(f"Senior author appears on NO dominant-group paper "
+          f"(genuinely separate): {len(independent)}")
+    for pmid, last in independent:
+        print(f"    {pmid}  senior {last}")
+    indep = [p for p, _ in independent]
     print()
 
     # "Independent" by senior author can still share bench authors. Measure the
