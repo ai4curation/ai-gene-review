@@ -71,6 +71,9 @@ Q = {
     "KIM13_PROLIF": "We also found that whereas augmentation of APLN signaling in normal PAECs led to an increase in PAEC proliferation as previously described,9 augmentation of APLN signaling in PAH PAECs had a reverse effect of inhibiting proliferation (Supp.",
     "KIM13_REFUTED": "Nevertheless, these effects have been modest at best, and others have refuted such findings,23 suggesting a strong context-dependence for APLN’s effects on the endothelium.",
     "KIM13_QUIESCENT": "Rather, an emerging role of APLN signaling in mature vessels appears to be to preserve a differentiated, quiescent, and homeostatic endothelial layer.",
+    # PMID:27492965 Pope 2016 (full text) - mechanism of agonist-driven APJ internalisation
+    "POP16_CCV": "stimulation caused internalization of mAPJ via clathrin coated vesicles (CCVs) and also caused a rapid reduction in cell surface and whole cell HA-mAPJ",
+    "POP16_GRK2": "Our data suggest that upon continuous agonist exposure GRK2-mediated phosphorylation targets APJ to CCVs that are internalized from the cell surface in a β-arrestin1-independent, EPS15- and dynamin-dependent manner.",
     # PMID:28890073 Sharma 2017 (full text) - mouse donor for GO:0060976
     "SHA17_NOPHENO": "but Apelin KO animals did not phenocopy the coronary defect seen in Apj KOs",
     "SHA17_OPPOSITE": "In fact, Apelin-deficient hearts displayed a phenotype opposite to that in Apj mutants with an increase in coronary growth so that the heart was fully covered at developmental time points earlier than wild-type controls",
@@ -899,13 +902,19 @@ D("GO:1904022", "IDA", "PMID:11359874",
   action="ACCEPT",
   reason=(
       "Agonist-driven receptor internalisation is part of what apelin does to its receptor, "
-      "not a distant consequence: the beta-arrestin arm that internalises APLNR is the same "
-      "arm whose balance against Gi signalling is set by apelin residues 75 and 77 "
-      "(UniProt SITE, from PMID:38428423) and whose over-activation is the adverse-effect "
-      "problem that motivated the design of biased agonists. The assay has its own "
-      "specificity control in the inactive truncated fragments. Core."),
+      "not a distant consequence: it is the desensitisation arm whose balance against Gi "
+      "signalling is set by apelin residues 75 and 77 (UniProt SITE, from PMID:38428423) "
+      "and whose over-activation is the adverse-effect problem that motivated the design of "
+      "G-protein-biased agonists. The assay has its own specificity control in the inactive "
+      "truncated fragments. One precision worth recording rather than glossing: apelin "
+      "drives beta-arrestin recruitment and it drives internalisation, but these are not the "
+      "same step - pyroglutamyl-apelin-13 internalises APJ through clathrin-coated vesicles "
+      "in a GRK2-dependent, EPS15- and dynamin-dependent but beta-arrestin1-independent "
+      "manner (PMID:27492965). Core."),
   supported_by=[("PMID:11359874", "REA01_FRAGMENTS"), ("PMID:11359874", "REA01_INACTIVE"),
-                ("PMID:22810587", "SCI12_ARRESTIN"), ("PMID:38428423", "WAN24_ARRESTIN")])
+                ("PMID:27492965", "POP16_CCV"), ("PMID:27492965", "POP16_GRK2"),
+                ("PMID:38428423", "WAN24_ARRESTIN")],
+  additional_reference_ids=["PMID:22810587"])
 D("GO:1904022", "IEA", "GO_REF:0000120", ents=RAT_PAIR + MOUSE_PAIR,
   summary=("Combined automatic pipeline transferring receptor internalisation from the rat "
            "and mouse orthologs, both of which carry it from PMID:11359874."),

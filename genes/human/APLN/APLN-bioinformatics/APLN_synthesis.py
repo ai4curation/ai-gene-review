@@ -75,14 +75,17 @@ CORE_FUNCTIONS = [
     dict(
         description=(
             "Ligand-driven desensitisation of its own receptor. Apelin binding to APLNR "
-            "recruits beta-arrestin and drives clathrin-dependent internalisation of the "
-            "receptor, and the balance between this arm and the Gi arm is set by residues "
-            "in the peptide itself - UniProt records positions 75 and 77 of APLN as "
+            "both recruits beta-arrestin and drives internalisation of the receptor through "
+            "clathrin-coated vesicles; the two are separable steps, since internalisation "
+            "is GRK2-, EPS15- and dynamin-dependent but beta-arrestin1-independent. The "
+            "balance between this desensitising arm and the Gi arm is set by residues in "
+            "the peptide itself - UniProt records positions 75 and 77 of APLN as "
             "determinants of that balance, from the cryo-EM structures of apelin-bound "
             "APLNR-Gi1 complexes. This is not a downstream consequence but part of what the "
             "ligand does to the receptor, and it is the arm whose over-activation "
             "motivated the design of G-protein-biased apelin analogues."),
         supported_by=[("PMID:11359874", "REA01_FRAGMENTS"), ("PMID:22810587", "SCI12_ARRESTIN"),
+                      ("PMID:27492965", "POP16_GRK2"),
                       ("PMID:38428423", "WAN24_BIAS"), ("PMID:38428423", "WAN24_ARRESTIN")],
         molecular_function={"id": "GO:0031704", "label": "apelin receptor binding"},
         directly_involved_in=[
@@ -122,8 +125,11 @@ KNOWLEDGE_GAPS = [
             "Two separable steps. Biologically: measure the tissue distribution of each "
             "processed form with form-specific assays, and repeat the key physiological "
             "perturbations with each. Curationally: annotate against the existing PRO chain "
-            "identifiers, as UniProt already does for the isoform-level GO:0005179 and "
-            "GO:0005576 rows it carries on PRO_0000001763 in other species."),
+            "identifiers. Half the machinery is already in place - mouse and bovine Apln "
+            "carry GO:0005179, GO:0005576 and GO:0060183 ISS rows whose WITH/FROM is "
+            "UniProtKB:Q9ULZ1-PRO_0000001763, i.e. the human apelin-13 chain is already "
+            "used as a similarity donor - but a QuickGO query on that identifier returns "
+            "zero annotations, so nothing is annotated to the chain itself."),
         provenance=[("PMID:24251091", "SHI13_FURIN"), ("PMID:15231996", "DEM04_FORMS"),
                     ("PMID:27217402", "WAN16_DOMINANT"), (UNIPROT, "UP_PTM")],
     ),
@@ -512,6 +518,17 @@ REFERENCE_REVIEWS = {
             "hypotensive action; also the source for those two being 'the dominant apelin "
             "peptides'. Cached abstract only. Missed by affinage, which cited a review "
             "instead.")),
+    "PMID:27492965": dict(
+        relevance="MEDIUM", correctness="VERIFIED",
+        review_notes=(
+            "Fetched by this review after the affinage record flagged it; full text cached. "
+            "The mechanism of agonist-driven APJ internalisation, and the reason the "
+            "GO:1904022 rows are phrased carefully here: pyroglutamyl-apelin-13 internalises "
+            "the receptor through clathrin-coated vesicles in a GRK2-, EPS15- and "
+            "dynamin-dependent but beta-arrestin1-INdependent manner, so beta-arrestin "
+            "recruitment and internalisation are separable steps rather than one chain. The "
+            "receptor studied is mouse APJ expressed in HEK293 cells and the agonist is the "
+            "human peptide.")),
     "PMID:28137936": dict(
         relevance="HIGH", correctness="VERIFIED",
         review_notes=(
@@ -631,5 +648,8 @@ REFERENCE_REVIEWS = {
             "paper, and the fluid-homeostasis pair. Its year column is also unreliable "
             "(several entries dated against the wrong journal year). Used for leads only; "
             "every claim taken from it was re-verified against the PMID, and no GO "
-            "grounding was imported from its mechanism profile.")),
+            "grounding was imported from its mechanism profile. It did contribute one paper "
+            "that changed a decision: PMID:27492965, which is why the GO:1904022 rows here "
+            "do not claim that beta-arrestin recruitment is what internalises the "
+            "receptor.")),
 }

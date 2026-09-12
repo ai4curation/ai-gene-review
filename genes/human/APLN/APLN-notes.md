@@ -22,11 +22,11 @@ recollection of a number.
   with no symbol collision of the AGT/AGXT kind. It is a good map of the modern apelin
   literature and it is where I found the ACE2/NEP metabolism thread, the I109^3.32 bias
   residue, and the ELA-versus-apelin distinct-binding-mode work.
-- **Cached publications.** Seven seeded from GOA; I fetched eleven more (listed in §13). Four of the
+- **Cached publications.** Seven seeded from GOA; I fetched twelve more (listed in §13). Four of the
   seven seeded papers are abstract-only (`full_text_available: false`): PMID:9792798,
-  PMID:10525157, PMID:11359874 and PMID:38428423. Of the eleven I fetched, four have full
-  text (PMID:15231996, PMID:19767528, PMID:24251091, PMID:28890073) and seven are
-  abstract-only.
+  PMID:10525157, PMID:11359874 and PMID:38428423. Of the twelve I fetched, five have full
+  text (PMID:15231996, PMID:19767528, PMID:24251091, PMID:27492965, PMID:28890073) and
+  seven are abstract-only.
 
 ## 2. What the gene product actually is
 
@@ -287,6 +287,20 @@ it is damping cytokine output. If the row is kept at all it should be
 or reduces the rate of production of a cytokine"*, verified live on QuickGO, not obsolete).
 MODIFY, with the weakness of the underlying experiment stated.
 
+## 8b. A precision on the internalisation rows
+
+`GO:1904022 positive regulation of G protein-coupled receptor internalization` is easy to
+write up as "apelin recruits beta-arrestin, which internalises the receptor". That chain is
+wrong in its second step. Agonist-driven APJ internalisation runs through clathrin-coated
+vesicles and is GRK2-, EPS15- and dynamin-dependent but **beta-arrestin1-independent**:
+[PMID:27492965 "Our data suggest that upon continuous agonist exposure GRK2-mediated phosphorylation targets APJ to CCVs that are internalized from the cell surface in a β-arrestin1-independent, EPS15- and dynamin-dependent manner."],
+with the internalisation itself measured directly
+[PMID:27492965 "stimulation caused internalization of mAPJ via clathrin coated vesicles (CCVs) and also caused a rapid reduction in cell surface and whole cell HA-mAPJ"].
+Apelin does both things - it recruits beta-arrestin (PMID:22810587) and it internalises the
+receptor - but they are separable steps, and the review says so rather than collapsing them.
+The receptor in that study is mouse APJ in HEK293 cells; the agonist is the human peptide.
+This was the one paper I took from the affinage lead list and then verified independently.
+
 ## 9. Core versus non-core: the line I drew
 
 Core, for a peptide hormone precursor, is the molecular act and its immediate pathway:
@@ -356,11 +370,16 @@ on. Specifically absent from its 31 citations:
 - **Processing.** PMID:24251091 (furin/PCSK3 → apelin-13 directly), which is the only
   mechanistic account of how the annotated gene product becomes the assayed peptide.
 
+What it did contribute: exactly one paper that changed a review decision. PMID:27492965 is
+in its citation list, and following it up is what stopped the `GO:1904022` rows being
+written as "apelin recruits beta-arrestin, which internalises the receptor" — a chain whose
+second step that paper disproves (§8b). That is the correct use of a lead list.
+
 Its dating column is also unreliable (e.g. PMID:30061698 and PMID:32879139 both listed 2018
 against journals of other years), so I used it for leads only and re-verified every claim
 against the PMID. Recorded as `relevance: MEDIUM`, `correctness: LOW_QUALITY` on the
 `file:` reference — not because the gates tripped (they did not) but because the record is
-a lead list whose bibliography does not overlap the record under review.
+a lead list whose bibliography barely overlaps the record under review.
 
 ## 12. Open questions carried into the review
 
@@ -387,6 +406,6 @@ a lead list whose bibliography does not overlap the record under review.
 - `just fetch-panther-paint PTHR15953` → 1 node, 1 node-level annotation.
 - Europe PMC was avoided; all literature search via NCBI E-utilities esearch/esummary, all
   caching via `just fetch-pmid`.
-- Eleven extra PMIDs cached and cited: 11384769, 11815627, 15231996, 17673668, 18617693,
-  19046574, 19767528, 24251091, 26611206, 27217402, 28890073.
+- Twelve extra PMIDs cached and cited: 11384769, 11815627, 15231996, 17673668, 18617693,
+  19046574, 19767528, 24251091, 26611206, 27217402, 27492965, 28890073.
 - Bioinformatics: `APLN-bioinformatics/` (3 scripts, `RESULTS.md`).
