@@ -328,7 +328,33 @@ do not otherwise associate — see the decision recorded in the review YAML.
 - **Stub under-seeding**: none; 37 = 37 = 37.
 - **`GO:0042802` downward MODIFY** (the ACRV1 "IBA above its donor" check): not warranted
   — the row is a human IPI at the correct term, not a propagation.
-- **Sibling/paralog review cross-check**: not applicable, no paralog reviews exist.
+- **Sibling/paralog review cross-check**: no *paralog* reviews exist (AHI1 has no human
+  paralogue), but two *complex-subunit* siblings do — see the next section, which found a
+  merged review resolving an identical row the opposite way.
+
+## A merged sibling ACCEPTs the identical row — and is right to
+
+The AADACL2/3/4 lesson says to check how sibling genes resolved the same row, and to flag
+a divergence rather than diverge silently. Of the 14 MKS-complex subunits, two have gene
+folders in this repo: **CC2D2A** and **TMEM67**. `genes/human/CC2D2A/CC2D2A-ai-review.yaml`
+is on `main` and carries the **byte-identical** row —
+`GO:1904491 / NAS / PMID:22179047` — with `action: ACCEPT`, where I mark it
+over-annotated.
+
+Both are correct, because the surrounding evidence differs, and the numbers say so:
+
+| | annotations for `GO:1904491` | reaches an experimental annotation? |
+|---|---|---|
+| human **CC2D2A** `Q9P2K1` | **3** — IBA (GO_Central), IEA (Ensembl Compara), NAS (ComplexPortal) | **Yes** — mouse `Cc2d2a` `Q8CFW7` (Swiss-Prot, 1633 aa) holds it by IMP |
+| human **AHI1** `Q8N157` | **1** — NAS (ComplexPortal) only | **No** — and mouse `Ahi1` and rat `Ahi1` carry the term at all |
+
+So on CC2D2A the ComplexPortal NAS is redundant with independently supported annotations;
+on AHI1 it is the *only* thing asserting the process. The two reviews differ on evidence,
+not on method — which is the distinction the AADACL2/3/4 episode showed nobody had drawn.
+
+Corroborating detail from the same reference: of the 4 entities carrying `GO:0035869` by
+IDA from PMID:22179047, one is mouse Cc2d2a — and **none is AHI1 in any species**. The
+paper's experimental reach simply does not include this gene, for either term.
 
 ## The adaptor claim: one real test, and two that were checked and rejected
 
@@ -411,7 +437,17 @@ AHI-1 with BCR-ABL and JAK2 in K562 cells (PMID:18936234), and AHI1 with OTUD1 a
 in A549 cells and patient PBMCs (PMID:35821088). Both are filed in `suggested_questions`.
 Consistent with the campaign's finding that for a well-studied gene the defect is as
 likely to be **absent curation** as over-annotation: this gene has 37 GOA rows, of which
-14 are ISS from a single mouse accession and 3 are one Reactome compartment label.
+13 are ISS from a single mouse accession and 3 are one Reactome compartment label.
+
+Evidence-code breakdown of the 37 rows, computed rather than eyeballed
+(`awk -F'\t' 'NR>1 {print $9}' AHI1-goa.tsv | sort | uniq -c`):
+**ISS 13, IPI 6, IDA 6, TAS 3, NAS 3, IEA 2, IBA 2, IMP 1, IC 1 = 37.**
+
+Recorded because the first draft of this review said "14 of 37 GOA rows are ISS" in two
+places. The count was never derived — it was estimated while reading — and it was wrong
+by one. Counting the column took five seconds. **A number in a review that was not
+computed is a latent error**, and the campaign's most heavily confirmed lesson is that a
+number which refuses to add up is the actual bug report.
 
 ## Committed check
 
