@@ -315,6 +315,12 @@ extracellular pool, and why an earlier draft's hedge — anchoring the nucleus
 proposal on PMID:33069768 because PMID:35608889 was "from the discovery lab" —
 was withdrawn: both papers have the same senior author.
 
+One caveat the script reports rather than hides: **Xu C appears on PMID:39905000
+and on 8 of the dominant group's 11 papers.** A shared surname-plus-initial is not
+proof of the same person, the senior author differs and the affiliations are a
+different institution, so the paper is still counted as independent — but "one
+independent replication" is load-bearing here, so the overlap is printed.
+
 The script also fails if the review text reintroduces a laboratory-count claim the
 author lists contradict.
 

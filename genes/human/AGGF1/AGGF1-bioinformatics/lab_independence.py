@@ -110,6 +110,27 @@ def main() -> None:
     print(f"Papers from neither: {indep}")
     print()
 
+    # "Independent" by senior author can still share bench authors. Measure the
+    # overlap rather than leaving the claim unqualified -- but note that a shared
+    # surname+initial is not proof of the same person, which is why this is
+    # reported as a caveat and not folded into the group count.
+    dominant_authors: dict[str, set[str]] = {}
+    for pmid in biggest:
+        for a in authors(pmid):
+            dominant_authors.setdefault(a, set()).add(pmid)
+    for pmid in indep:
+        shared = {a: sorted(v) for a, v in dominant_authors.items() if a in authors(pmid)}
+        if shared:
+            print(f"CAVEAT: {pmid} shares author name(s) with the dominant group:")
+            for a, where in sorted(shared.items(), key=lambda kv: -len(kv[1])):
+                print(f"    {a:12s} also on {len(where)} of its papers: {', '.join(where)}")
+            print("    A shared surname+initial is not proof of the same person, and the")
+            print("    senior author and affiliations differ, so the paper is still counted")
+            print("    as independent -- but the overlap is recorded rather than hidden.")
+        else:
+            print(f"{pmid} shares no author name with the dominant group.")
+    print()
+
     # The review must not claim more groups than this script finds.
     text = REVIEW.read_text()
     flat = re.sub(r"\s+", " ", text)

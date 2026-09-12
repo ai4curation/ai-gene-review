@@ -155,9 +155,17 @@ def check(paths: dict[str, str]) -> list[str]:
     retracted_patterns = [
         (r"(?:all four|every)[^.]{0,80}partner[^.]{0,80}(?:is|are)\s+nuclear",
          "the nuclear over-claim in any phrasing (MAB21L3 has zero CC annotations)"),
-        (r"(?:three|four|several)\s+(?:independent\s+)?(?:later\s+)?laborator",
+        # `laborator` alone is not enough: the corrected prose itself now says
+        # "independent group", so a future edit reading "three independent groups"
+        # is exactly the claim this exists to stop and would have sailed past.
+        (r"(?:three|four|several)\s+(?:independent\s+)?(?:later\s+)?"
+         r"(?:laborator|group|lab\b|team)",
          "a laboratory-independence count the author lists contradict "
          "(11 of 13 papers share one senior author)"),
+        # An allele frequency must not be presented as a carrier frequency. gnomAD
+        # AF for rs34203073 is ~1.4%; carriers are 2*AF*(1-AF) = 2.8%.
+        (r"carried by (?:roughly |about |~)?1\.4\s?%",
+         "a gnomAD ALLELE frequency used as a carrier frequency; carriers are ~2.8%"),
     ]
     for pat, why in retracted_patterns:
         for name, text in (("RESULTS.md", results), ("notes", notes), ("review", review)):
@@ -261,6 +269,15 @@ def self_test() -> int:
          "The nucleus evidence comes from three independent laboratories. "
          "This matters for how the review is worded", 1,
          "a laboratory-count claim in a wording no literal string covers"),
+        # Same guard, the wording the corrected prose actually uses.
+        ("notes", "This matters for how the review is worded",
+         "The nucleus evidence comes from three independent groups. "
+         "This matters for how the review is worded", 1,
+         "a group-count claim (the wording 'laborator' alone would miss)"),
+        ("review", "a benign polymorphism: its gnomAD v4 allele",
+         "a benign polymorphism carried by roughly 1.4% of the population: its "
+         "gnomAD v4 allele", 1,
+         "an allele frequency presented as a carrier frequency"),
     ]
     failures = 0
     for key, old, new, n, label in mutations:

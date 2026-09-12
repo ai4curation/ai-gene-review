@@ -45,8 +45,23 @@ because UniProt still presents the variant as functional.
 - The originating lab itself moved on: [PMID:18564129 "previously identified as a candidate susceptibility gene for KTS, but further"] In that paper's Discussion (full text not in the local cache, so not quoted here) they report E133K at P=0.59 between 163 cases and 465 controls and state it is unlikely to be associated with KTS.
 - External databases agree: ClinVar VCV000402345 classifies
   `NM_018046.5(AGGF1):c.397G>A (p.Glu133Lys)` **Benign/Likely benign** (multiple
-  submitters, no conflicts); gnomAD v4 gives an overall allele frequency of
-  ~1.4%, highest in Ashkenazi Jewish (~2.7%) and Non-Finnish European (~1.6%).
+  submitters, no conflicts, last evaluated 2026-01-01); gnomAD v4 gives an overall
+  **allele** frequency of ~1.4% (exomes AC 20,774 / AN 1,461,240), highest in
+  Ashkenazi Jewish (~2.7%) and Non-Finnish European (~1.6%), and **lowest**, at
+  ~0.27%, in African/African-American samples.
+
+  **Provenance for those two figures**, which are the only quantities in this
+  review with no script and no cached quote behind them: the gnomAD numbers were
+  read from the gnomAD v4 GraphQL API for variant `5-77035624-G-A` (GRCh38) and
+  cross-checked against Ensembl REST `/variation/human/rs34203073?pops=1`; the
+  ClinVar classification from NCBI eutils `esummary` for `VCV000402345`. Neither
+  is reproduced by a committed script — flagged here rather than left implicit.
+
+  **Allele frequency is not carrier frequency**, and an earlier draft of the
+  `description` conflated them. At AF = 0.0142 the carrier frequency is
+  2·AF·(1−AF) = **2.8%**, which is what the primary source actually measured:
+  Barker et al. found the change in **3.3%** of 275 controls (9/275 = 3.27%). The
+  three numbers agree; the description now names the right one.
 
 **Correction to report to UniProt.** `FT VARIANT 133 /note="E -> K (displays a
 stronger angiogenic activity; dbSNP:rs34203073)"` presents a benign common
@@ -206,6 +221,13 @@ each cached record):
 | **Wang Q / Wang QK** | **11 of 13** — 14961121, 33069768, 35608889, 34551592, 27513923, 27522498, 40035560, 23197652, 24277077, 35202649, 37081014 |
 | Tian XL | 1 — 33471274; Tian XL is the **first author of the discovery paper**, so a separate group but the same lineage |
 | Chen L | 1 — **39905000**, the only genuinely independent group |
+
+One caveat, measured rather than asserted (`lab_independence.py` reports it):
+**Xu C appears on PMID:39905000 and on 8 of the dominant group's 11 papers.** A
+shared surname-plus-initial is not proof of the same person, the senior author
+differs, and PMID:39905000's affiliations are a different institution — so the
+paper is still counted as independent. The overlap is recorded rather than hidden
+because "one independent replication" is load-bearing here.
 
 This matters for how the review is worded, not for any action. An earlier draft
 credited the nucleus evidence to more distinct laboratories than the author lists
