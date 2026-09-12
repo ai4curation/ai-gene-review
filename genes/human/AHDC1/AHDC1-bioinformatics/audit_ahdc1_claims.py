@@ -68,19 +68,36 @@ DupKeyLoader.add_constructor(
 
 # Phrasings that were asserted and then retracted. If any reappears outside a
 # sentence that explicitly marks it as retracted, that is a regression.
+# Retracted CLAIMS, as regexes over whitespace-normalised text.
+#
+# Two corrections after a reviewer showed the first version could not have worked.
+#
+# 1. Seeding the list with the exact strings the FIX DELETED can only confirm the
+#    fix; it cannot find the claim restated in different words. That is precisely
+#    what happened: the IntAct correction rewrote the GO:0005515 row, but a
+#    paraphrase of the retracted reading survived in the PMID:32814053
+#    `reference_review` for nine passes, and not one of the four seeded strings
+#    could match it. These patterns therefore anchor on the NUMBERS and the
+#    semantic core, which a paraphrase must also carry, rather than on dead prose.
+# 2. Matching `re.escape(phrase)` against RAW text makes any phrasing that wraps
+#    inside a YAML block scalar invisible by construction -- and everything in the
+#    review file wraps. Matching is now done on whitespace-normalised text, which
+#    is what REQUIRED already did via its `\s+` patterns.
 RETRACTED = [
-    # The IntAct decomposition error (round 2).
-    "same single yeast two-hybrid experiment logged twelve times",
-    "all twelve IntAct records for the AHDC1-HTT pair carry the same IntAct",
-    "this is one screen",
-    "NbExp=12 overstates replication twelvefold",
-    # The hexanediol condensate-control reading (asserted passes 6-8, withdrawn
-    # pass 8). Listed because it is likelier to come back than the IntAct ones:
-    # the GO:0003682 row still states the intent immediately before withdrawing it,
-    # so an editor trimming that paragraph could easily leave the claim standing.
-    "this strengthens the binding call",
-    "It strengthens the `GO:0003682` call",
-    "survived a condensate-disrupting pre-treatment would",
+    # The IntAct decomposition error (retracted in af3276a2): twelve records are
+    # 4 bait constructs x 3 sub-method labels, so the inflation is threefold.
+    re.compile(r"single\s+AHDC1-HTT\s+experiment", re.I),
+    re.compile(r"logged\s+twelve\s+times", re.I),
+    re.compile(r"twelve-?fold\s+overstatement", re.I),
+    re.compile(r"overstates\s+replication\s+twelve-?fold", re.I),
+    re.compile(r"this\s+is\s+one\s+screen", re.I),
+    # The hexanediol condensate-control reading (asserted passes 6-8, withdrawn in
+    # pass 8). Anchored on the assertion itself, not on one file's wording, because
+    # the GO:0003682 row still states the pre-treatment's INTENT immediately before
+    # withdrawing it and a trimmed paragraph would leave the claim standing.
+    re.compile(r"strengthens\s+the\s+binding\s+call", re.I),
+    re.compile(r"strengthens\s+the\s+`?GO:0003682`?\s+call", re.I),
+    re.compile(r"occupancy\s+reported\s+survived\s+a\s+condensate-disrupting", re.I),
 ]
 # A retraction context makes a retracted phrasing legitimate to quote.
 RETRACTION_MARKERS = (
@@ -220,9 +237,12 @@ def check_retracted(problems: list[str]) -> None:
         if not path.exists():
             problems.append(f"expected file missing: {path}")
             continue
-        text = path.read_text()
-        for phrase in RETRACTED:
-            for m in re.finditer(re.escape(phrase), text, re.I):
+        # Normalise whitespace BEFORE matching. Everything in the review YAML wraps
+        # inside block scalars, so raw-text matching cannot see a claim that spans a
+        # line break -- which is most of them.
+        text = re.sub(r"\s+", " ", path.read_text())
+        for pattern in RETRACTED:
+            for m in pattern.finditer(text):
                 # Allow it inside an explicit retraction context. The window must be
                 # BOUNDED on both sides: an earlier version reached back to the last
                 # blank line, which in a YAML file can be the start of the document,
@@ -235,10 +255,11 @@ def check_retracted(problems: list[str]) -> None:
                 para = text[lo : m.end() + RETRACTION_WINDOW]
                 if not any(k.lower() in para.lower() for k in RETRACTION_MARKERS):
                     problems.append(
-                        f"{path.name}: retracted phrasing outside a retraction context: {phrase!r}"
+                        f"{path.name}: retracted phrasing outside a retraction context: "
+                        f"{m.group(0)!r} (pattern {pattern.pattern!r})"
                     )
     print(f"  retracted-phrasing scan over {len(targets)} files: "
-          f"{len(RETRACTED)} phrasings checked")
+          f"{len(RETRACTED)} patterns checked (whitespace-normalised)")
 
 
 def check_required(problems: list[str]) -> None:
@@ -378,6 +399,37 @@ def self_test() -> int:
         REVIEW.write_text(yaml.dump(doc, sort_keys=False))
         fired["paired_claim_one_side_removed"] = fired_with(
             run(), "tagged_transgene_weighting_justified' is absent from the GO:0003682"
+        )
+        REVIEW.write_text(base)
+
+        # guard: THE REGRESSION THAT ACTUALLY HAPPENED. The pre-correction reading of
+        # the IntAct records survived in the PMID:32814053 reference_review for nine
+        # passes, because the first version of RETRACTED held only strings the fix had
+        # already deleted and matched them against raw (unwrapped) text. Splicing the
+        # historical sentence back in must fail. This is the one self-test case taken
+        # from a real defect rather than from a mutation I invented.
+        stale = (
+            "      A ~500-bait neurodegeneration yeast two-hybrid interactome. "
+            "Correctly cited, but\n"
+            "      IntAct logs its single AHDC1-HTT experiment (EBI-25827495) twelve "
+            "times under three\n"
+            "      sub-method names, which is what inflates UniProt's NbExp=12 into a "
+            "twelvefold\n      overstatement of replication.\n"
+        )
+        marker = (
+            "      A ~500-bait neurodegeneration yeast two-hybrid interactome. "
+            "Correctly cited. Its"
+        )
+        assert marker in base, "self-test could not find the corrected reference_review"
+        lines = base.splitlines(keepends=True)
+        i = next(n for n, ln in enumerate(lines) if ln.startswith(marker))
+        j = i
+        while j < len(lines) and not lines[j].startswith("- id: PMID:33644933"):
+            j += 1
+        REVIEW.write_text("".join(lines[:i]) + stale + "".join(lines[j:]))
+        assert "single AHDC1-HTT experiment" in REVIEW.read_text(), "splice did not land"
+        fired["regression_stale_reference_review"] = fired_with(
+            run(), "single AHDC1-HTT experiment"
         )
         REVIEW.write_text(base)
 

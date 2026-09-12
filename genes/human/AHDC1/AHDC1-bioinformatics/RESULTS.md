@@ -29,7 +29,7 @@ number or a phrasing asserted in prose and never re-derived from the data it des
 |---|---|
 | coverage | every data row of `AHDC1-goa.tsv` is matched by a non-`NEW` `existing_annotation` on (GO id, evidence code, reference, WITH/FROM) — asserted by **presence**, so a deleted entry fails rather than being skipped |
 | arithmetic | `entries == GOA rows + NEW rows`, the action tally sums to the entry count, and no `PENDING` survives |
-| retraction | **seven** retracted phrasings must not reappear in the review, the notes or the history record **outside an explicit retraction context** — four from the IntAct decomposition error, three from the hexanediol condensate-control reading |
+| retraction | **eight** retracted-claim **regexes**, matched against **whitespace-normalised** text, must not appear in the review, the notes or the history record **outside an explicit retraction context** — five from the IntAct decomposition error, three from the hexanediol condensate-control reading |
 | required claims | five load-bearing claims must appear in the number of files they should |
 | paired claims | **two** claims must each be present in **each** of two named rows' `review.reason`, resolved through the parsed YAML — the tagged-transgene weighting justification, and the hexanediol filtering argument, each on both `GO:0003700` and `GO:0003682`. A missing row is an **error**, not a skip, so deleting the row cannot satisfy the check |
 | duplicate keys | the review is loaded with a `SafeLoader` subclass that **raises** on a duplicated mapping key, which PyYAML otherwise resolves silently by keeping the last one |
@@ -85,9 +85,9 @@ Current state: `0 problems`, with `GOA rows=15  entries=20  NEW=5` and the actio
 numbers are **not** hand-maintained here — the script derives both sides and fails if they
 disagree, so this table cannot drift away from the file without the check going red.
 
-All six self-test guards fire: `coverage_on_deleted_entry`, `duplicate_key`,
+All seven self-test guards fire: `coverage_on_deleted_entry`, `duplicate_key`,
 `retracted_phrasing`, `required_claim_missing`, `paired_claim_one_side_removed`,
-`paired_claim_row_deleted`. The paired-claim mutations go **through the YAML parser** so
+`paired_claim_row_deleted`, `regression_stale_reference_review`. The paired-claim mutations go **through the YAML parser** so
 exactly one side is thinned, and each asserts the mutation landed before running the check
 — a guard whose mutation silently no-ops "proves" itself against nothing.
 
@@ -95,6 +95,38 @@ Each case also asserts **which** problem appeared, not merely that one did. `boo
 would have been satisfied by any failure, and three of the six mutations share a YAML
 round-trip: had the round-trip itself perturbed the document, all three would have "passed"
 while testing nothing. `fired_with(run(), "<expected text>")` closes that vacuous-pass mode.
+
+## The retraction lint could not have worked, and a reviewer proved it
+
+The sharpest finding on this PR, and it is about this script rather than about AHDC1.
+
+A **paraphrase of the retracted IntAct claim survived nine review passes** in the
+`reference_review` for `PMID:32814053` — "IntAct logs its single AHDC1-HTT experiment
+(EBI-25827495) twelve times … a twelvefold overstatement of replication" — while the
+`GO:0005515` row two hundred lines below said the opposite. The correction commit had
+rewritten the row and the notes and never touched the references block.
+
+The lint did not catch it, and the reason is structural, not an oversight in one string:
+
+1. **`RETRACTED` was seeded with the exact wordings the fix had deleted.** Such a list can
+   only ever confirm that the fix happened. It cannot find the claim **restated in
+   different words**, which is the failure mode that actually occurs. The patterns now
+   anchor on the **numbers and the semantic core** — `single\s+AHDC1-HTT\s+experiment`,
+   `twelve-?fold\s+overstatement` — which any paraphrase must also carry.
+2. **Matching `re.escape(phrase)` against raw text made every wrapped claim invisible.**
+   Everything in the review YAML lives in block scalars and wraps. Matching is now done on
+   **whitespace-normalised** text, which is what `REQUIRED` already did via its `\s+`
+   patterns. Of the seven phrasings in the previous version, **zero** could match anything
+   in the review file at all.
+
+Proof, not assertion: splicing the historical sentence back into a copy now fails on **two
+independent patterns**, and that splice is committed as the `regression_stale_reference_review`
+self-test guard — the only case here taken from a real defect rather than from a mutation I
+invented.
+
+**The general lesson:** a regression lint seeded from the diff of a fix inherits the fix's
+vocabulary, not the claim's meaning. Seed it from what the claim *asserts* — preferably a
+number — and it will still fire after someone rewrites the sentence.
 
 ## What writing it found
 

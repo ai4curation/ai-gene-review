@@ -565,8 +565,11 @@ rather than rescuing the control:
   that transfers;
 - **duration** is an independent problem. The Gibbin pre-treatment ran for **60 seconds**,
   while the cellular studies that paper cites used *"1.5% 1,6-hexanediol for 30 min"* and 1%
-  for 2 h. Even at a sufficient concentration, a 60-second exposure is two to three orders
-  of magnitude shorter than the cellular protocols.
+  for 2 h. That is **30× and 120× shorter** respectively. (An earlier draft here said "two
+  to three orders of magnitude", which is wrong — 30× and 120× are 1.5 and 2.1 orders. A
+  reviewer derived it; I had not. The review YAML states the raw durations and draws no
+  multiplier at all, which is the better form and is why the error stayed out of the
+  curation.)
 
 Worth naming the shape of this, because it is the second time on this gene: **I brought in
 a citation to qualify a claim and did not read past the fact I wanted from it.** The same
