@@ -13,6 +13,7 @@ uv run python domain_residues.py     # FHA + G-patch residue conservation -> dom
 uv run python retraction_check.py    # retraction / erratum / expression-of-concern
 uv run python check_terms.py         # QuickGO obsoletion + secondaryIds for every term used
 uv run python reconcile_goa.py       # GOA rows <-> existing_annotations, asserted
+uv run python term_choice_checks.py  # the two MODIFY targets vs GO's own usage
 uv run python audit_claims.py        # the reported numbers match what the scripts produce
 uv run python audit_claims.py --self-test
 ```

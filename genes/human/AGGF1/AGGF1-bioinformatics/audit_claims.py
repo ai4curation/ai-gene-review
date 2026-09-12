@@ -133,6 +133,40 @@ def check(paths: dict[str, str]) -> list[str]:
             if phrase in text:
                 problems.append(f"{name}: RETRACTED phrasing present ({why}): {phrase!r}")
 
+    # --- every MODIFY target named in the YAML must be the one the prose names ---
+    # This caught a real drift: the notes still said the TNFSF12 row was modified
+    # to GO:0043120 after the YAML had moved it to GO:0019955. A term id is the
+    # easiest thing in a review to change in one file and forget in another.
+    # NOT a dict keyed on the source term id: two of the three MODIFY rows are both
+    # GO:0005515 (TNFSF12 and DHX15), so a dict silently drops one of them and the
+    # guard then reports a false "target changed" failure. Collect a list.
+    targets = [
+        (a["term"]["id"], t["id"])
+        for a in anns
+        if a["review"]["action"] == "MODIFY"
+        for t in a["review"].get("proposed_replacement_terms", [])
+    ]
+    if len(targets) != 3:
+        problems.append(f"expected 3 MODIFY replacement terms, found {len(targets)}")
+    chosen = {t for _, t in targets}
+    if chosen != {"GO:0003723", "GO:0019955", "GO:0017151"}:
+        problems.append(
+            f"MODIFY targets changed to {sorted(chosen)}; the prose in RESULTS.md and "
+            "the notes documents GO:0003723, GO:0019955 and GO:0017151. Update both "
+            "before changing this guard."
+        )
+    for name, text in (("RESULTS.md", results), ("notes", notes)):
+        flat = re.sub(r"\s+", " ", text)
+        for go in sorted(chosen):
+            if go not in flat:
+                problems.append(f"{name}: MODIFY target {go} is never mentioned")
+        # A rejected alternative may be discussed, but never as the chosen one.
+        for verb in ("MODIFY to the informative `GO:0043120",
+                     "MODIFY to `GO:0043120"):
+            if verb in flat:
+                problems.append(f"{name}: names GO:0043120 as the chosen MODIFY target; "
+                                "the review chose GO:0019955")
+
     # --- the FHA claim must stay bounded in every place it is made ---
     _count(problems, results, "untested, not refuted", 1, "RESULTS.md")
     _require(problems, notes, "no phosphopeptide ever tested", "notes",
@@ -181,6 +215,11 @@ def self_test() -> int:
          "the 'untested not refuted' phrasing"),
         ("results", "three of the four HuRI partners", "all four HuRI partners", 1,
          "the retracted 'all four partners are nuclear' over-claim"),
+        ("notes", "MODIFY to\n  `GO:0019955 cytokine binding`",
+         "MODIFY to the informative `GO:0043120 tumor necrosis factor binding`", 1,
+         "a MODIFY target named differently in the prose than in the YAML"),
+        ("results", "GO:0017151", "GO:0017152", 0,
+         "a MODIFY target missing from RESULTS.md"),
     ]
     failures = 0
     for key, old, new, n, label in mutations:

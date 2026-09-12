@@ -13,6 +13,7 @@ uv run python domain_residues.py     # FHA and G-patch residue conservation
 uv run python retraction_check.py    # retraction / erratum / EoC
 uv run python check_terms.py         # QuickGO obsoletion + secondaryIds
 uv run python reconcile_goa.py       # GOA rows <-> existing_annotations
+uv run python term_choice_checks.py  # the two MODIFY targets vs GO's own usage
 ```
 
 The gene's own name, *Angiogenic factor with G-patch and FHA domains 1*, makes
@@ -252,6 +253,42 @@ present (`GO:0003676` ← GO:0000496; `GO:0003723` ← GO:0000498, GO:0044822;
 `GO:0007155` ← GO:0098602; `GO:0048018` ← GO:0071884).
 
 ---
+
+## 10. The two MODIFY targets, defended by GO's own usage
+
+A definition that *permits* something and a community that never *does* it are
+different situations, so `term_choice_checks.py` tests both MODIFY calls against
+usage rather than against the definition alone.
+
+**`GO:0019955 cytokine binding` for AGGF1–TNFSF12.** The obvious objection is
+that cytokine binding is a receptor's term and AGGF1 is a secreted non-receptor.
+Asking each holder's own GO record whether it carries `GO:0038023 signaling
+receptor activity` (not guessing from the gene symbol — a suffix heuristic put
+ACVRL1, BMPR1A and IFNAR1 in the wrong column) gives **83 receptors and 9
+non-receptors** among the 92 human holders read:
+
+```
+P21810  BGN     Biglycan
+P08246  ELANE   Neutrophil elastase
+P78536  ADAM17  Disintegrin and metalloproteinase domain-containing protein 17
+P29466  CASP1   Caspase-1
+P32455  GBP1    Guanylate-binding protein 1
+Q96PD4  IL17F   Interleukin-17F
+D2IYK3 / D5K9Q3 / D5K9R3  POU5F1
+```
+
+**BGN** is the directly analogous precedent: a secreted extracellular proteoglycan
+that binds secreted cytokines. The term is not receptor-restricted in use.
+
+**`GO:0017151 DEAD/H-box RNA helicase binding` for AGGF1–DHX15.** DHX15 is a
+DEA**H**-box helicase, so is a more specific term available, and is this one used
+that narrowly? Neither. The ontology search for *DEAH* returns **zero** terms, and
+`GO:0017151` has no comment, no synonyms and no children — it is the only term GO
+offers for binding a helicase of this superfamily. Its ten human annotations name
+four partners: **DDX5** (DEAD-box) and, via POT1, **BLM** and **WRN** — which are
+RecQ **DNA** helicases, not DEAD/H-box at all. So GO already applies this term well
+outside a strict DEAD-box reading; using it for DHX15 is inside existing usage and
+considerably more precise than those rows.
 
 ## Checks that came back negative, recorded so the next reviewer knows they ran
 

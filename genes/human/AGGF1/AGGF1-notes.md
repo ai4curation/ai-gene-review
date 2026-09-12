@@ -163,8 +163,12 @@ not all deserve the same verdict (`AGGF1-bioinformatics/RESULTS.md` §4):
 
 - **TNFSF12 / TWEAK** — the strongest. Three orthogonal assays in the original
   paper (Y2H, GST pull-down, co-IP) and an independent co-IP 21 years later in
-  human retinal endothelial cells (PMID:39905000). MODIFY to the informative
-  `GO:0043120 tumor necrosis factor binding`.
+  human retinal endothelial cells (PMID:39905000). MODIFY to
+  `GO:0019955 cytokine binding`. `GO:0043120 tumor necrosis factor binding` was
+  considered and rejected on its definition, which names TNF specifically as a
+  cytokine produced by monocytes and macrophages — that does not cover TNFSF12 —
+  even though GO places `GO:0038057 TNFSF11 binding` beneath it. That
+  inconsistency, and the missing `TNFSF12 binding` term, are raised separately.
 - **DHX15** — one Y2H screen, but it is the single most mechanistically predicted
   partner a G-patch protein can have. MODIFY to `GO:0017151 DEAD/H-box RNA
   helicase binding`: the same fact, stated informatively, with no new claim about
