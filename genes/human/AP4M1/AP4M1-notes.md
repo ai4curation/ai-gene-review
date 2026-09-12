@@ -297,8 +297,11 @@ Drosophila AP-1mu and AP-2mu, Dictyostelium AP-1 mu, and (in the newer slice) hu
 AP1M2. Not one AP-4 subunit seeds it. QuickGO confirms each seed has its own
 experimental grounding for the term (AP1M2 IDA PMID:10338135, AP2M1 IDA PMID:23676497,
 AP-1mu IMP PMID:22389401, AP-2mu IMP PMID:20226669, apm1 IDA PMID:12802059) while
-**AP4M1 has GO:0035615 by IBA only** — no experimental row anywhere. The term's
-definition does not tolerate the transfer: "Bringing together a cargo protein with
+**AP4M1 has GO:0035615 by IBA only**. Extending that check across the AP-4 clade,
+QuickGO returns exactly one GO:0035615 annotation for each of human O00189, mouse
+Q9JKC7, rat Q2PWT8, dog E2RED8 and *Arabidopsis* Q9SB50, and in every case it is the
+same IBA from GO_REF:0000033 — so no AP-4 mu subunit in any organism has experimental
+evidence for this term. The term's definition does not tolerate the transfer: "Bringing together a cargo protein with
 clathrin, responsible for the formation of endocytic vesicles" (QuickGO
 `/ontology/go/terms/GO:0035615/complete`). AP-4 neither works with clathrin
 (PMID:10436028 immunogold, PMID:26542808) nor acts in endocytosis (it is a TGN export
@@ -362,8 +365,9 @@ EM), PMID:20230749 (APP co-crystal and the F255/R283 site), PMID:29180427 and
 PMID:30262884 (ATG9A as cargo), PMID:29698489 and PMID:31142229 (in vivo ATG9A
 mislocalization), PMID:11707398 (mu4-ARF1, the source of a NEW annotation),
 PMID:26542808 (tepsin binds beta-4/epsilon, not mu4), PMID:32073997 (mu4-HOOK1/2),
-PMID:14572453 and PMID:18341993 (neuronal cargo), PMID:33084855 (the field review).
-Eleven of these are cited in the review. Affinage's `mechanism_profile` grounding
+PMID:14572453 and PMID:18341993 (neuronal cargo), PMID:33084855 (the field review). All
+fourteen are cited in the review, which carries 24 PMID references in total, every one of
+them used in at least one `supported_by` (counted from the finished YAML, not asserted). Affinage's `mechanism_profile` grounding
 (GO:0060090 molecular adaptor activity; Reactome R-HSA-5653656) was not imported; the
 MF was re-grounded from the narrative and the primary papers.
 
