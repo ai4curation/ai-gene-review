@@ -239,22 +239,23 @@ formation among 182 annotations. The reason is structural: `GO:0002003 is_a GO:0
 peptide hormone processing, under protein processing and proteolysis — the term
 describes the cleaving, and the substrate does none of it.
 
-Two habits follow:
+Therefore, before proposing a `NEW` process term:
 
-- **Check where the term sits in the ontology before proposing it.** A term's parents
-  often say plainly which entity is meant to carry it. A process term under
-  `GO:0006508 proteolysis`, `GO:0016310 phosphorylation`, or any other
-  reaction-type parent names the catalyst, not the substrate; and a proposed term that
-  is an ancestor or descendant of one you are also proposing (or of one the gene
-  already has) is redundant rather than additional.
-- **Check the GO-CAMs before concluding the gene is missing from a pathway.**
-  `gocams/index.tsv` and the cached models often contain the gene already, in the role
-  GO intends for it. The renin-angiotensin model
-  (`gocams/6246724f00000549/`) types REN and ACE `part_of GO:0002003` and puts AGT in
-  the same model as `GO:0005179` hormone activity, with `UniProtKB:P01019` additionally
-  present under `molecules:` — i.e. as the proteases' input. If a curator built a causal
-  model of the pathway, included your gene, and gave it a different term, that is a
-  modelling decision to argue with explicitly, not an absence to fill in.
+- **Name the entity that performs the step.** If the answer is another gene product,
+  the term belongs to that one. Necessity evidence does not answer this question.
+- **Run the comparator check** above, and treat a systematic absence as a convention
+  to identify rather than a gap to fill.
+- **Read the term's parents.** They usually say what kind of thing carries the term.
+  A process under `GO:0006508 proteolysis` names whatever does the cleaving — which is
+  the substrate itself in the autoprocessing case (`GO:0016540`), and otherwise is not.
+- **Check `gocams/index.tsv` and the cached models.** They often contain the gene
+  already, in the role GO intends for it — the renin-angiotensin model
+  (`gocams/6246724f00000549/`) has AGT twice over, as the hormone-activity node and as
+  the proteases' input molecule. A curator
+  who modelled the pathway, included your gene, and gave it a different term made a
+  decision to argue with explicitly, not an absence to fill in.
+- **Reject a term that is an ancestor or descendant** of another you are proposing, or
+  of one the gene already carries. That is redundancy, not added coverage.
 
 Where a substrate relationship genuinely needs to be machine-readable, the GO mechanism
 for it lives on the enzyme (`has input`), not on the substrate. Raise it as a
