@@ -220,8 +220,14 @@ fully paginated):
 | O43184 ADAM12 | 2 | peptide array, phage display | 1 (EBI-21225559) |
 
 `NbExp=3` for HAP1 is **one study logged under three method terms**. This does not weaken
-NPHP1 or HAP1 — both were additionally measured by gel filtration with defined
-stoichiometry — but it means the count is not a replication count.
+NPHP1 or HAP1 — both were additionally examined by gel filtration, which co-migrated each
+pair as species whose masses the authors read as a heterotetramer — but it means the count
+is not a replication count. (The stoichiometries themselves are the authors' reading of
+migration behaviour, not a measured quantity; see the round-2 section below.)
+
+Correction: `NbExp` counts **records**, not methods — which is why NPHP1's 4 does not
+equal its 2 methods while HAP1's 3 happens to equal its 3. See the round-1 section below
+for the per-record resolution.
 
 The same query also shows a BioID dataset (EBI-11176939) placing AHI1 in proximity to
 OFD1, PCM1, IQCB1, SSX2IP, ECD and others — a coherent centriolar-satellite/basal-body
@@ -546,6 +552,58 @@ missed site is an error rather than a silent no-op.
 defect this round was in text added one round earlier and gated only by "is the quote
 verbatim?". A new block written to satisfy a reviewer deserves the same scepticism as the
 original draft, not less.
+
+## Review round 3: the guard was fine, the site list was not
+
+Round 3 requested changes on one IMPORTANT item, and it is the sharpest process finding
+of this review.
+
+Round 2's fix was applied with a script that **asserted each anchor was present before
+replacing and absent afterwards** — the "fixed in N places, landed in N−1" guard, working
+exactly as designed. It reported four edits applied. And yet the retracted phrase
+*"resolve AHI1 dimers and tetramers as discrete species"* was still in the file, in the
+`GO:0042802` `existing_annotations` row, saying the opposite of what `core_functions` now
+said.
+
+**The guard verified the four sites it was handed. The four sites had been enumerated
+from memory rather than from a search.** So the failure mode the guard exists to prevent
+simply moved one level up, into the input. A guard over a hand-supplied site list inherits
+the incompleteness of that list, in the same way the ACTA1 guard inherited the scope of
+the claim it was checking.
+
+Worse, the surviving text was load-bearing, not cosmetic: the rejection of a MODIFY to
+`GO:0042803 protein homodimerization activity` rested **entirely** on the retracted claim
+("the paper resolves tetramers as well as dimers"). The conclusion survives and is in fact
+stronger — an unresolved copy number is a reason not to narrow to a dimer-specific term —
+but a curator reading that row alone would have got the disavowed argument.
+
+**The fix is structural, not another careful pass.** `audit_ahi1_claims.py` now carries:
+
+- **check 7** — a scan for every retracted phrasing across *both* the review YAML and the
+  notes, which takes **no site list as input** and therefore cannot be defeated by an
+  incomplete one. The notes are scanned with double-quoted spans stripped, so this
+  write-up can quote the retracted phrases while documenting them.
+- **check 8** — the *replacement* claims must be present. A retraction with nothing in its
+  place is a deletion, and check 7 alone would pass on it silently.
+
+Check 8's first version was itself defective and the self-test caught it: it took an
+**OR-list of alternatives**, so deleting one site still passed because a sibling phrase
+elsewhere satisfied the list — the "guard defeatable by deleting the thing it guards"
+failure, reproduced verbatim. Rewritten as one required string per site with its own
+minimum count. **Two of the seven guards in this file were found broken by trying to break
+them, and neither by reading them.**
+
+Two non-blocking items from the same round, both verified before acting:
+
+- **My RAB8A caveat over-corrected.** I had written that the total-level drop means "some
+  of the effect may be stability rather than localisation at all". The paper controls for
+  exactly that — overexpressed HA-Rab8a restores abundance and *still* never reaches the
+  basal body in Ahi1-knockdown cells, so localisation fails independently of abundance.
+  The recruitment-versus-retention ambiguity is real and kept; the stability alternative
+  is excluded and has been removed. A hedge can be wrong in the cautious direction, and
+  that is still wrong.
+- **The HAP1 stoichiometry was hedged harder than NPHP1's** although both rest on the same
+  kind of evidence and the same degree of authorial hedging. Levelled.
 
 ## Committed check
 

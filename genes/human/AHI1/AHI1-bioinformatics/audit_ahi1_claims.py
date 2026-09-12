@@ -31,6 +31,14 @@ What is checked
 5. Every `reference_id` cited anywhere is declared in the top-level `references`.
 6. The raw count of `- reference_id:` lines equals the parsed count, which is the
    cross-check that makes defect (1) detectable even if the strict loader is bypassed.
+7. No RETRACTED phrasing survives anywhere in the review or the notes. This exists
+   because of a real recurrence: a round-2 fix was applied with a before/after anchor
+   guard that correctly verified the four sites it was handed - but the four sites had
+   been enumerated from memory rather than from a search, so the retracted phrase
+   "resolve AHI1 dimers and tetramers as discrete species" survived in the
+   `existing_annotations` row while `core_functions` said the opposite. The guard was
+   fine; the site list was not. A phrase-level scan over the whole file cannot be
+   defeated that way, because it never takes a list of sites as input.
 
 The self-test mutates a temporary copy of the review, asserting each anchor string is
 present BEFORE replacing it, so a drifted anchor is an error rather than a mutation
@@ -53,6 +61,45 @@ HERE = Path(__file__).resolve().parent
 GENE_DIR = HERE.parent
 YAML_PATH = GENE_DIR / "AHI1-ai-review.yaml"
 GOA_PATH = GENE_DIR / "AHI1-goa.tsv"
+NOTES_PATH = GENE_DIR / "AHI1-notes.md"
+
+# Phrasings this review examined and RETRACTED. Each must not reappear as an assertion.
+# The notes file is allowed to quote them, because its round-2 section documents the
+# retraction - so the notes are scanned only outside quotation marks.
+RETRACTED_PHRASES = [
+    # The gel-filtration data do not settle AHI1's oligomeric state: the candidate
+    # homodimer peak is hedged and then argued against on mass grounds in the same
+    # sentence, and "tetramers and dimers of AHI1" is in the V443D mutant lane.
+    "resolve AHI1 dimers and tetramers as discrete species",
+    "resolves AHI1 dimers and tetramers as discrete species",
+    "self-associates into dimers and tetramers",
+    "the paper resolves tetramers as well as dimers",
+    # UniProt hedges every stoichiometry with "probably"; so does the source.
+    "defined AHI1(2):NPHP1(2) heterotetramer",
+    "assembles defined heterotetramers",
+    "defined heterotetramer and\n  heterodimer",
+    "gel filtration with defined\nstoichiometry",
+    # PMID:19625297 controlled for the abundance drop with overexpressed HA-Rab8a, so
+    # "may be stability rather than localisation" is excluded, not open.
+    "may be stability rather than localisation at all",
+]
+
+# Claims that MUST be present. A retraction is only complete when the replacement is
+# actually stated -- deleting both the retracted phrase and its replacement would
+# otherwise pass check 7 silently.
+#
+# Each entry is ONE required string with its own minimum count, deliberately NOT an
+# OR-list over alternatives: an OR-list is defeatable by deleting one site while a
+# sibling phrase elsewhere keeps the check satisfied, which is the "guard defeatable by
+# deleting the thing it guards" failure. The self-test caught exactly that here.
+REQUIRED_CLAIMS = [
+    ("stoichiometry open, existing_annotations row",
+     "how many copies is\n      open", 1),
+    ("stoichiometry open, core_functions entry",
+     "the activity is established while the stoichiometry is not", 1),
+    ("RAB8A localisation separable from abundance",
+     "so localisation fails independently of abundance", 1),
+]
 
 ACC_LIKE = re.compile(
     r"^(UniProtKB|MGI|ZFIN|PANTHER|RGD|SGD|FB|WB|TAIR|ComplexPortal|PMID):"
@@ -234,6 +281,38 @@ def audit(yaml_path: Path, goa_path: Path, verbose: bool = True) -> list[str]:
         )
     say(f"6. reference_id occurrences: raw {raw_count} == parsed {parsed_count}")
 
+    # 7. no retracted phrasing survives, in the review OR the notes
+    scanned = [(yaml_path.name, raw)]
+    notes = yaml_path.parent / "AHI1-notes.md"
+    if notes.exists():
+        body = notes.read_text(encoding="utf-8")
+        # Strip double-quoted spans: the notes legitimately QUOTE retracted phrasings
+        # while documenting the retraction. Scanning what remains keeps the check honest
+        # without making the write-up of a correction trip its own guard.
+        scanned.append((notes.name, re.sub(r'"[^"]*"', '""', body)))
+    hits = 0
+    for fname, text in scanned:
+        for phrase in RETRACTED_PHRASES:
+            n = text.count(phrase)
+            if n:
+                hits += n
+                problems.append(
+                    f"RETRACTED PHRASING survives in {fname} (x{n}): {phrase!r}"
+                )
+    say(f"7. retracted phrasings: {len(RETRACTED_PHRASES)} scanned over "
+        f"{len(scanned)} files, {hits} survivors")
+
+    # 8. the replacement claim is actually stated (a retraction with nothing in its
+    #    place is a deletion, not a correction)
+    for label, needle, minimum in REQUIRED_CLAIMS:
+        found = raw.count(needle)
+        if found < minimum:
+            problems.append(
+                f"REQUIRED CLAIM missing ({label}): expected >={minimum} occurrence(s) "
+                f"of {needle!r}, found {found}"
+            )
+    say(f"8. required replacement claims: {len(REQUIRED_CLAIMS)} checked")
+
     tally = Counter(a["review"]["action"] for a in annotations)
     say(f"\nactions: {dict(tally)}")
     return problems
@@ -269,6 +348,18 @@ MUTATIONS = [
         "    - reference_id: PMID:20081859\n      supporting_text: significantly (P = 0.00175",
         "    - reference_id: PMID:11111111\n      supporting_text: significantly (P = 0.00175",
         "cited but NOT declared",
+    ),
+    (
+        "retracted phrasing returns",
+        "and UniProt records it at ECO:0000269.",
+        "and the gel-filtration profiles in the same paper resolve AHI1 dimers and tetramers as discrete species.",
+        "RETRACTED PHRASING survives",
+    ),
+    (
+        "replacement claim deleted",
+        "So what is established is that AHI1 binds AHI1; how many copies is\n      open.",
+        "So what is established is that AHI1 binds AHI1.",
+        "REQUIRED CLAIM missing",
     ),
 ]
 
