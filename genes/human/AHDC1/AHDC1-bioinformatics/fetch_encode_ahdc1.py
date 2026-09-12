@@ -95,12 +95,10 @@ def main() -> int:
         print(f"  antibody {acc}  targets={ab.get('targets')}")
 
     # The two conclusions the review depends on, asserted rather than eyeballed.
-    knockin = [
-        g
-        for g in mods.values()
-        if g.get("method") == "CRISPR" and g.get("category") == "insertion"
-    ]
-    tagged = [g for g in mods.values() if g.get("introduced_tags")]
+    # Printed from the SAME values the gate tests, so the report and the verdict
+    # cannot drift apart -- computing them twice is how a summary starts saying
+    # something the exit status does not.
+    tagged, knockin = classify(mods)
     print()
     print(f"  => epitope-tagged:            {bool(tagged)}")
     print(f"  => tag at endogenous locus:   {bool(knockin)} (CRISPR insertion)")
@@ -115,6 +113,17 @@ def main() -> int:
     return 0
 
 
+def classify(mods: dict[str, dict]) -> tuple[list[dict], list[dict]]:
+    """Return (tagged, knockin) modifications. Single source of truth for both the
+    printed summary and the gate, so the two cannot disagree."""
+    tagged = [g for g in mods.values() if g.get("introduced_tags")]
+    knockin = [
+        g for g in mods.values()
+        if g.get("method") == "CRISPR" and g.get("category") == "insertion"
+    ]
+    return tagged, knockin
+
+
 def verdict_problems(mods: dict[str, dict]) -> list[str]:
     """Return the reasons the review's GO:0003682 claims would need revising.
 
@@ -123,11 +132,7 @@ def verdict_problems(mods: dict[str, dict]) -> list[str]:
     the review rests on, so a run in which either flips must exit non-zero rather
     than print a warning into a log nobody reads.
     """
-    knockin = [
-        g for g in mods.values()
-        if g.get("method") == "CRISPR" and g.get("category") == "insertion"
-    ]
-    tagged = [g for g in mods.values() if g.get("introduced_tags")]
+    tagged, knockin = classify(mods)
     problems: list[str] = []
     if not tagged:
         problems.append(

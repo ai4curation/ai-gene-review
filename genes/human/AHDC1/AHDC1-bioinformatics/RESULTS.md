@@ -120,6 +120,23 @@ every row's `review.reason`, with a missing row treated as an error rather than 
 **Assert presence; do not validate only on match** — otherwise the guard is defeated by
 deleting the thing it guards.
 
+## The self-test earned its keep: a guard that had been passing by luck
+
+Recorded because it is the one thing a self-test can do that reading cannot. After an
+unrelated edit elsewhere in the notes, `--self-test` went red on `retracted_phrasing`
+while the ordinary run stayed green.
+
+Cause: the retraction-context window reached **backwards to the last blank line**. In
+markdown that is a paragraph; in a **YAML** file, where blank lines are rare, it can reach
+the start of the document — so a retraction marker *anywhere above* silently excused every
+later match. The guard had been firing only because no marker happened to sit above the
+mutation point, and my edit put one there.
+
+Fixed with a **bounded** ±400-character window, which is predictable and cannot swallow the
+file. The general form: **a scoping heuristic tuned on one file format will behave
+differently on another**, and an unbounded reach in either direction is the version that
+fails silently — it makes the guard *more* permissive, so nothing goes red.
+
 **Caveat on the method, stated because it applies to this file too:** a passing self-test
 proves the guards I thought of fire. It cannot tell me which guard I failed to write, and
 the required-claim patterns encode *my* framing of each claim — they check that the

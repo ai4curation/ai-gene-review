@@ -76,6 +76,9 @@ RETRACTED = [
 ]
 # A retraction context makes a retracted phrasing legitimate to quote.
 RETRACTION_MARKERS = ("earlier draft", "retracted", "got it wrong", "was WRONG", "refuted")
+# Characters either side of a match that count as "the same context". Bounded on
+# purpose -- see the comment in check_retracted.
+RETRACTION_WINDOW = 400
 
 # Claims that must be present, with the number of files they must appear in.
 # Keyed by a short name so a failure names the claim, not a regex.
@@ -204,9 +207,16 @@ def check_retracted(problems: list[str]) -> None:
         text = path.read_text()
         for phrase in RETRACTED:
             for m in re.finditer(re.escape(phrase), text, re.I):
-                # allow it inside an explicit retraction context (same paragraph)
-                start = text.rfind("\n\n", 0, m.start())
-                para = text[max(start, 0) : m.end() + 400]
+                # Allow it inside an explicit retraction context. The window must be
+                # BOUNDED on both sides: an earlier version reached back to the last
+                # blank line, which in a YAML file can be the start of the document,
+                # so any retraction marker anywhere above silently excused every
+                # later match. The self-test caught that only after an unrelated
+                # edit added a marker near the top -- i.e. the guard had been
+                # passing by luck. A fixed +/- window is predictable and cannot
+                # swallow the file.
+                lo = max(0, m.start() - RETRACTION_WINDOW)
+                para = text[lo : m.end() + RETRACTION_WINDOW]
                 if not any(k.lower() in para.lower() for k in RETRACTION_MARKERS):
                     problems.append(
                         f"{path.name}: retracted phrasing outside a retraction context: {phrase!r}"

@@ -512,14 +512,25 @@ bears on two rows, stated on one. The filtering half is now on both, and a **sec
 `PAIRED_CLAIMS` entry** lints it, so the two instances of this defect are now both under
 the same guard.
 
-*The reagent is not clean, and the hedge cannot come from this paper.* 1,6-hexanediol is
-not a condensate-specific perturbant — aliphatic alcohols also affect kinase and
-phosphatase activity and alter chromatin compaction directly — so "hexanediol-resistant" is
-not strictly interchangeable with "not condensate-derived". Nothing in the cached text
-speaks to the reagent's selectivity, so this is flagged in the row as a limitation that
-cannot be sourced from the publication. Note it cuts **only against the strengthening
-half**: the filtering half holds whatever the mechanism, because a map collected after a
-disruptive pre-treatment is a filtered map regardless of what the disruption acted on.
+*The reagent is not clean, and the hedge cannot come from this paper — but it is
+sourceable.* 1,6-hexanediol is not a condensate-specific perturbant, so
+"hexanediol-resistant" is not strictly interchangeable with "not condensate-derived". The
+Nature paper says nothing about the reagent's selectivity, which is a different matter from
+the claim being unsourceable — a distinction the pass-7 reviewer made and which was worth
+acting on, since the hedge was briefly the one uncited assertion in a row where everything
+else carries provenance. **PMID:33814344** (Düster et al., *J Biol Chem* 2021) was looked
+up in PubMed and cached: kinases and phosphatases are *"virtually inactive"* at the 5–10%
+concentrations used to dissolve condensates, and **the Gibbin ChIP used 5%**. The
+concentration match is what makes it a real citation rather than a gesture.
+
+Scope discipline on that citation: only the **kinase/phosphatase** result is cited, because
+that is what the paper measured. An earlier draft also asserted that hexanediol alters
+chromatin compaction directly; no citation for it surfaced, so the claim was **dropped**
+rather than left standing unsourced.
+
+And the hedge cuts **only against the strengthening half**: the filtering half holds
+whatever the mechanism, because a map collected after a disruptive pre-treatment is a
+filtered map regardless of what the disruption acted on.
 
 *And a "reports but does not gate" bug in my own script.* `fetch_encode_ahdc1.py` printed
 its warnings and still returned `0`, so a future run in which the ENCODE tag turned out to
@@ -527,6 +538,11 @@ be transfected rather than knocked in would have exited clean. That is the repo'
 violated inside a script written to enforce rules. The verdict logic is now a separate
 function, returns non-zero, and has a `--self-test` exercising it on four synthetic records
 (real record passes; untagged, transfected-tag, and no-modifications all fail).
+
+A follow-on from the same reviewer, and a subtler version of the same thing: the script
+computed `tagged`/`knockin` **twice**, once for the printed summary and once inside the
+gate. Two copies of a derivation drift, and the failure mode is a summary that reports
+something the exit status does not. Both now come from a single `classify()` call.
 
 ## 17. A note on the reviews themselves
 
