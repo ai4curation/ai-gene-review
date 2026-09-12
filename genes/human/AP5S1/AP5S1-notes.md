@@ -238,7 +238,9 @@ All five come from one node. The PAINT slice
 itself. The GOA WITH/FROM on each row is `PANTHER:PTN000413531|UniProtKB:Q9NUS5`, i.e.
 the node plus the target. That is the self-referential pattern the campaign brief calls
 valid and expected, and it is unusually clean here: the family has one subfamily
-(`PTHR16120:SF0`) and one human member, so the node's assertion is "this is the
+(`PTHR16120:SF0`) and one human gene (a UniProt query for `xref:panther-PTHR16120 AND
+organism_id:9606` returns Q9NUS5 plus two unreviewed TrEMBL records of the same gene), so
+the node's assertion is "this is the
 eukaryote-wide σ5 orthology group, and what was measured on the human protein is the
 group's ancestral property". No AP-1/AP-2/AP-3 sigma terms leak in — there is no
 clathrin-related term anywhere in the slice, which is the right outcome for a
