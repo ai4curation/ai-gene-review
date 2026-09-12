@@ -85,7 +85,7 @@ and A62. A62 is the one specific to the tyrosinase signal, which is also the sig
 γ2-σ1B hemicomplex diverges from γ1-σ1B. This is recorded in the `role` and
 `comment` of the R14 residue claim.
 
-All four positions whose substitution abolishes or weakens dileucine-signal binding in sigma1A
+All five sigma1A positions whose substitution abolishes or weakens dileucine-signal binding
 ("the loss of signal binding by the sigma2 V88D or L103S substitutions and the homologous
 sigma1A V88D and I103S and sigma3A V94D and L109S substitutions" [PMID:21097499]) are present in
 AP1S2. The one difference versus sigma2 (L103 -> I102) is the Leu/Ile difference that

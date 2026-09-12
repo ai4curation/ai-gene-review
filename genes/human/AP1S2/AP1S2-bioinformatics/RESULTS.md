@@ -66,7 +66,7 @@ impact".
 Caveat: this establishes that the site is intact, not that the pocket has the same fine
 specificity. PMID:21097499 itself shows fine specificity differs between hemicomplexes
 (gamma2-sigma1B binds the tyrosinase signal but not the LIMP-II signal), and that difference is
-not read off these four positions.
+not read off these five positions.
 
 ## Question 2 — pairwise identity within the family
 
