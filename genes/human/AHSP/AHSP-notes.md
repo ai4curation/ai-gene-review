@@ -37,7 +37,10 @@ Counts agree. The stub did **not** collapse any rows on this gene — all eleven
 `GO:0005515` partner rows survived individually. Reported as a negative result
 because the ADAMTSL5 / ACTR5 finding says to check.
 
-Final `existing_annotations` count is 24 GOA rows + 2 `NEW` proposals = 26.
+Final `existing_annotations` count is 24 GOA rows + 2 `NEW` proposals = 26, with
+actions **8 ACCEPT · 8 MARK_AS_OVER_ANNOTATED · 7 MODIFY · 1 REMOVE · 2 NEW**.
+(The tally shifted from 10/8/5/1/2 after review: the two `GO:0030492` rows moved
+from ACCEPT to MODIFY once `GO:0031721` was found — see §6.)
 
 ## 3. The chaperone/holdase term situation — checked before proposing anything
 
@@ -103,6 +106,38 @@ So `GO:0140597` is cited as the proposed *parent*, not used as the annotation. T
 recorded because it is the first question a reviewer should ask, and "we did not just
 reach for the nearest existing term" is only credible if the nearest existing term is
 named and dispatched.
+
+### A stale label in a shared cache, and why it is not fixed here
+
+`GO:0140597`'s live primary label is **`protein carrier activity`** (confirmed
+independently at QuickGO and OLS; `protein carrier chaperone` is an exact synonym).
+The repo disagrees with itself:
+
+| source | label |
+|---|---|
+| `cache/go/terms.csv` (label cache used by term validation) | `protein carrier chaperone` |
+| `cache/ontologies/go.tsv` | `protein carrier activity` |
+| `genes/yeast/{RRB1,SQT1,SHQ1}-ai-review.yaml` on `main` | `protein carrier chaperone` |
+
+A reviewer suggested refreshing the stale `terms.csv` row in this PR. **Measured
+before deciding**, by editing the row and re-validating a merged file:
+
+```
+just validate yeast RRB1   # with the refreshed label
+⚠ WARN: Label mismatch for 'GO:0140597':
+        expected 'protein carrier activity', got 'protein carrier chaperone'
+```
+
+So the refresh is not free — it puts a new warning on **three merged reviews** that
+this PR does not otherwise touch, because they use the synonym in a label-validated
+`core_functions.molecular_function` slot. A correct fix updates the cache *and* those
+three files in one commit; that is shared-infrastructure work, not gene-review work,
+and the campaign's standing rule is not to regenerate shared caches inside a gene PR.
+
+The edit was therefore reverted and only the measurement kept. This review uses the
+live label in its own `proposed_parent`, which is the slot under its control. The
+three files needing simultaneous update are named above so whoever does the refresh
+does not have to rediscover them.
 
 AHSP is therefore another gene stranded by the `GO:0051082`/`GO:0140309` gap
 tracked in repo issue #2222 — but the *shape* of its stranding differs from the
@@ -174,23 +209,59 @@ measured heterodimer to record and the nearest available CC term was the tetrame
 Hence the second proposed new term, `AHSP-alpha-globin complex` under
 `GO:0032991`, is filed *with* the REMOVE rather than instead of it.
 
-## 6. `GO:0030492 hemoglobin binding` — kept, with the definitional mismatch recorded
+## 6. `GO:0030492` → `GO:0031721` — and the search error that nearly hid it
 
-Same shape as §5 but resolves the other way. The definition again names the
-tetramer ("an oxygen carrying, conjugated protein containing four heme groups and
-globin"), which AHSP demonstrably does not bind. But:
+**Corrected after review.** The first version of this section concluded that
+`GO:0030492 hemoglobin binding` was "the maximal available term", accepted the
+tetramer mismatch as a recorded caveat, and used it as the MODIFY target for the
+three α-globin `GO:0005515` rows. That was wrong.
 
-- the term carries the broad synonym **"globin binding"**, so GO itself licenses
-  the looser reading;
-- both GOA and InterPro2GO already use it for exactly this (`IPR015317` →
-  `GO:0030492`);
-- an OLS search for any α-globin-specific or free-globin-chain binding term returns
-  nothing.
+**`GO:0031721 hemoglobin alpha binding` exists.** Definition: *"Binding to a
+hemoglobin alpha chain."* It is an `is_a` child of `GO:0030492`, not obsolete, and
+it is exactly what four X-ray structures resolve. Its sibling `GO:0031722` is
+`hemoglobin beta binding`; the third id in that consecutive block, `GO:0031720`, is
+`haptoglobin binding`.
 
-So `GO:0030492` is the maximal available term and is ACCEPTed, with the mismatch
-noted on the row. Do not propose a child to fix it — the activity terms in §3 are
-the right place to put the information, per CLAUDE.md's rule against uninformative
-binding terms.
+**Why the first pass missed it, and the generalisable rule.** I searched OLS for
+`"globin binding"` and `"alpha-globin binding"`. Neither can match a label reading
+*hemoglobin alpha binding*, because OLS tokenises on words and **"globin" is not a
+token of "hemoglobin"** — the string is a substring, not a token. So the search was
+incapable of returning the term, and its empty result told me about my query, not
+about the ontology.
+
+This repo's own brief states the rule — *"an empty OLS keyword search is NOT
+evidence a term is absent"* — and names the fix: confirm with
+`get_terms_from_ontology` or QuickGO. **Listing the `is_a` children of `GO:0030492`
+returns both `GO:0031721` and `GO:0031722` immediately.** One call. It is the same
+error as the structure recount in §11b, in the same review, two hours apart:
+*a null result is a claim about the method, and so is a count read off a label.*
+Twice is a pattern, and the pattern is **asserting absence from a convenience
+query**.
+
+**Consequences of the fix**, all in the same direction — the review gets stronger:
+
+1. The three α-globin `GO:0005515` rows now MODIFY to `GO:0031721`, a strictly more
+   specific and definitionally exact term.
+2. Both `GO:0030492` GOA rows move from ACCEPT to **MODIFY → `GO:0031721`**.
+3. **The definitional asymmetry disappears.** The reviewer's second point was fair:
+   §5 removes `GO:0005833` partly *because* its definition requires a tetramer,
+   while §6 was accepting a tetramer-defined binding term with only a broad-synonym
+   mitigation. Applying the same standard to both rows was not possible while
+   `GO:0030492` was believed to be maximal; it is now.
+4. One `suggested_question` to the GO editors (should `GO:0030492` be broadened, or
+   a free-chain child created?) was asking for a term that already existed, and is
+   withdrawn. It is replaced by a better question aimed at **InterPro**: `IPR015317`
+   is an orthogroup-specific signature, so retargeting its InterPro2GO mapping from
+   `GO:0030492` to `GO:0031721` would fix every AHSP orthologue at once rather than
+   one gene at a time.
+
+Note what is *not* affected: the CC gap in §5 is real. `GO:0005833` has **zero
+children**, seven independent QuickGO query phrasings return no CC term for an
+AHSP or α-globin complex, and ComplexPortal holds **nine** complexes containing
+AHSP and **none** containing α-globin (`P69905`) — checked by reading each entry's
+participant accessions, because the nine names list AHSP alongside MAPK8IP
+scaffolds and are not plausible erythroid complexes on their face. Having just been
+caught asserting absence from one query, that absence was checked several ways.
 
 ## 7. Propagation: the cleanest IBA set seen in this campaign
 
@@ -252,8 +323,17 @@ InterPro:IPR015317 ... > GO:protein stabilization ; GO:0050821
 ```
 
 Family-specific signature + terms that the one experimentally characterised member
-actually holds = well-founded. ACCEPT all four; they are redundant with the IBA
-rows but not wrong.
+actually holds = well-founded. Three of the four are ACCEPTed; they are redundant
+with the IBA rows but not wrong.
+
+The fourth, `GO:0030492`, is **MODIFY → `GO:0031721`** (§6). The mapping is not
+wrong, only one level too general — and because `IPR015317` matches the AHSP
+orthogroup and nothing else, the specific child is safe family-wide. That makes
+this a fixable defect *upstream* rather than per gene: retargeting one line of
+`interpro2go` would correct every AHSP orthologue in one edit, which is why it is
+raised as a question for InterPro rather than only as a MODIFY here. Same shape as
+the PAINT node-placement findings elsewhere in this campaign — the annotation is
+right, the level it is attached at is not.
 
 `GO_REF:0000120` (combinatorial, **not** ARBA) supplies the second `GO:0005737`
 row, from `UniProtKB:Q9CY02` + `ensembl:ENSMUSP00000159842` +
