@@ -259,6 +259,17 @@ UniProt and Reactome both assert independently. Accepted.
   (PMID:24791904, quoted in §1), and Reactome models the cytosolic pool explicitly.
 - NEW: `GO:0000045 autophagosome assembly`, IMP, PMID:27388993 — two perturbations plus a
   variant-discriminating rescue, in two cell backgrounds.
+- NEW: `GO:0005198 structural molecule activity`, IC from the gene's own `GO:0030121`
+  membership, PMID:24791904. This is the only subunit-level MF GO can currently express for
+  sigma-1C; the activity one would rather state (dileucine sorting-signal binding) is filed
+  under `proposed_new_terms`.
+
+Counts, produced by `.scratch/reconcile.py` rather than typed: 45 GOA rows reconcile one-for-one
+with 45 reviewed YAML entries (identical term/evidence/reference/`supporting_entities`); actions
+are ACCEPT 37, KEEP_AS_NON_CORE 5, MODIFY 3, NEW 2; 11 rows carry a `propagation_review` (1 IBA +
+10 IEA) and every `source_entities` list matches its row's `supporting_entities` exactly; 36
+references, all with a `reference_review`; 149 `supporting_text` quotes, all verified by
+`checkquotes.py`; 8 `residue_claims`, 24 checks, 0 failures.
 
 ## 8. What affinage missed, and what it got right
 
