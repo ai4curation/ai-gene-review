@@ -191,9 +191,14 @@ in the 2025 paper, whose abstract states
 So the defensible subunit-level statement is structural, not catalytic or
 cargo-recognising: σ5 is an obligate small subunit that forms the ζ/σ5 hemicomplex and
 contributes part of the surface through which SPG11 clamps the two arms of AP-5
-together. GO has no molecular-function term for "structural subunit of an adaptor
-heterotetramer" that is narrower than `protein binding`, which is why `core_functions`
-below uses `in_complex` plus `directly_involved_in` and asserts no MF.
+together. GO has no term for "small subunit of an adaptor heterotetramer" specifically,
+but it does have `GO:0005198` structural molecule activity, whose definition — "the
+action of a molecule that contributes to the structural integrity of a complex" — covers
+exactly this, and which the sibling AP-4 small subunit review adopted for the same role.
+That is the one MF asserted here, as a NEW row with IDA from the structure, and it is
+asserted with its limit stated: sigma-5 has never been removed from cells, so "is
+required for AP-5 to exist" is *not* claimed, only "is an integral structural component
+of it". No cargo-recognition or adaptor activity is asserted at all.
 
 Note also that the IntAct interaction behind the GOA IPI row with mouse Ap5z1 (Q3U829,
 from PMID:40175557) is not a stray two-hybrid hit: it is the co-expressed, purified,
@@ -297,8 +302,11 @@ single residue.
   keep as non-core for the IMP and mark the InterPro IEA as redundant.
 * **`GO:0005515` ×5**: over-annotated as bare protein binding. Four of them (AP5Z1,
   AP5B1, SPG11, ZFYVE26) are within-complex partnerships already stated better by
-  `GO:0044599`; the fifth (mouse Ap5z1) is the structural ζ/σ5 pair. None can be
-  upgraded, because the honest MF — "forms the ζ/σ5 hemicomplex" — is not in GO and
-  "cargo adaptor activity" would be false.
-* **NEW**: `GO:0034499` late endosome to Golgi transport, the pathway this complex is
-  now assigned to, which no AP-5 subunit currently carries.
+  `GO:0044599`; the fifth (mouse Ap5z1) is the structural ζ/σ5 pair. None is upgraded to
+  a binding-specificity MF, because "cargo adaptor activity" would be false; the
+  architectural MF that *is* warranted is added as its own NEW row rather than by
+  rewriting these.
+* **NEW ×2**: `GO:0005198` structural molecule activity (IDA from the cryo-EM structure —
+  no AP-5 subunit currently carries any MF beyond bare protein binding), and `GO:0034499`
+  late endosome to Golgi transport, the pathway this complex is now assigned to, which no
+  AP-5 subunit and neither SPG11 nor ZFYVE26 currently carries.
