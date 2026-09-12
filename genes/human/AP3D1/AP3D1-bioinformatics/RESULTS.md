@@ -109,9 +109,19 @@ script additionally checks that every IBA row, and every ISS/ISO/IEA/IC row with
 (the defect that drift produces when these lists are hand-typed); and that every
 reference cited anywhere is declared in `references:`.
 
+It also runs a **strict verbatim check** on every `supporting_text`: a literal
+substring test after whitespace normalisation only. This is deliberately stricter
+than the repo/CI reference validator and than `checkquotes.py`, which both
+normalise before matching — and that normalisation silently accepts a quote that
+transliterates a character the paper prints, e.g. `delta-adaptin` where
+PMID:22521722 has `δ-adaptin`. Such a quote passes every existing check while no
+longer being findable in the paper. Two quotes in this review were caught that
+way and restored to the Greek character.
+
 **Result.** 59 GOA rows ↔ 59 GOA-derived YAML entries, no key unmatched in
 either direction. Evidence codes: IEA 29, IBA 10, NAS 8, IMP 3, HDA 2, TAS 2,
 ISS 2, IPI 1, IDA 1, IC 1. 42 rows require a `propagation_review` (10 IBA plus
 32 IEA/ISS/IC rows carrying `supporting_entities`). Every count quoted in
 `AP3D1-notes.md`, in the review YAML and in the PR body comes from this script's
-output rather than from a hand tally.
+output rather than from a hand tally. 135 `supporting_text` quotes pass the strict
+verbatim check.

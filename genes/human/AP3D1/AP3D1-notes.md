@@ -502,7 +502,14 @@ of which 14 carry `residue_claims` (51 claims; all pass
 `ai_gene_review.validation.gene_residue_claims`). 47 references, every one with a
 `reference_review`. No `negated` rows and no `contributes_to` qualifier in this
 gene's GOA, so neither special case arises. 135 `supporting_text` quotes, all
-verbatim (`checkquotes.py`).
+verbatim — checked twice: by `checkquotes.py` (the CI matcher) and by a stricter
+literal-substring test folded into `goa_reconcile.py`. The strict test matters:
+the CI matcher normalises before comparing, so it accepts a quote that
+transliterates a character the paper prints. Two quotes here said
+`delta-adaptin` and `AP3delta` where PMID:22521722 and PMID:26744459 print
+`δ-adaptin` and `AP3δ`; both passed `checkquotes.py` and both have been
+restored to the Greek character, because a quote that cannot be found in the
+paper by searching for it is not doing its job.
 
 **One validation warning is left standing on purpose.** `just validate` reports
 "No annotations reference available deep research files". That check is satisfied

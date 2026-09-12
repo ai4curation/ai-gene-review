@@ -14,6 +14,7 @@ notes or the PR body is asserted rather than counted.
 from __future__ import annotations
 
 import csv
+import re
 import sys
 from collections import Counter
 from pathlib import Path
@@ -23,6 +24,61 @@ import yaml
 HERE = Path(__file__).parent
 GOA = HERE.parent / "AP3D1-goa.tsv"
 REVIEW = HERE.parent / "AP3D1-ai-review.yaml"
+ROOT = HERE.parents[3]
+
+
+def _norm(text: str) -> str:
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def strict_quote_check(doc) -> int:
+    """Every supporting_text must be a LITERAL substring of its source.
+
+    Deliberately stricter than the repo/CI reference validator and than
+    checkquotes.py, both of which normalise before matching. That normalisation
+    silently accepts a quote that transliterates a character the paper actually
+    prints -- 'delta-adaptin' where PMID:22521722 has 'δ-adaptin' -- so the
+    sentence stops being findable in the paper while still passing. Only
+    whitespace is normalised here, and numeric citation markers are stripped from
+    the SOURCE (not the quote) exactly as the validator does.
+    """
+    cache: dict[str, str | None] = {}
+
+    def source(ref: str) -> str | None:
+        if ref not in cache:
+            if ref.startswith("PMID:"):
+                path = ROOT / "publications" / f"PMID_{ref.split(':', 1)[1]}.md"
+            elif ref.startswith("file:"):
+                path = ROOT / "genes" / ref.split(":", 1)[1]
+            else:
+                cache[ref] = None
+                return None
+            raw = path.read_text(errors="replace")
+            cache[ref] = _norm(re.sub(r"\[\d[\d,\s\-\u2013]*\]", " ", raw))
+        return cache[ref]
+
+    checked = bad = 0
+
+    def walk(node, path=""):
+        nonlocal checked, bad
+        if isinstance(node, dict):
+            if "supporting_text" in node and "reference_id" in node:
+                src = source(node["reference_id"])
+                if src is not None:
+                    checked += 1
+                    if _norm(node["supporting_text"]) not in src:
+                        bad += 1
+                        print(f"NOT LITERALLY VERBATIM: {path} {node['reference_id']}")
+                        print(f"    {node['supporting_text'][:150]}")
+            for k, v in node.items():
+                walk(v, f"{path}.{k}")
+        elif isinstance(node, list):
+            for i, v in enumerate(node):
+                walk(v, f"{path}[{i}]")
+
+    walk(doc)
+    print(f"strict verbatim check: {checked} quotes, {bad} not literally verbatim")
+    return bad
 
 
 def norm_entities(values) -> tuple[str, ...]:
@@ -122,7 +178,9 @@ def main() -> None:
     reviewed = sum(1 for r in doc.get("references", []) if r.get("reference_review"))
     print(f"references with reference_review: {reviewed}/{len(refs)}")
 
-    bad = bool(missing or extra or without or drift or undeclared)
+    quote_failures = strict_quote_check(doc)
+
+    bad = bool(missing or extra or without or drift or undeclared or quote_failures)
     print("\nRECONCILIATION:", "FAIL" if bad else "PASS")
     sys.exit(1 if bad else 0)
 

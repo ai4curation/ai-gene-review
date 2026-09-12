@@ -87,7 +87,7 @@ Q_MOCHA = (
 )
 Q_DELTA_BOTH = (
     "PMID:26744459",
-    "AP3D1 codes for the AP3delta subunit of the complex, which is essential for "
+    "AP3D1 codes for the AP3δ subunit of the complex, which is essential for "
     "both forms.",
 )
 Q_TWO_FORMS = (
@@ -1581,7 +1581,7 @@ NEW_ROWS = [
         supported_by=[
             ("PMID:26744459", "Whole exome sequencing identified a homozygous mutation in AP3D1 that leads to destabilization of the adaptor protein 3 (AP3) complex."),
             ("PMID:26744459", "AP3 complex formation and the degranulation defect in patient T cells were restored by retroviral reconstitution."),
-            ("PMID:22521722", "The absence of delta-adaptin causes destabilization of the AP3 complex in mouse mocha fibroblasts and mislocalization of VAMP7."),
+            ("PMID:22521722", "The absence of δ-adaptin causes destabilization of the AP3 complex in mouse mocha fibroblasts and mislocalization of VAMP7."),
             ("PMID:22521722", "Re-expression of wt and mutant δ-adaptin led to similar levels of stabilization of the other subunits of the complex"),
         ],
         additional_reference_ids=["PMID:22521722"],

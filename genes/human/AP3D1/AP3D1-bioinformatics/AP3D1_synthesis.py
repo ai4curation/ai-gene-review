@@ -166,8 +166,8 @@ CORE_FUNCTIONS = [
         locations=[("GO:0010008", "endosome membrane")],
         in_complex=("GO:0030123", "AP-3 adaptor complex"),
         supported_by=[
-            ("PMID:22521722", "The absence of delta-adaptin causes destabilization of the AP3 complex in mouse mocha fibroblasts and mislocalization of VAMP7."),
-            ("PMID:26744459", "AP3D1 codes for the AP3delta subunit of the complex, which is essential for both forms."),
+            ("PMID:22521722", "The absence of δ-adaptin causes destabilization of the AP3 complex in mouse mocha fibroblasts and mislocalization of VAMP7."),
+            ("PMID:26744459", "AP3D1 codes for the AP3δ subunit of the complex, which is essential for both forms."),
             ("PMID:26744459", "AP3 complex formation and the degranulation defect in patient T cells were restored by retroviral reconstitution."),
         ],
     ),
