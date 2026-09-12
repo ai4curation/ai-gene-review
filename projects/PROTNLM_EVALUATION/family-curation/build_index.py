@@ -169,7 +169,7 @@ def main():
         lines.append(f"| [{f}](#{f.lower()}) | {d['review_status']} | {label} |")
     lines += [""]
     with (BASE / "family-status.csv").open("w") as stream:
-        writer = csv.DictWriter(stream, fieldnames=list(status_rows[0]))
+        writer = csv.DictWriter(stream, fieldnames=list(status_rows[0]), lineterminator="\n")
         writer.writeheader()
         writer.writerows(status_rows)
     for f in families:
