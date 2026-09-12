@@ -25,6 +25,8 @@ All numbers below are computed at run time by `analyze.py` from live UniProt, PD
 | AP2M1 | 29.1 | 29.2 | 40.6 | 39.4 | 100.0 | 31.0 |
 | AP4M1 | 24.5 | 26.2 | 31.3 | 31.8 | 31.0 | 100.0 |
 
+The matrix is computed per ordered pair, and where several alignments are equally optimal the two directions can pick different ones, so it is very slightly asymmetric: the largest difference between a cell and its transpose is 0.6 percentage points. Both values in such a pair are correct for their own direction; the AP3M2 row, which is the one the review cites, is unaffected either way.
+
 AP3M2's closest human paralogue is **AP3M1** (84.2% identity). Identity to the AP-1 and AP-2 medium subunits is AP1M1 29.7%, AP1M2 31.6%, AP2M1 29.1%.
 
 ## 2. The AP-3 tyrosine-cargo site, observed and transferred

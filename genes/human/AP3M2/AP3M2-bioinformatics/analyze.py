@@ -301,6 +301,15 @@ def main() -> int:
             row.append(f"{pid:.1f}")
         out.append("| " + " | ".join(row) + " |")
     out.append("")
+    asym = max(abs(ident[(a, b)] - ident[(b, a)]) for a in order for b in order)
+    out.append(
+        "The matrix is computed per ordered pair, and where several alignments are "
+        "equally optimal the two directions can pick different ones, so it is very "
+        f"slightly asymmetric: the largest difference between a cell and its transpose "
+        f"is {asym:.1f} percentage points. Both values in such a pair are correct for "
+        "their own direction; the AP3M2 row, which is the one the review cites, is "
+        "unaffected either way.\n"
+    )
     closest = max(
         (b for b in order if b != "AP3M2"), key=lambda b: ident[("AP3M2", b)]
     )

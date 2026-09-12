@@ -536,7 +536,7 @@ OK: GOA and review reconcile exactly
 
 ---
 
-## 9. Round-2 additions (after the first bot review)
+## 9. Changes made across the three bot review rounds
 
 **The third clathrin-committed term.** The first draft modified `GO:0035615` and
 `GO:0030131` because each commits AP-3 to clathrin, and then accepted `GO:0035654`
@@ -556,9 +556,10 @@ So the remedy for GO:0035654 belongs to the ontology, not to this gene: drop
 vesicle cargo loading, leaving its current parent GO:0035652 for the AP-1/AP-2 adaptors.
 Both of those ids and labels were checked against QuickGO rather than written from memory
 — `GO:0035652` is "clathrin-coated vesicle cargo loading", not obsolete, with ancestors
-`GO:0006810, GO:0008150, GO:0035459, GO:0035652, GO:0051179, GO:0051234` — so the
-proposal moves GO:0035654 up one level to sit alongside GO:0035652 rather than beneath
-it. (Both `proposed_new_terms` entries are really ontology *change* requests, and
+`GO:0006810, GO:0008150, GO:0035459, GO:0035652, GO:0051179, GO:0051234`, and its
+children are exactly `GO:0035653` and `GO:0035654`, both `is_a`. That last lookup is the
+one that establishes the relation the proposal turns on: GO:0035654 currently sits
+*beneath* GO:0035652, so the proposal moves it up one level to sit alongside it. (Both `proposed_new_terms` entries are really ontology *change* requests, and
 `ProposedOntologyTerm` has no field that says so; each justification now states it
 explicitly, and the schema gap is worth an issue of its own.) That is now the second
 entry in `proposed_new_terms`, and the ONTOLOGY knowledge gap names both defects as two
@@ -592,3 +593,14 @@ reasoning, and any such value you encounter in a YAML row is likewise inert; nev
 edit, or argue from it." The seeded rows carry qualifiers because the GOA seeder copied
 them, which is not a reason to author one. The NEW row's `reason` was instead reworded to
 stop leaning on the word `involved_in`, and now argues the point directly.
+
+**Round 3: a denominator corrected.** The `WHOLLY_DARK` gap first said "21 of the 26 rows
+carry a WITH/FROM". Counted from the tsv, it is **20** — the six without are the five
+ComplexPortal NAS rows and the ProtInc TAS row — and the 21st `propagation_review` in the
+file belongs to the proposed NEW row. So the finding is **13 of 20**, not 13 of 21, which
+makes it slightly stronger. Also added to `RESULTS.md` §1: the pairwise identity matrix is
+computed per ordered pair, so where several alignments score equally the two directions
+can pick different ones and the matrix is very slightly asymmetric (largest
+cell-vs-transpose difference 0.6 percentage points, none of it in the AP3M2 row the review
+cites). The history record's `details` was rewritten to the final numbers; `docs/history.md`
+freezes only `target.slug` and `target.path`, so `details` is editable in place.
