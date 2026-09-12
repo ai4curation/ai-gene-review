@@ -105,16 +105,20 @@ REQUIRED = {
     ),
 }
 
-# Claims that must appear a given number of times WITHIN one file. A file-count
-# check cannot express "stated on both sides of a comparison", which is what the
-# tagged-transgene symmetry needs: the same experimental limitation is weighted
-# differently on the GO:0003700 and GO:0003682 rows, and a reader must be able to
-# see the justification from either row.
-REQUIRED_OCCURRENCES = {
+# Claims that must be stated on BOTH SIDES of a comparison, scoped to specific
+# rows. A whole-file occurrence count cannot express this: two matches anywhere
+# would satisfy it even if both sat in the same reason, which is exactly the
+# invariant that matters. So these are checked against the parsed
+# existing_annotations[].review.reason of the named term, one entry per side.
+#
+# The tagged-transgene limitation is weighted differently on GO:0003700 (where it
+# is load-bearing, because that term claims site specificity) and GO:0003682
+# (where it is secondary, because that term claims only association). A reader
+# arriving at either row must find the justification there.
+PAIRED_CLAIMS = {
     "tagged_transgene_weighting_justified": (
-        "AHDC1-ai-review.yaml",
         re.compile(r"weighted\s+(?:differently|less)", re.I),
-        2,
+        ["GO:0003700", "GO:0003682"],
     ),
 }
 
@@ -210,19 +214,31 @@ def check_required(problems: list[str]) -> None:
                 f"required claim {name!r} found in {len(hits)} file(s) "
                 f"({hits}), expected at least {min_files}"
             )
-    for name, (fname, pattern, min_count) in REQUIRED_OCCURRENCES.items():
-        if fname not in corpus:
-            problems.append(f"required-occurrence check {name!r} names unknown file {fname!r}")
-            continue
-        n = len(pattern.findall(corpus[fname]))
-        if n < min_count:
-            problems.append(
-                f"required claim {name!r} occurs {n} time(s) in {fname}, "
-                f"expected at least {min_count}"
-            )
+    # Paired claims: resolve each named term to its row's review.reason and require
+    # the pattern in EVERY side. A missing row is an error, not a silent skip --
+    # otherwise deleting the row would satisfy the check.
+    doc = load_review()
+    by_term: dict[str, list[str]] = {}
+    for e in doc["existing_annotations"]:
+        by_term.setdefault(e["term"]["id"], []).append(e["review"].get("reason") or "")
+    for name, (pattern, term_ids) in PAIRED_CLAIMS.items():
+        for tid in term_ids:
+            reasons = by_term.get(tid)
+            if not reasons:
+                problems.append(
+                    f"paired claim {name!r}: no existing_annotation for {tid}, so the "
+                    f"claim cannot be checked on that side"
+                )
+                continue
+            if not any(pattern.search(r) for r in reasons):
+                problems.append(
+                    f"paired claim {name!r} is absent from the {tid} row's review.reason; "
+                    f"the justification must appear on both sides of the comparison"
+                )
     print(
         f"  required-claim scan: {len(REQUIRED)} claims, "
-        f"{len(REQUIRED_OCCURRENCES)} occurrence-count claims"
+        f"{len(PAIRED_CLAIMS)} paired claims over "
+        f"{sum(len(v[1]) for v in PAIRED_CLAIMS.values())} rows"
     )
 
 
@@ -294,15 +310,33 @@ def self_test() -> int:
         fired["required_claim_missing"] = bool(run())
         NOTES.write_text(notes_base)
 
-        # guard: an occurrence-count claim dropping below its threshold. Removing
-        # ONE of the two "weighted differently/less" statements must fail, which a
-        # file-presence check could not detect.
+        # guard: a paired claim removed from ONE side. This is the mutation a
+        # whole-file occurrence count could not catch, because the other side still
+        # supplies a match. Mutate through the parsed YAML so the edit is scoped to
+        # exactly one row's reason, and assert it landed before running the check.
         pat = re.compile(r"weighted\s+(?:differently|less)", re.I)
-        assert len(pat.findall(base)) >= 2, "self-test expected >=2 occurrences to thin"
-        thinned = pat.sub("weighted somehow", base, count=1)
-        assert len(pat.findall(thinned)) == len(pat.findall(base)) - 1, "thinning did not land"
-        REVIEW.write_text(thinned)
-        fired["required_occurrence_count"] = bool(run())
+        doc = yaml.safe_load(base)
+        hit = None
+        for e in doc["existing_annotations"]:
+            if e["term"]["id"] == "GO:0003682" and pat.search(e["review"].get("reason") or ""):
+                e["review"]["reason"] = pat.sub("weighted somehow", e["review"]["reason"])
+                hit = e
+                break
+        assert hit is not None, "self-test could not find the GO:0003682 side to thin"
+        assert not pat.search(hit["review"]["reason"]), "thinning did not land"
+        REVIEW.write_text(yaml.dump(doc, sort_keys=False))
+        fired["paired_claim_one_side_removed"] = bool(run())
+        REVIEW.write_text(base)
+
+        # guard: the row a paired claim names is deleted entirely -- must fail, not skip
+        doc = yaml.safe_load(base)
+        before = len(doc["existing_annotations"])
+        doc["existing_annotations"] = [
+            e for e in doc["existing_annotations"] if e["term"]["id"] != "GO:0003682"
+        ]
+        assert len(doc["existing_annotations"]) < before, "self-test deletion did not land"
+        REVIEW.write_text(yaml.dump(doc, sort_keys=False))
+        fired["paired_claim_row_deleted"] = bool(run())
         REVIEW.write_text(base)
     finally:
         REVIEW, NOTES, HISTORY_DIR = orig_review, orig_notes, orig_hist

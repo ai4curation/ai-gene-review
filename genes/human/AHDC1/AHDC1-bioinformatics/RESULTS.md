@@ -25,7 +25,7 @@ number or a phrasing asserted in prose and never re-derived from the data it des
 | arithmetic | `entries == GOA rows + NEW rows`, the action tally sums to the entry count, and no `PENDING` survives |
 | retraction | four retracted phrasings must not reappear in the review, the notes or the history record **outside an explicit retraction context** |
 | required claims | five load-bearing claims must appear in the number of files they should |
-| occurrence counts | one claim must appear **twice within a single file** — the justification for weighting the tagged-transgene caveat differently on the `GO:0003700` and `GO:0003682` rows, which a file-presence check cannot express because it is a statement about both sides of a comparison |
+| paired claims | one claim must be present in **each** of two named rows' `review.reason`, resolved through the parsed YAML — the justification for weighting the tagged-transgene caveat differently on `GO:0003700` and `GO:0003682`. A missing row is an **error**, not a skip, so deleting the row cannot satisfy the check |
 | duplicate keys | the review is loaded with a `SafeLoader` subclass that **raises** on a duplicated mapping key, which PyYAML otherwise resolves silently by keeping the last one |
 
 ## Reproduce
@@ -40,11 +40,11 @@ Current state: `0 problems`, with `GOA rows=15  entries=20  NEW=5` and the actio
 numbers are **not** hand-maintained here — the script derives both sides and fails if they
 disagree, so this table cannot drift away from the file without the check going red.
 
-All five self-test guards fire: `coverage_on_deleted_entry`, `duplicate_key`,
-`retracted_phrasing`, `required_claim_missing`, `required_occurrence_count`. The last is
-exercised by **thinning** — removing one of the two occurrences and asserting the removal
-landed before running the check — because a guard whose mutation silently no-ops "proves"
-itself against nothing.
+All six self-test guards fire: `coverage_on_deleted_entry`, `duplicate_key`,
+`retracted_phrasing`, `required_claim_missing`, `paired_claim_one_side_removed`,
+`paired_claim_row_deleted`. The paired-claim mutations go **through the YAML parser** so
+exactly one side is thinned, and each asserts the mutation landed before running the check
+— a guard whose mutation silently no-ops "proves" itself against nothing.
 
 ## What writing it found
 
@@ -61,6 +61,19 @@ It failed on its first run, and every failure was real rather than a regex artef
 
 That third one is the reason this file exists: the check was written to stop a claim
 coming back, and what it actually caught was a claim that was barely there.
+
+## A guard that did not enforce its own docstring
+
+Worth recording, because it is the failure mode this script exists to catch and it
+happened *inside* the script. The first version of the paired check counted two matches
+**anywhere in the review file**, while its docstring claimed to enforce "stated on both
+sides of a comparison". Both statements sitting in the same row would have passed — the
+exact case it existed to prevent. A reviewer caught it.
+
+It now parses the YAML, resolves each named term to its row, and requires the pattern in
+every row's `review.reason`, with a missing row treated as an error rather than a skip.
+**Assert presence; do not validate only on match** — otherwise the guard is defeated by
+deleting the thing it guards.
 
 **Caveat on the method, stated because it applies to this file too:** a passing self-test
 proves the guards I thought of fire. It cannot tell me which guard I failed to write, and

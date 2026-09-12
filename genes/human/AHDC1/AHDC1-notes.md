@@ -407,29 +407,85 @@ because it is the **same experimental limitation** reaching two opposite conclus
 shape the campaign flags as "same author, same gene, two verdicts".
 
 The asymmetry survives being made explicit, which is why it is now stated on both rows
-rather than removed. Over-expression of a tagged chromatin protein distorts **which** sites
-are occupied far more than **whether** the protein reaches chromatin at all: an
-over-expressed protein samples weak and off-target sites that the endogenous one would not.
+rather than removed. Ectopic expression from a heterologous promoter distorts **which**
+sites are occupied far more than **whether** the protein reaches chromatin at all.
 `GO:0003700` claims site specificity, so the limitation is load-bearing there.
-`GO:0003682` claims only association, so it is secondary there. Two further facts limit it
-on the `GO:0003682` side and are cited only there: the occupancy is **conditional** —
-absent at day 0 and present at day 7 in the same cells with the same construct, which
-over-expression alone would not reproduce — and an **independently generated** ENCODE
-dataset in a different cell type recovers the same chromatin-state distribution, peak
-number and target gene set. Neither rescues a specificity claim, which is why neither
-appears on the `GO:0003700` row.
+`GO:0003682` claims only association, so it is secondary there. And the `GO:0003700`
+objection never rested on the construct anyway: all four arguments there hold if the
+transgene were endogenous.
 
-And the `GO:0003700` objection never rested on the construct anyway: all four arguments
-there hold if the transgene were endogenous. The audit script now enforces that the
-weighting is justified in **both** places, via an occurrence-count check, because a
-file-presence check cannot express "stated on both sides of a comparison".
+## 15. Two corrections to my own round-2 argument, both from the pass-4 review
 
-One factual note about the review itself: it ran with neither `uv` nor `just` available, so
-its term-id and quote checks were manual against `cache/go/terms.csv` and the cached
-publications. Its conclusions matched the local `just validate` result, but the `Build and
-test` workflow is the authoritative signal.
+Both were non-blocking suggestions and both were right. They are recorded here because
+each is an instance of a rule this review applies to everyone else.
 
-## 15. Process
+**"Over-expressed" was my inference, not the paper's report.** The methods say only
+*"a doxycycline-inducible, HA-tagged Gibbin transgene"* on a PiggyBac vector, *"induced for
+24 hours prior to crosslinking"*. Nothing compares the resulting level to endogenous AHDC1.
+Checked: the string "over-expression" appears in that paper about **GATA3**, not about
+Gibbin. So the accurate description is **ectopic, epitope-tagged expression from a
+heterologous promoter at an unmeasured level**, and every occurrence relating to the
+transgene has been reworded. (The two surviving uses of "over-expressed" in the review are
+about the **yeast two-hybrid** constructs, where it is IntAct's own
+`experimentalPreparations` value and therefore sourced.) This is the same move the review
+refuses elsewhere — a characterisation presented as a property of the experiment — and I
+made it while arguing against exactly that.
+
+**The ENCODE replication is not "independently generated", and checking turned a hedge into
+the strongest single support on the row.** `ENCSR168AUX` was queried directly rather than
+assumed:
+
+| field | value |
+|---|---|
+| target | `/targets/AHDC1-human/` — **untagged** target name, i.e. not an `eGFP-AHDC1` construct entry |
+| genetic modification | `ENCGM399CXU`: `category: insertion`, `purpose: tagging`, `method: **CRISPR**`, `perturbation: False` |
+| introduced tag | **C-terminal 3xFLAG** |
+| antibody | `ENCAB697XQW`, targeting `3xFLAG-synthetic_tag` |
+| lab / biosample | Richard Myers (HudsonAlpha) / HepG2 |
+
+So the reviewer's worry was half right in a useful way. It **is** tagged, so it does *not*
+control for tagging — but the tag is a **CRISPR knock-in at the endogenous locus**, so the
+protein is expressed **from its own promoter at endogenous levels**. That is precisely the
+axis that bears on occupancy, and it is the axis the Stanford PiggyBac transgene cannot
+control. Different lab, different lineage, different tag, native promoter, same
+chromatin-state distribution and target gene set.
+
+The residual shared limitation is now stated rather than glossed: **both** datasets are
+epitope-tagged and no ChIP-seq of untagged endogenous AHDC1 with a validated antibody
+exists, so tagging is the one axis neither controls.
+
+Incidental but on-theme: ENCODE's own target record classifies AHDC1 as
+`investigated_as: ['transcription factor']`. That is a third independent database
+inheriting the classification from the gene's name rather than from a measurement, after
+UniProt's `GO:0003700` IDA and PANTHER's family label "TRANSCRIPTION FACTOR GIBBIN".
+
+**And a guard that did not enforce what its docstring claimed.** The round-2 occurrence
+check counted two matches *anywhere in the review file*, so it would have passed with both
+statements inside the same row — the exact case it existed to prevent. This is the brief's
+"unreachable check that reads as coverage" failure mode, and I wrote it into a script whose
+whole purpose is catching that kind of thing. Replaced with a **paired-claim** check that
+parses the YAML, resolves `GO:0003700` and `GO:0003682` to their rows, and requires the
+justification in **each** row's `review.reason`; a missing row is an error rather than a
+skip, so deleting the row cannot satisfy it. Two new self-test guards exercise it —
+`paired_claim_one_side_removed` (mutating through the parser so exactly one side is
+thinned) and `paired_claim_row_deleted`. Six guards now, all firing.
+
+## 16. A note on the reviews themselves
+
+All four review passes ran in a runner with neither `uv` nor `just` installed (and, by pass
+4, with Python execution sandbox-blocked), so every reviewer check was manual against
+`cache/go/terms.csv`, the GOA TSV, the schema and the cached publications. Neither
+`just validate human AHDC1` nor the committed audit script could be run there. Their
+conclusions matched the local runs, but the `Build and test` workflow is the authoritative
+validation signal, and its scoped gene-review and history-record steps passed on this
+branch.
+
+Worth recording that the reviewer was **right on every item it raised across four passes**,
+including two that corrected arguments I had just written, and that it **withdrew one of
+its own** (the `core_functions` restructure) after checking the schema and finding
+`CoreFunction` has exactly one BP slot with no downstream variant.
+
+## 17. Process
 
 - Branch `paint/AHDC1` from `origin/main`; own worktree.
 - Every supporting_text pre-verified with a normalising substring check before writing
