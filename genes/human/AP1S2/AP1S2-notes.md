@@ -69,16 +69,20 @@ BLOSUM62 alignment, run captured in `sigma_cargo_site.out`):
 | sigma1A anchor (P61966) | AP1S2 (P56377) | verdict |
 |---|---|---|
 | R15 | **R14** | RETAINED (corroborative only for AP-1) |
-| V88 | **V87** | RETAINED |
-| L101 | **L100** | RETAINED |
-| I103 | **I102** | RETAINED |
+| A63 | **A62** | RETAINED (abolishing substitution in sigma1A) |
+| V88 | **V87** | RETAINED (abolishing substitution in sigma1A) |
+| L101 | **L100** | RETAINED (corroborative only for AP-1) |
+| I103 | **I102** | RETAINED (abolishing substitution in sigma1A) |
 
 A caveat the bot review correctly pressed on: in AP-1 the sigma-side Arg15 is *not* the
 load-bearing basic residue. Mattera et al. state that "interaction with γ1-σ1A depends mainly on
 γ1 Arg 15" and list "σ1A Arg 15 and Leu 101 , which can be substituted with relatively little
 impact on the ability of γ1-σ1A to recognize (D/E) XXX L(L/I) signals" [PMID:21097499]. So R14
-and L100 are corroborative; V87 and I102 are the positions that carry the argument, since their
-sigma1A counterparts (V88D, I103S) do abolish binding. This is recorded in the `role` and
+and L100 are corroborative. The positions that carry the argument are the three whose sigma1A
+counterparts abolish binding outright: the γ1-σ1A interaction "was abolished only by V88D and
+I103S (for Nef) and also by A63D (for tyrosinase)" [PMID:21097499], mapping to AP1S2 V87, I102
+and A62. A62 is the one specific to the tyrosinase signal, which is also the signal on which the
+γ2-σ1B hemicomplex diverges from γ1-σ1B. This is recorded in the `role` and
 `comment` of the R14 residue claim.
 
 All four positions whose substitution abolishes or weakens dileucine-signal binding in sigma1A

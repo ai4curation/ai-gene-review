@@ -26,11 +26,14 @@ Global pairwise alignment (Biopython `PairwiseAligner`, BLOSUM62, gap open -11, 
 | anchor | anchor site | AP1S2 (P56377) position | verdict |
 |---|---|---|---|
 | AP1S1 / sigma1A (P61966) | R15 | **R14** | RETAINED (corroborative only for AP-1: see caveat) |
-| AP1S1 / sigma1A | V88 | **V87** | RETAINED |
-| AP1S1 / sigma1A | L101 | **L100** | RETAINED |
-| AP1S1 / sigma1A | I103 | **I102** | RETAINED |
+| AP1S1 / sigma1A | **A63** | **A62** | RETAINED (abolishing substitution in sigma1A) |
+| AP1S1 / sigma1A | **V88** | **V87** | RETAINED (abolishing substitution in sigma1A) |
+| AP1S1 / sigma1A | L101 | **L100** | RETAINED (weak in AP-1) |
+| AP1S1 / sigma1A | **I103** | **I102** | RETAINED (abolishing substitution in sigma1A) |
 | AP2S1 / sigma2 (P53680) | R15 | R14 | RETAINED |
+| AP2S1 / sigma2 | A63 | A62 | RETAINED |
 | AP2S1 / sigma2 | V88 | V87 | RETAINED |
+| AP2S1 / sigma2 | E100 | E99 | RETAINED |
 | AP2S1 / sigma2 | L101 | L100 | RETAINED |
 | AP2S1 / sigma2 | L103 | I102 | SUBSTITUTED (Leu -> Ile; sigma1A also carries Ile here) |
 | AP3S1 / sigma3A (Q92572) | R15 | R14 | RETAINED |
@@ -38,9 +41,13 @@ Global pairwise alignment (Biopython `PairwiseAligner`, BLOSUM62, gap open -11, 
 | AP3S1 / sigma3A | L107 | L100 | RETAINED |
 | AP3S1 / sigma3A | L109 | I102 | SUBSTITUTED (Leu -> Ile, as for sigma1A) |
 
-**Conclusion.** All four sigma-side residues whose substitution abolishes or weakens
-dileucine-signal binding in sigma1A are present in AP1S2, at R14, V87, L100 and I102 in AP1S2's
-own numbering (UniProt sequence version 1). The single difference against sigma2 (L103 -> I102)
+**Conclusion.** Every sigma-side residue whose substitution abolishes or weakens
+dileucine-signal binding in sigma1A is present in AP1S2, at R14, A62, V87, L100 and I102 in
+AP1S2's own numbering (UniProt sequence version 1). That includes all three whose substitution
+*abolished* the gamma1-sigma1A interaction outright — the paper reports it "was abolished only
+by V88D and I103S (for Nef) and also by A63D (for tyrosinase)" — which map to **V87, I102 and
+A62**. A62 is the one tied specifically to the tyrosinase signal, which is also the signal where
+the gamma2-sigma1B hemicomplex's fine specificity differs from gamma1-sigma1B. The single difference against sigma2 (L103 -> I102)
 is the same Leu/Ile difference that distinguishes the AP-1 sigma1 subfamily from sigma2, and
 sigma1A — which was shown experimentally to bind all three test signals — carries Ile there too.
 There is therefore no residue-level basis for arguing that sigma1B has lost the cargo-signal
@@ -50,9 +57,11 @@ Caveat on R14 specifically: in AP-2 and AP-3 the sigma-side Arg15 is load-bearin
 AP-1 it is not. PMID:21097499 reports that "interaction with gamma1-sigma1A depends mainly on
 gamma1 Arg 15", and lists sigma1A Arg15 among the residues "which can be substituted with
 relatively little impact on the ability of gamma1-sigma1A to recognize (D/E)XXXL(L/I) signals".
-Retention of R14 in sigma1B is therefore corroborative rather than decisive; V87 and I102 are
-the positions that carry the argument, since their sigma1A counterparts (V88D, I103S) do
-abolish binding.
+Retention of R14 in sigma1B is therefore corroborative rather than decisive; A62, V87 and I102
+are the positions that carry the argument, since their sigma1A counterparts (A63D, V88D, I103S)
+are the three substitutions that abolish binding. L100 is in the same corroborative class as
+R14: PMID:21097499 names sigma1A Leu101 alongside Arg15 as substitutable "with relatively little
+impact".
 
 Caveat: this establishes that the site is intact, not that the pocket has the same fine
 specificity. PMID:21097499 itself shows fine specificity differs between hemicomplexes

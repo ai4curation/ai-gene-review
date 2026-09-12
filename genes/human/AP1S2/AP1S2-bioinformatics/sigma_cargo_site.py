@@ -4,9 +4,13 @@ Mattera et al. 2011 (PMID:21097499) located the (D/E)XXXL(L/I) sorting-signal bi
 the AP-1 gamma/sigma1, AP-2 alpha/sigma2 and AP-3 delta/sigma3 hemicomplexes, and identified the
 sigma-side residues whose substitution abolishes or weakens signal binding:
 
-    sigma2 (AP2S1): R15, V88, L101, L103
-    sigma1A (AP1S1): R15, V88, L101, I103
+    sigma2 (AP2S1): R15, A63, V88, E100, L101, L103
+    sigma1A (AP1S1): R15, A63, V88, L101, I103
     sigma3A (AP3S1): R15, V94, L107, L109
+
+The three sigma1A substitutions the paper reports as abolishing the gamma1-sigma1A
+interaction outright are V88D and I103S (for the Nef signal) "and also by A63D (for
+tyrosinase)"; the remaining sigma1A positions tested are weaker or signal-dependent.
 
 The paper assayed gamma1-sigma1B hemicomplexes functionally but did not report the sigma1B
 residue numbers. This script fetches the sequences live, aligns sigma1B (AP1S2) to each
@@ -45,14 +49,19 @@ PROTEINS = {
 # (position in the comparator's own numbering, expected residue, role)
 TESTED_SITES = {
     "P61966": [
-        (15, "R", "sigma-side basic residue contacting the (D/E) of (D/E)XXXL(L/I)"),
+        (15, "R", "sigma-side basic residue contacting the (D/E) of (D/E)XXXL(L/I); for AP-1 "
+                  "this contact depends mainly on gamma1 Arg15, so sigma1A R15 is weak"),
+        (63, "A", "pocket residue; A63D abolishes binding of the tyrosinase signal by "
+                  "gamma1-sigma1A, one of only three sigma1A substitutions that abolish it"),
         (88, "V", "hydrophobic pocket residue; V88D abolishes dileucine-signal binding"),
         (101, "L", "hydrophobic pocket residue; L101A has signal-dependent effects"),
         (103, "I", "hydrophobic pocket residue; I103S abolishes dileucine-signal binding"),
     ],
     "P53680": [
         (15, "R", "sigma2 R15; R15E inhibits dileucine-signal binding"),
+        (63, "A", "sigma2 A63; A63D largely abolishes binding of both Nef and tyrosinase"),
         (88, "V", "sigma2 V88; V88D abolishes dileucine-signal binding"),
+        (100, "E", "sigma2 E100; E100A largely abolishes binding of both signals"),
         (101, "L", "sigma2 L101; L101A has signal-dependent effects"),
         (103, "L", "sigma2 L103; L103S abolishes dileucine-signal binding"),
     ],
