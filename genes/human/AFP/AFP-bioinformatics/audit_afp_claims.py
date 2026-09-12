@@ -337,11 +337,23 @@ def check_all(review_path: Path = REVIEW) -> tuple[list[str], dict]:
     notes = (ROOT / "genes" / "human" / "AFP" / "AFP-notes.md").read_text()
     for label, blob in (("review", raw), ("notes", notes)):
         for phrase in RETRACTED_PHRASINGS:
-            n = blob.count(phrase)
-            # the notes deliberately quote some retired phrasings while narrating
-            # the correction, so they are allowed there only inside a quotation
-            if n and not (label == "notes" and f'"{phrase}' in blob):
-                problems.append(f"retracted phrasing present in {label} ({n}x): {phrase!r}")
+            for m in re.finditer(re.escape(phrase), blob):
+                # The notes deliberately quote some retired phrasings while
+                # narrating the correction, so they are allowed there -- but the
+                # exemption is per OCCURRENCE, not per phrase. A per-phrase
+                # exemption would mean that once a phrase appears once inside a
+                # quotation, every later bare re-assertion of it in that file is
+                # waved through: a guard defeated by the very thing it permits.
+                quoted = blob[m.start() - 1 : m.start()] == '"' and blob[
+                    m.end() : m.end() + 1
+                ] in ('"', ".", ",")
+                if label == "notes" and quoted:
+                    continue
+                line = blob[: m.start()].count("\n") + 1
+                problems.append(
+                    f"retracted phrasing present in {label} at line {line}"
+                    f"{' (unquoted)' if label == 'notes' else ''}: {phrase!r}"
+                )
 
     # ...and the claims that replaced them must be present, with counts, so that
     # deleting the correction is as loud as leaving the error.
@@ -476,6 +488,25 @@ def self_test() -> int:
         tok = "His264A/His268A/Asp280A"
         assert tok in raw, f"self-test anchor {tok!r} absent - mutation would no-op"
         fired["correction_deleted"] = run(raw.replace(tok, "XXXX"))
+
+        # guard: a BARE re-assertion in the notes of a phrase that is legitimately
+        # quoted elsewhere in the same file. This is the case a per-phrase
+        # exemption would wave through, so it is the one worth exercising.
+        notes_p = ROOT / "genes" / "human" / "AFP" / "AFP-notes.md"
+        notes_orig = notes_p.read_text()
+        quoted_phrase = next(
+            (p for p in RETRACTED_PHRASINGS if f'"{p}"' in notes_orig), None
+        )
+        assert quoted_phrase, "self-test needs a phrase already quoted in the notes"
+        try:
+            notes_p.write_text(notes_orig + f"\n\nAFP really does have {quoted_phrase}.\n")
+            tmp.write_text(raw)
+            probs, _ = check_all(tmp)
+            fired["notes_bare_reassertion"] = any(
+                "unquoted" in p for p in probs
+            )
+        finally:
+            notes_p.write_text(notes_orig)
 
         # guard: a dropped GOA row (review under-covers the TSV)
         doc2 = yaml.safe_load(raw)
