@@ -142,9 +142,13 @@ The flip side is a genuine positive: the screen is functional evidence that AHNA
 `ECO:0000255`-predicted PDZ domain really folds and binds PDZ ligands.
 
 **Negative results from the sibling checks, reported because they were run:**
-- *Partner-accession check* (the ACRV1 TSC1/ORFeome trap): all 19 partner and WITH/FROM accessions
-  resolve to **reviewed canonical Swiss-Prot entries at full length**. No truncated-clone
-  substitutions. The fragment on these rows is on AHNAK's side, not the partner's.
+- *Partner-accession check* (the ACRV1 TSC1/ORFeome trap): all **15** distinct `GO:0005515`
+  partner accessions resolve to **reviewed canonical Swiss-Prot entries at full length** — the HCV
+  row correctly uses the mature-chain id `P27958-PRO_0000037576` rather than a truncated clone. No
+  ORFeome-fragment substitutions. The fragment on these rows is on AHNAK's side, not the partner's.
+  (This claim is about *partner* accessions only. Several **WITH/FROM donor** accessions are
+  **TrEMBL**, not Swiss-Prot — mouse Ahnak `E9Q616` and all three mouse Ahnak2 entries — as the
+  table above records. Conflating the two sets would have made a false 19-of-19 claim.)
 - *Topological-impossibility check*: mostly negative. HSPA5/BiP is ER-lumenal against a
   cytosol-facing AHNAK, which is worth noting, but the other partners are all cytosol- or
   nucleus-accessible, so the ACRV1-style "every partner is on the wrong side of a membrane"

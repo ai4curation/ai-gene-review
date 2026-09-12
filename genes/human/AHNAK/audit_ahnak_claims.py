@@ -223,6 +223,60 @@ def check_counts(goa: list[dict], problems: list[str]) -> None:
     print("  recomputed:", computed)
 
 
+PROSE_KEYS = {"summary", "reason", "description", "comment", "source_label", "review_notes",
+              "gap_statement", "question", "justification", "proposed_definition",
+              "proposed_name", "boundary", "significance", "resolution"}
+LABEL_KEYS = {"source_label", "proposed_name"}
+KNOWN_PROPER = ("Human Protein Atlas",)
+
+
+def check_prose(doc, problems: list[str]) -> None:
+    """Catch edit artefacts in generated prose.
+
+    The reason this exists: a line-anchored fix to the builder spliced a clause out of one
+    `reason` and left `"...rather than a protein. They Human AHNAK also has its own
+    record..."` behind. That is the brief's "string replacement across wrapped YAML creates
+    new garbage" failure, and no schema or quote check can see it.
+
+    The spliced-clause pattern is anchored on the *pronoun*, not on the preceding word: the
+    preceding word normally keeps the full stop that survived the edit, so a
+    "lowercase-word then capital" pattern never fires. Requiring a lowercase letter after
+    the capital keeps acronyms (NAS, IDA, AHNAK) from matching.
+    """
+    def walk(obj, path=""):
+        if isinstance(obj, dict):
+            for k, v in obj.items():
+                if k in PROSE_KEYS and isinstance(v, str):
+                    check(v, f"{path}.{k}", sentence=k not in LABEL_KEYS)
+                walk(v, f"{path}.{k}")
+        elif isinstance(obj, list):
+            for i, v in enumerate(obj):
+                walk(v, f"{path}[{i}]")
+
+    def check(text, path, sentence=True):
+        flat = re.sub(r"\s+", " ", text).strip()
+        if not flat:
+            problems.append(f"{path}: empty prose field")
+            return
+        if sentence and not flat.endswith((".", "?", "!", ":", "'", '"', ")")):
+            problems.append(f"{path}: no terminal punctuation: ...{flat[-60:]!r}")
+        for m in re.finditer(r"\b(\w+)\s+\1\b", flat, re.I):
+            if m.group(1).lower() not in {"had", "that"}:
+                problems.append(f"{path}: doubled word {m.group(0)!r}")
+        for m in re.finditer(r"\b(They|It|This|These|Those)\s+([A-Z][a-z]+)", flat):
+            window = flat[max(0, m.start() - 8):m.end() + 32]
+            if any(w in window for w in KNOWN_PROPER):
+                continue
+            problems.append(f"{path}: possible spliced clause: {m.group(0)!r}")
+        for orphan in (" and .", " , ", " the the ", ".."):
+            if orphan in flat:
+                problems.append(f"{path}: artefact {orphan!r}")
+        if re.search(r"\b(TODO|FIXME|XXX|PENDING)\b", flat):
+            problems.append(f"{path}: placeholder text")
+
+    walk(doc)
+
+
 def run(self_test: bool = False) -> int:
     goa = load_goa(TSV)
     doc = yaml.load(YML.read_text(encoding="utf-8"), Loader=StrictLoader)
@@ -231,6 +285,7 @@ def run(self_test: bool = False) -> int:
     check_raw_vs_parsed(problems)
     check_source_entities(goa, doc, problems)
     check_counts(goa, problems)
+    check_prose(doc, problems)
     for p in problems:
         print("  PROBLEM:", p)
     print(f"{len(problems)} problems")
@@ -291,6 +346,30 @@ def self_test() -> int:
         failures.append("StrictLoader accepted a duplicate key")
     except ValueError:
         pass
+
+    # 6. prose: reintroduce the exact spliced clause that this check was written for
+    p = []
+    mutated = _copy.deepcopy(doc)
+    target = next(a for a in mutated["existing_annotations"]
+                  if "rather than a protein." in (a.get("review") or {}).get("reason", ""))
+    reason = target["review"]["reason"]
+    anchor = "rather than a protein. Human AHNAK"
+    assert anchor in reason, "spliced-clause self-test anchor drifted; the mutation would no-op"
+    target["review"]["reason"] = reason.replace(
+        anchor, "rather than a protein. They Human AHNAK", 1)
+    check_prose(mutated, p)
+    if not p:
+        failures.append("prose check did not fire on a spliced clause")
+
+    # 7. prose: a doubled word
+    p = []
+    mutated = _copy.deepcopy(doc)
+    first = mutated["existing_annotations"][0]["review"]
+    assert "summary" in first, "prose self-test target missing"
+    first["summary"] = "The the donor set is fine."
+    check_prose(mutated, p)
+    if not p:
+        failures.append("prose check did not fire on a doubled word")
 
     for f in failures:
         print("  SELF-TEST FAILURE:", f)
