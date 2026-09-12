@@ -552,8 +552,15 @@ anyway is about what each term picks out and what alternatives exist.
 | GO:0035654 | a term created *for* AP-3; its definition names the AP-3 heterotetramer | **no** — generalising to GO:0035459 discards the AP-3 identity to drop an adjective |
 
 So the remedy for GO:0035654 belongs to the ontology, not to this gene: drop
-"clathrin-coated" from the name and definition and re-parent it under GO:0035459 vesicle
-cargo loading, leaving GO:0035652 for the AP-1/AP-2 adaptors. That is now the second
+"clathrin-coated" from the name and definition and re-parent it directly under GO:0035459
+vesicle cargo loading, leaving its current parent GO:0035652 for the AP-1/AP-2 adaptors.
+Both of those ids and labels were checked against QuickGO rather than written from memory
+— `GO:0035652` is "clathrin-coated vesicle cargo loading", not obsolete, with ancestors
+`GO:0006810, GO:0008150, GO:0035459, GO:0035652, GO:0051179, GO:0051234` — so the
+proposal moves GO:0035654 up one level to sit alongside GO:0035652 rather than beneath
+it. (Both `proposed_new_terms` entries are really ontology *change* requests, and
+`ProposedOntologyTerm` has no field that says so; each justification now states it
+explicitly, and the schema gap is worth an issue of its own.) That is now the second
 entry in `proposed_new_terms`, and the ONTOLOGY knowledge gap names both defects as two
 faces of the same legacy framing. The structural work states the point plainly
 [PMID:39705307 "our findings that AP-3 contains multiple AH domains and can co-opt Arf1 for homodimerization suggests that a clathrin-independent tubular coat for AP-3 is likely."].
@@ -570,7 +577,8 @@ of synaptic vesicle precursors from endosomal membranes"* — which is the defin
 presynaptic membrane endocytic zone"). The two reviews therefore agree on the biology and
 differ only on which term expresses it; the AP3B2 row's prose argues for the term this
 review proposes. I did not edit AP3B2: it is neither this gene's folder nor a donor in
-any of its rows, and the campaign brief limits edits to those. It needs a follow-up.
+any of its rows, and the campaign brief limits edits to those. Filed instead as
+[issue #3027](https://github.com/ai4curation/ai-gene-review/issues/3027).
 
 **Two actions retuned.** `GO:0006886` and `GO:0016192` were ACCEPT while their own
 reasons called them broad, harmless IEA parents; since `ACCEPT` means "retain as
