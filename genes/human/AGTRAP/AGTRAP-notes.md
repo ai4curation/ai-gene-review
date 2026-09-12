@@ -150,6 +150,25 @@ space** and cannot reach that surface; 17 more are mixed; 67 are cytosol-facing;
 argument, not the decisive one, because a majority of partners *are* nominally
 accessible. The decisive argument is the assay structure above.
 
+**The property that every screen row's verdict rests on, stated exactly.** An
+earlier draft said, on all 178 rows, that "searching this partner independently
+of the AGTRAP symbol found no follow-up study". I did not run 131 separate
+partner searches, so that was an over-claim, and it was replaced by what was
+actually measured (`scratchpad/nony2h_vs_goa.py`, which asserts
+`len(results) == totalElements` and then asserts the property per partner):
+
+```
+GOA partner accessions (base): 132
+GOA partners with no IntAct record under Q6RW13: 0
+IntAct partners with any non-two-hybrid method: 23
+   of those, present in GOA: 0
+ASSERTION HELD: every GOA partner found in IntAct has two-hybrid methods only
+```
+
+Every one of the 132 GOA partners resolves in IntAct, every one is
+two-hybrid-only, and the 23 partners that do have orthogonal support are
+**disjoint** from the GOA set.
+
 **The contrast is the finding.** The 23 pairs with non-Y2H (AP-MS / co-IP /
 BioID) evidence are almost all membrane proteins — CYB5D2, ENPP6, MBLAC2,
 TMEM47, TMEM106B, LAMP5, SLC15A3, SLC15A4, TMEM63A, CFTR, CHRNB1, SLC1A1,
