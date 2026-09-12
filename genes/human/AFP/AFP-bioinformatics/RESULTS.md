@@ -27,8 +27,8 @@ that no duplicated YAML key has silently discarded data.
 | distinct GO terms in GOA | 6 |
 | GOA rows with an experimental evidence code | 3 |
 | GOA assigners | AgBase, Ensembl, GO_Central, IntAct, Reactome, UniProt |
-| `supporting_text` quotes verified | 67 |
-| - in `supported_by` | 38 |
+| `supporting_text` quotes verified | 68 |
+| - in `supported_by` | 39 |
 | - in `references[].findings[]` | 29 |
 | of which cite a `file:` source (unchecked by CI) | 5 |
 
