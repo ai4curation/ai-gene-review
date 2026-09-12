@@ -155,13 +155,18 @@ def check(paths: dict[str, str]) -> list[str]:
     retracted_patterns = [
         (r"(?:all four|every)[^.]{0,80}partner[^.]{0,80}(?:is|are)\s+nuclear",
          "the nuclear over-claim in any phrasing (MAB21L3 has zero CC annotations)"),
-        # `laborator` alone is not enough: the corrected prose itself now says
-        # "independent group", so a future edit reading "three independent groups"
-        # is exactly the claim this exists to stop and would have sailed past.
-        (r"(?:three|four|several)\s+(?:independent\s+)?(?:later\s+)?"
-         r"(?:laborator|group|lab\b|team)",
-         "a laboratory-independence count the author lists contradict "
-         "(11 of 13 papers share one senior author)"),
+        # Three rounds of this claim, three patterns, each too narrow for the next
+        # wording. `lab\b` cannot match "labs" (b->s is not a word boundary), and
+        # requiring a count word let the uncounted "confirmed by later labs"
+        # through. The rule is now: a VAGUE plural attribution is forbidden,
+        # whatever the quantifier.
+        (r"\b(?:three|four|five|several|multiple|many|various|numerous|other|later"
+         r"|across)\s+(?:\w+\s+){0,2}(?:labs?|laborator\w*|groups?|teams?)\b",
+         "a vague plural-laboratory attribution. 11 of the 13 papers share one "
+         "senior author; only PMID:39905000 is independent. A counted, checkable "
+         "claim naming the papers is fine -- 'two methods from two laboratories' "
+         "(Vidal, Gygi) and 'two laboratories report opposite effects' (Wang QK, "
+         "Chen L) are both true and deliberately not matched"),
         # An allele frequency must not be presented as a carrier frequency. gnomAD
         # AF for rs34203073 is ~1.4%; carriers are 2*AF*(1-AF) = 2.8%.
         (r"carried by (?:roughly |about |~)?1\.4\s?%",
@@ -274,6 +279,17 @@ def self_test() -> int:
          "The nucleus evidence comes from three independent groups. "
          "This matters for how the review is worded", 1,
          "a group-count claim (the wording 'laborator' alone would miss)"),
+        # The two wordings that reached a reviewer, both uncounted plurals in a
+        # `summary` whose own `reason` already said the opposite.
+        # Fragments chosen to sit on ONE physical line: the YAML is dumped at
+        # width=100, so a longer span is wrapped and the mutation silently no-ops
+        # (which reports as "mutation target absent", not as a passing guard).
+        ("review", "by later work from the same group.",
+         "by several later labs.", 1,
+         "'several later labs' -- the wording that defeated the count-word pattern"),
+        ("review", "confirmed by an independent group's",
+         "confirmed by later labs including", 1,
+         "'later labs' -- an uncounted plural the count-word pattern let through"),
         ("review", "a benign polymorphism: its gnomAD v4 allele",
          "a benign polymorphism carried by roughly 1.4% of the population: its "
          "gnomAD v4 allele", 1,
