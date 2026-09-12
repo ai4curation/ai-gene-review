@@ -304,6 +304,29 @@ from the rule's own conditions first, so the zero is a result rather than a
 broken matcher. Reported as an unresolved provenance question, not spun into a
 verdict — both terms are independently supported by the HPA IDA rows anyway.
 
+## Step 8b — the propagation pipelines that are absent, and what that means
+
+Resolving provenance means accounting for the GO_REFs that are *not* there as
+well as the ones that are. AHNAK2's 13 rows use `GO_REF:0000033` (PAINT, 3),
+`GO_REF:0000117` (ARBA, 2), `GO_REF:0000052` (HPA, 2), `GO_REF:0000044`
+(SubCell, 1), plus 5 from PMID:17185750. There is **no `GO_REF:0000002`
+(InterPro2GO)** row and **no `GO_REF:0000120`** row.
+
+That absence is informative rather than a gap. The only interpro2go mapping
+available for any of AHNAK2's signatures is
+
+```
+InterPro:IPR001478 PDZ domain > GO:protein binding ; GO:0005515
+```
+
+— i.e. the pipeline's best offer for this protein is exactly the uninformative
+term the curation guidelines tell us to avoid, and it would be redundant with
+the two IPI rows already present. So there is no InterPro2GO over-annotation to
+find here, which is worth stating: the check ran and came back negative. It also
+sharpens the case for `GO:0042803` — no automatic route can ever produce a
+better molecular function for AHNAK2, so the structure has to be curated by
+hand or the gene stays MF-dark.
+
 ## Step 9 — what has actually been measured on human AHNAK2
 
 The best-measured fact about this protein is not in GO at all.
@@ -333,6 +356,27 @@ expression of mouse AHNAK2 were obtained from Origene (Rockville, MD)."] in NIH
 "commercially available anti-AHNAK2 antibodies failed to reliably detect AHNAK2
 both in immunoblotting and immunofluorescence"]. So these are ISS/IPI on a
 fragment, not IDA/IMP on the human protein — proposed as such.
+
+## Step 9b — an ontology gap, checked properly before being called one
+
+An empty OLS keyword search is not evidence a term is absent, so I enumerated
+`GO:0009306`'s children from QuickGO instead. It has **23**: nine bacterial
+secretion systems, three regulation terms, a basolateral and a platelet route,
+and **ten cargo-named terms** — Wnt protein secretion, BMP secretion, insulin,
+prolactin, adiponectin, amylase, matrix metallopeptidase, renin, pancreatic
+trypsinogen, lysosomal enzymes. So the cargo-named pattern is well established
+and populated, and **FGF is simply missing from it**. There is also no
+unconventional- or non-classical-secretion term anywhere in GO.
+
+I did **not** file a `proposed_new_terms` entry, because the nearest existing
+term is `GO:0090269 fibroblast growth factor production`, defined as appearance
+due to *"biosynthesis or secretion"* following a cellular stimulus — which
+arguably already covers it, while sitting in the production branch rather than
+under protein secretion. Proposing a duplicate of a term that may have been
+created precisely to serve this case is the failure mode the campaign's
+merged-GAP-terms lesson warns about. Recorded as an `ONTOLOGY` knowledge gap on
+the FGF1 core function with the disambiguating question for GO curators, and
+annotated to the undifferentiated parent in the meantime.
 
 ## Step 10 — what I declined to propose
 
@@ -392,23 +436,36 @@ invariant is enforced rather than remembered.
 
 13 GOA rows + 4 NEW = 17 entries, reconciling exactly.
 
-## Divergences the AHNAK reviewer should see
+## Cross-check against the concurrent AHNAK review (PR #2999)
 
-A concurrent review of AHNAK is in flight. Where we are likely to differ, and
-why:
+Diffed row-by-row rather than assumed, since independently reviewed paralogues
+in this campaign have given the same row different answers. The two reviews
+share **10** `(term, evidence, reference)` keys and diverge on **5**. Every
+divergence is one I had predicted, and each has a checkable basis:
 
-1. **PMID:17185750's NAS rows.** AHNAK and AHNAK2 received the identical trio
-   (`GO:0005737`, `GO:0030315`, `GO:0042383`, all NAS) from this paper. For
-   AHNAK they are the paper's own subject and should stand; for AHNAK2 they are
-   not, and I have kept two as non-core and marked T-tubule over-annotated. An
-   AHNAK review that accepts all three is not in conflict with this one.
-2. **`GO:0043484`.** AHNAK holds this by IDA from PMID:21940993 and should keep
-   it. AHNAK2 holds it only by IBA from AHNAK, and I have marked it
-   over-annotated. Same string, different meaning per gene — the AFF1/AFF4
-   pattern.
-3. **`UniProtKB:Q09666` in a WITH/FROM** is *self-referential* on AHNAK (valid,
-   `NO_FAILURE_CORE`) and *paralogue-derived* on AHNAK2. Likewise
-   `UniProtKB:Q8IVF2`, mirrored.
-4. **The PDZ measurement.** If the AHNAK review proposes `GO:0042803` from
-   PMID:24675079, that would be wrong — AHNAK is not in that structure. The
-   paper's two chains are PRX and AHNAK2.
+| shared row | AHNAK2 | AHNAK | why they differ |
+|---|---|---|---|
+| `GO:0005515` IPI PMID:17185750 | KEEP_AS_NON_CORE + UNDECIDED | ACCEPT x3 | the paper's subject is AHNAK; UniProt carried DYSF but not MYOF to AHNAK2 |
+| `GO:0005634` IBA | MARK_AS_OVER_ANNOTATED | ACCEPT | **human AHNAK holds nucleus by ISS from its own mouse orthologue** (PMID:21940993); AHNAK2 has no equivalent |
+| `GO:0030315` T-tubule NAS | MARK_AS_OVER_ANNOTATED | ACCEPT | AHNAK's own datum in that paper; AHNAK2's is not |
+| `GO:0042383` sarcolemma NAS | KEEP_AS_NON_CORE | ACCEPT | same |
+| `GO:0043484` IBA | MARK_AS_OVER_ANNOTATED | KEEP_AS_NON_CORE | **human AHNAK holds it by ISS from mouse Ahnak's IDA**; AHNAK2 holds it only by IBA |
+
+The two rows that matter turn on the same fact, and it is one I got slightly
+wrong on a first pass and corrected: **the PMID:21940993 IDA is on *mouse*
+Ahnak; human AHNAK holds both `GO:0005634` and `GO:0043484` by *ISS* from it.**
+That ISS is an ortholog-strength, same-gene transfer made by a curator reading
+the paper. AHNAK2 has no such transfer for either term — it has only the IBA,
+whose donor set is periaxin-dominated for nucleus and, for splicing, one mouse
+Ahnak IDA plus a mouse Prx holding the term circularly. So the divergences are
+**well-founded rather than an inconsistency to reconcile**: the same term is
+ISS-supported on one gene and IBA-only on the other.
+
+Two further points recorded for the AHNAK reviewer:
+
+1. **`UniProtKB:Q09666` in a WITH/FROM** is *self-referential* on AHNAK and
+   *paralogue-derived* on AHNAK2; `UniProtKB:Q8IVF2` mirrors it. The same string
+   means different things per gene — the AFF1/AFF4 pattern.
+2. **The PDZ measurement.** `GO:0042803` from PMID:24675079 would be wrong for
+   AHNAK — the structure's two chains are PRX and AHNAK2, and AHNAK is not in
+   it. Checked: the AHNAK review does not propose it.

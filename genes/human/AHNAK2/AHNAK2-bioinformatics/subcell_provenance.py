@@ -22,8 +22,10 @@ from uniprot import _cached_get
 ACCS = {
     "AHNAK2 (subject)": "Q8IVF2",
     "AHNAK (paralogue donor)": "Q09666",
+    "Ahnak mouse (donor on all three IBAs)": "E9Q616",
     "PRX (donor)": "Q9BXM0",
     "Prx mouse (donor)": "O55103",
+    "Prx rat (donor)": "Q63425",
     "Ahnak2 mouse (ortholog, cytoplasm IBA only)": "A0A7N9VR94",
 }
 WANT = {"SUBCELLULAR LOCATION", "SUBUNIT"}
