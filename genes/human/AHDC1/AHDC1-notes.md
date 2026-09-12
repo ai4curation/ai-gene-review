@@ -199,20 +199,40 @@ This is the ACTR8 check, and it comes back clean: no complex-level projection, n
 spreading of one phenotype across a subunit set. Contrast ACTR8, where
 `PMID:23979016` annotated 16 entities with identical evidence.
 
-## 8. `GO:0005515` — `NbExp` is inflated ~6-fold, for the third time in this campaign
+## 8. `GO:0005515` — what `NbExp` actually decomposes into
+
+**This section was rewritten after I got it wrong the first time.** My first pass wrote
+that "all twelve HTT records are the same single experiment logged twelve times", inferred
+from the records sharing one publication accession. Dumping the full records instead of
+the summary fields refuted it: the twelve rows carry **twelve distinct interaction ACs**
+and four distinct `aliasesA` construct sets. The campaign rule is *verify the number, don't
+find a story that makes it acceptable* — I nearly shipped the story.
 
 UniProt's `CC   -!- INTERACTION:` block reads `ATXN1; NbExp=5` and `HTT; NbExp=12`.
 Expanding every IntAct record (73 records, 45 distinct partners; `totalElements` asserted
-against rows read):
+against rows read; **2** of the 73 are RNA-level records where AHDC1 appears as
+`ENST00000374011` and are reported rather than silently dropped):
 
-| partner | IntAct records | distinct publications | distinct IntAct experiments | methods | MI score |
-|---|---|---|---|---|---|
-| ATXN1 `P54253` | 5 | 2 (`16713569`, `32814053`) | 2 (`EBI-963863`, `EBI-25827495`) | `2 hybrid`; `validated two hybrid` + `two hybrid array` + `two hybrid pooling` | 0.67 |
-| HTT `P42858` | 12 | **1** (`32814053`) | **1** (`EBI-25827495`) | the same three sub-methods, four times each | 0.56 |
+| partner | records | publications | what the records actually differ by | MI |
+|---|---|---|---|---|
+| ATXN1 `P54253` | 5 | 2 | PMID:16713569 → **2** records, one method (`2 hybrid`), differing by **ATXN1 fragment**: 528-815 "c terminal" and 557-699 "axh region", both `sufficient to bind`. PMID:32814053 → **3** records differing **only by sub-method label**, all one construct `p.Gln225[50]` | 0.67 |
+| HTT `P42858` | 12 | **1** | **4 HTT constructs × 3 sub-method labels**. Constructs: 1932-2642; 1-511 `Gln18[49]`; exon-1 with `Gln18` at 17/20/23/49/51/79; 1-504 with `Gln18[23]`/`Gln18[80]` | 0.56 |
 
-So `NbExp=12` for HTT is **one yeast two-hybrid screen logged twelve times**. Host
-organism for every record is *Saccharomyces cerevisiae*. No orthogonal assay for either
-partner, and no functional consequence of either interaction has ever been tested.
+So the honest decomposition is:
+
+- **The sub-method triplication is real and is a threefold inflation.** `validated two
+  hybrid` (MI:1356) + `two hybrid array` (MI:0397) + `two hybrid pooling` (MI:0398) are
+  three logs of one assay. This is the third occurrence in the campaign (ACRV1, ADAMTSL5).
+- **The remaining fourfold variation on HTT is the screen's standard huntingtin bait
+  panel**, not a mapping performed on this pair — exon-1 and 506-residue polyQ series plus
+  a C-terminal fragment, applied to every prey in a ~500-protein neurodegeneration screen.
+- **But the records are not contentless.** IntAct curates HTT 1932-2642 as `sufficient to
+  bind`, and curates some polyQ lengths as `mutation disrupting strength` and others as
+  `mutation with no effect`, so the Y2H readout is graded. And on ATXN1, PMID:16713569
+  genuinely maps the binding region to the **AXH domain** (557-699).
+- **No region is mapped on the AHDC1 side of any ATXN1 or HTT record.** (Other partners do
+  have AHDC1-side `sufficient to bind` features, on `EBI-10697753` and `EBI-9090956`; the
+  tag features elsewhere are construct tags, not mapping.)
 
 Promiscuity check: HTT has **1,216** distinct IntAct partners and ATXN1 **634**, against
 AHDC1's 45. Both are polyQ neurodegeneration baits, and both screens were designed around
@@ -224,11 +244,19 @@ Partner-accession discipline (ACRV1 lesson): both partners resolve to **reviewed
 Swiss-Prot canonical** entries at full length (ATXN1 815 aa, HTT 3,142 aa). No TrEMBL or
 ORFeome substitution here — a negative result, reported.
 
-Verdict: all three rows `MARK_AS_OVER_ANNOTATED`, not `REMOVE` (they are experimental
-IPI rows and the interactions may well be real). ATXN1 is replicated across two
-independent laboratories, so it is the stronger of the two; HTT is a single screen. The
-informative replacement is not a refinement of either: it is `GO:0140297 DNA-binding
-transcription factor binding`, which is what the paper's own interactome supports.
+**Verdict, per partner, and it splits:**
+
+- **ATXN1 (both rows) → `KEEP_AS_NON_CORE`.** Two independent laboratories, region mapping
+  onto the AXH domain, and a topologically plausible pair (ATXN1 is itself a
+  chromatin-binding transcriptional corepressor; both proteins are nuclear). Calling that
+  an over-annotation would be wrong. It is simply not a core function, and the term
+  conveys nothing.
+- **HTT → `MARK_AS_OVER_ANNOTATED`.** One laboratory, bait-panel design, a 1,216-partner
+  hub, nothing tested functionally.
+
+Neither is `REMOVE`: both are experimental IPI rows. The informative replacement is not a
+refinement of either — it is `GO:0140297 DNA-binding transcription factor binding`, from
+the functional paper's own proximity interactome.
 
 ## 9. Retraction / erratum check — clean
 
