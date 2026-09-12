@@ -43,8 +43,8 @@ activity`, or in a GO-CAM model, and to let the ligand keep the terms that
 describe what it actually does (cobalamin binding, cobalamin transport).
 
 This obsoletion is unusually tractable: the term's entire footprint of 172
-annotations fans out from **three** seed annotations, and two of the three
-affected human genes already carry the replacement content.
+annotations fans out from **three** seed annotations, and all three affected
+human genes already carry the replacement content.
 
 ## Upstream tickets
 
@@ -91,7 +91,7 @@ version of that thread.
 | **TCN1** (haptocorrin) | human | P20061 | EXP | PMID:22547309 | Reactome |
 | **TCN2** (transcobalamin-2) | human | P20062 | EXP | PMID:3782074 | Reactome |
 | **CBLIF** (gastric intrinsic factor) | human | P27352 | EXP | PMID:17954916 | Reactome |
-| **Tcn2** | mouse | O88968 | IDA | PMID:237480 | MGI |
+| **`Tcn2`** | mouse | O88968 | IDA | PMID:237480 | MGI |
 | **Cblif** | mouse | P52787 | IDA | PMID:14321840 | MGI |
 | **`ATG5`** | *S. cerevisiae* | Q12380 | IDA | PMID:27879200 | SGD |
 
@@ -130,10 +130,10 @@ Two observations on this table:
 
 | Gene product | Species | UniProt | Source (WITH/FROM) | Assigned by |
 |---|---|---|---|---|
-| Tcn2 | mouse | O88968 | UniProtKB:P20062 | GO_Central |
+| `Tcn2` | mouse | O88968 | UniProtKB:P20062 | GO_Central |
 | Cblif | mouse | P52787 | UniProtKB:P27352 (×2), RGD:62084 | MGI (×2), GO_Central |
 | Cblif | rat | P17267 | UniProtKB:P27352, MGI:MGI:1202394 | RGD |
-| Tcn2 | rat | Q9R0D6 | UniProtKB:P20062, MGI:MGI:98534 | RGD |
+| `Tcn2` | rat | Q9R0D6 | UniProtKB:P20062, MGI:MGI:98534 | RGD |
 | **Hpse** | mouse | Q6YGZ1 | UniProtKB:Q9Y251 (PMID:24788042) | MGI |
 
 All but the last are orthology transfers within the TCN2/CBLIF set and
@@ -155,7 +155,7 @@ to exactly one of three seeds:
 
 | Seed | Species | IEA rows projected |
 |---|---|---|
-| O88968 (mouse Tcn2) | mouse | 77 |
+| O88968 (mouse `Tcn2`) | mouse | 77 |
 | P52787 (mouse Cblif) | mouse | 68 |
 | Q12380 (yeast `ATG5`) | *S. cerevisiae* | 12 (EnsemblFungi) |
 
@@ -241,8 +241,8 @@ content on their own and the correct action is a plain `REMOVE`.
 
 ## Scope
 
-- **Organisms**: human (TCN1, TCN2, CBLIF), mouse (Tcn2, Cblif, Hpse), rat
-  (Tcn2, Cblif), *S. cerevisiae* (`ATG5`); 157 further Ensembl/EnsemblFungi
+- **Organisms**: human (TCN1, TCN2, CBLIF), mouse (`Tcn2`, Cblif, Hpse), rat
+  (`Tcn2`, Cblif), *S. cerevisiae* (`ATG5`); 157 further Ensembl/EnsemblFungi
   ortholog projections follow automatically.
 - **GO branch**: MF obsoletion with **no replacement term**. Content moves
   either to terms the genes already have, or onto the receptor's activity as
