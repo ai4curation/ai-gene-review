@@ -337,7 +337,62 @@ review to cross-check against (the AADACL2/3/4 check is not applicable here). Th
 sharing a domain is REV3L via DUF4683 (`PMID:34950897` calls it "a conserved REV3L
 domain"), which is a domain-level resemblance with no functional claim attached.
 
-## 14. Process
+## 14. Review round: what the reviewer caught, and what I checked before conceding
+
+`ai4c-reviewer` approved with five non-blocking items. Each premise was verified first.
+
+**The off-by-one was real.** The PR body and the first history event said "5 NEW / 20
+entries"; the file had **4 NEW / 19**. Cause: `GO:0006357` was planned as a NEW row and
+implemented as the `proposed_replacement_terms` of a MODIFY, and the narrative count was
+never re-derived. This is the campaign's most-confirmed lesson landing on me — a number
+that does not add up is the bug report — and the tell was that I *wrote* the count from a
+plan rather than deriving it with `grep -c '^- term:'` and `grep -o 'action: NEW'`.
+
+Note the trap in the fix: acting on item 3 below **added** a fifth NEW row, so the file is
+now 20 = 15 + 5 and the original claim reads as correct again. It was not correct when
+made. Said explicitly in the reply and in the history record, because a number that quietly
+becomes true is the easiest kind of correction to lose.
+
+**The off-target quote was real.** The `GO:0001707` `GO_REF:0000107` row was supported by
+*"Heterozygous or homozygous Gibbin mutants ... failed to survive past birth"*. Perinatal
+lethality speaks to neither mesoderm formation nor to the circularity the row argues.
+Replaced with the human scRNA-seq mesoderm result and the day-3 onset — which is the right
+choice for this row specifically, because what needs evidencing is that the *target already
+holds the term from this publication*. The `GO:0043589` Compara row carried the identical
+quote and got a different fix: the mouse skin data (KRT14/KRT10 loss, reduced differentiated
+layers), because on that row the donor's evidence genuinely is a distinct experiment. One
+bad quote, two different right answers — worth noting, since the reflex is to apply one
+replacement to both.
+
+**`GO:0000785 chromatin`.** Checked before adding: enum-valid, and its ancestor closure
+over `is_a,part_of` **does** contain `GO:0005694`, so it specialises the existing row rather
+than competing with it. Added as a NEW `located_in` row on the same reference rather than
+re-graining the `EXP` row, which reflects UniProt's curated Chromosome location and is not
+wrong. Also added to both `core_functions` `locations`. The validator then cleared the two
+"location term not reflected in existing_annotations" warnings that the core_functions-only
+version had produced — i.e. the additive route was also the one the repo's own rules wanted.
+
+**`core_functions` restructure.** The reviewer's objection was that entry 2 re-stated entry
+1's activity and hung downstream developmental terms off it. Fixed by dividing the two
+entries **by activity and by experiment**: entry 1 is the partner-facing arm (`GO:0003712`,
+`GO:0006357`; proximity proteomics and epistasis), entry 2 the DNA-facing arm (`GO:0003682`,
+`GO:0040029` moved here from entry 1, `GO:1902275`, plus the developmental outcomes;
+ChIP-seq, methylation arrays, HiChIP). Entry 2 now states the causal distance explicitly:
+mesoderm formation is the direct readout, skin morphogenesis is reached
+non-cell-autonomously — the same argument used to decline `GO:0030216`.
+
+**The `IPI` query was not an objection, and I did not concede it.** Coding `GO:0140297` off
+the GATA3 epistasis instead was considered and rejected: the epistasis is a genetic result
+about GATA3's *dependence on* AHDC1, which is IMP-shaped and would support a regulation
+term, not a binding term. `IPI` on the proximity data with the labelling-radius caveat is
+what matches the measurement. Recorded in the row rather than only in the PR reply.
+
+One factual note about the review itself: it ran with neither `uv` nor `just` available, so
+its term-id and quote checks were manual against `cache/go/terms.csv` and the cached
+publications. Its conclusions matched the local `just validate` result, but the `Build and
+test` workflow is the authoritative signal.
+
+## 15. Process
 
 - Branch `paint/AHDC1` from `origin/main`; own worktree.
 - Every supporting_text pre-verified with a normalising substring check before writing
