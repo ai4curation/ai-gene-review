@@ -136,8 +136,10 @@ against three independent lines:
 
 1. [PMID:35608889 "and PSF. Here, we show that AGGF1 is a key regulatory and structural component"]
 2. [PMID:33471274 "Angiogenic factor with G-patch and FHA domains 1 (AGGF1) exhibits a dynamic"] — a different lab (Tian XL, the first author of the 2004 discovery paper), mapping an NLS to residues 260–288
-3. AGGF1's own interaction record: all four HuRI partners (DHX15, MCRS1, FBXO28,
-   MAB21L3) are nuclear/nucleolar proteins, and AGGF1 was included as a
+3. AGGF1's own interaction record: three of the four HuRI partners — DHX15, MCRS1 and FBXO28 — carry
+   `GO:0005634` nucleus with experimental evidence (EXP or IDA), while the
+   fourth, MAB21L3, has **no** cellular-component annotation in GOA at all and
+   no UniProt `SUBCELLULAR LOCATION` comment; and AGGF1 was included as a
    spliceosome-associated protein in the Hegele 2012 Y2H matrix (PMID:22365833)
 
 The interaction rows in AGGF1's own GO record already point at the nucleus while

@@ -118,6 +118,15 @@ def check(paths: dict[str, str]) -> list[str]:
             "the superseded GO:0005515 row count (there are nine)",
         "three studies, two assay types":
             "the superseded self-interaction count (the BioID row is an artefact)",
+        "all four HuRI partners":
+            "the over-claim that all four HuRI partners are nuclear; MAB21L3 has "
+            "ZERO cellular-component annotations in GOA",
+        "all four partners the HuRI":
+            "the same over-claim in its other phrasing",
+        "All four partners are nuclear":
+            "the same over-claim in the reference finding",
+        "MAB21L3, all nuclear":
+            "the same over-claim in suggested_questions",
     }
     for phrase, why in retracted.items():
         for name, text in (("RESULTS.md", results), ("notes", notes), ("review", review)):
@@ -170,6 +179,8 @@ def self_test() -> int:
          "the bounded FHA claim"),
         ("results", "untested, not refuted", "refuted outright", 1,
          "the 'untested not refuted' phrasing"),
+        ("results", "three of the four HuRI partners", "all four HuRI partners", 1,
+         "the retracted 'all four partners are nuclear' over-claim"),
     ]
     failures = 0
     for key, old, new, n, label in mutations:

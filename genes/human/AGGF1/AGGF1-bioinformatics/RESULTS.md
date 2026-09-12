@@ -159,9 +159,12 @@ Three things follow. **634 of the 742 records are a single BioID screen**
 (bait biotinylates bait), while the two Y2H self-interaction rows are real: a Y2H
 self-hit requires the DB- and AD-fusions to associate, and AGGF1 carries a
 70-residue coiled coil (18-88) that would do it.
-And **all four HuRI partners are nuclear or nucleolar proteins** — DHX15
-(nucleus/nucleolus), MCRS1 (nucleus/nucleolus), FBXO28 (nucleus/chromosome) —
-on a gene whose entire GOA localisation record is cytoplasm plus extracellular.
+And **three of the four HuRI partners carry `GO:0005634` nucleus with
+experimental evidence** — DHX15 (EXP), MCRS1 (EXP + IDA), FBXO28 (EXP) — on a
+gene whose entire GOA localisation record is cytoplasm plus extracellular. The
+fourth, MAB21L3, has **zero** cellular-component annotations in GOA and no
+UniProt `SUBCELLULAR LOCATION` comment, so it is neither support nor
+counter-evidence; saying "all four are nuclear" would have been an over-claim.
 
 **Isoform caveat, computed not assumed.** 24 IntAct records are logged against
 `Q8N302-2`. Fetching each isoform gives Q8N302-1 = 714 aa, **Q8N302-2 = 109 aa,
