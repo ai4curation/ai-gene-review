@@ -1510,7 +1510,7 @@ render-all:
 # Assemble the already-rendered public site without changing the active Pages source.
 # This transitional artifact preserves the URLs currently served from main:/.
 stage-pages:
-    uv run python -m ai_gene_review.tools.stage_pages --output-dir _site --manifest _site-manifest.json
+    uv run python -m ai_gene_review.tools.stage_pages --manifest _site-manifest.json
 
 # Build the complete disposable publication tree used by the Pages migration.
 build-pages: render-all render-projects validate-modules render-modules deploy-browser stage-pages

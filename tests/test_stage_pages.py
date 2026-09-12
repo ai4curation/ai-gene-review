@@ -1,8 +1,9 @@
 from pathlib import Path
+import subprocess
 
 import pytest
 
-from ai_gene_review.tools.stage_pages import stage_pages
+from ai_gene_review.tools.stage_pages import _safe_clean_output, stage_pages
 
 
 def _write(path: Path, content: str = "fixture") -> None:
@@ -11,6 +12,7 @@ def _write(path: Path, content: str = "fixture") -> None:
 
 
 def _site_fixture(root: Path) -> None:
+    subprocess.run(["git", "init", "--quiet", str(root)], check=True)
     _write(root / "index.html")
     _write(root / ".nojekyll", "")
     _write(root / "genes" / "human" / "ABC1" / "ABC1-ai-review.yaml")
@@ -102,3 +104,45 @@ def test_stage_pages_rejects_staging_symlink_to_sources(tmp_path: Path) -> None:
         stage_pages(tmp_path, tmp_path / "_site")
 
     assert (tmp_path / "genes/human/ABC1/ABC1-ai-review.yaml").is_file()
+
+
+@pytest.mark.parametrize("nested_in_repository", [False, True])
+def test_stage_pages_requires_git_worktree_root(
+    tmp_path: Path, nested_in_repository: bool
+) -> None:
+    """An arbitrary directory or repository subdirectory is not a staging root."""
+    if nested_in_repository:
+        subprocess.run(["git", "init", "--quiet", str(tmp_path)], check=True)
+    root = tmp_path / "arbitrary"
+    sentinel = root / "_site" / "keep.txt"
+    _write(sentinel, "keep me")
+
+    with pytest.raises(ValueError, match="Git worktree root"):
+        stage_pages(root, root / "_site")
+
+    assert sentinel.read_text() == "keep me"
+
+
+def test_cleanup_supports_linked_git_worktrees(tmp_path: Path) -> None:
+    """A worktree with a .git file is a valid root, just like a regular clone."""
+    repository = tmp_path / "repository"
+    subprocess.run(["git", "init", "--quiet", str(repository)], check=True)
+    subprocess.run(
+        ["git", "-C", str(repository), "-c", "user.name=Test",
+         "-c", "user.email=test@example.com", "-c", "commit.gpgsign=false",
+         "commit", "--quiet", "--allow-empty", "-m", "Fixture"],
+        check=True,
+    )
+    worktree = tmp_path / "worktree"
+    subprocess.run(
+        ["git", "-C", str(repository), "worktree", "add", "--quiet",
+         "--detach", str(worktree), "HEAD"],
+        check=True,
+    )
+    _write(worktree / "_site/stale.html")
+    assert (worktree / ".git").is_file()
+
+    _safe_clean_output(worktree, worktree / "_site")
+
+    assert list((worktree / "_site").iterdir()) == []
+    assert (worktree / ".git").is_file()

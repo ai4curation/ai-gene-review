@@ -396,7 +396,8 @@ python -m ai_gene_review.render --all genes/    # Alternative rendering command
 `stage-pages` is the shadow build for the GitHub Pages artifact migration. It
 preserves current public URL paths, writes an ignored `_site/` directory, and
 reports the uncompressed publication size. Cleanup is restricted to the repository's
-`_site/` directory; other output paths are rejected. Shadow build failures warn
+`_site/` directory, and the root is verified with Git before cleanup. The CLI always
+uses `<repo-root>/_site`. Shadow build failures warn
 without blocking regeneration PRs. The live site continues to publish
 from `main:/` until the shadow artifact has been verified.
 

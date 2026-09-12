@@ -12,6 +12,7 @@ import argparse
 import json
 import re
 import shutil
+import subprocess
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
@@ -54,6 +55,14 @@ def _safe_clean_output(repo_root: Path, output_dir: Path) -> None:
         raise ValueError("Pages output directory must be inside the repository root")
     if resolved_output != resolved_root / "_site":
         raise ValueError("Pages output directory must be the repository's _site directory")
+    git_root = subprocess.run(
+        ["git", "-C", str(resolved_root), "rev-parse", "--show-toplevel"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if git_root.returncode or Path(git_root.stdout.strip()).resolve() != resolved_root:
+        raise ValueError("Pages repository root must be a Git worktree root")
     if resolved_output.exists():
         shutil.rmtree(resolved_output)
     resolved_output.mkdir(parents=True)
@@ -178,12 +187,6 @@ def _parse_args() -> argparse.Namespace:
         help="Repository root (default: current directory)",
     )
     parser.add_argument(
-        "--output-dir",
-        type=Path,
-        default=Path("_site"),
-        help="Disposable Pages output directory (must be the repository's _site)",
-    )
-    parser.add_argument(
         "--warn-size-mib",
         type=int,
         default=1024,
@@ -200,9 +203,7 @@ def _parse_args() -> argparse.Namespace:
 def main() -> None:
     args = _parse_args()
     repo_root = args.repo_root.resolve()
-    output_dir = args.output_dir
-    if not output_dir.is_absolute():
-        output_dir = repo_root / output_dir
+    output_dir = repo_root / "_site"
 
     manifest = stage_pages(repo_root, output_dir)
     manifest_json = json.dumps(asdict(manifest), indent=2) + "\n"

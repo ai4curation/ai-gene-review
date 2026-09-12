@@ -398,6 +398,8 @@ def test_publication_headlines_match_generated_metrics() -> None:
     assert "**71.4% CNN**" in slides
     assert "**15.4% NPI/PLI/REP**" in slides
     assert "**2.4% COR**" in slides
+    for slide_text in (slides, slides_html):
+        assert f"{sft['cnn_exact_frozen_goa']} exact GOA" in slide_text
 
     with (PROJECT_DIR / "cafa-style" / "argo139_prediction_goa_overlap.csv").open() as handle:
         incorrect_hf = [
