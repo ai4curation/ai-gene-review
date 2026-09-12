@@ -66,7 +66,7 @@ def deep_research_client_command() -> list[str]:
         return shlex.split(override)
     package = os.environ.get("DEEP_RESEARCH_CLIENT_UVX_FROM", DEFAULT_DRC_PACKAGE)
     # The client requires Python >=3.12; do not use an older ambient interpreter.
-    return ["uvx", "--python", "3.12", "--from", package, "deep-research-client"]
+    return ["uvx", "--python", ">=3.12,<4.0", "--from", package, "deep-research-client"]
 
 
 def parse_uniprot_gene_name(uniprot_file: Path) -> str:
