@@ -233,16 +233,16 @@ collapse rows that share the first three and differ only in the fourth:
 
 ```
 GOA data rows              : 24
-existing_annotations entries: 32
+existing_annotations entries: 33
 actions                    : {'ACCEPT': 10, 'KEEP_AS_NON_CORE': 10,
-                              'MARK_AS_OVER_ANNOTATED': 1, 'MODIFY': 3, 'NEW': 8}
+                              'MARK_AS_OVER_ANNOTATED': 1, 'MODIFY': 3, 'NEW': 9}
 GOA rows with no review entry : 0
-review entries with no GOA row: 8   (all action: NEW)
+review entries with no GOA row: 9   (all action: NEW)
 ```
 
 The stub did **not** collapse anything on this gene — it seeded 24 entries for 24
 rows with per-partner WITH/FROM intact. The script asserts all three invariants
-(no uncovered GOA row; every extra entry is `NEW`; 24 + 8 = 32) and fails loudly
+(no uncovered GOA row; every extra entry is `NEW`; 24 + 9 = 33) and fails loudly
 rather than printing a number.
 
 ## 9. Term hygiene
@@ -289,6 +289,34 @@ four partners: **DDX5** (DEAD-box) and, via POT1, **BLM** and **WRN** — which 
 RecQ **DNA** helicases, not DEAD/H-box at all. So GO already applies this term well
 outside a strict DEAD-box reading; using it for DHX15 is inside existing usage and
 considerably more precise than those rows.
+
+## 11. Almost all of this literature is one laboratory
+
+`lab_independence.py` reads the senior (last) author out of each cached record
+rather than taking "independent replication" on impression. Of the 13 papers this
+review relies on:
+
+```
+  Wang   Q    : 11 paper(s)  14961121, 33069768, 35608889, 34551592, 27513923,
+                             27522498, 40035560, 23197652, 24277077, 35202649, 37081014
+  Tian   XL   :  1 paper(s)  33471274
+  Chen   L    :  1 paper(s)  39905000
+```
+
+`Wang Q` and `Wang QK` are merged as initial variants of one name; the merge only
+fires when one initial string is a prefix of the other. Tian XL is the **first
+author of the discovery paper**, so PMID:33471274 is a separate group but the same
+lineage — reported separately from the count because that is a judgement and the
+author list is not.
+
+**PMID:39905000 (senior author Chen L) is the only genuinely independent group.**
+That is why the review leans on it for the TNFSF12 interaction and for the
+extracellular pool, and why an earlier draft's hedge — anchoring the nucleus
+proposal on PMID:33069768 because PMID:35608889 was "from the discovery lab" —
+was withdrawn: both papers have the same senior author.
+
+The script also fails if the review text reintroduces a laboratory-count claim the
+author lists contradict.
 
 ## Checks that came back negative, recorded so the next reviewer knows they ran
 

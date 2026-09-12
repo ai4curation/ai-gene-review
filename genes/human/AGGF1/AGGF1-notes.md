@@ -135,7 +135,7 @@ perinuclear region of cytoplasm (×1). There is **no nucleus annotation at all**
 against three independent lines:
 
 1. [PMID:35608889 "and PSF. Here, we show that AGGF1 is a key regulatory and structural component"]
-2. [PMID:33471274 "Angiogenic factor with G-patch and FHA domains 1 (AGGF1) exhibits a dynamic"] — a different lab (Tian XL, the first author of the 2004 discovery paper), mapping an NLS to residues 260–288
+2. [PMID:33471274 "Angiogenic factor with G-patch and FHA domains 1 (AGGF1) exhibits a dynamic"] — headed by Tian XL, the first author of the 2004 discovery paper, so a different group but the same lineage; maps an NLS to residues 260–288
 3. AGGF1's own interaction record: three of the four HuRI partners — DHX15, MCRS1 and FBXO28 — carry
    `GO:0005634` nucleus with experimental evidence (EXP or IDA), while the
    fourth, MAB21L3, has **no** cellular-component annotation in GOA at all and
@@ -195,6 +195,37 @@ i.e. AGGF1 blocks TWEAK–Fn14 in atrophic muscle and promotes it in retinal
 endothelium. Both may be context-specific; neither is currently annotated. No GO
 term is proposed for either until it is resolved.
 
+## One laboratory has done almost all of this work
+
+Raised by the PR reviewer and then measured rather than argued
+(`AGGF1-bioinformatics/lab_independence.py`, which reads the senior author out of
+each cached record):
+
+| senior author | papers |
+|---|---|
+| **Wang Q / Wang QK** | **11 of 13** — 14961121, 33069768, 35608889, 34551592, 27513923, 27522498, 40035560, 23197652, 24277077, 35202649, 37081014 |
+| Tian XL | 1 — 33471274; Tian XL is the **first author of the discovery paper**, so a separate group but the same lineage |
+| Chen L | 1 — **39905000**, the only genuinely independent group |
+
+This matters for how the review is worded, not for any action. An earlier draft
+credited the nucleus evidence to more distinct laboratories than the author lists
+support, and hedged the paraspeckle paper by anchoring the nucleus proposal on
+PMID:33069768 "instead" — but that paper has the **same senior author**, so the
+hedge was empty. Both statements are withdrawn. (The retracted wording is
+paraphrased rather than quoted here on purpose: `audit_claims.py` greps for it,
+and a guard that has to tell a retraction apart from a report of one is a guard
+that will eventually let the claim back in.)
+
+The useful version: AGGF1's mechanistic literature is essentially one group's
+programme, and **PMID:39905000 is the single substantive independent replication**
+— which is exactly why the review leans on it for the TNFSF12 interaction and for
+the extracellular pool. Independent replication of the paraspeckle and splicing
+results is the most valuable thing anyone could do for this gene's annotation.
+
+A review that collapses `NbExp` into independent experiments and catches a
+bait-labelling artefact has no business asserting laboratory independence it never
+checked. The check is now committed so the claim stays a measurement.
+
 ## Process notes
 
 - **affinage** returned 25 citations, all numeric PMIDs, trust gates clear. Its
@@ -211,8 +242,8 @@ term is proposed for either until it is resolved.
   respectively. Neither affects any evidence used here.
 - **Row reconciliation**: `AGGF1-goa.tsv` has 24 data rows; the `fetch-gene` stub
   seeded **24** `existing_annotations`, one per row, with per-partner WITH/FROM
-  preserved. No collapse this time. The review adds 8 `NEW` entries on top,
-  giving 32; `AGGF1-bioinformatics/reconcile_goa.py` asserts the reconciliation
+  preserved. No collapse this time. The review adds 9 `NEW` entries on top,
+  giving 33; `AGGF1-bioinformatics/reconcile_goa.py` asserts the reconciliation
   on the full (term, evidence, reference, WITH/FROM) key rather than on row
   counts, and that every extra entry is `action: NEW`.
 - **Not confirmed**, and said so: the predicted

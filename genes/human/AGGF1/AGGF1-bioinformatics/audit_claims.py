@@ -101,19 +101,20 @@ def check(paths: dict[str, str]) -> list[str]:
     doc = yaml.safe_load(review)
     anns = doc["existing_annotations"]
     n_new = sum(1 for a in anns if a["review"]["action"] == "NEW")
-    if (len(anns), n_new) != (32, 8):
-        problems.append(f"review has {len(anns)} entries / {n_new} NEW, expected 32 / 8")
-    _require(problems, notes, "The review adds 8 `NEW` entries on top,", "notes",
+    if (len(anns), n_new) != (33, 9):
+        problems.append(f"review has {len(anns)} entries / {n_new} NEW, expected 33 / 9")
+    _require(problems, notes, "The review adds 9 `NEW` entries on top,", "notes",
              "the NEW-entry count")
-    _require(problems, results, "existing_annotations entries: 32", "RESULTS.md",
+    _require(problems, results, "existing_annotations entries: 33", "RESULTS.md",
              "the reconciliation block")
 
     # --- retracted phrasings must not come back ---
     retracted = {
         "0/8 anchor transfers retained":
             "the discarded global-alignment artefact",
-        "9 `NEW` entries":
-            "the superseded NEW-entry count",
+        "8 `NEW` entries":
+            "the superseded NEW-entry count (there are now nine, after adding the "
+            "GO:0003723 IDA row the PR reviewer asked for)",
         "Eight `GO:0005515` rows":
             "the superseded GO:0005515 row count (there are nine)",
         "three studies, two assay types":
@@ -127,11 +128,41 @@ def check(paths: dict[str, str]) -> list[str]:
             "the same over-claim in the reference finding",
         "MAB21L3, all nuclear":
             "the same over-claim in suggested_questions",
+        # The PR reviewer found a FIFTH phrasing of the same claim that the four
+        # above did not match, in a review.summary. Enumerating phrasings is a
+        # losing game, so the pattern check below backs these up.
+        "every partner in its own high-throughput interaction record is nuclear":
+            "the fifth phrasing of the same over-claim (and 'its high-throughput "
+            "record' is 695 BioID partners, not four)",
+        # Laboratory-independence claims the author lists contradict.
+        "three laboratories":
+            "a laboratory count contradicted by the author lists: 11 of 13 papers "
+            "share senior author Wang Q/QK and only PMID:39905000 is independent",
+        "three later laboratories":
+            "the same laboratory over-count for the extracellular rows",
+        "reproduced repeatedly":
+            "an independence claim for two same-senior-author papers",
     }
     for phrase, why in retracted.items():
         for name, text in (("RESULTS.md", results), ("notes", notes), ("review", review)):
-            if phrase in text:
+            if phrase in re.sub(r"\s+", " ", text):
                 problems.append(f"{name}: RETRACTED phrasing present ({why}): {phrase!r}")
+
+    # Enumerating phrasings is a losing game -- the reviewer found a fifth wording
+    # of the nuclear over-claim that four literal strings did not match. These
+    # patterns catch the CLAIM rather than a spelling of it, in any of the three
+    # files, with whitespace normalised so YAML wrapping cannot hide one.
+    retracted_patterns = [
+        (r"(?:all four|every)[^.]{0,80}partner[^.]{0,80}(?:is|are)\s+nuclear",
+         "the nuclear over-claim in any phrasing (MAB21L3 has zero CC annotations)"),
+        (r"(?:three|four|several)\s+(?:independent\s+)?(?:later\s+)?laborator",
+         "a laboratory-independence count the author lists contradict "
+         "(11 of 13 papers share one senior author)"),
+    ]
+    for pat, why in retracted_patterns:
+        for name, text in (("RESULTS.md", results), ("notes", notes), ("review", review)):
+            for m in re.finditer(pat, re.sub(r"\s+", " ", text), re.I):
+                problems.append(f"{name}: RETRACTED CLAIM ({why}): {m.group(0)[:90]!r}")
 
     # --- every MODIFY target named in the YAML must be the one the prose names ---
     # This caught a real drift: the notes still said the TNFSF12 row was modified
@@ -199,9 +230,9 @@ def self_test() -> int:
     mutations = [
         ("results", "**8/8.**", "**7/8.**", 1, "G-patch headline"),
         ("results", "**6/8 strict.**", "**5/8 strict.**", 1, "FHA headline"),
-        ("results", "existing_annotations entries: 32", "entries: 31", 1, "reconciliation"),
-        ("notes", "The review adds 8 `NEW` entries on top,",
-         "The review adds 9 `NEW` entries on top,", 1, "NEW count"),
+        ("results", "existing_annotations entries: 33", "entries: 31", 1, "reconciliation"),
+        ("notes", "The review adds 9 `NEW` entries on top,",
+         "The review adds 8 `NEW` entries on top,", 1, "NEW count"),
         ("notes", "G437", "G999", 0, "FHA anchor position in notes"),
         ("results", "N478", "N999", 0, "FHA anchor position in RESULTS.md"),
         ("results", "AGGF1 G631 <- NKRF G563", "AGGF1 G631 <- NKRF G999", 1, "NKRF mapping"),
@@ -220,6 +251,16 @@ def self_test() -> int:
          "a MODIFY target named differently in the prose than in the YAML"),
         ("results", "GO:0017151", "GO:0017152", 0,
          "a MODIFY target missing from RESULTS.md"),
+        # The two pattern guards, exercised with wordings the literal `retracted`
+        # strings do NOT contain -- which is the whole reason the patterns exist.
+        ("review", "Proposed. AGGF1 has no nucleus annotation anywhere in GOA",
+         "Proposed. Every partner in this gene's interaction record is nuclear, and "
+         "AGGF1 has no nucleus annotation anywhere in GOA", 1,
+         "the nuclear over-claim in a wording no literal string covers"),
+        ("notes", "This matters for how the review is worded",
+         "The nucleus evidence comes from three independent laboratories. "
+         "This matters for how the review is worded", 1,
+         "a laboratory-count claim in a wording no literal string covers"),
     ]
     failures = 0
     for key, old, new, n, label in mutations:
