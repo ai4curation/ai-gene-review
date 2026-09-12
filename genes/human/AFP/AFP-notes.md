@@ -105,7 +105,7 @@ copper(II) ion."]` UniProt encodes exactly this as `FT BINDING 22 /ligand="Cu(2+
 Jacobsen peroxidase assay), again on cord-serum and hepatoma-ascites AFP. **GO has no
 `bilirubin binding` MF term at all** — see the proposed term below.
 
-**Fatty acids and zinc — the paper nobody cited.** `PMID:38678117` (*Commun Biol* 2024, PDB
+**Fatty acids and metal ions — the paper nobody cited.** `PMID:38678117` (*Commun Biol* 2024, PDB
 **8X1N**) is the first structure of human AFP and it is the single most function-relevant paper
 on this gene. `[PMID:38678117 "We observed and identified certain structural features of AFP,
 including N-glycosylation at Asn251, four natural fatty acids bound to distinct domains, and
@@ -117,9 +117,45 @@ to AFP"]` — 57.42% of total FA, with stearate the other major peak — at four
 and IIIB, respectively"]`. The metal was not supplied by the experimenters:
 `[PMID:38678117 "the presence of metal ions was not intentionally introduced during the protein
 extraction process"]`, and His22 is the same residue UniProt already annotates as the Cu(2+)
-ligand from the 1978 paper. Caveat recorded honestly in the review: the authors note
-`[PMID:38678117 "This could be due to the presence of multiple metal ions at this binding site,
-and the metal ion density being obtained through an averaging algorithm"]`.
+ligand from the 1978 paper.
+
+**Round 2 — the metal is NOT zinc-specific, and I missed the experiment that says so.** I first
+proposed `GO:0008270 zinc ion binding`, disclosing only the authors' averaging caveat
+(`[PMID:38678117 "This could be due to the presence of multiple metal ions at this binding site,
+and the metal ion density being obtained through an averaging algorithm"]`) and arguing that "the
+deposited structure commits to zinc". The reviewer pointed to the decisive experiment **in the
+same full text I already had**: the authors mutated all four residues
+(`[PMID:38678117 "We mutated four amino acids of AFP to alanine, obtaining the mutant AFP-4mut
+(H22A, H264A, H268A, and D280A)."]`) and measured metal content by ICP-MS —
+`[PMID:38678117 "The findings indicated a reduction in the molar ratio of metal to protein in the
+mutant AFP-4mut, specifically for elements such as magnesium, aluminum, nickel and zinc"]`,
+concluding `[PMID:38678117 "This implies that the identified four amino acids in AFP possess the
+capacity to bind to different types of metal ions"]`. And zinc entered the model by choice, not by
+identification: `[PMID:38678117 "After we selected Zn2+ fit into the density map"]`.
+
+So the one piece of direct wet-lab metal data in the paper is **positive evidence for promiscuity**,
+not merely an absence of evidence for specificity. **Changed to `GO:0046872 metal ion binding`.**
+This is the ACBD3 lesson landing on me: I had the full text, quoted from it five times, and did not
+read the Results paragraph that tested the very site I was annotating. *An empty stretch of a paper
+you are already quoting is where the answer hides.*
+
+Two things this **strengthens** rather than weakens:
+- **The copper row is untouched.** `GO:0005507` rests on `PMID:80265` — equilibrium-dialysis
+  stoichiometry on protein from human tissue, site mapped chemically to histidine. Specific where a
+  specific metal was measured; general where only "a metal" was. That asymmetry is now stated in the
+  review rather than left implicit.
+- **UniProt's unsourced nickel claim gains support.** Nickel is among the four metals lost in the
+  4mut — the first independent measurement on the human protein bearing on it. My own
+  `suggested_questions` entry asking where the nickel assertion came from is now partly answered by
+  a paper I was already citing, which the reviewer also spotted.
+
+*(One reviewer premise I checked and did not concede: it stated that "no prior affinity comparison
+is cited anywhere" and that the paper says only "This motif provides AFP with strong metal-ion
+binding capabilities". The paper does state the comparison, twice —
+`[PMID:38678117 "Previous studies have demonstrated that AFP exhibits a higher affinity for Zn2+
+than HSA"]` and again in the introduction. The fair half of the criticism was that my review
+asserted it without quoting it, so the quote is now in `core_functions` rather than the claim
+being dropped.)*
 
 **This paper is absent from GOA and absent from the affinage report.** It is the campaign's
 recall lesson exactly: `gates_passed: True` certifies precision, never recall.
@@ -225,10 +261,26 @@ re-fetching with `--force` got it. The full text settles the term choice:
 `[PMID:39822733 "The results show that AFP pulls down GPC3, but not MUC16, a control protein"]`
 (purified Fc-tagged AFP against GPC3-His, with a negative control), and crucially
 `[PMID:39822733 "The results show that the GPC3-ΔHS also precipitates AFP, suggesting that the
-GPC3 core protein might bind AFP"]`. **Binding is to the core protein, not the heparan sulfate
-chains — so `GO:0043394 proteoglycan binding` would misdescribe it.** No functional consequence
-was measured. Bare `GO:0005515` is, unusually, the correct ceiling here; recorded as a per-partner
-justification rather than a shrug.
+GPC3 core protein might bind AFP"]`.
+
+**Round 2 — I got the term wrong here, and the reviewer caught it.** I first argued that because
+the ΔHS mutant still binds, the contact is with the core protein and `GO:0043394 proteoglycan
+binding` would misdescribe it, so bare `GO:0005515` was the correct ceiling. That confuses two
+different objects. `GO:0043394` is *"Binding to a proteoglycan, any glycoprotein in which the
+carbohydrate units are glycosaminoglycans"* — the object is **the glycoprotein**, and GO has
+separate terms for the sugar moiety (`GO:0008201` heparin binding, `GO:1904399` heparan sulfate
+binding). Checked against QuickGO rather than read off the label. So the ΔHS result rules out a
+*glycosaminoglycan*-binding term and leaves `GO:0043394` untouched: it shows the HS chains are
+**not required**, not that the partner is not a proteoglycan. GPC3 is a GPI-anchored heparan
+sulfate proteoglycan, and both the HepG2 co-IP and the membrane colocalisation used native,
+glycanated protein. **Action changed to `MODIFY` → `GO:0043394`.** The row stays non-core in
+substance — still no measured functional consequence — but a strictly more informative term does
+exist, which is exactly what CLAUDE.md's "avoid `protein binding`" rule is for.
+
+The generalisable error: I let an experiment about *which part* of a partner is contacted decide a
+term that is about *what the partner is*. Same shape as the campaign's other label-versus-definition
+failures — I reasoned from "core protein, not sugar" to "not a proteoglycan" without reading the
+definition.
 
 **HCV E2, `PMID:26808496` (two rows, IntAct + AgBase).** `UniProtKB:Q99IB8-PRO_0000045596`
 resolves to **Envelope glycoprotein E2, residues 384–750** of the HCV genotype 2a JFH-1
