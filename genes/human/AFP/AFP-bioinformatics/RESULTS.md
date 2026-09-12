@@ -31,6 +31,8 @@ that no duplicated YAML key has silently discarded data.
 | - in `supported_by` | 42 |
 | - in `references[].findings[]` | 29 |
 | of which cite a `file:` source (unchecked by CI) | 5 |
+| retracted phrasings swept for (review + notes) | 13 |
+| required corrections asserted with minimum counts | 6 |
 
 ## Notes on the counts
 

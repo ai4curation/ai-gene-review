@@ -60,6 +60,48 @@ COL_TERM, COL_EV, COL_REF, COL_WITH, COL_BY = 4, 8, 9, 10, 13
 
 EXPERIMENTAL_CODES = {"EXP", "IDA", "IPI", "IMP", "IGI", "IEP", "HTP", "HDA", "HMP", "HGI", "HEP"}
 
+# Claims this review made and then retracted under review. None may reappear in
+# the YAML, and none may appear in the notes except inside a quotation narrating
+# the correction. Each entry cost a review round.
+RETRACTED_PHRASINGS = (
+    # the one-site metal reading (rounds 3-6)
+    "the same site binds several metals",
+    "the same four-residue site",
+    "Which metal the amino-terminal site prefers in vivo",
+    "so the amino-terminal site does engage nickel",
+    "The amino-terminal His22 site of alpha-fetoprotein binds",
+    "which separates the two sites by construction",
+    "the ICP-MS result belongs to it",
+    "metal still bound is amino-terminal and metal lost is tetrahedral",
+    # GPC3 (round 2): binding the core protein does not make the partner not a proteoglycan
+    "proteoglycan binding would positively misdescribe it",
+    "Bare `GO:0005515` is, unusually, the correct ceiling",
+    # zinc specificity (round 2)
+    "the deposited structure commits to zinc",
+    # hand-counted IntAct figures (self-caught)
+    "12 distinct partners",
+    "12 distinct IntAct partners",
+)
+
+# Corrections that replaced them. Deleting a correction must be as loud as leaving
+# the original error, so these are asserted with minimum occurrence counts.
+#
+# Every threshold below was MEASURED against the document, not estimated. That is
+# not pedantry: the first draft of this table guessed 2 for "proteoglycan binding"
+# (actual 1 - the reason says "binding to a proteoglycan", which does not contain
+# the phrase) and an earlier guard guessed 4 for "undecapeptide" (actual 12) and 4
+# for the exact string "separable" (actual 3, because the text also uses
+# "separability"). Three hand-assigned thresholds, three wrong. Prefer tokens that
+# cannot be reworded - GO ids - over prose fragments, and measure the rest.
+REQUIRED_CLAIMS = {
+    "His264A/His268A/Asp280A": 3,  # knowledge gap, experiment hypothesis, description
+    "undecapeptide": 12,           # separability argument + the supporting quotes
+    "GO:0016151": 1,               # nickel named and explicitly declined
+    "GO:0140272": 5,               # exogenous protein binding, both HCV E2 rows
+    "GO:0043394": 3,               # proteoglycan binding on the GPC3 row
+    "GO:0046872": 6,               # metal ion binding, generalised from GO:0008270
+}
+
 
 # --------------------------------------------------------------------------- #
 # strict YAML loading
@@ -286,7 +328,45 @@ def check_all(review_path: Path = REVIEW) -> tuple[list[str], dict]:
                 )
     stats["file_quotes"] = n_file_quotes
 
-    # --- 4. descriptive counts used in the review's prose --------------------
+    # --- 4. retracted claims must not survive anywhere -----------------------
+    # Three separate rounds of review on this gene each found ONE claim retracted
+    # at N-1 sites: the one-site metal reading, the "same site" framing, and a
+    # mutant that cannot do the job asked of it. The through-line was verifying
+    # the edits made rather than sweeping the document for the retired claim. So
+    # this sweeps BOTH files, and it is a gate, not a note.
+    notes = (ROOT / "genes" / "human" / "AFP" / "AFP-notes.md").read_text()
+    for label, blob in (("review", raw), ("notes", notes)):
+        for phrase in RETRACTED_PHRASINGS:
+            n = blob.count(phrase)
+            # the notes deliberately quote some retired phrasings while narrating
+            # the correction, so they are allowed there only inside a quotation
+            if n and not (label == "notes" and f'"{phrase}' in blob):
+                problems.append(f"retracted phrasing present in {label} ({n}x): {phrase!r}")
+
+    # ...and the claims that replaced them must be present, with counts, so that
+    # deleting the correction is as loud as leaving the error.
+    for phrase, minimum in REQUIRED_CLAIMS.items():
+        n = raw.count(phrase)
+        if n < minimum:
+            problems.append(
+                f"required claim appears {n}x in the review, expected >={minimum}: {phrase!r}"
+            )
+    stats["retracted_phrasings_checked"] = len(RETRACTED_PHRASINGS)
+    stats["required_claims_checked"] = len(REQUIRED_CLAIMS)
+
+    # --- 5. the notes must not quote a stale derived count -------------------
+    # AFP-notes.md previously hardcoded "63" supporting_text quotes and drifted to
+    # 71 without anything noticing. Reconcile any number the notes assert about
+    # this document against the value derived here.
+    m = re.search(r"verifies all \*\*(\d+)\*\* `supporting_text` quotes", notes)
+    if m is None:
+        problems.append("notes no longer state a supporting_text count in the expected form")
+    elif int(m.group(1)) != len(parsed):
+        problems.append(
+            f"notes claim {m.group(1)} supporting_text quotes but the review has {len(parsed)}"
+        )
+
+    # --- 6. descriptive counts used in the review's prose --------------------
     stats["experimental_goa_rows"] = sum(
         1 for r in rows if r["evidence"] in EXPERIMENTAL_CODES
     )
@@ -330,6 +410,8 @@ that no duplicated YAML key has silently discarded data.
 | - in `supported_by` | {stats.get('quotes_supported_by')} |
 | - in `references[].findings[]` | {stats.get('quotes_findings')} |
 | of which cite a `file:` source (unchecked by CI) | {stats.get('file_quotes')} |
+| retracted phrasings swept for (review + notes) | {stats.get('retracted_phrasings_checked')} |
+| required corrections asserted with minimum counts | {stats.get('required_claims_checked')} |
 
 ## Notes on the counts
 
@@ -382,6 +464,18 @@ def self_test() -> int:
         assert target, "self-test anchor: no entry with supporting_entities"
         target.pop("supporting_entities")
         fired["supporting_entities_dropped"] = run(yaml.dump(doc, sort_keys=False))
+
+        # guard: a retracted claim reappears in the review
+        phrase = RETRACTED_PHRASINGS[0]
+        assert phrase not in raw, f"self-test assumes {phrase!r} is absent; it is present"
+        fired["retracted_claim_returns"] = run(
+            raw.replace("status: COMPLETE", f"status: COMPLETE\n# {phrase}", 1)
+        )
+
+        # guard: a correction is deleted
+        tok = "His264A/His268A/Asp280A"
+        assert tok in raw, f"self-test anchor {tok!r} absent - mutation would no-op"
+        fired["correction_deleted"] = run(raw.replace(tok, "XXXX"))
 
         # guard: a dropped GOA row (review under-covers the TSV)
         doc2 = yaml.safe_load(raw)
