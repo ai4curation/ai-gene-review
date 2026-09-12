@@ -198,3 +198,39 @@ Non-blocking items from the same review, addressed in this pass:
   abstract-only and `grep -ci asf1` returns 0, so that phrasing claimed more than is visible
   here. Per CLAUDE.md the experimental annotation is not second-guessed on that basis;
   `ACCEPT` is unchanged and only the phrasing was overstated.
+
+## 2026-09-12 — the `GO:0005634` Complex Portal IDA is CPX-1322 RAD53-ASF1, not a chromatin complex
+
+**This supersedes the `GO:0005634` bullet of 2026-09-10 above, which was wrong.** That pass
+swapped the row's `supporting_text` from the Rad53-dephosphorylation sentence to "Asf1
+associates with the histone H3–H4 heterodimer", on the stated grounds that the latter named
+"the chromatin complex that this Complex Portal IDA actually records". The committed records
+say otherwise on both halves of that claim:
+
+- **ASF1 belongs to exactly one Complex Portal complex, and it is the Rad53 one.**
+  `ASF1-uniprot.txt:625` reads `DR   ComplexPortal; CPX-1322; RAD53-ASF1 complex.`, and
+  Complex Portal's only other contributions to this protein are the two Rad53-checkpoint BP
+  terms `GO:2000002` and `GO:0006282` [`ASF1-uniprot.txt:664,669`] — the same
+  `PMID:27222517` rows already reviewed in this file. No chromatin complex is recorded.
+- **The row itself identifies no complex.** The GOA line for this annotation
+  (`ASF1-goa.tsv`, `GO:0005634` / IDA / `PMID:27222517` / assigned by ComplexPortal) has an
+  **empty** WITH/FROM column, so "chromatin complex" was an inference, not a reading.
+- **The substituted quote is another paper's finding.** `publications/PMID_27222517.md:124`
+  reads "Asf1 associates with the histone H3–H4 heterodimer (English et al. 2006)" — the
+  sentence is verbatim in the cache, so it passes the substring check, but it credits this
+  reference with a claim the text itself attributes elsewhere.
+
+The 2026-09-10 swap therefore traded a quote about the right complex for one about a
+different association, and introduced an unsupported assertion in the same free-text `reason`
+channel that had previously hidden `GO:0016585`. Restored the original
+`Asf1 facilitates dephosphorylation of Rad53 after DNA double-strand break repair` quote
+(verbatim, and already the supporting text on the sibling `GO:2000002` row), and rewrote the
+`summary`/`reason` to name CPX-1322 RAD53-ASF1 instead of a chromatin complex. `ACCEPT`
+stands unchanged, as does the note that this cache contains no direct localization statement
+and that the nucleus call rests on the curator's full record plus the independent SGD nucleus
+IDAs on `PMID:11404324` and `PMID:22932476`.
+
+The general lesson, recorded for future passes on this file: a "mismatched quote" nit is not
+automatically fixed by finding a more topical sentence. Where the annotation comes from a
+complex-centric source, the complex identity in `ASF1-uniprot.txt` is the constraint, and an
+off-topic quote about the right complex beats an on-topic quote about the wrong one.
