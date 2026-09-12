@@ -69,9 +69,9 @@ AP3_CARGO_ACC = "P11279"  # LAMP1_HUMAN
 # 4IKN: an independent AP-3 cargo complex -- the rat mu3A C-terminal domain with the
 #       TGN38 SDYQRL peptide. Different species, different cargo, same subfamily, so it
 #       is a check on whether the 9C5B site is structure-specific.
-AP3_PDB2 = "4ikn"
-AP3_MU2_ACC = "P53676"   # AP3M1_RAT
-AP3_CARGO2_ACC = "P19814"  # TGON3_RAT
+AP3_RAT_PDB = "4ikn"
+AP3_RAT_MU_ACC = "P53676"    # AP3M1_RAT -- rat mu3A, NOT an AP-2 subunit
+AP3_RAT_CARGO_ACC = "P19814"  # TGON3_RAT
 # 1BXX: rat mu2 C-terminal domain with the TGN38 DYQRLN signal -- the classical
 #       YxxPhi pocket, used as an outgroup comparison and alignment cross-check.
 AP2_PDB = "1bxx"
@@ -372,20 +372,20 @@ def main() -> int:
     )
 
     # ------------------- second, independent AP-3 cargo complex (different species+cargo)
-    rat_m1 = parse_uniprot_txt("AP3M1_RAT", AP3_MU2_ACC)
+    rat_m1 = parse_uniprot_txt("AP3M1_RAT", AP3_RAT_MU_ACC)
     assert_identity(rat_m1, "Ap3m1", "Rattus norvegicus")
     ap3b_contacts, ap3b_pep_chain, ap3b_pep_seq = peptide_contacts(
-        AP3_PDB2, AP3_MU2_ACC, AP3_CARGO2_ACC
+        AP3_RAT_PDB, AP3_RAT_MU_ACC, AP3_RAT_CARGO_ACC
     )
     ratm1_to_hum = pairwise_identity(rat_m1.sequence, entries["AP3M1"].sequence, al)
     ratm1_to_m2 = pairwise_identity(rat_m1.sequence, entries["AP3M2"].sequence, al)
     projected = {ratm1_to_hum[1].get(pos) for pos, _ in ap3b_contacts} - {None}
     observed = {p for p, _ in ap3_contacts}
     out.append(
-        f"### 2b. An independent AP-3 cargo complex: PDB {AP3_PDB2.upper()}\n"
+        f"### 2b. An independent AP-3 cargo complex: PDB {AP3_RAT_PDB.upper()}\n"
     )
     out.append(
-        f"{AP3_PDB2.upper()} is the {rat_m1.organism} mu3A C-terminal domain bound to the "
+        f"{AP3_RAT_PDB.upper()} is the {rat_m1.organism} mu3A C-terminal domain bound to the "
         f"TGN38 cytoplasmic tail (chain {ap3b_pep_chain}, modelled sequence "
         f"`{ap3b_pep_seq}`, carrying the DYQRL YxxPhi motif) - a different species and a "
         f"different cargo from {AP3_PDB.upper()}, so it tests whether the site found there "
@@ -411,7 +411,7 @@ def main() -> int:
     shared = sorted(projected & observed)
     out.append(
         f"Projected onto human AP3M1, the {len(ap3b_contacts)} contacts of "
-        f"{AP3_PDB2.upper()} land on {len(projected)} positions, of which {len(shared)} "
+        f"{AP3_RAT_PDB.upper()} land on {len(projected)} positions, of which {len(shared)} "
         f"are among the {len(observed)} that {AP3_PDB.upper()} shows contacting LAMP1 "
         f"(shared: {', '.join(str(p) for p in shared) if shared else 'none'}). "
         f"Human AP3M2 carries the same residue as rat mu3A at {agree} of the "
@@ -464,6 +464,20 @@ def main() -> int:
             f"{100.0 * retained[s] / len(contacts):.0f} |"
         )
     out.append("")
+    unanimous = []
+    for pos, aa in contacts:
+        cells = [
+            entries[s].sequence[maps[s][pos] - 1] if maps[s].get(pos) else None
+            for s in order
+        ]
+        if all(c == aa for c in cells):
+            unanimous.append((pos, aa))
+    out.append(
+        "Positions where **every** human paralogue matches mu2: "
+        + (", ".join(f"mu2 {aa}{pos}" for pos, aa in unanimous) if unanimous else "none")
+        + f" ({len(unanimous)} of {len(contacts)}). Every other contact position has at "
+        "least one paralogue that diverges.\n"
+    )
     n_aligned = sum(1 for _, _, t, _ in ap3m2_rows if t is not None)
     observed = {p for p, _ in ap3_contacts}
     overlap = sorted(ap3m1_mapped & observed)

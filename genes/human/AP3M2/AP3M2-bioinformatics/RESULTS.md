@@ -97,6 +97,8 @@ Projected onto human AP3M1, the 10 contacts of 4IKN land on 10 positions, of whi
 | AP2M1 | 13 | 13 | 100 |
 | AP4M1 | 11 | 13 | 85 |
 
+Positions where **every** human paralogue matches mu2: mu2 D176, mu2 V401 (2 of 13). Every other contact position has at least one paralogue that diverges.
+
 AP3M2 aligns to 13/13 of the mu2 pocket positions, with no deletions, but matches mu2's residue at only 4 of them - fewer than AP1M1 (10), AP1M2 (9) or AP4M1 (11). The AP-3 medium subunits have diverged substantially from the AP-2 signal pocket even though, per section 2a, they bind tyrosine cargo through the structurally equivalent region.
 
 ### 2d. Do the alignment and structure routes agree?
