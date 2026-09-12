@@ -32,7 +32,12 @@ evidence quality, and whether the curation narrative is coherent.
 1. GO term specificity and aspect correctness
 - Prefer the most accurate GO term supported by the evidence, not the nearest generic match.
 - Flag terms that are too broad, too narrow, or placed in the wrong GO aspect.
-- Be especially skeptical of vague terms like `protein binding` when a more informative MF term is available.
+- For `GO:0005515` (`protein binding`), flag `MARK_AS_OVER_ANNOTATED` as an
+  inappropriate action. Use `MODIFY` when the paper supports a more informative
+  MF term; otherwise generally use `REMOVE` because the annotation is
+  uninformative, without denying the reported interaction. Preserve `UNDECIDED`
+  when the relevant evidence cannot be accessed or adjudicated. See the
+  [annotation-reviewer guidance](../annotation-reviewer/SKILL.md) for the full rule.
 - If recommending `MODIFY`, provide the concrete replacement term(s) with GO IDs.
 
 2. Evidence quality
