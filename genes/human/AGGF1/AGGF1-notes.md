@@ -226,9 +226,21 @@ high-throughput screens and the non-studies):
 | trainee/collaborator lineage — senior author is themselves an author on a Wang-group paper | **5** — Tian XL (23628701, 33471274), Xu Y (26850475), Zhou B (28958996), Lu Q (32061268) |
 | senior author on **no** Wang-group paper | **4** — Qi J (17884784), **Zhang JH (29885663)**, Liao S (33168501), **Chen L (39905000)** |
 
-Of those four, two are substantive: **PMID:29885663** (*J Neuroinflammation* 2018,
-full text cached) and **PMID:39905000** (*Nature Communications* 2025). The other
-two are single-report papers in low-visibility journals.
+All four are used. **PMID:29885663** (*J Neuroinflammation* 2018) corroborates
+the PI3K/AKT axis, in rats; **PMID:39905000** (*Nature Communications* 2025)
+independently re-confirms the TNFSF12 interaction and measures AGGF1 in patient
+vitreous; and **PMID:33168501** (Liao S) shows AGGF1 co-localising with γH2AX in
+human HCT116 cells, which is independent human-cell corroboration that AGGF1 is
+nuclear — cited on the `GO:0005634` row for localisation only, not for its
+DNA-repair interpretation. Only **PMID:17884784** (Qi J, a 2007 yeast two-hybrid
+Id1 report) is not used.
+
+An earlier version of this section said "two of the four are substantive" and
+named only the first two. That filter was a **judgement layered on top of a
+measurement** — the count is derived end to end, and then a hand-applied
+significance filter quietly dropped a paper that bears directly on this review's
+largest proposal. The reviewer caught it; the lesson is the same one as the
+hand-written paper list two rounds earlier, one level up.
 
 **The first version of this table said "exactly one independent group", and it was
 wrong** — because `lab_independence.py` used a hand-written paper list that had
@@ -254,11 +266,12 @@ and a guard that has to tell a retraction apart from a report of one is a guard
 that will eventually let the claim back in.)
 
 The useful version: AGGF1's mechanistic literature is overwhelmingly one group's
-programme, with **two substantive independent contributions** — PMID:39905000
-(TNFSF12–FN14, and AGGF1 protein in patient vitreous) and PMID:29885663
-(PI3K/AKT, in rats). Neither touches the paraspeckle or splicing results, which
-remain entirely single-group; independent replication of those is the most
-valuable thing anyone could do for this gene's annotation.
+programme, with **three independent contributions the review actually uses** —
+PMID:39905000 (TNFSF12–FN14, and AGGF1 in patient vitreous), PMID:29885663
+(PI3K/AKT, in rats) and PMID:33168501 (nuclear co-localisation with γH2AX in human
+HCT116). None of them touches the paraspeckle or splicing results, which remain
+entirely single-group; independent replication of those is the most valuable thing
+anyone could do for this gene's annotation.
 
 A review that collapses `NbExp` into independent experiments and catches a
 bait-labelling artefact has no business asserting laboratory independence it never

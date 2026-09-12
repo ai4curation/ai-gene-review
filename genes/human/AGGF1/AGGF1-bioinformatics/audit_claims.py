@@ -298,7 +298,7 @@ def self_test() -> int:
         ("review", "confirmed by an independent group's",
          "confirmed by later labs including", 1,
          "'later labs' -- an uncounted plural the count-word pattern let through"),
-        ("notes", "two substantive independent contributions",
+        ("notes", "three independent contributions the review actually uses",
          "the only genuinely independent group", 1,
          "the superseded 'one independent group' count"),
         ("review", "a benign polymorphism: its gnomAD v4 allele",

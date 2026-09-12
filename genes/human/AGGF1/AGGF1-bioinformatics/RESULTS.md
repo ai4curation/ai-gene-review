@@ -348,13 +348,22 @@ investigator:
 | lineage | **5** | Tian XL ×2, Xu Y, Zhou B, Lu Q — each an author on a Wang-group paper |
 | senior author on **no** Wang-group paper | **4** | Qi J (17884784), **Zhang JH (29885663)**, Liao S (33168501), **Chen L (39905000)** |
 
-Two of those four are substantive — **PMID:29885663** (*J Neuroinflammation*) and
-**PMID:39905000** (*Nature Communications*). That is why the review leans on
-PMID:39905000 for the TNFSF12 interaction and the extracellular pool, and cites
-PMID:29885663 on the PI3K/AKT row; and why an earlier draft's hedge — anchoring
-the nucleus proposal on PMID:33069768 because PMID:35608889 was "from the
-discovery lab" — was withdrawn: both papers have the same senior author. The
-paraspeckle and splicing results remain entirely single-group.
+Three of those four are used by the review: **PMID:39905000** for the TNFSF12
+interaction and the extracellular pool, **PMID:29885663** on the PI3K/AKT row, and
+**PMID:33168501** on the `GO:0005634` nucleus row, where it supplies independent
+human-cell corroboration (AGGF1 co-localising with γH2AX in HCT116) for what was
+otherwise a Wang-group-and-lineage proposal.
+
+An earlier version of this section said "two of the four are substantive" and left
+PMID:33168501 out. That was a **judgement layered on top of a measurement** — the
+count is derived end to end, then a hand-applied significance filter dropped a
+paper bearing directly on the review's largest proposal. Same failure as the
+hand-written paper list this script was rewritten to remove, one level up.
+
+This is also why an earlier draft's hedge — anchoring the nucleus proposal on
+PMID:33069768 because PMID:35608889 was "from the discovery lab" — was withdrawn:
+both papers have the same senior author. The paraspeckle and splicing results
+remain entirely single-group.
 
 One caveat the script reports rather than hides: **Xu C appears on PMID:39905000
 and on 14 of the dominant group's 18 papers.** A shared surname-plus-initial is not
