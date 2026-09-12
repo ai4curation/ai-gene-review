@@ -292,10 +292,12 @@ single residue.
 
 28 GOA rows. Summary of the actions taken in `AP5S1-ai-review.yaml`:
 
-* **Locations** (lysosome ×3, late endosome ×4, cytosol ×3, lysosomal membrane,
-  late endosome membrane): accept, with cytosol kept as non-core (the unrecruited pool)
-  and the two SubCell membrane IEAs kept as non-core because they are ECO:0000305
-  inferences from the same imaging.
+* **Locations** (lysosome ×3, late endosome ×4, lysosomal membrane, late endosome
+  membrane): all accepted. The two SubCell membrane IEAs are accepted with a note that
+  the UniProt statements behind them are ECO:0000305 curator inferences from the same
+  imaging rather than separate observations. The three cytosol rows are the exception:
+  kept as non-core, because for a coat that cycles on and off membrane the cytosolic
+  fraction is the unrecruited pool rather than the site of action.
 * **Complex**: `GO:0044599` accept; the three `GO:0030119` rows — the IDA is MODIFY to
   the specific child, the IBA and IEA are accepted as correct-but-general parents.
 * **Process**: `GO:0016197` endosomal transport accept (IBA, IEA, IMP);
