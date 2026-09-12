@@ -317,7 +317,34 @@ token-based, so a query for "TNFSF12 binding" cannot match a term named
 would have looked like absence. The script exits non-zero if any child ever does
 match, so the proposal cannot silently become a duplicate.
 
-## 12. Almost all of this literature is one laboratory
+## 12. The self-test checks WHICH guard fired, and is itself tested by breaking it
+
+`audit_claims.py --self-test` mutates each claim in turn and requires a guard to
+fire. That is necessary and was not sufficient: a mutation passed if **any**
+problem appeared, so a guard that had silently stopped matching would still report
+`ok` whenever the inserted text happened to offend a different guard. Each
+mutation now declares a **marker** — a substring the intended guard's message
+contains — and the newly-appearing problems must include it.
+
+Installing the markers immediately exposed three mutations whose labels described
+the wrong guard. Two of them fire the vague-plural pattern rather than the derived
+count check, because `three` is a *legal* value in the derived ok-set (it equals
+`independent_cited_n`) — a concrete instance of the ok-set limitation documented
+in the code.
+
+`break_selftest.py` then tests the tester, on a copy, restoring the real file
+byte-for-byte:
+
+| breakage | required behaviour | result |
+|---|---|---|
+| a marker pointing at a string no guard emits | exactly that mutation fails | 1 failure, the right one |
+| one guard disabled outright | exactly its own mutation fails | 1 failure, the right one |
+| control: unmodified file | clean | exit 0 |
+
+A self-test that reports "ok" is only worth anything if it can report "not ok" for
+the right reason, and that has to be demonstrated rather than assumed.
+
+## 13. Almost all of this literature is one laboratory
 
 `lab_independence.py` reads the senior (last) author out of each cached record
 rather than taking "independent replication" on impression. Its paper set is

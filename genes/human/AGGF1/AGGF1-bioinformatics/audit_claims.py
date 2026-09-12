@@ -207,6 +207,19 @@ def check(paths: dict[str, str]) -> list[str]:
         meas = None
     if meas:
         words = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six"}
+        # LIMITATION, stated rather than papered over: `ok` is the union of the
+        # two measured values, so this check constrains a count to be ONE OF
+        # {independent_n, independent_cited_n} -- it cannot tell which of the two
+        # a given sentence means. "four independent groups are cited" (false:
+        # three are) and "three senior authors are independent" (false: four are)
+        # would both pass. That is the four-exist-versus-three-used confusion
+        # which produced an earlier blocking finding in this PR.
+        #
+        # Inferring the intended sense from surrounding words was considered and
+        # rejected: heuristics over prose are exactly what failed for four rounds
+        # here, and a wrong heuristic is worse than a stated limit because it
+        # looks like coverage. The check still rejects every count that is
+        # neither value, which is what caught the live instances.
         ok = {
             words.get(meas["independent_n"], str(meas["independent_n"])),
             str(meas["independent_n"]),
@@ -311,15 +324,74 @@ def self_test() -> int:
     """Prove each guard fires. A passing self-test shows the guards you thought
     of work; it cannot tell you which guard you failed to write."""
     base = load()
-    if check(base):
+    baseline = set(check(base))
+    if baseline:
         print("SELF-TEST ABORTED: the unmutated inputs already fail:")
-        for p in check(base):
-            print("   ", p)
+        for pr in sorted(baseline):
+            print("   ", pr)
         return 1
     # `n` is how many occurrences to replace. A guard that tests "is this
     # substring present at all" is not exercised by replacing only the first of
     # several occurrences -- the mutation looks applied and the guard correctly
     # still passes, which reads as a missing guard. Replace all of them (n=0).
+    MARKERS = {
+        'G-patch headline':
+            'the G-patch 8/8 headline',
+        'FHA headline':
+            'the FHA 6/8 headline',
+        'reconciliation':
+            'the reconciliation block',
+        'NEW count':
+            'the NEW-entry count',
+        'FHA anchor position in notes':
+            'FHA anchor G437',
+        'FHA anchor position in RESULTS.md':
+            'FHA anchor N478',
+        'NKRF mapping':
+            'an NKRF correspondence row',
+        'review conservation claim':
+            'the G-patch conservation claim',
+        'FHA panel power note':
+            "the FHA panel's lack of power",
+        'the bounded FHA claim':
+            'the bounded FHA claim',
+        "the 'untested not refuted' phrasing":
+            'untested, not refuted',
+        "the retracted 'all four partners are nuclear' over-claim":
+            'all four HuRI partners',
+        'a MODIFY target named differently in the prose than in the YAML':
+            'names GO:0043120 as the chosen MODIFY target',
+        'a MODIFY target missing from RESULTS.md':
+            'MODIFY target GO:0017151 is never mentioned',
+        'the nuclear over-claim in a wording no literal string covers':
+            'the nuclear over-claim in any phrasing',
+        # Fires the VAGUE-PLURAL pattern, not the count check: "three" is a
+        # legal value in the derived ok-set (it equals independent_cited_n), so
+        # COUNT_RE accepts it. That is the ok-set limitation documented above,
+        # visible here as a concrete case.
+        'a laboratory-count claim in a wording no literal string covers':
+            'a vague plural-laboratory attribution',
+        "a group-count claim (the wording 'laborator' alone would miss)":
+            'a vague plural-laboratory attribution',
+        "'several later labs' -- the wording that defeated the count-word pattern":
+            'a vague plural-laboratory attribution',
+        "'later labs' -- an uncounted plural the count-word pattern let through":
+            'a vague plural-laboratory attribution',
+        "the superseded 'one independent group' count":
+            'significance-ranking of the independent set',
+        'an independent-group count disagreeing with the measurement':
+            'disagrees with lab_independence.measure()',
+        'a significance-ranking of the independent set, in a new wording':
+            'significance-ranking of the independent set',
+        "a count on the noun COUNT_RE's list used to omit":
+            'disagrees with lab_independence.measure()',
+        'a count on the plural noun `lab\\b` could not match':
+            'disagrees with lab_independence.measure()',
+        'the retracted significance filter, in the YAML this time':
+            'the same filter in its shorter phrasing',
+        'an allele frequency presented as a carrier frequency':
+            'a gnomAD ALLELE frequency used as a carrier frequency',
+    }
     mutations = [
         ("results", "**8/8.**", "**7/8.**", 1, "G-patch headline"),
         ("results", "**6/8 strict.**", "**5/8 strict.**", 1, "FHA headline"),
@@ -411,8 +483,28 @@ def self_test() -> int:
             print(f"SELF-TEST BROKEN: mutation for {label} changed nothing")
             failures += 1
             continue
-        if not check(mutated):
+        # Which guard fired, not merely that one did. check(base) is empty (the
+        # abort above proves it), so every problem here is new -- but "new" is
+        # not "the one this mutation was written to exercise". Requiring the new
+        # problems to name the mutated file stops a mutation that trips an
+        # unrelated guard elsewhere from counting as a pass.
+        new_problems = sorted(set(check(mutated)) - baseline)
+        if not new_problems:
             print(f"SELF-TEST FAILED: no guard fires for {label}")
+            failures += 1
+            continue
+        marker = MARKERS.get(label)
+        if marker is None:
+            print(f"SELF-TEST BROKEN: no marker declared for {label!r}")
+            failures += 1
+            continue
+        if not any(marker in pr for pr in new_problems):
+            # A mutation that trips SOME guard is not evidence that the guard it
+            # was written to exercise still matches. Without this, a guard that
+            # silently stopped matching would keep reporting "ok" as long as the
+            # inserted text happened to offend something else.
+            print(f"SELF-TEST FAILED: a guard fired for {label}, but none mentions "
+                  f"{marker!r}; got {new_problems[:2]}")
             failures += 1
         else:
             print(f"  ok  guard fires for {label}")

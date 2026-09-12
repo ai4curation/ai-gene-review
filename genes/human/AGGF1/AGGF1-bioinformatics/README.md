@@ -18,6 +18,7 @@ uv run python lab_independence.py    # which labs produced this literature
 uv run python proposed_term_check.py # proposed term is not a duplicate; projection test
 uv run python audit_claims.py        # the reported numbers match what the scripts produce
 uv run python audit_claims.py --self-test
+uv run python break_selftest.py    # proves the self-test can fail, for the right reason
 ```
 
 Findings are written up in `RESULTS.md`. `audit_claims.py` is the guard that keeps
