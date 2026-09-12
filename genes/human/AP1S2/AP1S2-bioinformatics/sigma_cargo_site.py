@@ -1,16 +1,19 @@
 """Map the experimentally defined AP-complex dileucine-signal binding residues onto AP1S2 (sigma1B).
 
 Mattera et al. 2011 (PMID:21097499) located the (D/E)XXXL(L/I) sorting-signal binding site on
-the AP-1 gamma/sigma1, AP-2 alpha/sigma2 and AP-3 delta/sigma3 hemicomplexes, and identified the
-sigma-side residues whose substitution abolishes or weakens signal binding:
+the AP-1 gamma/sigma1, AP-2 alpha/sigma2 and AP-3 delta/sigma3 hemicomplexes by mutating
+sigma-side residues and assaying signal binding. The positions it names in its text are:
 
     sigma2 (AP2S1): R15, A63, V88, N92, E100, L101, L103
     sigma1A (AP1S1): R15, A63, V88, L101, I103
     sigma3A (AP3S1): R15, V94, D98, L107, L109
 
-The three sigma1A substitutions the paper reports as abolishing the gamma1-sigma1A
-interaction outright are V88D and I103S (for the Nef signal) "and also by A63D (for
-tyrosinase)"; the remaining sigma1A positions tested are weaker or signal-dependent.
+These are the positions tested, not a set of positions all required for binding: the effect of
+a substitution is frequently signal-dependent, and several of these are exceptions for one
+signal while still reducing binding of another. The three sigma1A substitutions the paper
+reports as abolishing the gamma1-sigma1A interaction outright are V88D and I103S (for the Nef
+signal) "and also by A63D (for tyrosinase)"; the remaining sigma1A positions tested are weaker
+or signal-dependent.
 
 The paper assayed gamma1-sigma1B hemicomplexes functionally but did not report the sigma1B
 residue numbers. This script fetches the sequences live, aligns sigma1B (AP1S2) to each
@@ -70,8 +73,9 @@ TESTED_SITES = {
     "Q92572": [
         (15, "R", "sigma3A R15"),
         (94, "V", "sigma3A V94; V94D decreases dileucine-signal binding"),
-        (98, "D", "sigma3A D98; one of the two sigma3A substitutions that did NOT reduce "
-                  "binding - D98A was the exception for the tyrosinase signal"),
+        (98, "D", "sigma3A D98; D98A was the one sigma3A substitution that did not reduce "
+                  "binding of the TYROSINASE signal specifically - it is not a blanket "
+                  "no-effect result, and the paper's other exception, L107A, is for Nef"),
         (107, "L", "sigma3A L107"),
         (109, "L", "sigma3A L109; L109S decreases dileucine-signal binding"),
     ],

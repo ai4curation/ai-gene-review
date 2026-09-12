@@ -39,7 +39,7 @@ Global pairwise alignment (Biopython `PairwiseAligner`, BLOSUM62, gap open -11, 
 | AP2S1 / sigma2 | L103 | I102 | SUBSTITUTED (Leu -> Ile; sigma1A also carries Ile here) |
 | AP3S1 / sigma3A (Q92572) | R15 | R14 | RETAINED |
 | AP3S1 / sigma3A | V94 | V87 | RETAINED |
-| AP3S1 / sigma3A | D98 | D91 | RETAINED |
+| AP3S1 / sigma3A | D98 | D91 | RETAINED (tolerant position: D98A did not reduce tyrosinase binding) |
 | AP3S1 / sigma3A | L107 | L100 | RETAINED |
 | AP3S1 / sigma3A | L109 | I102 | SUBSTITUTED (Leu -> Ile, as for sigma1A) |
 
