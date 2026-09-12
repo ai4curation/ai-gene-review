@@ -317,6 +317,15 @@ This is a positive biological argument, which is what REMOVE requires. (Note: th
 review in this repo marked the same row KEEP_AS_NON_CORE; I think that is too generous and
 say so here rather than editing that gene.)
 
+A general point this row forced me to get right: **`source_status` is term-relative**, not a
+global verdict on a source. The same Reactome reaction sources two rows here, and it is
+`SOURCE_BAD` for `GO:0031904` and `SOURCE_WEAK_OR_INFERRED` for `GO:0032588` — bad where the
+projection produces an impossible compartment, merely weak where it happens to produce the
+right one, because in both cases the mechanism carries no discriminating power and the
+correct term stands on independent evidence. My first build keyed source judgments by source
+id alone, which silently forced one verdict onto both rows; the builder now takes per-row
+overrides.
+
 The reference-projection test makes the scale of the artefact exact: QuickGO by
 `reference=Reactome:R-HSA-5229111` returns 11 annotations over 5 entities — the four AP-4
 subunits plus APP — with GO:0031904 on five of them and GO:0032588 on five of them. One
