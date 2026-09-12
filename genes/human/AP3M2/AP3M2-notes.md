@@ -180,8 +180,10 @@ definition is explicitly committed to internalisation: "Binding to a endocytic s
 sequence, a specific peptide sequence, of 4-6 amino acids with an essential tyrosine
 (Y), found on cytoplasmic tails of some cell surface membrane proteins, which directs
 internalization by clathrin-coated pits." Its only ancestors are GO:0005515 /
-GO:0005488 / GO:0003674, so there is no non-endocytic sibling to fall back on. Recorded
-under `proposed_new_terms`.
+GO:0005488 / GO:0003674, so there is no non-endocytic sibling to fall back on. That the
+motif's recognition by a mu subunit is not an endocytic-only activity is shown directly
+[PMID:11139587 "This chimera was targeted to the endosomal-lysosomal system without being internalized from the plasma membrane."].
+Recorded under `proposed_new_terms`.
 
 ---
 
@@ -385,12 +387,14 @@ AP3M2's seven InterPro signatures (IPR001392, IPR011012, IPR018240, IPR022775,
 IPR028565, IPR036168, IPR050431, confirmed via the InterPro API for P53677) or for
 PTHR10529 leaves exactly two:
 
-- set 26: `IPR011012` **AND** taxon `Saccharomyces` — AP3M2 is human, so this fails;
-- set 289: `IPR016635` **AND** `IPR022775` **AND** `IPR027156` — IPR016635 is "Adaptor
+- one pairing `IPR011012` with taxon `Saccharomyces` — AP3M2 is human, so this fails;
+- one pairing `IPR022775` with `IPR016635` and `IPR027156` — IPR016635 is "Adaptor
   protein complex, sigma subunit" and IPR027156 is "AP-2 complex subunit sigma";
   AP3M2 is a mu subunit and has neither, so this fails too.
 
-No published condition set of the rule is satisfied by this protein. The *claim* is
+No condition set of the rule as the API serves it is satisfied by this protein. (The
+record returns no meaningful version string, so an earlier revision may have had a set
+that did fire; the finding is about the rule as it now stands.) The *claim* is
 nonetheless true (AP-3 is a cytosolic coat that cycles on and off membranes), so the
 row is kept as non-core rather than removed, with the provenance defect recorded in
 `propagation_review`. This is the same pattern as the repo's earlier ARBA00027853
@@ -406,19 +410,19 @@ finding.
 | 2 | GO:0005769 early endosome | NAS | ACCEPT (§2.3) |
 | 3 | GO:0005794 Golgi apparatus | IEA SubCell | KEEP_AS_NON_CORE (§2.3) |
 | 4 | GO:0005802 trans-Golgi network | IBA | MODIFY → GO:0005769 (§4.3) |
-| 5 | GO:0006886 intracellular protein transport | IEA InterPro | ACCEPT (§4.6) |
+| 5 | GO:0006886 intracellular protein transport | IEA InterPro | KEEP_AS_NON_CORE (§4.6) |
 | 6 | GO:0006896 Golgi to vacuole transport | IBA | MODIFY → GO:0008333 (§4.3) |
 | 7 | GO:0008021 synaptic vesicle | IEA | KEEP_AS_NON_CORE (§4.5) |
 | 8-9 | GO:0008089 anterograde axonal transport | IEA, ISS | KEEP_AS_NON_CORE (§4.5) |
 | 10 | GO:0016183 synaptic vesicle coating | NAS | MODIFY → GO:0016182 (§2.1) |
-| 11 | GO:0016192 vesicle-mediated transport | IEA InterPro | ACCEPT (§4.6) |
+| 11 | GO:0016192 vesicle-mediated transport | IEA InterPro | KEEP_AS_NON_CORE (§4.6) |
 | 12 | GO:0030119 AP-type membrane coat adaptor complex | TAS | MODIFY → GO:0030123 |
 | 13-14 | GO:0030123 AP-3 adaptor complex | IBA, NAS | ACCEPT (§4.4) |
 | 15 | GO:0030131 clathrin adaptor complex | IEA InterPro | MODIFY → GO:0030123 (§4.6) |
 | 16 | GO:0030659 cytoplasmic vesicle membrane | IEA SubCell | ACCEPT |
 | 17 | GO:0035615 clathrin-cargo adaptor activity | IBA | MODIFY → GO:0140312 (§4.2) |
 | 18 | GO:0035651 AP-3 adaptor complex binding | IEA | MARK_AS_OVER_ANNOTATED (§4.5) |
-| 19 | GO:0035654 cc-vesicle cargo loading, AP-3-mediated | NAS | ACCEPT (§2.4) |
+| 19 | GO:0035654 cc-vesicle cargo loading, AP-3-mediated | NAS | ACCEPT (§2.4, §9) |
 | 20 | GO:0036465 synaptic vesicle recycling | NAS | ACCEPT (§2.1) |
 | 21 | GO:0048488 synaptic vesicle endocytosis | IEA | MODIFY → GO:0016182 (§2.1) |
 | 22-23 | GO:0048490 anterograde synaptic vesicle transport | IEA, ISS | KEEP_AS_NON_CORE (§4.5) |
@@ -500,7 +504,7 @@ YAML reviewed rows      : 26
 YAML NEW rows           : 1
 rows with propagation_review: 21
 rows with supporting_entities: 21
-action counts           : {'KEEP_AS_NON_CORE': 9, 'ACCEPT': 9, 'MODIFY': 7,
+action counts           : {'KEEP_AS_NON_CORE': 11, 'ACCEPT': 7, 'MODIFY': 7,
                            'MARK_AS_OVER_ANNOTATED': 1, 'NEW': 1}
 OK: GOA and review reconcile exactly
 ```
@@ -512,8 +516,59 @@ OK: GOA and review reconcile exactly
   the right source. The record is still adjudicated in `references` with
   `relevance: LOW` / `correctness: LOW_QUALITY` and an explanation. The campaign's own
   model review, `genes/human/AGT`, carries the identical warning with `status: COMPLETE`.
-- `checkquotes.py` → `checked 75 quotes: 0 failures, 0 skipped`.
+- `checkquotes.py` → `checked 80 quotes: 0 failures, 0 skipped`.
 - `uv run python -m ai_gene_review.validation.gene_residue_claims` →
   `91 pass, 0 fail, 0 unresolved` over 14 gene reviews, AP3M2's four claims among them.
 - Duplicate-key scan of the YAML → none. `cache/go/terms.csv` → no deletions relative to
   the merge base, no duplicate ids.
+
+---
+
+## 9. Round-2 additions (after the first bot review)
+
+**The third clathrin-committed term.** The first draft modified `GO:0035615` and
+`GO:0030131` because each commits AP-3 to clathrin, and then accepted `GO:0035654`
+*"**clathrin-coated vesicle** cargo loading, AP-3-mediated"* without comment. That reads
+as selective, and the objection does apply to the wording: the definition's clause is
+"transported by a clathrin-coated vesicle". The distinction that makes ACCEPT right
+anyway is about what each term picks out and what alternatives exist.
+
+| term | what it is | non-clathrin alternative in GO |
+|---|---|---|
+| GO:0035615 | a term *about* clathrin adaptors, into which AP-3 was swept by a family-root IBD | yes — GO:0140312, its immediate parent |
+| GO:0030131 | a complex class AP-3 is not in (GO:0030123 is not a descendant) | yes — GO:0030123 itself |
+| GO:0035654 | a term created *for* AP-3; its definition names the AP-3 heterotetramer | **no** — generalising to GO:0035459 discards the AP-3 identity to drop an adjective |
+
+So the remedy for GO:0035654 belongs to the ontology, not to this gene: drop
+"clathrin-coated" from the name and definition and re-parent it under GO:0035459 vesicle
+cargo loading, leaving GO:0035652 for the AP-1/AP-2 adaptors. That is now the second
+entry in `proposed_new_terms`, and the ONTOLOGY knowledge gap names both defects as two
+faces of the same legacy framing. The structural work states the point plainly
+[PMID:39705307 "our findings that AP-3 contains multiple AH domains and can co-opt Arf1 for homodimerization suggests that a clathrin-independent tubular coat for AP-3 is likely."].
+
+**Cross-review inconsistency with AP3B2 — not resolved here.**
+`genes/human/AP3B2/AP3B2-ai-review.yaml` ACCEPTs both `GO:0016183` (same ComplexPortal
+NAS, same PMID:15537701) and `GO:0048488` (same Ensembl route), and puts GO:0016183 in
+its core functions. This review modifies both to `GO:0016182` for the obligate partner of
+the same complex, so the repository now carries two opposite calls on the same assertion.
+
+Worth recording that AP3B2's own summary for GO:0016183 reads *"mediating the formation
+of synaptic vesicle precursors from endosomal membranes"* — which is the definition of
+**GO:0016182**, not of GO:0016183 ("the formation of clathrin coated pits in the
+presynaptic membrane endocytic zone"). The two reviews therefore agree on the biology and
+differ only on which term expresses it; the AP3B2 row's prose argues for the term this
+review proposes. I did not edit AP3B2: it is neither this gene's folder nor a donor in
+any of its rows, and the campaign brief limits edits to those. It needs a follow-up.
+
+**Two actions retuned.** `GO:0006886` and `GO:0016192` were ACCEPT while their own
+reasons called them broad, harmless IEA parents; since `ACCEPT` means "retain as
+representing the core function", both moved to `KEEP_AS_NON_CORE` with
+`root_cause: NO_FAILURE_NON_CORE`. Counts are now 11 / 7 / 7 / 1 / 1.
+
+**One suggestion declined.** The bot suggested adding `qualifier: involved_in` to the NEW
+row for consistency with the seeded rows. Declined: the annotation-reviewer skill is
+explicit that the gene-product-to-term relationship type "plays no role in review
+reasoning, and any such value you encounter in a YAML row is likewise inert; never add,
+edit, or argue from it." The seeded rows carry qualifiers because the GOA seeder copied
+them, which is not a reason to author one. The NEW row's `reason` was instead reworded to
+stop leaning on the word `involved_in`, and now argues the point directly.
