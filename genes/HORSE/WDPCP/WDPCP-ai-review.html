@@ -1,0 +1,2543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WDPCP - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>WDPCP</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A0A3Q2KRK8" target="_blank" class="term-link">
+                        A0A3Q2KRK8
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Equus caballus</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "WDPCP";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">2</span> Annotations</a>
+
+
+
+        <a href="#review-research" title="Deep research and hypothesis research reports"><span class="nav-count">1</span> Research</a>
+
+
+
+        <a href="#external-predictions" title="External predictions assessed separately from GOA annotations" class="nav-external"><span class="nav-count">4</span> External</a>
+
+
+
+        <a href="#review-core-functions" title="Core biological functions"><span class="nav-count">1</span> Core Function</a>
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">3</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">2</span> Documents</a>
+
+
+
+
+
+
+
+
+
+
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A0A3Q2KRK8" data-a="DESCRIPTION: WDPCP is a conserved CPLANE-family ciliary and cyt..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>WDPCP is a conserved CPLANE-family ciliary and cytoskeletal scaffold. Its retained WD40 and alpha-solenoid architecture supports roles at the ciliary base and in actin organization. The horse protein has a shorter N terminus consistent with mammalian variation and a small deletion in the phosphoinositide-binding tail whose effect on lipid affinity is unresolved.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A3Q2KRK8" data-a="GO:0005886" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A peripheral membrane-associated WDPCP pool is supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The conserved scaffold and experimentally characterized actin/focal-adhesion localization support the broad membrane assignment. The small tail deletion leaves precise phosphoinositide affinity uncertain without negating peripheral localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24302887" target="_blank" class="term-link">
+                                        PMID:24302887
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Wdpcp
+is also found in the cytoplasm, where it is localized in the actin cytoskeleton
+and in focal adhesions.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:HORSE/WDPCP/WDPCP-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">share 88.1% identity among 704 paired residues.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:HORSE/WDPCP/WDPCP-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">The WD40/alpha-solenoid scaffold is extensively conserved, supporting broad ciliary and cytoskeletal roles.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005930" target="_blank" class="term-link">
+                                    GO:0005930
+                                </a>
+                            </span>
+                            <span class="term-label">axoneme</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="A0A3Q2KRK8" data-a="GO:0005930" data-r="GO_REF:0000044" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ciliary-base localization is supported more clearly than axonemal shaft localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The mammalian evidence places WDPCP at the transition zone. Conservation supports ciliary participation but does not independently resolve the exact axoneme annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24302887" target="_blank" class="term-link">
+                                        PMID:24302887
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Wdpcp is localized to the transition zone</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:HORSE/WDPCP/WDPCP-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">share 88.1% identity among 704 paired residues.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section" id="review-core-functions">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Conserved scaffold supporting ciliary and actin-cytoskeletal organization; precise lipid affinity remains untested.</h3>
+                <span class="vote-buttons" data-g="A0A3Q2KRK8" data-a="FUNCTION: Conserved scaffold supporting ciliary and actin-cy..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044782" target="_blank" class="term-link">
+                                cilium organization
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24302887" target="_blank" class="term-link">
+                                PMID:24302887
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Wdpcp is localized to the transition zone</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24302887" target="_blank" class="term-link">
+                                PMID:24302887
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">in Wdpcp-deficient cells, Sept2 was lost from the actin
+cytoskeleton, suggesting Wdpcp is required for Sept2 recruitment to actin
+filaments.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:HORSE/WDPCP/WDPCP-bioinformatics/RESULTS.md
+
+                        </span>
+
+                        <div class="finding-text">share 88.1% identity among 704 paired residues.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:HORSE/WDPCP/WDPCP-bioinformatics/RESULTS.md
+
+                        </span>
+
+                        <div class="finding-text">The WD40/alpha-solenoid scaffold is extensively conserved, supporting broad ciliary and cytoskeletal roles.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24302887" target="_blank" class="term-link">
+                            PMID:24302887
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Wdpcp, a PCP protein required for ciliogenesis, regulates directional cell migration and cell polarity by direct modulation of the actin cytoskeleton.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:HORSE/WDPCP/WDPCP-bioinformatics/RESULTS.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">HORSE/WDPCP/WDPCP-bioinformatics/RESULTS.md</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+    <section class="section external-predictions" id="external-predictions" aria-labelledby="external-predictions-title">
+        <h2 class="section-title" id="external-predictions-title">External Prediction Reviews</h2>
+        <p class="prediction-notice">These computational predictions are reviewed separately from the GOA annotation set used for this review.
+            The assessments below are from this project and do not constitute official GO annotations or endorsement by GO/UniProt.
+            They are not included in the existing annotation review above.</p>
+
+
+        <article class="prediction-review">
+        <h3>ProtNLM2 <span class="badge">External predictions</span></h3>
+        <p class="prediction-source"><a href="WDPCP-protnlm-predictions-review.yaml">View prediction review YAML</a> &middot; WDPCP-protnlm-predictions-review.yaml
+            &middot; Review status: COMPLETE</p>
+
+        <p>Broad ciliary and cytoskeletal roles are supported by mammalian experiments and the conserved horse scaffold.</p>
+
+        <p class="prediction-source">Review score: 2 = concordant with evidence; 1 = uncertain; 0 = discordant with evidence. This is an assessment score, not a model probability.</p>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030030" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:0030030
+                    </a>
+                    <span class="term-label">cell projection organization</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_BP</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-cor">
+                        COR — Correct novel prediction
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 2/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM2
+                 &middot; Version: UniProt API snapshot 2026-09-08
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> Wdpcp loss disrupts cilia and actin-based protrusive behavior. Conservation of the WD40/alpha-solenoid scaffold supports the broad cell-projection-organization prediction. The N-terminal length difference resembles known human–mouse variation; a short lipid-binding-tail deletion leaves affinity, not this entire broad role, unresolved.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24302887" target="_blank" class="term-link">PMID:24302887</a>:
+
+
+                        <span class="finding-text">"Wdpcp is localized to the transition zone"</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24302887" target="_blank" class="term-link">PMID:24302887</a>:
+
+
+                        <span class="finding-text">"decreased membrane ruffling, failure to establish cell polarity, and loss of
+directional cell migration."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="WDPCP-bioinformatics/RESULTS.md" target="_blank" class="term-link">file:HORSE/WDPCP/WDPCP-bioinformatics/RESULTS.md</a>:
+
+
+                        <span class="finding-text">"share 88.1% identity among 704 paired residues."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/35427153" target="_blank" class="term-link">PMID:35427153</a>:
+
+
+                        <span class="finding-text">"Compared to mouse, the human Wdpcp has an N-terminal extension of ~35 residues that is not resolved in the map."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="WDPCP-bioinformatics/RESULTS.md" target="_blank" class="term-link">file:HORSE/WDPCP/WDPCP-bioinformatics/RESULTS.md</a>:
+
+
+                        <span class="finding-text">"The WD40/alpha-solenoid scaffold is extensively conserved, supporting broad ciliary and cytoskeletal roles."</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:0005737
+                    </a>
+                    <span class="term-label">cytoplasm</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_CC</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-cor">
+                        COR — Correct novel prediction
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 2/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM2
+                 &middot; Version: UniProt API snapshot 2026-09-08
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> Mouse imaging directly detects a cytoplasmic WDPCP pool on actin and focal adhesions. The conserved horse architecture supports this localization independently of electronic annotation agreement.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24302887" target="_blank" class="term-link">PMID:24302887</a>:
+
+
+                        <span class="finding-text">"Wdpcp
+is also found in the cytoplasm, where it is localized in the actin cytoskeleton
+and in focal adhesions."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="WDPCP-bioinformatics/RESULTS.md" target="_blank" class="term-link">file:HORSE/WDPCP/WDPCP-bioinformatics/RESULTS.md</a>:
+
+
+                        <span class="finding-text">"share 88.1% identity among 704 paired residues."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="WDPCP-bioinformatics/RESULTS.md" target="_blank" class="term-link">file:HORSE/WDPCP/WDPCP-bioinformatics/RESULTS.md</a>:
+
+
+                        <span class="finding-text">"The WD40/alpha-solenoid scaffold is extensively conserved, supporting broad ciliary and cytoskeletal roles."</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005929" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:0005929
+                    </a>
+                    <span class="term-label">cilium</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_CC</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-cor">
+                        COR — Correct novel prediction
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 2/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM2
+                 &middot; Version: UniProt API snapshot 2026-09-08
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> Transition-zone localization places WDPCP at the ciliary base. Conserved horse scaffold architecture supports this broad cilium location; it does not establish axonemal shaft localization.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24302887" target="_blank" class="term-link">PMID:24302887</a>:
+
+
+                        <span class="finding-text">"Wdpcp is localized to the transition zone"</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="WDPCP-bioinformatics/RESULTS.md" target="_blank" class="term-link">file:HORSE/WDPCP/WDPCP-bioinformatics/RESULTS.md</a>:
+
+
+                        <span class="finding-text">"share 88.1% identity among 704 paired residues."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="WDPCP-bioinformatics/RESULTS.md" target="_blank" class="term-link">file:HORSE/WDPCP/WDPCP-bioinformatics/RESULTS.md</a>:
+
+
+                        <span class="finding-text">"The WD40/alpha-solenoid scaffold is extensively conserved, supporting broad ciliary and cytoskeletal roles."</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005856" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:0005856
+                    </a>
+                    <span class="term-label">cytoskeleton</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_CC</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-cor">
+                        COR — Correct novel prediction
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 2/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM2
+                 &middot; Version: UniProt API snapshot 2026-09-08
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> Wdpcp localizes to the actin cytoskeleton and recruits Sept2. The conserved horse scaffold supports a cytoskeletal pool, without requiring it to be an actin motor or a tubulin polymerization enzyme.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24302887" target="_blank" class="term-link">PMID:24302887</a>:
+
+
+                        <span class="finding-text">"Wdpcp
+is also found in the cytoplasm, where it is localized in the actin cytoskeleton
+and in focal adhesions."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24302887" target="_blank" class="term-link">PMID:24302887</a>:
+
+
+                        <span class="finding-text">"in Wdpcp-deficient cells, Sept2 was lost from the actin
+cytoskeleton, suggesting Wdpcp is required for Sept2 recruitment to actin
+filaments."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="WDPCP-bioinformatics/RESULTS.md" target="_blank" class="term-link">file:HORSE/WDPCP/WDPCP-bioinformatics/RESULTS.md</a>:
+
+
+                        <span class="finding-text">"share 88.1% identity among 704 paired residues."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="WDPCP-bioinformatics/RESULTS.md" target="_blank" class="term-link">file:HORSE/WDPCP/WDPCP-bioinformatics/RESULTS.md</a>:
+
+
+                        <span class="finding-text">"The WD40/alpha-solenoid scaffold is extensively conserved, supporting broad ciliary and cytoskeletal roles."</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        </article>
+
+    </section>
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section" id="review-research">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(WDPCP-hypotheses/horse40-cell-projection-organization/openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A3Q2KRK8" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">AIGR Gene Hypothesis Deep Research — Final Report</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">8 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-08T16:39:11.108041</span>
+
+
+
+                    <a href="WDPCP-hypotheses/horse40-cell-projection-organization/openscientist.md.citations.md" class="term-link">citations file</a>
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="WDPCP-hypotheses/horse40-cell-projection-organization/openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="WDPCP-hypotheses/horse40-cell-projection-organization/openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="aigr-gene-hypothesis-deep-research-final-report">AIGR Gene Hypothesis Deep Research — Final Report</h1>
+<p><strong>Target:</strong> <em>Equus caballus</em> WDPCP, UniProt <strong>A0A3Q2KRK8</strong> (705 aa)<br />
+<strong>Hypothesis (function assignment):</strong> The horse protein A0A3Q2KRK8 participates in <strong>cell projection organization (GO:0030030)</strong><br />
+<strong>Focus type:</strong> function_assignment<br />
+<strong>Date:</strong> 2026-09-08<br />
+<strong>Sources:</strong> Primary literature (PMIDs) + public sequence/domain/structure resources (UniProt, InterPro, QuickGO). No ai-gene-review repository judgments, syntheses, or local bioinformatics analyses were consulted.</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>The hypothesis that horse A0A3Q2KRK8 participates in cell projection organization (GO:0030030) is <strong>SUPPORTED</strong>, with two curation caveats: the term is generic (more specific child terms are better supported), and all functional evidence is transferred by orthology rather than observed directly in horse. Three independent lines of evidence converge on this conclusion. First, identity is secure: the supplied 705-aa sequence is byte-identical to the current UniProt A0A3Q2KRK8 record (matching the provided SHA-256), and global alignment to human WDPCP (O95876) yields 83.3% identity with the diagnostic Frtz + WD40-repeat domain architecture — this is a genuine one-to-one WDPCP (Fritz) ortholog, not a mislabeled paralog. Second, the molecular biology of WDPCP is exceptionally well characterized in mammals: it is a core scaffolding and lipid-binding subunit of the CPLANE complex required for primary cilium assembly and actin-based planar cell polarity, both of which are, by GO definition, forms of cell projection organization. Third, the horse truncation relative to human is terminal-only and preserves the functional scaffold and the process-critical apical-docking residues N512/W513.</p>
+<p>Mechanistically, WDPCP is a WD40/Frtz β-propeller scaffold within the crescent-shaped CPLANE complex (INTU–FUZ–WDPCP–JBTS17–RSG1) that binds phosphatidylinositol-3-phosphate and recruits partners including Septin 2. Its direct activity — scaffolding, lipid binding, and partner recruitment — drives two cellular readouts: assembly of the primary cilium (via basal-body apical docking and transition-zone function, feeding Hedgehog signaling) and organization of actin-based projections (planar cell polarity, directional migration). Loss- and point-mutation studies in mouse collapse both branches and produce Bardet–Biedl / Meckel–Gruber-like ciliopathy phenotypes. Because the horse ortholog shares the full domain architecture and the exact process-critical residues, the same mechanistic model is expected to hold.</p>
+<p>For curation, GO:0030030 is correct but coarse. The evidence more precisely supports specific children (cilium assembly GO:0060271; establishment of planar polarity) plus candidate cellular-component (ciliary transition zone/basal body, actin cytoskeleton) and molecular-function (PI3P binding / structural scaffold) leads. Because there is no direct equine assay and the horse record is unreviewed TrEMBL, an <strong>ISS/ISO</strong> (orthology-transfer) evidence code is appropriate — not an experimental code, which belongs to the mouse and human records.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-a0a3q2krk8-is-a-genuine-wdpcp-fritz-ortholog-not-a-mislabeled-paralog">Finding 1 — A0A3Q2KRK8 is a genuine WDPCP (Fritz) ortholog, not a mislabeled paralog</h3>
+<p>The first gate for any function-assignment hypothesis is identity, and treating the "WDPCP" gene label as proof would be circular. Identity was therefore verified independently at the sequence and domain level. The supplied 705-aa FASTA was confirmed byte-identical to the current UniProt A0A3Q2KRK8 sequence (equality verified in code) and matches the provided SHA-256 <code>a132072d392ff9ec8d0962a571a5ae3534476ecfc0679bdeb9051777f3aa5a0a</code>, establishing that the analyzed sequence is exactly the frozen cohort sequence.</p>
+<p>A global Needleman–Wunsch alignment of the horse protein against human WDPCP (O95876, 746 aa) gives <strong>624 identical positions over a 749-position alignment = 83.3% identity</strong> (88.5% over the horse length). Full-length identity at this level is diagnostic of a true one-to-one ortholog rather than a distant paralog. Consistent with this, UniProt annotates gene = <strong>WDPCP</strong>, InterPro <strong>IPR024511 (Frtz domain)</strong> plus <strong>IPR036322 (WD40 repeat domain superfamily)</strong>, Pfam <strong>PF11768 (Frtz)</strong>, and PANTHER <strong>PTHR13667:SF5</strong> ("WD repeat-containing and planar cell polarity effector protein Fritz homolog"). Keyword annotations include <em>Cell projection</em>, <em>Cilium</em>, <em>Cilium biogenesis/degradation</em>, and <em>Cytoskeleton</em> — the same functional vocabulary carried by the mammalian orthologs.</p>
+<p>This finding removes the most common failure mode for function-assignment hypotheses — paralog overannotation — and licenses careful transfer of mammalian WDPCP biology to the horse protein. The one methodological caveat is that the alignment used simple identity-based (±1) Needleman–Wunsch scoring as an estimate, not a Smith–Waterman/BLAST E-value; the 83% figure is a robust identity estimate rather than a formal statistic.</p>
+<h3 id="finding-2-wdpcp-participates-in-cell-projection-organization-via-cplane-dependent-ciliogenesis-and-actin-based-polarity">Finding 2 — WDPCP participates in cell projection organization via CPLANE-dependent ciliogenesis and actin-based polarity</h3>
+<p>WDPCP's function is unusually well characterized in mammals, and the evidence maps directly onto GO:0030030.</p>
+<p><strong>Loss-of-function, actin and cilia (mouse).</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/24302887/">PMID: 24302887</a> (Cui et al., 2013) showed that Wdpcp-deficient mice develop a Bardet–Biedl / Meckel–Gruber-like ciliopathy. Wdpcp localizes to the ciliary transition zone and to actin filaments/focal adhesions, interacts with Septin 2 (Sept2), and its loss both disorganizes actin filaments and abolishes cilia. The verified snippets — <em>"Wdpcp, a PCP effector, was recently shown to regulate both ciliogenesis and collective cell movement"</em> and <em>"organization of the actin filaments and focal contacts were markedly changed in Wdpcp-deficient cells"</em> — directly connect WDPCP to the organization of two distinct cell-projection systems.</p>
+<p><strong>Structural scaffold, cryo-EM (human/mouse).</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/35427153/">PMID: 35427153</a> resolved the near-atomic structure of the human and mouse WDPCP–Inturned–Fuzzy (CPLANE) complex. WDPCP is a structural scaffold within a crescent-shaped complex that binds phospholipids, and a ciliopathy mutation perturbs lipid binding. The verified snippet — <em>"the crescent-shaped CPLANE complex binds phospholipids such as phosphatidylinositol 3-phosphate via multiple modules"</em> — defines WDPCP's direct molecular role as a scaffolding/lipid-binding subunit.</p>
+<p><strong>Point mutation, whole-process resolution (mouse).</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/41268724/">PMID: 41268724</a> (2025) generated a Wdpcp point mutant (deletion of D481/W482, equivalent to human N512/W513). The protein is still made but fails apical basal-body docking, and <em>"Cilia formation and Hh signaling were severely impaired"</em> with neural-tube/craniofacial/polydactyly defects. This is the key discriminator required by the decisive question: it ties a specific structural element to failure of the whole ciliogenesis process, rather than a mere biochemical tweak.</p>
+<p><strong>Pathway context.</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/38546045/">PMID: 38546045</a> shows the CPLANE partner Fuzzy recruits ARHGAP35 (p190A RhoGAP) to the basal body to restrain actin polymerization for ciliogenesis; <a href="https://pubmed.ncbi.nlm.nih.gov/35740972/">PMID: 35740972</a> (review) and <a href="https://pubmed.ncbi.nlm.nih.gov/31562761/">PMID: 31562761</a> place WDPCP as a core CPLANE effector with a Longin-domain/Rab-GEF-adjacent architecture. Human genetics (<a href="https://pubmed.ncbi.nlm.nih.gov/32055034/">PMID: 32055034</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/37239474/">PMID: 37239474</a>) supports WDPCP as a Bardet–Biedl/ciliopathy gene.</p>
+<p>Because both cilia and lamellipodia/actin-based projections are GO cell projections, this ensemble of assay, mutant-phenotype, localization, interaction, and structural evidence satisfies GO:0030030 at the process level. WDPCP's direct molecular role is a CPLANE scaffold/lipid-binding subunit; its cellular consequence is organization of cilia and actin-based projections.</p>
+<h3 id="finding-3-the-horse-truncation-is-terminal-only-the-process-critical-apical-docking-residues-are-conserved">Finding 3 — The horse truncation is terminal-only; the process-critical apical-docking residues are conserved</h3>
+<p>Because the horse protein (705 aa) is 41 residues shorter than human WDPCP (746 aa), the deletion location determines whether orthology transfer is valid. Global alignment with traceback (match +2 / mismatch −1 / gap −2) gives <strong>623/748 identical (83.3%)</strong>. The 43 human residues absent from the horse alignment map almost entirely to the <strong>extreme N-terminus (human residues ~1–33)</strong> plus a handful of scattered residues at the <strong>far C-terminus (~718–731)</strong>. The internal body — where the Frtz and WD40 scaffold modules reside — is contiguous and highly conserved.</p>
+<p>Decisively, the residues human <strong>N512/W513</strong> are perfectly conserved in horse: the aligned window "NILSSMNWDTLGH" is identical in both species. The two-codon deletion of the mouse equivalents (D481/W482) abolishes ciliary apical docking, ciliogenesis, and Hedgehog signaling (<a href="https://pubmed.ncbi.nlm.nih.gov/41268724/">PMID: 41268724</a>), and the human W513S substitution is a Bardet–Biedl allele. Thus the horse truncation does not remove the functional scaffold or the process-critical docking residues. The N-terminal shortening most plausibly reflects an incomplete/alternative gene model (start-boundary artifact) in the unreviewed TrEMBL prediction rather than genuine functional divergence — strengthening, not weakening, the orthology-transfer argument. This directly answers the decisive question: there is no evidence of a horse-specific alteration to a process-critical biochemical property.</p>
+<h3 id="finding-4-go0030030-is-a-high-level-bp-ancestor-of-cilium-assembly-wdpcps-demonstrated-role-sits-within-its-subtree">Finding 4 — GO:0030030 is a high-level BP ancestor of cilium assembly; WDPCP's demonstrated role sits within its subtree</h3>
+<p>The target term's scope was verified against the QuickGO (EBI) record. GO:0030030 has aspect = <strong>biological_process</strong> and definition: <em>"A process that is carried out at the cellular level which results in the assembly, arrangement of constituent parts, or disassembly of a prolongation or process extending from a cell, e.g. a flagellum or axon."</em> Its subtree descends via child GO:0120036 (plasma membrane bounded cell projection organization) → GO:0044782 (cilium organization) → GO:0060271 (cilium assembly). WDPCP's experimentally demonstrated processes (cilium assembly and establishment of planar polarity / actin-based projection organization) are therefore true descendants of GO:0030030. The term is correctly placed relative to WDPCP's biology, but it is a high-level ancestor — correct yet less informative than the specific children the evidence supports.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<div class="codehilite"><pre><span></span><code><span class="w"> </span><span class="n">CPLANE</span><span class="w"> </span><span class="n">complex</span><span class="w"> </span><span class="p">(</span><span class="n">INTU</span><span class="err">–</span><span class="n">FUZ</span><span class="err">–</span><span class="n">WDPCP</span><span class="err">–</span><span class="n">JBTS17</span><span class="err">–</span><span class="n">RSG1</span><span class="p">)</span>
+<span class="w"> </span><span class="n">crescent</span><span class="o">-</span><span class="n">shaped</span><span class="w"> </span><span class="n">scaffold</span><span class="p">;</span><span class="w"> </span><span class="n">binds</span><span class="w"> </span><span class="n">PI3P</span><span class="w"> </span><span class="p">(</span><span class="n">cryo</span><span class="o">-</span><span class="n">EM</span><span class="p">)</span>
+<span class="w">              </span><span class="err">│</span>
+<span class="w">  </span><span class="err">┌───────────────────┴───────────────────┐</span>
+<span class="w">  </span><span class="err">▼</span><span class="w">                                        </span><span class="err">▼</span>
+<span class="w">  </span><span class="n">Ciliogenesis</span><span class="w"> </span><span class="n">branch</span><span class="w">                     </span><span class="n">Actin</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">PCP</span><span class="w"> </span><span class="n">branch</span>
+<span class="w">  </span><span class="o">-</span><span class="w"> </span><span class="n">WDPCP</span><span class="w"> </span><span class="n">at</span><span class="w"> </span><span class="n">transition</span><span class="w"> </span><span class="n">zone</span><span class="w">              </span><span class="o">-</span><span class="w"> </span><span class="n">WDPCP</span><span class="w"> </span><span class="n">on</span><span class="w"> </span><span class="n">actin</span><span class="w"> </span><span class="n">filaments</span><span class="p">,</span>
+<span class="w">  </span><span class="o">-</span><span class="w"> </span><span class="n">apical</span><span class="w"> </span><span class="n">basal</span><span class="o">-</span><span class="n">body</span><span class="w"> </span><span class="n">docking</span><span class="w">               </span><span class="n">focal</span><span class="w"> </span><span class="n">adhesions</span>
+<span class="w">    </span><span class="p">(</span><span class="n">requires</span><span class="w"> </span><span class="n">N512</span><span class="o">/</span><span class="n">W513</span><span class="p">)</span><span class="w">                  </span><span class="o">-</span><span class="w"> </span><span class="n">interacts</span><span class="w"> </span><span class="n">with</span><span class="w"> </span><span class="n">Sept2</span>
+<span class="w">  </span><span class="o">-</span><span class="w"> </span><span class="n">primary</span><span class="w"> </span><span class="n">cilium</span><span class="w"> </span><span class="n">assembly</span><span class="w">               </span><span class="o">-</span><span class="w"> </span><span class="n">directional</span><span class="w"> </span><span class="n">migration</span><span class="p">,</span>
+<span class="w">  </span><span class="o">-</span><span class="w"> </span><span class="n">Hedgehog</span><span class="w"> </span><span class="n">signaling</span><span class="w"> </span><span class="n">output</span><span class="w">               </span><span class="n">planar</span><span class="w"> </span><span class="n">cell</span><span class="w"> </span><span class="n">polarity</span>
+<span class="w">  </span><span class="err">│</span><span class="w">                                        </span><span class="err">│</span>
+<span class="w">  </span><span class="err">└───────────────┬────────────────────────┘</span>
+<span class="w">          </span><span class="err">▼</span>
+<span class="n">Cell</span><span class="w"> </span><span class="n">projection</span><span class="w"> </span><span class="n">organization</span><span class="w"> </span><span class="p">(</span><span class="n">GO</span><span class="p">:</span><span class="mi">0030030</span><span class="p">)</span><span class="w">  </span><span class="err">←</span><span class="w"> </span><span class="n">generic</span><span class="p">,</span><span class="w"> </span><span class="n">correct</span>
+<span class="err">├─</span><span class="w"> </span><span class="n">cilium</span><span class="w"> </span><span class="n">assembly</span><span class="w"> </span><span class="p">(</span><span class="n">GO</span><span class="p">:</span><span class="mi">0060271</span><span class="p">)</span><span class="w">            </span><span class="err">←</span><span class="w"> </span><span class="n">best</span><span class="o">-</span><span class="n">supported</span><span class="w"> </span><span class="n">child</span>
+<span class="err">└─</span><span class="w"> </span><span class="n">establishment</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">planar</span><span class="w"> </span><span class="n">polarity</span><span class="w">         </span><span class="err">←</span><span class="w"> </span><span class="n">best</span><span class="o">-</span><span class="n">supported</span><span class="w"> </span><span class="n">child</span>
+<span class="w">          </span><span class="err">│</span>
+<span class="w">          </span><span class="err">▼</span><span class="w">  </span><span class="p">(</span><span class="n">loss</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="n">function</span><span class="p">)</span>
+<span class="n">Ciliopathy</span><span class="p">:</span><span class="w"> </span><span class="n">Bardet</span><span class="o">-</span><span class="n">Biedl</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">Meckel</span><span class="o">-</span><span class="n">Gruber</span><span class="p">,</span><span class="w"> </span><span class="n">NTD</span><span class="p">,</span><span class="w"> </span><span class="n">polydactyly</span>
+<span class="p">(</span><span class="n">downstream</span><span class="w"> </span><span class="n">disease</span><span class="w"> </span><span class="n">outcomes</span><span class="w"> </span><span class="err">—</span><span class="w"> </span><span class="n">NOT</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">MF</span><span class="o">/</span><span class="n">BP</span><span class="w"> </span><span class="n">call</span><span class="p">)</span>
+</code></pre></div>
+
+<p>WDPCP acts as a <strong>structural scaffold and PI3P-binding hub</strong> within the CPLANE complex. Through this dual role it organizes two classes of cell projections: the primary cilium (via basal-body apical docking and transition-zone function required for ciliogenesis and downstream Hedgehog signaling) and actin-based projections (via association with actin filaments/focal adhesions and Septin 2, driving planar cell polarity and directional migration). Loss or targeted point mutation of WDPCP collapses both branches, producing ciliopathy phenotypes. The horse ortholog shares 83% identity, the full domain architecture, and the exact process-critical residues, so the same mechanistic model is expected to hold — the appropriate inference type being orthology transfer, not direct observation.</p>
+<p><strong>Evidence-provenance comparison:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Evidence layer</th>
+<th>Organism</th>
+<th>Directness for horse</th>
+<th>Strength</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sequence identity / domain architecture</td>
+<td>Horse vs. human</td>
+<td><strong>Direct (horse sequence)</strong></td>
+<td>High</td>
+</tr>
+<tr>
+<td>Conserved N512/W513 docking residues</td>
+<td>Horse vs. mouse/human</td>
+<td><strong>Direct (horse sequence)</strong></td>
+<td>High</td>
+</tr>
+<tr>
+<td>CPLANE scaffold / PI3P binding (cryo-EM)</td>
+<td>Human/mouse</td>
+<td>Transferred by orthology</td>
+<td>High (for ortholog)</td>
+</tr>
+<tr>
+<td>Ciliogenesis + actin loss-of-function</td>
+<td>Mouse</td>
+<td>Transferred by orthology</td>
+<td>High (for ortholog)</td>
+</tr>
+<tr>
+<td>Apical-docking point mutant</td>
+<td>Mouse</td>
+<td>Transferred by orthology</td>
+<td>High (for ortholog)</td>
+</tr>
+<tr>
+<td>Direct equine assay</td>
+<td>Horse</td>
+<td><strong>None available</strong></td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="evidence-base-evidence-matrix">Evidence Base / Evidence Matrix</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Citation (PMID)</th>
+<th>Evidence type</th>
+<th>Stance</th>
+<th>Claim tested</th>
+<th>Key finding</th>
+<th>Context</th>
+<th>Confidence / limitations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>This report (UniProt A0A3Q2KRK8; InterPro)</td>
+<td>Sequence/evolutionary (computed)</td>
+<td>Supports (identity)</td>
+<td>Is A0A3Q2KRK8 really WDPCP?</td>
+<td>83.3% identity to human WDPCP O95876; Frtz + WD40 domains; PANTHER "Fritz homolog"</td>
+<td>Horse vs. human</td>
+<td>High for identity; simple ±1 NW scoring (estimate, not BLAST)</td>
+</tr>
+<tr>
+<td>1b</td>
+<td>This report (computed alignment)</td>
+<td>Sequence/evolutionary (computed)</td>
+<td>Supports/qualifies</td>
+<td>Does the 705-aa truncation drop process-critical residues?</td>
+<td>43-aa difference is N-terminal (human 1–33) + far C-terminal; N512/W513 and Frtz/WD40 core conserved</td>
+<td>Horse vs. human</td>
+<td>High; truncation = gene-model boundary, not functional loss</td>
+</tr>
+<tr>
+<td>2</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/24302887/">24302887</a></td>
+<td>Mutant phenotype + localization + interaction</td>
+<td>Supports (core)</td>
+<td>Does WDPCP organize cilia and actin projections?</td>
+<td>Wdpcp-null mice: ciliopathy; WDPCP at transition zone + actin/focal adhesions; binds Sept2; loss disorganizes actin &amp; abolishes cilia</td>
+<td>Mouse</td>
+<td>High; direct genetics + cell biology</td>
+</tr>
+<tr>
+<td>3</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/35427153/">35427153</a></td>
+<td>Structural (cryo-EM)</td>
+<td>Supports/qualifies (MF)</td>
+<td>WDPCP's direct molecular role</td>
+<td>Structure of WDPCP–Inturned–Fuzzy CPLANE; crescent scaffold binding PI3P; ciliopathy mutant has aberrant lipid binding</td>
+<td>Human/mouse</td>
+<td>High; defines scaffolding/lipid-binding activity</td>
+</tr>
+<tr>
+<td>4</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/41268724/">41268724</a></td>
+<td>Mutant phenotype (point mutant)</td>
+<td>Supports</td>
+<td>Are specific residues essential for ciliogenesis?</td>
+<td>D481/W482 (≈ human N512/W513) deletion: protein made but fails apical docking; cilia &amp; Hh severely impaired</td>
+<td>Mouse</td>
+<td>High; residues conserved in horse</td>
+</tr>
+<tr>
+<td>5</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/38546045/">38546045</a></td>
+<td>Mutant phenotype + mechanism</td>
+<td>Supports (complex context)</td>
+<td>Do CPLANE proteins control cilia via actin?</td>
+<td>Fuzzy recruits ARHGAP35 to basal body; restrains actin polymerization for ciliogenesis</td>
+<td>Mouse</td>
+<td>Medium-high; about partner FUZ</td>
+</tr>
+<tr>
+<td>6</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31562761/">31562761</a></td>
+<td>Structural/evolutionary (bioinformatic)</td>
+<td>Qualifies (MF)</td>
+<td>Protein family / activity</td>
+<td>CPLANE triplicated Longin domains; likely Rab-GEF module</td>
+<td>Cross-species</td>
+<td>Medium; predictive</td>
+</tr>
+<tr>
+<td>7</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/35740972/">35740972</a></td>
+<td>Review/database</td>
+<td>Supports (orientation)</td>
+<td>Is WDPCP a CPLANE/ciliogenesis gene?</td>
+<td>WDPCP is a CPLANE subunit linked to ciliogenesis, PCP, Hh</td>
+<td>Review</td>
+<td>Orientation only</td>
+</tr>
+<tr>
+<td>8</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/32055034/">32055034</a> / <a href="https://pubmed.ncbi.nlm.nih.gov/37239474/">37239474</a></td>
+<td>Human genetics</td>
+<td>Supports</td>
+<td>Is WDPCP a ciliopathy gene?</td>
+<td>WDPCP variants in Bardet-Biedl/ciliopathy cohorts</td>
+<td>Human patients</td>
+<td>Medium; supports process relevance</td>
+</tr>
+<tr>
+<td>9</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/34518561/">34518561</a></td>
+<td>Genetic association</td>
+<td>Qualifies</td>
+<td>Broader neuronal role?</td>
+<td>WDPCP missense (p=3.96e-10, tinnitus); axonal migration/structural reinforcement</td>
+<td>Human</td>
+<td>Lower relevance to core cilia claim</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="go-curation-implications">GO Curation Implications</h2>
+<p><strong>GO:0030030 scope confirmed</strong> (QuickGO): aspect = biological_process; the term is a high-level ancestor of cilium assembly. WDPCP's demonstrated role sits squarely inside its subtree, so annotation to GO:0030030 is correct but coarse.</p>
+<p><strong>Lead (curator to verify):</strong> <em>cell projection organization (GO:0030030)</em> can be <strong>retained as a correct-but-generic</strong> BP annotation for horse WDPCP, but more informative and better-supported terms are candidates to add or prefer:</p>
+<table>
+<thead>
+<tr>
+<th>GO term</th>
+<th>Aspect</th>
+<th>Recommended action</th>
+<th>Basis</th>
+<th>Evidence code</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GO:0030030 cell projection organization</td>
+<td>BP</td>
+<td>Retain (or generalize-to-specific)</td>
+<td>Correct but generic parent</td>
+<td>ISS/ISO</td>
+</tr>
+<tr>
+<td>GO:0060271 cilium assembly / GO:0044782 cilium organization</td>
+<td>BP</td>
+<td><strong>Add / prefer</strong></td>
+<td>Ciliogenesis LOF + point mutant</td>
+<td>ISS/ISO</td>
+</tr>
+<tr>
+<td>GO:0001736 establishment of planar polarity</td>
+<td>BP</td>
+<td>Add (lead)</td>
+<td>Actin/PCP + migration data</td>
+<td>ISS/ISO</td>
+</tr>
+<tr>
+<td>ciliary transition zone / basal body / actin cytoskeleton</td>
+<td>CC</td>
+<td>Add (lead)</td>
+<td>Localization (PMID 24302887)</td>
+<td>ISS/ISO</td>
+</tr>
+<tr>
+<td>phosphatidylinositol-3-phosphate binding / CPLANE structural scaffold</td>
+<td>MF</td>
+<td>Add (lead)</td>
+<td>Cryo-EM (PMID 35427153)</td>
+<td>ISS/ISO</td>
+</tr>
+</tbody>
+</table>
+<p>The molecular-function call should reflect the demonstrated lipid-binding/structural-scaffold role rather than a bare "protein binding." Because there is no direct equine experiment, the horse annotation should carry an <strong>ISS/ISO (orthology)</strong> evidence code; experimental codes (IDA/IMP) belong to the mouse and human records.</p>
+<hr />
+<h2 id="mechanistic-scope">Mechanistic Scope</h2>
+<p>The immediate molecular function being tested is WDPCP's role as a <strong>WD40/Frtz β-propeller scaffold and PI3P-binding subunit of the CPLANE complex</strong> that recruits partners (Sept2; CPLANE subunits; and, via the complex, actin regulators). Its immediate activity is scaffolding, lipid binding, and protein recruitment. The immediate cellular readout is organization of cell projections — primary-cilium assembly and actin-based planar polarity.</p>
+<p>Direct gene-product activity (should drive the MF/CC/BP call): CPLANE scaffolding; PI3P binding; localization to transition zone, basal body, and actin filaments/focal adhesions; interaction with Septin 2. Downstream consequences (should NOT be conflated with the molecular function): Hedgehog signaling output, neural-tube/craniofacial/polydactyly developmental defects, and Bardet–Biedl / Meckel–Gruber ciliopathy disease manifestations. These are loss-of-function outcomes that support, but are not equivalent to, the GO:0030030 process annotation. The seed hypothesis is pitched at the correct process level, and the evidence discriminates a whole-process requirement (the point mutant abolishes ciliogenesis) from a mere biochemical tweak.</p>
+<hr />
+<h2 id="conflicts-and-alternatives">Conflicts and Alternatives</h2>
+<ul>
+<li><strong>Paralog confusion:</strong> Effectively ruled out. 83% full-length identity, the diagnostic Frtz+WD40 architecture, and the PANTHER Fritz-homolog subfamily assignment identify a true one-to-one WDPCP ortholog.</li>
+<li><strong>Specificity vs. breadth:</strong> The main tension is granularity, not contradiction — GO:0030030 is arguably "too broad" relative to what is demonstrated (cilium assembly + PCP), but it is not wrong.</li>
+<li><strong>Isoform / truncation artifact — RESOLVED:</strong> The 43-residue horse↔human difference maps to the extreme N-terminus (human ~1–33) and a few far-C-terminal residues; the internal body and the process-critical N512/W513 are conserved. Most parsimoniously a gene-model/start-boundary artifact of the unreviewed TrEMBL prediction, not functional loss.</li>
+<li><strong>Complex-level vs. WDPCP-specific mechanism:</strong> Some actin/RhoGAP detail (PMID 38546045) is shown for the partner FUZ, not WDPCP directly; transfer within CPLANE is reasonable but is complex-level.</li>
+<li><strong>Broader roles:</strong> The tinnitus GWAS association (PMID 34518561) invokes axonal migration and cytoskeletal reinforcement — consistent with, but broader than, the core ciliogenesis role; it does not conflict with GO:0030030.</li>
+<li><strong>Database carry-over risk:</strong> The horse record is unreviewed TrEMBL; the support here rests on primary mammalian literature plus the horse's own sequence/domain evidence, not on agreement with any electronic prediction.</li>
+</ul>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li><strong>No direct horse data.</strong> Checked: PubMed for equine WDPCP functional studies — only orthology plus human/mouse assays exist. This means any horse annotation is inherently ISS/ISO. Resolve with equine cell/ciliogenesis assays or expression data.</li>
+<li><strong>Horse isoform completeness — largely resolved.</strong> Checked: 705 vs. 746 aa; alignment locates the difference at the N-terminus (human ~1–33) and far C-terminus, with N512/W513 and the Frtz/WD40 core conserved. Residual uncertainty is whether the missing N-terminal ~33 residues carry any regulatory role (not implicated in published ciliogenesis assays). Resolve by confirming the equine gene model / 5′ transcript.</li>
+<li><strong>Alignment method.</strong> The 83% identity used simple ±1 Needleman–Wunsch scoring, an identity estimate rather than a Smith–Waterman/BLAST E-value. The conclusion is robust but should be confirmed with a standard tool for the record.</li>
+<li><strong>GO granularity policy.</strong> Which specific child term(s) the curator prefers depends on project policy on generic vs. specific terms when support is orthology-transferred.</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li><strong>Reciprocal-best-hit orthology confirmation</strong> across Equidae and additional mammals (Ensembl Compara / OrthoDB) to formally lock in one-to-one orthology beyond pairwise identity.</li>
+<li><strong>Structural superposition</strong> of an AlphaFold model of A0A3Q2KRK8 onto the cryo-EM CPLANE structure (PMID 35427153) to confirm the scaffold fold and PI3P-binding modules are preserved in horse (Phenix <code>phenix.superpose_pdbs</code> / <code>compare_structures</code>).</li>
+<li><strong>Residue-level conservation mapping</strong> of all reported human ciliopathy alleles (e.g., W513S) onto the horse sequence — extend the N512/W513 check to the complete variant set.</li>
+<li><strong>Equine ciliated-cell assay</strong> (tracheal epithelium or fibroblast): siRNA knockdown of WDPCP with cilia (acetylated-tubulin) and actin (phalloidin) readouts — the single most decisive test to convert ISS into IDA/IMP.</li>
+<li><strong>Co-immunoprecipitation</strong> of equine WDPCP with INTU/FUZ/Sept2 to confirm CPLANE complex membership in horse.</li>
+<li><strong>Curator decision</strong> on parent-vs-child GO annotation and on adding the MF (PI3P binding) and CC (transition zone / actin cytoskeleton) leads with ISS/ISO codes.</li>
+</ol>
+<hr />
+<h2 id="curation-leads-require-curator-verification">Curation Leads (require curator verification)</h2>
+<ul>
+<li><strong>Action:</strong> Keep GO:0030030 as a valid (generic) BP annotation; consider promoting to the specific children (cilium assembly GO:0060271; establishment of planar polarity GO:0001736) and adding CC (ciliary transition zone/basal body, actin cytoskeleton) and MF (phosphatidylinositol-3-phosphate binding / structural scaffold) leads. Use an <strong>ISS/ISO</strong> evidence code.</li>
+<li><strong>Candidate references with snippets to verify:</strong></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/24302887/">PMID: 24302887</a>: <em>"Wdpcp… regulate both ciliogenesis and collective cell movement"</em>; <em>"organization of the actin filaments and focal contacts were markedly changed in Wdpcp-deficient cells."</em></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/35427153/">PMID: 35427153</a>: <em>"the crescent-shaped CPLANE complex binds phospholipids such as phosphatidylinositol 3-phosphate via multiple modules."</em></li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/41268724/">PMID: 41268724</a>: <em>"Cilia formation and Hh signaling were severely impaired."</em></li>
+<li><strong>Suggested question to curator:</strong> Does project policy prefer the specific cilium/PCP terms over the generic GO:0030030 when experimental support is orthology-transferred, and should MF/CC annotations beyond the single BP hypothesis be added?</li>
+<li><strong>Suggested experiment:</strong> Equine ciliated-cell WDPCP knockdown with cilia/actin readouts (converts ISS → direct evidence).</li>
+</ul>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>The seed hypothesis is <strong>SUPPORTED</strong>. Horse A0A3Q2KRK8 is a genuine WDPCP ortholog (83% identity to human WDPCP O95876, full Frtz+WD40 architecture, conserved process-critical residues N512/W513), and WDPCP is an experimentally established CPLANE-complex scaffold required for ciliogenesis and actin-based planar polarity in mouse and human — both forms of cell projection organization. GO:0030030 is therefore biologically justified for the horse protein. The two curation caveats are that the term is generic (specific children such as cilium assembly and establishment of planar polarity are better supported) and that all functional evidence is transferred by orthology to an unreviewed TrEMBL record, so an <strong>ISS/ISO</strong> evidence code is appropriate rather than an experimental one.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="WDPCP-hypotheses/horse40-cell-projection-organization/openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="WDPCP-hypotheses/horse40-cell-projection-organization/openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(WDPCP-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A3Q2KRK8" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="wdpcp-paired-humanhorse-review-notes">WDPCP: paired human–horse review notes</h1>
+<h2 id="biological-evidence">Biological evidence</h2>
+<p>WDPCP is a CPLANE ciliary scaffold with an independent actin/septin/polarity role. Mouse microscopy and perturbation establish ciliary-base, cytoplasmic actin and focal-adhesion pools. Recombinant structural work demonstrates individual WDPCP phosphoinositide binding in its C-terminal tail. The full2016paper explicitly reports human WDPCP variants and relevant digit/tongue/palate phenotypes.</p>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/24302887/">PMID:24302887: Wdpcp, a PCP protein required for ciliogenesis, regulates directional cell migration and cell polarity by direct modulation of the actin cytoskeleton.</a> — full text cached.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/27158779/">PMID:27158779: The ciliopathy-associated CPLANE proteins direct basal body recruitment of intraflagellar transport machinery.</a> — full text cached.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/35427153/">PMID:35427153: Structure of the ciliogenesis-associated CPLANE complex.</a> — full text cached.</li>
+</ul>
+<h2 id="exact-horse-model">Exact horse model</h2>
+<p>The horse N-terminal difference resembles the approximately35-residue human extension relative to mouse reported in the structure. The conserved scaffold supports broad ciliary/cytoskeletal predictions. A separate nine-residue deletion affects the lipid-binding tail; disorder does not imply that deletion is functionally irrelevant, and exact lipid affinity remains unresolved.</p>
+<p>The reproducible alignment, source paths and hashes are in <a href="../../HORSE/WDPCP/WDPCP-bioinformatics/RESULTS.md">the paired comparison</a>. Current UniProt sequences have not been proven identical to the original ProtNLM input sequences. Sequence anomalies are therefore recorded as model/transfer limitations, not as proven wrong-input pipeline errors.</p>
+<h2 id="evidence-gaps">Evidence gaps</h2>
+<p>Distinguish transition-zone/base localization from the axonemal shaft. Test the tail deletion before transferring quantitative phosphoinositide affinity.</p>
+<h2 id="review-scope-and-checks">Review scope and checks</h2>
+<p>Every seeded annotation receives a current assessment. UNDECIDED marks unresolved source-specific or biological evidence; these are initial reviews rather than a claim that every original experimental assay has been independently reproduced or verified. The human Edison report is retained as a research synthesis and source-finding aid; decisive YAML excerpts cite primary publications, source records or reproducible analysis. The validator advisory to cite the deep-research file is deliberately not satisfied by citing AI prose as biological proof.</p>
+            </div>
+        </details>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioinformatics Results</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RESULTS.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A3Q2KRK8" data-a="DOC: Bioinformatics Results" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="wdpcp-humanhorse-sequence-comparison">WDPCP: human–horse sequence comparison</h1>
+<p>The downloaded human O95876 sequence (746 residues) and selected horse A0A3Q2KRK8 sequence (705 residues) share 88.1% identity among 704 paired residues. Paired coverage is 94.4% of human and 99.9% of horse.</p>
+<p>Full alignments, sequence hashes and calculation details: <a href="../../../../projects/PROTNLM_EVALUATION/mammal-benchmark/paired-sequences/WDPCP.json">WDPCP.json</a>. Reproduce with <a href="../../../../projects/PROTNLM_EVALUATION/mammal-benchmark/paired-sequences/compare.py">compare.py</a> using the two downloaded UniProt text records. See the <a href="../../../../projects/PROTNLM_EVALUATION/mammal-benchmark/paired-sequences/README.md">methods and limitations</a>.</p>
+<ul>
+<li>[x] Computed from sequence inputs; no hardcoded results.</li>
+<li>[x] The same script was run on ten different gene pairs.</li>
+<li>[x] Alignment completed and full output retained.</li>
+<li>[ ] Orthology, gene-model completeness and conservation of each biological claim require additional evidence. Sequence similarity alone does not establish them.</li>
+</ul>
+<p>Current UniProt sequences were compared; their identity with the original ProtNLM input sequences has not been established.</p>
+<h2 id="domain-context">Domain context</h2>
+<p>The horse model lacks aligned human residues 1–33 and 721–729. The structural CPLANE study (PMID:35427153) identifies a human-specific approximately 35-residue N-terminal extension relative to mouse; the N-terminal difference is therefore compatible with ordinary mammalian variation. The short C-terminal deletion falls in an unresolved tail, but that tail mediates phosphoinositide binding. Disorder does not make this second deletion functionally irrelevant: its effect on lipid affinity is untested. The WD40/alpha-solenoid scaffold is extensively conserved, supporting broad ciliary and cytoskeletal roles.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A0A3Q2KRK8
+gene_symbol: WDPCP
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:9796
+  label: Equus caballus
+description: WDPCP is a conserved CPLANE-family ciliary and cytoskeletal scaffold. Its retained WD40 and
+  alpha-solenoid architecture supports roles at the ciliary base and in actin organization. The horse
+  protein has a shorter N terminus consistent with mammalian variation and a small deletion in the phosphoinositide-binding
+  tail whose effect on lipid affinity is unresolved.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB-SubCell:SL-0039
+  review:
+    action: ACCEPT
+    summary: A peripheral membrane-associated WDPCP pool is supported.
+    reason: The conserved scaffold and experimentally characterized actin/focal-adhesion localization
+      support the broad membrane assignment. The small tail deletion leaves precise phosphoinositide affinity
+      uncertain without negating peripheral localization.
+    supported_by:
+    - reference_id: PMID:24302887
+      supporting_text: &#39;Wdpcp
+
+        is also found in the cytoplasm, where it is localized in the actin cytoskeleton
+
+        and in focal adhesions.&#39;
+    - &amp;id001
+      reference_id: file:HORSE/WDPCP/WDPCP-bioinformatics/RESULTS.md
+      supporting_text: share 88.1% identity among 704 paired residues.
+    - &amp;id003
+      reference_id: file:HORSE/WDPCP/WDPCP-bioinformatics/RESULTS.md
+      supporting_text: The WD40/alpha-solenoid scaffold is extensively conserved, supporting broad ciliary
+        and cytoskeletal roles.
+- term:
+    id: GO:0005930
+    label: axoneme
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB-SubCell:SL-0304
+  review:
+    action: UNDECIDED
+    summary: Ciliary-base localization is supported more clearly than axonemal shaft localization.
+    reason: The mammalian evidence places WDPCP at the transition zone. Conservation supports ciliary
+      participation but does not independently resolve the exact axoneme annotation.
+    supported_by:
+    - &amp;id002
+      reference_id: PMID:24302887
+      supporting_text: Wdpcp is localized to the transition zone
+    - *id001
+references:
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping,
+    accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: PMID:24302887
+  title: Wdpcp, a PCP protein required for ciliogenesis, regulates directional cell migration and cell
+    polarity by direct modulation of the actin cytoskeleton.
+  full_text_unavailable: false
+  findings: []
+- id: file:HORSE/WDPCP/WDPCP-bioinformatics/RESULTS.md
+  title: HORSE/WDPCP/WDPCP-bioinformatics/RESULTS.md
+  findings: []
+core_functions:
+- description: Conserved scaffold supporting ciliary and actin-cytoskeletal organization; precise lipid
+    affinity remains untested.
+  directly_involved_in:
+  - id: GO:0044782
+    label: cilium organization
+  supported_by:
+  - *id002
+  - reference_id: PMID:24302887
+    supporting_text: &#39;in Wdpcp-deficient cells, Sept2 was lost from the actin
+
+      cytoskeleton, suggesting Wdpcp is required for Sept2 recruitment to actin
+
+      filaments.&#39;
+  - *id001
+  - *id003
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

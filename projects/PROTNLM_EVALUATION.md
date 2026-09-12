@@ -1,21 +1,361 @@
 ---
 title: ProtNLM2 Evaluation
-maturity: COMPLETE
-tags: [EVALUATION, ML_PREDICTIONS]
-species: [9PRIM, ABRPR, AEDAE, AQUCT, ARAHY, ARATH, ARTAN, ASPOR, BALMU, BORPE, BOVIN, CAEEL, CALMI, CANLF, CHRVO, COLLI, COTJA, CUCME, DANRE, DEIRA, DROPS, DROVI, GADMO, GIBF5, JUGRE, MACFA, MAIZE, MYTGA, ORYSI, ORYSJ, PANPA, PARTE, PHATC, RABIT, SOYBN, STRCO, TAKRU, TOBAC, TRIV3, WHEAT, XANCP, XENNA, XENTR]
-genes: [A0A061AL94, A0A1S3BTE3, A0A1S3Y076, A0A2G9RZF1, A0A2I0M3K7, A0A2I4G8T1, A0A2K5UJ34, A0A2R9CAF4, A0A2U1PS28, A0A3B6GK97, A0A3B6NKR6, A0A3B6RKV1, A0A444Z7V7, A0A4W3GVU1, A0A674PKV4, A0A6I8TLE4, A0A6I8W8A2, A0A804UIX9, A0A8B6BFL6, A0A8B6GS20, A0A8B8L1Z3, A0A8B8WEG2, A0A8C2TBA7, A0A8C5FPT8, A0A8C9H4D2, A0A8I3PI07, A0A8J0SCI2, A0A8J1IYX6, A0A8M9QG43, A0BFB4, A2FPI7, B4MAQ2, B7FXQ8, B8BAB0, C6T1A2, D3VIU4, E1BL04, F4JLB7, F6LAX4, F6WPT1, G1TUN6, Q2U1U6, Q6YYC5, Q7NUH2, Q7VZI5, Q8P365, Q9KZ33, Q9L243, Q9RSY6, S0EDH7]
+maturity: IN_PROGRESS
+tags:
+- EVALUATION
+- ML_PREDICTIONS
+species:
+- human
+- HORSE
+- 9PRIM
+- ABRPR
+- AEDAE
+- AQUCT
+- ARAHY
+- ARATH
+- ARTAN
+- ASPOR
+- BALMU
+- BORPE
+- BOVIN
+- CAEEL
+- CALMI
+- CANLF
+- CHRVO
+- COLLI
+- COTJA
+- CUCME
+- DANRE
+- DEIRA
+- DROME
+- DROPS
+- DROVI
+- GADMO
+- GIBF5
+- JUGRE
+- MACFA
+- MAIZE
+- MYTGA
+- NEUCR
+- ORYSI
+- ORYSJ
+- PANPA
+- PARTE
+- PHATC
+- RABIT
+- SCHPO
+- SOYBN
+- STRCO
+- TAKRU
+- TOBAC
+- TRIV3
+- WHEAT
+- XANCP
+- XENLA
+- XENNA
+- XENTR
+- mouse
+- rat
+- worm
+genes:
+- 9PRIM/A0A8C9H4D2
+- ABRPR/A0A8B8L1Z3
+- AEDAE/A0A6I8TLE4
+- AQUCT/A0A2G9RZF1
+- ARAHY/A0A444Z7V7
+- ARATH/AT4G38370
+- ARATH/DRS1
+- ARATH/F4JLB7
+- ARATH/FTSH12
+- ARTAN/A0A2U1PS28
+- ASPOR/Q2U1U6
+- BALMU/A0A8B8WEG2
+- BORPE/Q7VZI5
+- BOVIN/E1BL04
+- CAEEL/A0A061AL94
+- CALMI/A0A4W3GVU1
+- CANLF/A0A8I3PI07
+- CHRVO/Q7NUH2
+- COLLI/A0A2I0M3K7
+- COTJA/A0A8C2TBA7
+- CUCME/A0A1S3BTE3
+- DANRE/A0A8M9QG43
+- DANRE/dcxr
+- DANRE/hes6
+- DEIRA/Q9RSY6
+- DROME/Ank2
+- DROME/CG10359
+- DROME/CG13096
+- DROME/CG13494
+- DROME/CG14662
+- DROME/CG17404
+- DROME/CG18507
+- DROME/CG18547
+- DROME/CG30287
+- DROME/CG30288
+- DROME/CG31099
+- DROME/CG31606
+- DROME/CG32086
+- DROME/CG32354
+- DROME/CG32706
+- DROME/CG33090
+- DROME/CG33116
+- DROME/CG33453
+- DROME/CG34117
+- DROME/CG34171
+- DROME/CG3515
+- DROME/CG3631
+- DROME/CG42331
+- DROME/CG42404
+- DROME/CG43124
+- DROME/CG43742
+- DROME/CG45100
+- DROME/CG46301
+- DROME/CG4793
+- DROME/CG5565
+- DROME/CG5611
+- DROME/CG6830
+- DROME/CG6836
+- DROME/CG8353
+- DROME/CG8745
+- DROME/CG8841
+- DROME/CG8915
+- DROME/CSN5
+- DROME/Cables1
+- DROME/Ctns
+- DROME/CycA
+- DROME/Dic4
+- DROME/Fbxo42
+- DROME/Gfat1
+- DROME/Gpdh3
+- DROME/Hmt-1
+- DROME/Hn
+- DROME/IKKepsilon
+- DROME/Lcp3
+- DROME/MESK2
+- DROME/Mrm2
+- DROME/Mst27D
+- DROME/NTPase
+- DROME/Nepl19
+- DROME/NtR
+- DROME/P58IPK
+- DROME/Pcf11
+- DROME/Pde4
+- DROME/Pld
+- DROME/Rhp
+- DROME/RluA-1
+- DROME/Serinc
+- DROME/Synj
+- DROME/Tango5
+- DROME/TyrRS
+- DROME/alpha-Man-Ia
+- DROME/amon
+- DROME/awd
+- DROME/betaTub97EF
+- DROME/cdm
+- DROME/dati
+- DROME/ftz-f1
+- DROME/glo
+- DROME/hbt
+- DROME/jumu
+- DROME/loqs
+- DROME/metro
+- DROME/msk
+- DROME/orb
+- DROME/qkr58E-1
+- DROME/rgn
+- DROME/scaf
+- DROME/sns
+- DROME/ttv
+- DROPS/A0A6I8W8A2
+- DROVI/B4MAQ2
+- GADMO/A0A8C5FPT8
+- GIBF5/S0EDH7
+- HORSE/AFAP1L2
+- HORSE/ALDH7A1
+- HORSE/ALG5
+- HORSE/BCAT2
+- HORSE/CACNB3
+- HORSE/CAPSL
+- HORSE/CC2D2A
+- HORSE/CDK7
+- HORSE/CH25H
+- HORSE/CTDSP2
+- HORSE/CXCR3
+- HORSE/DARS2
+- HORSE/DNMT3A
+- HORSE/DNMT3L
+- HORSE/DUOX1
+- HORSE/DYNLT2B
+- HORSE/EFR3A
+- HORSE/GEMIN5
+- HORSE/GHSR
+- HORSE/GPAM
+- HORSE/HSPA4
+- HORSE/HSPD1
+- HORSE/IRAK3
+- HORSE/KRIT1
+- HORSE/MAP2K2
+- HORSE/MTMR9
+- HORSE/MYL10
+- HORSE/OLFML2A
+- HORSE/OMA1
+- HORSE/PEA15
+- HORSE/PPP4R4
+- HORSE/PTPRN2
+- HORSE/SHLD2
+- HORSE/SIRT5
+- HORSE/TRAF2
+- HORSE/USP8
+- HORSE/VAPA
+- HORSE/WDPCP
+- HORSE/WEE1
+- HORSE/ZDHHC23
+- JUGRE/A0A2I4G8T1
+- MACFA/A0A2K5UJ34
+- MAIZE/A0A804UIX9
+- MYTGA/A0A8B6BFL6
+- MYTGA/A0A8B6GS20
+- NEUCR/NCU01245
+- NEUCR/NCU01540
+- NEUCR/NCU02539
+- NEUCR/NCU03033
+- NEUCR/NCU04302
+- NEUCR/NCU04637
+- NEUCR/NCU04937
+- NEUCR/NCU06005
+- NEUCR/NCU06296
+- NEUCR/NCU07379
+- NEUCR/NCU08595
+- NEUCR/NCU08990
+- NEUCR/NCU09721
+- NEUCR/NCU09880
+- NEUCR/NCU11362
+- NEUCR/NCU12035
+- NEUCR/glt-1
+- NEUCR/kal-1
+- NEUCR/mek-1
+- NEUCR/vtc-4
+- ORYSI/B8BAB0
+- ORYSJ/Q6YYC5
+- PANPA/A0A2R9CAF4
+- PARTE/A0BFB4
+- PHATC/B7FXQ8
+- RABIT/G1TUN6
+- SCHPO/SPAC25B8.09
+- SCHPO/asr1
+- SCHPO/cao1
+- SCHPO/cbh1
+- SCHPO/cem1
+- SCHPO/cis4
+- SCHPO/crt10
+- SCHPO/gpi16
+- SCHPO/lsm6
+- SCHPO/mre11
+- SCHPO/nip7
+- SCHPO/pta1
+- SCHPO/rfc3
+- SCHPO/rpa49
+- SCHPO/rpo41
+- SCHPO/rrp36
+- SCHPO/sec59
+- SCHPO/sen15
+- SCHPO/spo2
+- SCHPO/spt16
+- SCHPO/sus1
+- SCHPO/sws2
+- SCHPO/trm402
+- SCHPO/uch2
+- SCHPO/ulp2
+- SCHPO/vas2
+- SCHPO/wss1
+- SCHPO/yml6
+- SOYBN/C6T1A2
+- STRCO/Q9KZ33
+- STRCO/Q9L243
+- TAKRU/A0A674PKV4
+- TOBAC/A0A1S3Y076
+- TRIV3/A2FPI7
+- WHEAT/A0A3B6GK97
+- WHEAT/A0A3B6NKR6
+- WHEAT/A0A3B6RKV1
+- WHEAT/F6LAX4
+- XANCP/Q8P365
+- XENLA/uap1.S
+- XENNA/D3VIU4
+- XENTR/A0A8J0SCI2
+- XENTR/A0A8J1IYX6
+- XENTR/F6WPT1
+- human/ACAD9
+- human/AFAP1L2
+- human/ALDH7A1
+- human/ALG5
+- human/BCAT2
+- human/CACNB3
+- human/CAPSL
+- human/CC2D2A
+- human/CDK7
+- human/CH25H
+- human/CTDSP2
+- human/CXCR3
+- human/DARS2
+- human/DNMT3A
+- human/DNMT3L
+- human/DTD1
+- human/DUOX1
+- human/DYNLT2B
+- human/EFR3A
+- human/GEMIN5
+- human/GHSR
+- human/GPAM
+- human/HSPA4
+- human/HSPD1
+- human/IRAK3
+- human/KRIT1
+- human/MAP2K2
+- human/MTMR9
+- human/MYL10
+- human/NARF
+- human/OLFML2A
+- human/OMA1
+- human/PEA15
+- human/PPP4R4
+- human/PTPRN2
+- human/RHOJ
+- human/SHLD2
+- human/SIRT5
+- human/TRAF2
+- human/UBE2F
+- human/USP8
+- human/VAPA
+- human/WDPCP
+- human/WEE1
+- human/ZDHHC23
+- mouse/Sdhaf2
+- mouse/Spcs2
+- mouse/Vmn2r73
+- rat/Mtmr12
+- rat/Pnkd
+- rat/Ptk7
+- worm/C28G1.2
+- worm/dpm-1
+- worm/wdr-23
 ---
 # ProtNLM2 Evaluation
 
 [Function prediction evaluation index](FUNCTION_PREDICTION_EVALUATION.md)
 
-Evaluation of Google's ProtNLM2 GO term predictions using the ARGO-ProtNLM-50 benchmark: **50 protein records across 14 taxonomic groups, 41 with GO predictions, and 77 prediction assessments**. The evaluation assesses biological support, annotation specificity, and overlap with existing GOA annotations. Nine records have empty GO prediction lists.
+Evaluation of Google's ProtNLM2 predictions across **242 prediction targets and 40 paired human reference records**, with **288 GO-term assessments** and **57 narrative function-review records**. The cross-species cohorts examine biological support, substrate and paralog specificity, domain completeness, and transfer of annotations across species. Narrative records may contain multiple claims with different judgments; they are reported separately from GO terms.
+
+**[Cross-cohort results and narrative review index](PROTNLM_EVALUATION/benchmark-results.md)** — deduplicated totals and links to the underlying claim assessments. Thirteen narrative review records contain a PLI judgment; zero PLI among the GO terms does not describe the narrative predictions.
+
+The original **ARGO-ProtNLM-50** subset contains 50 protein records across 14 taxonomic groups: 41 records contribute 77 GO assessments, and nine have empty GO prediction lists. Its GO results and illustrative case studies are presented below.
 
 **[Interactive prediction evaluation table](PROTNLM_EVALUATION/protnlm-eval.html)** — filterable/sortable assessments, rationales, and links to all 50 protein reviews.
 
 **Independent adjudication, both directions.** Focused [OpenScientist](https://www.openscientist.io) investigations evaluate both uncertain predictions and predictions disputed by the review. Their integration of sequence, structure, comparative biology, and literature provides substantial evidence for adjudication. Examples include the missing kinase domain in ARATH/F4JLB7 and experimental autophagosome localization in the human ortholog of GADMO/A0A8C5FPT8. See the [OpenScientist investigation report](PROTNLM_EVALUATION/openscientist-adjudication.md) for the individual investigations and their findings.
 
-## Key findings
+## ARGO-ProtNLM-50 key findings
 
 1. **Useful additional annotations can follow from established biology and mapping gaps.** Supported family transfers include chloroplastic EF4 localization for ARTAN/A0A2U1PS28 and a laterality role for MACFA/A0A2K5UJ34. The [InterPro2GO coverage analysis](PROTNLM_EVALUATION/interpro2go-coverage-gaps.md) identifies absent mappings, mappings on unassigned superfamily entries, and unintegrated Pfam signatures as routes by which plausible functions can be absent from GOA. A mapping gap alone does not establish the predicted function: nuclear localization for the 74-residue CAEEL/A0A061AL94 record remains uncertain. Matrix organization for 9PRIM/A0A8C9H4D2 is supported by an experimentally grounded mouse OLFML2A annotation, providing a basis for ortholog transfer beyond localization alone.
 
@@ -29,7 +369,9 @@ Evaluation of Google's ProtNLM2 GO term predictions using the ARGO-ProtNLM-50 be
 
 6. **Biological assessment adds information beyond ontology overlap.** Sigma-factor activity supports transcription initiation even when an is_a/part_of comparison reports NO_OVERLAP. Conversely, matching an existing annotation does not override target-specific contrary evidence.
 
-## Aggregate results
+## ARGO-ProtNLM-50 GO results
+
+This table covers only the 77 GO claims in the original ARGO-50 subset. Expanded-cohort GO totals and narrative judgments are in the [cross-cohort results](PROTNLM_EVALUATION/benchmark-results.md).
 
 Assessment categories follow [de Crécy-Lagard et al. 2025 (PMID:40703034)](https://pubmed.ncbi.nlm.nih.gov/40703034/), with the project's GO prediction guidelines.
 
@@ -101,6 +443,20 @@ STRCO/Q9KZ33 has an IBA annotation for `sigma factor activity`; ProtNLM2 predict
 ProtNLM2 is a transformer-based sequence-to-sequence model developed by Google DeepMind with UniProt, trained on 240 million protein entries from UniProt release 2023_04. It generates protein names, GO terms, subcellular locations, keywords, and function comments from amino acid sequence. UniProt describes the current model as trained entirely on sequence. See the [UniProt ProtNLM documentation](https://www.uniprot.org/help/ProtNLM).
 
 Predictions are post-processed by the **Evidencer**, which applies exclusion criteria including GO taxon constraints and seeks corroboration through string matches, phmmer sequence similarity (bit score greater than 25), and TM-align structural similarity. This corroboration can explain the biological source of support for a prediction, but it is separate from the neural model's generation of that prediction. The exploratory XML dataset and public release differ in coverage; the [data provenance](PROTNLM_EVALUATION/data_history.md) describes the source versions used here.
+
+## Expanded cohorts and family curation
+
+The [cross-benchmark family curation](PROTNLM_EVALUATION/family-curation.md) covers all 282 selected protein records and paired references, with 211 structured family reviews and individual assessments for 18 inputs without exact-record PANTHER assignments. The gene-to-family index distinguishes direct sequence assignments from verified canonical gene context.
+
+The [human and model-organism challenge set](PROTNLM_EVALUATION/mod-evolution20.md) selects twenty additional prediction-bearing genes across seven species, with priorities for evolutionary analysis of substrate specificity, catalytic divergence and complex participation. The cohort complements the fly and pombe selections with substrate-specificity, catalytic-divergence and complex-participation cases.
+
+The [Neurospora cohort](PROTNLM_EVALUATION/neurospora.md) covers 20 genes: all 16 GO/function-bearing entries in the published species subset and four selected localization cases. Its 21 GO predictions, three function paragraphs and ten localization claims are reviewed separately, with a full 51-record source census.
+
+The [pombe cohort](PROTNLM_EVALUATION/pombe.md) includes all 20 GO/function-bearing entries among 28 fission-yeast accessions identified in the original export: 32 GO claims and 11 function paragraphs. These currently reviewed/Swiss-Prot entries are API-accessible despite being absent from the published pilot accession list.
+
+The [fly cohort](PROTNLM_EVALUATION/fly.md) includes all 41 Drosophila melanogaster genes with GO or function-text predictions in the published species subset, plus a separate tier of 29 location/keyword-only records. Its full 94-record census preserves exact sequences, current FlyBase identifiers and original prediction provenance.
+
+The horse cohort contains [40 selected horse genes](PROTNLM_EVALUATION/horse40.md) with released functional predictions and paired human–horse reviews. See the [review findings and evidence gaps](PROTNLM_EVALUATION/horse40-review-findings.md). The [horse-first benchmark design](PROTNLM_EVALUATION/mammal-benchmark-design.md) includes the prediction census and mammalian evidence leads.
 
 ## ARGO-ProtNLM-50 benchmark design
 
