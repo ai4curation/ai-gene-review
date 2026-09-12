@@ -194,7 +194,10 @@ contributes part of the surface through which SPG11 clamps the two arms of AP-5
 together. GO has no term for "small subunit of an adaptor heterotetramer" specifically,
 but it does have `GO:0005198` structural molecule activity, whose definition — "the
 action of a molecule that contributes to the structural integrity of a complex" — covers
-exactly this, and which the sibling AP-4 small subunit review adopted for the same role.
+exactly this. (The AP4S1 review merged to main as PR #3026 proposes the same term for
+the AP-4 small subunit, but that review is not in this branch's base and AP4S1 does not
+carry GO:0005198 in GOA, so the precedent is noted here only and is not used as
+justification in the YAML.)
 That is the one MF asserted here, as a NEW row with IDA from the structure, and it is
 asserted with its limit stated: sigma-5 has never been removed from cells, so "is
 required for AP-5 to exist" is *not* claimed, only "is an integral structural component
@@ -301,7 +304,8 @@ single residue.
 * **Complex**: `GO:0044599` accept; the three `GO:0030119` rows — the IDA is MODIFY to
   the specific child, the IBA and IEA are accepted as correct-but-general parents.
 * **Process**: `GO:0016197` endosomal transport accept (IBA, IEA, IMP);
-  `GO:0016192` vesicle-mediated transport accept as the true parent; `GO:0007040`
+  `GO:0016192` vesicle-mediated transport kept as non-core, since it is a true
+  grandparent that the child already on the gene expresses better; `GO:0007040`
   lysosome organization keep as non-core (complex-level NAS); `GO:0000724` HR repair
   keep as non-core for the IMP and mark the InterPro IEA as redundant.
 * **`GO:0005515` ×5**: over-annotated as bare protein binding. Four of them (AP5Z1,
@@ -313,4 +317,10 @@ single residue.
 * **NEW ×2**: `GO:0005198` structural molecule activity (IDA from the cryo-EM structure —
   no AP-5 subunit currently carries any MF beyond bare protein binding), and `GO:0034499`
   late endosome to Golgi transport, the pathway this complex is now assigned to, which no
-  AP-5 subunit and neither SPG11 nor ZFYVE26 currently carries.
+  AP-5 subunit and neither SPG11 nor ZFYVE26 currently carries. The second is coded **IC**,
+  not IMP, and this matters: σ5's own knockdown (PMID:22022230) shows the CIMPR and Vps26
+  redistributing but does not establish the *direction* — that paper even flags directional
+  uncertainty for AP-1 — and the late-endosome-to-Golgi assignment comes from the 2018
+  knockout of AP5Z1. So the row names its inference basis (`GO:0016197`, which σ5 holds by
+  its own IMP, and `GO:0044599`) in `supporting_entities` rather than claiming an
+  experiment on this gene that was not done.
