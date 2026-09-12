@@ -160,7 +160,8 @@ CORE_FUNCTIONS = [
             "delta loss produces a combined pigmentary, platelet, immune and neurological phenotype "
             "while loss of beta-3A alone (HPS2) spares the nervous system."
         ),
-        molecular_function=("GO:0000149", "SNARE binding"),
+        contributes_to_molecular_function=("GO:0140312", "cargo adaptor activity"),
+        molecular_function=("GO:0005198", "structural molecule activity"),
         directly_involved_in=[("GO:0006901", "vesicle coating")],
         locations=[("GO:0010008", "endosome membrane")],
         in_complex=("GO:0030123", "AP-3 adaptor complex"),

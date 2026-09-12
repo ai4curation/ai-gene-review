@@ -1381,23 +1381,27 @@ DECISIONS[54] = dict(
 # 55 GO:0140916 zinc ion import into lysosome -- MODIFY
 DECISIONS[55] = dict(
     summary="The delta-specific knockdown is sound, but AP-3 is not the zinc importer - it delivers the ZnT transporters that are.",
-    action="MODIFY",
+    action="KEEP_AS_NON_CORE",
     reason=(
         "The experiment is squarely about this gene product: the siRNA targeted delta and depleted the "
-        "complex, and vesicular zinc fell. But GO:0140916 is 'The directed import of zinc(2+) from the "
-        "cytosol, across an organelle membrane, into a lysosome' - a transmembrane transport event that "
-        "ZnT2/ZnT3 perform, not AP-3. The paper's own decisive result makes the distinction: "
-        "overexpressing GFP-ZnT2 RESCUES the AP-3-depleted phenotype, which is only interpretable if the "
-        "AP-3 defect is a failure to deliver the transporter. Annotating the trafficking factor with the "
-        "transporter's activity conflates the agent with the machinery that positions it. Proposing "
-        "GO:0061462 protein localization to lysosome, which states what AP-3 does and keeps the "
-        "experimental result attached to the right gene."
+        "complex, and vesicular zinc fell. The caveat worth recording is that AP-3 is not itself the "
+        "zinc importer - GO:0140916 is 'The directed import of zinc(2+) from the cytosol, across an "
+        "organelle membrane, into a lysosome', a transmembrane transport event that ZnT2/ZnT3 perform - "
+        "and the paper's own decisive result makes the point, since overexpressing GFP-ZnT2 RESCUES the "
+        "AP-3-depleted phenotype, which is only interpretable if the AP-3 defect is a failure to deliver "
+        "the transporter. I first proposed replacing the term with GO:0061462 protein localization to "
+        "lysosome and have withdrawn that: GO:0061462 is an ancestor of GO:0006622 protein targeting to "
+        "lysosome, which this review adds as a NEW row, so the substitution would have traded the "
+        "zinc-specific content for a parent the file already carries, and no zinc-preserving alternative "
+        "exists in GO for an upstream trafficking factor. For a biological process, involved_in also "
+        "tolerates indirect-but-required participation in a way that a molecular-function term would "
+        "not, and this is a curator IMP made from the full text. Kept, marked non-core: it is a "
+        "downstream consequence of the generic AP-3 sorting step rather than delta's own activity."
     ),
     supported_by=[
         ("PMID:17349999", "For AP-3 protein complex knockdown, the target was the δ subunit of the complex."),
         ("PMID:17349999", "Moreover, GFP-ZnT2 overexpression elicited a significant accumulation of zinc within mature lysosomes, which in untransfected M1 cells contained little or no chelatable zinc, and restored the zinc storage capability of AP-3-deficient cells."),
     ],
-    proposed_replacement_terms=[("GO:0061462", "protein localization to lysosome")],
 )
 
 # 56 GO:1903232 melanosome assembly, NAS
@@ -1553,6 +1557,34 @@ NEW_ROWS = [
             Q_TUBULAR,
         ],
         additional_reference_ids=["PMID:15598649", "PMID:15051738", "file:human/AP3D1/AP3D1-deep-research-affinage.md"],
+    ),
+    dict(
+        term=("GO:0005198", "structural molecule activity"),
+        evidence_type="IMP",
+        original_reference_id="PMID:26744459",
+        qualifier="enables",
+        summary="Delta is a structural constituent of AP-3: without it the heterotetramer does not assemble, and restoring it restores the complex.",
+        action="NEW",
+        reason=(
+            "AP3D1's only molecular-function rows in GOA are bare protein binding and an inverted "
+            "AP-3-adaptor-complex-binding IEA, so the plainest subunit-level fact about the protein is "
+            "unstated: delta holds the complex together. GO:0005198 is defined as 'The action of a "
+            "molecule that contributes to the structural integrity of a complex', which is exactly the "
+            "observation. The evidence is human and loss-and-restore: a homozygous AP3D1 mutation "
+            "destabilises AP-3 in patient cells and retroviral re-expression of wild-type AP3D1 restores "
+            "complex formation. The mouse mocha counterpart is the same result in reverse - the complex "
+            "is destabilised in mocha fibroblasts and rescued by transfected delta, including by "
+            "VAMP7-non-binding delta mutants, which shows the structural role is separable from the "
+            "cargo-binding role. Added because core_functions asserts this activity and it should be "
+            "traceable to an annotation."
+        ),
+        supported_by=[
+            ("PMID:26744459", "Whole exome sequencing identified a homozygous mutation in AP3D1 that leads to destabilization of the adaptor protein 3 (AP3) complex."),
+            ("PMID:26744459", "AP3 complex formation and the degranulation defect in patient T cells were restored by retroviral reconstitution."),
+            ("PMID:22521722", "The absence of delta-adaptin causes destabilization of the AP3 complex in mouse mocha fibroblasts and mislocalization of VAMP7."),
+            ("PMID:22521722", "Re-expression of wt and mutant δ-adaptin led to similar levels of stabilization of the other subunits of the complex"),
+        ],
+        additional_reference_ids=["PMID:22521722"],
     ),
     dict(
         term=("GO:0043316", "cytotoxic T cell degranulation"),

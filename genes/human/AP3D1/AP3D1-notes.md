@@ -479,17 +479,29 @@ Counted by `AP3D1-bioinformatics/goa_reconcile.py`, not tallied by hand
 | action | n | which |
 |---|---|---|
 | ACCEPT | 11 | AP-3 complex (x3), endosome membrane (x3), cytoplasm, vesicle coat assembly, membrane coat, early endosome, protein targeting to vacuole |
-| KEEP_AS_NON_CORE | 38 | every cell-type-specific outcome (melanosome, platelet dense granule, synapse, otolith) and every true-but-general parent |
-| MODIFY | 5 | GO:0005515 -> GO:0140312; GO:0006896 -> GO:0008333; GO:0016183 -> GO:0016182; GO:0035654 -> GO:0035459; GO:0140916 -> GO:0061462 |
+| KEEP_AS_NON_CORE | 39 | every cell-type-specific outcome (melanosome, platelet dense granule, synapse, otolith), every true-but-general parent, and GO:0140916 |
+| MODIFY | 4 | GO:0005515 -> GO:0140312; GO:0006896 -> GO:0008333; GO:0016183 -> GO:0016182; GO:0035654 -> GO:0035459 |
 | MARK_AS_OVER_ANNOTATED | 3 | GO:0016020 membrane (HDA, 1142 entities); GO:0032502 developmental process; GO:0035651 AP-3 adaptor complex binding |
 | REMOVE | 2 | GO:0010496 intercellular transport (ARBA, wrong topology); GO:1990742 microvesicle (donor term means an extracellular vesicle) |
-| NEW | 5 | GO:0031267 small GTPase binding; GO:0000149 SNARE binding; GO:0006622 protein targeting to lysosome; GO:0043316 and GO:0043320 degranulation |
+| NEW | 6 | GO:0031267 small GTPase binding; GO:0000149 SNARE binding; GO:0005198 structural molecule activity; GO:0006622 protein targeting to lysosome; GO:0043316 and GO:0043320 degranulation |
+
+**A MODIFY withdrawn after review.** `GO:0140916 zinc ion import into lysosome`
+was first proposed for replacement by `GO:0061462 protein localization to
+lysosome`, on the ground that AP-3 delivers ZnT2/ZnT3 rather than importing zinc.
+The observation stands, but the substitution does not: `GO:0061462` is an
+**ancestor** of `GO:0006622`, which this review adds as a NEW row, so the trade
+would have swapped zinc-specific content for a parent the file already carries -
+and GO has no zinc-preserving term for an upstream trafficking factor. For a
+biological process, `involved_in` also tolerates indirect-but-required
+participation in a way a molecular-function term would not, and this is a curator
+IMP made from the full text. The row is now `KEEP_AS_NON_CORE` with the role
+observation retained as a caveat in `review.reason`.
 
 `propagation_review` on 42 rows (10 IBA + 32 IEA/ISS/IC with `supporting_entities`),
 of which 14 carry `residue_claims` (51 claims; all pass
 `ai_gene_review.validation.gene_residue_claims`). 47 references, every one with a
 `reference_review`. No `negated` rows and no `contributes_to` qualifier in this
-gene's GOA, so neither special case arises. 131 `supporting_text` quotes, all
+gene's GOA, so neither special case arises. 135 `supporting_text` quotes, all
 verbatim (`checkquotes.py`).
 
 **One validation warning is left standing on purpose.** `just validate` reports
