@@ -75,3 +75,30 @@ def test_stage_pages_refuses_to_clean_repository_root(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="must be inside"):
         stage_pages(tmp_path, tmp_path)
+
+
+@pytest.mark.parametrize("directory", ["genes", "pages", "app", ".git", "custom"])
+def test_stage_pages_preserves_non_staging_directories(
+    tmp_path: Path, directory: str
+) -> None:
+    """Reject source and arbitrary directories before removing any contents."""
+    _site_fixture(tmp_path)
+    sentinel = tmp_path / directory / "keep.txt"
+    _write(sentinel, "keep me")
+
+    with pytest.raises(ValueError, match="_site"):
+        stage_pages(tmp_path, tmp_path / directory)
+
+    assert sentinel.read_text() == "keep me"
+    assert (tmp_path / "genes/human/ABC1/ABC1-ai-review.yaml").is_file()
+
+
+def test_stage_pages_rejects_staging_symlink_to_sources(tmp_path: Path) -> None:
+    """Resolving the output must not turn a staging path into a source deletion."""
+    _site_fixture(tmp_path)
+    (tmp_path / "_site").symlink_to(tmp_path / "genes", target_is_directory=True)
+
+    with pytest.raises(ValueError, match="_site"):
+        stage_pages(tmp_path, tmp_path / "_site")
+
+    assert (tmp_path / "genes/human/ABC1/ABC1-ai-review.yaml").is_file()

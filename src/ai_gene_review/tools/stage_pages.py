@@ -47,10 +47,13 @@ def _require_file(path: Path) -> None:
 
 
 def _safe_clean_output(repo_root: Path, output_dir: Path) -> None:
+    """Only remove the repository's dedicated, ignored staging directory."""
     resolved_root = repo_root.resolve()
     resolved_output = output_dir.resolve()
     if resolved_output == resolved_root or resolved_root not in resolved_output.parents:
         raise ValueError("Pages output directory must be inside the repository root")
+    if resolved_output != resolved_root / "_site":
+        raise ValueError("Pages output directory must be the repository's _site directory")
     if resolved_output.exists():
         shutil.rmtree(resolved_output)
     resolved_output.mkdir(parents=True)
@@ -99,6 +102,7 @@ def stage_pages(repo_root: Path, output_dir: Path) -> SiteManifest:
     Gene source material is not copied: only rendered review HTML is published.
     ``pages/`` remains a transitional mixed-output area and is copied wholesale
     until its manually maintained inputs are separated in a later migration.
+    ``output_dir`` must resolve to the repository's dedicated ``_site`` directory.
     """
 
     repo_root = repo_root.resolve()
@@ -177,7 +181,7 @@ def _parse_args() -> argparse.Namespace:
         "--output-dir",
         type=Path,
         default=Path("_site"),
-        help="Disposable Pages output directory (default: _site)",
+        help="Disposable Pages output directory (must be the repository's _site)",
     )
     parser.add_argument(
         "--warn-size-mib",

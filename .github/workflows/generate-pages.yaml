@@ -127,10 +127,17 @@ jobs:
       # publishing source.  It is uploaded for inspection but not deployed yet,
       # so this migration cannot disturb the live site or legacy regeneration
       # PRs.  The staging command reports the uncompressed 1 GiB Pages budget.
+      # Keep every shadow step non-blocking so failures cannot skip the legacy
+      # regeneration lane. Only summarize/upload a successfully staged tree.
       - name: Stage GitHub Pages artifact
+        id: shadow-stage
+        continue-on-error: true
         run: just stage-pages
 
       - name: Summarize staged Pages site
+        id: shadow-summary
+        if: steps.shadow-stage.outcome == 'success'
+        continue-on-error: true
         shell: bash
         run: |
           {
@@ -150,10 +157,21 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload shadow GitHub Pages artifact
+        id: shadow-upload
+        if: steps.shadow-stage.outcome == 'success'
+        continue-on-error: true
         uses: actions/upload-pages-artifact@v4
         with:
           path: _site
           retention-days: 3
+
+      - name: Warn when shadow Pages build fails
+        if: >-
+          ${{ !cancelled() &&
+              (steps.shadow-stage.outcome == 'failure' ||
+               steps.shadow-summary.outcome == 'failure' ||
+               steps.shadow-upload.outcome == 'failure') }}
+        run: echo "::warning title=Shadow Pages build failed::Inspect the shadow staging, summary, and upload steps. Legacy regeneration will continue; the live Pages source is unchanged."
 
       - name: Check for changes
         id: check-changes
