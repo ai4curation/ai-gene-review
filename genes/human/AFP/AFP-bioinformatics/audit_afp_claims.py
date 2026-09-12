@@ -134,14 +134,23 @@ def norm(s: str) -> str:
     return re.sub(r"\s+", " ", s).strip()
 
 
-# Delimiters that mark a retired phrase as being NARRATED rather than re-asserted.
+# Delimiter PAIRS that mark a retired phrase as NARRATED rather than re-asserted.
+#
 # Straight quotes alone are not enough: this notes file's house style for quoting
-# superseded wording is backticks and bold, so a guard that recognised only `"`
-# would red-build a correctly written journal entry -- and the path of least
-# resistance under a red build is to delete the narration, which is the opposite
-# of what the guard exists to protect. Recognise the styles actually in use.
-_NARRATION_OPENERS = ('"', "“", "`", "**", "*", "'")
-_NARRATION_CLOSERS = ('"', "”", "`", "**", "*", "'")
+# superseded wording is backticks and bold, so a guard recognising only `"` would
+# red-build a correctly written journal entry -- and the path of least resistance
+# under a red build is to delete the narration, which is the opposite of what the
+# guard protects.
+#
+# But the widening must stop short of two things, both of which a first attempt got
+# wrong by listing openers and closers as independent sets:
+#   * single-asterisk italics and single quotes are NOT narration here. Italics in
+#     this file mark the author's own emphasis, so `*phrase*` is an emphasised
+#     ASSERTION and must still fire.
+#   * opener and closer must MATCH. Unpaired sets let `**phrase"` through.
+# Longest first, so `**` is tried before `*` would have been.
+_NARRATION_PAIRS = (('"', '"'), ("“", "”"), ("**", "**"), ("`", "`"))
+_SENTENCE_PUNCT = (".", ",", ";", ":", "?", "!")
 
 
 def _quoted_somewhere(blob: str, phrase: str) -> bool:
@@ -153,21 +162,19 @@ def _quoted_somewhere(blob: str, phrase: str) -> bool:
 
 
 def _is_narrated(blob: str, start: int, end: int) -> bool:
-    """True if this occurrence is enclosed by any recognised quoting style.
+    """True if this occurrence is wrapped in a MATCHED narration delimiter pair.
 
     Checks the actual neighbouring characters of THIS occurrence, so a later bare
-    re-assertion of a phrase quoted earlier in the file is not exempted.
+    re-assertion of a phrase narrated earlier in the file is not exempted.
     """
-    for opener in _NARRATION_OPENERS:
-        if blob[max(0, start - len(opener)) : start] != opener:
+    for opener, closer in _NARRATION_PAIRS:
+        if start < len(opener) or blob[start - len(opener) : start] != opener:
             continue
-        tail = blob[end : end + 3]
-        if any(tail.startswith(c) for c in _NARRATION_CLOSERS):
+        tail = blob[end : end + len(closer) + 1]
+        if tail.startswith(closer):
             return True
-        # allow a closing delimiter after trailing sentence punctuation
-        if tail[:1] in (".", ",", ";", ":", "?", "!") and any(
-            tail[1:].startswith(c) for c in _NARRATION_CLOSERS
-        ):
+        # a closer may follow one character of sentence punctuation
+        if tail[:1] in _SENTENCE_PUNCT and tail[1:].startswith(closer):
             return True
     return False
 
@@ -552,6 +559,32 @@ def self_test() -> int:
             probs2, _ = check_all(tmp, notes_path=notes_tmp)
             fired["narration_not_false_positive"] = not any(
                 "retracted phrasing present in notes" in p for p in probs2
+            )
+
+            # every narration style must be exercised by a mutation, not by
+            # reasoning: a branch nothing breaks is a branch nothing tests.
+            def notes_fires(snippet: str) -> bool:
+                notes_tmp.write_text(notes_orig + "\n\n" + snippet + "\n")
+                p, _ = check_all(tmp, notes_path=notes_tmp)
+                return any("unquoted" in x for x in p)
+
+            styles = {
+                "double_quote": f'I wrote "{quoted_phrase}" and was wrong.',
+                "curly_quote": f"I wrote “{quoted_phrase}” and was wrong.",
+                "backtick": f"I wrote `{quoted_phrase}` and was wrong.",
+                "bold": f"I wrote **{quoted_phrase}** and was wrong.",
+                "quote_then_punct": f'I wrote "{quoted_phrase}." Wrong.',
+            }
+            fired["all_narration_styles_exempt"] = not any(
+                notes_fires(s) for s in styles.values()
+            )
+            # ...and the two styles deliberately NOT treated as narration, because
+            # italics and single quotes mark this file's own assertions
+            fired["italic_reassertion_still_fires"] = notes_fires(
+                f"AFP really does have *{quoted_phrase}* today."
+            )
+            fired["unmatched_delimiters_still_fire"] = notes_fires(
+                f'AFP really does have **{quoted_phrase}" today.'
             )
         finally:
             notes_tmp.unlink(missing_ok=True)
