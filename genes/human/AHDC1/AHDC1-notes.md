@@ -116,6 +116,19 @@ DNA-binding transcription factor at a specific genomic locus, either on its own 
 part of a complex") is what the paper actually demonstrates. `GO:0003682 chromatin
 binding` is added separately for the ChIP-seq itself.
 
+**And the shape of the correction matters as much as its direction.** Ancestor closure
+over `is_a,part_of` was fetched for both terms: `GO:0003712`'s only ancestors are
+`GO:0140110` and the molecular-function root, and `GO:0003700` sits under `GO:0140110`
+too. So `GO:0003712` is a **sibling of `GO:0003700` under `GO:0140110`**, not an ancestor
+of it. This is a *lateral* correction inside the transcription-regulator branch — the
+review is not retreating to a vaguer parent, it is naming a different activity in the same
+class. That distinction is the difference between "we could not tell how specific to be"
+and "the specific claim on record is the wrong one", and only the second is true here.
+
+The same closure query is what showed that `GO:0006355` is an ancestor of `GO:0003700`
+but **not** of `GO:0003712` — i.e. correcting the MF silently voids the `GO_REF:0000108`
+BP row, which is why that row is handled explicitly rather than left alone.
+
 ### Reading the whole paragraph, not the quotable sentence (ACTR10 lesson)
 
 Two places where the neighbouring sentence changes the reading:
