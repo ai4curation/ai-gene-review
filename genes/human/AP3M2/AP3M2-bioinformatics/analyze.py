@@ -66,6 +66,12 @@ HUMAN_MU = {
 AP3_PDB = "9c5b"
 AP3_MU_ACC = "Q9Y2T2"   # AP3M1_HUMAN, the mu subunit in the structure
 AP3_CARGO_ACC = "P11279"  # LAMP1_HUMAN
+# 4IKN: an independent AP-3 cargo complex -- the rat mu3A C-terminal domain with the
+#       TGN38 SDYQRL peptide. Different species, different cargo, same subfamily, so it
+#       is a check on whether the 9C5B site is structure-specific.
+AP3_PDB2 = "4ikn"
+AP3_MU2_ACC = "P53676"   # AP3M1_RAT
+AP3_CARGO2_ACC = "P19814"  # TGON3_RAT
 # 1BXX: rat mu2 C-terminal domain with the TGN38 DYQRLN signal -- the classical
 #       YxxPhi pocket, used as an outgroup comparison and alignment cross-check.
 AP2_PDB = "1bxx"
@@ -365,9 +371,58 @@ def main() -> int:
         "recognition.\n"
     )
 
+    # ------------------- second, independent AP-3 cargo complex (different species+cargo)
+    rat_m1 = parse_uniprot_txt("AP3M1_RAT", AP3_MU2_ACC)
+    assert_identity(rat_m1, "Ap3m1", "Rattus norvegicus")
+    ap3b_contacts, ap3b_pep_chain, ap3b_pep_seq = peptide_contacts(
+        AP3_PDB2, AP3_MU2_ACC, AP3_CARGO2_ACC
+    )
+    ratm1_to_hum = pairwise_identity(rat_m1.sequence, entries["AP3M1"].sequence, al)
+    ratm1_to_m2 = pairwise_identity(rat_m1.sequence, entries["AP3M2"].sequence, al)
+    projected = {ratm1_to_hum[1].get(pos) for pos, _ in ap3b_contacts} - {None}
+    observed = {p for p, _ in ap3_contacts}
+    out.append(
+        f"### 2b. An independent AP-3 cargo complex: PDB {AP3_PDB2.upper()}\n"
+    )
+    out.append(
+        f"{AP3_PDB2.upper()} is the {rat_m1.organism} mu3A C-terminal domain bound to the "
+        f"TGN38 cytoplasmic tail (chain {ap3b_pep_chain}, modelled sequence "
+        f"`{ap3b_pep_seq}`, carrying the DYQRL YxxPhi motif) - a different species and a "
+        f"different cargo from {AP3_PDB.upper()}, so it tests whether the site found there "
+        f"is structure-specific. {len(ap3b_contacts)} rat mu3A residues lie within "
+        f"{CONTACT_CUTOFF_A} A of the peptide. Rat and human mu3A are "
+        f"{ratm1_to_hum[0]:.1f}% identical and rat mu3A and human mu3B are "
+        f"{ratm1_to_m2[0]:.1f}% identical.\n"
+    )
+    out.append("| AP3M1_RAT pos | rat mu3A | human AP3M1 pos | mu3A | human AP3M2 pos | mu3B |")
+    out.append("|---|---|---|---|---|---|")
+    agree = 0
+    for pos, aa in ap3b_contacts:
+        h1 = ratm1_to_hum[1].get(pos)
+        h2 = ratm1_to_m2[1].get(pos)
+        h1c = entries["AP3M1"].sequence[h1 - 1] if h1 else "-"
+        h2c = entries["AP3M2"].sequence[h2 - 1] if h2 else "-"
+        if h2c == aa:
+            agree += 1
+        out.append(
+            f"| {pos} | {aa} | {h1 or '-'} | {h1c} | {h2 or '-'} | {h2c} |"
+        )
+    out.append("")
+    shared = sorted(projected & observed)
+    out.append(
+        f"Projected onto human AP3M1, the {len(ap3b_contacts)} contacts of "
+        f"{AP3_PDB2.upper()} land on {len(projected)} positions, of which {len(shared)} "
+        f"are among the {len(observed)} that {AP3_PDB.upper()} shows contacting LAMP1 "
+        f"(shared: {', '.join(str(p) for p in shared) if shared else 'none'}). "
+        f"Human AP3M2 carries the same residue as rat mu3A at {agree} of the "
+        f"{len(ap3b_contacts)} positions. Two AP-3 structures, two different YxxPhi "
+        "cargoes and two species therefore pick out the same site, and mu3B matches mu3A "
+        "across it.\n"
+    )
+
     # ------------------------------- outgroup: the classical AP-2 YxxPhi pocket
     contacts, pep_chain, pep_seq = peptide_contacts(AP2_PDB, AP2_MU_ACC, None)
-    out.append(f"### 2b. Outgroup: the classical mu2 YxxPhi pocket (PDB {AP2_PDB.upper()})\n")
+    out.append(f"### 2c. Outgroup: the classical mu2 YxxPhi pocket (PDB {AP2_PDB.upper()})\n")
     out.append(
         f"{AP2_PDB.upper()} is the mu2 (AP50) C-terminal domain of {anchor.organism} "
         f"bound to the {AP2_CARGO_NAME} (chain {pep_chain}, modelled sequence "
@@ -421,14 +476,14 @@ def main() -> int:
         "cargo through the structurally equivalent region.\n"
     )
     out.append(
-        "### 2c. Do the two routes agree?\n\n"
+        "### 2d. Do the alignment and structure routes agree?\n\n"
         f"Projecting the {len(contacts)} mu2 pocket positions onto AP3M1 by alignment "
         f"lands on {len(ap3m1_mapped)} AP3M1 positions, of which {len(overlap)} are "
         f"among the {len(observed)} positions the {AP3_PDB.upper()} structure actually "
         f"shows contacting LAMP1 cargo (overlap: "
         f"{', '.join(str(p) for p in overlap) if overlap else 'none'}). The "
         "alignment-only route and the structure-observed route therefore identify the "
-        "same site, which is the check that the cross-family alignment in 2b is not "
+        "same site, which is the check that the cross-family alignment in 2c is not "
         "drifting.\n"
     )
 

@@ -49,7 +49,26 @@ AP3M2's closest human paralogue is **AP3M1** (84.2% identity). Identity to the A
 
 **AP3M2 is identical to AP3M1 at 8 of the 9 cargo-contacting positions**, with no deletions. The tyrosine-cargo site that the AP-3 cryo-EM structure resolves is therefore intact in the neuronal mu3B paralogue; there is no residue-level evidence that AP3M2 has lost cargo recognition.
 
-### 2b. Outgroup: the classical mu2 YxxPhi pocket (PDB 1BXX)
+### 2b. An independent AP-3 cargo complex: PDB 4IKN
+
+4IKN is the Rattus norvegicus (Rat) mu3A C-terminal domain bound to the TGN38 cytoplasmic tail (chain B, modelled sequence `DYQRL`, carrying the DYQRL YxxPhi motif) - a different species and a different cargo from 9C5B, so it tests whether the site found there is structure-specific. 10 rat mu3A residues lie within 4.0 A of the peptide. Rat and human mu3A are 98.8% identical and rat mu3A and human mu3B are 84.2% identical.
+
+| AP3M1_RAT pos | rat mu3A | human AP3M1 pos | mu3A | human AP3M2 pos | mu3B |
+|---|---|---|---|---|---|
+| 180 | Y | 180 | Y | 180 | Y |
+| 181 | F | 181 | F | 181 | F |
+| 182 | D | 182 | D | 182 | D |
+| 389 | V | 389 | V | 389 | V |
+| 392 | L | 392 | L | 392 | L |
+| 402 | F | 402 | F | 402 | F |
+| 403 | K | 403 | K | 403 | K |
+| 404 | G | 404 | G | 404 | G |
+| 405 | V | 405 | V | 405 | I |
+| 406 | K | 406 | K | 406 | K |
+
+Projected onto human AP3M1, the 10 contacts of 4IKN land on 10 positions, of which 9 are among the 9 that 9C5B shows contacting LAMP1 (shared: 180, 181, 389, 392, 402, 403, 404, 405, 406). Human AP3M2 carries the same residue as rat mu3A at 9 of the 10 positions. Two AP-3 structures, two different YxxPhi cargoes and two species therefore pick out the same site, and mu3B matches mu3A across it.
+
+### 2c. Outgroup: the classical mu2 YxxPhi pocket (PDB 1BXX)
 
 1BXX is the mu2 (AP50) C-terminal domain of Rattus norvegicus (Rat) bound to the TGN38 internalisation peptide (chain P, modelled sequence `DYQRLN`). 13 mu2 residues lie within 4.0 A of the peptide. Positions are in P84092 (AP2M1_RAT) numbering and are carried onto each human paralogue by pairwise alignment.
 
@@ -80,9 +99,9 @@ AP3M2's closest human paralogue is **AP3M1** (84.2% identity). Identity to the A
 
 AP3M2 aligns to 13/13 of the mu2 pocket positions, with no deletions, but matches mu2's residue at only 4 of them - fewer than AP1M1 (10), AP1M2 (9) or AP4M1 (11). The AP-3 medium subunits have diverged substantially from the AP-2 signal pocket even though, per section 2a, they bind tyrosine cargo through the structurally equivalent region.
 
-### 2c. Do the two routes agree?
+### 2d. Do the alignment and structure routes agree?
 
-Projecting the 13 mu2 pocket positions onto AP3M1 by alignment lands on 13 AP3M1 positions, of which 9 are among the 9 positions the 9C5B structure actually shows contacting LAMP1 cargo (overlap: 180, 181, 389, 392, 402, 403, 404, 405, 406). The alignment-only route and the structure-observed route therefore identify the same site, which is the check that the cross-family alignment in 2b is not drifting.
+Projecting the 13 mu2 pocket positions onto AP3M1 by alignment lands on 13 AP3M1 positions, of which 9 are among the 9 positions the 9C5B structure actually shows contacting LAMP1 cargo (overlap: 180, 181, 389, 392, 402, 403, 404, 405, 406). The alignment-only route and the structure-observed route therefore identify the same site, which is the check that the cross-family alignment in 2c is not drifting.
 
 ## 3. The mu-linker amphipathic helix
 

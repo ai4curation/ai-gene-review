@@ -208,6 +208,16 @@ within 4.0 A of the cargo: Y180, F181, V389, L392, F402, K403, G404, V405, K406.
 deletions. There is therefore no residue-level evidence that the neuronal paralogue has
 lost cargo recognition — encoded as `residue_claims` on the molecular-function row.
 
+**A second, independent AP-3 cargo complex.** The PANTHER family metadata names
+**PDB 4IKN** as PTHR10529's representative structure: the *rat* mu3A C-terminal domain
+bound to the TGN38 tail (`DYQRL`) — a different species and a different cargo from 9C5B.
+Ten rat mu3A residues contact the peptide, and projected onto human AP3M1 **nine of them
+are exactly the 9C5B set**; the tenth is D182, which falls just outside the 4.0 Å cutoff
+in 9C5B. Human AP3M2 carries the same residue as rat mu3A at 9 of the 10. So the site is
+not an artefact of one structure, one cargo or one species, and mu3B matches mu3A across
+it. (D182 is also the single position at which every human mu paralogue agrees with mu2
+in the outgroup comparison below — the conserved aspartate of the tyrosine pocket.)
+
 **Outgroup and alignment check.** The classical AP-2 pocket from **PDB 1BXX** (rat mu2 +
 TGN38 `DYQRLN`) gives 13 contact residues. Both AP-3 mu subunits have diverged sharply
 from it — AP3M2 matches mu2 at 4/13 and AP3M1 at 5/13, versus AP1M1 10/13, AP1M2 9/13
@@ -530,7 +540,7 @@ OK: GOA and review reconcile exactly
   model review, `genes/human/AGT`, carries the identical warning with `status: COMPLETE`.
 - `checkquotes.py` → `checked 80 quotes: 0 failures, 0 skipped`.
 - `uv run python -m ai_gene_review.validation.gene_residue_claims` →
-  `91 pass, 0 fail, 0 unresolved` over 14 gene reviews, AP3M2's four claims among them.
+  `91 pass, 0 fail, 0 unresolved` over 14 gene reviews, AP3M2's five claims among them.
 - Duplicate-key scan of the YAML → none. `cache/go/terms.csv` → no deletions relative to
   the merge base, no duplicate ids.
 
