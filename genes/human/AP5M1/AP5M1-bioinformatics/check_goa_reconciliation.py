@@ -158,8 +158,16 @@ def main() -> int:
     for cf in review.get("core_functions") or []:
         for s in cf.get("supported_by") or []:
             used.add(s["reference_id"])
+    for gap in review.get("knowledge_gaps") or []:
+        for s in gap.get("provenance") or []:
+            used.add(s["reference_id"])
+    for nt in review.get("proposed_new_terms") or []:
+        for s in nt.get("supported_by") or []:
+            used.add(s["reference_id"])
     undeclared = sorted(used - declared)
+    unused = sorted(declared - used)
     print(f"reference ids used: {len(used)}; undeclared: {undeclared}")
+    print(f"declared but never cited: {unused}")
     if undeclared:
         ok = False
 
