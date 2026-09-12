@@ -69,13 +69,29 @@ DupKeyLoader.add_constructor(
 # Phrasings that were asserted and then retracted. If any reappears outside a
 # sentence that explicitly marks it as retracted, that is a regression.
 RETRACTED = [
+    # The IntAct decomposition error (round 2).
     "same single yeast two-hybrid experiment logged twelve times",
     "all twelve IntAct records for the AHDC1-HTT pair carry the same IntAct",
     "this is one screen",
     "NbExp=12 overstates replication twelvefold",
+    # The hexanediol condensate-control reading (asserted passes 6-8, withdrawn
+    # pass 8). Listed because it is likelier to come back than the IntAct ones:
+    # the GO:0003682 row still states the intent immediately before withdrawing it,
+    # so an editor trimming that paragraph could easily leave the claim standing.
+    "this strengthens the binding call",
+    "It strengthens the `GO:0003682` call",
+    "survived a condensate-disrupting pre-treatment would",
 ]
 # A retraction context makes a retracted phrasing legitimate to quote.
-RETRACTION_MARKERS = ("earlier draft", "retracted", "got it wrong", "was WRONG", "refuted")
+RETRACTION_MARKERS = (
+    "earlier draft",
+    "retracted",
+    "got it wrong",
+    "was WRONG",
+    "refuted",
+    "withdrawn",
+    "superseded",
+)
 # Characters either side of a match that count as "the same context". Bounded on
 # purpose -- see the comment in check_retracted.
 RETRACTION_WINDOW = 400

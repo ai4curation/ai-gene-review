@@ -484,16 +484,20 @@ CTCF ChIPs in the same paper. 1,6-hexanediol disrupts the weak multivalent inter
 that hold biomolecular condensates together, so what was crosslinked and sequenced is the
 **hexanediol-resistant fraction** of AHDC1 on chromatin.
 
-For this protein specifically that matters, and it cuts both ways:
+For this protein specifically that matters, and my first reading was that it cuts both ways:
 
-- **It strengthens the `GO:0003682` call.** A heavily disordered protein (ten MobiDB-lite
+- ~~**It strengthens the `GO:0003682` call.** A heavily disordered protein (ten MobiDB-lite
   disordered regions) appearing in a ChIP is exactly the case where condensate
   co-precipitation is a live alternative explanation for apparent chromatin binding. The
-  occupancy reported survived a condensate-disrupting pre-treatment.
+  occupancy reported survived a condensate-disrupting pre-treatment.~~
+  **WITHDRAWN — superseded by §15 below.** The 5% used here is *below* the dissolution
+  threshold the citing reference reports, so the pre-treatment cannot be assumed to have
+  disrupted anything. Struck rather than deleted, so the journal records what was thought
+  and why it changed; the claim-audit lint now treats this phrasing as retracted.
 - **It also filters the map**, since any condensate-dependent occupancy was removed before
-  crosslinking. That is a **third independent** reason not to read site specificity off
+  crosslinking. That is a **further independent** reason not to read site specificity off
   these peaks, alongside the ectopic promoter and the authors' own statement that occupancy
-  is unrestricted.
+  is unrestricted. This half survives §15 untouched.
 
 The word "hexanediol" appeared **zero** times in the review, the notes and RESULTS.md
 before this round. It is a methods-section detail that changes how the primary evidence
@@ -552,11 +556,37 @@ occupancy did depend on the interactions the reagent disrupts was removed before
 crosslinking, and a pre-treatment that inactivates kinases and phosphatases at this
 concentration is not inert either way.
 
+Two further details from the same Discussion, added in the next round, point the same way
+rather than rescuing the control:
+
+- the 7.5% figure is specific to **one construct in a cell-free system**, and the paper
+  itself says *"the concentration required to dissolve LLPS probably varies with respect to
+  protein and experimental condition"* — so it is a floor established in vitro, not a value
+  that transfers;
+- **duration** is an independent problem. The Gibbin pre-treatment ran for **60 seconds**,
+  while the cellular studies that paper cites used *"1.5% 1,6-hexanediol for 30 min"* and 1%
+  for 2 h. Even at a sufficient concentration, a 60-second exposure is two to three orders
+  of magnitude shorter than the cellular protocols.
+
 Worth naming the shape of this, because it is the second time on this gene: **I brought in
-a citation to qualify a claim and did not read past the abstract-level fact I wanted from
-it.** The same paper's Discussion contained the concentration threshold that overturns the
-claim outright. This is the ACRBP lesson — *if you cite a PMID more than once, read its
-full text* — arriving one round late.
+a citation to qualify a claim and did not read past the fact I wanted from it.** The same
+paper's Discussion contained the concentration threshold that overturns the claim outright,
+*and* the two qualifiers above, and all of it came out one reviewer pass at a time. This is
+the ACRBP lesson — *if you cite a PMID more than once, read its full text* — arriving late,
+twice.
+
+**The withdrawn claim is now linted, and adding the lint exposed a live inconsistency.**
+`RETRACTED` originally held only the four IntAct phrasings. The condensate-control reading
+is likelier to come back than those, because the `GO:0003682` row still states the *intent*
+of the pre-treatment immediately before withdrawing it — an editor trimming that paragraph
+could easily leave the claim standing. Adding it caught something real straight away: §14
+above still carried *"It strengthens the `GO:0003682` call"* unqualified, roughly 1,700
+characters from the withdrawal and so far outside the ±400 `RETRACTION_WINDOW`. The journal
+structure of these notes makes that defensible, but it is exactly the reading the guard
+exists to prevent. Resolved by striking the bullet in place with an explicit
+*superseded by §15* pointer, rather than by deleting it — the journal should record what
+was thought and why it changed — and `withdrawn`/`superseded` were added to
+`RETRACTION_MARKERS` so an in-place strike is a recognised context.
 
 *And a "reports but does not gate" bug in my own script.* `fetch_encode_ahdc1.py` printed
 its warnings and still returned `0`, so a future run in which the ENCODE tag turned out to

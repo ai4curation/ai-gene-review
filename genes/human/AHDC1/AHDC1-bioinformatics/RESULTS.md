@@ -29,7 +29,7 @@ number or a phrasing asserted in prose and never re-derived from the data it des
 |---|---|
 | coverage | every data row of `AHDC1-goa.tsv` is matched by a non-`NEW` `existing_annotation` on (GO id, evidence code, reference, WITH/FROM) — asserted by **presence**, so a deleted entry fails rather than being skipped |
 | arithmetic | `entries == GOA rows + NEW rows`, the action tally sums to the entry count, and no `PENDING` survives |
-| retraction | four retracted phrasings must not reappear in the review, the notes or the history record **outside an explicit retraction context** |
+| retraction | **seven** retracted phrasings must not reappear in the review, the notes or the history record **outside an explicit retraction context** — four from the IntAct decomposition error, three from the hexanediol condensate-control reading |
 | required claims | five load-bearing claims must appear in the number of files they should |
 | paired claims | **two** claims must each be present in **each** of two named rows' `review.reason`, resolved through the parsed YAML — the tagged-transgene weighting justification, and the hexanediol filtering argument, each on both `GO:0003700` and `GO:0003682`. A missing row is an **error**, not a skip, so deleting the row cannot satisfy the check |
 | duplicate keys | the review is loaded with a `SafeLoader` subclass that **raises** on a duplicated mapping key, which PyYAML otherwise resolves silently by keeping the last one |
