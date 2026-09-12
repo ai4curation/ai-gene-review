@@ -293,7 +293,19 @@ clathrin-associated` and Peden showed its budding profiles arise from endosomes,
 the plasma membrane. (AP-3 does contact clathrin — [PMID:9545220 "In vitro binding assays showed that mammalian AP-3 did associate with clathrin by interaction of the appendage domain of its beta3 subunit with the amino-terminal domain of the clathrin heavy chain."] — but that is the beta3 subunit and it does not make AP-3 an endocytic coat.)
 → MODIFY to **GO:0140312 cargo adaptor activity**, the immediate parent (QuickGO
 ancestors of GO:0035615 include GO:0140312, GO:0030674, GO:0060090), which keeps the
-adaptor claim and drops the clathrin/endocytosis commitments. The residue analysis in
+adaptor claim and drops the clathrin/endocytosis commitments.
+
+This is not an AP3M2 quirk. Querying QuickGO for the same term on the other two human
+non-clathrin medium subunits returns the identical row on both:
+
+```
+AP3M1  GO:0035615  IBA  GO_REF:0000033  FB:FBgn0024833|FB:FBgn0263351|PANTHER:PTN000055849|dictyBase:DDB_G0289247
+AP4M1  GO:0035615  IBA  GO_REF:0000033  FB:FBgn0024833|FB:FBgn0263351|PANTHER:PTN000055849|dictyBase:DDB_G0289247
+```
+
+Same node, same four AP-1/AP-2 donors, same clathrin-committed molecular function on
+three human genes whose complexes are not clathrin coats. Fixing it at the node would fix
+all three. The residue analysis in
 §3 is attached here so it is clear the modification is a scoping fix and *not* a
 loss-of-function argument.
 
