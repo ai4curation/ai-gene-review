@@ -468,6 +468,28 @@ def main() -> None:
         seq_rows[label] = row
     results["sigma5_vs_human_sigma_paralogs"] = seq_rows
 
+    # --- does the anchor's numbering transfer to the human protein? ----------
+    # The dileucine site is defined on the sigma2 chain of 2JKR, which is the MOUSE
+    # orthologue, while the functional weight of position 15 comes from human genetics.
+    # Rather than assume the two are interchangeable, compare them.
+    human_sigma2 = fetch_uniprot_sequence("P53680")
+    mouse_sigma2 = sequences["P62743"]
+    anchor_positions = sorted(
+        int(t[1:]) for t in results["dileucine_site"]["sigma2_contact_residues"]
+    )
+    results["anchor_species_check"] = {
+        "anchor_used_in_structure": "P62743 (mouse Ap2s1, the sigma2 chain of 2JKR)",
+        "human_orthologue": "P53680 (AP2S1)",
+        "same_length": len(human_sigma2) == len(mouse_sigma2),
+        "identical_over_full_chain": human_sigma2 == mouse_sigma2,
+        "differing_positions": [
+            i + 1 for i, (a, b) in enumerate(zip(human_sigma2, mouse_sigma2)) if a != b
+        ],
+        "peptide_contact_positions_identical": all(
+            human_sigma2[p - 1] == mouse_sigma2[p - 1] for p in anchor_positions
+        ),
+    }
+
     (HERE / "results.json").write_text(json.dumps(results, indent=2) + "\n")
     write_report(results)
     print(json.dumps(results["dileucine_site_summary"], indent=2))
@@ -557,6 +579,17 @@ def write_report(r: dict) -> None:
         f"(CA within 4 A after superposition), {summ['identical_residue_in_sigma5']} of those carry the "
         f"identical residue, and {summ['equivalent_positions_occluded_by_zeta_nterminus']} of them are in "
         "contact with the zeta N-terminus in the assembled AP-5 core.")
+    add("")
+    ac = r["anchor_species_check"]
+    add("## Does the mouse anchor's numbering transfer to the human protein?")
+    add("")
+    add(f"The dileucine site is defined on {ac['anchor_used_in_structure']}, while the functional")
+    add(f"weight of these positions comes from work on the human protein, {ac['human_orthologue']}.")
+    add(f"Same length: {ac['same_length']}. Identical over the full chain: "
+        f"{ac['identical_over_full_chain']}"
+        + (f" (differing positions: {ac['differing_positions']})" if ac["differing_positions"] else "")
+        + f". All peptide-contacting positions identical between the two: "
+        f"{ac['peptide_contact_positions_identical']}.")
     add("")
     add("## Sequence control -- can this comparison be made from sequence alone?")
     add("")

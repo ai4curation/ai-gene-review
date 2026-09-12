@@ -79,6 +79,12 @@ control and the unrelated fold, which is what a divergent homologue should do.
 
 Summary: of 19 sigma2 residues that contact the dileucine peptide, 18 have a structurally equivalent position in sigma-5 (CA within 4 A after superposition), 3 of those carry the identical residue, and 3 of them are in contact with the zeta N-terminus in the assembled AP-5 core.
 
+## Does the mouse anchor's numbering transfer to the human protein?
+
+The dileucine site is defined on P62743 (mouse Ap2s1, the sigma2 chain of 2JKR), while the functional
+weight of these positions comes from work on the human protein, P53680 (AP2S1).
+Same length: True. Identical over the full chain: True. All peptide-contacting positions identical between the two: True.
+
 ## Sequence control -- can this comparison be made from sequence alone?
 
 | paralog | length | % identity over aligned columns | alignment score | shuffled mean +- sd | z |
