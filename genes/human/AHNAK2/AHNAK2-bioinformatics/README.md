@@ -10,11 +10,14 @@ uv run python subcell_provenance.py      # what evidence backs each SUBCELLULAR 
 uv run python paralogue_architecture.py  # is the AHNAK2/AHNAK paralogy functionally informative?
 uv run python gap_homodimer.py           # did PDB 4CN0 produce any GO annotation anywhere?
 uv run python gap_by_reference.py        # per-paper GO coverage for AHNAK2
+uv run python node_reach.py              # which node's reach is exactly my gene set?
 uv run python arba_rules.py              # which ARBA condition set fires on AHNAK2?
 uv run python intact_partners.py         # is AHNAK2's interactome one screen or many?
 uv run python retraction_check.py        # retraction/erratum/correction on every cited PMID
 uv run python check_terms.py             # definitions + ancestry of every term argued about
+uv run python reconcile_goa.py           # gate: every GOA row reviewed exactly once
 uv run python audit_claims.py            # gate: the review's claims still match the data
+uv run python audit_claims.py --self-test  # prove the guards fire
 ```
 
 `paralogue_architecture.md` is written by `paralogue_architecture.py`. Do not

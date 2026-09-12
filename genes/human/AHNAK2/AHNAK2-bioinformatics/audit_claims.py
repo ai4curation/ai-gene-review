@@ -50,7 +50,7 @@ REQUIRED = {
         ("PDB 4CN0", 2, None),   # the GO:0042803 NEW row + the reference finding
     ],
     RESULTS: [
-        ("28.4%", 1, None),      # AHNAK2-vs-AHNAK PDZ identity
+        ("28.4%", 2, None),      # AHNAK2-vs-AHNAK PDZ identity: table + node section
         ("56.8%", 1, None),      # AHNAK2-vs-PRX PDZ identity
         ("71.9%", 1, None),      # fraction of the AHNAK alignment inside the repeat
     ],
@@ -159,11 +159,18 @@ def check_source_entities(doc: dict, problems: list[str]) -> None:
                 f"    missing from review: {sorted(want - seen[key])}\n"
                 f"    not in GOA:          {sorted(seen[key] - want)}"
             )
-        if supporting.get(key) and supporting[key] != want:
+        # Assert presence, not "compare only if present". The earlier version of
+        # this guard tested `if supporting.get(key) and ...`, which is exactly the
+        # "defeatable by deleting the thing it guards" failure: dropping the whole
+        # supporting_entities list made the check pass silently. It did - a
+        # GO:0005886 IEA row lost its ARBA token in a file rewrite and only a
+        # separate row-by-row reconciliation found it.
+        got = supporting.get(key, set())
+        if got != want:
             problems.append(
                 f"supporting_entities for {key} differ from GOA WITH/FROM:\n"
-                f"    missing from review: {sorted(want - supporting[key])}\n"
-                f"    not in GOA:          {sorted(supporting[key] - want)}"
+                f"    missing from review: {sorted(want - got)}\n"
+                f"    not in GOA:          {sorted(got - want)}"
             )
 
 

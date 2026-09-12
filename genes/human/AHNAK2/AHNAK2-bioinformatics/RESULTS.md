@@ -135,7 +135,51 @@ AHNAK2 — yet AHNAK2 carries `GO:0043484` by IBA sourced from exactly those
 annotations. The curator who read the paper did not annotate AHNAK2; the
 phylogenetic pipeline did.
 
-## 6. The two ARBA rows cannot be reproduced from the published rules
+## 6. One PAINT node treats AHNAK2, AHNAK and periaxin as interchangeable
+
+`node_reach.py`. The reciprocal question - *which node's reach is exactly my
+gene set, and what did it give them?* - is what finds placement problems.
+
+All three human PTHR23348 members hold **the same three IBA terms from
+byte-identical WITH/FROM sets**:
+
+| term | AHNAK2 | AHNAK | PRX | WITH/FROM identical? |
+|---|---|---|---|---|
+| `GO:0005634` nucleus | yes | yes | yes | **IDENTICAL** |
+| `GO:0005737` cytoplasm | yes | yes | yes | **IDENTICAL** |
+| `GO:0043484` regulation of RNA splicing | yes | yes | yes | **IDENTICAL** |
+| `GO:0032287` PNS myelin maintenance | - | - | yes | (PRX-only node `PTN002763386`) |
+
+So node `PTN001156025` treats three different PANTHER subfamilies - whose only
+shared domain is 28.4% identical between the two AHNAKs - as one unit. A
+subfamily-specific node already exists for periaxin's myelin term, so the
+machinery for finer placement is there and was used once.
+
+What each of the three holds by its **own** experimental evidence for those
+terms:
+
+| term | AHNAK2 | AHNAK | PRX |
+|---|---|---|---|
+| `GO:0005634` nucleus | none | none | IDA, PMID:24633211 |
+| `GO:0005737` cytoplasm | IDA at `GO:0005829` (HPA) | IDA PMID:22057634 | IDA PMID:24633211 |
+| `GO:0043484` reg. of RNA splicing | **none** | **none** | **none** |
+
+`GO:0043484` is held by **no human member of the family on its own evidence**.
+The entire human holding rests on one mouse Ahnak IDA — and querying that
+paper by reference shows what the curator who read it actually did:
+
+```
+PMID:21940993 -> 17 annotations over exactly 2 entities
+  mouse Ahnak (E9Q616): GO:0043484 IDA, GO:0005634 IDA, GO:0005829 IDA, + 5 ISS
+  human AHNAK (Q09666): GO:0043484 ISS, GO:0043034 ISS, + 7 more
+```
+
+The curator made **one species step within one gene** — mouse Ahnak IDA to human
+AHNAK ISS — and stopped. PAINT carried the same term to AHNAK2 and to PRX, which
+the curator did not. The same paper is where human AHNAK acquired `GO:0043034`
+costamere by ISS, a term human AHNAK2 still lacks.
+
+## 7. The two ARBA rows cannot be reproduced from the published rules
 
 `arba_rules.py`
 
@@ -150,7 +194,7 @@ conditions, so the zero is a result rather than a broken matcher. Either the
 REST view of these rules is incomplete, or the annotations were applied from a
 rule version whose conditions have since changed. Reported, not guessed at.
 
-## 7. IntAct has 164 records over 118 partners; GOA imported none of them
+## 8. IntAct has 164 records over 118 partners; GOA imported none of them
 
 `intact_partners.py`
 

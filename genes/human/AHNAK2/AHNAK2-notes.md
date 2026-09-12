@@ -139,6 +139,43 @@ does not exist, so this is a named deciding experiment, not a refutation.
 Same logic applies to the nucleus rows, and it explains why they are stranded on
 the full-length chain with no isoform qualifier.
 
+## Step 3b — the reciprocal node question, which sharpened the splicing verdict
+
+`node_reach.py`. The brief's second half of the PAINT question — *which node's
+reach is exactly my gene set, and what did it give them?* — turned out to be the
+one worth asking.
+
+All three human PTHR23348 members (AHNAK2, AHNAK, PRX) hold the **same three IBA
+terms from byte-identical WITH/FROM sets**, from node `PTN001156025`. PRX has
+one extra, `GO:0032287` PNS myelin maintenance, from a **periaxin-specific**
+node `PTN002763386`. So the machinery for subfamily-level placement exists and
+was used once; everything else is assigned as if AHNAK2, AHNAK and periaxin were
+one thing, when their only shared domain is 28.4–58% identical and they sit in
+three different subfamilies.
+
+And **none of the three holds `GO:0043484` by its own experimental evidence.**
+Only PRX holds `GO:0005634` by its own IDA. So the family-wide holding of the
+splicing term rests on a single mouse Ahnak IDA.
+
+Reading that paper's full annotation set by reference is what closed it:
+
+```
+PMID:21940993 -> 17 annotations over exactly 2 entities
+  mouse Ahnak (E9Q616): GO:0043484 IDA, GO:0005634 IDA, GO:0005829 IDA, + 5 ISS
+  human AHNAK (Q09666): GO:0043484 ISS, GO:0043034 ISS, + 7 more
+```
+
+The curator made exactly **one species step within one gene** — mouse Ahnak IDA
+to human AHNAK ISS — and did not extend it to AHNAK2 or to PRX. PAINT did. That
+is a cleaner statement of the defect than "one donor with evidence", and it is
+a *contrast between two curation decisions on the same paper* rather than my
+opinion about transferability.
+
+Bonus from the same query: human AHNAK acquired `GO:0043034 costamere` by ISS
+from this paper. Human AHNAK2 has no costamere annotation at all, which is
+exactly the coverage gap the NEW row proposes to fill — and AHNAK2 was one of
+the two subjects of the costamere paper.
+
 ## Step 4 — where does the nucleus annotation come from at all?
 
 `subcell_provenance.py`:
@@ -198,6 +235,16 @@ Two corrections came out of checking rather than concluding:
 A 2022 review states the discrepancy directly [PMID:35158796 "However, in
 contrast, a separate study of skeletal muscle showed no colocalisation of AHNAK
 or AHNAK2 with dihydropyridine receptors [14]."].
+
+**Neighbouring-sentence check on the quote I truncated.** The Komuro sentence I
+quote ends mid-period in the abstract; the continuation is *"...but other
+studies indicate that the association of AHNAKs with calcium channel proteins is
+more widespread."* It does not disconfirm the hedge I am relying on — if
+anything it widens it away from a cardiomyocyte-specific T-tubule claim. Running
+the check and reporting the result, since a verbatim quote can be true and
+selectively bounded and no validator can see that. The abstract's closing line is
+also a nice arc: in 2004 the PDZ domain was *"predicted"*; by 2014 it had been
+crystallised at 1.75 Å.
 
 So: cardiac-vs-skeletal, pan-antibody-vs-specific-antibody, and the GOA row
 cites neither of those papers. `MARK_AS_OVER_ANNOTATED`, not `REMOVE`. Recording
@@ -326,6 +373,24 @@ Publisher Correction. **10 PMIDs checked, 0 flagged** — the 8 papers cited in
 the review plus the two donor-evidence papers (PMID:24633211, PMID:10671475).
 The cancer-biology papers in the affinage record support no annotation here, so
 their status is not load-bearing.
+
+## A defect my own rewrite introduced, found mechanically
+
+`reconcile_goa.py` keys every GOA row on `(GO id, evidence, reference,
+WITH/FROM)` and demands a 1:1 match with the review. It reported one mismatch:
+the `GO:0005886 / IEA / GO_REF:0000117` row had **lost its
+`ARBA:ARBA00027801` supporting entity** when I rewrote the YAML. Reading the
+file did not catch it; the row-by-row key comparison did on the first run.
+
+Worse, `audit_claims.py` had the bug the campaign brief names explicitly — *a
+guard defeatable by deleting the thing it guards*. Its check read
+`if supporting.get(key) and supporting[key] != want`, so an **empty** list
+skipped the comparison and passed. Deleting the whole field was invisible to the
+check written to protect it. Now fixed to assert presence
+(`got = supporting.get(key, set())`), and both scripts are committed so the
+invariant is enforced rather than remembered.
+
+13 GOA rows + 4 NEW = 17 entries, reconciling exactly.
 
 ## Divergences the AHNAK reviewer should see
 
