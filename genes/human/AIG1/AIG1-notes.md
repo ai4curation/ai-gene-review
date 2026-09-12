@@ -348,6 +348,71 @@ Run because ACRV1/ACRBP established them; reported whether or not they fired.
 | LCA / heterogeneous-donor caveat | **Does not apply.** Two donors, both characterised in the same paper, both holding the same specific term. No heterogeneous clade is forcing a broad term. |
 | catalytic residues present in the FT table | **Present.** `SITE 43` and `SITE 134`, both `ECO:0000269|PubMed:27018888`, both with `MUTAGEN` entries showing loss of activity. The pseudoenzyme defect is absent. |
 
+## Review round 2 — what the reviewer changed, and the one I was about to get wrong
+
+The PR approved with no blocking items and six suggestions. Four were acted on, two
+declined with reasons. The instructive one is #3.
+
+**#3, conceded, and it reversed my draft position.** The reviewer asked whether
+`GO:1901800 positive regulation of proteasomal protein catabolic process` belongs
+alongside `GO:0031398`. I had drafted a decline on the grounds that the paper's
+proteasome statement is hedged — *"likely regulated through a ubiquitin-proteasome
+mechanism"* — before reading the experiments that sentence summarises. They are properly
+controlled:
+
+- a **cycloheximide chase** measuring turnover rate, not steady-state level
+  [PMID:40303337 "In fact, a cycloheximide (CHX) chase assay conducted in HL-1
+  cardiomyocytes revealed that AIG1 silencing significantly decelerated p53 protein
+  degradation"]; and
+- a **three-inhibitor discrimination** with a negative arm [PMID:40303337 "Our results
+  showed that protein level of p53 was reduced in response to AIG1 overexpression, an
+  effect reversed by MG132 treatment but unaffected by 3-MA or Baf A1 under DOX stress"].
+
+MG132 reverses, 3-MA and bafilomycin A1 do not. That is a route assignment, not an
+inference from the ubiquitination result, so the term is not redundant with `GO:0031398`:
+one covers the modification step, the other the catabolic outcome, and each was measured
+separately. Added as a third `NEW` row.
+
+The lesson is the campaign's own and I repeated it: **the hedge in an author's summary
+sentence is not a measure of the evidence underneath it.** I had read this paper
+thoroughly for the Pirh2 interaction and skimmed the degradation arm, which is exactly the
+ACRBP failure ("cited a paper four times without reading past the abstract") in a milder
+form. Declining on a quoted hedge would have looked well-sourced and been wrong.
+
+**#2, acted on.** Both `NEW` rows lacked `supporting_entities`. GO requires a With/From on
+a similarity code. Added `UniProtKB:Q9D8B1` (AIG1_MOUSE, reviewed) to all three, and
+upgraded `ISS` to **`ISO`**: the transfer is from the 1:1 orthologue, not from generic
+similarity — Q9D8B1 and Q9NVV5 sit in the same PANTHER subfamily and carry the same
+reviewed protein name. Also recorded the reviewer's point that on GO's conventions the
+primary annotation belongs on *mouse* Aig1 with IMP, with the human row as its orthology
+projection; neither exists in GOA, so the mouse row is the one a curator should make first.
+
+**#4 and #5, acted on together.** `core_functions[1]` gave the Pirh2 arm co-equal billing
+with the hydrolase activity on one murine paper plus a Y2H this review itself marks
+`UNVERIFIED`, while the review's own knowledge gap concedes the two functions may not be
+separable. The reviewer was right that this argues for secondary placement rather than for
+a split. Removed; the claim still lives in three `NEW` annotation rows with full evidence,
+and the knowledge gap now states explicitly *why* `core_functions` carries only the
+hydrolase. That also dissolves #5 (curation commentary in the description), which existed
+only inside the removed entry.
+
+**#6, acted on.** `PMID:21868574` carried the whole AIG1-versus-ADTRP divergence argument
+in two `reason` blocks and a `suggested_question` without appearing in `references`, so no
+reader could check it. Added with a finding and a `reference_review`, title copied from the
+cached frontmatter rather than written from memory.
+
+**#1, declined here and escalated.** The merged ADTRP review now asserts, on a
+byte-identical row, a verdict this PR disproves — and its `supported_by` quotes a
+node-to-term line that is stale against the repo's own PAINT slice. The reviewer agrees the
+scope boundary is debatable. It is a different gene, needing its own history record and its
+own validation run, so it belongs in a follow-up PR rather than being smuggled into this
+one. Already disclosed in `suggested_questions`; reported to the campaign coordinator.
+
+**Reviewer's own caveat, checked.** It could not run `just validate` (no `just`/`uv` in its
+sandbox) and relied on this PR's reported result. That result was re-derived after every
+edit in this round: `✓ Valid` with the one deliberately-unsatisfied warning, `checkquotes`
+57/57 with zero `file:` quotes, `cache_lint` exit 0, and `terms.csv` untouched.
+
 ## Isoform note, not actioned
 
 Isoforms 5 and 6 truncate at residue 134–138 (`VSP_060691` H134→L plus `VSP_060692`
