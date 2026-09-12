@@ -63,6 +63,12 @@ My re-test on the current UniProt sequences and current Pfam boundaries:
   `LLNLD`@631) and both sit in the long unstructured hinge — the position where the motif
   actually works. So
   [file:human/AP5B1/AP5B1-bioinformatics/RESULTS.md "AP5B1 has no clathrin box in an accessible linker"].
+  Caveat I would rather state than bury, since the same structural test decides the `WDW`
+  question below: residue 841 is **not** modelled in 8YAB chain B (span 7-631), so the
+  "buried in a folded domain" call rests on the Pfam assignment alone, and an unmodelled
+  region is often a flexible one. The conclusion does not depend on it — the AP1B1/AP2B1
+  boxes are not merely unstructured but sit in a linker three times longer, and AP-5's
+  clathrin independence is a biochemical result.
 - The trunk-to-appendage linker is 62 aa in AP5B1 against 187 in AP1B1 and 178 in AP2B1;
   [file:human/AP5B1/AP5B1-bioinformatics/RESULTS.md "AP5B1's is the shortest, and by a factor of ~3 against the two clathrin-dependent beta subunits."]
   This confirms the "no long hinge" claim quantitatively.
@@ -127,7 +133,15 @@ PMID:40175557, PMID:25365221, PMID:23825025) and **CPX-26503 "Spastizin-spatacsi
 and neither carries a GO cross-reference. That asymmetry is a genuine ontology gap, recorded
 as such in the review's `knowledge_gaps` and `proposed_new_terms`. It is also why the four
 SPG11 IPI rows and the one SPG15 IPI row cannot be replaced by the CC annotation that would
-actually capture them.
+actually capture them. Because `CPX-20045` is asserted as a machine-readable
+`skos:exactMatch` and was the only load-bearing identifier in the review with no other
+committed source, the fetch is now scripted and its output committed:
+`AP5B1-bioinformatics/complexportal_provenance.py`, `complexportal.json`,
+`complexportal-output.txt`. The script asserts CPX-20045 still contains Q2VPB7 and prints a
+retirement notice if a GO cross-reference ever appears, which is how a later curator learns
+the proposed term is no longer needed. (Incidental finding from the same fetch, not built on
+here: ComplexPortal also lists CPX-13475 "CDC123:AP5B1" and CPX-19795, both putting CDC123
+(O75794) with AP5B1. CDC123 appears in no AP-5 paper I read and in no GOA row for this gene.)
 
 **Assembly evidence specific to AP5B1** (i.e. not just "AP-5 does X"):
 

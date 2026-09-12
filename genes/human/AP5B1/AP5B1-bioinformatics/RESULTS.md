@@ -1,20 +1,27 @@
 # AP5B1 (beta-5 adaptin): does it carry the beta-adaptin clathrin-binding apparatus?
 
-Reproducible analysis for the AP5B1 gene review. Every number and every residue position
-below is emitted by `clathrin_box_scan.py`, which fetches at run time: sequences from
-UniProt, Pfam domain boundaries from InterPro, secondary-structure and REGION features from
-UniProt, and the modelled residue ranges of PDB 8YAB chain B from the PDBe polymer-coverage
-API. Nothing is hardcoded; expected sequence lengths are asserted so a changed accession
-fails loudly. Cross-check any figure in this document against `run-output.txt` or
-`results.json` — if it is not in one of those, it does not belong here.
+Reproducible analysis for the AP5B1 gene review. Two scripts:
+
+- `clathrin_box_scan.py` (§1-§4) fetches at run time: sequences from UniProt, Pfam domain
+  boundaries and names from InterPro, secondary-structure and REGION features from UniProt,
+  the SIFTS chain-to-accession map for PDB 8YAB, and that entry's modelled residue ranges
+  from the PDBe polymer-coverage API. Output: `run-output.txt`, `results.json`.
+- `complexportal_provenance.py` (§5) records which ComplexPortal complexes contain AP5B1 and
+  whether they carry GO cross-references. Output: `complexportal-output.txt`,
+  `complexportal.json`.
 
 ```
 cd genes/human/AP5B1/AP5B1-bioinformatics
 uv run python clathrin_box_scan.py --json results.json
+uv run python complexportal_provenance.py --json complexportal.json
 ```
 
-`run-output.txt` is the captured output of the run described here; `results.json` is the full
-machine-readable result set.
+Nothing is hardcoded. Expected sequence lengths are asserted, the PDB chain is asserted to be
+Q2VPB7 via SIFTS before any coverage is read from it, and CPX-20045 is asserted to still
+contain Q2VPB7 — so a silently changed record fails loudly rather than producing a plausible
+wrong number. Cross-check any figure in this document against the four output files; if it is
+not in one of them, it does not belong here, and the two paragraphs that are not from a run
+say so explicitly.
 
 ## Why this test
 
@@ -39,11 +46,18 @@ controls.
 Sequence lengths verified against UniProt at run time: AP5B1 878 aa, AP1B1 949 aa,
 AP2B1 937 aa, AP3B1 1094 aa, AP4B1 739 aa.
 
+The structure used below is identified by SIFTS rather than trusted by chain letter: the run
+asserts that 8YAB chain B maps to Q2VPB7 before reading any coverage from it, and prints the
+whole entry's composition, which is worth seeing — `A=Q3U829 (AP5Z1_MOUSE), B=Q2VPB7
+(AP5B1_HUMAN), C=Q9NUS5 (AP5S1_HUMAN), D=Q96JI7 (SPTCS_HUMAN), E=Q8BJ63 (AP5M1_MOUSE)`. The
+deposited complex is a human/mouse hybrid, which is the same cross-species reconstitution the
+IntAct `Xeno` flag records for the AP5B1-Ap5m1 interaction.
+
 ### 1. Clathrin box: present as a sequence match, absent as an accessible motif
 
 | Protein | L(phi)x(phi)[DE] matches | matches outside any Pfam domain | position |
 |---|---|---|---|
-| **AP5B1** | 1 (`LLRLE`@841) | **0** | inside PF21590 (AP5B1_C, 781-873) |
+| **AP5B1** | 1 (`LLRLE`@841) | **0** | inside PF21590 "AP5B1, C-terminal" (781-873) |
 | AP1B1 | 1 (`LLNLD`@632) | 1 | in the 534-720 hinge |
 | AP2B1 | 1 (`LLNLD`@631) | 1 | in the 534-711 hinge |
 | AP3B1 | 3 | 0 | all inside folded domains |
@@ -54,6 +68,14 @@ AP5B1 has exactly one. What distinguishes it from the AP-1/AP-2 case is position
 and AP2B1 boxes sit in the long unstructured hinge, where a linear motif can reach clathrin;
 the AP5B1 match sits inside the folded C-terminal Pfam domain. **The claim survives in the
 form that matters**: AP5B1 has no clathrin box in an accessible linker.
+
+**The structural test used in §3 cuts the other way here, and is reported rather than
+skipped.** Residue 841 is *not* modelled in 8YAB chain B, whose modelled span is 7-631, so
+the appendage was not resolved in that structure. Unmodelled often means flexible, which is
+the direction that would weaken "buried in a folded domain" — the "inside PF21590" call rests
+on the Pfam assignment alone. Two things keep the conclusion intact regardless: the AP1B1 and
+AP2B1 boxes are not merely unstructured but sit in a linker three times longer (§4), and the
+clathrin-independence of AP-5 is established biochemically, not by motif analysis.
 
 ### 2. `LLDLL` and `YQW`: absent, exactly as reported
 
@@ -116,6 +138,26 @@ itself, whereas PF01602 (Adaptin_N) is a pan-family model, so the boundary calls
 derived the same way in the test subject and the controls. The 62-vs-178/187 difference is
 large enough to survive that asymmetry, and the cryo-EM helix range corroborates the AP5B1
 boundary, but the numbers should be read as domain-model spans, not as measured disorder.
+
+### 5. ComplexPortal provenance for the ontology gap
+
+`complexportal_provenance.py` (output in `complexportal-output.txt`, full record in
+`complexportal.json`) exists so that the one load-bearing identifier in the review with no
+other committed source — `ComplexPortal:CPX-20045`, asserted as a `skos:exactMatch` in
+`proposed_new_terms` — has evidence behind it in the repository. From the run:
+
+- Four ComplexPortal complexes contain Q2VPB7: **CPX-5181** (AP-5 Adaptor complex),
+  **CPX-20045** (AP5-Spastizin-spatacsin complex), CPX-13475 (CDC123:AP5B1) and CPX-19795
+  (AP5Z1:CDC123:AP5B1:ZFYVE26:SPG11:AP5M1:AP5S1).
+- CPX-20045 is built from two sub-complexes, `CPX-5181` + `CPX-26503` (Spastizin-spatacsin
+  complex), each at 1:1, and cites PMID:40175557, PMID:25365221 and PMID:23825025.
+- **CPX-20045 carries no GO cross-reference.** Neither does CPX-5181, but CPX-5181 has a GO
+  counterpart anyway (`GO:0044599`); CPX-20045 has none, which is precisely the gap the
+  review records.
+
+The script asserts that CPX-20045 still lists Q2VPB7, and prints a retirement notice if a GO
+cross-reference ever appears — re-running it is how a future curator finds out that the
+proposed term is no longer needed.
 
 ## Conclusion
 

@@ -44,9 +44,12 @@ INTERPRO_MATCHES = (
     "https://www.ebi.ac.uk/interpro/api/entry/all/protein/uniprot/{acc}/?page_size=200"
 )
 PDBE_COVERAGE = "https://www.ebi.ac.uk/pdbe/api/pdb/entry/polymer_coverage/{pdb}"
+PDBE_SIFTS = "https://www.ebi.ac.uk/pdbe/api/mappings/uniprot/{pdb}"
 
 # Experimental structures whose modelled residue ranges are used to decide whether a motif
-# position is actually resolved. Keyed by the symbol under test.
+# position is actually resolved. Keyed by the symbol under test. The chain letter is checked
+# against the SIFTS UniProt mapping before use, so a re-lettered chain fails loudly instead
+# of silently handing this analysis another subunit's coverage.
 STRUCTURES: dict[str, tuple[str, str]] = {"AP5B1": ("8yab", "B")}
 
 # accession -> (gene symbol, expected length, role in this test)
@@ -73,7 +76,7 @@ class Protein:
     acc: str
     symbol: str
     seq: str
-    domains: list[tuple[str, str, int, int]] = field(default_factory=list)  # db, id, start, end
+    domains: list[tuple[str, str, int, int, str]] = field(default_factory=list)  # db, id, start, end, name
     features: list[tuple[str, int, int, str]] = field(default_factory=list)  # type, start, end, note
     observed: list[tuple[int, int]] = field(default_factory=list)  # modelled ranges in a PDB chain
     structure: str | None = None
@@ -92,15 +95,18 @@ def fetch_sequence(acc: str) -> str:
     return "".join(lines[1:])
 
 
-def fetch_domains(acc: str) -> list[tuple[str, str, int, int]]:
-    """Return (source_db, entry_accession, start, end) for every Pfam match."""
+def fetch_domains(acc: str) -> list[tuple[str, str, int, int, str]]:
+    """Return (source_db, entry_accession, start, end, name) for every Pfam match."""
     r = requests.get(INTERPRO_MATCHES.format(acc=acc), timeout=120)
     r.raise_for_status()
-    out: list[tuple[str, str, int, int]] = []
+    out: list[tuple[str, str, int, int, str]] = []
     for res in r.json().get("results", []):
         meta = res["metadata"]
         if meta.get("source_database") != "pfam":
             continue
+        name = meta.get("name")
+        if isinstance(name, dict):
+            name = name.get("short") or name.get("name") or ""
         for prot in res.get("proteins", []):
             for loc in prot.get("entry_protein_locations", []):
                 frags = loc.get("fragments", [])
@@ -112,6 +118,7 @@ def fetch_domains(acc: str) -> list[tuple[str, str, int, int]]:
                         meta["accession"],
                         min(f["start"] for f in frags),
                         max(f["end"] for f in frags),
+                        name or "",
                     )
                 )
     return sorted(out, key=lambda d: d[2])
@@ -129,6 +136,22 @@ def fetch_features(acc: str) -> list[tuple[str, int, int, str]]:
             continue
         out.append((feat["type"], start, end, feat.get("description") or ""))
     return sorted(out, key=lambda f: f[1])
+
+
+def assert_chain_is(pdb: str, chain: str, acc: str) -> dict[str, list[str]]:
+    """Verify via SIFTS that `chain` of `pdb` really is the protein `acc`, and return the
+    whole entry's chain-to-accession map so the composition is on the record."""
+    r = requests.get(PDBE_SIFTS.format(pdb=pdb), timeout=60)
+    r.raise_for_status()
+    mapping: dict[str, list[str]] = {}
+    for uniprot_acc, entry in r.json()[pdb]["UniProt"].items():
+        for m in entry["mappings"]:
+            mapping.setdefault(m["chain_id"], []).append(f"{uniprot_acc} ({entry['name']})")
+    assert mapping.get(chain) and any(v.startswith(acc) for v in mapping[chain]), (
+        f"{pdb.upper()} chain {chain} maps to {mapping.get(chain)}, not to {acc}. "
+        "The structure has been re-lettered or replaced; do not trust the coverage numbers."
+    )
+    return mapping
 
 
 def fetch_observed_ranges(pdb: str, chain: str) -> list[tuple[int, int]]:
@@ -181,9 +204,9 @@ def flanking_features(pos: int, features: list[tuple[str, int, int, str]]) -> di
     }
 
 
-def in_domain(pos: int, domains: list[tuple[str, str, int, int]]) -> str | None:
+def in_domain(pos: int, domains: list[tuple[str, str, int, int, str]]) -> str | None:
     """1-based residue position -> Pfam accession covering it, else None (= linker/loop)."""
-    for _db, acc, start, end in domains:
+    for _db, acc, start, end, _name in domains:
         if start <= pos <= end:
             return acc
     return None
@@ -276,6 +299,9 @@ def main() -> int:
             "Re-check the accession before trusting anything below."
         )
         pdb_chain = STRUCTURES.get(symbol)
+        chain_map: dict[str, list[str]] = {}
+        if pdb_chain:
+            chain_map = assert_chain_is(pdb_chain[0], pdb_chain[1], acc)
         prot = Protein(
             acc=acc, symbol=symbol, seq=seq,
             domains=fetch_domains(acc), features=fetch_features(acc),
@@ -288,6 +314,7 @@ def main() -> int:
             "role": role,
             "length": prot.length,
             "structure": prot.structure,
+            "structure_chain_map": chain_map,
             "modelled_ranges": [list(r) for r in prot.observed],
             "uniprot_secondary_structure_span": (
                 [min(f[1] for f in prot.features if f[0] in ("Helix", "Beta strand", "Turn")),
@@ -295,7 +322,7 @@ def main() -> int:
                 if any(f[0] in ("Helix", "Beta strand", "Turn") for f in prot.features) else None
             ),
             "pfam_domains": [
-                {"accession": d[1], "start": d[2], "end": d[3]} for d in prot.domains
+                {"accession": d[1], "start": d[2], "end": d[3], "name": d[4]} for d in prot.domains
             ],
             "inter_domain_gaps": inter_domain_gaps(prot),
             "trunk_to_next_domain_linker": trunk_to_next_gap(prot),
@@ -309,8 +336,13 @@ def main() -> int:
     print("=" * 78)
     for symbol, data in report.items():
         print(f"\n### {symbol} ({data['accession']}), {data['length']} aa - {data['role']}")
+        if data.get("structure_chain_map"):
+            chains = ", ".join(
+                f"{c}={'/'.join(v)}" for c, v in sorted(data["structure_chain_map"].items())
+            )
+            print(f"  Structure {data['structure']} (SIFTS-verified); entry composition: {chains}")
         doms = data["pfam_domains"]
-        print("  Pfam domains: " + (", ".join(f"{d['accession']}:{d['start']}-{d['end']}" for d in doms) or "none"))
+        print("  Pfam domains: " + (", ".join(f"{d['accession']} {d['name']}:{d['start']}-{d['end']}" for d in doms) or "none"))
         gaps = data["inter_domain_gaps"]
         print(
             "  Inter-domain gaps: "
@@ -347,6 +379,12 @@ def main() -> int:
         f"1. classical clathrin box in AP5B1: {len(cb)} sequence match(es) to L(phi)x(phi)[DE], "
         f"of which {len(cb_outside)} outside any Pfam domain."
     )
+    for h in cb:
+        cov = h["structure_coverage"]
+        if cov:
+            print(f"   {h['match']}@{h['start']}: inside {h['within_pfam_domain']}; "
+                  f"{ap5['structure']} modelled={cov['modelled']} "
+                  f"within chain span {cov['chain_modelled_span']}={cov['within_chain_span']}")
     for sym in ("AP1B1", "AP2B1", "AP3B1", "AP4B1"):
         ctrl = report[sym]["motif_hits"]["clathrin_box_LPhixPhiDE"]
         ctrl_out = [h for h in ctrl if h["within_pfam_domain"] is None]
