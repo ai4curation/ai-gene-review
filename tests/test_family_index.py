@@ -189,7 +189,7 @@ def test_unknown_project_template_fails_explicitly(tmp_path):
         render_project(source, tmp_path / "out", tmp_path / "genes")
 
 
-def test_preview_revision_applies_to_catalog_and_related_source_links(
+def test_preview_revision_applies_to_catalog_related_links_and_footer(
     tmp_path, monkeypatch
 ):
     projects = tmp_path / "projects"
@@ -201,7 +201,61 @@ def test_preview_revision_applies_to_catalog_and_related_source_links(
     )
     write_yaml(tmp_path / "interpro/panther/PTHR1/PTHR1-review.yaml", {})
     monkeypatch.setenv("AI_GENE_REVIEW_SOURCE_REF", "feature/catalog")
-    output, _ = render_project(source, tmp_path / "pages/projects", tmp_path / "genes")
+    output, _ = render_project(
+        source,
+        tmp_path / "pages/projects",
+        tmp_path / "genes",
+        source_ref="feature/catalog",
+    )
     html = output.read_text()
     assert "/blob/feature%2Fcatalog/interpro/" in html
     assert "/tree/feature%2Fcatalog/reports" in html
+
+    assert '/tree/feature%2Fcatalog/interpro"' in html
+    output, _ = render_project(source, tmp_path / "production", tmp_path / "genes")
+    assert '/tree/main/interpro"' in output.read_text()
+
+
+@pytest.mark.parametrize("render_all", [False, True])
+def test_cli_threads_source_ref_through_project_rendering(
+    tmp_path, monkeypatch, render_all
+):
+    from typer.testing import CliRunner
+    from ai_gene_review.cli import app
+
+    projects = tmp_path / "projects"
+    projects.mkdir()
+    (projects / "FAMILIES.md").write_text(
+        "---\ntitle: Families\ntemplate: family_index\nautolink_gene_symbols: false\n---\n"
+    )
+    write_yaml(tmp_path / "interpro/panther/PTHR1/PTHR1-review.yaml", {})
+    monkeypatch.chdir(tmp_path)
+    args = ["render-projects", "--source-ref", "feature/catalog"]
+    args += ["--all"] if render_all else ["projects/FAMILIES.md"]
+    result = CliRunner().invoke(app, args)
+    assert result.exit_code == 0, result.output
+    html = (tmp_path / "pages/projects/FAMILIES.html").read_text()
+    assert "/blob/feature%2Fcatalog/interpro/" in html
+    assert '/tree/feature%2Fcatalog/interpro"' in html
+
+
+def test_mapping_filter_options_come_only_from_pfam(tmp_path):
+    projects = tmp_path / "projects"
+    projects.mkdir()
+    source = projects / "FAMILIES.md"
+    source.write_text(
+        "---\ntitle: Families\ntemplate: family_index\nautolink_gene_symbols: false\n---\n"
+    )
+    write_yaml(tmp_path / "interpro/panther/PTHR1/PTHR1-review.yaml", {})
+    write_yaml(
+        tmp_path / "interpro/pfam/PF1/PF1-review.yaml",
+        {"pfam_id": "PF1", "interpro": {"mapping_viability": "NOT_VIABLE"}},
+    )
+    output, _ = render_project(source, tmp_path / "pages/projects", tmp_path / "genes")
+    options = (
+        output.read_text()
+        .split('id="filter-mapping_viability"', 1)[1]
+        .split("</select>", 1)[0]
+    )
+    assert 'value="NOT_VIABLE"' in options
+    assert 'value="NOT_RECORDED"' not in options

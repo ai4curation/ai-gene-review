@@ -5,7 +5,6 @@ This module converts project markdown files (from projects/) to HTML,
 automatically linking gene symbols to their corresponding gene review pages.
 """
 
-import os
 import re
 import shutil
 from pathlib import Path
@@ -1102,6 +1101,7 @@ def render_project(
     genes_dir: Path = Path("genes"),
     template_path: Optional[Path] = None,
     projects_dir: Optional[Path] = None,
+    source_ref: str = "main",
 ) -> Tuple[Path, List[str]]:
     """Render a single project markdown file to HTML.
 
@@ -1120,6 +1120,7 @@ def render_project(
         projects_dir: Root projects directory; when given, the output path
             mirrors ``md_path``'s location relative to it. When ``None`` the
             file is rendered flat as ``output_dir/<stem>.html``.
+        source_ref: Git revision for catalog GitHub links; defaults to main.
 
     Returns:
         Tuple of (output_path, list_of_warnings)
@@ -1243,7 +1244,6 @@ def render_project(
             raise ValueError(
                 "Family catalog requires projects_dir or a source under projects/"
             )
-        source_ref = os.environ.get("AI_GENE_REVIEW_SOURCE_REF", "main")
         family_rows = collect_family_reviews(source_root.parent, source_ref=source_ref)
         for view in ("blob", "tree"):
             github_base = f"https://github.com/ai4curation/ai-gene-review/{view}/"
@@ -1274,6 +1274,7 @@ def render_project(
         content=html_content,
         source_file=md_path.name,
         family_rows=family_rows,
+        source_ref=quote(source_ref, safe=""),
         warnings=warnings,
         frontmatter=frontmatter,
         projects_base_path="../" * subdir_depth,
@@ -1329,6 +1330,7 @@ def render_project_bundle(
     genes_dir: Path = Path("genes"),
     template_path: Optional[Path] = None,
     projects_dir: Path = Path("projects"),
+    source_ref: str = "main",
 ) -> Tuple[List[Path], List[str]]:
     """Render a project page plus its same-named supporting folder.
 
@@ -1349,6 +1351,7 @@ def render_project_bundle(
             genes_dir=genes_dir,
             template_path=template_path,
             projects_dir=projects_dir,
+            source_ref=source_ref,
         )
         output_paths.append(output_path)
         index_path = write_readme_index_alias(bundle_file, output_path, projects_dir)
@@ -1525,6 +1528,7 @@ def render_all_projects(
     projects_dir: Path = Path("projects"),
     output_dir: Path = Path("pages/projects"),
     genes_dir: Path = Path("genes"),
+    source_ref: str = "main",
 ) -> Tuple[List[Path], List[str]]:
     """Render all project markdown files to HTML.
 
@@ -1532,6 +1536,7 @@ def render_all_projects(
         projects_dir: Directory containing project markdown files
         output_dir: Directory for output HTML files
         genes_dir: Path to the genes directory
+        source_ref: Git revision for catalog GitHub links; defaults to main.
 
     Returns:
         Tuple of (list_of_output_paths, list_of_all_warnings)
@@ -1564,6 +1569,7 @@ def render_all_projects(
                 output_dir=output_dir,
                 genes_dir=genes_dir,
                 projects_dir=projects_dir,
+                source_ref=source_ref,
             )
             output_paths.append(output_path)
             index_path = write_readme_index_alias(md_file, output_path, projects_dir)

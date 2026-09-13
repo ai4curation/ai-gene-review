@@ -2938,6 +2938,14 @@ def render_projects(
         Path,
         typer.Option("--genes-dir", "-g", help="Genes directory for symbol index"),
     ] = Path("genes"),
+    source_ref: Annotated[
+        str,
+        typer.Option(
+            "--source-ref",
+            help="Git branch or commit for family catalog source links",
+            envvar="AI_GENE_REVIEW_SOURCE_REF",
+        ),
+    ] = "main",
     all_projects: Annotated[
         bool,
         typer.Option("--all", "-a", help="Render all project files in projects/"),
@@ -2987,6 +2995,7 @@ def render_projects(
             projects_dir=Path("projects"),
             output_dir=output_dir,
             genes_dir=genes_dir,
+            source_ref=source_ref,
         )
 
         if verbose and warnings:
@@ -3008,6 +3017,7 @@ def render_projects(
                     md_file,
                     output_dir=output_dir,
                     genes_dir=genes_dir,
+                    source_ref=source_ref,
                     projects_dir=Path("projects"),
                 )
                 total_warnings.extend(warnings)

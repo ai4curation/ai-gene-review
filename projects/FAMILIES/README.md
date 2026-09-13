@@ -25,13 +25,18 @@ uv run ai-gene-review render-projects projects/FAMILIES.md -o pages/projects
 ## PR previews
 
 Published source links default to the repository's `main` branch. To preview files
-that exist only on a PR branch, set an explicit revision while rendering to a
+that exist only on a PR branch, pass `--source-ref` while rendering to a
 separate output directory:
 
 ```bash
-AI_GENE_REVIEW_SOURCE_REF=cmungall/gr-pages uv run ai-gene-review render-projects projects/FAMILIES.md -o /tmp/family-preview
+uv run ai-gene-review render-projects projects/FAMILIES.md --source-ref cmungall/gr-pages -o /tmp/family-preview
 ```
 
 The revision can be a branch or commit. It affects GitHub source links; links to
 other rendered site pages still require the corresponding site tree. Keep the
 default `main` links in committed production pages.
+
+The CLI also accepts `AI_GENE_REVIEW_SOURCE_REF` as a fallback; an explicit
+`--source-ref` takes precedence. Python render functions accept `source_ref`
+directly and do not read the environment. The selected revision applies to
+catalog links, related source links, and the footer.
