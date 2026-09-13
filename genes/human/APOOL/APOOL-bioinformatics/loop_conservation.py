@@ -156,7 +156,15 @@ def main() -> None:
     print()
     print(f"Members fetched: {len(members)} "
           f"({len(index)} from the family index + the fly PAINT seed {FLY_SEED})")
-    print("All indexed lengths matched the live UniProt sequences.")
+    print("Length check (live UniProt vs family index; a mismatch aborts the run):")
+    for member in members:
+        if member.indexed_length is None:
+            print(f"  {member.accession}: {len(member.sequence):>4} aa (not in the index)")
+        else:
+            print(
+                f"  {member.accession}: {len(member.sequence):>4} aa == "
+                f"{member.indexed_length} in {ENTRIES_CSV.name}"
+            )
     print()
     print("## Human APOOL topology (from APOOL-uniprot.txt, not re-predicted)")
     for key, start, end, note in features:

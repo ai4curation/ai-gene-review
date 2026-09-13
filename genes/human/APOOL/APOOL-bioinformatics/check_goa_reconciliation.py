@@ -2,8 +2,8 @@
 
 Checks, in both directions:
 
-* each GOA row (term id, evidence code, reference, normalized WITH/FROM) matches exactly
-  one ``existing_annotations`` entry, and vice versa;
+* each GOA row (term id, evidence code, reference, qualifier, normalized WITH/FROM) matches
+  exactly one ``existing_annotations`` entry, and vice versa;
 * ``supporting_entities`` in the YAML is identical, as an ordered de-duplicated list, to
   the GOA WITH/FROM column split on ``|``;
 * every non-NEW entry carries a review with an action that is not PENDING;
@@ -51,6 +51,7 @@ def goa_rows() -> list[tuple]:
                     row["GO TERM"],
                     row["GO EVIDENCE CODE"],
                     row["REFERENCE"],
+                    row["QUALIFIER"],
                     tuple(normalize_with_from(row["WITH/FROM"])),
                 )
             )
@@ -67,6 +68,7 @@ def yaml_rows(doc: dict) -> list[tuple]:
                 entry["term"]["id"],
                 entry["evidence_type"],
                 entry["original_reference_id"],
+                entry.get("qualifier"),
                 tuple(entry.get("supporting_entities") or []),
             )
         )
@@ -78,6 +80,18 @@ def main() -> None:
     goa = goa_rows()
     reviewed = yaml_rows(doc)
     failures: list[str] = []
+
+    # Term labels must be GOA's, not the reviewer's.
+    label_of = {}
+    with GOA_TSV.open() as handle:
+        for row in csv.DictReader(handle, delimiter="\t"):
+            label_of[row["GO TERM"]] = row["GO NAME"]
+    for entry in doc["existing_annotations"]:
+        term = entry["term"]
+        if term["id"] in label_of and term["label"] != label_of[term["id"]]:
+            failures.append(
+                f"{term['id']}: label {term['label']!r} != GOA label {label_of[term['id']]!r}"
+            )
 
     goa_counts, yaml_counts = Counter(goa), Counter(reviewed)
     for key in sorted(set(goa_counts) | set(yaml_counts)):

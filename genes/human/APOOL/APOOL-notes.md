@@ -8,8 +8,9 @@ intended protein and not a merged-accession redirect. Secondary accessions Q3KNU
 Despite the name, this is not a plasma apolipoprotein. UniProt: `DE   RecName: Full=MICOS
 complex subunit MIC27; AltName: Full=Apolipoprotein O-like;`. The name is a 2003 secreted-protein
 discovery-initiative artefact (`RN [1]`, PMID:12975309, "The secreted protein discovery initiative
-(SPDI) ... to identify novel human secreted and transmembrane proteins"), and essentially every
-defect in the current GOA set traces back to it.
+(SPDI) ... to identify novel human secreted and transmembrane proteins"), and it accounts for two of
+the three bad cellular-component rows. The third, SAM complex, is an independent complexome
+conflation and has nothing to do with the name.
 
 ## 1. What the protein is
 
@@ -262,11 +263,16 @@ preprint on MIC27 APEX2 proximity labelling). Not citable as a PMID and not used
 
 ## 9. Review decisions (27 GOA rows + 1 NEW)
 
-- **REMOVE ×3**: `GO:0005576 extracellular region` and `GO:0031093 platelet alpha granule lumen`
+- **REMOVE ×6**: `GO:0005576 extracellular region` and `GO:0031093 platelet alpha granule lumen`
   (Reactome name-era projection, refuted by PMID:37279200 and PMID:23704930); `GO:0001401 SAM
   complex` (inner-membrane protein cannot be part of an outer-membrane complex; the MIB and MICOS
-  rows from the same reference already capture the real relationship).
-- **MARK_AS_OVER_ANNOTATED ×3**: the three bare `GO:0005515 protein binding` IPIs.
+  rows from the same reference already capture the real relationship); and the three bare
+  `GO:0005515 protein binding` IPIs. The last three follow the repository's standing policy that
+  generic protein binding is not an over-annotation but an uninformative one: MODIFY is the first
+  choice and is unavailable here, because the only more specific molecular function on offer is the
+  yeast oligomer-stabilisation role that §6 shows does not transfer, so REMOVE applies. Removal is
+  not a claim that any of the three interactions is false; all three partners are MICOS subunits and
+  the shared membership is already recorded by `GO:0061617`.
 - **MODIFY ×1**: `GO:0007007 inner mitochondrial membrane organization` (IC on MIB membership) →
   `GO:0042407 cristae formation`, which is a descendant of GO:0007007 (QuickGO ancestor list for
   GO:0042407 contains GO:0007007) and is already on the gene from three other sources.
