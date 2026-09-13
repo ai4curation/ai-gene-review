@@ -162,12 +162,23 @@ Per-partner rows are in `huri_partners.tsv`.
 chain *does* pass through the ER and Golgi, so sharing a compartment name with a
 secretory-pathway protein proves nothing on its own. It is **which face** of that
 compartment. APOC4 is lumenal throughout its transit and extracellular thereafter;
-it never faces the cytosol, the mitochondrial matrix or the nucleus. Twenty-one of
-the 23 partners do their work on the cytosolic side or inside an organelle APOC4
-never enters; the two that are not in that class are handled below. And whatever
-their native compartment, all 23 pairs were scored by a Gal4 two-hybrid in the
-yeast nucleus — a compartment the target cannot occupy at all — so the assay could
-not have observed any of them where it matters.
+it never faces the cytosol, the mitochondrial matrix or the nucleus.
+
+Two things follow, and they are worth keeping apart because they are not equally
+firm. The firm one is the assay: whatever their native compartment, all 23 pairs
+were scored by a Gal4 two-hybrid in the yeast nucleus — a compartment the target
+cannot occupy at all — so the screen could not have observed any of these
+interactions where it would matter. The softer one is the per-partner topology.
+It is strongest for the ten partners with a curated mitochondrial location, and
+sharpest for the five curated *exclusively* there; it is weakest for the
+ER/Golgi-membrane partners, where APOC4 does transit the same organelle and the
+argument turns on which face of the membrane the partner works on. That face is not
+always settled — PORCN, for one, is an ER MBOAT whose acyltransferase site has been
+placed on the lumenal side by some accounts — so no exact count of
+"topologically impossible" partners is claimed here. What the table does establish
+without qualification is that **none** of the 23 has a curated secreted or
+extracellular location, so not one of them is a plasma protein of the kind apoC-IV
+actually encounters.
 
 Five partners (MICOS10, MICOS13, MAIP1, BCL2L2, TIMMDC1) are curated *exclusively*
 to the mitochondrion, which has no connection to the secretory pathway at all;
