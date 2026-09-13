@@ -380,11 +380,11 @@ assignment, or `shepherd:hold` when fresh content needs additional observation
 time.
 
 Reads use the built-in read-only token. A separately scoped ai4c-agent token
-(Contents write + pull-request write + Workflows write) is supplied only to the head-pinned merge
-and best-effort courtesy-comment subprocesses. API uncertainty fails an execute
-run red. A positively observed head movement is instead a benign skip:
-concurrent automation changed the candidate, so its new state must pass a later
-sweep. The separate ai4c-reviewer credential is explicitly scoped to
+(Contents write + pull-request write, matching DisMech) is supplied only to the
+head-pinned merge and best-effort courtesy-comment subprocesses. API uncertainty
+fails an execute run red. A positively observed head movement is instead a
+benign skip: concurrent automation changed the candidate, so its new state must
+pass a later sweep. The separate ai4c-reviewer credential is explicitly scoped to
 pull-request write only; it can record the approval but cannot push content.
 
 The feature flag and execute preflight are not substitutes for protection. The
@@ -411,10 +411,9 @@ rule in repository settings or with
   There is no additional human or CODEOWNERS gate for `.github/`, `scripts/`,
   or `src/`; do not infer one from `.protected`. The same current-head approval,
   CI, conflict, hold, and age checks apply to all files;
-- the ai4c-agent App registration and installation grant **Workflows: write**, in
-  addition to Contents and Pull requests write, so the merge token can support
-  workflow-changing PRs without a file-path exception. The separate reviewer
-  token remains scoped to Pull requests write only;
+- the ai4c-agent App installation grants Contents and Pull requests write, the
+  two permissions requested by DisMech's merge token and this workflow. The
+  separate reviewer token remains scoped to Pull requests write only;
 - unresolved review conversations block merging;
 - the ai4c-agent and ai4c-reviewer Apps have no pull-request bypass allowance,
   while force pushes and branch deletion remain disabled;
@@ -431,12 +430,20 @@ Shepherd run.
 During the PR #3041 review, the live merge flag was already `true` (set August
 10), and `main` required one review with stale-review dismissal and no CODEOWNERS
 requirement. The ai4c-agent App and its ai4curation installation both lacked
-Workflows write. Before merging the token-permission change in #3041, add that
-permission in the [App registration](https://github.com/settings/apps/ai4c-agent/permissions)
-and approve it for the [ai4curation installation](https://github.com/organizations/ai4curation/settings/installations/130616615).
-Requesting it in YAML cannot expand the installation's grant; token minting will
-fail until the grant is approved. GitHub documents this two-step process in
-[Changing App permissions](https://docs.github.com/en/apps/maintaining-github-apps/modifying-a-github-app-registration#changing-the-permissions-of-a-github-app).
+Workflows write. The review follow-up added a request for that ungranted
+permission, which would make token creation fail before any PR could be processed
+in execute mode. That request has been removed to match DisMech's two-permission
+merge token; no App permission upgrade is a prerequisite for this workflow.
+The controller still applies no file-path veto, and reports GitHub merge errors
+per PR while continuing to process other candidates.
+
+DisMech currently uses a merge queue; this repository does not. DisMech uses the
+same scoped token for both enqueueing and its direct-merge fallback. The latter
+uses `gh pr merge --squash --match-head-commit`, as this controller does. Matching
+the token scope does not establish that GitHub accepts every workflow-changing
+direct merge: any such rejection needs evidence from that specific operation,
+not an unconditional permission request that blocks all candidates at token
+creation.
 
 Generated-page PRs use a separate lane. Their workflow's staged-file allowlist
 proves the commit contains derived artifacts only and always builds from the
