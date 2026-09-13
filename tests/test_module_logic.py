@@ -267,9 +267,15 @@ KETOLYSIS = Path("modules/ketone_body_oxidation.yaml")
 @pytest.mark.skipif(not KETOLYSIS.exists(), reason="module file absent")
 def test_ketolysis_structure():
     circuit = compile_module_file(KETOLYSIS)
-    assert [step_id(c) for c in circuit.children] == ["bdh1_step", "oxct1_step", "acat1_step"]
-    assert len(enumerate_routes(circuit)) == 1  # linear, all required
-    assert sorted(a.gene_symbol for a in core_atoms(circuit)) == ["ACAT1", "BDH1", "OXCT1"]
+    assert [step_id(c) for c in circuit.children] == [
+        "opt:hydroxybutyrate_import",
+        "hydroxybutyrate_oxidation",
+        "acetoacetate_activation",
+        "acetoacetyl_coa_thiolysis",
+    ]
+    assert len(enumerate_routes(circuit)) == 4  # optional import x two activation routes
+    core_symbols = {symbol for atom in core_atoms(circuit) for symbol in atom.gene_symbols}
+    assert {"BDH1", "ACAT1"} <= core_symbols
 
 
 @pytest.mark.skipif(not KETOLYSIS.exists(), reason="module file absent")
@@ -279,23 +285,31 @@ def test_ketolysis_structure():
         # ketolytic tissue (heart/brain/...): all enzymes, asserted active
         ({"BDH1", "OXCT1", "ACAT1"}, True, "CONSISTENT_ACTIVE", []),
         # liver: SCOT/OXCT1 absent, and liver genuinely does not oxidise ketones
-        ({"BDH1", "ACAT1"}, False, "CONSISTENT_INACTIVE", ["oxct1_step"]),
+        ({"BDH1", "ACAT1"}, False, "CONSISTENT_INACTIVE", ["acetoacetate_activation"]),
         # if a tissue truly oxidised ketones yet lacked OXCT1, that is a lead
-        ({"BDH1", "ACAT1"}, True, "ABDUCTION_TARGET", ["oxct1_step"]),
+        ({"BDH1", "ACAT1"}, True, "ABDUCTION_TARGET", ["acetoacetate_activation"]),
     ],
 )
 def test_ketolysis_abduction(present, active, classification, gaps):
     circuit = compile_module_file(KETOLYSIS)
 
     def holds(atom):
-        return atom.gene_symbol in present
+        return any(symbol in present for symbol in atom.gene_symbols)
 
     ab = abduce(circuit, holds, asserted_active=active)
     assert ab.classification == classification
     assert ab.gap_steps == gaps
     if classification == "CONSISTENT_INACTIVE":
         # the liver gap pinpoints the SCOT step
-        assert ab.gap_candidates["oxct1_step"] == ["OXCT1"]
+        assert ab.gap_candidates["acetoacetate_activation"] == ["Aacs", "OXCT1"]
+
+
+def test_family_atom_uses_concrete_representatives():
+    circuit = compile_module_file(KETOLYSIS)
+    hbdh = next(atom for atom in iter_atoms(circuit) if atom.node_id == "hbdh_activity")
+    assert hbdh.gene_symbol == "HbdH"
+    assert hbdh.gene_symbols == ("HbdH", "BDH1")
+    assert hbdh.uniprots == ("Q88IC6", "Q02338")
 
 
 def test_atom_is_hashable():
