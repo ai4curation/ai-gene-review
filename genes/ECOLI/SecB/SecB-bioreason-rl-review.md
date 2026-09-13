@@ -28,7 +28,7 @@ Minor gaps:
 - Does not mention that substrates wrap around the tetrameric surface (PMID:16962134)
 - The thinking trace says "trimers" which is incorrect -- SecB is a tetramer
 
-The thinking trace's mention of "trimers" is an error, but the Functional Summary avoids specifying the oligomeric state, so this diagnostic error does not lower correctness. The curated review identifies SecB's function as GO:0140309 (unfolded protein carrier activity), which is more specific than the generic "chaperone" description but aligned with the narrative.
+The thinking trace's mention of "trimers" is an error, but the Functional Summary avoids specifying the oligomeric state, so this diagnostic error does not lower correctness. The curated review identifies SecB's function as GO:0140309 (unfolded protein holdase activity; carrier-specific definition), which is more specific than the generic "chaperone" description but aligned with the narrative.
 
 Comparison with interpro2go:
 
