@@ -76,9 +76,8 @@ BRANCHES = [
 # the experimental codes IEP sits alongside plus the two big inferred codes.
 BASELINE_CODES = ["IDA", "IMP", "IGI", "IPI", "IEP", "IBA", "ISO", "IEA", "TAS", "NAS"]
 
-# Disposition columns. ``UNREVIEWED`` is the bucket for annotations carrying no
-# ``review.action`` at all; it is listed so the action columns sum to the
-# reviewed total rather than silently dropping rows out of the table.
+# Disposition columns include reviewer-proposed NEW annotations and rows with
+# no review.action (UNREVIEWED), both of which contribute to the total.
 ACTIONS = [
     "ACCEPT",
     "KEEP_AS_NON_CORE",
@@ -87,6 +86,7 @@ ACTIONS = [
     "REMOVE",
     "UNDECIDED",
     "PENDING",
+    "NEW",
     "UNREVIEWED",
 ]
 # Actions that say "this annotation, as written, is not a keeper".
@@ -378,6 +378,27 @@ def pct(n: int, d: int) -> str:
     return f"{100.0 * n / d:.1f}%" if d else "n/a"
 
 
+def render_disposition_table(disposition: dict[str, Counter[str]]) -> list[str]:
+    """Render every counted action, including any newly encountered values."""
+    observed_actions = {
+        action for code in BASELINE_CODES for action in disposition.get(code, {})
+    }
+    actions = ACTIONS + sorted(observed_actions - set(ACTIONS))
+    lines = [
+        "| Code | Reviewed | " + " | ".join(actions) + " | % negative |",
+        "|---|---:|" + "---:|" * (len(actions) + 1),
+    ]
+    for code in BASELINE_CODES:
+        counts = disposition.get(code)
+        if not counts:
+            continue
+        total = sum(counts.values())
+        neg = sum(counts[a] for a in NEGATIVE_ACTIONS)
+        cells = " | ".join(str(counts.get(a, 0)) for a in actions)
+        lines.append(f"| {code} | {total:,} | {cells} | **{pct(neg, total)}** |")
+    return lines
+
+
 def fisher_exact_two_sided(a: int, b: int, c: int, d: int) -> float:
     """Two-sided Fisher exact p for the 2x2 table ``[[a, b], [c, d]]``.
 
@@ -565,23 +586,15 @@ def main() -> None:
 
     add("### Disposition by evidence code")
     add("")
-    header = "| Code | Reviewed | " + " | ".join(ACTIONS) + " | % negative |"
-    add(header)
-    add("|---|---:|" + "---:|" * (len(ACTIONS) + 1))
-    for code in BASELINE_CODES:
-        counts = rev["disposition"].get(code)
-        if not counts:
-            continue
-        total = sum(counts.values())
-        neg = sum(counts[a] for a in NEGATIVE_ACTIONS)
-        cells = " | ".join(str(counts.get(a, 0)) for a in ACTIONS)
-        add(f"| {code} | {total:,} | {cells} | **{pct(neg, total)}** |")
+    lines.extend(render_disposition_table(rev["disposition"]))
     add("")
     add(
         "`% negative` = REMOVE + MARK_AS_OVER_ANNOTATED + MODIFY, i.e. rows a "
         "reviewer judged not keepable as written, over the `Reviewed` total. "
         "That total is every annotation row carrying the code, including the "
-        "`PENDING` and `UNREVIEWED` ones, so the action columns sum to it."
+        "reviewer-proposed `NEW` annotations and `PENDING`/`UNREVIEWED` rows, "
+        "so the action columns sum to it. `NEW` rows are proposals from this "
+        "project, not dispositions of an existing GOA annotation."
     )
     add("")
 
@@ -684,12 +697,13 @@ def main() -> None:
         f"Pooled, the developmental branch flags at "
         f"{pct(dev_total_neg, dev_total)} against "
         f"{pct(stim_total_neg, stim_total)} for stimulus-response, on "
-        f"{dev_total_neg}/{dev_total} versus {stim_total_neg}/{stim_total} — "
-        f"**not separable from noise** (two-sided Fisher p = {p_pooled:.2f}). "
-        f"The developmental rows are at least not a single review batch: they "
-        f"span {len(rev['branch_genes']['developmental process']):,} gene "
-        f"directories. Treat the gap as suggestive of the mechanism argued "
-        f"from the worked examples, not as evidence for it."
+        f"{dev_total_neg}/{dev_total} versus {stim_total_neg}/{stim_total} "
+        f"(two-sided Fisher p = {p_pooled:.2f}). The developmental rows span "
+        f"{len(rev['branch_genes']['developmental process']):,} gene directories. "
+        "These are annotation-level comparisons: rows can share genes, "
+        "references, and review batches. The p-values are unadjusted, and "
+        "neither a pooled contrast nor the number of genes rules out those "
+        "dependencies or establishes a branch-wide difference in annotation quality."
     )
     add("")
 

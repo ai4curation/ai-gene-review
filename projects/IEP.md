@@ -131,8 +131,8 @@ Three views. [`IEP/iep_corpus_survey.py`](IEP/iep_corpus_survey.py) (output:
 [iep-corpus-survey.md](IEP/iep-corpus-survey.md)) produces two of them: the
 **GOA view** counts rows in the repo's cached `*-goa.tsv` downloads, and the
 **review view** counts annotations in `*-ai-review.yaml`, i.e. what reviewers
-concluded. Neither is a sample of IEP, because a gene directory exists only
-because somebody chose that gene for review.
+concluded. Neither is a probability sample of IEP, because a gene directory
+exists only because somebody chose that gene for review.
 
 [`IEP/iep_global_atlas.py`](IEP/iep_global_atlas.py) (output:
 [iep-global-atlas.md](IEP/iep-global-atlas.md)) supplies the denominator: the
@@ -157,10 +157,15 @@ arrive after the review that would have carried it. The gap is small — under 1
 of rows, one review file — but it means the two views should be read as two
 measurements of the same thing rather than as one filtered from the other.
 
+Review-view denominators include all entries in `existing_annotations`, including
+reviewer-proposed `NEW` annotations. The disposition table reports `NEW`
+separately; those entries are not necessarily annotations supplied by GOA.
+
 The reviewed sample is 2% of global IEP, so before drawing conclusions from it,
 see [how representative it is](#is-the-reviewed-sample-representative). The short
-answer: representative for the *term-type* stratifications this page's main
-findings rest on, badly skewed by organism and annotation group.
+answer: close to global shares for coarse term types, badly skewed by organism
+and annotation group. Matching those marginal shares does not establish that
+reviewer flag rates are representative.
 
 ### What "flagged" means, and does not mean
 
@@ -209,11 +214,11 @@ is marked as suggestive in the text.
 Branch assignment is **first match wins** in the order above, so a term parented
 under both `response to stimulus` and `developmental process` — a defence
 response that is also a developmental one, say — is counted as
-stimulus-response. That choice makes the developmental bucket smaller and purer
-and, since the developmental bucket is the one with the higher flag rate, it
-biases against the finding drawn from it below. The repo shares here are the
-review view (550 rows); the representativeness tables further down use the GOA
-view (555 rows), which is why the same stratum can differ by a point.
+stimulus-response. Those dual-parented rows are excluded from the developmental
+bucket. A different bucket priority could change the flag-rate comparison; its
+effect has not been measured. The repo shares here are the review view (550
+rows); the representativeness tables further down use the GOA view (555 rows),
+which is why the same stratum can differ by a point.
 
 Seven out of ten IEP annotations are a "response to X" term, both globally and in
 the repo, which follows directly from the experiment type: expose an organism to
@@ -225,11 +230,15 @@ The flag rates in that table hint at a second-order finding — **the developmen
 branch may be the riskier one** — but the corpus is too small to establish it.
 19 of 84 developmental rows were flagged against 64 of 381 stimulus rows, a
 difference not separable from noise (two-sided Fisher exact p = 0.21). Splitting
-by species does not rescue it: the direction repeats in the three largest
-species (rat 33.3% vs 25.0%, human 20.6% vs 10.4%, *Arabidopsis* 40.0% vs 8.6%)
-and reverses in *Dictyostelium* (10.0% vs 18.2%), with no stratum reaching
-significance. What the split does establish is that the developmental rows are
-not one review batch: they span 54 gene directories across seven species.
+by species does not establish a general developmental excess: the direction
+repeats in the three largest species (rat 33.3% vs 25.0%, human 20.6% vs 10.4%,
+*Arabidopsis* 40.0% vs 8.6%), but none of those contrasts reaches significance.
+It reverses in *Dictyostelium* (10.0% vs 18.2%) and in mouse, where 0/4
+developmental rows are flagged against 8/8 stimulus rows (Fisher p = 0.002).
+The mouse result is an opposite-direction contrast in only 12 rows, not evidence
+for a general developmental risk. The developmental rows span 54 gene
+directories across seven species, but that spread does not rule out review-batch
+or gene-selection confounding.
 
 The mechanistic reason to expect the gap is independent of the numbers, and it
 is argued below from worked examples rather than from the flag rate: a "response
@@ -306,8 +315,8 @@ interest, not by sampling IEP. The
 compares each stratum's repo share against its global share; a ratio of 1.00x
 means proportional, above 1 over-sampled, below 1 under-sampled.
 
-**Representative where it matters most for this page.** The stratifications the
-main findings rest on come out close to proportional:
+**Close to global marginal distributions.** Several coarse annotation shares
+come out close to proportional:
 
 | Stratum | Global | Repo | Ratio |
 |---|---:|---:|---:|
@@ -318,9 +327,11 @@ main findings rest on come out close to proportional:
 | biological_process aspect | 95.2% | 95.9% | 1.01x |
 | Genes with ≥5 IEP rows, as share of IEP rows | 42.3% | 41.3% | 0.98x |
 
-So "IEP is overwhelmingly a stimulus-response code", "the developmental branch is
-the riskier one", and "IEP load concentrates in a few genes" are not artifacts of
-which genes the repo happens to contain.
+The global counts independently support two descriptive findings: IEP is
+overwhelmingly a stimulus-response code, and its annotations concentrate in a
+few genes. They do not measure reviewer dispositions. Similar branch shares
+therefore cannot establish that developmental annotations are riskier or rule
+out selection and review-batch effects on the flag-rate comparison.
 
 **Badly skewed by organism and annotation group.** Here the sample is a poor
 picture of IEP:
@@ -340,9 +351,9 @@ Entirely absent from the repo: **AgBase** (785 rows), **ZFIN** (326),
 **CollecTF** (211); *Gossypium hirsutum* (395), *Danio rerio* (335),
 *Gallus gallus* (279), *M. tuberculosis* H37Rv (179).
 
-The human over-sampling is expected — the repo is human-centric — and it is
-benign for the term-type findings, because human IEP looks like everyone else's
-IEP.
+The human over-sampling is expected — the repo is human-centric. The coarse
+term-type shares above remain close to the global shares, but organism
+imbalances still limit comparisons of reviewer dispositions.
 
 The MGI row is the one that has moved, and it is worth saying why, because it
 shows what targeted sampling buys. MGI matters disproportionately: the largest
@@ -914,6 +925,19 @@ correct answer is "true, keep it, but it is not what this gene is for."
 
 ## Session Notes
 
+### 2026-09-13 (review follow-up — reconcile dispositions and branch claims)
+
+- Clarified that review-view totals include reviewer-proposed `NEW` rows, which
+  the disposition table now displays separately. The totals are unchanged.
+- Corrected the claim that no species stratum reaches significance: mouse has
+  an opposite-direction contrast (0/4 developmental versus 8/8 stimulus rows
+  flagged; Fisher p = 0.002). The pooled developmental excess remains
+  inconclusive (p = 0.21), and gene and species coverage does not eliminate
+  review-batch confounding.
+- Removed the inference from matching global branch proportions to reliable
+  branch-specific flag rates. The global atlas measures annotation composition,
+  not independent error rates. Earlier session claims are corrected below.
+
 ### 2026-09-05 (fourth pass — statistics tightened, review response)
 
 Nothing in the qualitative argument changed; what changed is how confidently the
@@ -926,10 +950,11 @@ them.
   against 64/381, which a two-sided Fisher exact test puts at **p = 0.21** —
   within noise. The survey script now computes that test, and splits both
   branches by species so batch confounding is visible: the direction repeats in
-  rat, human and *Arabidopsis* and reverses in *Dictyostelium*, with no stratum
-  significant. The developmental rows do at least span 54 gene directories
-  across six species, so they are not one review batch. Recommendation 3 now
-  rests on the six worked cases and says so.
+  rat, human and *Arabidopsis* and reverses in *Dictyostelium*. **Correction
+  (2026-09-13):** this entry originally said no stratum was significant, omitting
+  the opposite-direction mouse result (p = 0.002). The developmental rows span
+  54 gene directories across seven species, not six; that coverage does not
+  exclude batch confounding. Recommendation 3 rests on the six worked cases.
 - **Added a limitations section**,
   [What "flagged" means](#what-flagged-means-and-does-not-mean). Every
   disposition on the page comes from this project's own AI-generated reviews,
@@ -940,10 +965,11 @@ them.
   single rate; what is not neutral is that `KEEP_AS_NON_CORE` and
   `MARK_AS_OVER_ANNOTATED` are first-class verdicts, and "true but peripheral"
   is precisely this page's conclusion about IEP.
-- **Closed the reproducibility gaps.** The survey script now emits the per-gene
-  concentration statistics, the ACCEPT∩core count, and an `UNREVIEWED` column so
-  the disposition columns sum to the stated total instead of silently dropping
-  rows. Two page figures that had no counterpart in the script output are
+- **Partly closed the reproducibility gaps.** The survey script added per-gene
+  concentration statistics, the ACCEPT∩core count, and an `UNREVIEWED` column.
+  **Correction (2026-09-13):** the columns still omitted `NEW` rows, so the claim
+  that they summed to the total was premature; the missing column is now added.
+  Two page figures that had no counterpart in the script output are
   corrected: the concentration stat is now "top 10% of genes (23 of 221) carry
   42.7%", and core grounding is 55 rows of which 50 were also ACCEPTed (the page
   previously quoted the ACCEPT∩core number as if it were the total).
@@ -970,8 +996,10 @@ them.
   counting gene *directory names*, so `rat/Hspa8` and `mouse/Hspa8` collapsed
   into one. The correct figures are 218 distinct accessions across 220
   directories, not 212, and both are now reported.
-- **Smaller fixes.** Branch classification is now documented as first-match-wins
-  (which biases *against* the developmental finding); `% core` is documented as
+- **Smaller fixes.** Branch classification is now documented as first-match-wins.
+  **Correction (2026-09-13):** its effect on the branch contrast has not been
+  measured, so the earlier claim that it biases against the finding is withdrawn.
+  `% core` is documented as
   crediting a code for terms other codes also carry; both scripts normalise the
   one GOA cache that spells the aspect `P`; the atlas snapshot date is recorded
   in `data/global_iep_snapshot.json` instead of being read from file mtime,
@@ -1031,6 +1059,9 @@ them.
   BP aspect 1.00x, gene-concentration 1.02x — and **skewed by organism**: human
   4.58x, *Dictyostelium* 6.34x, mouse 0.33x, fly 0.30x, MGI 0.05x, with AgBase,
   ZFIN, CollecTF, cotton, zebrafish, chicken and *M. tuberculosis* absent entirely.
+  **Correction (2026-09-13):** the representativeness claim above was too broad.
+  These are marginal annotation shares, not evidence that the reviewed sample's
+  branch-specific flag rates generalize or are free of batch confounding.
 - **Correction (aspect violations).** Querying QuickGO with
   `evidenceCodeUsage=exact` initially suggested non-BP IEP was ~0.2% of the code
   and that the repo had over-sampled it. Using `descendants` — which is what a
@@ -1071,9 +1102,10 @@ them.
   core-function grounding it was the weakest experimental code by both measures, with 56.8% of
   rows landing in `KEEP_AS_NON_CORE` — the highest of any code. The
   characteristic IEP annotation is true and peripheral.
-- **Second finding:** the developmental branch (23.7% flagged) is riskier than
-  the stimulus-response branch (15.1%), despite the latter carrying 70.5% of all
-  IEP rows.
+- **Initial second finding (subsequently qualified):** the first pass described
+  the developmental branch (23.7% flagged) as riskier than the stimulus-response
+  branch (15.1%), despite the latter carrying 70.5% of all IEP rows. That general
+  claim was not established; see the corrected comparison and Recommendation 3.
 - **Third finding:** the 23 GORULE:0000006 aspect violations are an ECO→GAF
   mapping artifact, not curator error. ECO:0000279 (qualitative western
   immunoblotting) descends from both ECO:0000270 (→IEP) and ECO:0000314 (→IDA);
