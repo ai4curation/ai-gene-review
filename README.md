@@ -404,6 +404,9 @@ from `main:/` until the shadow artifact has been verified.
 The Generate Pages workflow runs daily at 08:23 UTC and can also be started with
 GitHub Actions' **Run workflow** button. Each run rebuilds the full site, so merged
 content normally appears after the next daily regeneration PR is merged.
+Agent cron profiles do not control this publication schedule. Manual runs wait for
+an active build to finish instead of cancelling it. Gene review validation remains
+in PR CI and the weekly full validation workflow.
 
 ## Contributing
 

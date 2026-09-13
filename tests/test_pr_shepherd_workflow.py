@@ -122,6 +122,20 @@ def test_generated_pages_runs_daily_or_manually():
     assert set(triggers) == {"schedule", "workflow_dispatch"}
     assert triggers["schedule"] == [{"cron": "23 8 * * *"}]
     assert triggers["workflow_dispatch"] is None
+    assert workflow["concurrency"]["cancel-in-progress"] is False
+
+
+def test_daily_generation_relies_on_main_validation_workflow():
+    """A last-commit diff cannot validate a day's merges; main CI owns validation."""
+    generation = GENERATE_PAGES.read_text()
+    assert "HEAD~1" not in generation
+    assert "steps.changed.outputs.files" not in generation
+    main_ci = _workflow(ROOT / ".github/workflows/main.yaml")
+    assert "pull_request" in main_ci[True]
+    assert "schedule" in main_ci[True]
+    validation = _step(main_ci["jobs"]["test"], "Validate gene reviews (scoped)")
+    assert "just validate-changed" in validation["run"]
+    assert "just validate-all" in validation["run"]
 
 
 def test_shadow_pages_failures_do_not_block_regeneration():
