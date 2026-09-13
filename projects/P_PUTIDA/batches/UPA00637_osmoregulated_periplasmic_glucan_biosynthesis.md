@@ -9,6 +9,7 @@ autolink_gene_symbols: false
 # PSEPK UPA00637: Osmoregulated Periplasmic Glucan Biosynthesis
 
 - Module seed: `osmoregulated_periplasmic_glucan_biosynthesis`
+- Pull request: https://github.com/ai4curation/ai-gene-review/pull/2142
 - Candidate genes from membership table: 2
 - Primary bucket genes: 2
 - Existing review files: 2
@@ -24,7 +25,7 @@ autolink_gene_symbols: false
 - [x] Run OpenScientist deep research for selected genes.
 - [x] Curate each selected gene review.
 - [x] Validate module and gene reviews.
-- [ ] Open one PR for this module/pathway.
+- [x] Open one PR for this module/pathway.
 - [ ] Shepherd PR through review, CI, and merge readiness.
 
 ## Candidate Genes
