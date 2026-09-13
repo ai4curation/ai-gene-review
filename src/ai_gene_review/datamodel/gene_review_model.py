@@ -614,7 +614,7 @@ class ActionEnum(str, Enum):
     """
     REMOVE = "REMOVE"
     """
-    Remove the existing annotation, as it is unlikely to be correct based on combined evidence
+    Remove the existing annotation, as it is unlikely to be correct or not consistent with GO annotation guidelines
     """
     MODIFY = "MODIFY"
     """

@@ -3570,7 +3570,7 @@ class ActionEnum(EnumDefinitionImpl):
         description="""Keep the existing annotation as-is, but mark it as non-core. For pleiotropic genes, this may be the developmental processes, or other processes that are not the core function of the gene.""")
     REMOVE = PermissibleValue(
         text="REMOVE",
-        description="Remove the existing annotation, as it is unlikely to be correct based on combined evidence")
+        description="Remove the existing annotation, as it is unlikely to be correct or not consistent with GO annotation guidelines")
     MODIFY = PermissibleValue(
         text="MODIFY",
         description="""The essence of the annotation is sound, but there are better terms to use (use in combination with proposed_replacement_terms). if the term is too general, then MODIFY should be used, with a proposed replacement term for the correct specific function. sometimes terms can also be overly specific and contorted, so in some cases you might want to generalize""")
