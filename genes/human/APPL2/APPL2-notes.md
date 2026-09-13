@@ -373,8 +373,11 @@ Four IEA pipelines contribute 38 rows.
 ## 11. What I think the core functions are
 
 1. **Rab effector on APPL endosomes and on early phagosomes.** Binds GTP-loaded Rab5A/5C,
-   Rab22A and, with highest affinity, Rab31 (Kd 140 nM), through the BAR-PH unit; this is
-   what puts APPL2 on membranes. `GO:0031267` + `GO:0010008`.
+   Rab22A, Rab24 and Rab31 through the BAR-PH unit; this is what puts APPL2 on membranes.
+   Rab31 is the only one whose affinity has been measured (Kd 140 ± 30 nM by ITC), and the
+   only one shown to be preferred over Rab5A (threefold, by co-immunoprecipitation in
+   macrophages) — the other three were scored only in yeast two-hybrid, so there is no
+   measured ranking across the four. `GO:0031267` + `GO:0010008`.
 2. **BAR-domain-mediated homo- and hetero-dimerization scaffold**, binding
    phosphoinositides through PH and PTB. `GO:0042803`, `GO:0035091`.
 3. **Negative regulation of insulin-stimulated glucose uptake in muscle** via the

@@ -338,21 +338,34 @@ for idx, ref, partner, quotes in RAB_ROWS:
         repl=[{"id": "GO:0031267", "label": "small GTPase binding"}])
 
 # ---- GO:0005515: APPL1 partner -> heterodimerization ----------------------
+# The third element, when present, is an extra sentence appended to the shared reason.
+AP_MS_NOTE = (
+    " One caveat specific to this row: its own reference is an affinity-purification "
+    "mass-spectrometry screen, which establishes co-complex membership rather than a 1:1 "
+    "dimer. The stoichiometry that justifies GO:0046982 comes from PMID:18034774 - yeast "
+    "two-hybrid with the minimal BAR domains plus reciprocal coimmunoprecipitation - not from "
+    "the AP-MS experiment itself. The re-term is still the right call here, because the partner "
+    "is identified and the nature of the APPL1-APPL2 interaction is independently established; "
+    "that is what distinguishes this row from the other partners in the same screens, which have "
+    "no such follow-up and are marked over-annotated."
+)
 APPL1_ROWS = {
-    7: ("PMID:15016378", ("rab5_effectors", "appl_proliferation")),
+    7: ("PMID:15016378", ("bar_dimer", "appl1_appl2_coip", "rab5_effectors")),
     8: ("PMID:16189514", ("bar_dimer", "ht_rual")),
     11: ("PMID:17030088", ("appl1_appl2_bar", "akt2_difference")),
     12: ("PMID:18034774", ("bar_dimer", "appl1_appl2_coip")),
     17: ("PMID:23414517", ("bar_dimer", "ht_lgmd")),
     21: ("PMID:24879834", ("tbc1d1_partner", "bar_dimer")),
     25: ("PMID:25416956", ("bar_dimer", "ht_rolland")),
-    28: ("PMID:28514442", ("bar_dimer", "ht_bioplex2")),
+    28: ("PMID:28514442", ("bar_dimer", "ht_bioplex2"), AP_MS_NOTE),
     32: ("PMID:31515488", ("bar_dimer", "ht_variants")),
     39: ("PMID:32296183", ("bar_dimer", "ht_huri")),
-    41: ("PMID:33961781", ("bar_dimer", "ht_bioplex3")),
-    42: ("PMID:35271311", ("bar_dimer", "ht_opencell")),
+    41: ("PMID:33961781", ("bar_dimer", "ht_bioplex3"), AP_MS_NOTE),
+    42: ("PMID:35271311", ("bar_dimer", "ht_opencell"), AP_MS_NOTE),
 }
-for idx, (ref, quotes) in APPL1_ROWS.items():
+for idx, spec in APPL1_ROWS.items():
+    ref, quotes = spec[0], spec[1]
+    extra = spec[2] if len(spec) > 2 else ""
     add(idx, ("GO:0005515", "IPI", ref), "MODIFY",
         "Bare protein binding for the APPL1 partner; the interaction is a defined BAR-domain heterodimer.",
         ("APPL1 is by far the most frequently reported APPL2 partner in this GOA record, and the "
@@ -360,7 +373,7 @@ for idx, (ref, quotes) in APPL1_ROWS.items():
          "APPL1-APPL2 heterodimerisation in yeast two-hybrid and the proteins reciprocally "
          "coimmunoprecipitate. GO:0046982 protein heterodimerization activity states that, where "
          "'protein binding' does not. The heterodimer is also the mechanistic substrate of the "
-         "adiponectin antagonism, in which APPL2 sequesters APPL1."),
+         "adiponectin antagonism, in which APPL2 sequesters APPL1." + extra),
         sup(*quotes),
         repl=[{"id": "GO:0046982", "label": "protein heterodimerization activity"}])
 
@@ -1330,7 +1343,8 @@ DESCRIPTION = (
     "self-association into crescent-shaped dimers and also heterodimerisation with its paralog APPL1, "
     "while the PH and PTB domains bind phosphoinositides; together these give the protein a "
     "curvature-sensing, lipid-binding scaffold. APPL2 is an effector of small GTPases of the Rab5 "
-    "branch, binding GTP-loaded Rab5, Rab22A and, with highest affinity, Rab31, and this is what "
+    "branch, binding GTP-loaded Rab5, Rab22A, Rab24 and Rab31 - the last being the only one whose "
+    "affinity has been measured, a dissociation constant of 140 nM - and this is what "
     "recruits it to membranes. On a peripheral subpopulation of early endosomes, called APPL "
     "endosomes for the two adaptors that mark them, APPL2 acts together with Rab5 and annexin A2 as "
     "part of a signalling platform that links internalised receptors to the nucleus; a pool of the "
@@ -1381,13 +1395,24 @@ CORE_FUNCTIONS = [
         "description": ("Sequesters APPL1 and competes with it for the adiponectin receptors, acting as "
                         "the negative arm of adiponectin and insulin signalling in muscle"),
         "molecular_function": {"id": "GO:0140311", "label": "protein sequestering activity"},
+        "directly_involved_in": [
+            {"id": "GO:0033211", "label": "adiponectin-activated signaling pathway"},
+            {"id": "GO:1900077", "label": "negative regulation of cellular response to insulin stimulus"},
+        ],
         "supported_by": sup("yin_yang", "sequestration", "appl2_rnai"),
     },
     {
-        "description": ("Binds phospho-Ser235 TBC1D1 through its BAR domain and suppresses TBC1D1 "
-                        "Thr-596 phosphorylation, restraining insulin-stimulated GLUT4 translocation "
-                        "and glucose uptake"),
+        "description": ("Binds phospho-Ser235 TBC1D1 through its BAR domain, holding it away from the "
+                        "kinase that would otherwise phosphorylate its Thr-596 site, and so restrains "
+                        "insulin-stimulated GLUT4 translocation and glucose uptake. The sequestering "
+                        "here is of TBC1D1 from its upstream kinase rather than of APPL1 from a "
+                        "receptor, which is the same activity applied to a different partner; what the "
+                        "protein contributes is the same phospho-dependent occupancy in both cases."),
         "molecular_function": {"id": "GO:0140311", "label": "protein sequestering activity"},
+        "directly_involved_in": [
+            {"id": "GO:0046325", "label": "negative regulation of D-glucose import across plasma membrane"},
+            {"id": "GO:0042593", "label": "glucose homeostasis"},
+        ],
         "supported_by": sup("tbc1d1_mech", "glut4_bidirectional", "muscle_ko"),
     },
     {
