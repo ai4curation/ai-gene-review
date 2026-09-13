@@ -325,10 +325,15 @@ in UniProt only as `By similarity` and have no human IPI row at all. The four ro
 
 ## 6. Per-row issues found
 
-Actions across the 57 GOA rows, plus 4 NEW: 30 ACCEPT, 21 KEEP_AS_NON_CORE, 1 MODIFY,
-5 MARK_AS_OVER_ANNOTATED, 4 NEW. No REMOVE — nothing in this record is contradicted, and the
-weak rows are weak by provenance rather than wrong in substance. (Counts are produced by
-`.scratch/count_actions.py`, not asserted.)
+Actions across the 57 GOA rows plus 5 NEW rows (62 entries): 38 ACCEPT, 13 KEEP_AS_NON_CORE,
+5 MARK_AS_OVER_ANNOTATED, 1 MODIFY, 5 NEW. No REMOVE — nothing in this record is contradicted,
+and the weak rows are weak by provenance rather than wrong in substance. 48 rows carry a
+`propagation_review` (all 6 IBAs, all 23 ISS including the 5 NEW rows, and all 19 IEAs — i.e.
+every row with `supporting_entities`), enumerating 70 source entities in total. Root causes are
+35 `NO_FAILURE_CORE`, 9 `NO_FAILURE_NON_CORE`, 3 `SOURCE_WEAK_OR_INFERRED` and 1
+`TERM_SCOPING_PROBLEM`; the only failure modes used are `SOURCE_EVIDENCE_WEAK` (×3) and
+`COMPARTMENT_OR_COMPLEX_MISMATCH` (×1). Every count in this paragraph is produced by
+`.scratch/count_actions.py`, not asserted.
 
 Specific calls worth flagging:
 
@@ -370,6 +375,24 @@ Specific calls worth flagging:
   no counterpart anywhere in the human record. Coded ISS on mouse Arc.
 - **GO:0036336 dendritic cell migration** — UniProt's FUNCTION block already asserts the immune
   role, but GO has nothing [PMID:28783680]. Coded ISS on mouse Arc; non-core.
+- **GO:0030674 protein-macromolecule adaptor activity** — the molecular-function record for this
+  gene is four bare `protein binding` Y2H rows plus mRNA binding and structural molecule
+  activity, none of which says what Arc does at the synapse. Chowdhury et al. mapped the
+  endophilin and dynamin interactions to distinct regions (UniProt: residues 89–100 and 195–214)
+  and showed both are required for vesicle association [PMID:17088211, "Distinct Regions of Arc
+  are Required for Interactions with Endophilin and Dynamin, and Both Interactions are Required
+  for Association with Vesicles"], and Wu et al. state the recruitment outright. GO:0030674 is
+  defined as bringing macromolecules into contact so they can act in a coordinated way, with
+  "protein recruiting activity" among its synonyms. This is the term the four uninformative
+  `protein binding` rows would ideally have become — except their partners are not the adaptor
+  partners, so it is added rather than substituted. Coded ISS on rat Arc.
+
+One deliberate near-miss on internal consistency is worth recording. The GO:0005886 IDA row
+(Bai 2011, GFP-ARC in PC3 cells) was initially graded `KEEP_AS_NON_CORE` while the GO:0005886 IBA
+row was `ACCEPT`; validation flags divergent actions on one term, and on reflection the validator
+is right. The action records what should happen to the annotation, and plasma membrane is core for
+Arc regardless of which row you look at. Both are now `ACCEPT`, with the evidence weakness of the
+Bai row stated in its `reason` rather than encoded as a different action.
 
 ## 8. Ontology gap
 
