@@ -40,3 +40,95 @@ Sgo1 is the fission-yeast meiosis-specific shugoshin that protects centromeric s
 - spindle attachment to meiosis I kinetochore (GO:0051455) IMP PMID:14972679 — mono-orientation in meiosis I; supported (sgo1 mutants affect MI kinetochore orientation). Accept.
 - meiotic spindle (GO:0072687) IDA PMID:19965387 — localization; defer/accept.
 - nuclear envelope (GO:0005635) HDA PMID:16823372 — high-throughput; keep non-core.
+
+## Reassessment — 2026-09-05
+
+The annotation-reviewer consultation rechecked the primary sources and live
+QuickGO records. These corrections supersede the earlier statements where they
+conflict:
+
+- Sgo1-associated fission-yeast PP2A is the Paa1–Par1–Ppa2 combination. The
+  primary paper distinguishes the severe segregation phenotype of par1 deletion
+  from the substantially faithful segregation of par2 deletion; the description,
+  core function and proposed imaging experiment should not assert interchangeable
+  Par1/Par2 complexes [PMID:16541024, p. 54, full primary paper:
+  https://publications.mpi-cbg.de/Riedel_2006_1292.pdf].
+- GO:0140463 chromatin-protein adaptor activity is explicitly `part_of`
+  GO:0006325 chromatin organization. The latter is broader than chromatin
+  remodeling, so this automated process inference is accepted. The earlier
+  rejection rested on an incorrectly narrow reading of chromatin organization
+  [QuickGO GO:0140463 relationships, checked 2026-09-05].
+- The PMID:20739936 IPI record is assigned by IntAct with WITH/FROM
+  UniProtKB:Q10428 (Par1). It is not a Survivin interaction record. Independent
+  PP2A evidence supports retaining this as a non-core interaction, while the
+  original paper-specific assay remains to be traced; the broad abstract does
+  not justify a CPC-adaptor claim for this row [QuickGO annotations for
+  UniProtKB:Q9P7A0, checked 2026-09-05; PMID:16541024].
+- The current record of APC-mediated ubiquitination in UniProt is an inference
+  (ECO:0000305). Declining abundance after meiosis I and proven APC causality
+  should not be conflated, so the standalone description now states only the
+  abundance change [UniProt:Q9P7A0; PMID:14972679].
+
+The mitotic biorientation assertion from PMID:20739936 remains under focused
+investigation. Its full main text was not recovered in the evidence audit. The
+open supplement contains Sgo2 experiments and human SGO1/SGO2 experiments;
+this is not grounds for alleging that PomBase misattributed the Sgo1 annotation.
+An OpenScientist request was launched through `just gene-hypothesis-research`
+to recover exact species, genotype, expression regime and assay provenance.
+No outcome from that request is assumed here.
+
+The nuclear-envelope HDA (PMID:16823372) and meiotic-spindle IDA
+(PMID:19965387) are now UNDECIDED because the accessible abstracts do not expose
+the gene-specific observations. This does not dispute the experimental records;
+absence of a known compartment-specific function is not evidence that observed
+localization is wrong. The earlier nuclear-envelope over-annotation claim and
+assertion of a secondary spindle pool were unsupported.
+
+The existing UNDECIDED review for GO:0051455 (PMID:14972679) remains appropriate
+pending its primary attachment assay. This supersedes the earlier notes entry
+saying ACCEPT. The term concerns physical spindle attachment to a meiosis-I
+kinetochore; it is not simply synonymous with cohesion protection or with
+kinetochore orientation [QuickGO GO:0051455 definition, checked 2026-09-05].
+
+## OpenScientist result assessment — 2026-09-05
+
+The [focused report](sgo1-hypotheses/mitotic-evidence-provenance/openscientist.md)
+completed successfully through the wrapper, with citation and provenance artifacts.
+Its recommendation to remove or re-scope GO:1990758 is not adopted. The report
+explicitly lacked the main article body and could not extract the freely available
+supplement. Figure-caption names, absence of Sgo1 from the accessible subset, and
+absence of an exported allele/FYPO record do not establish that the curator's IMP
+has no supporting experiment. The report's low residual-uncertainty estimate and
+proposed author-curation carry-over mechanism are not demonstrated results.
+
+The independent annotation-reviewer audit did read the supplement and identified
+Sgo2 and human SGO1/SGO2 assays there, but likewise did not recover the complete
+main-text provenance for this pombe Sgo1 annotation. The appropriate current
+outcome remains UNDECIDED pending its exact primary assay, rather than REMOVE
+or a confident assertion of paralog misattribution. The report is preserved as
+provider output, including its limitations; it is not treated as verified evidence
+for the proposed rejection [PMID:20739936; OpenScientist report, Limitations].
+
+### 2026-09-05: source-aware refresh after wrapper fix
+
+`just fetch-gene SCHPO sgo1 --force` refreshed 35 GOA rows and restored three
+source-specific IPI review records, yielding 30 review entries. Reviewed all three
+individually; none remains PENDING. UniProt's live Q10428 record maps `par1` to
+`SPCC188.02` (https://rest.uniprot.org/uniprotkb/Q10428.json, accessed 2026-09-05).
+The existing PMID:18716626 / PomBase:SPCC188.02 row therefore incorrectly described
+Swi6; it now describes Par1. Both identifier namespaces are preserved as seeded.
+
+The Swi6/P40381 record is directly supported by the PMID:18716626 abstract. For
+Par1-source records from that paper, retain the curated interaction with explicit
+curator deference and independent PP2A evidence from PMID:16541024; the Swi6 abstract
+statement is not evidence for a Par1-specific assay. PMID:16541025 directly supports
+meiotic fission-yeast shugoshin association with PP2A, while its abstract alone does
+not identify individual subunit assays. These protein-binding records remain
+KEEP_AS_NON_CORE; the adaptor function remains the informative core function.
+
+Checked the linked author correction PMID:30275479 against PubMed and the publisher:
+https://www.nature.com/articles/s41586-018-0529-9. It replaces quantification graphs
+to match the tubulin-reporter status of representative cells and corrects the human
+HP1alpha blot. The authors state the conclusions are unchanged. This does not
+resolve the unavailable Par1-specific assay in the original full text and is not a
+reason to remove the curated interaction.
