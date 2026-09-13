@@ -229,11 +229,16 @@ location** (IFI27, MICOS10, MICOS13, LETMD1, MAIP1, BCL2L2, TIMMDC1, DIABLO, NFU
 have a transmembrane segment, 1 (THBD) has a cleaved signal peptide, and 1 (SYT16) has no curated
 location at all**. The remainder are cytosolic, nuclear or endomembrane (GAD2, TPRG1, APOL2, UBQLN1,
 UBQLN2, SENP2, SNAP47, GSDMA, PORCN, TBC1D20, TMEM14B). Not one is a plasma or lipoprotein-associated
-protein. The load-bearing distinction is not "intracellular" — APOC4's mature chain does transit the ER
-and Golgi lumen on the way out of the hepatocyte — but which *face* of the compartment: APOC4 is lumenal
-then extracellular, and never faces the cytosol, the mitochondrial matrix or the nucleus, which is where
-all 23 partners work. Five (MICOS10, MICOS13, MAIP1, BCL2L2, TIMMDC1) are curated exclusively to the
-mitochondrion, which has no secretory-pathway connection at all. THBD is the single partial exception
+protein. Two claims follow and they are not equally firm. The firm one needs no partner topology at all:
+not one of the 23 is a plasma protein of the kind apoC-IV encounters, and every pair was scored by a Gal4
+two-hybrid, i.e. reconstituted in the yeast nucleus — a compartment APOC4's mature chain cannot occupy.
+The softer one is each partner's own compartment, which is graded rather than blanket. It is strongest
+for the ten curated mitochondrial partners, and sharpest for the five curated *exclusively* there
+(MICOS10, MICOS13, MAIP1, BCL2L2, TIMMDC1), since the mitochondrion has no secretory-pathway connection
+at all. It is weakest for the ER/Golgi-membrane partners, because APOC4 does transit those organelles on
+the way out of the hepatocyte, so the argument turns on which *face* of the membrane the partner works
+on — and that face is not settled for every partner (PORCN, an ER MBOAT, is the clear case). No exact
+count of topologically impossible partners is therefore claimed. THBD is the single partial exception
 worth stating: as a single-pass type I membrane protein it does present an extracellular domain to
 flowing blood, so an encounter is not topologically absurd — but that is precisely the topology a nuclear
 Gal4 two-hybrid cannot test. A reader checking UniProt will see `NbExp=3` on every one of these pairs;
