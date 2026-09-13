@@ -1240,6 +1240,7 @@ def render_project(
         source_file=md_path.name,
         warnings=warnings,
         frontmatter=frontmatter,
+        projects_base_path="../" * subdir_depth,
     )
     html = "\n".join(line.rstrip() for line in html.splitlines()) + "\n"
 

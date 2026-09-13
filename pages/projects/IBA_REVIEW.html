@@ -342,7 +342,7 @@
 </head>
 <body>
     <nav class="breadcrumb">
-        <a href="../index.html">Home</a> &raquo;
+        <a href="../../index.html">Home</a> &raquo;
         <a href="index.html">Projects</a> &raquo;
         IBA Annotation Quality Project
     </nav>
@@ -853,6 +853,610 @@ comments.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="how-many-sources-to-enumerate">How many sources to enumerate</h3>
+<p><code>source_entities</code> is a <strong>curated subset, not an exhaustive mirror</strong> of the row's<br />
+<code>WITH/FROM</code>. Enumerate the sources the review's argument actually rests on; where a<br />
+column carries dozens of donors, characterise the span in prose and name the ones that<br />
+matter. In mouse alone, <code>Mapk1 GO:0035556</code> has 53 donors, <code>Ccnb1 GO:0005634</code> has 45 and<br />
+<code>Egfr GO:0005886</code> has 67 — listing all of them is noise, not rigour, and it buries the<br />
+two or three that carry the reasoning.</p>
+<p>The rule that does bind: <strong>no sentence may claim more than the enumeration shows.</strong><br />
+A block that names one seed and calls it <em>"the</em> IBD seed" asserts a sole-donor fact the<br />
+<code>WITH/FROM</code> may contradict, and that is a defect regardless of how many sources are<br />
+listed. Definite singulars — "the IBD seed", "the sole donor", "the only seed" — must be<br />
+checked against the donor count before use; prefer "one of the IBD seeds" whenever more<br />
+than one gene-level donor exists.</p>
+<p>Two traps when counting donors:</p>
+<ul>
+<li>The <code>PANTHER:PTN…</code> entry is the <strong>node</strong>, not a donor. A row whose <code>WITH/FROM</code> is<br />
+<code>MGI:MGI:95407|PANTHER:PTN002571322</code> has exactly one donor, so "the IBD seed" is<br />
+  correct there.</li>
+<li>The same entity can appear twice under different identifiers — <code>RGD:2275</code> and<br />
+<code>UniProtKB:P55213</code> are both rat caspase-3. Two entries, one donor.</li>
+</ul>
+<p>Two mouse blocks were corrected under this rule, both by rewording the claim and adding<br />
+the co-donors: <code>Grpel2 GO:0051082</code> said "the IBD seed" while the row carries a human<br />
+<a href="../../genes/human/GRPEL1/GRPEL1-ai-review.html">GRPEL1</a> co-donor, and <code>Gulo GO:0016491</code> said the same while carrying seven gene donors<br />
+spanning fungi, plants and bacteria. Both now enumerate their full <code>WITH/FROM</code>.</p>
+<h3 id="resolving-a-donor-before-calling-it-unresolvable">Resolving a donor before calling it unresolvable</h3>
+<p><code>interpro/panther/&lt;FAMILY&gt;/&lt;FAMILY&gt;-entries.csv</code> is keyed on <strong>UniProt accession</strong> and<br />
+covers the whole family, not just <code>representative_members</code>. It gives the protein name,<br />
+gene symbol and source organism, so it resolves donors that a <code>grep</code> over <code>genes/</code> will<br />
+not:</p>
+<div class="codehilite"><pre><span></span><code>$<span class="w"> </span>grep<span class="w"> </span><span class="s1">&#39;^P9WIT3,&#39;</span><span class="w"> </span>interpro/panther/PTHR43762/PTHR43762-entries.csv
+P9WIT3,<span class="s2">&quot;L-gulono-1,4-lactone dehydrogenase&quot;</span>,protein,83332,
+<span class="w">       </span>Mycobacterium<span class="w"> </span>tuberculosis<span class="w"> </span><span class="o">(</span>strain<span class="w"> </span>ATCC<span class="w"> </span><span class="m">25618</span><span class="w"> </span>/<span class="w"> </span>H37Rv<span class="o">)</span>,…,Rv1771,…
+</code></pre></div>
+
+<p>Check it before writing "the local index does not resolve this". The <code>CLAUDE.md</code><br />
+restraint is <em>assert nothing you cannot establish</em> — not <em>assert nothing about UniProt<br />
+ids</em>, and a resolved donor usually strengthens the block's argument rather than being<br />
+mere bookkeeping. Note the limits: it is accession-keyed, so <code>FB:</code>/<code>SGD:</code>/<code>RGD:</code>/<code>MGI:</code><br />
+identifiers are <strong>not</strong> lookups in it, and a family whose directory is absent from<br />
+<code>interpro/panther/</code> resolves nothing.</p>
+<p><strong>Search every family's index, not just the node's own.</strong> A seed can sit in one family's<br />
+IBD while PANTHER classifies the protein into a <em>different</em> family, so the node's own<br />
+<code>entries.csv</code> will not contain it and a family-scoped lookup files it unresolvable when it<br />
+is in fact resolvable. <code>Acadl</code>'s bacterial seeds are the worked case: both are seeds of<br />
+<code>PTN002535634</code> in <code>PTHR43884</code>, but only <a href="https://www.uniprot.org/uniprotkb/P60584/entry">P60584</a> (<em>caiA</em>) is in <code>PTHR43884-entries.csv</code> —<br />
+<a href="https://www.uniprot.org/uniprotkb/Q47146/entry">Q47146</a> (<em>fadE</em>) resolves in <code>PTHR48083-entries.csv</code>. The reason is one column away in<br />
+that row: <a href="https://www.uniprot.org/uniprotkb/Q47146/entry">Q47146</a> is classified into <code>PTHR48083:SF18</code> ("ACYL-COENZYME A DEHYDROGENASE"),<br />
+so PANTHER's classification and the node it seeds simply are not the same family. So the<br />
+lookup is</p>
+<div class="codehilite"><pre><span></span><code>grep -l &#39;&lt;ACC&gt;&#39; interpro/panther/*/*-entries.csv
+</code></pre></div>
+
+<p>rather than a single family's file. This is the same widening the WITH/FROM route already<br />
+gets below: "the family has no index" and "the node's family has no index" are both<br />
+weaker than "no index has it".</p>
+<p><strong>A MOD-id seed can therefore only be name-matched, and a name match returns every<br />
+species' ortholog — so check the taxon column.</strong> <code>PTHR10836</code> carries <code>Gapdh2</code> for<br />
+<em>D. melanogaster</em> (<a href="https://www.uniprot.org/uniprotkb/P07487/entry">P07487</a>), <em>D. pseudoobscura</em> (<a href="https://www.uniprot.org/uniprotkb/O44104/entry">O44104</a>) and <em>D. subobscura</em><br />
+(<a href="https://www.uniprot.org/uniprotkb/O44105/entry">O44105</a>); matching on the gene name alone picks whichever comes first. A name match<br />
+corroborates that the family contains such a gene; it does not establish that the<br />
+<code>FB:</code>/<code>SGD:</code> id in the <code>WITH/FROM</code> <strong>is</strong> that entry. Say "corroborated", not<br />
+"resolved", when that is what happened.</p>
+<p>In this corpus <strong>"corroborated through the UniProt cross-reference for this MOD id<br />
+(ACC)"</strong> is the standard phrasing for that situation: the family index confirms <code>ACC</code><br />
+is the named protein, while the MOD-id-to-accession step is an inference rather than a<br />
+lookup. Reserve "resolved" for a step some file in the repository actually performs. And there<br />
+is a third state the substitution above can fall through: the family has no local directory<br />
+and the accession appears nowhere, so <strong>nothing corroborates it either</strong>. Say that<br />
+explicitly — "asserted from external knowledge, not corroborable here" — rather than<br />
+reaching for the weaker verb, which still implies a check that did not happen.</p>
+<p>The mechanical test for which of the three verbs applies is <strong>whether any family's index<br />
+resolves the accession</strong> — the widened <code>grep -l</code> above, not the node's own family, for the<br />
+reason that paragraph gives — so check that before choosing the wording, not after. The<br />
+narrower question (does the node's family have a directory under <code>interpro/panther/</code>?)<br />
+settles it only when the answer is yes; a no leaves the seed still possibly resolvable<br />
+elsewhere, which is exactly the case <code>Acadl</code>'s <a href="https://www.uniprot.org/uniprotkb/Q47146/entry">Q47146</a> turned out to be.</p>
+<p><strong>Before re-checking any existing "the local index does not resolve it" comment, work out<br />
+which seed it is about, and scope whatever you then claim to the comments you actually<br />
+identified.</strong> Two ways of assembling that set have already failed here, in opposite<br />
+directions, so the instruction comes before the criterion rather than after it:</p>
+<ul>
+<li><strong>Grepping the prose under-counts and mis-classifies.</strong> The wording varies ("could not be<br />
+  resolved to a named gene product", "do not resolve against the local caches", "not<br />
+  resolved to a protein"), and three reasonable patterns return three different sets. That<br />
+  is how a claim that every such comment cites a MOD id got written here, when two of them<br />
+  cite accessions.</li>
+<li><strong>Keying on the comment's own <code>source_id</code> misses the node-level ones.</strong> A comment can<br />
+  make an unresolvability claim about seeds it is <em>not</em> attached to: <code>Gulo</code>'s self-seed<br />
+  comment sits under an <code>MGI:</code> id while naming <code>UniProtKB:Q57ZU1</code> among donors that "do not<br />
+  resolve against the local caches", <code>Ghr</code>'s sits under a <code>PANTHER:PTN…</code> id while saying<br />
+  "several" of the row's further accessions could not be resolved, and <code>Notch1</code>'s sits<br />
+  under a <code>PANTHER:PTN…</code> id while naming four donors — a <code>WB:</code>, a <code>FB:</code> and two <code>ZFIN:</code><br />
+  ids — that "resolve nowhere in the local caches". Three blocks, so this is the pattern<br />
+  rather than a pair: read the comment's content, not just its key.</li>
+</ul>
+<p>The criterion itself is a property, not a list of the prefixes anyone has happened to see:<br />
+<strong>a seed is an index lookup iff it is a <code>UniProtKB:</code> accession.</strong> Nothing else is a key in<br />
+an accession-keyed file, so running the widened <code>grep</code> on anything else returns nothing<br />
+for a reason that says nothing about the seed — MOD identifiers (<code>MGI:</code>, <code>SGD:</code>, <code>FB:</code>,<br />
+<code>RGD:</code>, <code>PomBase:</code>, <code>ZFIN:</code>, <code>CGD:</code>, <code>TAIR:</code>, <code>WB:</code>, <code>dictyBase:</code>, <code>AGI_LocusCode:</code>) and<br />
+the non-MOD namespaces a <code>WITH/FROM</code> also carries (<code>PANTHER:</code>, <code>InterPro:</code> and <code>ensembl:</code><br />
+among many more) alike. No count or per-directory scope is given for those prefixes on<br />
+purpose: an earlier revision said which seven <code>genes/mouse</code> used and was wrong by one<br />
+(<code>Cftr</code> cites a <code>TAIR:</code> id) — a list offered as illustration, read back as the set to<br />
+match against, which is the failure this whole passage exists to prevent. Match on the<br />
+property. <code>ensembl:</code> is the one worth a second sentence, not as an exception but because<br />
+it is the case a reader cannot settle from the prefix: an Ensembl protein accession<br />
+<em>looks</em> like something an accession-keyed index might carry, and what actually excludes it<br />
+is that no <code>ENS…P…</code> identifier is a key in any <code>*-entries.csv</code>. For anything that is not a<br />
+<code>UniProtKB:</code> accession the routes are instead the name match described above and the<br />
+target's own UniProt <code>DR</code> cross-reference line. The consequence for re-checking: such a<br />
+comment is correct under the widening without being re-run, while an accession-cited one<br />
+is exactly what the widened grep can move. <code>Ccnt1</code>'s are the accession-cited ones this<br />
+sweep found, and they still resolve nowhere.</p>
+<p>That is what separates <code>Gulo</code> (<a href="https://www.uniprot.org/uniprotkb/P9WIT3/entry">P9WIT3</a> resolves to <em>M. tuberculosis</em> Rv1771) from <code>Bcl2</code><br />
+(<code>PTHR11256</code>) and <code>Ednra</code> (<code>PTHR46099</code>), whose accessions resolve in <strong>no</strong> family's<br />
+index, so no amount of grepping can corroborate the MOD-id-to-accession step. A bare <code>grep</code><br />
+for the accession is not a substitute: a hit may be an unnamed <code>ECO:0000250</code> or <code>WITH/FROM</code><br />
+reference, or a substring collision with an EMBL id (<code>AAP97287.1</code> matches <a href="https://www.uniprot.org/uniprotkb/P97287/entry">P97287</a>), and a<br />
+miss tells you only that the repository is silent. Check the route, not the grep.</p>
+<p>The middle verb has a worked example too, and it is the one place all three states<br />
+appear in a single claim. <code>genes/mouse/Bcl2</code> cites <a href="https://www.uniprot.org/uniprotkb/Q64373/entry">Q64373</a> as mouse <a href="../../genes/human/BCL2L1/BCL2L1-ai-review.html">Bcl2l1</a>: the<br />
+accession is <strong>named in no cached record</strong> (so "resolved" is unavailable), <em>and</em> the<br />
+identification is nonetheless <strong>corroborated</strong>, because <code>BCL2L1-goa.tsv</code> carries it as<br />
+the mouse-ortholog donor (<code>UniProtKB:Q64373|ensembl:ENSMUSP00000105445</code>) in the<br />
+<code>GO_REF:0000107</code> Ensembl-compara rows on human <a href="../../genes/human/BCL2L1/BCL2L1-ai-review.html">BCL2L1</a> — an orthology assertion is not a<br />
+name, but it establishes which gene the accession is. Note the route: an accession absent<br />
+from every <code>entries.csv</code> can still be corroborated by a <strong>GOA <code>WITH/FROM</code> column in<br />
+another gene's file</strong>, which is why "the family has no index" settles the first verb but<br />
+not the second.</p>
+<p>Finally, do not assert the lookup in the same breath as disclaiming it. "The UniProt<br />
+cross-reference for this MOD id <strong>points to</strong> <code>ACC</code>" states the mapping as fact — which is<br />
+the step the sentence exists to say is uncheckable. Write "the accession <code>ACC</code> <strong>is asserted<br />
+from</strong> external knowledge" instead.</p>
+<p>Universal quantifiers over a seed set need the same care as a definite singular:<br />
+"seeded entirely by X" or "every seed is an X" claims something about donors the block<br />
+may not have identified. Scope it — "every seed this review identified" — or name the<br />
+unidentified ones and say no claim is made about them.</p>
+<h3 id="when-a-remove-overrules-a-curator-and-when-it-does-not">When a REMOVE overrules a curator, and when it does not</h3>
+<p><code>CLAUDE.md</code> forbids using <code>REMOVE</code> on an experimental annotation (IDA/IMP/IPI/IGI/IEP/EXP)<br />
+just because the cached title or abstract is about a different gene — the full text the<br />
+curator read is usually not in <code>publications/</code>. Applying that across <code>genes/mouse</code> needed a<br />
+test sharper than "is the reason biological?", and the two ways of getting it wrong are both<br />
+on the record here.</p>
+<p><strong>The condition, not the phrasing — but that is necessary, not sufficient.</strong> A first pass<br />
+selected rows by matching phrases in the reason and missed a row whose immediate neighbour it<br />
+caught — same gene, same PMID, same evidence code, same argument, differing only in that one<br />
+said "The paper concerns" and the other "This physiology belongs to". Key on the condition<br />
+instead: an experimental evidence code, a cited PMID whose cache is<br />
+<code>full_text_available: false</code>, and a reason that turns on <strong>what the paper contains or which<br />
+gene it studies</strong>. That took the class from the 25 the phrase list found to 42.</p>
+<p>The class is actually <strong>48 rows across 17 genes</strong>. The last six were routed into the <em>keep</em><br />
+bucket because their shared reason cited biology — and it took reading each row's qualifier<br />
+to get them out. So the residual error does not live in the sweep; it lives in the triage of<br />
+what the sweep keeps, which is what the table below is for.</p>
+<p><strong>Then ask whether the cited biology contradicts <em>this</em> annotation, given its qualifier and<br />
+aspect.</strong> This is the step that separates a sound <code>REMOVE</code> from one that only sounds sound:</p>
+<table>
+<thead>
+<tr>
+<th>Keep the <code>REMOVE</code></th>
+<th>Convert to <code>UNDECIDED</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GO:0005515</code> protein binding — policy against the term, independent of any text</td>
+<td>the reason asserts what the paper is about</td>
+</tr>
+<tr>
+<td>the biology is stated <strong>in the cached abstract itself</strong> — <a href="../../genes/mouse/Uox/Uox-ai-review.html">Uox</a>'s abstract gives the enzyme's real reaction, which is what makes the deoxynucleoside-catabolism terms wrong</td>
+<td>the reason turns on unread full text</td>
+</tr>
+<tr>
+<td>the argument is about the gene's molecular identity — a protease that cleaves a CDK inhibitor is not one, so <code>GO:0004861</code> goes</td>
+<td>the argument answers a claim the annotation does not make</td>
+</tr>
+</tbody>
+</table>
+<p>The last row is the trap. Six <a href="../../genes/mouse/Bcl2/Bcl2-ai-review.html">Bcl2</a> rows carried "…or describes an enzymatic/molecular<br />
+activity not enabled by <a href="../../genes/mouse/Bcl2/Bcl2-ai-review.html">Bcl2</a>" — true of <a href="../../genes/mouse/Bcl2/Bcl2-ai-review.html">Bcl2</a>, and irrelevant to every row it was applied to.<br />
+Four were qualified <code>acts_upstream_of_or_within</code>, which asserts <strong>regulation</strong>, not<br />
+catalysis; two were <code>located_in</code> cellular-component calls, which assert neither. <strong>Read the<br />
+qualifier and the aspect before accepting that a biological argument bites.</strong></p>
+<p><strong>A shared reason is suspicious only under a corrective action.</strong> Reuse alone is not a<br />
+signal: a reason string whose rows span ≥3 distinct terms occurs in <strong>201 groups</strong> across<br />
+<code>genes/mouse</code>, up to 243 rows on one string. Where those groups sit is the whole point:</p>
+<table>
+<thead>
+<tr>
+<th>action</th>
+<th style="text-align: right;">groups</th>
+<th style="text-align: right;">rows</th>
+<th style="text-align: right;">largest</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>KEEP_AS_NON_CORE</code></td>
+<td style="text-align: right;">83</td>
+<td style="text-align: right;">2952</td>
+<td style="text-align: right;">228</td>
+</tr>
+<tr>
+<td><code>ACCEPT</code></td>
+<td style="text-align: right;">60</td>
+<td style="text-align: right;">1648</td>
+<td style="text-align: right;">139</td>
+</tr>
+<tr>
+<td><code>MARK_AS_OVER_ANNOTATED</code></td>
+<td style="text-align: right;">30</td>
+<td style="text-align: right;"><strong>587</strong></td>
+<td style="text-align: right;">202</td>
+</tr>
+<tr>
+<td><code>MODIFY</code></td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">108</td>
+<td style="text-align: right;">18</td>
+</tr>
+<tr>
+<td><code>REMOVE</code></td>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;"><strong>93</strong></td>
+<td style="text-align: right;">23</td>
+</tr>
+<tr>
+<td><code>UNDECIDED</code></td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">9</td>
+</tr>
+</tbody>
+</table>
+<p>(Neither column sums to the unscoped total — 200 groups against 201, and 5409 rows against<br />
+5432. Qualification is per-scope: a group can clear ≥3 terms overall and not within one<br />
+action, or the reverse. The clearest case is <code>Secondary or downstream function</code>, 243 rows<br />
+that split 228 <code>KEEP_AS_NON_CORE</code> + 15 <code>ACCEPT</code>, qualifying in one scope and not the other.)</p>
+<p>Reproduce every figure here, as of the commit that ships the script<br />
+(<code>git log --oneline -1 -- projects/IBA_REVIEW/shared_reason_groups.py</code>):</p>
+<div class="codehilite"><pre><span></span><code>S=projects/IBA_REVIEW/shared_reason_groups.py
+python3 $S
+for a in ACCEPT KEEP_AS_NON_CORE MARK_AS_OVER_ANNOTATED MODIFY REMOVE UNDECIDED; do
+    python3 $S --action &quot;$a&quot;
+done
+python3 $S --action REMOVE --list
+python3 $S --action MARK_AS_OVER_ANNOTATED --list
+</code></pre></div>
+
+<p><strong><code>REMOVE</code> is not the whole of "corrective", and scoping to it hid the larger half.</strong> An<br />
+earlier revision of this paragraph reported only the <code>REMOVE</code> row — 10 groups over 93 —<br />
+and called the rest "nearly all <code>KEEP_AS_NON_CORE</code> or <code>ACCEPT</code>". <code>MARK_AS_OVER_ANNOTATED</code> is<br />
+corrective too, and carries <strong>587 rows, six times as many</strong>, with a single string on 202 of<br />
+them. "Nearly all" was also wrong on its own terms: <code>KEEP_AS_NON_CORE</code> and <code>ACCEPT</code> together<br />
+are 85% of scoped rows and 72% of groups, not nearly all.</p>
+<p>The lesson is about operationalization, not arithmetic. The rule names a <em>property</em><br />
+("corrective"); the measurement named <em>one action</em>; and because the narrower figure was the<br />
+one that made the point cleanly, nothing prompted a check that the two matched. When a rule<br />
+and its measurement are worded differently, the gap is where the finding hides.</p>
+<p>The <code>REMOVE</code> breakdown, for reference, is <a href="../../genes/mouse/Casp3/Casp3-ai-review.html">Casp3</a> 23; <a href="../../genes/mouse/Ang2/Ang2-ai-review.html">Ang2</a> 18, 8, 4 and 3; <a href="../../genes/mouse/Uox/Uox-ai-review.html">Uox</a> 12; <a href="../../genes/mouse/Hsp90aa1/Hsp90aa1-ai-review.html">Hsp90aa1</a> 8;<br />
+<a href="../../genes/mouse/Cyp1a1/Cyp1a1-ai-review.html">Cyp1a1</a> 7; <a href="../../genes/mouse/Agtr1a/Agtr1a-ai-review.html">Agtr1a</a> 5; <a href="../../genes/mouse/Ednra/Ednra-ai-review.html">Ednra</a> 5.</p>
+<p><strong>A caveat that the <code>MARK_AS_OVER_ANNOTATED</code> figure does not settle.</strong> The two actions are<br />
+not equally exposed to the objection. <code>REMOVE</code> withdraws an annotation, so its reason has to<br />
+carry a per-annotation verdict; <code>MARK_AS_OVER_ANNOTATED</code> withdraws nothing and records a<br />
+scoping judgement, where one class rationale across many terms is more often the honest<br />
+description. So the 587 is not 587 defects. But it is 587 rows the rule as stated reaches and<br />
+the measurement did not — and the second-largest group is a clear instance: <code>Bcl2</code>'s 35 rows<br />
+over 19 terms on <em>"this term is too indirect, broad, or mechanistically ambiguous"</em>, a<br />
+three-way disjunction that never says which disjunct applies, which is the shape dismantled<br />
+under <code>REMOVE</code> in that same file.</p>
+<p>Apply this section's own qualifier-and-aspect test and the disjunction visibly breaks. Those<br />
+19 terms span <strong>all three aspects and five qualifiers</strong> in <code>Bcl2-goa.tsv</code>: 3 <code>enables</code> MF, 21<br />
+<code>involved_in</code> and 8 <code>acts_upstream_of_or_within</code> BP, 2 <code>located_in</code> and 2 <code>part_of</code> CC (36<br />
+GOA rows for 35 review rows — one term carries a duplicate). So <em>"mechanistically ambiguous"</em><br />
+cannot be what is wrong with <code>GO:0043209 myelin sheath</code>, a curated <code>located_in</code> IDA on<br />
+PMID:7953633; and <em>"too indirect"</em> cannot be what is wrong with <code>GO:0015267 channel activity</code>,<br />
+an <code>enables</code> MF claim. Each row probably has one fitting disjunct and the reader is never told<br />
+which. That is the argument <strong>for</strong> the follow-up, recorded here so the deferral is not<br />
+mistaken for a judgement that the group is fine. The <a href="../../genes/mouse/Bcl2/Bcl2-ai-review.html">Bcl2</a> group is measured and recorded,<br />
+<strong>not repaired</strong>: doing it properly is per-term work across its 19 terms, and this<br />
+paragraph's own history is a warning against opportunistic rewrites (see the <a href="../../genes/mouse/Ang2/Ang2-ai-review.html">Ang2</a> note<br />
+below).</p>
+<p>The largest group, 202 rows on <em>"This overstates the direct role of the gene product; the<br />
+curated model…"</em>, is a separate case — a cross-file class rationale spanning far more terms,<br />
+and mostly though not wholly outside this review: <a href="../../genes/mouse/Edn1/Edn1-ai-review.html">Edn1</a> 114, <a href="../../genes/mouse/Ednra/Ednra-ai-review.html">Ednra</a> 32, <a href="../../genes/mouse/Tnfrsf1a/Tnfrsf1a-ai-review.html">Tnfrsf1a</a> 31, <a href="../../genes/mouse/Agtr1a/Agtr1a-ai-review.html">Agtr1a</a> 25,<br />
+so 88 of the 202 sit in files edited here.</p>
+<p><strong>That script exists because these figures had been wrong twice before it did</strong>, the second<br />
+time in a way no reader could have caught. The published pair — 160 groups, and 7 over 63<br />
+under <code>REMOVE</code> — turned out to come from three mutually inconsistent predicates in a single<br />
+sentence: the <code>REMOVE</code> breakdown reproduces only with a ≥40-character minimum on the reason<br />
+string, the "177 rows" figure only with rows deduplicated by (file, term), and 160 reproduces<br />
+under neither. <code>grep</code>-able counts of a folded scalar need a parser, and a figure a reader<br />
+cannot reproduce does not go wrong quietly — it goes wrong invisibly. State the predicate,<br />
+ship the command, and quote no number you cannot re-run.</p>
+<p>The length cutoff was not a harmless tuning choice either. It hid <a href="../../genes/mouse/Ang2/Ang2-ai-review.html">Ang2</a>'s three largest<br />
+<code>REMOVE</code> groups — 20, 8 and 4 rows on "No direct mouse evidence.", "Stale ISO transfer." and<br />
+"Do not stack inference on inference." — the most boilerplate-looking rows in the corpus and<br />
+exactly the ones the paragraph wants counted. So no minimum length is applied here, and<br />
+counting those 32 rows is what turned up the finding below.</p>
+<h3 id="what-the-count-is-for-a-pointer-not-a-verdict">What the count is for: a pointer, not a verdict</h3>
+<p>All 32 are <code>ISO</code> or <code>IEA</code> — no experimental row among them — and inspection split them in two.<br />
+The question that separates them is <strong>what the reason is about</strong>:</p>
+<ul>
+<li><strong>12 rows</strong> (8 + 4) shared one string in <code>reason</code> <em>and</em> one in <code>summary</code>, and are<br />
+<strong>legitimately</strong> shared: "the current human source no longer carries this term", "the<br />
+  current human source is itself inferred-only (IBA)". Those are claims about the<br />
+<strong>transfer</strong>, and one <code>GO_REF:0000119</code> transfer from one human source fails the same way<br />
+  for every term it carried. Restating it eight times would be duplication, not diligence.</li>
+<li><strong>20 rows</strong> were the real defect, and not the one a shared string suggests. Their <code>reason</code><br />
+  said only "No direct mouse evidence." — which is not an argument against an <code>ISO</code> at all,<br />
+  since transferred-without-mouse-data is precisely what <code>ISO</code> asserts. The row-specific<br />
+  material sat in <code>summary</code> ("Transferred heparin binding from human <a href="../../genes/human/ANG/ANG-ai-review.html">ANG</a>, not shown for mouse<br />
+<a href="../../genes/mouse/Ang2/Ang2-ai-review.html">Ang2</a>"), which restates the same absence. So 20 corrective verdicts rested on a<br />
+<strong>tautology</strong>, while the file's neighbouring rows carried the real argument — the functional<br />
+  divergence <code>PMID:8633065</code> documents. Those 20 now carry it (18 <code>ISO</code> rows share the<br />
+  transfer-level wording; the 2 <code>IEA</code> rows name the automated import instead). <strong>No action<br />
+  changed</strong>; what changed is that the reason now says something that could be wrong.</li>
+</ul>
+<p>And the first repair got the paper wrong, which is the part worth keeping. It said<br />
+<code>PMID:8633065</code> showed Angrp "lacks Ang's angiogenic activity, <strong>the one function directly<br />
+  compared</strong>". The abstract compares three things: Angrp is not angiogenic; that is <em>not</em> a<br />
+  catalytic deficiency, because Angrp's ribonucleolytic activity toward tRNA is somewhat<br />
+<em>greater</em> than Ang's; and an inability to bind cellular receptors is implicated, with poor<br />
+  conservation of the receptor recognition sequence 58-69. The middle finding is quoted as<br />
+<code>supporting_text</code> <strong>six times in the same file</strong> — on four <code>ACCEPT</code>ed rows (<code>GO:0004540</code> as<br />
+  IBA, IEA and ISO, and the narrower <code>GO:0004549 tRNA-specific ribonuclease</code> as ISO), in<br />
+<code>core_functions</code>, and in the <code>reference_review.findings</code> — so one document was<br />
+  simultaneously accepting that Angrp is the <em>better</em> RNase, on a <em>more specific</em> RNase term,<br />
+  and removing RNase-driven terms on the ground that it had lost activity. The reasons now<br />
+  state all three findings and rest on the receptor-binding defect, which is what actually<br />
+  blocks the receptor-mediated uptake that <a href="../../genes/human/ANG/ANG-ai-review.html">ANG</a>'s nuclear and stress-response biology depends<br />
+  on.</p>
+<p>Note where the right reading already lived: the file's own <code>references[].findings</code> for<br />
+  this PMID recorded all three results, including that the angiogenic loss is "attributed to<br />
+  defective cellular receptor binding rather than loss of RNase catalytic capacity" — while 20<br />
+<code>reason</code> fields citing the same paper said otherwise. A <code>reference_review</code> is the curator's<br />
+  reading of the paper; when a <code>reason</code> citing that paper disagrees with it, the <code>reason</code> is<br />
+  the thing to check first.</p>
+<p>The <code>summary</code> fields were left as they are, deliberately. "Transferred heparin binding from<br />
+  human <a href="../../genes/human/ANG/ANG-ai-review.html">ANG</a>, not shown for mouse <a href="../../genes/mouse/Ang2/Ang2-ai-review.html">Ang2</a>" is an accurate <em>description</em> of the annotation and its<br />
+  status; it was only a defect while it was also the whole argument. Summary describes, reason<br />
+  argues — and conflating the two is what produced the tautology in the first place.</p>
+<p>Note what the two groups have in common after the fix: the repaired reason is <em>also</em> one<br />
+shared string across 18 rows, and belongs there. Sharing was never the defect. A claim about<br />
+the term must be per-term; a claim about the source or the transfer covers every term that<br />
+transfer moved; and a claim that merely restates the evidence code is not a claim.</p>
+<p><strong><code>source_label</code> is perspectival, and the three-verb standard does not reach it.</strong> The verbs<br />
+(<em>resolved</em> / <em>corroborated</em> / <em>asserted from external knowledge</em>) govern provenance claims in<br />
+prose, where the <code>comment</code> says how an identity was established. <code>source_label</code> is a readable<br />
+handle for the source <em>as it stands to this target</em> — the same role <code>preferred_term</code> plays<br />
+beside a PANTHER <code>term.label</code>, which <code>CLAUDE.md</code> already separates from the checked field.</p>
+<p>That makes a cross-file consistency check on it actively wrong. Of <strong>64 distinct MOD ids</strong><br />
+carrying a label in <code>genes/mouse</code> (89 labelled sources; MOD = <code>MGI</code>/<code>RGD</code>/<code>SGD</code>/<code>FB</code>/<code>WB</code>/<br />
+<code>ZFIN</code>/<code>TAIR</code>/<code>PomBase</code>/<code>dictyBase</code>/<code>CGD</code>/<code>Xenbase</code>), three are labelled differently in<br />
+different files, and all three are correct:</p>
+<table>
+<thead>
+<tr>
+<th>id</th>
+<th>in one file</th>
+<th>in the other</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>MGI:MGI:1346858</code></td>
+<td><code>mouse Mapk1 (the review target itself)</code></td>
+<td><code>mouse Mapk1 (ERK2, the target's closest paralog)</code></td>
+</tr>
+<tr>
+<td><code>MGI:MGI:1346859</code></td>
+<td><code>mouse Mapk3 (ERK1, the target's closest paralog)</code></td>
+<td><code>mouse Mapk3 (the review target itself)</code></td>
+</tr>
+<tr>
+<td><code>MGI:MGI:88316</code></td>
+<td><code>mouse Ccne1 (cyclin E1)</code></td>
+<td><code>mouse Ccne1 (this gene)</code></td>
+</tr>
+</tbody>
+</table>
+<p>The <strong>identity half agrees in all three</strong>; only the relationship clause differs, because the<br />
+relationship differs. So check the symbol, leave the parenthetical alone.</p>
+<p>Where to check it needs saying, because the obvious answer does not reach most rows. When<br />
+this was first measured only <strong>26 of the 89</strong> labelled sources had a <code>comment</code> carrying a<br />
+provenance verb (<strong>32</strong> at the time of writing, after the repairs below); on the rest the<br />
+comment is biological commentary ("A mammalian D-type cyclin seed at the same node") and the<br />
+symbol is asserted in the label alone, with nothing to check it against. So the rule<br />
+is not <em>check the label against the comment</em> — it is that <strong>the symbol is an identity claim<br />
+wherever it is written</strong>, and is owed the same standard there: establish it from the local<br />
+index (PAINT seeds, <code>*-entries.csv</code>, the GOA <code>WITH/FROM</code>) or write no label. A label whose<br />
+symbol you cannot establish is a reason to write no label, not to invent one; the<br />
+<code>SGD:S000004812</code> seed in <code>Ccnb1 GO:0005737</code> is cited by bare identifier for exactly that<br />
+reason, three lines below a labelled row whose comment makes no identity claim at all.</p>
+<p><strong>A self-label is not an identity claim, and does not need establishing.</strong> Of the 89, <strong>27</strong><br />
+name the review target itself — "mouse <a href="../../genes/mouse/Ccnb1/Ccnb1-ai-review.html">Ccnb1</a> (this gene)", "the review target itself", or the<br />
+bare symbol — where the symbol is the file's own <code>gene_symbol</code> and there is nothing to look<br />
+up. The rule reaches the other <strong>62</strong>: labels naming a <em>different</em> gene, where the symbol<br />
+asserts something a reader could not otherwise check. <strong>31 of those carry a provenance<br />
+clause; 31 do not</strong>, across ten files: <a href="../../genes/mouse/Sox2/Sox2-ai-review.html">Sox2</a> 6, <a href="../../genes/mouse/Mapk1/Mapk1-ai-review.html">Mapk1</a> 5, <a href="../../genes/mouse/Ifi204/Ifi204-ai-review.html">Ifi204</a> 4, <a href="../../genes/mouse/Mapk3/Mapk3-ai-review.html">Mapk3</a> 4, <a href="../../genes/mouse/Drd1/Drd1-ai-review.html">Drd1</a> 3, <a href="../../genes/mouse/Frmpd2/Frmpd2-ai-review.html">Frmpd2</a> 3,<br />
+<a href="../../genes/mouse/Nf1/Nf1-ai-review.html">Nf1</a> 3, <a href="../../genes/mouse/Agtr1a/Agtr1a-ai-review.html">Agtr1a</a> 1, <a href="../../genes/mouse/Aldh2/Aldh2-ai-review.html">Aldh2</a> 1, <a href="../../genes/mouse/Ccne1/Ccne1-ai-review.html">Ccne1</a> 1.</p>
+<p>Reproduce the split, and the residual by file:</p>
+<div class="codehilite"><pre><span></span><code>python3 projects/IBA_REVIEW/shared_reason_groups.py --classify-labels
+python3 projects/IBA_REVIEW/shared_reason_groups.py --classify-labels --list
+</code></pre></div>
+
+<p><strong>The classifier has to be stricter than "contains the target's symbol", and the first<br />
+version was not.</strong> An earlier revision matched the <code>gene_symbol</code> as a word anywhere in the<br />
+label and published 32/57/28/29 — five rows too many on the self side, every one of them a<br />
+<em>cross-species ortholog</em>: "rat <a href="../../genes/mouse/Casp3/Casp3-ai-review.html">Casp3</a>" ×2, "rat <a href="../../genes/mouse/Aldh2/Aldh2-ai-review.html">Aldh2</a>", "Drosophila <a href="../../genes/mouse/Nf1/Nf1-ai-review.html">Nf1</a>", and a <code>Fbxo2</code> label<br />
+whose whole point is <em>"not mouse <a href="../../genes/mouse/Fbxo2/Fbxo2-ai-review.html">Fbxo2</a>, whose own record is MGI:2446216"</em>. Those are exactly<br />
+the identity claims the rule exists for — "rat <a href="../../genes/mouse/Casp3/Casp3-ai-review.html">Casp3</a>" in a mouse file asserts something about<br />
+a rat gene a reader cannot check — and the loose match filed them under "nothing to<br />
+establish". A label is a self-label only when it carries a self-marker ("this gene", "the<br />
+review target itself") or <em>is</em> the bare symbol (optionally "mouse "-prefixed and with a<br />
+parenthetical), and carries no other-species qualifier and no negation. <code>Ednra</code>'s "zebrafish<br />
+ednraa" is why the symbol test must be an exact match rather than a substring.</p>
+<p>That predicate is now <code>is_self_label()</code> in the script rather than prose, with the boundary<br />
+cases as self-test arms — because the bare-symbol form is the only one classified by<br />
+comparison rather than by a visible marker, and so the first thing a refactor breaks.<br />
+<code>Hsp90aa1</code>'s "<a href="../../genes/mouse/Hsp90aa1/Hsp90aa1-ai-review.html">Hsp90aa1</a>" and <code>Grb2</code>'s "<a href="../../genes/mouse/Grb2/Grb2-ai-review.html">Grb2</a>" are the self side of that boundary; <code>Ccnb1</code>'s<br />
+"budding-yeast CLB5" is the foreign side. Substituting the old word-boundary predicate now<br />
+fails the self-test rather than silently republishing 32/57.</p>
+<p>Two of the five were unprovenanced, so the residual gained a file. <strong><code>Aldh2 RGD:69219</code> is the<br />
+highest-leverage entry</strong>: <code>genes/rat/Aldh2</code> does not exist, the accession appears nowhere<br />
+name-carrying in the repository, and it is the ISO donor for nine further rows in that same<br />
+file — one establish would ground ten rows.</p>
+<p><strong>The label is the weaker signal, and the accession is the stronger one.</strong> Two further<br />
+misclassifications of the same shape turned up outside mouse — <code>ACRBP</code> and <code>ADAMTSL5</code> each<br />
+cite a mouse ortholog whose label the species list did not cover — and chasing them<br />
+through that list was the wrong layer. A MOD accession names a gene in exactly one<br />
+species, so <code>MGI:</code> in <code>genes/human</code> is the mouse ortholog <em>however the label reads</em> — and<br />
+because <code>MOD_PREFIXES</code> is derived from a <code>MOD_ORGANISM</code> map rather than listed separately,<br />
+every prefix in that map resolves. <code>mod_source_is_foreign()</code> applies that first; of the<br />
+825 labelled species-scoped sources across the whole corpus it settles <strong>708</strong>, leaving <strong>117</strong><br />
+same-species rows to <code>is_self_label()</code>, whose live remaining job is separating the target<br />
+from its own <strong>paralogs</strong> ("mouse Bax" in <code>Bcl2</code>, "Dictyostelium cAR1-type paralog" in<br />
+<code>carD</code>: 77 of the 117). The word list is now the fallback, not the decision.</p>
+<p>That matters because the label can be silent. Four rows move corpus-wide, all in<br />
+<code>genes/human</code>, and <strong>two of them no word list could ever have reached</strong>:<br />
+<code>genes/human/FEN1</code> cites <code>MGI:MGI:102779</code> as bare <strong>"Fen1"</strong> — case-insensitively equal to<br />
+its own <code>gene_symbol</code> <a href="../../genes/human/FEN1/FEN1-ai-review.html">FEN1</a>, with no species word present to match. <code>ACRBP</code>'s "Acrbp (Mus<br />
+musculus)" and <code>ADAMTSL5</code>'s "<a href="../../genes/human/ADAMTSL5/ADAMTSL5-ai-review.html">Adamtsl5</a> (M. musculus)" the word list does now catch, but the<br />
+accession catches them too and would have without the patch. Afterwards <code>genes/human</code> has<br />
+<strong>0</strong> MOD self-labels, which is right <em>by construction</em>: no MOD namespace maps to human, so a<br />
+human review's own annotation can never arrive under one.</p>
+<p><strong>Deriving one list from another checks it against nothing.</strong> <code>MOD_PREFIXES</code> is derived<br />
+from <code>MOD_ORGANISM</code>, which makes the two agree with <em>each other</em> and neither with the<br />
+corpus — and <code>MOD_ORGANISM</code> was itself written from a roster of model-organism databases.<br />
+It was wrong in both directions. <code>AGI_LocusCode</code> is used <strong>22 times, 15 of them on labelled<br />
+sources</strong>, and was absent: because the derived <code>MOD_PREFIXES</code> gates <code>classify_labels</code>'<br />
+<code>startswith</code> filter, those rows were discarded <em>before</em> <code>mod_source_is_foreign()</code> could<br />
+see them, so they were missing from all four buckets and from the denominator. It is not<br />
+an exotic namespace — it is the Arabidopsis locus spelling of the species <code>TAIR</code> already<br />
+maps to (<code>AGI_LocusCode:AT2G17800</code> where GOA writes <code>TAIR:locus:2827916</code>), i.e. the same<br />
+both-written-forms problem as <code>Mus musculus</code> / <code>M. musculus</code>, one field over. In the other<br />
+direction <code>Xenbase</code> sat in the map with <strong>0</strong> uses and a <code>genes/XENLA</code> value that is not a<br />
+directory — the identical invented-entry defect described below, in the map the gate<br />
+derives everything from, and the arm written to catch that class checked only the sibling<br />
+map. Adding the one and dropping the other moves the corpus denominator 714 → <strong>729</strong><br />
+(gate 597 → 612) and leaves mouse untouched.</p>
+<p>The same grep then caught the roster one level up. <code>ensembl:</code> was excluded on the stated<br />
+ground that it "names no gene in exactly one species" — true of <code>UniProtKB</code>, <code>PANTHER</code>,<br />
+<code>InterPro</code>, <code>GO</code>, <code>RHEA</code> and <code>EC</code>, and <strong>false of <code>ensembl</code></strong>: all 312 of its sources are<br />
+<code>ENSMUSP</code> (216) or <code>ENSRNOP</code> (96), so the species is readable from the accession string,<br />
+which is more than <code>UniProtKB</code> offers. That left <strong>96 labelled sources</strong> outside the gate —<br />
+and the hole is precisely the <code>FEN1</code> case, since a bare-symbol <code>ensembl:ENSMUSP…</code> label in<br />
+<code>genes/human</code> would have no namespace to catch it. Not live today (none of the 96 is filed<br />
+self by the label predicate), but closed rather than documented, because all 96 sit in<br />
+<code>genes/human</code> and none in <code>genes/mouse</code>, so nothing published moves: denominator 729 →<br />
+<strong>825</strong>, gate 612 → <strong>708</strong>, the 117 same-species rows and their 77 paralogs unchanged.</p>
+<p><code>--check-coverage</code> now also <strong>prints the prefixes it declines</strong> instead of skipping them.<br />
+The roster deciding what counts as a gap was itself hand-written, so it could silently<br />
+narrow what the checker was allowed to find — which is exactly how <code>ensembl</code> stayed outside<br />
+the gate while the checker reported zero gaps. Printing the declined list puts that<br />
+judgement in front of the reader on every run.</p>
+<p><code>--check-coverage</code> now runs the corpus greps for all three lists and reports gaps in both<br />
+directions, so "the list matches the corpus" is something to run rather than something to<br />
+trust:</p>
+<div class="codehilite"><pre><span></span><code>python3 projects/IBA_REVIEW/shared_reason_groups.py --check-coverage
+</code></pre></div>
+
+<p>It reports 0 gaps, and re-introducing any of the four original defects makes either it or<br />
+the self-test fail.</p>
+<p><strong>Its scan is always the whole corpus, not the glob</strong>, unlike every other mode here.<br />
+The maps it audits are global objects, and one of its two directions — "the roster carries<br />
+an entry the corpus never uses" — is simply false over a subset: under this script's default<br />
+mouse glob it reported four such gaps for <code>AGI_LocusCode</code>, <code>WB</code>, <code>dictyBase</code> and <code>ensembl</code>,<br />
+every one of which <code>genes/ARATH</code>, <code>genes/worm</code>, <code>genes/DICDI</code> or <code>genes/human</code> does use. A<br />
+roster audit whose answer depends on which files you happened to pass is not an audit, so<br />
+this mode does not scope its scan by the glob. (A glob matching nothing is still an error,<br />
+as in every mode — that catches the typo, it does not narrow the audit.)</p>
+<p><code>ORGANISM_WORDS</code> is keyed by directory, and its scope is the directories that carry a<br />
+<code>source_label</code>, enumerable with</p>
+<div class="codehilite"><pre><span></span><code>grep -rl &#39;source_label:&#39; genes/ --include=&#39;*-ai-review.yaml&#39; | cut -d/ -f2 | sort -u
+</code></pre></div>
+
+<p>— every one of which must be a key, which <code>--check-coverage</code> enforces on each run. The<br />
+count is deliberately not written down here: it was, and it went stale the first time a<br />
+new organism gained a labelled source (<code>POPTR</code>, added as a key for exactly that reason). A<br />
+first pass at that list was assembled from a taxonomy rather than from the corpus and got<br />
+it wrong in both directions: it omitted <code>VIBCH</code>, <code>PSEPK</code>, <code>NEUCR</code> and <code>ANOGA</code>, which do<br />
+carry labels (<code>PSEPK</code> is the second-largest gene directory in the repo), while adding<br />
+<code>PIG</code> and <code>XENLA</code>, which are <strong>not directories in this repository at all</strong>. A self-test arm now requires every key to name a real <code>genes/&lt;key&gt;</code><br />
+directory, which is what catches the invented half; the species names for the four real ones<br />
+are read off each directory's own <code>taxon.label</code>. <code>CHICK</code> is kept as a key with no labels<br />
+yet, because that directory does exist.</p>
+<p><strong>None of this moves mouse.</strong> Every mouse self-label is MGI-sourced — mouse's own MOD — so<br />
+the gate is a no-op there and the 27 / 62 / 31 / 31 figures above are unaffected. The<br />
+composition is named <code>is_target_source()</code> rather than inlined, so a self-test arm can bite on<br />
+the gate being <em>applied</em>; testing <code>mod_source_is_foreign()</code> alone would stay green if the call<br />
+were dropped from the caller.</p>
+<p>Beware two numerical coincidences in the 27 / 62 / 31 / 31 split above, since they are the<br />
+kind that hide an error. <strong>31 appears twice</strong> and means different things — 31 third-party<br />
+labels carry a provenance clause and 31 do not. And <strong>32</strong> is the count of <em>all</em> labelled<br />
+MOD sources whose comment carries one of the three verbs, which is 31 third-party <strong>plus<br />
+one self-label</strong> (<code>Gulo</code>), so 31 and 32 are both right about different sets rather than<br />
+one being a correction of the other.</p>
+<p>The reason the split matters is that it stops the count from being read as a defect count.<br />
+Sixty-two unprovenanced labels would be alarming; 31 third-party labels in ten files is a<br />
+chore. Measuring the wrong denominator turns a chore into an alarm, or the reverse — and the<br />
+32/57 revision above did the second thing to itself.</p>
+<p><strong>A <code>propagation_review</code> with no <code>source_entities</code> is the norm in at least one file, not an<br />
+anomaly.</strong> 16 of the 76 blocks carry none — 15 in <code>Mapk1</code>, 1 in <code>Scgb1a1</code> — so "no sources at<br />
+all" is not the tell for the stale-block defect this document catalogues. The tell was the<br />
+<em>accepting action</em> under a failure-asserting root cause, which is what the auditor's third<br />
+arm keys on; a corrective action with no sources trips nothing, and should not.</p>
+<p><strong>A <code>propagation_review</code> block is not owed symmetrically across paralogs; the <em>action</em> is.</strong><br />
+<code>Mapk1</code> carries <strong>18</strong> blocks against <code>Mapk3</code>'s <strong>2</strong>, and 11 of <a href="../../genes/mouse/Mapk1/Mapk1-ai-review.html">Mapk1</a>'s ISO-row blocks sit<br />
+on a (term, evidence) pair whose <code>Mapk3</code> twin row has none — the ciliary trio<br />
+(<code>GO:0005929</code>, <code>GO:0036064</code>, <code>GO:0097542</code>) is the clean case: same term, same ISO evidence,<br />
+same <code>GO_REF:0000119</code>, same <code>MARK_AS_OVER_ANNOTATED</code> in both files, diagnosis recorded on one.</p>
+<p>That asymmetry is not a divergence and <code>--pair</code> is right to report clean. A block is optional<br />
+on an ISO row by construction — 528 such rows corpus-wide carry none, because ISO is pairwise<br />
+ortholog transfer with no PANTHER node behind it — so its <em>presence</em> tracks which rows a<br />
+reviewer happened to work, while the <em>verdict</em> is what must agree. Mirroring a subset would<br />
+make things worse rather than better: filling the three ciliary blocks leaves eight twins<br />
+still bare, and a reader who saw the file made symmetric on three would reasonably infer it<br />
+was symmetric on all. Either do all 11 or state the convention. This states it — and names<br />
+the 11, so choosing the other option does not start with a re-derivation.</p>
+<p><a href="../../genes/mouse/Mapk1/Mapk1-ai-review.html">Mapk1</a>'s 18 blocks are <strong>2 IBA + 16 ISO</strong>, and the 16 split <strong>11 with a bare <code>Mapk3</code> twin</strong><br />
+plus <strong>5 whose term has no <code>Mapk3</code> row at all</strong>, which is what lets the paragraph be checked<br />
+against the files:</p>
+<ul>
+<li><strong>the 11</strong>: <code>GO:0005929</code>, <code>GO:0010759</code>, <code>GO:0032206</code>, <code>GO:0032991</code>, <code>GO:0034198</code>,<br />
+<code>GO:0036064</code>, <code>GO:0046697</code>, <code>GO:0051403</code>, <code>GO:0061514</code>, <code>GO:0097542</code>, <code>GO:0120041</code></li>
+<li><strong>the 5</strong>: <code>GO:0010800</code>, <code>GO:0042307</code>, <code>GO:0043627</code>, <code>GO:0045542</code>, <code>GO:0045893</code></li>
+</ul>
+<p>Every figure above comes from a parse of <code>propagation_review.source_entities</code>, not a <code>grep</code>:<br />
+159 of the 234 sources in <code>genes/mouse</code> carry a label, of which 89 are MOD-prefixed, split<br />
+27 self / 62 third-party, and 32 of the 89 carry a <code>comment</code> matching one of the three<br />
+provenance verbs (<em>resolved</em> / <em>corroborated</em> / <em>asserted from external knowledge</em>) — the<br />
+same regex that returned 26 before the repairs. Where a count here moves between revisions it<br />
+is usually the corpus that moved; where the split moved, it was the classifier. An<br />
+earlier revision of this paragraph said 66 ids over 91 sources, which is the same sweep run<br />
+as <em>not-<code>UniProtKB</code>, not-<code>PANTHER</code></em> — a filter that also admits the two <code>InterPro:</code> sources in<br />
+<code>Serpinh1</code>. Same finding either way; different set.</p>
+<p><strong>A self-seed marks node membership always; it marks independent grounding only when the<br />
+target's own experimental annotation behind the IBD is itself RETAINED by this review.</strong><br />
+The operative word is <em>retained</em>, not <em>same-term</em>. An earlier revision of this sentence said<br />
+"same-term", which is narrower than both PAINT semantics and the practice underneath it: an<br />
+IBD seed is a gene whose experimental evidence the curator judged relevant to the node, which<br />
+routinely means a <strong>descendant or mechanistically adjacent</strong> term rather than the propagated<br />
+one. Of the eleven blocks in <code>genes/mouse</code> carrying the canonical gloss<br />
+(<code>grep -rn "grounding exists on the target" genes/mouse</code>), only three ground on the block's<br />
+own term; <strong>six legitimately ground on a different one</strong> — <code>Mapk1 GO:0035556</code> and <code>GO:0007166</code><br />
+on <code>GO:0000165</code>, <code>Mapk3</code>'s pair on <code>GO:0070371</code>, <code>Nf1 GO:1902531</code> on <code>GO:0005096</code> and<br />
+<code>GO:0007265</code> (its comment says so outright: "which are among the descendant evidences behind<br />
+the IBD"), and <code>Sox2 GO:0030182</code> on <code>GO:0045665</code>. A literal same-term check would report all<br />
+six as defects, and a rule that mostly flags correct work is a rule that gets ignored.</p>
+<p><code>Acadl GO:0005737</code> is the cleanest case: it has <strong>no</strong> experimental <code>GO:0005737</code> row at all —<br />
+the only one is the IBA itself — and its grounding is the <code>located_in GO:0005739 mitochondrion</code><br />
+IDA (<code>ECO:0000314</code>, PMID:26767982), which QuickGO confirms has <code>GO:0005737</code> among its<br />
+<code>is_a</code>/<code>part_of</code> ancestors and which this review retains as <code>KEEP_AS_NON_CORE</code>. Textbook under<br />
+the descendant reading; a defect under "same-term".</p>
+<p><code>CLAUDE.md</code> glosses a self-seed as "a marker that experimental grounding exists on the target<br />
+itself", and that is the usual case — but it presumes this review still stands behind that<br />
+annotation. Where the experimental row the self-seed rests on is one this review removes, the<br />
+self-seed still shows the target is inside the clade and <code>SUPPORTS_TRANSFER</code> is still right<br />
+(<code>CIRCULAR_OR_REDUNDANT</code> is forbidden for a self-seed), yet citing it as grounding leans on<br />
+evidence the same file rejects. Say node membership and say explicitly that grounding is<br />
+not claimed. One block in <code>genes/mouse</code> needed this — <code>Agtr1a GO:0006954</code>, whose own IGI<br />
+is <code>REMOVE</code>d on full text that <em>is</em> available. Its comment asserted the canonical gloss<br />
+until <code>9ce63aa88</code>, so the block as it now stands is the corrected form, not the defect.<br />
+The other twelve self-seed claims cite annotations their files retain, so the canonical<br />
+gloss holds for them.</p>
+<p>Note what carries the <code>Agtr1a</code> example: the IGI being <strong>removed</strong>, not the term matching.<br />
+The retained test also catches a case a same-term test would wave through. <code>Grb2</code>'s block<br />
+sits on <code>GO:0007165</code>, and the experimental row nearest it by term is <code>GO:0008180 COP9
+signalosome</code> (IDA, PMID:22561606) — which this very file marks <code>MARK_AS_OVER_ANNOTATED</code>,<br />
+so it is precisely what must <strong>not</strong> be cited as grounding. What does ground the block is<br />
+<code>GO:0005091 guanyl-nucleotide exchange factor adaptor activity</code> (IDA ×3, all <code>ACCEPT</code>), a<br />
+<em>different</em> term: the SOS1-recruitment adapter activity that couples receptors to Ras,<br />
+matching the block's own <code>GO:0007165</code> → <code>GO:0007265</code> refinement.</p>
+<p><strong>Finally, keep the row's own evidence pointing the same way as its verdict.</strong> When an action<br />
+is withdrawn, the <code>summary</code> and the <code>supported_by</code> have to move with it; otherwise the block<br />
+asserts a conclusion its action has given up. Both have been missed here — 42 summaries that<br />
+still argued for removal, and six <code>supported_by</code> entries citing the very argument the new<br />
+reason withdrew. A <code>propagation_review</code> self-seed comment is the same hazard in another<br />
+place: do not cite, as the target's experimental grounding, an annotation this review<br />
+elsewhere removes. Of 13 such grounding claims in <code>genes/mouse</code>, one (<code>Agtr1a GO:0006954</code>)<br />
+did exactly that, until <code>9ce63aa88</code> rewrote it to the node-membership form above.</p>
 <h3 id="what-an-iba-actually-asserts-and-two-ways-to-misread-the-withfrom">What an IBA actually asserts, and two ways to misread the WITH/FROM</h3>
 <p>An IBA is not a similarity transfer from one gene to another. Behind every IBA is a<br />
 <strong>PAINT curator's IBD</strong> (Inferred from Biological aspect of Descendant): the curator<br />
@@ -1846,6 +2450,172 @@ experimentally defined activity rather than as a finished call.</p>
 - Structural proteins with conserved function<br />
 - Process/location terms that are organism-agnostic<br />
 - <strong>Subfamilies with high sequence identity and same EC number</strong></p>
+<p><strong>Writing the <code>reason</code> field — things nothing enforces</strong>:<br />
+- <strong>A quotation inside <code>reason</code> is not validated — nor inside <code>comment</code> or <code>summary</code>.</strong> The<br />
+  substring check runs over <code>supporting_text</code> only (<code>linkml_reference_validator</code>'s<br />
+  supporting-text validator; <code>grep -rn reason src/ai_gene_review/validation/*.py</code> returns<br />
+  one unrelated docstring). So a quote in any free-prose field — a <code>review.reason</code>, a<br />
+<code>propagation_review.source_entities[].comment</code>, a <code>summary</code> — can be paraphrased,<br />
+  mis-attributed or invented and still pass. <code>comment</code> is the easiest to forget, because<br />
+  it sits inside a structured block that looks validated and is not. Sweep all three<br />
+  together, and take one of three paths for each span, saying which: mirror it into<br />
+<code>supported_by</code>, where the substring validator checks it; name its source with a locator in<br />
+  the prose itself (<code>projects/FOO.md:14</code>, <code>Ccne1-uniprot.txt:96</code>), which is checkable by a<br />
+  reader even though no tool enforces it; or state in the text that it is unchecked. The<br />
+  middle path is the right one for a term label or a file this review does not cite as a<br />
+  reference, and it is not the same as saying nothing - a source named without a locator is<br />
+  the third path wearing the second one's clothes.<br />
+- <strong>Never state what an abstract-only paper "records".</strong> Check<br />
+<code>full_text_available:</code> first. A reason on this project asserted that PMID:12492473<br />
+  "records <a href="../../genes/mouse/Casp3/Casp3-ai-review.html">Casp3</a> proteolytically cleaving iPLA2"; that cache is abstract-only, contains no<br />
+  cleavage assay (<code>grep -ic cleav</code> -&gt; 0), and names the enzyme a <em>plasmalogen-selective<br />
+  phospholipase A2</em>, never iPLA2 — both the mechanism and the enzyme identity were inferred<br />
+  and shipped. The conclusion survived on grounds the abstract does support (inhibitor<br />
+  epistasis placing the protein upstream, typed as an <code>enables</code> MF), which is the form to<br />
+  reach for. A sentence that claims what a paper contains <strong>and</strong> claims to need no full<br />
+  text is self-refuting; one half has to go.<br />
+- <strong>Normalize before you decide a quote is fabricated.</strong> Every layout assumption<br />
+  listed below - whitespace and markup alike - has produced a confident false negative on<br />
+  this project, and every one fails toward "this quote is invented" -- the most expensive wrong answer available here.<br />
+  A single-line <code>grep</code> misses any quote that wraps. A flat string match misses text inside a<br />
+  folded YAML scalar. <code>tr '\n' ' '</code> misses text whose source lines carry trailing spaces<br />
+  (squeeze with <code>tr -s</code> instead). And a match against a flat-file source misses text carrying<br />
+  structural line prefixes -- UniProt <code>CC</code>/<code>FT</code>, a <code>#</code> comment. Join and squeeze<br />
+  (<code>re.sub(r'\s+', ' ', ...)</code>) AND strip the source's line prefixes before concluding<br />
+  anything is absent. Better still, put the quote in <code>supported_by</code> and let the substring<br />
+  validator answer.<br />
+  Markdown emphasis is the widest of them, because every<br />
+<code>file:*-deep-research-*.md</code> citation in this corpus is markdown: <code>Predominantly
+  **nuclear** transcription factor</code> will not match the quote <code>predominantly nuclear</code><br />
+  under any prefix-stripping, because the markup sits INSIDE the phrase rather than at<br />
+  the line start. Strip <code>[*_</code>]<code>too, or match permissively
+  (</code>predominantly[^A-Za-z]{0,40}nuclear`) before concluding anything.</p>
+<ul>
+<li>
+<p><strong>Quoted spans in prose are content-verbatim; strictness lives in <code>supporting_text</code>.</strong><br />
+  Terminal sentence punctuation may sit inside the closing quote (American convention),<br />
+  and an elision may be marked with <code>...</code> - both are ordinary typography, not claims about<br />
+  the source, and the corpus uses them: <code>[Dnaja3](../../genes/mouse/Dnaja3/Dnaja3-ai-review.html)</code> closes a quote on a period where its<br />
+  source writes a comma, <code>[Sox2](../../genes/mouse/Sox2/Sox2-ai-review.html)</code> closes one where the source sentence runs on past a<br />
+  semicolon, <code>[Fbxo2](../../genes/mouse/Fbxo2/Fbxo2-ai-review.html)</code> elides mid-quote. What is <em>not</em> allowed is dropping<br />
+  source words silently: the same <code>[Fbxo2](../../genes/mouse/Fbxo2/Fbxo2-ai-review.html)</code> row quoted GO:1990756's definition with the<br />
+  parenthetical "(including ubiquitin ligase and UFM1 ligase)" removed and no ellipsis,<br />
+  which reads as the whole definition and is not - that one is a defect and was fixed. So<br />
+  a sweep must strip a trailing <code>[.,]</code> and split on <code>...</code> before calling a span unmatched,<br />
+  or it will report the convention as fabrication; and any span that must be<br />
+  machine-checked belongs in <code>supporting_text</code>, where the substring validator applies the<br />
+  strict reading. This holds for <code>reason</code>, <code>summary</code> and <code>comment</code> alike — the surrounding<br />
+  bullets are phrased around <code>reason</code> because that is where the first instances were found,<br />
+  but the exemplars here are spread across all three, and the ISO backlog will write far<br />
+  more <code>comment</code> and <code>summary</code> than <code>reason</code>. One span type has no local source at all: a<br />
+<strong>GO term definition</strong>. The only tracked <code>.obo</code> here is <code>interpro/panther/panther.obo</code>,<br />
+<code>cache/go/terms.csv</code> and <code>cache/ontologies/go.tsv</code> carry labels but no definitions, and<br />
+<code>cache/ontologies/*.obo</code> is gitignored - so a definition verified against a working-tree<br />
+  obo is not reproducible from a fresh checkout. Quote it if it earns its place, but take<br />
+  the third path explicitly and say the check needs a GO lookup.</p>
+</li>
+<li>
+<p><strong>"Nothing local says this" is a claim about where you looked.</strong> Before writing that an<br />
+  assertion cannot be checked from the repository, enumerate the places the repository<br />
+  keeps that kind of fact. A reason on this project stated that GO:0051082's obsoletion<br />
+  was "not checkable from this repository" on the strength of two ontology caches —<br />
+  while <code>projects/UNFOLDED_PROTEIN_BINDING.md</code> records it explicitly, verified live<br />
+  against QuickGO and OLS, and the same review file asserted it plainly twelve lines<br />
+  further down. <code>projects/</code> is where this repo records ontology decisions postdating a<br />
+  cache snapshot, so a cache-only search will systematically miss them; <code>cache/ontologies/README.md</code><br />
+  says the caches are sparse by design, holding only terms used in annotations. Absence<br />
+  from a cache means "not cached", never "not real" and never "not recorded here". Search<br />
+  the gene directory, cited publications, the caches, <code>interpro/</code>, <code>projects/</code>, and the<br />
+  file's own <code>origin/main</code> text before concluding anything is unprovable.</p>
+</li>
+<li><strong>A quoted-span sweep is only as good as its corpus — and a bad corpus fails toward<br />
+  "fabricated".</strong> Three rules, each learned by getting it wrong on this project's mouse<br />
+  pass. (i) <strong>Exclude the file under test.</strong> A corpus that walks the gene directory picks up<br />
+<code>GENE-ai-review.yaml</code> itself, so every quote proves itself and the sweep reports a clean<br />
+  pass it did not earn; dropping that one file turned a zero-miss run into a list of misses.<br />
+  (ii) <strong>Every miss that survived was a corpus gap, not a fabrication</strong> — the <em>other</em> gene<br />
+  directory named in the comment (a <code>DR   MGI; ...</code> line quoted from <code>Ccne1-uniprot.txt</code><br />
+  inside a <code>[Ccnb1](../../genes/mouse/Ccnb1/Ccnb1-ai-review.html)</code> review), the per-family <code>interpro/panther/PTHR*/*-entries.csv</code> rather<br />
+  than just <code>panther.obo</code>, and a PMID cited only in <code>supported_by</code> rather than in the<br />
+  top-level <code>references</code> list the extractor read. Widen the corpus before you widen the<br />
+  accusation. (iii) <strong>Strip prefixes on both sides, or neither.</strong> A quote that itself<br />
+  carries <code>DR</code> will not match a source you have stripped <code>DR</code> out of; test the raw<br />
+  and stripped forms of each.</li>
+<li><strong><code>origin/main</code> is not a source.</strong> Listing "present in this file's own <code>origin/main</code><br />
+  text" among the places a span may be proven against silently exempts every pre-existing<br />
+  quote, because that is where pre-existing quotes live. It answers <em>was this introduced by<br />
+  this PR</em> and gets read as <em>is this verified</em> - two different questions, and the corpus<br />
+  sweep on this branch reported one unmatched span with the clause and ten without it. Keep<br />
+  the scope question if you need it, but keep it in a separate column. The exception is a<br />
+  span the prose explicitly presents as the file's own superseded text ("the previous shared<br />
+  reason offered a disjunction, ..."): there <code>origin/main</code> genuinely is the source.</li>
+<li><strong>A minimum length on the quote regex mis-pairs quotation marks.</strong> <code>"([^"]{12,400})"</code><br />
+  skips a short quoted phrase and then matches from <em>its</em> closing mark to the next opening<br />
+  one, so the span reported is the prose between two quotations rather than either of them.<br />
+  A sentence naming both a "Par complex" and a "Par3" produced exactly that. Match every<br />
+  quoted span, then filter by length.</li>
+<li><strong>Sweep on the property, not on the phrasings you have seen.</strong> A tell list is built from<br />
+  the instances already found, so it cannot find the ones worded differently — and it reports<br />
+  a clean pass when it runs out of tells, not when it runs out of instances. This project has<br />
+  now shipped that mistake in six places (the abstract-only pass keyed on "The paper concerns"<br />
+  and missed "This physiology belongs to"; a MOD-prefix list; the <code>Araport</code>/<code>araport11</code><br />
+  spelling; the PAINT namespace enumeration; a <code>-B30</code> extraction; and a <code>description</code> sweep<br />
+  keyed on <code>Falcon</code> / <code>best curated with</code> / <code>retained as non-core</code>, which missed<br />
+<code>over-extensions</code>, <code>GOA rows</code>, <code>not treated here</code> and <code>conflate</code> — two of them in<br />
+  descriptions the same commit had just rewritten). For <code>description</code> the property is one<br />
+  sentence: <strong>it must be readable by someone who does not know this repository exists</strong>, so<br />
+  any sentence whose grammatical subject is <em>an annotation</em> rather than <em>the gene</em> belongs in<br />
+<code>review.reason</code>, <code>core_functions</code> or the notes file. Operationalize that <strong>grammatically, not<br />
+  lexically</strong> — split the field into sentences and judge each one's subject, object and<br />
+  predicate, flagging any where an annotation, an evidence record or a curation artifact<br />
+  appears as <em>subject or object</em>, <strong>or</strong> where the <em>predicate</em> is a curation act. Read each hit<br />
+  and judge; the result is a set you can defend, because what it missed is a judgement you made<br />
+  rather than a word you had not thought of.</li>
+</ul>
+<p><strong>Do not read any example below as the set to match against</strong> — that is this bullet's whole<br />
+  subject, and the examples fail the test themselves. Every curation-act instance in this<br />
+  corpus is plural (<code>are treated as</code>, <code>are retained as</code>, <code>are curated as</code>), so the singular<br />
+  forms that come to mind first — <code>is treated as</code>, <code>is kept as</code> — match <strong>zero</strong> of the ten<br />
+  occurrences, spread over eight files (<code>[Calm3](../../genes/mouse/Calm3/Calm3-ai-review.html)</code> alone carries three). One of<br />
+  the ten is <code>are **best** treated as</code>, which no fixed phrase reaches at all. Say which unit a<br />
+  count is in: at <em>file</em> scope those same singular forms return over three hundred hits, all of<br />
+  them outside any <code>description</code>, so the figure inverts if the scope is left implicit. Object<br />
+  position is the same trap one step further out: <code>[Cdk5r1](../../genes/mouse/Cdk5r1/Cdk5r1-ai-review.html)</code> says the p35/p25 distribution explains<br />
+<em>"the mixed cellular localization annotations"</em>, where subject and predicate are both clean and<br />
+  the annotation sits in a trailing participial clause. An outside reader still asks <em>what<br />
+  annotations?</em>, so it is an instance — which is why the test is a judgement about roles, not a<br />
+  list of strings.</p>
+<p><strong>Expect the screen to produce hits that clear</strong> — that is the <code>read each hit and judge</code> step<br />
+  working, not a sign it is too wide. The Dnajb11 sentence written for this very bullet (<em>"the<br />
+</em><em>observation</em><em> used an N-terminally tagged construct…"</em>) is itself a hit, with an evidence<br />
+  record as its subject, and it clears: a biologist who has never seen this repository reads it<br />
+  as ordinary writing about a published experiment. Counting hits as defects is what pulls a<br />
+  screen back toward being a tell list.</p>
+<p>This bullet got that wrong on its first writing, which is the sharpest case in the file: it<br />
+  diagnosed tell-list sweeping and then <strong>specified the remedy as a tell list</strong> (<code>annotat</code>,<br />
+<code>GOA</code>, <code>GO_REF</code>, an evidence code, <code>curat</code>, <code>term</code>, <code>non-core</code>, <code>over-</code>, <code>treated here</code>, a<br />
+  provider name). Run that vocabulary over <code>[Dnajb11](../../genes/mouse/Dnajb11/Dnajb11-ai-review.html)</code>'s <em>"The reported APOBEC1/apoB<br />
+  mRNA-editing interaction </em><em>is treated as</em><em> unsupported"</em> and it returns <strong>zero</strong> hits —<br />
+<code>treated as</code> is not <code>treated here</code>, and none of the other nine appears. <code>[Tert](../../genes/mouse/Tert/Tert-ai-review.html)</code> (<em>"are<br />
+  treated as context-dependent </em><em>non-canonical</em><em> activities"</em>) and <code>[Syk](../../genes/mouse/Syk/Syk-ai-review.html)</code> (<em>"rather than the<br />
+</em><em>core</em><em> molecular function"</em>) escape identically, on one word each. A vocabulary is always<br />
+  built from the instances already found, so specifying one as the cure for that very failure<br />
+  reproduces it at one remove. The grammar is what generalizes: a curation act has a doer, and<br />
+  in a <code>description</code> the doer is always this review.<br />
+- <strong>A scare quote is not a quotation.</strong> <code>"FB:FBgn0001091 is Gapdh1"</code> in a Gapdh comment is<br />
+  a proposition the sentence goes on to call "an inference from organism and gene name<br />
+  rather than a lookup", not a span lifted from a source. Read the surrounding prose<br />
+  before treating an unmatched span as a citation defect.<br />
+- <strong>If a block's prose argues its own action may be under-strength, say so in the prose.</strong><br />
+<code>root_cause</code> and <code>failure_modes</code> are a fixed vocabulary and cannot carry "the objection<br />
+  reaches further than the action I am leaving in place". A consumer reading the structured<br />
+  fields alone gets only the coded story, so the tension belongs in the comment, with the<br />
+  reason it is being left (e.g. re-typing an inherited action is a separate judgement).</p>
+<p><strong>Name the fault with its own action's vocabulary.</strong> Calling a defect "the over-annotation"<br />
+in a row whose action is <code>REMOVE</code> — beside a sibling row carrying<br />
+<code>MARK_AS_OVER_ANNOTATED</code> — reads as an argument for the other action. The disjunctive<br />
+reason class this project dismantled (Casp3, Ghr) failed the same way: the limb that made<br />
+the text defensible was the limb arguing against the action it sat on.</p>
 <hr />
 <h2 id="project-history-methodology">Project history &amp; methodology</h2>
 <p>This page records the <strong>synthesized findings</strong>. The dated project log, the per-pass<br />
