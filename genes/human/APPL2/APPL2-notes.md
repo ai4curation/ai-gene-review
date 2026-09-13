@@ -419,15 +419,18 @@ Counted, not asserted, by `APPL2-bioinformatics/check_goa_reconciliation.py`:
   the one NEW ISS row. `source_entities` is generated from each row's own
   `supporting_entities` by script, so the two lists cannot drift.
 
-The 22 MODIFY rows are all `GO:0005515 protein binding` IPIs where the partner is
+21 of the 22 MODIFY rows are `GO:0005515 protein binding` IPIs where the partner is
 identifiable: 9 rows whose partner is a Rab (RAB5A, RAB5C, RAB22A, RAB31) go to
 `GO:0031267 small GTPase binding`, and 12 rows whose partner is APPL1 go to
-`GO:0046982 protein heterodimerization activity`. The 23rd MODIFY is the
+`GO:0046982 protein heterodimerization activity`. The 22nd MODIFY is the
 homotetramerization row (§6), proposed to become `GO:0051260 protein homooligomerization`.
 
 The 13 over-annotated rows are the urinary-exosome HDA row (1016-entity projection), the
-three broad-ARBA rows (`GO:0042592 homeostatic process`, `GO:0098588 bounding membrane of
+two broad-ARBA rows (`GO:0042592 homeostatic process`, `GO:0098588 bounding membrane of
 organelle`) and 10 protein-binding IPIs from systematic screens with no APPL2 follow-up.
+The `GO:0005886 plasma membrane` IEA row is *not* among them: its ARBA rule is the most
+promiscuous on the gene, but the term itself is true, so all three plasma-membrane rows are
+KEEP_AS_NON_CORE together.
 
 Two NEW rows: `GO:0090263 positive regulation of canonical Wnt signaling pathway` (IMP,
 PMID:19433865 — GOA carries the Reptin and β-catenin/HDAC interactions but no process row
