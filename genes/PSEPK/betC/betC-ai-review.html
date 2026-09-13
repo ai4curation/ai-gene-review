@@ -1,0 +1,2317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>betC - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>betC</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88RQ2" target="_blank" class="term-link">
+                        Q88RQ2
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "betC";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88RQ2" data-a="DESCRIPTION: BetC is a cytoplasmic choline sulfatase that hydro..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>BetC is a cytoplasmic choline sulfatase that hydrolyzes choline-O-sulfate to choline, sulfate, and a proton. In Pseudomonas putida KT2440 it supports use of choline-O-sulfate as a carbon or nitrogen source; unlike BetA/BetB-mediated glycine-betaine production, its principal role is choline-O-sulfate metabolism rather than osmoprotection.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RQ2" data-a="GO:0005737" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Retain the phylogenetically inferred cytoplasmic localization as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The TreeGrafter annotation is not contradicted by the target sequence or pathway context, but location is ancillary to the catalytic function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/betC/betC-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0005737	cytoplasm</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/betC/betC-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">Localization inferred from phenotype, not from imaging.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008484" target="_blank" class="term-link">
+                                    GO:0008484
+                                </a>
+                            </span>
+                            <span class="term-label">sulfuric ester hydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RQ2" data-a="GO:0008484" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Retain this chemically valid broad parent as non-core.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> BetC hydrolyzes a sulfate ester, but the existing exact choline-sulfatase term is more informative for its core function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/betC/betC-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0008484	sulfuric ester hydrolase activity</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047753" target="_blank" class="term-link">
+                                    GO:0047753
+                                </a>
+                            </span>
+                            <span class="term-label">choline-sulfatase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000003
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RQ2" data-a="GO:0047753" data-r="GO_REF:0000003" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accept exact choline-sulfatase activity as the core molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target has concordant EC 3.1.6.6 and choline-sulfatase-specific domain assignments, KT2440 betC genetics support choline-O-sulfate utilization, and the reviewed Sinorhizobium BetC exemplar has direct genetic and enzymatic evidence for the same reaction.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/betC/betC-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">InterPro; IPR017785; Choline-sulfatase.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17116241" target="_blank" class="term-link">
+                                        PMID:17116241
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">This mutant still accumulated intact COS but failed to use this compound as carbon or nitrogen source.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9736747" target="_blank" class="term-link">
+                                        PMID:9736747
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a new gene (betC) was identified as encoding a choline sulfatase catalyzing the conversion of choline-O-sulfate and, at a lower rate, phosphorylcholine, into choline.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/29458126" target="_blank" class="term-link">
+                                        PMID:29458126
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Sinorhizobium meliloti choline sulfatase (SmCS) efficiently catalyzes the hydrolysis of alkyl sulfate choline-O-sulfate</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/betC/betC-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">No direct enzymology on the *P. putida* protein itself.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Choline sulfatase that hydrolyzes choline-O-sulfate to choline, sulfate, and a proton, enabling metabolic utilization of choline-O-sulfate.</h3>
+                <span class="vote-buttons" data-g="Q88RQ2" data-a="FUNCTION: Choline sulfatase that hydrolyzes choline-O-sulfat..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0047753" target="_blank" class="term-link">
+                            choline-sulfatase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/betC/betC-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">InterPro; IPR017785; Choline-sulfatase.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17116241" target="_blank" class="term-link">
+                                PMID:17116241
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">This mutant still accumulated intact COS but failed to use this compound as carbon or nitrogen source.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9736747" target="_blank" class="term-link">
+                                PMID:9736747
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">a new gene (betC) was identified as encoding a choline sulfatase catalyzing the conversion of choline-O-sulfate and, at a lower rate, phosphorylcholine, into choline.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/29458126" target="_blank" class="term-link">
+                                PMID:29458126
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Sinorhizobium meliloti choline sulfatase (SmCS) efficiently catalyzes the hydrolysis of alkyl sulfate choline-O-sulfate</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/betC/betC-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">No direct enzymology on the *P. putida* protein itself.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000003.md" target="_blank" class="term-link">
+                            GO_REF:0000003
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on Enzyme Commission mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/betC/betC-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88RQ2 for Pseudomonas putida KT2440 BetC</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Q88RQ2 is assigned EC 3.1.6.6.</div>
+
+                        <div class="finding-text">"EC=3.1.6.6"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The target contains the specific InterPro choline-sulfatase signature.</div>
+
+                        <div class="finding-text">"InterPro; IPR017785; Choline-sulfatase."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17116241" target="_blank" class="term-link">
+                            PMID:17116241
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Uncoupling of choline-O-sulphate utilization from osmoprotection in Pseudomonas putida.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">KT2440 betC is required to use choline-O-sulfate as a carbon or nitrogen source but not to accumulate it.</div>
+
+                        <div class="finding-text">"This mutant still accumulated intact COS but failed to use this compound as carbon or nitrogen source."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">High salt downregulates betC, supporting metabolism rather than osmoprotection as its main KT2440 role.</div>
+
+                        <div class="finding-text">"the principal role of this gene lied in COS metabolism, not in osmoprotection"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9736747" target="_blank" class="term-link">
+                            PMID:9736747
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Presence of a gene encoding choline sulfatase in Sinorhizobium meliloti bet operon: choline-O-sulfate is metabolized into glycine betaine.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Sinorhizobium BetC directly converts choline-O-sulfate and, more slowly, phosphorylcholine to choline.</div>
+
+                        <div class="finding-text">"a new gene (betC) was identified as encoding a choline sulfatase catalyzing the conversion of choline-O-sulfate and, at a lower rate, phosphorylcholine, into choline."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Loss of betC eliminates choline-sulfatase activity in the ortholog system.</div>
+
+                        <div class="finding-text">"Choline sulfatase activity was absent from betC but not from betB mutants"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29458126" target="_blank" class="term-link">
+                            PMID:29458126
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Structural and Mechanistic Analysis of the Choline Sulfatase from Sinorhizobium melliloti: A Class I Sulfatase Specific for an Alkyl Sulfate Ester.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Purified Sinorhizobium choline sulfatase efficiently hydrolyzes choline-O-sulfate.</div>
+
+                        <div class="finding-text">"Sinorhizobium meliloti choline sulfatase (SmCS) efficiently catalyzes the hydrolysis of alkyl sulfate choline-O-sulfate"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The crystal structure defines the active site of this BetC exemplar.</div>
+
+                        <div class="finding-text">"Its 2.8-Å resolution X-ray structure shows a buried, largely hydrophobic active site"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/betC/betC-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep-research report for PSEPK betC</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report identifies the exact target and conserved choline-sulfatase motif.</div>
+
+                        <div class="finding-text">"A direct sequence scan locates the universal sulfatase active-site signature **(C/S)-X-P-X-R** as **C52-A-P-S-R56** near the N-terminus."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report explicitly notes the absence of purified KT2440 Q88RQ2 enzymology.</div>
+
+                        <div class="finding-text">"No direct enzymology on the *P. putida* protein itself."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the kinetic parameters and in vivo contributions of KT2440 BetC for choline-O-sulfate versus phosphorylcholine?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88RQ2" data-a="Q: What are the kinetic parameters and in vivo contri..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify Q88RQ2 and quantify choline-O-sulfate and phosphorylcholine hydrolysis, then compare metabolite flux and growth in clean betC deletion and complementation strains under carbon-, nitrogen-, and sulfur-source conditions.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88RQ2" data-a="EXPERIMENT: Purify Q88RQ2 and quantify choline-O-sulfate and p..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(betC-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88RQ2" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: betC (Q88RQ2) — Choline-O-sulfatase in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">7 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-31T05:53:26.601576</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="betC-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="betC-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-betc-q88rq2-choline-o-sulfatase-in-pseudomonas-putida-kt2440">Functional Annotation Report: betC (Q88RQ2) — Choline-O-sulfatase in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>betC</strong> (locus tag <strong>PP_0077</strong>; UniProt <strong>Q88RQ2</strong>) of <em>Pseudomonas putida</em> strain KT2440 encodes <strong>choline-O-sulfatase</strong> (<strong>EC 3.1.6.6</strong>), a cytoplasmic enzyme of the sulfatase / alkaline-phosphatase superfamily. Its primary catalytic function is the hydrolysis of the sulfate ester bond of <strong>choline-O-sulfate</strong>, releasing <strong>free choline and inorganic sulfate</strong>; it also acts, at a lower rate, on <strong>phosphorylcholine</strong>. Catalysis proceeds through the sulfatase-family mechanism, in which a signature cysteine residue (embedded in the diagnostic (C/S)-X-P-X-R motif — here <strong>C52-A-P-S-R56</strong>) is post-translationally converted to a <strong>Cα-formylglycine</strong> nucleophile that drives a <strong>double-displacement (covalent) mechanism</strong>.</p>
+<p>The identity of the target protein is well supported and unambiguous. The gene symbol <em>betC</em>, the organism (<em>P. putida</em> KT2440), and the protein family/domain architecture all align internally and with the primary literature. The definitive functional study — <em>"Uncoupling of choline-O-sulphate utilization from osmoprotection in Pseudomonas putida"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/17116241/">PMID: 17116241</a>) — directly examines <em>betC</em> (PP_0077) in this exact strain. The founding biochemical/genetic characterization of a <em>betC</em>-encoded choline sulfatase comes from <em>Sinorhizobium meliloti</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/9736747/">PMID: 9736747</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/12906115/">PMID: 12906115</a>), which establishes the reaction and substrate preference of the BetC enzyme family. There is therefore no ambiguity of the kind flagged in the research brief.</p>
+<p>A key mechanistic insight distinguishes <em>P. putida</em> from other model organisms. In <em>Bacillus subtilis</em> and <em>S. meliloti</em>, choline liberated from choline-O-sulfate feeds the biosynthesis of the osmoprotectant <strong>glycine betaine</strong>. In <em>P. putida</em> KT2440, by contrast, <em>betC</em> serves <strong>catabolism (nutrient acquisition)</strong> rather than <strong>osmoprotection</strong>: a <em>betC</em> deletion mutant still accumulated intact choline-O-sulfate but could no longer use it as a carbon or nitrogen source, and — decisively — <em>betC</em> is transcriptionally <strong>down-regulated</strong> under high salt, the opposite of what would be expected for an osmostress gene. BetC therefore functions <strong>intracellularly</strong>, acting on choline-O-sulfate that is first delivered into the cytoplasm by an <strong>adjacent ABC transporter</strong>, all under the control of a neighbouring <strong>LysR-type regulator</strong>. Osmoprotection in <em>Pseudomonas</em> is handled by physically and functionally separate modules (the <em>betBA</em> genes and the OpuC osmoprotectant transporter).</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="f001-betc-encodes-choline-o-sulfatase-ec-3166-hydrolyzing-choline-o-sulfate-to-choline-sulfate">F001 — betC encodes choline-O-sulfatase (EC 3.1.6.6), hydrolyzing choline-O-sulfate to choline + sulfate</h3>
+<p>The core molecular function of the <em>betC</em> gene product is the enzymatic hydrolysis of choline-O-sulfate:</p>
+<div class="codehilite"><pre><span></span><code>choline-O-sulfate  +  H2O   →   choline  +  sulfate
+</code></pre></div>
+
+<p>This assignment rests on both nomenclature/annotation in the target organism and direct genetic evidence in the founding homolog. In <em>P. putida</em> KT2440, PP_0077 is named <em>betC</em> and annotated as choline sulphatase (<a href="https://pubmed.ncbi.nlm.nih.gov/17116241/">PMID: 17116241</a>). The enzymatic activity and substrate preference were first established genetically and biochemically in <em>S. meliloti</em>, where "a new gene (<em>betC</em>) was identified as encoding a choline sulfatase catalyzing the conversion of choline-O-sulfate and, at a lower rate, phosphorylcholine, into choline" (<a href="https://pubmed.ncbi.nlm.nih.gov/9736747/">PMID: 9736747</a>). Critically, choline sulfatase activity was <strong>absent from <em>betC</em> mutants</strong>, providing genetic proof that <em>betC</em> is responsible for this activity rather than merely correlated with it. The same assignment — <em>betC</em> = choline sulphatase — is confirmed directly in the target organism: "<em>betC</em> (choline sulphatase) lies adjacent to an ATP-binding cassette transporter and a LysR type regulator" (<a href="https://pubmed.ncbi.nlm.nih.gov/17116241/">PMID: 17116241</a>).</p>
+<p><strong>Substrate specificity:</strong> The enzyme's preferred physiological substrate is <strong>choline-O-sulfate</strong>. It also hydrolyzes <strong>phosphorylcholine</strong>, but at a lower rate, indicating that the choline moiety is a key recognition element while the enzyme tolerates (with reduced efficiency) substitution of the sulfate ester by a phosphate ester.</p>
+<h3 id="f002-in-p-putida-kt2440-betc-serves-catabolism-cns-nutrition-not-osmoprotection">F002 — In P. putida KT2440 betC serves catabolism (C/N/S nutrition), not osmoprotection</h3>
+<p>This is the central distinguishing finding for the target organism, and it directly answers "what biological process does the gene serve." A <em>betC</em> deletion mutant of <em>P. putida</em> KT2440 <strong>still accumulated intact choline-O-sulfate (COS)</strong> but <strong>failed to use COS as a carbon or nitrogen source</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/17116241/">PMID: 17116241</a>): "This mutant still accumulated intact COS but failed to use this compound as carbon or nitrogen source." Because the sulfate ester is cleaved in the reaction, choline-O-sulfate is also a potential <strong>sulfur</strong> source, making BetC a gateway enzyme for carbon, nitrogen, and sulfur acquisition from this single environmental compound.</p>
+<p>The regulatory behaviour reinforces the catabolic (as opposed to osmoprotective) role: "<em>betC</em> expression was downregulated at high salt concentrations, showing that the principal role of this gene lied in COS metabolism, not in osmoprotection" (<a href="https://pubmed.ncbi.nlm.nih.gov/17116241/">PMID: 17116241</a>). An osmostress-protective gene would be <em>induced</em> by salt; the observed <em>repression</em> is the opposite pattern and demonstrates that BetC's job is nutritional. This uncoupling of choline-O-sulfate utilization from osmoprotection distinguishes <em>P. putida</em> from <em>B. subtilis</em> and <em>S. meliloti</em>, where the choline released downstream is channelled into glycine betaine synthesis for osmotic defense.</p>
+<h3 id="f003-betc-belongs-to-the-sulfatase-alkaline-phosphatase-superfamily-and-uses-a-formylglycine-nucleophile">F003 — betC belongs to the sulfatase / alkaline-phosphatase superfamily and uses a formylglycine nucleophile</h3>
+<p>The protein Q88RQ2 (505 amino acids) carries the InterPro domain signatures diagnostic of the sulfatase superfamily: <strong>Sulfatase_N (IPR000917)</strong>, <strong>Sulfatase_CS (IPR024607)</strong>, and the <strong>Alkaline_phosphatase_core superfamily fold (IPR017850)</strong>, plus two domains specific to this enzyme class — <strong>Choline-sulfatase (IPR017785)</strong> and <strong>Choline_sulf_C_dom (IPR025863)</strong>. A direct sequence scan locates the universal sulfatase active-site signature <strong>(C/S)-X-P-X-R</strong> as <strong>C52-A-P-S-R56</strong> near the N-terminus.</p>
+<p>Members of the sulfatase family share a defining catalytic strategy: "Sulfatases use a unique formylglycine nucleophile, formed by posttranslational modification of a cysteine/serine embedded in a signature sequence (C/S)XPXR" (<a href="https://pubmed.ncbi.nlm.nih.gov/18793651/">PMID: 18793651</a>). In BetC, Cys52 within the C52-A-P-S-R56 motif is the residue predicted to undergo this modification to <strong>Cα-formylglycine (FGly)</strong>, generating the catalytic nucleophile. Kinetic studies of a closely related superfamily member show that "burst kinetics suggest that substrate hydrolysis proceeds via a double-displacement mechanism" (<a href="https://pubmed.ncbi.nlm.nih.gov/18793651/">PMID: 18793651</a>), supporting a <strong>covalent, two-step (transesterification then hydrolysis)</strong> mechanism for BetC in which the FGly hydrate attacks the sulfur (or phosphorus) center, forms a covalent intermediate, and is then regenerated.</p>
+<h3 id="f004-betc-acts-intracellularly-downstream-of-a-dedicated-abc-importer-under-lysr-type-regulation">F004 — betC acts intracellularly downstream of a dedicated ABC importer, under LysR-type regulation</h3>
+<p>The genomic context of <em>betC</em> in <em>P. putida</em> KT2440 defines its cellular logic. PP_0077 is "adjacent to an ATP-binding cassette transporter and a LysR type regulator, but well away from <em>betBA</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/17116241/">PMID: 17116241</a>). This organization — an <strong>importer</strong>, a <strong>regulator</strong>, and a <strong>catabolic enzyme</strong> clustered together and separated from the osmoprotective <em>betBA</em> genes — is characteristic of a nutrient-scavenging module rather than an osmotic-stress operon.</p>
+<p>The subcellular order of operations is established by the mutant phenotype: because the <em>betC</em> mutant "still accumulated intact COS" (<a href="https://pubmed.ncbi.nlm.nih.gov/17116241/">PMID: 17116241</a>), choline-O-sulfate must first be <strong>imported into the cytoplasm</strong> (via the adjacent ABC transporter) and only then hydrolyzed by BetC. BetC therefore carries out its function <strong>inside the cell</strong>, on an internalized substrate. In the homologous <em>S. meliloti</em> system, the choline sulfatase gene is embedded in the <em>betICBA</em> operon and induced by choline and choline-O-sulfate through the <strong>BetI repressor</strong>, which senses the intracellular choline pool (<a href="https://pubmed.ncbi.nlm.nih.gov/12906115/">PMID: 12906115</a>). In <em>P. putida</em> the regulator is instead a <strong>LysR-type</strong> protein, consistent with an inducible catabolic system.</p>
+<h3 id="f005-alphafold-model-supports-a-well-ordered-sulfatase-fold-with-a-structured-catalytic-cys52">F005 — AlphaFold model supports a well-ordered sulfatase fold with a structured catalytic Cys52</h3>
+<p>The AlphaFold Database model <strong>AF-Q88RQ2-F1 (v6)</strong> covers all 505 residues at very high confidence: <strong>mean pLDDT = 96.4</strong>, with <strong>99.2 %</strong> of residues scoring pLDDT &gt; 70. The predicted catalytic <strong>Cys52</strong> — the residue expected to become Cα-formylglycine — is modeled at <strong>pLDDT 98.25</strong>, i.e., it sits in a well-ordered structural core rather than a disordered or low-confidence region. This structural prediction is fully consistent with the sulfatase-superfamily α/β fold and lends independent (in-silico structural) support to the identity of Cys52 as the catalytic nucleophile position.</p>
+<h3 id="f006-osmoprotection-in-pseudomonas-is-handled-by-separate-modules-opuc-and-betba-not-by-betc">F006 — Osmoprotection in Pseudomonas is handled by separate modules (OpuC and betBA), not by betC</h3>
+<p>The functional separation between osmoadaptation and choline-O-sulfate catabolism in <em>Pseudomonas</em> is reinforced by the characterization of the osmoprotectant transporter OpuC in <em>Pseudomonas syringae</em>. There, an ABC transporter "designated OpuC, functioned as the primary or sole transporter for glycine betaine and as one of multiple transporters for choline under high osmolarity," with broad specificity for other osmoprotectants (acetylcholine, carnitine, proline betaine), and its <strong>cystathionine-β-synthase (CBS) domains are required for osmoregulatory function</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/17660277/">PMID: 17660277</a>). Combining this with the <em>P. putida</em> result that <em>betC</em> is salt-repressed and dispensable for osmoprotection (<a href="https://pubmed.ncbi.nlm.nih.gov/17116241/">PMID: 17116241</a>), it is clear that in <em>Pseudomonas</em> the acquisition of osmoprotectants (OpuC) and their synthesis (<em>betBA</em>, converting choline → glycine betaine) are distinct modules from the catabolic choline-O-sulfatase BetC.</p>
+<h3 id="f007-the-predicted-active-site-pocket-recapitulates-the-conserved-metal-dependent-sulfatase-catalytic-constellation">F007 — The predicted active-site pocket recapitulates the conserved metal-dependent sulfatase catalytic constellation</h3>
+<p>Analysis of the AlphaFold model's active site adds mechanistic detail. Residues within 8 Å of the Cys52 Sγ form a compact catalytic pocket containing the signature <strong>Arg56</strong>, a candidate divalent-metal-coordinating set (<strong>Asp12, Asn73, Asp289</strong>) typical of alkaline-phosphatase/sulfatase-superfamily metal sites, and a cluster of conserved basic/acidic residues that line arylsulfatase sulfate-binding sites (<strong>Lys100, His102, His142, His195, Asp196, Asp289, His290, Lys302</strong>). This spatial arrangement matches the well-characterized active sites of <em>Pseudomonas aeruginosa</em> arylsulfatase and <em>E. coli</em> alkaline phosphatase homologs. The general principle is documented for the superfamily: members show "structural homology to arylsulfatases with conservation of the core alpha/beta-fold, the mononuclear active site and most of the active-site residues" (<a href="https://pubmed.ncbi.nlm.nih.gov/18793651/">PMID: 18793651</a>). BetC thus carries a conserved <strong>mononuclear (metal-dependent) active site</strong> organized around the FGly-forming Cys52.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>The findings integrate into a coherent picture of BetC as a <strong>cytoplasmic, catabolic choline-O-sulfatase</strong> feeding a nutrient-acquisition pathway that is regulatorily and genetically separated from osmotic-stress physiology.</p>
+<h3 id="pathway-and-cellular-localization">Pathway and cellular localization</h3>
+<div class="codehilite"><pre><span></span><code><span class="w">   </span><span class="nx">Environment</span><span class="w">                       </span><span class="nx">Cytoplasm</span><span class="w"> </span><span class="p">(</span><span class="nx">P</span><span class="p">.</span><span class="w"> </span><span class="nx">putida</span><span class="w"> </span><span class="nx">KT2440</span><span class="p">)</span>
+<span class="w"> </span><span class="err">┌───────────────┐</span><span class="w">   </span><span class="nx">ABC</span><span class="w"> </span><span class="nx">importer</span><span class="w">   </span><span class="err">┌───────────────────────────────────────┐</span>
+<span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="nx">choline</span><span class="o">-</span><span class="nx">O</span><span class="o">-</span><span class="w">    </span><span class="err">│</span><span class="w"> </span><span class="err">───────────────►</span><span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="nx">choline</span><span class="o">-</span><span class="nx">O</span><span class="o">-</span><span class="nx">sulfate</span><span class="w">                      </span><span class="err">│</span>
+<span class="w"> </span><span class="err">│</span><span class="w"> </span><span class="nx">sulfate</span><span class="w"> </span><span class="p">(</span><span class="nx">COS</span><span class="p">)</span><span class="w"> </span><span class="err">│</span><span class="w">  </span><span class="p">(</span><span class="nx">adjacent</span><span class="w"> </span><span class="nx">ABC</span><span class="w">   </span><span class="err">│</span><span class="w">        </span><span class="err">│</span><span class="w">                               </span><span class="err">│</span>
+<span class="w"> </span><span class="err">└───────────────┘</span><span class="w">   </span><span class="nx">transporter</span><span class="p">)</span><span class="w">   </span><span class="err">│</span><span class="w">        </span><span class="err">│</span><span class="w">  </span><span class="nx">BetC</span><span class="w"> </span><span class="p">(</span><span class="nx">PP_0077</span><span class="p">)</span><span class="w">               </span><span class="err">│</span>
+<span class="w">                     </span><span class="err">│</span><span class="w">        </span><span class="err">▼</span><span class="w">  </span><span class="nx">choline</span><span class="o">-</span><span class="nx">O</span><span class="o">-</span><span class="nx">sulfatase</span><span class="w"> </span><span class="nx">EC</span><span class="w"> </span><span class="m m-Double">3.1.6.6</span><span class="err">│</span>
+<span class="w">   </span><span class="nx">LysR</span><span class="o">-</span><span class="k">type</span><span class="w"> </span><span class="nx">regulator</span><span class="w"> </span><span class="err">─</span><span class="p">(</span><span class="nx">induces</span><span class="p">)</span><span class="err">──►</span><span class="w"> </span><span class="err">│</span><span class="w">  </span><span class="nx">choline</span><span class="w">  </span><span class="o">+</span><span class="w">  </span><span class="nx">SO4</span><span class="o">^</span><span class="mi">2</span><span class="o">-</span><span class="w">                    </span><span class="err">│</span>
+<span class="w">   </span><span class="p">(</span><span class="nx">adjacent</span><span class="w"> </span><span class="nx">to</span><span class="w"> </span><span class="nx">betC</span><span class="p">)</span><span class="w">                </span><span class="err">│</span><span class="w">     </span><span class="err">│</span><span class="w">                                  </span><span class="err">│</span>
+<span class="w">                     </span><span class="err">│</span><span class="w">     </span><span class="err">├──►</span><span class="w"> </span><span class="nx">carbon</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">nitrogen</span><span class="w"> </span><span class="nx">source</span><span class="w">      </span><span class="err">│</span>
+<span class="w">                     </span><span class="err">│</span><span class="w">     </span><span class="err">│</span><span class="w">    </span><span class="p">(</span><span class="nx">catabolism</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nx">energy</span><span class="p">,</span><span class="w"> </span><span class="nx">C</span><span class="o">/</span><span class="nx">N</span><span class="p">)</span><span class="w">    </span><span class="err">│</span>
+<span class="w">                     </span><span class="err">│</span><span class="w">     </span><span class="err">└──►</span><span class="w"> </span><span class="nx">sulfur</span><span class="w"> </span><span class="nx">source</span><span class="w"> </span><span class="p">(</span><span class="nx">from</span><span class="w"> </span><span class="nx">sulfate</span><span class="p">)</span><span class="w">  </span><span class="err">│</span>
+<span class="w">                     </span><span class="err">└───────────────────────────────────────┘</span>
+
+<span class="w">   </span><span class="nx">Separate</span><span class="w"> </span><span class="nx">module</span><span class="w"> </span><span class="p">(</span><span class="nx">NOT</span><span class="w"> </span><span class="nx">betC</span><span class="p">):</span><span class="w">  </span><span class="nx">choline</span><span class="w"> </span><span class="err">──</span><span class="nx">betA</span><span class="err">──►</span><span class="w"> </span><span class="nx">betaine</span><span class="w"> </span><span class="nx">aldehyde</span><span class="w"> </span><span class="err">──</span><span class="nx">betB</span><span class="err">──►</span>
+<span class="w">                </span><span class="nx">glycine</span><span class="w"> </span><span class="nx">betaine</span><span class="w">  </span><span class="p">(</span><span class="nx">osmoprotection</span><span class="p">;</span><span class="w"> </span><span class="nx">betBA</span><span class="w"> </span><span class="nx">locus</span><span class="p">)</span>
+<span class="w">   </span><span class="nx">Osmoprotectant</span><span class="w"> </span><span class="nx">uptake</span><span class="p">:</span><span class="w"> </span><span class="nx">OpuC</span><span class="w"> </span><span class="nx">ABC</span><span class="w"> </span><span class="nx">transporter</span><span class="w"> </span><span class="p">(</span><span class="nx">glycine</span><span class="w"> </span><span class="nx">betaine</span><span class="p">,</span><span class="w"> </span><span class="nx">choline</span><span class="p">,</span><span class="w"> </span><span class="nx">etc</span><span class="p">.)</span>
+</code></pre></div>
+
+<p><strong>Step 1 — Uptake.</strong> Choline-O-sulfate is imported into the cytoplasm by the ABC transporter encoded adjacent to <em>betC</em>. The <em>betC</em> mutant's accumulation of intact COS proves that uptake is independent of, and upstream of, BetC.</p>
+<p><strong>Step 2 — Intracellular hydrolysis.</strong> BetC hydrolyzes the sulfate ester of choline-O-sulfate, releasing free choline and inorganic sulfate. Mechanistically this uses the Cys52-derived <strong>formylglycine</strong> nucleophile in a <strong>double-displacement</strong> reaction within a conserved <strong>mononuclear metal</strong> active site (Arg56 plus the Asp12/Asn73/Asp289 metal set and a basket of His/Lys/Asp residues that bind the sulfate).</p>
+<p><strong>Step 3 — Nutrient partitioning.</strong> The products feed central metabolism: choline provides carbon and nitrogen (and can be further oxidized), while the liberated sulfate provides a sulfur source. This is the "principal role" identified experimentally.</p>
+<p><strong>Regulatory logic.</strong> A LysR-type transcriptional regulator adjacent to <em>betC</em> controls the module, presumably inducing it in response to substrate availability (paralleling the choline/COS-inducible BetI system of <em>S. meliloti</em>). Salt represses <em>betC</em>, cementing that this is a nutritional, not osmoprotective, response.</p>
+<h3 id="comparative-context-across-organisms">Comparative context across organisms</h3>
+<table>
+<thead>
+<tr>
+<th>Organism</th>
+<th>betC product</th>
+<th>Fate of liberated choline</th>
+<th>Primary role of the module</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>P. putida</em> KT2440 (<strong>target</strong>)</td>
+<td>Choline-O-sulfatase (PP_0077)</td>
+<td>Catabolized for C/N; sulfate for S</td>
+<td><strong>Nutrient acquisition</strong> (COS catabolism); salt-<strong>repressed</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/17116241/">PMID: 17116241</a>)</td>
+</tr>
+<tr>
+<td><em>S. meliloti</em></td>
+<td>Choline sulfatase (<em>betC</em> in <em>betICBA</em>)</td>
+<td>→ glycine betaine via BetB/BetA</td>
+<td>Osmoprotectant precursor supply; choline-<strong>induced</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/9736747/">PMID: 9736747</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/12906115/">PMID: 12906115</a>)</td>
+</tr>
+<tr>
+<td><em>Ruegeria pomeroyi</em> (Roseobacter)</td>
+<td>Choline sulfatase (<em>betC</em>)</td>
+<td>Choline catabolism, re-mineralized to NH4+</td>
+<td>Choline/GBT catabolism (<a href="https://pubmed.ncbi.nlm.nih.gov/26058574/">PMID: 26058574</a>)</td>
+</tr>
+<tr>
+<td><em>B. subtilis</em></td>
+<td>(<em>gbsAB</em> pathway)</td>
+<td>→ glycine betaine</td>
+<td>Osmoprotection (<a href="https://pubmed.ncbi.nlm.nih.gov/8752328/">PMID: 8752328</a>)</td>
+</tr>
+</tbody>
+</table>
+<p>The comparison shows that the <strong>same enzyme (choline sulfatase)</strong> is recruited to <strong>different physiological ends</strong> depending on the downstream wiring and the regulatory response to salt. In <em>P. putida</em>, the wiring places BetC firmly in catabolism.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports / relates to the findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17116241/">17116241</a></td>
+<td><em>Uncoupling of choline-O-sulphate utilization from osmoprotection in Pseudomonas putida</em></td>
+<td><strong>Primary study on the exact target.</strong> Confirms <em>betC</em> = choline sulphatase in KT2440; genomic context (ABC transporter + LysR regulator, away from <em>betBA</em>); <em>betC</em> mutant accumulates COS but can't use it as C/N source; <em>betC</em> is salt-repressed → catabolic, not osmoprotective. Supports F001, F002, F004, F006.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9736747/">9736747</a></td>
+<td><em>Presence of a gene encoding choline sulfatase in S. meliloti bet operon</em></td>
+<td><strong>Founding functional characterization.</strong> Defines the BetC reaction and substrate preference (choline-O-sulfate &gt; phosphorylcholine); activity absent in <em>betC</em> mutants. Supports F001, F003.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12906115/">12906115</a></td>
+<td><em>The S. meliloti glycine betaine biosynthetic genes (betICBA) are induced by choline...</em></td>
+<td>Establishes operon structure and BetI-mediated, choline-inducible regulation in the homolog; contextualizes the LysR/inducible regulation of the <em>P. putida</em> module. Supports F004 (regulatory context).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18793651/">18793651</a></td>
+<td><em>A new member of the alkaline phosphatase superfamily with a formylglycine nucleophile...</em></td>
+<td>Defines the (C/S)XPXR signature, the formylglycine nucleophile, the double-displacement mechanism, and the conserved mononuclear active site shared by the superfamily. Supports F003, F007.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17660277/">17660277</a></td>
+<td><em>Characterization of the osmoprotectant transporter OpuC from P. syringae...</em></td>
+<td>Shows osmoprotectant acquisition in <em>Pseudomonas</em> is via dedicated OpuC transporters (CBS domains required), functionally distinct from BetC catabolism. Supports F006.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/26058574/">26058574</a></td>
+<td><em>Comparative genomics ... choline metabolism in the marine Roseobacter clade</em></td>
+<td>Independent confirmation that <em>betC</em> encodes choline sulfatase in choline catabolism; nitrogen-rich choline/GBT re-mineralized to ammonium — parallels the catabolic role in <em>P. putida</em>. Supports F001, F002 (comparative).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/8752328/">8752328</a></td>
+<td><em>Synthesis of the osmoprotectant glycine betaine in B. subtilis (gbsAB)</em></td>
+<td>Provides the osmoprotection contrast: in <em>B. subtilis</em> the choline→glycine betaine route (gbsAB) is an osmotic-stress pathway, unlike the catabolic role of <em>betC</em> in <em>P. putida</em>. Contextualizes F002/F006.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20615119/">20615119</a></td>
+<td><em>Choline and osmotic-stress tolerance ... Bacillus subtilis (GB03)</em></td>
+<td>Broader background on choline → glycine betaine osmoprotection; contextual only, not a claim source for BetC's catabolic role.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Internal consistency check.</strong> The gene symbol (<em>betC</em>), organism (<em>P. putida</em> KT2440), EC number (3.1.6.6), family (sulfatase), and domain architecture (Sulfatase_N/CS, Alkaline phosphatase core fold, Choline-sulfatase domains) all agree with the primary literature and with the AlphaFold structural model. No conflicting-identity literature was encountered, so the mandatory verification is satisfied and the research proceeds on the correct protein.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct enzymology on the <em>P. putida</em> protein itself.</strong> The kinetic ordering (choline-O-sulfate preferred over phosphorylcholine) and mechanistic details cited here are inferred from (a) the founding <em>S. meliloti</em> choline sulfatase, (b) the general sulfatase/alkaline-phosphatase superfamily, and (c) the AlphaFold model. No purified Q88RQ2 assay with measured kcat/Km is available. The precise substrate range and relative rates for the <em>P. putida</em> enzyme remain to be measured.</p>
+</li>
+<li>
+<p><strong>Formylglycine modification is inferred, not demonstrated.</strong> The Cys52→FGly conversion is predicted from the conserved (C/S)XPXR signature and superfamily precedent. Direct evidence (mass spectrometry of the mature enzyme, or identification of the cognate formylglycine-generating machinery in <em>P. putida</em>) has not been established here.</p>
+</li>
+<li>
+<p><strong>Metal identity is a prediction.</strong> The candidate metal-coordinating residues (Asp12/Asn73/Asp289) and the "mononuclear metal" assignment derive from the AlphaFold model and superfamily homology. Whether BetC uses Ca²⁺, Mg²⁺, or another divalent cation, and the precise coordination geometry, requires a crystal/cryo-EM structure or metal analysis.</p>
+</li>
+<li>
+<p><strong>Transporter and regulator not molecularly defined.</strong> The adjacent ABC transporter's specificity for choline-O-sulfate and the LysR regulator's effector/operator have not been directly characterized in <em>P. putida</em>; the regulatory model is partly extrapolated from <em>S. meliloti</em> BetI.</p>
+</li>
+<li>
+<p><strong>Downstream catabolic routing is incompletely mapped.</strong> How liberated choline is oxidized (which dehydrogenases) and how the released sulfate is assimilated under sulfur limitation are not detailed for KT2440 in the cited work.</p>
+</li>
+<li>
+<p><strong>Localization inferred from phenotype, not from imaging.</strong> The cytoplasmic localization of BetC is inferred from the mutant's intracellular COS accumulation (uptake precedes hydrolysis) and from the absence of periplasmic-targeting evidence, rather than from direct fractionation or fluorescence localization.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Purify recombinant Q88RQ2 and measure steady-state kinetics</strong> on choline-O-sulfate and phosphorylcholine (kcat, Km, kcat/Km), plus a panel of candidate substrates (nitrophenyl sulfate, other choline esters) to define specificity quantitatively.</p>
+</li>
+<li>
+<p><strong>Confirm the formylglycine modification</strong> by intact-protein and peptide mass spectrometry of Cys52, and identify the <em>P. putida</em> formylglycine-generating enzyme required for maturation (test activity in a maturation-deficient background).</p>
+</li>
+<li>
+<p><strong>Determine the metal dependence and active-site structure</strong> — metal analysis (ICP-MS), activity ± chelators/added divalent cations, and an experimental structure (X-ray/cryo-EM) to validate the predicted Arg56 / Asp12-Asn73-Asp289 / His-Lys constellation from the AlphaFold model (F007).</p>
+</li>
+<li>
+<p><strong>Characterize the adjacent ABC transporter</strong> by transport assays with labeled choline-O-sulfate in wild-type vs. transporter-knockout strains, testing whether it is the dedicated COS importer implied by the <em>betC</em> mutant's COS accumulation.</p>
+</li>
+<li>
+<p><strong>Dissect the LysR regulator</strong> — identify its inducer (choline-O-sulfate vs. choline) and operator by transcriptional fusions and EMSA/DNase footprinting, and compare the salt-repression mechanism to the BetI system.</p>
+</li>
+<li>
+<p><strong>Physiological growth panel</strong> — quantify growth of wild-type, Δ<em>betC</em>, and complemented strains on choline-O-sulfate as sole C, N, and S source, closing the loop on the tripartite nutritional role, and confirm cytoplasmic localization by subcellular fractionation.</p>
+</li>
+</ol>
+<hr />
+<h2 id="direct-answer">Direct Answer</h2>
+<p><strong>betC (PP_0077, UniProt Q88RQ2) of <em>Pseudomonas putida</em> KT2440 encodes choline-O-sulfatase (EC 3.1.6.6), a cytoplasmic sulfatase-superfamily enzyme that hydrolyzes the sulfate ester of choline-O-sulfate — and, more weakly, phosphorylcholine — into free choline and inorganic sulfate, using a Cys52-derived formylglycine nucleophile and a double-displacement mechanism.</strong> It acts intracellularly on choline-O-sulfate imported by an adjacent ABC transporter and is controlled by a neighbouring LysR-type regulator. <strong>In <em>P. putida</em> its principal role is catabolic — supplying carbon, nitrogen, and sulfur from choline-O-sulfate — and it is not involved in osmoprotection</strong>, which is handled by the physically and functionally separate betBA genes and OpuC transporter.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="betC-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="betC-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:17116241</li>
+<li>PMID:9736747</li>
+<li>PMID:12906115</li>
+<li>PMID:18793651</li>
+<li>PMID:17660277</li>
+<li>PMID:26058574</li>
+<li>PMID:8752328</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(betC-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88RQ2" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="betc-curation-notes">betC curation notes</h1>
+<h2 id="evidence-boundary">Evidence boundary</h2>
+<p>KT2440 BetC (Q88RQ2; PP_0077) is assigned EC 3.1.6.6 and the exact<br />
+choline-sulfatase family signature [<code>betC-uniprot.txt</code>, "EC=3.1.6.6";<br />
+"InterPro; IPR017785; Choline-sulfatase."]. The KT2440 genetic study found<br />
+that a <code>betC</code> mutant accumulated intact choline-O-sulfate but could not use it<br />
+as carbon or nitrogen, supporting a central role in utilization rather than<br />
+uptake or osmoprotection [PMID:17116241, "This mutant still accumulated intact<br />
+COS but failed to use this compound as carbon or nitrogen source."].</p>
+<p>Direct ortholog evidence comes from Sinorhizobium meliloti BetC (UniProt<br />
+O69787): the gene encodes a choline sulfatase converting choline-O-sulfate, and<br />
+more slowly phosphorylcholine, to choline [PMID:9736747, "a new gene (betC) was<br />
+identified as encoding a choline sulfatase catalyzing the conversion of<br />
+choline-O-sulfate and, at a lower rate, phosphorylcholine, into choline."].</p>
+<p>The same Sinorhizobium choline sulfatase was subsequently characterized as a<br />
+purified enzyme and by X-ray crystallography [PMID:29458126,<br />
+"Sinorhizobium meliloti choline sulfatase (SmCS) efficiently catalyzes the<br />
+hydrolysis of alkyl sulfate choline-O-sulfate"]. This provides a direct<br />
+structural and kinetic exemplar for the exact BetC family assignment.</p>
+<p>PANTHER PTHR45953:SF1 is not used as an exact BetC selector because its official<br />
+label is <code>IDURONATE 2-SULFATASE</code> and its membership spans functionally distinct<br />
+sulfatases. InterPro IPR017785 and the characterized UniProt exemplar provide a<br />
+more defensible module selector.</p>
+<h2 id="curation-position">Curation position</h2>
+<ul>
+<li>Accept exact choline-sulfatase activity as the core function.</li>
+<li>Retain sulfuric ester hydrolase activity as a valid but broad non-core parent.</li>
+<li>Retain cytoplasm only as non-core localization evidence.</li>
+</ul>
+<h2 id="openscientist-adjudication">OpenScientist adjudication</h2>
+<p>The report correctly identifies Q88RQ2, the C52-A-P-S-R sulfatase motif, the<br />
+direct KT2440 <code>betC</code> phenotype, and the absence of purified target-protein<br />
+kinetics. Its claim that an adjacent ABC transporter imports choline-O-sulfate<br />
+is not adopted: PP_0075 has SLC26A/SulP-STAS architecture, no cognate local ABC<br />
+ATPase is established, and neither PP_0075 nor PP_0076 has a target-specific<br />
+transport assay.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88RQ2
+gene_symbol: betC
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  BetC is a cytoplasmic choline sulfatase that hydrolyzes choline-O-sulfate to
+  choline, sulfate, and a proton. In Pseudomonas putida KT2440 it supports use
+  of choline-O-sulfate as a carbon or nitrogen source; unlike BetA/BetB-mediated
+  glycine-betaine production, its principal role is choline-O-sulfate metabolism
+  rather than osmoprotection.
+existing_annotations:
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: located_in
+  review:
+    summary: Retain the phylogenetically inferred cytoplasmic localization as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: The TreeGrafter annotation is not contradicted by the target sequence or pathway context, but location is ancillary to the catalytic function.
+    supported_by:
+    - reference_id: file:PSEPK/betC/betC-goa.tsv
+      supporting_text: &#34;GO:0005737\tcytoplasm&#34;
+    - reference_id: file:PSEPK/betC/betC-deep-research-openscientist.md
+      supporting_text: Localization inferred from phenotype, not from imaging.
+- term:
+    id: GO:0008484
+    label: sulfuric ester hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: Retain this chemically valid broad parent as non-core.
+    action: KEEP_AS_NON_CORE
+    reason: BetC hydrolyzes a sulfate ester, but the existing exact choline-sulfatase term is more informative for its core function.
+    supported_by:
+    - reference_id: file:PSEPK/betC/betC-goa.tsv
+      supporting_text: &#34;GO:0008484\tsulfuric ester hydrolase activity&#34;
+- term:
+    id: GO:0047753
+    label: choline-sulfatase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000003
+  qualifier: enables
+  review:
+    summary: Accept exact choline-sulfatase activity as the core molecular function.
+    action: ACCEPT
+    reason: The target has concordant EC 3.1.6.6 and choline-sulfatase-specific domain assignments, KT2440 betC genetics support choline-O-sulfate utilization, and the reviewed Sinorhizobium BetC exemplar has direct genetic and enzymatic evidence for the same reaction.
+    supported_by:
+    - reference_id: file:PSEPK/betC/betC-uniprot.txt
+      supporting_text: &#39;InterPro; IPR017785; Choline-sulfatase.&#39;
+    - reference_id: PMID:17116241
+      supporting_text: This mutant still accumulated intact COS but failed to use this compound as carbon or nitrogen source.
+    - reference_id: PMID:9736747
+      supporting_text: a new gene (betC) was identified as encoding a choline sulfatase catalyzing the conversion of choline-O-sulfate and, at a lower rate, phosphorylcholine, into choline.
+    - reference_id: PMID:29458126
+      supporting_text: Sinorhizobium meliloti choline sulfatase (SmCS) efficiently catalyzes the hydrolysis of alkyl sulfate choline-O-sulfate
+    - reference_id: file:PSEPK/betC/betC-deep-research-openscientist.md
+      supporting_text: No direct enzymology on the *P. putida* protein itself.
+references:
+- id: GO_REF:0000003
+  title: Gene Ontology annotation based on Enzyme Commission mapping
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: file:PSEPK/betC/betC-uniprot.txt
+  title: UniProtKB entry Q88RQ2 for Pseudomonas putida KT2440 BetC
+  findings:
+  - statement: Q88RQ2 is assigned EC 3.1.6.6.
+    supporting_text: &#39;EC=3.1.6.6&#39;
+    reference_section_type: RESULTS
+  - statement: The target contains the specific InterPro choline-sulfatase signature.
+    supporting_text: &#39;InterPro; IPR017785; Choline-sulfatase.&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Exact target accession, EC, and domain architecture verified. The entry is unreviewed and its exact function remains inferred rather than based on isolated target-protein enzymology.
+- id: PMID:17116241
+  title: Uncoupling of choline-O-sulphate utilization from osmoprotection in Pseudomonas putida.
+  full_text_unavailable: true
+  findings:
+  - statement: KT2440 betC is required to use choline-O-sulfate as a carbon or nitrogen source but not to accumulate it.
+    supporting_text: This mutant still accumulated intact COS but failed to use this compound as carbon or nitrogen source.
+    reference_section_type: ABSTRACT
+  - statement: High salt downregulates betC, supporting metabolism rather than osmoprotection as its main KT2440 role.
+    supporting_text: the principal role of this gene lied in COS metabolism, not in osmoprotection
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed identity and cached abstract verified; direct KT2440 betC genetics, but not isolated enzyme kinetics.
+- id: PMID:9736747
+  title: &#39;Presence of a gene encoding choline sulfatase in Sinorhizobium meliloti bet operon: choline-O-sulfate is metabolized into glycine betaine.&#39;
+  full_text_unavailable: true
+  findings:
+  - statement: Sinorhizobium BetC directly converts choline-O-sulfate and, more slowly, phosphorylcholine to choline.
+    supporting_text: a new gene (betC) was identified as encoding a choline sulfatase catalyzing the conversion of choline-O-sulfate and, at a lower rate, phosphorylcholine, into choline.
+    reference_section_type: ABSTRACT
+  - statement: Loss of betC eliminates choline-sulfatase activity in the ortholog system.
+    supporting_text: Choline sulfatase activity was absent from betC but not from betB mutants
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: PubMed identity and cached abstract verified; direct ortholog genetics and enzymology for reviewed UniProt exemplar O69787.
+- id: PMID:29458126
+  title: &#39;Structural and Mechanistic Analysis of the Choline Sulfatase from Sinorhizobium melliloti: A Class I Sulfatase Specific for an Alkyl Sulfate Ester.&#39;
+  findings:
+  - statement: Purified Sinorhizobium choline sulfatase efficiently hydrolyzes choline-O-sulfate.
+    supporting_text: Sinorhizobium meliloti choline sulfatase (SmCS) efficiently catalyzes the hydrolysis of alkyl sulfate choline-O-sulfate
+    reference_section_type: ABSTRACT
+  - statement: The crystal structure defines the active site of this BetC exemplar.
+    supporting_text: Its 2.8-Å resolution X-ray structure shows a buried, largely hydrophobic active site
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Full text and PubMed identity verified; direct purified-enzyme kinetics and structure for the Sinorhizobium BetC exemplar.
+- id: file:PSEPK/betC/betC-deep-research-openscientist.md
+  title: OpenScientist deep-research report for PSEPK betC
+  findings:
+  - statement: The report identifies the exact target and conserved choline-sulfatase motif.
+    supporting_text: A direct sequence scan locates the universal sulfatase active-site signature **(C/S)-X-P-X-R** as **C52-A-P-S-R56** near the N-terminus.
+    reference_section_type: DISCUSSION
+  - statement: The report explicitly notes the absence of purified KT2440 Q88RQ2 enzymology.
+    supporting_text: No direct enzymology on the *P. putida* protein itself.
+    reference_section_type: DISCUSSION
+  reference_review:
+    relevance: HIGH
+    correctness: LOW_QUALITY
+    review_notes: &gt;-
+      Exact target identity, motif, direct KT2440 phenotype, and absence of
+      target-protein kinetics were retained. The report&#39;s assertion that the
+      adjacent proteins form the importer is rejected: current PP_0075
+      architecture is SLC26A/SulP-STAS, and no cognate local ABC ATPase or
+      target-specific transport assay is established.
+core_functions:
+- description: Choline sulfatase that hydrolyzes choline-O-sulfate to choline, sulfate, and a proton, enabling metabolic utilization of choline-O-sulfate.
+  molecular_function:
+    id: GO:0047753
+    label: choline-sulfatase activity
+  supported_by:
+  - reference_id: file:PSEPK/betC/betC-uniprot.txt
+    supporting_text: &#39;InterPro; IPR017785; Choline-sulfatase.&#39;
+  - reference_id: PMID:17116241
+    supporting_text: This mutant still accumulated intact COS but failed to use this compound as carbon or nitrogen source.
+  - reference_id: PMID:9736747
+    supporting_text: a new gene (betC) was identified as encoding a choline sulfatase catalyzing the conversion of choline-O-sulfate and, at a lower rate, phosphorylcholine, into choline.
+  - reference_id: PMID:29458126
+    supporting_text: Sinorhizobium meliloti choline sulfatase (SmCS) efficiently catalyzes the hydrolysis of alkyl sulfate choline-O-sulfate
+  - reference_id: file:PSEPK/betC/betC-deep-research-openscientist.md
+    supporting_text: No direct enzymology on the *P. putida* protein itself.
+proposed_new_terms: []
+suggested_questions:
+- question: What are the kinetic parameters and in vivo contributions of KT2440 BetC for choline-O-sulfate versus phosphorylcholine?
+suggested_experiments:
+- description: Purify Q88RQ2 and quantify choline-O-sulfate and phosphorylcholine hydrolysis, then compare metabolite flux and growth in clean betC deletion and complementation strains under carbon-, nitrogen-, and sulfur-source conditions.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

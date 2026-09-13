@@ -1,0 +1,2195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_0075 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_0075</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88RQ4" target="_blank" class="term-link">
+                        Q88RQ4
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_0075";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88RQ4" data-a="DESCRIPTION: PP_0075 is a multi-pass SLC26A/SulP-family membran..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PP_0075 is a multi-pass SLC26A/SulP-family membrane transporter with a cytoplasmic STAS domain. It lies next to the choline-sulfatase gene betC, but its transported substrate, coupling mechanism, and proposed role in choline-O-sulfate uptake have not been established experimentally.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RQ4" data-a="GO:0016020" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The multi-pass architecture strongly supports membrane localization.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Membrane location is valid topology but is ancillary to the unresolved transport activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_0075/PP_0075-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Membrane</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055085" target="_blank" class="term-link">
+                                    GO:0055085
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RQ4" data-a="GO:0055085" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Accept generic transmembrane transport without assigning a specific cargo.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Nine predicted membrane-spanning segments and the SLC26A/SulP family assignment support a transport role. Neither the submitted product name nor genomic adjacency establishes choline-O-sulfate specificity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_0075/PP_0075-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">InterPro; IPR001902; SLC26A/SulP_fam.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_0075/PP_0075-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">PP_0075 encodes an integral inner-membrane secondary transporter belonging to the **SulP / SLC26 anion-permease superfamily**.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022857" target="_blank" class="term-link">
+                                    GO:0022857
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/PP_0075/PP_0075-uniprot.txt
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88RQ4" data-a="GO:0022857" data-r="file:PSEPK/PP_0075/PP_0075-uniprot.txt" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Add the generic molecular activity implied by the multi-pass SLC26A/SulP architecture.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The fetched GOA set contains the transport process but no molecular function. A generic transporter activity is defensible while exact cargo specificity remains unresolved.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_0075/PP_0075-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">InterPro; IPR001902; SLC26A/SulP_fam.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Multi-pass SLC26A/SulP-family transmembrane transporter of unresolved physiological cargo and coupling mechanism.</h3>
+                <span class="vote-buttons" data-g="Q88RQ4" data-a="FUNCTION: Multi-pass SLC26A/SulP-family transmembrane transp..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022857" target="_blank" class="term-link">
+                            transmembrane transporter activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055085" target="_blank" class="term-link">
+                                transmembrane transport
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_0075/PP_0075-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">InterPro; IPR001902; SLC26A/SulP_fam.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_0075/PP_0075-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">No direct transport assay exists for PP_0075.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_0075/PP_0075-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88RQ4 for Pseudomonas putida KT2440 PP_0075</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Q88RQ4 is an integral multi-pass membrane protein.</div>
+
+                        <div class="finding-text">"Multi-pass membrane protein"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The protein belongs to the SLC26A/SulP transporter family and contains a STAS domain.</div>
+
+                        <div class="finding-text">"InterPro; IPR001902; SLC26A/SulP_fam."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17116241" target="_blank" class="term-link">
+                            PMID:17116241
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Uncoupling of choline-O-sulphate utilization from osmoprotection in Pseudomonas putida.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A KT2440 betC deletion did not prevent accumulation of intact choline-O-sulfate.</div>
+
+                        <div class="finding-text">"This mutant still accumulated intact COS but failed to use this compound as carbon or nitrogen source."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21369825" target="_blank" class="term-link">
+                            PMID:21369825
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Inducible expression of choline sulfatase and its regulator BetR in Pseudomonas sp. ATCC19151.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The syntenic BetE homolog is predicted to be a STAS-domain permease.</div>
+
+                        <div class="finding-text">"BetE is a permease and contains STAS domain."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_0075/PP_0075-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep-research report for PSEPK PP_0075</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report confirms the target&#39;s generic SulP/SLC26 transporter architecture.</div>
+
+                        <div class="finding-text">"PP_0075 encodes an integral inner-membrane secondary transporter belonging to the **SulP / SLC26 anion-permease superfamily**."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report acknowledges that no direct target transport assay establishes substrate or direction.</div>
+
+                        <div class="finding-text">"No direct transport assay exists for PP_0075."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What solute does PP_0075 transport, and does it functionally couple to the adjacent PP_0076 binding protein?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88RQ4" data-a="Q: What solute does PP_0075 transport, and does it fu..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure uptake of choline-O-sulfate, sulfate, choline, and related solutes in clean PP_0075 deletion and complementation strains, then reconstitute transport in proteoliposomes.</p>
+
+
+
+                </div>
+                <span class="vote-buttons" data-g="Q88RQ4" data-a="EXPERIMENT: Measure uptake of choline-O-sulfate, sulfate, chol..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_0075-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88RQ4" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: PP_0075 (Q88RQ4), *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">9 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-31T05:15:29.922212</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_0075-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_0075-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-pp_0075-q88rq4-pseudomonas-putida-kt2440">Functional Annotation Report: PP_0075 (Q88RQ4), <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>Gene:</strong> PP_0075 (OrderedLocusNames PP_0075)<br />
+<strong>UniProt:</strong> Q88RQ4<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / NCIMB 11950 / KT2440), NCBI taxon PSEPK<br />
+<strong>Automatic annotation under review:</strong> "Choline sulfate transporter" (SubName, from EMBL AAN65709.1)</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>PP_0075 encodes an integral inner-membrane secondary transporter belonging to the <strong>SulP / SLC26 anion-permease superfamily</strong>. The 521-residue protein has the canonical two-part architecture of this family: a hydrophobic transmembrane core of ~10 helices (residues ~42–416) that forms the anion-conducting pathway, followed by a C-terminal cytoplasmic <strong>STAS domain</strong> (residues ~434–521) that in this family serves regulatory and protein–protein interaction roles. This architecture is diagnostic and places PP_0075 firmly among bacterial sulfate/anion permeases (Pfam PF00916 Sulfate_transp + PF01740 STAS; InterPro IPR001902/IPR011547; KEGG orthology K03321 "sulfate permease, SulP family"; eggNOG COG0659).</p>
+<p>Genomically, PP_0075 is the distal gene of a small <strong>choline-O-sulfate (COS) catabolic operon</strong> in <em>P. putida</em> KT2440. It is co-transcribed on the minus strand with an ABC-transporter substrate-binding protein (PP_0076, K02002) and the <strong>betC choline-sulfatase</strong> (PP_0077, EC 3.1.6.6, K01133), and is controlled by a divergently oriented LysR-type regulator (PP_0079). Choline-sulfatase cleaves the sulfate ester of intracellular choline-O-sulfate to release <strong>free choline plus inorganic sulfate</strong>; the choline then feeds the downstream betBA pathway (choline → betaine aldehyde → glycine betaine) as a carbon/nitrogen/energy source. This operonic context tightly links PP_0075 to sulfur and quaternary-ammonium-ester metabolism.</p>
+<p>The literal database name — "choline sulfate transporter" — is an <strong>unverified automatic annotation</strong> and is most likely misleading with respect to the transported species. Comparative physiology and family biochemistry argue that the bulky zwitterionic COS molecule is imported by ABC binding-protein systems (as in <em>Bacillus subtilis</em> OpuC and rhizobial Cho/Prb systems), whereas SulP-family permeases characteristically move small inorganic anions (sulfate, bicarbonate). The most parsimonious functional assignment is therefore that <strong>PP_0075 transports the inorganic sulfate liberated by choline-sulfatase across the cytoplasmic membrane</strong>, coupling COS catabolism to cellular sulfur handling/assimilation. This substrate assignment is an inference from protein family, genome context, and comparative physiology; direct transport assays on PP_0075 have not been reported. This report lays out the evidence for each of these conclusions and identifies the experiments that would settle the remaining uncertainty.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="f001-pp_0075-is-a-sulpslc26-family-anion-permease-with-a-tm-core-plus-c-terminal-stas-domain">F001 — PP_0075 is a SulP/SLC26-family anion permease with a TM core plus C-terminal STAS domain</h3>
+<p>UniProt Q88RQ4 describes a <strong>521-amino-acid integral membrane protein</strong>. Domain analysis is unambiguous and internally consistent across resources: Pfam assigns <strong>PF00916 (Sulfate_transp)</strong> for the membrane core and <strong>PF01740 (STAS)</strong> for the C-terminal cytoplasmic module; InterPro assigns <strong>IPR001902/IPR011547 (SLC26A/SulP family and domain)</strong> and <strong>IPR002645/IPR036513 (STAS domain and its structural superfamily)</strong>; eggNOG places it in <strong>COG0659 (sulfate permease)</strong>. The UniProt feature table predicts <strong>9–10 helical transmembrane segments spanning residues ~42–416</strong>, followed by a cytoplasmic STAS domain over residues ~434–521. Gene Ontology terms are consistent: C:membrane (GO:0016020) and P:transmembrane transport (GO:0055085).</p>
+<p>This two-domain layout is the defining signature of the SLC26/SulP superfamily. As reviewed by Alper &amp; Sharma, "<em>SLC26 polypeptides are characterized by N-terminal cytoplasmic domains, 10–14 hydrophobic transmembrane spans, and C-terminal cytoplasmic STAS domains</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/23506885/">PMID: 23506885</a>). PP_0075 matches this template precisely (TM core + STAS). The same review notes the functional relevance of bacterial members: "<em>SulP genes present in antibiotic operons may provide sulfate for antibiotic biosynthetic pathways</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/23506885/">PMID: 23506885</a>) — illustrating that bacterial SulP permeases characteristically transport sulfate/anions, which supports the inferred substrate class for PP_0075.</p>
+<p>Structural work on bacterial homologs reinforces the architecture and its mechanistic implications. A <em>Yersinia enterocolitica</em> Slc26A protein forms a <strong>transmembrane-stabilized dimer</strong> in which "<em>the cytoplasmic STAS domain projects away from the transmembrane domain and is not involved in dimerization,</em>" and "<em>large movements of the STAS domain underlie the conformational changes that occur during transport</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/21659513/">PMID: 21659513</a>). The <em>M. tuberculosis</em> Rv1739c protein is likewise "<em>a SulP anion permease, related in structure to the SLC26 gene family of metazoan anion exchangers and anion channels</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/19636956/">PMID: 19636956</a>). These homologs establish the fold, oligomeric state, and STAS-driven conformational cycle expected for PP_0075.</p>
+<h3 id="f002-pp_0075-lies-within-the-p-putida-kt2440-choline-o-sulfate-cos-utilization-gene-cluster">F002 — PP_0075 lies within the <em>P. putida</em> KT2440 choline-O-sulfate (COS) utilization gene cluster</h3>
+<p>The genomic neighborhood of PP_0075 defines its biological context. The adjacent genes are:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>UniProt</th>
+<th>Product</th>
+<th>KEGG orthology</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_0075</td>
+<td>Q88RQ4</td>
+<td>SulP-family anion permease</td>
+<td>K03321 (sulfate permease)</td>
+</tr>
+<tr>
+<td>PP_0076</td>
+<td>Q88RQ3</td>
+<td>choline/betaine ABC substrate-binding protein</td>
+<td>K02002</td>
+</tr>
+<tr>
+<td>PP_0077</td>
+<td>Q88RQ2</td>
+<td>betC choline-sulfatase (EC 3.1.6.6)</td>
+<td>K01133</td>
+</tr>
+<tr>
+<td>PP_0079</td>
+<td>Q88RQ0</td>
+<td>LysR-type transcriptional regulator</td>
+<td>—</td>
+</tr>
+<tr>
+<td>PP_0080</td>
+<td>Q88RP9</td>
+<td>NAD(P)-binding oxidoreductase</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>This locus was experimentally described by Galvão and colleagues, who reported that "<em>the genomic context of the recognized bet genes for choline-O-sulphate (COS) utilization in Pseudomonas putida KT2440 is such that betC (choline sulphatase) lies adjacent to an ATP-binding cassette transporter and a LysR type regulator, but well away from betBA</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/17116241/">PMID: 17116241</a>). PP_0075, PP_0076, and PP_0077 are precisely those "adjacent" genes.</p>
+<p>The metabolic logic downstream of the sulfatase is set by the classical bet pathway. In the closely related <em>Sinorhizobium</em> system, the enzymes are "<em>betC (choline sulfatase), betB (betaine aldehyde dehydrogenase), and betA (choline dehydrogenase)</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/12906115/">PMID: 12906115</a>). Thus betC desulfates COS to choline, and the choline is subsequently oxidized (via betA/betB) to glycine betaine, which serves as carbon/nitrogen/energy source. PP_0075 sits at the membrane-transport step of this catabolic module.</p>
+<h3 id="f003-the-precise-substrate-of-pp_0075-is-inferred-not-directly-proven">F003 — The precise substrate of PP_0075 is inferred, not directly proven</h3>
+<p>Galvão et al. attributed <strong>choline-O-sulfate uptake</strong> in KT2440 to the co-encoded ABC transporter (a binding-protein-dependent system, i.e., PP_0076 plus its partners), and demonstrated that betC is required to metabolize <strong>intracellular</strong> COS as a carbon/nitrogen source. Critically, a betC mutant "<em>still accumulated intact COS but failed to use this compound as carbon or nitrogen source. Furthermore, betC expression was downregulated at high salt concentrations, showing that the principal role of this gene lied in COS metabolism, not in osmoprotection</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/17116241/">PMID: 17116241</a>).</p>
+<p>Two important conclusions follow. First, <strong>COS uptake is separable from desulfation</strong> — cells import intact COS even without betC — implying uptake is handled by the ABC binding-protein machinery rather than by PP_0075. Second, the locus functions in <strong>catabolism/sulfur metabolism, not osmoprotection</strong>. PP_0075 itself (a secondary SulP/SLC26 permease, PF00916) was <strong>not individually assayed</strong> in that study. Because SulP family members characteristically transport small inorganic anions (sulfate, bicarbonate) rather than bulky zwitterionic quaternary-ammonium esters, the most plausible role for PP_0075 is the movement of the <strong>sulfate</strong> released intracellularly by betC — a substrate assignment reached by inference rather than direct measurement.</p>
+<h3 id="f004-operon-structure-and-orthology-co-transcribed-betcbindingpsulp-under-a-divergent-lysr-regulator">F004 — Operon structure and orthology: co-transcribed betC–bindingP–SulP under a divergent LysR regulator</h3>
+<p>KEGG genomic coordinates (organism ppu) place the three catabolic genes contiguously on the minus strand: PP_0077 (choline-sulfatase, complement 87800..89317), PP_0076 (betaine-binding protein, complement 86862..87785), and PP_0075 (SulP permease, complement 85152..86717). The intergenic gaps are only <strong>15 bp (PP_0077→PP_0076)</strong> and <strong>145 bp (PP_0076→PP_0075)</strong>, consistent with a <strong>single operon transcribed betC → binding protein → SulP</strong>. PP_0079 (89426..90325) lies on the <strong>plus strand, divergently oriented</strong> — the canonical arrangement of a LysR-type regulator controlling a divergent catabolic operon.</p>
+<p>KEGG orthology assignments reinforce each gene's role: PP_0075 = <strong>K03321</strong> "sulfate permease, SulP family"; PP_0076 = <strong>K02002</strong> "glycine betaine/proline ABC transporter substrate-binding protein"; PP_0077 = <strong>K01133</strong> "choline-sulfatase [EC:3.1.6.6]." The co-localization of a sulfate permease with a sulfate-ester–hydrolyzing sulfatase within one operon is a strong contextual argument that PP_0075 handles the sulfate produced by the pathway.</p>
+<h3 id="f005-comparative-evidence-cos-import-is-abc-mediated-in-other-bacteria-supporting-a-sulfateanion-role-for-pp_0075">F005 — Comparative evidence: COS import is ABC-mediated in other bacteria, supporting a sulfate/anion role for PP_0075</h3>
+<p>Across bacteria that use COS, the <strong>importer for the intact COS molecule is an ABC system, not a SulP permease.</strong> In <em>Bacillus subtilis</em>, "<em>choline-O-sulfate was specifically acquired from the environment via OpuC</em>," and the authors "<em>identified a high-affinity ATP-binding cassette (ABC) transport system responsible for its uptake</em>" (Km ~4 µM) (<a href="https://pubmed.ncbi.nlm.nih.gov/9925583/">PMID: 9925583</a>). In <em>P. putida</em> KT2440 the COS operon likewise encodes an ABC substrate-binding protein (PP_0076, K02002) that would capture the quaternary-ammonium substrate, while betC (PP_0077) desulfates intracellular COS to choline + sulfate.</p>
+<p>This pattern generalizes to related quaternary-ammonium-compound (QAC) transporters in the Rhizobiaceae: <em>Sinorhizobium meliloti</em> Cho is "<em>a highly specific high-affinity choline transporter</em>" of the ABC class (ChoX binding protein, KD ~2.7 µM) (<a href="https://pubmed.ncbi.nlm.nih.gov/15342567/">PMID: 15342567</a>), and the Opp-like ABC system Prb takes up proline betaine and "<em>other quaternary ammonium compounds such as choline</em>" (<a href="https://pubmed.ncbi.nlm.nih.gov/16923898/">PMID: 16923898</a>). In every characterized case the QAC substrate is moved by a binding-protein-dependent ABC transporter — never by a SulP permease. Since PP_0075 is orthologous to SulP sulfate permeases (K03321), the comparative evidence points away from "choline sulfate transporter" and toward <strong>inorganic sulfate/anion transport</strong> as its true function.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>The findings assemble into a coherent picture of a single catabolic module that lets <em>P. putida</em> KT2440 extract carbon, nitrogen, energy, and sulfur from environmental choline-O-sulfate, a common plant/soil osmolyte.</p>
+<div class="codehilite"><pre><span></span><code><span class="w">   </span><span class="nx">ENVIRONMENT</span><span class="w">                 </span><span class="nx">PERIPLASM</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">INNER</span><span class="w"> </span><span class="nx">MEMBRANE</span><span class="w">                 </span><span class="nx">CYTOPLASM</span>
+<span class="w"> </span><span class="err">─────────────────────────────────────────────────────────────────────────────────</span>
+<span class="w">   </span><span class="nx">Choline</span><span class="o">-</span><span class="nx">O</span><span class="o">-</span><span class="nx">sulfate</span><span class="w">  </span><span class="err">──►</span><span class="w">  </span><span class="nx">ABC</span><span class="w"> </span><span class="nx">substrate</span><span class="o">-</span><span class="nx">binding</span><span class="w"> </span><span class="nx">protein</span><span class="w"> </span><span class="p">(</span><span class="nx">PP_0076</span><span class="p">,</span><span class="w"> </span><span class="nx">K02002</span><span class="p">)</span>
+<span class="w">   </span><span class="p">(</span><span class="nx">COS</span><span class="p">,</span><span class="w"> </span><span class="nx">zwitterion</span><span class="p">)</span><span class="w">            </span><span class="err">│</span><span class="w">  </span><span class="p">(</span><span class="o">+</span><span class="w"> </span><span class="nx">ABC</span><span class="w"> </span><span class="nx">permease</span><span class="o">/</span><span class="nx">ATPase</span><span class="w"> </span><span class="nx">partners</span><span class="p">)</span>
+<span class="w">                </span><span class="err">▼</span>
+<span class="w">         </span><span class="nx">COS</span><span class="w"> </span><span class="nx">imported</span><span class="w"> </span><span class="nx">intact</span><span class="w"> </span><span class="err">───────────────►</span><span class="w">  </span><span class="nx">COS</span><span class="w"> </span><span class="p">(</span><span class="nx">cytoplasm</span><span class="p">)</span>
+<span class="w">                                                     </span><span class="err">│</span>
+<span class="w">                                       </span><span class="nx">betC</span><span class="w"> </span><span class="nx">choline</span><span class="o">-</span><span class="nx">sulfatase</span>
+<span class="w">                                       </span><span class="p">(</span><span class="nx">PP_0077</span><span class="p">,</span><span class="w"> </span><span class="nx">EC</span><span class="w"> </span><span class="m m-Double">3.1.6.6</span><span class="p">)</span>
+<span class="w">                                                     </span><span class="err">│</span>
+<span class="w">                            </span><span class="err">┌────────────────────────┴───────────┐</span>
+<span class="w">                            </span><span class="err">▼</span><span class="w">                                     </span><span class="err">▼</span>
+<span class="w">                        </span><span class="nx">CHOLINE</span><span class="w">                            </span><span class="nx">INORGANIC</span><span class="w"> </span><span class="nx">SULFATE</span>
+<span class="w">                            </span><span class="err">│</span><span class="w">                                     </span><span class="err">│</span>
+<span class="w">                </span><span class="nx">betA</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">betB</span><span class="w"> </span><span class="p">(</span><span class="nx">elsewhere</span><span class="w"> </span><span class="nx">on</span><span class="w"> </span><span class="nx">genome</span><span class="p">)</span><span class="w">         </span><span class="nx">PP_0075</span><span class="w"> </span><span class="nx">SulP</span><span class="w"> </span><span class="nx">permease</span>
+<span class="w">                            </span><span class="err">▼</span><span class="w">                              </span><span class="p">(</span><span class="nx">K03321</span><span class="p">)</span><span class="w"> </span><span class="nx">moves</span><span class="w"> </span><span class="nx">sulfate</span>
+<span class="w">                   </span><span class="nx">glycine</span><span class="w"> </span><span class="nx">betaine</span><span class="w"> </span><span class="err">──►</span><span class="w"> </span><span class="nx">C</span><span class="o">/</span><span class="nx">N</span><span class="o">/</span><span class="nx">energy</span><span class="w">          </span><span class="nx">across</span><span class="w"> </span><span class="nx">membrane</span><span class="w"> </span><span class="err">→</span><span class="w"> </span><span class="nx">sulfur</span>
+<span class="w">                                                            </span><span class="nx">assimilation</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">homeostasis</span>
+
+<span class="w">   </span><span class="nx">Regulation</span><span class="p">:</span><span class="w">  </span><span class="nx">LysR</span><span class="o">-</span><span class="k">type</span><span class="w"> </span><span class="nx">regulator</span><span class="w"> </span><span class="nx">PP_0079</span><span class="w"> </span><span class="p">(</span><span class="nx">divergent</span><span class="p">,</span><span class="w"> </span><span class="nx">plus</span><span class="w"> </span><span class="nx">strand</span><span class="p">)</span><span class="w"> </span><span class="nx">controls</span><span class="w"> </span><span class="nx">the</span>
+<span class="nx">betC</span><span class="err">–</span><span class="nx">bindingP</span><span class="err">–</span><span class="nx">SulP</span><span class="w"> </span><span class="nx">operon</span><span class="w"> </span><span class="p">(</span><span class="nx">minus</span><span class="w"> </span><span class="nx">strand</span><span class="p">,</span><span class="w"> </span><span class="nx">transcribed</span><span class="w"> </span><span class="mi">0077</span><span class="err">→</span><span class="mi">0076</span><span class="err">→</span><span class="mi">0075</span><span class="p">).</span>
+</code></pre></div>
+
+<p><strong>Why PP_0075 is best modeled as a sulfate/anion permease rather than a COS importer:</strong></p>
+<ol>
+<li><strong>Family biochemistry.</strong> SulP/SLC26 permeases transport small inorganic anions — sulfate, bicarbonate, and related species — and this is the diagnostic function of the fold (<a href="https://pubmed.ncbi.nlm.nih.gov/23506885/">PMID: 23506885</a>). A bulky zwitterionic ester like COS is not a typical SulP substrate.</li>
+<li><strong>Division of labor in the operon.</strong> The operon already contains a dedicated ABC binding protein (PP_0076) whose family is the universal COS/QAC importer across bacteria (<a href="https://pubmed.ncbi.nlm.nih.gov/9925583/">PMID: 9925583</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/15342567/">PMID: 15342567</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/16923898/">PMID: 16923898</a>). There is no need for a second COS importer, and PP_0075's fold is wrong for that job.</li>
+<li><strong>Metabolic accounting.</strong> Desulfation of COS liberates one sulfate per molecule inside the cell (<a href="https://pubmed.ncbi.nlm.nih.gov/17116241/">PMID: 17116241</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/12906115/">PMID: 12906115</a>). A co-transcribed sulfate permease provides an obvious route to manage that sulfate — feeding it into assimilation or exporting excess — closing the sulfur loop of the pathway.</li>
+</ol>
+<p><strong>Localization.</strong> PP_0075 is an integral protein of the <strong>cytoplasmic (inner) membrane</strong> (GO:0016020), with its transport pathway in the membrane and its STAS regulatory domain facing the cytoplasm. By analogy to the <em>Yersinia</em> homolog it likely functions as a homodimer stabilized through the transmembrane core, with STAS-domain motions driving the transport cycle (<a href="https://pubmed.ncbi.nlm.nih.gov/21659513/">PMID: 21659513</a>). The STAS domain is also a documented protein-interaction hub in this family — e.g., <em>E. coli</em> YchM's STAS domain binds acyl carrier protein to link bicarbonate transport with fatty-acid metabolism (<a href="https://pubmed.ncbi.nlm.nih.gov/21070944/">PMID: 21070944</a>) — leaving open the possibility of an analogous regulatory partnership for PP_0075, though none is documented.</p>
+<p><strong>Pathway placement.</strong> PP_0075 acts at the <strong>membrane-transport / sulfur-handling step</strong> of choline-O-sulfate catabolism. The upstream steps (COS import, desulfation) and the downstream carbon pathway (choline → glycine betaine via betA/betB) are established; PP_0075's specific contribution is to move the anionic product of desulfation. It is not implicated in osmoprotection, since the operon's catabolic character (betC downregulated by salt) argues explicitly against an osmotic-stress role (<a href="https://pubmed.ncbi.nlm.nih.gov/17116241/">PMID: 17116241</a>).</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>Role in this report</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23506885/">23506885</a></td>
+<td><em>The SLC26 gene family of anion transporters and channels</em></td>
+<td>Defines the SLC26/SulP architecture (TM core + STAS) that Q88RQ4 matches; documents sulfate/anion transport by bacterial SulP members</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21659513/">21659513</a></td>
+<td><em>Low-resolution structure of a bacterial SLC26 transporter</em></td>
+<td>Bacterial SulP forms a TM-stabilized dimer; STAS domain projects into cytoplasm and drives conformational changes — the structural model for PP_0075</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21070944/">21070944</a></td>
+<td><em>STAS domain in complex with acyl carrier protein (E. coli YchM)</em></td>
+<td>Shows STAS domains mediate protein interactions linking anion transport to metabolism; template for possible PP_0075 STAS regulation</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19636956/">19636956</a></td>
+<td><em>STAS domain of Rv1739c (M. tuberculosis)</em></td>
+<td>Confirms SulP anion-permease identity of bacterial family members related to SLC26</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/17116241/">17116241</a></td>
+<td><em>Uncoupling of choline-O-sulphate utilization from osmoprotection in P. putida</em></td>
+<td><strong>Primary experimental study of this locus</strong>: defines the KT2440 COS operon (betC + ABC transporter + LysR), shows COS uptake is separable from betC, and establishes a catabolic (not osmoprotective) role</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12906115/">12906115</a></td>
+<td><em>S. meliloti glycine betaine biosynthetic genes (betICBA)</em></td>
+<td>Defines betC as choline sulfatase and the downstream betBA choline→betaine pathway that consumes the choline released after desulfation</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9925583/">9925583</a></td>
+<td><em>High-affinity transport of choline-O-sulfate in B. subtilis</em></td>
+<td>Shows COS is imported by the ABC system OpuC, supporting that the ABC binding protein (not the SulP permease) captures COS</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15342567/">15342567</a></td>
+<td><em>S. meliloti ABC transporter Cho specific for choline</em></td>
+<td>Comparative: high-affinity choline/QAC uptake is ABC-mediated, not SulP-mediated</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16923898/">16923898</a></td>
+<td><em>Proline betaine uptake in S. meliloti (Prb, opp-like ABC)</em></td>
+<td>Comparative: QAC uptake is ABC-mediated; reinforces division of labor in the operon</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/4855359/">4855359</a></td>
+<td><em>Utilization of choline-O-sulphate as a sulphur source (Pseudomonas)</em></td>
+<td>Historical precedent that Pseudomonas uses COS as a sulfur source (abstract unavailable)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30338300/">30338300</a></td>
+<td><em>Choline sulfatase from …</em></td>
+<td>Enzymology of choline-sulfatase, the operon partner producing sulfate (abstract unavailable)</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21602374/">21602374</a></td>
+<td><em>Small-molecule inhibition of choline catabolism in Pseudomonas</em></td>
+<td>Context: aerobic choline catabolism is widespread in Pseudomonas, including P. putida</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Convergence of evidence.</strong> Three independent lines all point to the same conclusion: (1) the <strong>protein fold</strong> (SulP/SLC26 anion permease), (2) the <strong>operon context</strong> (co-transcribed with a choline-sulfatase that produces sulfate, and with an ABC binding protein that handles the QAC substrate), and (3) <strong>comparative physiology</strong> (COS/QAC import is ABC-mediated in every characterized bacterium). Together they argue that PP_0075's substrate is the inorganic sulfate/anion product of the pathway, and that the "choline sulfate transporter" name is a misleading automatic annotation.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct transport assay exists for PP_0075.</strong> Its substrate (sulfate vs. bicarbonate vs. another anion), direction (import vs. export), and coupling ion have not been measured. The sulfate assignment is an inference from family, genome context, and comparative physiology, not an experimental determination.</p>
+</li>
+<li>
+<p><strong>The "choline sulfate transporter" name is unverified.</strong> It derives from an automatic annotation on EMBL AAN65709.1. No experimental evidence supports PP_0075 transporting intact choline-O-sulfate, and the family biochemistry argues against it.</p>
+</li>
+<li>
+<p><strong>Operon transcription is inferred from gene spacing/orientation, not from transcript mapping.</strong> While the 15-bp and 145-bp intergenic gaps and shared strand strongly suggest a single operon, RNA-seq/RT-PCR confirmation and mapping of the LysR-controlled promoter are lacking.</p>
+</li>
+<li>
+<p><strong>No PP_0075-specific genetics.</strong> The Galvão et al. study characterized betC; a clean PP_0075 deletion and its phenotype (growth on COS as sulfur source, intracellular sulfate accumulation) have not been reported.</p>
+</li>
+<li>
+<p><strong>STAS-domain interactions are unexplored for PP_0075.</strong> Whether its STAS domain binds a partner (as YchM's binds ACP) is unknown.</p>
+</li>
+<li>
+<p><strong>Structure is homology-based only.</strong> No experimental structure of PP_0075 exists; the dimeric, STAS-mobile model is transferred from <em>Yersinia</em>/<em>M. tuberculosis</em> homologs.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Direct transport assay.</strong> Express and purify PP_0075, reconstitute into proteoliposomes, and test uptake/efflux of radiolabeled/ion-selective-electrode–monitored <strong>sulfate</strong>, bicarbonate, and — as a negative control — choline-O-sulfate, to define substrate specificity and directionality.</p>
+</li>
+<li>
+<p><strong>Targeted genetics.</strong> Construct an in-frame ΔPP_0075 deletion in KT2440 and assay growth on COS as sole <strong>sulfur</strong> source (vs. sole C/N source), and measure intracellular sulfate accumulation. Complement in trans to confirm.</p>
+</li>
+<li>
+<p><strong>Operon/promoter mapping.</strong> Use RT-PCR/RNA-seq to confirm co-transcription of PP_0077–PP_0076–PP_0075, and define the LysR (PP_0079)-dependent divergent promoter and its inducer (predicted: COS or choline).</p>
+</li>
+<li>
+<p><strong>Regulator characterization.</strong> Test whether PP_0079 binds the intergenic region and responds to COS; identify the effector molecule.</p>
+</li>
+<li>
+<p><strong>STAS interactome.</strong> Pull down the isolated PP_0075 STAS domain to test for metabolic partners analogous to the YchM STAS–ACP interaction.</p>
+</li>
+<li>
+<p><strong>Structural determination.</strong> Pursue cryo-EM or AlphaFold-guided crystallography of full-length PP_0075 to confirm the dimeric, STAS-mobile architecture and to model the anion-binding site.</p>
+</li>
+<li>
+<p><strong>Annotation correction.</strong> On the strength of the fold, orthology (K03321/COG0659), and comparative physiology, flag the UniProt "choline sulfate transporter" name as a likely automatic-annotation error and propose "SulP-family sulfate/anion permease (choline-O-sulfate catabolic operon)" pending assay.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>PP_0075 (Q88RQ4) is an inner-membrane <strong>SulP/SLC26-family anion permease</strong> — a 521-residue protein with a ~10-TM core and a cytoplasmic C-terminal STAS domain — encoded as the distal gene of a <strong>choline-O-sulfate catabolic operon</strong> in <em>P. putida</em> KT2440 (with betC choline-sulfatase PP_0077, ABC binding protein PP_0076, and divergent LysR regulator PP_0079). Its function is anion transport at the cytoplasmic membrane in service of COS utilization. Because COS is imported by ABC binding-protein systems and PP_0075 is orthologous to SulP sulfate permeases (KEGG K03321), it most plausibly transports the <strong>inorganic sulfate</strong> liberated by choline-sulfatase, coupling COS breakdown to sulfur assimilation. This substrate assignment is inferred from protein family, genome context, and comparative physiology; PP_0075 transport activity has not been directly assayed, so the literal "choline sulfate transporter" annotation remains unverified and probably inaccurate.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="PP_0075-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="PP_0075-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:23506885</li>
+<li>PMID:21659513</li>
+<li>PMID:19636956</li>
+<li>PMID:17116241</li>
+<li>PMID:12906115</li>
+<li>PMID:9925583</li>
+<li>PMID:15342567</li>
+<li>PMID:16923898</li>
+<li>PMID:21070944</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_0075-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88RQ4" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pp_0075-curation-notes">PP_0075 curation notes</h1>
+<h2 id="evidence-boundary">Evidence boundary</h2>
+<p>PP_0075 (Q88RQ4) is a 521-aa multi-pass membrane protein annotated as a<br />
+choline-sulfate transporter. Its current architecture is SLC26A/SulP plus a<br />
+cytoplasmic STAS domain, not a canonical ABC permease/ATPase architecture<br />
+[<code>PP_0075-uniprot.txt</code>, "InterPro; IPR001902; SLC26A/SulP_fam.";<br />
+"InterPro; IPR002645; STAS_dom."].</p>
+<p>The adjacent KT2440 <code>betC</code> locus was studied genetically. The paper describes<br />
+an adjacent putative ABC transporter, but the decisive phenotype is that a<br />
+<code>betC</code> mutant still accumulated intact choline-O-sulfate while failing to use<br />
+it as carbon or nitrogen. This establishes a role for BetC in utilization and<br />
+shows that uptake can occur independently of BetC; it does not directly assay<br />
+PP_0075 or establish PP_0075 as the sole choline-O-sulfate importer<br />
+[PMID:17116241, "This mutant still accumulated intact COS but failed to use<br />
+this compound as carbon or nitrogen source."].</p>
+<h2 id="curation-position">Curation position</h2>
+<ul>
+<li>Retain the well-supported membrane location and generic transmembrane<br />
+  transport process.</li>
+<li>Treat choline-O-sulfate specificity as a pathway-level candidate assignment,<br />
+  not as an experimentally established gene-level function.</li>
+<li>Do not annotate PP_0075 as an ABC-transporter component.</li>
+</ul>
+<h2 id="openscientist-adjudication">OpenScientist adjudication</h2>
+<p>The report correctly retrieves the SulP/SLC26-STAS architecture and the absence<br />
+of a direct transport assay. Its proposed sulfate cargo remains speculative.<br />
+Its assignment of intact choline-O-sulfate uptake to an unspecified ABC route<br />
+is also not established by the target or cached KT2440 evidence.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88RQ4
+gene_symbol: PP_0075
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  PP_0075 is a multi-pass SLC26A/SulP-family membrane transporter with a
+  cytoplasmic STAS domain. It lies next to the choline-sulfatase gene betC, but
+  its transported substrate, coupling mechanism, and proposed role in
+  choline-O-sulfate uptake have not been established experimentally.
+existing_annotations:
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: The multi-pass architecture strongly supports membrane localization.
+    action: KEEP_AS_NON_CORE
+    reason: Membrane location is valid topology but is ancillary to the unresolved transport activity.
+    supported_by:
+    - reference_id: file:PSEPK/PP_0075/PP_0075-uniprot.txt
+      supporting_text: &#39;SUBCELLULAR LOCATION: Membrane&#39;
+- term:
+    id: GO:0055085
+    label: transmembrane transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Accept generic transmembrane transport without assigning a specific cargo.
+    action: ACCEPT
+    reason: &gt;-
+      Nine predicted membrane-spanning segments and the SLC26A/SulP family
+      assignment support a transport role. Neither the submitted product name
+      nor genomic adjacency establishes choline-O-sulfate specificity.
+    supported_by:
+    - reference_id: file:PSEPK/PP_0075/PP_0075-uniprot.txt
+      supporting_text: &#39;InterPro; IPR001902; SLC26A/SulP_fam.&#39;
+    - reference_id: file:PSEPK/PP_0075/PP_0075-deep-research-openscientist.md
+      supporting_text: PP_0075 encodes an integral inner-membrane secondary transporter belonging to the **SulP / SLC26 anion-permease superfamily**.
+- term:
+    id: GO:0022857
+    label: transmembrane transporter activity
+  evidence_type: IEA
+  original_reference_id: file:PSEPK/PP_0075/PP_0075-uniprot.txt
+  qualifier: enables
+  review:
+    summary: Add the generic molecular activity implied by the multi-pass SLC26A/SulP architecture.
+    action: NEW
+    reason: &gt;-
+      The fetched GOA set contains the transport process but no molecular
+      function. A generic transporter activity is defensible while exact cargo
+      specificity remains unresolved.
+    supported_by:
+    - reference_id: file:PSEPK/PP_0075/PP_0075-uniprot.txt
+      supporting_text: &#39;InterPro; IPR001902; SLC26A/SulP_fam.&#39;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/PP_0075/PP_0075-uniprot.txt
+  title: UniProtKB entry Q88RQ4 for Pseudomonas putida KT2440 PP_0075
+  findings:
+  - statement: Q88RQ4 is an integral multi-pass membrane protein.
+    supporting_text: Multi-pass membrane protein
+    reference_section_type: RESULTS
+  - statement: The protein belongs to the SLC26A/SulP transporter family and contains a STAS domain.
+    supporting_text: &#39;InterPro; IPR001902; SLC26A/SulP_fam.&#39;
+    reference_section_type: RESULTS
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Exact target accession and architecture verified. The record is unreviewed, and its choline-sulfate product name is submission-derived.
+- id: PMID:17116241
+  title: Uncoupling of choline-O-sulphate utilization from osmoprotection in Pseudomonas putida.
+  full_text_unavailable: true
+  findings:
+  - statement: A KT2440 betC deletion did not prevent accumulation of intact choline-O-sulfate.
+    supporting_text: This mutant still accumulated intact COS but failed to use this compound as carbon or nitrogen source.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Direct KT2440 betC genetics. The cached abstract does not individually assay PP_0075 or identify the transporter responsible for COS uptake.
+- id: PMID:21369825
+  title: Inducible expression of choline sulfatase and its regulator BetR in Pseudomonas sp. ATCC19151.
+  full_text_unavailable: true
+  findings:
+  - statement: The syntenic BetE homolog is predicted to be a STAS-domain permease.
+    supporting_text: BetE is a permease and contains STAS domain.
+    reference_section_type: ABSTRACT
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: The BetE transport role is an in-silico assignment rather than a direct substrate-transport assay.
+- id: file:PSEPK/PP_0075/PP_0075-deep-research-openscientist.md
+  title: OpenScientist deep-research report for PSEPK PP_0075
+  findings:
+  - statement: The report confirms the target&#39;s generic SulP/SLC26 transporter architecture.
+    supporting_text: PP_0075 encodes an integral inner-membrane secondary transporter belonging to the **SulP / SLC26 anion-permease superfamily**.
+    reference_section_type: DISCUSSION
+  - statement: The report acknowledges that no direct target transport assay establishes substrate or direction.
+    supporting_text: No direct transport assay exists for PP_0075.
+    reference_section_type: DISCUSSION
+  reference_review:
+    relevance: MEDIUM
+    correctness: LOW_QUALITY
+    review_notes: &gt;-
+      Architecture and absence-of-direct-assay observations were retained. The
+      report&#39;s proposed sulfate cargo and assignment of intact COS uptake to an
+      unspecified ABC route are speculative and are not adopted.
+core_functions:
+- description: Multi-pass SLC26A/SulP-family transmembrane transporter of unresolved physiological cargo and coupling mechanism.
+  molecular_function:
+    id: GO:0022857
+    label: transmembrane transporter activity
+  directly_involved_in:
+  - id: GO:0055085
+    label: transmembrane transport
+  supported_by:
+  - reference_id: file:PSEPK/PP_0075/PP_0075-uniprot.txt
+    supporting_text: &#39;InterPro; IPR001902; SLC26A/SulP_fam.&#39;
+  - reference_id: file:PSEPK/PP_0075/PP_0075-deep-research-openscientist.md
+    supporting_text: No direct transport assay exists for PP_0075.
+proposed_new_terms: []
+suggested_questions:
+- question: What solute does PP_0075 transport, and does it functionally couple to the adjacent PP_0076 binding protein?
+suggested_experiments:
+- description: Measure uptake of choline-O-sulfate, sulfate, choline, and related solutes in clean PP_0075 deletion and complementation strains, then reconstitute transport in proteoliposomes.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
