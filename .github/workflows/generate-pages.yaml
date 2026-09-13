@@ -108,14 +108,16 @@ jobs:
             echo "| Gene pages | $(jq -r .gene_pages _site-manifest.json) |"
             echo "| Project pages | $(jq -r .project_pages _site-manifest.json) |"
             echo "| Module pages | $(jq -r .module_pages _site-manifest.json) |"
-            echo "| Linked source files not staged | $(jq -r .linked_source_files_not_staged _site-manifest.json) |"
-            echo "| Linked source MiB not staged | $(jq -r '.linked_source_bytes_not_staged / 1048576 | round' _site-manifest.json) |"
+            echo "| Excluded orphan review pages | $(jq -r .linked_source_files_not_staged _site-manifest.json) |"
+            echo "| Excluded orphan review MiB | $(jq -r '.linked_source_bytes_not_staged / 1048576 | round' _site-manifest.json) |"
+            echo "| Broken local targets | $(jq -r .broken_local_links _site-manifest.json) |"
+            echo "| Size budget (bytes) | $(jq -r .size_budget_bytes _site-manifest.json) |"
           } >> "$GITHUB_STEP_SUMMARY"
-          if jq -e '.total_bytes <= 1000000000 and .linked_source_files_not_staged == 0' _site-manifest.json > /dev/null; then
+          if jq -e '.deployable == true' _site-manifest.json > /dev/null; then
             echo "deployable=true" >> "$GITHUB_OUTPUT"
           else
             echo "deployable=false" >> "$GITHUB_OUTPUT"
-            echo "::warning title=Pages deployment blocked::The artifact exceeds the supported size budget or omits linked repository files. The existing site will remain deployed."
+            echo "::warning title=Pages deployment blocked::The artifact exceeds the supported size budget or has excluded or missing static local targets. The existing site will remain deployed."
           fi
 
       - name: Upload shadow GitHub Pages artifact
@@ -433,6 +435,9 @@ jobs:
             || echo "Auto-merge could not be enabled; PR #$PR_NUMBER left open for manual merge."
 
   deploy-pages:
+    concurrency:
+      group: pages
+      cancel-in-progress: false
     needs: generate-pages
     if: >-
       ${{ vars.PAGES_ARTIFACT_DEPLOY_ENABLED == 'true' &&

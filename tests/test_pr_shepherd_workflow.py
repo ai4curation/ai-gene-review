@@ -164,13 +164,20 @@ def test_pages_deployment_requires_opt_in_and_publishable_artifact():
     assert "vars.PAGES_ARTIFACT_DEPLOY_ENABLED == 'true'" in deploy["if"]
     assert "needs.generate-pages.outputs.deployable == 'true'" in deploy["if"]
     assert "steps.shadow-upload.outcome == 'success'" in build["outputs"]["deployable"]
-    assert "steps.shadow-summary.outputs.deployable == 'true'" in build["outputs"]["deployable"]
+    assert (
+        "steps.shadow-summary.outputs.deployable == 'true'"
+        in build["outputs"]["deployable"]
+    )
     summary = _step(build, "Summarize staged Pages site")["run"]
-    assert ".total_bytes <= 1000000000" in summary
-    assert ".linked_source_files_not_staged == 0" in summary
+    assert ".deployable == true" in summary
+    assert ".broken_local_links" in summary
+    assert deploy["concurrency"] == {"group": "pages", "cancel-in-progress": False}
     assert deploy["permissions"] == {"pages": "write", "id-token": "write"}
     assert deploy["environment"]["name"] == "github-pages"
-    assert _step(deploy, "Deploy validated Pages artifact")["uses"] == "actions/deploy-pages@v4"
+    assert (
+        _step(deploy, "Deploy validated Pages artifact")["uses"]
+        == "actions/deploy-pages@v4"
+    )
 
 
 def test_generated_pages_waits_for_ci_and_exact_head_approval():

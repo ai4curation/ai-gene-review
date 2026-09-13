@@ -14,12 +14,13 @@ import shutil
 import subprocess
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from ai_gene_review.tools.pages_dependencies import TEXT_ASSETS, linked_repository_files
+
+from ai_gene_review.tools.pages_dependencies import TEXT_ASSETS, DependencyResolver
 
 
+PAGES_SIZE_BUDGET_BYTES = 1_000_000_000
 MIB = 1024 * 1024
 BROWSER_FILES = ("index.html", "data.js", "schema.js")
-
 
 
 @dataclass(frozen=True)
@@ -33,6 +34,22 @@ class SiteManifest:
     module_pages: int
     linked_source_files_not_staged: int
     linked_source_bytes_not_staged: int
+    broken_local_link_paths: list[str]
+    size_budget_bytes: int = PAGES_SIZE_BUDGET_BYTES
+
+    @property
+    def broken_local_links(self) -> int:
+        """Number of distinct missing static local targets."""
+        return len(self.broken_local_link_paths)
+
+    @property
+    def deployable(self) -> bool:
+        """Readiness policy shared by CLI reporting and deployment."""
+        return (
+            self.total_bytes <= self.size_budget_bytes
+            and self.linked_source_files_not_staged == 0
+            and self.broken_local_links == 0
+        )
 
 
 def _copy_file(source: Path, destination: Path) -> None:
@@ -52,7 +69,9 @@ def _safe_clean_output(repo_root: Path, output_dir: Path) -> None:
     if resolved_output == resolved_root or resolved_root not in resolved_output.parents:
         raise ValueError("Pages output directory must be inside the repository root")
     if resolved_output != resolved_root / "_site":
-        raise ValueError("Pages output directory must be the repository's _site directory")
+        raise ValueError(
+            "Pages output directory must be the repository's _site directory"
+        )
     git_root = subprocess.run(
         ["git", "-C", str(resolved_root), "rev-parse", "--show-toplevel"],
         capture_output=True,
@@ -66,35 +85,47 @@ def _safe_clean_output(repo_root: Path, output_dir: Path) -> None:
     resolved_output.mkdir(parents=True)
 
 
-def _stage_linked_files(repo_root: Path, output_dir: Path) -> set[Path]:
+def _stage_linked_files(
+    repo_root: Path, output_dir: Path
+) -> tuple[set[Path], set[Path]]:
     """Copy static dependencies transitively and return any excluded public files.
 
     Scan each HTML/CSS/JS file only once. Referenced notes, downloads, reports,
     images, and their dependencies keep their paths and original bytes.
     """
-    pending = [p.relative_to(output_dir) for p in output_dir.rglob("*")
-               if p.is_file() and p.suffix.lower() in TEXT_ASSETS]
+    pending = [
+        p.relative_to(output_dir)
+        for p in output_dir.rglob("*")
+        if p.is_file() and p.suffix.lower() in TEXT_ASSETS
+    ]
     scanned: set[Path] = set()
     omitted: set[Path] = set()
+    broken: set[Path] = set()
+    resolver = DependencyResolver(repo_root)
     while pending:
         relative = pending.pop()
         if relative in scanned:
             continue
         scanned.add(relative)
         content = (output_dir / relative).read_text(errors="ignore")
-        for target in linked_repository_files(repo_root, relative, content):
+        links = resolver.scan(relative, content)
+        broken.update(links.missing)
+        for target in links.existing:
             source = repo_root / target
             destination = output_dir / target
             if not destination.is_file():
                 # Keep the existing exclusion of orphan review HTML, even if an
                 # old index still links to it. Report it instead of publishing it.
-                if source.name.endswith("-ai-review.html") and not source.with_suffix(".yaml").is_file():
+                if (
+                    source.name.endswith("-ai-review.html")
+                    and not source.with_suffix(".yaml").is_file()
+                ):
                     omitted.add(source)
                     continue
                 _copy_file(source, destination)
             if target.suffix.lower() in TEXT_ASSETS and target not in scanned:
                 pending.append(target)
-    return omitted
+    return omitted, {path for path in broken if not (output_dir / path).is_file()}
 
 
 def stage_pages(repo_root: Path, output_dir: Path) -> SiteManifest:
@@ -125,11 +156,11 @@ def stage_pages(repo_root: Path, output_dir: Path) -> SiteManifest:
     gene_pages = [review.with_suffix(".html") for review in review_files]
     missing_pages = [page for page in gene_pages if not page.is_file()]
     if missing_pages:
-        preview = ", ".join(str(path.relative_to(repo_root)) for path in missing_pages[:5])
+        preview = ", ".join(
+            str(path.relative_to(repo_root)) for path in missing_pages[:5]
+        )
         suffix = (
-            ""
-            if len(missing_pages) <= 5
-            else f" (and {len(missing_pages) - 5} more)"
+            "" if len(missing_pages) <= 5 else f" (and {len(missing_pages) - 5} more)"
         )
         raise FileNotFoundError(f"Missing rendered gene pages: {preview}{suffix}")
 
@@ -151,16 +182,19 @@ def stage_pages(repo_root: Path, output_dir: Path) -> SiteManifest:
         _require_file(source)
         _copy_file(source, output_dir / "app" / browser_file)
 
-    linked_sources = _stage_linked_files(repo_root, output_dir)
+    linked_sources, broken_links = _stage_linked_files(repo_root, output_dir)
     staged_files = [path for path in output_dir.rglob("*") if path.is_file()]
     manifest = SiteManifest(
+        broken_local_link_paths=sorted(p.as_posix() for p in broken_links),
         total_bytes=sum(path.stat().st_size for path in staged_files),
         total_files=len(staged_files),
         gene_pages=len(gene_pages),
         project_pages=len(list((output_dir / "pages" / "projects").rglob("*.html"))),
         module_pages=len(list((output_dir / "pages" / "modules").rglob("*.html"))),
         linked_source_files_not_staged=len(linked_sources),
-        linked_source_bytes_not_staged=sum(path.stat().st_size for path in linked_sources),
+        linked_source_bytes_not_staged=sum(
+            path.stat().st_size for path in linked_sources
+        ),
     )
 
     if manifest.project_pages == 0:
@@ -180,12 +214,6 @@ def _parse_args() -> argparse.Namespace:
         help="Repository root (default: current directory)",
     )
     parser.add_argument(
-        "--warn-size-mib",
-        type=int,
-        default=1024,
-        help="Warn when the uncompressed site exceeds this many MiB",
-    )
-    parser.add_argument(
         "--manifest",
         type=Path,
         help="Optional path for a JSON size/count report (outside the site is recommended)",
@@ -199,7 +227,17 @@ def main() -> None:
     output_dir = repo_root / "_site"
 
     manifest = stage_pages(repo_root, output_dir)
-    manifest_json = json.dumps(asdict(manifest), indent=2) + "\n"
+    manifest_json = (
+        json.dumps(
+            {
+                **asdict(manifest),
+                "broken_local_links": manifest.broken_local_links,
+                "deployable": manifest.deployable,
+            },
+            indent=2,
+        )
+        + "\n"
+    )
 
     if args.manifest:
         manifest_path = args.manifest
@@ -217,11 +255,17 @@ def main() -> None:
         f"{manifest.project_pages:,} projects, "
         f"{manifest.module_pages:,} modules"
     )
-    if size_mib > args.warn_size_mib:
+    if manifest.total_bytes > manifest.size_budget_bytes:
         print(
             f"::warning title=Pages size budget exceeded::"
             f"Staged site is {size_mib:,.1f} MiB; warning threshold is "
-            f"{args.warn_size_mib:,} MiB. Reduce it before switching Pages to Actions."
+            f"{manifest.size_budget_bytes:,} bytes. Reduce it before switching Pages to Actions."
+        )
+    if manifest.broken_local_links:
+        print(
+            "::warning title=Broken local Pages links::"
+            f"{manifest.broken_local_links:,} missing static targets; "
+            "see broken_local_link_paths in the manifest. Deployment is blocked."
         )
     if manifest.linked_source_files_not_staged:
         linked_size_mib = manifest.linked_source_bytes_not_staged / MIB
