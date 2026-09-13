@@ -89,7 +89,12 @@ jobs:
       actions: read
       pull-requests: read
     env:
-      RETRY_MODE: ${{ github.event_name == 'schedule' && 'execute' || inputs.review_retry_mode || 'audit' }}
+      # Explicit false audits scheduled passes without minting a writer token.
+      # Unset preserves the intended live schedule; manual mode stays explicit.
+      RETRY_MODE: >-
+        ${{ github.event_name == 'schedule' &&
+            (vars.PR_SHEPHERD_RETRY_ENABLED == 'false' && 'audit' || 'execute') ||
+            inputs.review_retry_mode || 'audit' }}
       RETRY_DELAY: ${{ inputs.review_retry_delay_hours || '1' }}
       RETRY_LIMIT: ${{ inputs.max_review_retries || '5' }}
       SPECIFIC_PR: ${{ inputs.pr_number || '' }}
@@ -447,6 +452,9 @@ jobs:
           # remains best-effort and does not justify a wider merge credential.
           permission-contents: write
           permission-pull-requests: write
+          # The same merge policy applies to reviewed workflow changes. The
+          # App registration and installation must grant this before rollout.
+          permission-workflows: write
 
       - name: Audit merge-ready PRs (deterministic)
         if: ${{ env.MERGE_MODE == 'audit' }}

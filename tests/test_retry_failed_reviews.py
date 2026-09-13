@@ -2,7 +2,7 @@
 
 import importlib.util
 import subprocess
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -11,8 +11,10 @@ ROOT = Path(__file__).resolve().parents[1]
 SPEC = importlib.util.spec_from_file_location(
     "retry_reviews", ROOT / "scripts/retry_failed_reviews.py"
 )
+assert SPEC is not None and SPEC.loader is not None
 retry = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(retry)
+UTC = timezone.utc
 NOW = datetime(2026, 9, 6, 12, tzinfo=UTC)
 
 
@@ -217,6 +219,60 @@ def test_read_failure_does_not_retry(monkeypatch):
     assert "error" in rows[0]
 
 
+@pytest.mark.parametrize("field,error", [("base", "AttributeError"), ("head", "TypeError")])
+@pytest.mark.parametrize("refresh", [1, 2])
+def test_null_pr_metadata_does_not_abort_other_prs(monkeypatch, field, error, refresh):
+    older = run(
+        id=10,
+        pull_requests=[{"number": 8}],
+        updated_at=(NOW - timedelta(hours=8)).isoformat(),
+    )
+    writes = harness(monkeypatch, rows=[older, run()])
+    original = retry.api
+    reads = 0
+
+    def read(path):
+        nonlocal reads
+        if path.endswith("/pulls/8"):
+            reads += 1
+            if reads == refresh:
+                return pr(**{field: None})
+        return original(path)
+
+    monkeypatch.setattr(retry, "api", read)
+    rows, errors = retry.sweep("owner/repo", NOW, limit=1, dry_run=False)
+    assert errors == 1
+    assert f"PR #8, run 10: error ({error}); no further action on this PR." in rows
+    assert len(writes) == 1 and writes[0][0][2] == "20"
+    assert any("PR #7, run 20: retried failed jobs" in row for row in rows)
+
+
+@pytest.mark.parametrize("payload", [None, [], {"workflow_runs": None}])
+def test_malformed_branch_run_payload_does_not_abort_other_prs(monkeypatch, payload):
+    older = run(
+        id=10,
+        pull_requests=[{"number": 8}],
+        updated_at=(NOW - timedelta(hours=8)).isoformat(),
+    )
+    writes = harness(monkeypatch, rows=[older, run()])
+    original = retry.api
+    reads = 0
+
+    def read(path):
+        nonlocal reads
+        if "/workflows/" in path:
+            reads += 1
+            if reads == 1:
+                return payload
+        return original(path)
+
+    monkeypatch.setattr(retry, "api", read)
+    rows, errors = retry.sweep("owner/repo", NOW, limit=1, dry_run=False)
+    assert errors == 1
+    assert "PR #8, run 10: error (TypeError); no further action on this PR." in rows
+    assert len(writes) == 1 and writes[0][0][2] == "20"
+
+
 def test_exhausted_run_does_not_spend_retry_budget(monkeypatch):
     exhausted = run(
         id=10,
@@ -270,6 +326,29 @@ def test_resolve_dispatch_and_legacy_dispatch(monkeypatch):
         lambda *args: "2026-09-06 Dispatched PR #7: head_ref='feature' author='human'",
     )
     assert retry.run_pr(run(event="workflow_dispatch", pull_requests=[]), "o/r") == 7
+
+
+@pytest.mark.parametrize("payload,error", [(None, "AttributeError"), (run(pull_requests=None), "TypeError")])
+def test_malformed_run_association_returns_diagnostic(payload, error):
+    assert retry.resolve_run(payload, "owner/repo") == (payload, None, error)
+
+
+def test_malformed_completed_run_association_does_not_abort_other_prs(monkeypatch):
+    malformed = run(id=30, pull_requests=None)
+    writes = harness(monkeypatch, rows=[run(), malformed], fresh=[run()])
+    calls = 0
+
+    def discovered(*args):
+        nonlocal calls
+        calls += 1
+        return [run(), malformed] if calls == 1 else []
+
+    monkeypatch.setattr(retry, "workflow_runs", discovered)
+    rows, errors = retry.sweep("owner/repo", NOW, dry_run=False)
+    assert errors == 0
+    assert "Run 30: cannot resolve PR (TypeError)." in rows
+    assert "Run 30: deferred; PR association unavailable." in rows
+    assert len(writes) == 1 and writes[0][0][2] == "20"
 
 
 def test_legacy_aigr_dispatch_resolves_from_pr_number_environment(monkeypatch):
@@ -370,6 +449,28 @@ def test_stale_queue_refresh_read_failure_still_blocks(monkeypatch, lookup):
     monkeypatch.setattr(retry, lookup, fail)
     ignored, diagnostic = retry.unassociated_active_disposition(stale_queue(), "owner/repo", NOW)
     assert not ignored and "cannot verify" in diagnostic
+
+
+@pytest.mark.parametrize(
+    "endpoint,payload",
+    [
+        ("run", None),
+        ("run", []),
+        ("jobs", {"jobs": None}),
+        ("jobs", {"jobs": {}}),
+    ],
+)
+def test_stale_queue_malformed_refresh_cannot_prove_no_activity(monkeypatch, endpoint, payload):
+    def read(path):
+        if path.endswith("/30"):
+            return payload if endpoint == "run" else stale_queue()
+        assert "/30/jobs?" in path
+        return payload
+
+    monkeypatch.setattr(retry, "api", read)
+    ignored, diagnostic = retry.unassociated_active_disposition(stale_queue(), "owner/repo", NOW)
+    assert not ignored
+    assert "cannot verify an unassociated active review (TypeError)" in diagnostic
 
 
 def test_recent_unassociated_queue_during_final_scan_has_explicit_deferral(monkeypatch):
@@ -579,6 +680,43 @@ def test_main_writes_same_linked_summary_to_stdout_and_actions(
     assert retry.main(["--repo", "owner/repo"]) == 0
     assert capsys.readouterr().out.strip() == output.read_text().strip()
     assert "https://github.com/owner/repo/actions/runs/20" in output.read_text()
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        None,
+        [],
+        {"total_count": None, "workflow_runs": []},
+        {"total_count": 0, "workflow_runs": None},
+        {"total_count": 0, "workflow_runs": {}},
+        {"total_count": 1, "workflow_runs": [None]},
+    ],
+)
+def test_cli_malformed_discovery_reports_error_without_writes(monkeypatch, capsys, payload):
+    writes = []
+    monkeypatch.setenv("GH_RETRY_TOKEN", "writer")
+    monkeypatch.setattr(retry, "api", lambda path: payload)
+    monkeypatch.setattr(retry, "gh", lambda *args, **kwargs: writes.append(args))
+    assert retry.main(["--repo", "owner/repo", "--execute"]) == 1
+    assert not writes
+    summary = capsys.readouterr().out
+    assert "Discovery failed (TypeError); no retries issued." in summary
+    assert "Live run: 0 rerun requests accepted" in summary
+
+
+def test_cli_discovery_request_failure_reports_error_without_writes(monkeypatch, capsys):
+    writes = []
+    monkeypatch.setenv("GH_RETRY_TOKEN", "writer")
+
+    def fail(path):
+        raise subprocess.CalledProcessError(1, ["gh"])
+
+    monkeypatch.setattr(retry, "api", fail)
+    monkeypatch.setattr(retry, "gh", lambda *args, **kwargs: writes.append(args))
+    assert retry.main(["--repo", "owner/repo", "--execute"]) == 1
+    assert not writes
+    assert "Discovery failed (CalledProcessError); no retries issued." in capsys.readouterr().out
 
 
 @pytest.mark.parametrize("mode", [[], ["--dry-run"]])

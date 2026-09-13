@@ -21,6 +21,14 @@ RETRYABLE = {"failure", "timed_out"}
 REVIEWERS = {"ai4c-reviewer[bot]", "github-actions[bot]"}
 RERUN_WINDOW_DAYS = 30
 STALE_JOBLESS_QUEUE_HOURS = 24
+LOOKUP_ERRORS = (
+    subprocess.SubprocessError,
+    ValueError,
+    KeyError,
+    TypeError,
+    AttributeError,
+    RuntimeError,
+)
 
 
 def timestamp(value):
@@ -49,11 +57,18 @@ def api(path):
     return json.loads(gh("api", path))
 
 
+def object_rows(value):
+    """Reject malformed API collections instead of treating them as empty."""
+    if not isinstance(value, list) or any(not isinstance(row, dict) for row in value):
+        raise TypeError("Expected an API list of objects")
+    return value
+
+
 def pages(path, key=None):
     result = []
     for page in range(1, 1001):
         data = api(f"{path}{'&' if '?' in path else '?'}per_page=100&page={page}")
-        rows = data[key] if key else data
+        rows = object_rows(data[key] if key else data)
         result.extend(rows)
         if len(rows) < 100:
             return result
@@ -98,9 +113,9 @@ def workflow_runs(repo, since, until, status=None, event=None):
         return workflow_runs(repo, since, middle, status, event) + workflow_runs(
             repo, middle, until, status, event
         )
-    rows = first["workflow_runs"]
+    rows = object_rows(first["workflow_runs"])
     for page in range(2, (first["total_count"] + 99) // 100 + 1):
-        rows.extend(api(path + f"&per_page=100&page={page}")["workflow_runs"])
+        rows.extend(object_rows(api(path + f"&per_page=100&page={page}")["workflow_runs"]))
     return rows
 
 
@@ -155,7 +170,7 @@ def resolve_run(run, repo):
     """Bounded, read-only metadata lookup; retain deterministic report order."""
     try:
         return run, run_pr(run, repo), None
-    except (subprocess.SubprocessError, ValueError, KeyError, RuntimeError) as exc:
+    except LOOKUP_ERRORS as exc:
         return run, None, type(exc).__name__
 
 
@@ -191,7 +206,7 @@ def unassociated_active_disposition(run, repo, now):
             f"has no jobs or PR association and no updates for at least "
             f"{STALE_JOBLESS_QUEUE_HOURS} hours. No run was cancelled or retried."
         )
-    except (subprocess.SubprocessError, ValueError, KeyError, TypeError, RuntimeError) as exc:
+    except LOOKUP_ERRORS as exc:
         return False, (
             f"{prefix}: deferred; cannot verify an unassociated active review "
             f"({type(exc).__name__})."
@@ -338,7 +353,7 @@ def sweep(
                     datetime.now(UTC),
                     state,
                 )
-            peers = list(fresh["workflow_runs"])
+            peers = object_rows(fresh["workflow_runs"]).copy()
             blocked_by_unassociated = False
             for peer in {r["id"]: r for r in recent}.values():
                 if peer.get("conclusion") == "skipped":
@@ -381,7 +396,7 @@ def sweep(
                 f"{prefix}: {'would retry' if dry_run else 'retried'} failed jobs "
                 f"(attempt {current.get('run_attempt', 1) + 1})."
             )
-        except (subprocess.SubprocessError, ValueError, KeyError, RuntimeError) as exc:
+        except LOOKUP_ERRORS as exc:
             errors += 1
             rows.append(
                 f"{prefix}: error ({type(exc).__name__}); no further action on this PR."
@@ -501,7 +516,7 @@ def main(argv=None):
             dry_run,
             args.specific_pr,
         )
-    except (subprocess.SubprocessError, ValueError, KeyError, RuntimeError) as exc:
+    except LOOKUP_ERRORS as exc:
         rows, errors = (
             [f"Discovery failed ({type(exc).__name__}); no retries issued."],
             1,

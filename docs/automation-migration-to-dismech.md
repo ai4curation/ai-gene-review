@@ -380,7 +380,7 @@ assignment, or `shepherd:hold` when fresh content needs additional observation
 time.
 
 Reads use the built-in read-only token. A separately scoped ai4c-agent token
-(Contents write + pull-request write) is supplied only to the head-pinned merge
+(Contents write + pull-request write + Workflows write) is supplied only to the head-pinned merge
 and best-effort courtesy-comment subprocesses. API uncertainty fails an execute
 run red. A positively observed head movement is instead a benign skip:
 concurrent automation changed the candidate, so its new state must pass a later
@@ -405,6 +405,16 @@ rule in repository settings or with
   Actions App (`app_id: 15368`);
 - one approving review is required and stale approvals are dismissed; requiring
   a separate approval for the latest push is disabled, matching DisMech;
+- the approval policy intentionally accepts bot-only approval on infrastructure
+  paths as well as curation paths, per the maintainer's direction for PR #3041.
+  An AI-approved PR may therefore update the automation's own merge policy.
+  There is no additional human or CODEOWNERS gate for `.github/`, `scripts/`,
+  or `src/`; do not infer one from `.protected`. The same current-head approval,
+  CI, conflict, hold, and age checks apply to all files;
+- the ai4c-agent App registration and installation grant **Workflows: write**, in
+  addition to Contents and Pull requests write, so the merge token can support
+  workflow-changing PRs without a file-path exception. The separate reviewer
+  token remains scoped to Pull requests write only;
 - unresolved review conversations block merging;
 - the ai4c-agent and ai4c-reviewer Apps have no pull-request bypass allowance,
   while force pushes and branch deletion remain disabled;
@@ -417,6 +427,16 @@ rule in repository settings or with
 
 If any setting is weakened later, set the flag false and cancel any in-flight
 Shepherd run.
+
+During the PR #3041 review, the live merge flag was already `true` (set August
+10), and `main` required one review with stale-review dismissal and no CODEOWNERS
+requirement. The ai4c-agent App and its ai4curation installation both lacked
+Workflows write. Before merging the token-permission change in #3041, add that
+permission in the [App registration](https://github.com/settings/apps/ai4c-agent/permissions)
+and approve it for the [ai4curation installation](https://github.com/organizations/ai4curation/settings/installations/130616615).
+Requesting it in YAML cannot expand the installation's grant; token minting will
+fail until the grant is approved. GitHub documents this two-step process in
+[Changing App permissions](https://docs.github.com/en/apps/maintaining-github-apps/modifying-a-github-app-registration#changing-the-permissions-of-a-github-app).
 
 Generated-page PRs use a separate lane. Their workflow's staged-file allowlist
 proves the commit contains derived artifacts only and always builds from the
@@ -500,6 +520,10 @@ token. `review_retry_delay_hours` defaults to one; successive attempts back off
 to six and then 24 hours. `pr_number` narrows recovery to a specific PR.
 Standalone script invocations also default to audit; live operation requires
 both `--execute` and `GH_RETRY_TOKEN`.
+Set the repository variable `PR_SHEPHERD_RETRY_ENABLED=false` to switch scheduled
+recovery to audit without minting a writer token; an unset or other value keeps
+the live schedule. Manual `review_retry_mode` remains independent. This switch
+does not cancel requests accepted by previous sweeps.
 
 The retry sweep checks the current PR and attempt again before acting, skips
 superseded commits, completed formal verdicts, generated-page branches, and
@@ -540,3 +564,9 @@ closing predicate, including its 41 paths, formal approval, current head,
 mergeability, and CI. A one-day retry audit with a two-PR budget selected #3006
 and #3005, deferred #3008 and #3007 at the budget, and reported no errors. Neither
 audit issued GitHub writes.
+
+Per-PR API errors deliberately make the retry job red after it writes its full
+summary and processes the other candidates. This keeps failures visible while
+isolating malformed payloads and transient errors to the affected PR. Red does
+not mean that earlier retry requests were rolled back; the summary identifies
+the accepted requests and failures separately.

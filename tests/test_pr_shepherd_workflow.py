@@ -83,6 +83,12 @@ def test_review_recovery_has_an_independent_runner_budget_and_credential():
     assert run["env"]["GH_RETRY_TOKEN"] == "${{ steps.retry-token.outputs.token }}"
     inputs = workflow[True]["workflow_dispatch"]["inputs"]
     assert inputs["review_retry_mode"]["default"] == "audit"
+    retry_mode = retry["env"]["RETRY_MODE"]
+    assert (
+        "vars.PR_SHEPHERD_RETRY_ENABLED == 'false' && 'audit' || 'execute'"
+        in retry_mode
+    )
+    assert "inputs.review_retry_mode || 'audit'" in retry_mode
 
 
 @pytest.mark.parametrize(
@@ -133,6 +139,26 @@ def test_review_triggers_share_one_lane_without_comment_cancellation():
     assert "github.event.comment.author_association" in group
     assert "format('ignored-{0}', github.run_id)" in group
     assert workflow["concurrency"]["cancel-in-progress"] is True
+
+
+def test_review_comment_authorization_matches_the_concurrency_lane():
+    """Changing comment authorization must also change its cancellation lane."""
+    workflow = _workflow(CLAUDE_REVIEW)
+    predicate = """github.event.issue.pull_request != null &&
+        github.event.comment.body == '/review' &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'),
+                 github.event.comment.author_association)"""
+
+    # Compare normalized tokens, including the entire role list and exact
+    # comment match, so neither predicate can acquire an extra/missing guard.
+    def tokens(value):
+        return re.sub(r"\s+", "", value)
+
+    concurrency = tokens(workflow["concurrency"]["group"])
+    job_condition = tokens(workflow["jobs"]["claude-review"]["if"])
+    shared = tokens(predicate)
+    assert f"!({shared})" in concurrency
+    assert f"github.event_name=='issue_comment'&&{shared})" in job_condition
 
 
 def test_agent_scope_includes_maintainer_codex_branches_without_retry_overlap():
@@ -196,6 +222,7 @@ def test_execute_is_feature_gated_main_only_and_narrowly_scoped():
     assert permissions == {
         "permission-contents": "write",
         "permission-pull-requests": "write",
+        "permission-workflows": "write",
     }
     assert "permission-issues" not in token["with"]
     assert "|| github.token" not in str(token)
