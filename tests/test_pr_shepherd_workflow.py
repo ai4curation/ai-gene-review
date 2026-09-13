@@ -222,7 +222,6 @@ def test_execute_is_feature_gated_main_only_and_narrowly_scoped():
     assert permissions == {
         "permission-contents": "write",
         "permission-pull-requests": "write",
-        "permission-workflows": "write",
     }
     assert "permission-issues" not in token["with"]
     assert "|| github.token" not in str(token)
