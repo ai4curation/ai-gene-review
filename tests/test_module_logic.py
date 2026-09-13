@@ -230,7 +230,35 @@ def test_methionine_genome_reconstruction(present, found, gaps):
     assert [step_id(s) for s in unsatisfied_steps(circuit, holds)] == gaps
 
 
-@pytest.mark.skipif(not METHIONINE.exists(), reason="module file absent")
+def _abduction_fixture() -> dict:
+    """Fixed three-step circuit; curation additions must not change unit inputs.
+
+    Keep the live methionine module covered by the reconstruction tests above.
+    Here each tuple is one alternative route; multi-gene tuples are AND gates.
+    """
+    steps: list[tuple[str, list[tuple[str, ...]]]] = [
+        ("acylation", [("metA",), ("metX",)]),
+        ("sulfur_incorporation", [("metB", "metC"), ("metY",), ("metZ",)]),
+        ("methylation", [("metE",), ("metH",)]),
+    ]
+    return {"module": {"id": "abduction_fixture", "parts": [
+        {"order": order, "node": {
+            "id": step,
+            "variant_sets": [{
+                "id": f"{step}_alternatives",
+                "variants": [
+                    {"id": f"{step}_{index}", "annotons": [
+                        {"id": symbol, "participant": {"gene": {"preferred_term": symbol}}}
+                        for symbol in route
+                    ]}
+                    for index, route in enumerate(routes)
+                ],
+            }],
+        }}
+        for order, (step, routes) in enumerate(steps, 1)
+    ]}}
+
+
 @pytest.mark.parametrize(
     "present,active,classification,gaps",
     [
@@ -245,7 +273,7 @@ def test_methionine_genome_reconstruction(present, found, gaps):
     ],
 )
 def test_abduction_classification(present, active, classification, gaps):
-    circuit = compile_module_file(METHIONINE)
+    circuit = compile_module(_abduction_fixture())
 
     def holds(atom):
         return atom.gene_symbol in present
