@@ -1,0 +1,11 @@
+# TyrRS review notes
+
+FlyBase identifies one 525 aa TyrRS-PA/Q9VV60 protein. The catalogue [PMID:26761199](https://pubmed.ncbi.nlm.nih.gov/26761199/) distinguishes cytoplasmic TyrRS/CG4561 from mitochondrial TyrRS-m. [PMID:19561293](https://pubmed.ncbi.nlm.nih.gov/19561293/) provides functional and genetic complementation support, though this cache is abstract-only and no new construct-specific assay claim is made.
+
+The charging narrative is supported. The resveratrol claim remains UNC. The starvation prediction is CNN on direct fly secretion evidence, scoped to a cellular response to serum deprivation. Direct binding is not refuted by the obsoletion of a nonevolved ligand-binding GO term. QuickGO snapshots verify both resveratrol-term obsoletion and replacement guidance for the obsolete tyrosyl-tRNA aminoacylation BP term. Original IDs/labels remain untouched.
+
+Falcon completed after its wrapper timed out. A separate [manual research synthesis](TyrRS-deep-research-manual.md) documents directly inspected evidence. The completed Falcon report was read and its endogenous secretion finding is evaluated against the primary paper. The human resveratrol/serum-starvation study PMID:25533949 was fetched with full text and read; its direct evidence is acknowledged while transfer to native fly TyrRS remains unresolved.
+
+## Direct extracellular and starvation evidence
+
+The full [PMID:26658841 article](https://www.nature.com/articles/ncomms10022) was downloaded and its Results, figures and controls read. The immutable HTML and extracted text are retained locally. Endogenous extracellular staining and haemolymph blots support secretion during competition; TyrRS depletion reduces haemocyte recruitment, while secreted TyrRS/EMAP constructs support chemoattractant activity. Figure 3 reports TyrRS-HA secretion after 24 h serum deprivation in S2 cells with anti-tubulin and membrane-integrity controls. This supports the broad starvation-response prediction under the QuickGO definition, which explicitly includes secretion changes upon nourishment deprivation. It does not establish whole-animal starvation fitness or the rat donor’s nuclear PARP1 mechanism. The cached PMID record is abstract-only, but the separately retained publisher full text supplies the Figure 3 evidence.

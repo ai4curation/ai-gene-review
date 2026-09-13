@@ -1,0 +1,1899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CTDSP2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CTDSP2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/F7A4N8" target="_blank" class="term-link">
+                        F7A4N8
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Equus caballus</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CTDSP2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+
+
+        <a href="#review-research" title="Deep research and hypothesis research reports"><span class="nav-count">1</span> Research</a>
+
+
+
+        <a href="#external-predictions" title="External predictions assessed separately from GOA annotations" class="nav-external"><span class="nav-count">1</span> External</a>
+
+
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">3</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">2</span> Documents</a>
+
+
+
+
+
+
+
+
+
+
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="F7A4N8" data-a="DESCRIPTION: F7A4N8 is a 174-residue protein model assigned to ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>F7A4N8 is a 174-residue protein model assigned to the horse CTDSP2 locus. Its N-terminal segment is closely conserved with human CTDSP2, but the remaining sequence does not preserve the canonical FCP1-homology phosphatase domain. The catalytic activity and physiological role of this particular protein model are unresolved; it cannot be treated as a demonstrated active CTD phosphatase.</p>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:HORSE/CTDSP2/CTDSP2-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB F7A4N8: selected horse CTDSP2 protein model</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:HORSE/CTDSP2/CTDSP2-bioinformatics/RESULTS.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">CTDSP2 human–horse sequence comparison</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/CTDSP2/CTDSP2-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB O14595: human CTDSP2 catalytic features</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+    <section class="section external-predictions" id="external-predictions" aria-labelledby="external-predictions-title">
+        <h2 class="section-title" id="external-predictions-title">External Prediction Reviews</h2>
+        <p class="prediction-notice">These computational predictions are reviewed separately from the GOA annotation set used for this review.
+            The assessments below are from this project and do not constitute official GO annotations or endorsement by GO/UniProt.
+            They are not included in the existing annotation review above.</p>
+
+
+        <article class="prediction-review">
+        <h3>ProtNLM2 <span class="badge">External predictions</span></h3>
+        <p class="prediction-source"><a href="CTDSP2-protnlm-predictions-review.yaml">View prediction review YAML</a> &middot; CTDSP2-protnlm-predictions-review.yaml
+            &middot; Review status: COMPLETE</p>
+
+        <p>Kinase activity is unsupported for the selected short CTDSP2 protein model. Its sequence lacks the canonical human CTDSP2 catalytic region, so neither a normal phosphatase function nor a definitive alternative catalytic verdict can be transferred from the gene symbol.</p>
+
+        <p class="prediction-source">Review score: 2 = concordant with evidence; 1 = uncertain; 0 = discordant with evidence. This is an assessment score, not a model probability.</p>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016301" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:0016301
+                    </a>
+                    <span class="term-label">kinase activity</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_MF</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-unc">
+                        UNC — Uncertain
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 1/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM2
+                 &middot; Version: UniProt API snapshot 2026-09-08
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> No kinase mechanism is supported for F7A4N8. The selected 174-residue sequence matches the N-terminal portion of human CTDSP2 but diverges before the FCP1 catalytic domain and lacks its conserved catalytic aspartates. A phosphatase-versus-kinase contradiction based only on the CTDSP2 gene name would therefore overstate the evidence for this exact input. The current sequence and domain record argue against an ordinary protein kinase but do not provide a structural or biochemical assessment sufficient to exclude every kinase activity. Resolve the protein model and inspect its structure before a definitive catalytic adjudication; no target GOA overlap exists.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="CTDSP2-uniprot.txt" target="_blank" class="term-link">file:HORSE/CTDSP2/CTDSP2-uniprot.txt</a>:
+
+
+                        <span class="finding-text">"ID   F7A4N8_HORSE            Unreviewed;       174 AA."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="../../human/CTDSP2/CTDSP2-uniprot.txt" target="_blank" class="term-link">file:human/CTDSP2/CTDSP2-uniprot.txt</a>:
+
+
+                        <span class="finding-text">"FT   ACT_SITE        107"</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="CTDSP2-bioinformatics/RESULTS.md" target="_blank" class="term-link">file:HORSE/CTDSP2/CTDSP2-bioinformatics/RESULTS.md</a>:
+
+
+                        <span class="finding-text">"Global alignment of cached UniProt sequences gives **97/170 identical paired residues (57.1%)**."</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        </article>
+
+    </section>
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section" id="review-research">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CTDSP2-hypotheses/horse40-kinase-activity/openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="F7A4N8" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Focused Hypothesis Report — F7A4N8 (Equus caballus CTDSP2): &#34;enables kinase activity&#34; (GO:0016301)</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-08T17:02:57.632113</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="CTDSP2-hypotheses/horse40-kinase-activity/openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="CTDSP2-hypotheses/horse40-kinase-activity/openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="focused-hypothesis-report-f7a4n8-equus-caballus-ctdsp2-enables-kinase-activity-go0016301">Focused Hypothesis Report — F7A4N8 (Equus caballus CTDSP2): "enables kinase activity" (GO:0016301)</h1>
+<h2 id="executive-judgment">Executive Judgment</h2>
+<p><strong>Verdict: REFUTED (kinase activity not supported), with the strongest alternative being a HAD-like protein phosphatase family.</strong></p>
+<p>The seed hypothesis is that horse protein <strong>F7A4N8 enables kinase activity (GO:0016301)</strong>. Independent<br />
+sequence and orthology analysis refutes this:</p>
+<ol>
+<li><strong>No kinase machinery.</strong> The exact 174-aa sequence (SHA-256 verified) contains <strong>none</strong> of the<br />
+   defining eukaryotic protein-kinase catalytic motifs (Gly-rich loop GxGxxG, VAIK β3 lysine, HRD<br />
+   catalytic loop, DFG Mg-binding, APE). It has only 3 aspartates in 174 residues — incompatible with<br />
+   an ATP-phosphotransfer active site.</li>
+<li><strong>The gene family is a phosphatase, not a kinase.</strong> CTDSP2 belongs to the FCP/SCP small<br />
+   C-terminal-domain phosphatase family (HAD-like hydrolase superfamily). Its human ortholog O14595 is a<br />
+   reviewed <strong>protein phosphatase</strong> (active-site Asp107 forms a 4-aspartylphosphate intermediate). A<br />
+   phosphatase catalyzes <strong>de</strong>phosphorylation — mechanistically the opposite of a kinase.</li>
+<li><strong>This particular horse model is truncated/aberrant.</strong> F7A4N8 matches human CTDSP2 at ~96% identity<br />
+   over only the N-terminal ~84 residues, then diverges into a Ser/Arg-rich low-complexity C-terminus.<br />
+   It <strong>lacks the entire FCP1-homology catalytic phosphatase domain</strong> (human residues 97–255, DLDET<br />
+   active site). So this sequence supports neither kinase nor (on its own) phosphatase catalysis.</li>
+</ol>
+<p><strong>Most important caveat:</strong> F7A4N8 is a TrEMBL/Ensembl automatic prediction whose C-terminus appears to be<br />
+an incomplete or mis-predicted gene model. Identity with the original prediction-time input was not<br />
+independently establishable, but the supplied sequence was verified byte-for-byte (hash match).</p>
+<hr />
+<h2 id="reproducible-methods-provenance">Reproducible Methods &amp; Provenance</h2>
+<ul>
+<li><strong>Sequences (retrieved 2026-09-08 from UniProt REST <code>rest.uniprot.org/uniprotkb/{acc}.json</code>):</strong></li>
+<li>Target: <strong>F7A4N8</strong> (TrEMBL, <em>Equus caballus</em>), 174 aa, mass 19,012 Da; submitted name "CTD small<br />
+    phosphatase 2"; gene CTDSP2 (VGNC). SHA-256 = <code>94788163d6db3dbca3e1432762d7b2a1e8b57e1be2048c233c505a07a0b5042c</code> <strong>(match confirmed)</strong>.</li>
+<li>Human lead: <strong>O14595</strong> (Swiss-Prot), "Carboxy-terminal domain RNA polymerase II polypeptide A small<br />
+    phosphatase 2", 271 aa; FCP1-homology domain 97–255; active sites Asp107 (4-aspartylphosphate<br />
+    intermediate) and Asp109 (proton donor); Mg binding 218; keywords Hydrolase, Protein phosphatase,<br />
+    Magnesium, Nucleus; has PDB structure.</li>
+<li><strong>Motif scan</strong> (regex against the verified sequence) — kinase hallmarks and FCP/SCP DxDxT/V motif.</li>
+<li><strong>Pairwise comparison</strong> F7A4N8 vs O14595 (identity of shared prefix; divergence point; catalytic-domain<br />
+  presence).</li>
+<li>Computed outputs are reproduced in the Evidence Matrix and Mechanistic Scope below.</li>
+</ul>
+<p><strong>Independent cross-database checks (added Iteration 2):</strong><br />
+- <strong>UniProt F7A4N8</strong> has <strong>no GO cross-references</strong> and the word "kinase" appears <strong>0 times</strong> — the kinase<br />
+  claim is not database-derived.<br />
+- <strong>UniProt O14595</strong> GO annotations: <strong>GO:0008420</strong> "RNA polymerase II CTD heptapeptide repeat phosphatase<br />
+  activity" with <strong>IDA (direct assay)</strong> evidence; <strong>GO:0006470</strong> protein dephosphorylation (IDA);<br />
+  GO:0005654 nucleoplasm (TAS). "kinase" appears 0 times; "phosphatase" 13 times.<br />
+- <strong>InterPro F7A4N8</strong> → <strong>HTTP 204 (no domain matches at all)</strong> — the horse model carries neither a kinase<br />
+  domain nor the phosphatase domain.<br />
+- <strong>InterPro O14595</strong> → FCP1 homology domain (IPR004274), Dullard phosphatase domain (IPR011948), HAD-like<br />
+  superfamily (IPR036412), Pfam <strong>PF03031 "NLI interacting factor-like phosphatase"</strong>, SMART SM00577<br />
+  "catalytic domain of ctd-like phosphatases", SFLD "RNA Pol CTD Phosphatase Like" — all phosphatase/HAD<br />
+  signatures, <strong>zero kinase signatures</strong>.</p>
+<p><strong>Structural check (added Iteration 3):</strong> AlphaFold DB model <strong>AF-F7A4N8-F1 (v6, 2025-03-31)</strong> — mean<br />
+pLDDT <strong>46.2 (very low)</strong>; 66% of residues pLDDT &lt;50, 98% &lt;70; shared N-terminus (res 1–84) mean 51.4,<br />
+divergent C-terminus (res 85–174) mean 41.4. <strong>No high-confidence globular/catalytic fold</strong>, consistent<br />
+with the InterPro no-domain result.</p>
+<p>Key computed values:<br />
+- Kinase motifs GxGxxG / VAIK / HRD / DFG / APE: <strong>all NONE</strong>.<br />
+- FCP/SCP catalytic motif DxDx[TV] / DLDET in F7A4N8: <strong>NONE</strong> ("DLDET" absent).<br />
+- F7A4N8 vs O14595 identity over first 84 aa: <strong>81/84 = 96.4%</strong>; sequences track together until human<br />
+  ~res 84 (…CLQYQFYQ), then diverge. Human DLDET catalytic motif at residues 107–111 has <strong>no counterpart</strong><br />
+  in the horse model.<br />
+- F7A4N8 composition: Ser 16.7%, Arg 8.0%, Asp 1.7% (Asp at positions 14, 73, 147 only).</p>
+<hr />
+<h2 id="evidence-matrix">Evidence Matrix</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Citation</th>
+<th>Evidence type</th>
+<th>Supports/Refutes</th>
+<th>Claim tested</th>
+<th>Key finding</th>
+<th>Context</th>
+<th>Confidence / limitations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>This analysis (UniProt F7A4N8, 2026-09-08)</td>
+<td>Computational (motif scan)</td>
+<td><strong>Refutes</strong></td>
+<td>F7A4N8 has kinase catalytic machinery</td>
+<td>No GxGxxG/VAIK/HRD/DFG/APE; only 3 Asp</td>
+<td>Horse protein sequence</td>
+<td>High; sequence-based, no experiment</td>
+</tr>
+<tr>
+<td>2</td>
+<td>UniProt O14595 (Swiss-Prot)</td>
+<td>Database (curated, structure-backed)</td>
+<td><strong>Competing/qualifies</strong></td>
+<td>True MF of CTDSP2</td>
+<td>Protein phosphatase; Asp107 4-aspartylphosphate intermediate; FCP1 domain; PDB structure</td>
+<td>Human ortholog</td>
+<td>High (reviewed + 3D)</td>
+</tr>
+<tr>
+<td>3</td>
+<td>This analysis (pairwise align)</td>
+<td>Structural/evolutionary</td>
+<td><strong>Refutes/qualifies</strong></td>
+<td>Horse model encodes the catalytic domain</td>
+<td>F7A4N8 = 96% id over N-term ~84 aa, then diverges; <strong>lacks FCP1 catalytic domain / DLDET</strong></td>
+<td>Horse vs human</td>
+<td>High; alignment is unambiguous at divergence</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Burkholder et al. 2018, <strong>PMID 30217818</strong></td>
+<td>Direct assay (kinetics + X-ray)</td>
+<td><strong>Competing</strong></td>
+<td>SCP family reaction direction</td>
+<td>SCP1 <strong>dephosphorylates</strong> REST degron pSer-861 (phosphatase)</td>
+<td>Human, in vitro + HEK293</td>
+<td>High; paralog SCP1, transfer to family</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Visvanathan et al. 2007, <strong>PMID 17403776</strong></td>
+<td>Mutant/overexpression phenotype</td>
+<td><strong>Competing</strong></td>
+<td>SCP family is a phosphatase</td>
+<td>"phosphatase SCP1 (small C-terminal domain phosphatase 1)" controls neurogenesis</td>
+<td>Mouse/chick CNS development</td>
+<td>High; paralog-level</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Panina et al. 2024, <strong>PMID 38609948</strong></td>
+<td>Review/functional (drug targeting)</td>
+<td><strong>Competing</strong></td>
+<td>SCP1 enzymatic class</td>
+<td>Inhibitors target "small C-terminal domain phosphatase 1 (SCP1)"</td>
+<td>Human glioblastoma</td>
+<td>Moderate; confirms phosphatase class</td>
+</tr>
+<tr>
+<td>7</td>
+<td>UniProt O14595 GO (2026-09-08)</td>
+<td>Database (IDA-backed)</td>
+<td><strong>Competing</strong></td>
+<td>True MF of ortholog</td>
+<td><strong>GO:0008420 CTD phosphatase activity, IDA (direct assay)</strong>; GO:0006470 dephosphorylation</td>
+<td>Human</td>
+<td>High; direct-assay evidence code</td>
+</tr>
+<tr>
+<td>8</td>
+<td>UniProt F7A4N8 GO (2026-09-08)</td>
+<td>Database</td>
+<td><strong>Refutes (absence)</strong></td>
+<td>Any kinase annotation exists</td>
+<td><strong>No GO terms; "kinase" appears 0×</strong> in the record</td>
+<td>Horse</td>
+<td>High; shows claim is not DB-derived</td>
+</tr>
+<tr>
+<td>9</td>
+<td>InterPro F7A4N8 vs O14595 (2026-09-08)</td>
+<td>Structural/evolutionary</td>
+<td><strong>Refutes/qualifies</strong></td>
+<td>Domain content of horse model</td>
+<td>F7A4N8 = <strong>no InterPro domains (HTTP 204)</strong>; O14595 = FCP1/HAD phosphatase domains, no kinase</td>
+<td>Horse vs human</td>
+<td>High; independent domain DB</td>
+</tr>
+<tr>
+<td>10</td>
+<td>AlphaFold AF-F7A4N8-F1 v6 (2025-03-31)</td>
+<td>Structural (predicted)</td>
+<td><strong>Refutes/qualifies</strong></td>
+<td>Horse model has a folded catalytic domain</td>
+<td>Mean pLDDT 46.2 (very low); 66% residues &lt;50, 98% &lt;70; no globular domain</td>
+<td>Horse</td>
+<td>Moderate-high; prediction, but clearly no fold</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="go-curation-implications">GO Curation Implications</h2>
+<ul>
+<li><strong>GO:0016301 kinase activity — REMOVE / do not annotate.</strong> No sequence, structural, or family evidence<br />
+  supports kinase activity for F7A4N8 or the CTDSP2 family. This is a misannotation (a phosphatase gene<br />
+  annotated with the mechanistically opposite activity). <em>(Lead — requires curator verification.)</em></li>
+<li><strong>Better-supported MF (by orthology/family, requires the catalytic domain):</strong><br />
+<code>GO:0004721 phosphoprotein phosphatase activity</code> (or more specific<br />
+<code>GO:0008420 RNA polymerase II CTD heptapeptide repeat phosphatase activity</code> /<br />
+<code>GO:0004725</code>-adjacent serine/threonine phosphatase), plus <code>GO:0046872 metal ion (Mg) binding</code>.<br />
+<strong>Caveat:</strong> these should be transferred to the horse gene with an ISS/orthology qualifier and a note that<br />
+  the current F7A4N8 protein model lacks the catalytic domain — the annotation belongs to the <em>gene</em>, not<br />
+  necessarily to this truncated protein isoform.</li>
+<li><strong>BP/CC (family-level, orthology):</strong> BP <code>GO:0006470 protein dephosphorylation</code> /<br />
+  transcription regulation; CC <code>GO:0005634 nucleus</code>.</li>
+<li>Avoid "protein binding" as a terminal recommendation — the phosphatase MF is more informative and<br />
+  well-supported for the gene.</li>
+</ul>
+<hr />
+<h2 id="mechanistic-scope">Mechanistic Scope</h2>
+<ul>
+<li><strong>Immediate molecular function tested:</strong> ATP-dependent phosphotransfer (kinase). <strong>Not supported</strong> — no<br />
+  ATP-binding/kinase fold in the sequence.</li>
+<li><strong>Established family function (direct gene-product activity):</strong> Mg²⁺-dependent HAD-family<br />
+  aspartate-nucleophile <strong>phosphatase</strong> that removes phosphate from phospho-Ser substrates (RNA Pol II CTD<br />
+  Ser5; REST degron phosphosites). This is a hydrolase reaction, not phosphotransfer.</li>
+<li><strong>Downstream/phenotypic (not the MF):</strong> transcriptional regulation, REST stabilization, neuronal gene<br />
+  silencing, neurogenesis timing — consequences of phosphatase activity, not the activity itself.</li>
+</ul>
+<hr />
+<h2 id="conflicts-and-alternatives">Conflicts and Alternatives</h2>
+<ul>
+<li><strong>Reaction-direction confusion (kinase vs phosphatase):</strong> The most likely source of the erroneous<br />
+  "kinase activity" term. Both terms concern phosphate, but the gene is a phosphatase. No paralog of CTDSP2<br />
+  is a kinase.</li>
+<li><strong>Truncated/aberrant gene model:</strong> F7A4N8's C-terminus (res 85–174) is Ser/Arg-rich low-complexity and<br />
+  diverges from all mammalian CTDSP2 orthologs, which continue into a conserved catalytic domain. This<br />
+  looks like an incomplete or frameshifted Ensembl prediction rather than a genuine catalytic-domain-less<br />
+  isoform; it warrants caution before transferring <em>any</em> enzymatic MF to this specific protein record.</li>
+<li><strong>Isoform/orthology:</strong> Identity is confirmed as horse CTDSP2 by gene name and VGNC/Ensembl xrefs and by<br />
+  the 96% N-terminal match to human CTDSP2 — but the protein model is not full-length.</li>
+</ul>
+<hr />
+<h2 id="knowledge-gaps">Knowledge Gaps</h2>
+<table>
+<thead>
+<tr>
+<th>Gap</th>
+<th>What was checked</th>
+<th>Why it matters</th>
+<th>What would resolve it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Is F7A4N8 a real truncated isoform or a mis-prediction?</td>
+<td>UniProt features + alignment show divergence at res ~84 and missing catalytic domain</td>
+<td>Determines whether <em>this protein</em> has any enzymatic MF</td>
+<td>Inspect Ensembl gene model / RNA-seq / a corrected full-length horse CTDSP2 transcript</td>
+</tr>
+<tr>
+<td>Direct horse enzymatic assay</td>
+<td>None found</td>
+<td>No directly observed horse phosphatase/kinase data exists</td>
+<td>In vitro pNPP/CTD-peptide phosphatase assay on full-length horse CTDSP2</td>
+</tr>
+<tr>
+<td>Provenance of the kinase GO term</td>
+<td>Not in supplied context</td>
+<td>Whether it is IEA/ARBA carry-over vs. a specific claim</td>
+<td>Trace annotation source &amp; evidence code in the review</td>
+</tr>
+</tbody>
+</table>
+<h2 id="discriminating-tests">Discriminating Tests</h2>
+<ol>
+<li><strong>Retrieve full-length horse CTDSP2</strong> (Ensembl/RefSeq) and re-scan for the DLDET motif and FCP1 domain<br />
+   — expected present in the true gene, absent in F7A4N8's current model.</li>
+<li><strong>HMM/domain search (Pfam PF03031 "NIF"/FCP1-like) and structure (AlphaFold F7A4N8)</strong> to confirm the<br />
+   catalytic core is absent from this model.</li>
+<li><strong>Phosphatase activity assay</strong> (para-nitrophenyl phosphate or phospho-CTD peptide) on recombinant<br />
+   full-length horse CTDSP2 — positive would confirm phosphatase; a kinase assay (ATP transfer) would be<br />
+   negative.</li>
+</ol>
+<h2 id="curation-leads-require-curator-verification">Curation Leads (require curator verification)</h2>
+<ul>
+<li><strong>Action:</strong> Remove/reject GO:0016301 "kinase activity" for CTDSP2 (F7A4N8) as a misannotation.</li>
+<li><strong>Replacement MF leads:</strong> <code>GO:0004721 phosphoprotein phosphatase activity</code> /<br />
+<code>GO:0008420 RNA Pol II CTD phosphatase activity</code>; add <code>GO:0046872 magnesium ion binding</code>; BP<br />
+<code>GO:0006470 protein dephosphorylation</code>; CC <code>GO:0005634 nucleus</code> — all as <strong>orthology (ISS)</strong> with a note<br />
+  that the current F7A4N8 model lacks the catalytic domain.</li>
+<li><strong>Candidate references to verify:</strong> PMID 30217818 (SCP1 phosphatase kinetics + structure), PMID 17403776<br />
+  (SCP1 phosphatase in CNS development), PMID 38609948 (SCP1 as a phosphatase drug target); database:<br />
+  UniProt O14595 (human CTDSP2, reviewed phosphatase).</li>
+<li><strong>Suggested question for curator:</strong> Should enzymatic MF terms be attached to the F7A4N8 protein record at<br />
+  all, given it is a truncated model missing the catalytic domain — or annotated at the gene level only?</li>
+</ul>
+<h2 id="limitations">Limitations</h2>
+<ul>
+<li>No directly observed <em>Equus caballus</em> biochemical data were found; family/ortholog transfer relies on<br />
+  human/mouse SCP paralogs. Motif and alignment analyses are computational. PubMed queries for "SCP2/CTDSP2"<br />
+  specifically returned no results; cited evidence is for the closely related paralog SCP1 and the family.</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="CTDSP2-hypotheses/horse40-kinase-activity/openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="CTDSP2-hypotheses/horse40-kinase-activity/openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CTDSP2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="F7A4N8" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ctdsp2-exact-sequence-caution">CTDSP2: exact-sequence caution</h1>
+<p>The selected horse F7A4N8 is 174 aa and maps to VGNC:16932 / ENSECAG00000018788. Human CTDSP2 O14595 is 271 aa with an FCP1-homology domain and catalytic Asp107/Asp109. The alignment matches the horse N-terminus through about residue 84; the remainder diverges and does not retain the human catalytic domain. No InterPro phosphatase or kinase domain is listed in the selected horse record. Absence of an annotation alone is not proof of absent function, but the actual sequence discontinuity makes ordinary whole-protein functional transfer unsafe.</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/12721286">PMID:12721286</a>(https://pubmed.ncbi.nlm.nih.gov/12721286/), DOI <a href="https://doi.org/10.1074/jbc.M301791200">10.1074/jbc.M301791200</a>, describes the small CTD phosphatase family: “preferentially catalyze the dephosphorylation of Ser5 within the consensus repeat.” The abstract foregrounds SCP1; it cannot alone establish which CTDSP2 assays were performed. The existing human CTDSP2 experimental annotation is retained with this access limitation rather than rejected for paralog misattribution. <a href="https://pubmed.ncbi.nlm.nih.gov/15681389">PMID:15681389</a>(https://pubmed.ncbi.nlm.nih.gov/15681389/) is the REST/neuronal silencing source in the curated record.</p>
+<p>The abnormal horse model does not establish evolutionary loss or a pseudoenzyme: transcript/exon validation and an alternative full-length horse product are needed before distinguishing a genuine isoform from a gene-model problem. The input used at prediction time is not separately recovered. Do not label this WRONG_INPUT_SEQUENCE without such evidence. A completed human Falcon report has been inspected; horse-specific Edison is not indicated by the genome-only identification sources.</p>
+            </div>
+        </details>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioinformatics Results</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RESULTS.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="F7A4N8" data-a="DOC: Bioinformatics Results" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ctdsp2-humanhorse-sequence-comparison">CTDSP2: human–horse sequence comparison</h1>
+<p>Global alignment of cached UniProt sequences gives <strong>97/170 identical paired residues (57.1%)</strong>. Paired coverage is 62.7% of human O14595 (271 aa) and 97.7% of horse F7A4N8 (174 aa).</p>
+<p>Reproduce from the repository root with <code>uv run python genes/HORSE/CTDSP2/CTDSP2-bioinformatics/align.py</code> (Biopython). The full alignment is in <code>alignment.txt</code>; sequence hashes and scoring parameters are in <code>results.json</code>.</p>
+<p>This measures conservation between the identified records. It is not a reciprocal orthology analysis and does not itself validate a functional annotation. Interpret it alongside locus identifiers, domain architecture and primary literature. The sequences are current cached UniProt records, not independently recovered prediction-time inputs.</p>
+<h2 id="human-feature-correspondence">Human feature correspondence</h2>
+<p>These mappings report sequence conservation only; they do not validate targeting, activity or annotation transfer.</p>
+<table>
+<thead>
+<tr>
+<th>Human feature</th>
+<th>Human positions</th>
+<th>Paired horse positions</th>
+<th>Identical / paired</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ACT_SITE</td>
+<td>107–107</td>
+<td>unaligned/deleted</td>
+<td>0/0</td>
+</tr>
+<tr>
+<td>ACT_SITE</td>
+<td>109–109</td>
+<td>unaligned/deleted</td>
+<td>0/0</td>
+</tr>
+<tr>
+<td>BINDING</td>
+<td>107–107</td>
+<td>unaligned/deleted</td>
+<td>0/0</td>
+</tr>
+<tr>
+<td>BINDING</td>
+<td>109–109</td>
+<td>unaligned/deleted</td>
+<td>0/0</td>
+</tr>
+<tr>
+<td>BINDING</td>
+<td>218–218</td>
+<td>117</td>
+<td>0/1</td>
+</tr>
+</tbody>
+</table>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: F7A4N8
+gene_symbol: CTDSP2
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:9796
+  label: Equus caballus
+description: F7A4N8 is a 174-residue protein model assigned to the horse CTDSP2 locus. Its N-terminal
+  segment is closely conserved with human CTDSP2, but the remaining sequence does not preserve the canonical
+  FCP1-homology phosphatase domain. The catalytic activity and physiological role of this particular protein
+  model are unresolved; it cannot be treated as a demonstrated active CTD phosphatase.
+references:
+- id: file:HORSE/CTDSP2/CTDSP2-uniprot.txt
+  title: &#39;UniProtKB F7A4N8: selected horse CTDSP2 protein model&#39;
+  findings: []
+- id: file:HORSE/CTDSP2/CTDSP2-bioinformatics/RESULTS.md
+  title: CTDSP2 human–horse sequence comparison
+  findings: []
+- id: file:human/CTDSP2/CTDSP2-uniprot.txt
+  title: &#39;UniProtKB O14595: human CTDSP2 catalytic features&#39;
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

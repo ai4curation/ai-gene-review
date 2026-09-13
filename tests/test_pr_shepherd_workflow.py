@@ -115,12 +115,44 @@ def test_reviewer_app_token_cannot_write_pr_contents():
     assert permissions == {"permission-pull-requests": "write"}
 
 
-def test_generated_pages_triggers_on_project_data_files():
-    """Published project data must trigger regeneration of its pages copies."""
+def test_generated_pages_runs_daily_or_manually():
+    """Batch regeneration daily instead of rebuilding on every merge."""
     workflow = _workflow(GENERATE_PAGES)
-    paths = workflow[True]["push"]["paths"]
-    assert "projects/**/*.csv" in paths
-    assert "projects/**/*.json" in paths
+    triggers = workflow[True]
+    assert set(triggers) == {"schedule", "workflow_dispatch"}
+    assert triggers["schedule"] == [{"cron": "23 8 * * *"}]
+    assert triggers["workflow_dispatch"] is None
+    assert workflow["concurrency"]["cancel-in-progress"] is False
+
+
+def test_daily_generation_relies_on_main_validation_workflow():
+    """A last-commit diff cannot validate a day's merges; main CI owns validation."""
+    generation = GENERATE_PAGES.read_text()
+    assert "HEAD~1" not in generation
+    assert "steps.changed.outputs.files" not in generation
+    main_ci = _workflow(ROOT / ".github/workflows/main.yaml")
+    assert "pull_request" in main_ci[True]
+    assert "schedule" in main_ci[True]
+    validation = _step(main_ci["jobs"]["test"], "Validate gene reviews (scoped)")
+    assert "just validate-changed" in validation["run"]
+    assert "just validate-all" in validation["run"]
+
+
+def test_shadow_pages_failures_do_not_block_regeneration():
+    """Shadow failures remain observable without failing the legacy PR lane."""
+    job = _workflow(GENERATE_PAGES)["jobs"]["generate-pages"]
+    stage = _step(job, "Stage GitHub Pages artifact")
+    summary = _step(job, "Summarize staged Pages site")
+    upload = _step(job, "Upload shadow GitHub Pages artifact")
+    for step in (stage, summary, upload):
+        assert step["continue-on-error"] is True
+    for step in (summary, upload):
+        assert step["if"] == "steps.shadow-stage.outcome == 'success'"
+    assert stage["id"] == "shadow-stage"
+    warning = _step(job, "Warn when shadow Pages build fails")
+    for step in (stage, summary, upload):
+        assert f"steps.{step['id']}.outcome == 'failure'" in warning["if"]
+    assert "::warning" in warning["run"]
 
 
 def test_generated_pages_waits_for_ci_and_exact_head_approval():

@@ -333,6 +333,16 @@ reference has not been manually adjudicated. **Verify, don't trust**: confirm a 
 anchor a claim to a checkable fact such as the GOA evidence code) before marking it `VERIFIED` — an
 LLM-generated deep-research summary asserting a citation is not sufficient.
 
+**Deleted duplicate PMIDs and conflicting findings:** Keep GOA's
+`original_reference_id`. Record a verified canonical identifier in
+`reference_review.replacement` with `reference_id`, `reason`, and verification
+notes; fetch failure alone does not establish a remapping or retraction. Quote
+the canonical paper using its own `reference_id` in `review.supported_by`.
+For a statement from P1 contradicted by P2, use P1's
+`findings[].finding_review` with `finding_status`, `superseded_by`, and
+`supported_by` containing P2's exact snippet. See
+[Reference Curation](docs/reference_curation.md) for examples and validation rules.
+
 ## Tools
 
 Use the OLS MCP to find relevant ontology terms, if the terms you need are not in existing_annotations.
@@ -530,7 +540,11 @@ just deploy-browser    # update data.js + index.html for the interactive browser
 Output: `app/`
 
 ### CI automation
-The `generate-pages` workflow runs on push to main when gene YAMLs, schema, templates, or project markdown change. It renders everything and creates a PR. Pages deploy directly from main — no gh-pages branch needed for the static content.
+The `generate-pages` workflow runs daily at 08:23 UTC, with manual runs available
+through GitHub Actions. It renders everything and creates a PR. Its publication
+schedule is exempt from agent cron profiles. Gene reviews are validated in PR CI
+and by the weekly full validation workflow. Pages deploy directly from main — no
+gh-pages branch needed for the static content.
 
 ## General guidelines
 

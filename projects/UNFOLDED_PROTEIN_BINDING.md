@@ -94,6 +94,7 @@ How GO:0051082 annotations were reclassified:
 | Co-chaperone NEF (GrpE-like) | REMOVE | *(none — not direct UPB)* | Regulates HSP70 nucleotide cycle, does not bind unfolded substrate directly | GRPEL1 |
 | ER/quality control sensor | REMOVE or MARK_AS_OVER_ANNOTATED | *(none — not chaperones)* | Substrate recognition for ligase/GT, not chaperoning | SYVN1, ERLEC1, UGGT1 |
 | HSP90 co-chaperone | MARK_AS_OVER_ANNOTATED | *(none — co-chaperone, not UPB)* | These assist HSP90, not direct unfolded protein binding. AHSA1 is an HSP90 ATPase activator; PTGES3 mechanism less clear (activator? substrate adaptor?) | AHSA1, PTGES3, TMEM67 |
+| HSP90 co-chaperone **with direct chaperone-activity evidence** | MODIFY | GO:0044183 protein folding chaperone | Carve-out from the row above: where a co-chaperone has its own IDA for chaperone activity *and* a curator-asserted `GO:0042026` protein refolding IDA, the UPB annotation reflects demonstrated chaperone activity rather than HSP90 assistance, so MARK_AS_OVER_ANNOTATED would discard real evidence. Foldase (GO:0044183) vs holdase (GO:0140309) is deferred pending full text | CPR6, CPR7 |
 | Other specific MF | MODIFY | Gene-specific term | Function better captured by existing GO term | NPM1 → GO:0140713, AIP → GO:0051879 |
 
 ## Impact Summary
@@ -406,6 +407,15 @@ apply consistently across species.
 | KEEP_AS_NON_CORE | 2 | UPB is secondary to primary function (ATP11, VMA22) |
 | REMOVE | 2 | Misannotations (slrP/Salmonella, hsp-12.6/worm) |
 
+> **Tally needs recomputation — counting basis undocumented.** These counts sum to 118,
+> but a scan of the 116 matched non-human gene YAMLs finds **249** `GO:0051082`/`GO:0031249`
+> annotation rows, so the table is neither per-annotation nor cleanly per-gene (several genes
+> carry mixed actions across their rows, and the rule for collapsing those to one count is not
+> recorded here). The numbers above are therefore left as-is rather than adjusted by hand.
+> Anyone refreshing this table should first state the counting basis, then regenerate it from
+> the YAMLs. Note the four `OVER_ANNOTATED` → `MODIFY → GO:0044183` corrections to CNE1,
+> COX20, CPR6 and CPR7 below are not yet reflected in these counts.
+
 ### Species breakdown
 
 | Species | Genes | Notes |
@@ -546,10 +556,10 @@ established:
 | CCT8 | *S. cerevisiae* | P47079 | 20 | MODIFY → GO:0044183 | TRiC/CCT subunit |
 | CDC37 | *S. cerevisiae* | P06101 | 23 | OVER_ANNOTATED | HSP90 co-chaperone |
 | CHS7 | *S. cerevisiae* | P38843 | 20 | MODIFY | Chitin synthase chaperone |
-| CNE1 | *S. cerevisiae* | P27825 | 17 | OVER_ANNOTATED | ER lectin |
-| COX20 | *S. cerevisiae* | Q04935 | 12 | OVER_ANNOTATED | Cox2p assembly factor |
-| CPR6 | *S. cerevisiae* | P53691 | 28 | OVER_ANNOTATED | HSP90 co-chaperone |
-| CPR7 | *S. cerevisiae* | P47103 | 21 | OVER_ANNOTATED | HSP90 co-chaperone |
+| CNE1 | *S. cerevisiae* | P27825 | 17 | MODIFY → GO:0044183 | ER lectin |
+| COX20 | *S. cerevisiae* | Q04935 | 12 | MODIFY → GO:0044183 | Cox2p assembly factor |
+| CPR6 | *S. cerevisiae* | P53691 | 28 | MODIFY → GO:0044183 | HSP90 co-chaperone with direct chaperone-activity IDA (PMID:10942767); see [HSP90 co-chaperone carve-out](#decision-rules) |
+| CPR7 | *S. cerevisiae* | P47103 | 21 | MODIFY → GO:0044183 | HSP90 co-chaperone with direct chaperone-activity IDA (PMID:10942767); see [HSP90 co-chaperone carve-out](#decision-rules) |
 | EGD1 | *S. cerevisiae* | Q02642 | 19 | MODIFY → GO:0044183 | NAC complex |
 | EGD2 | *S. cerevisiae* | P38879 | 22 | MODIFY → GO:0044183 | NAC complex |
 | EPS1 | *S. cerevisiae* | P40557 | 15 | OVER_ANNOTATED | ER QC factor |
