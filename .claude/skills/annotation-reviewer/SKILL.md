@@ -164,7 +164,19 @@ experimental annotations whose full text you have not read.
    - Citations to relevant literature when available
 
 6. **Quality Standards**: 
-   - Avoid accepting vague terms like 'protein binding' - seek more informative molecular function terms
+   - **Generic protein binding is not over-annotation.** Do not use
+     `MARK_AS_OVER_ANNOTATED` for `GO:0005515` (`protein binding`): its problem is
+     lack of functional information, not a claim that exceeds the evidence.
+     Use `MODIFY` when the cited paper supports a more informative molecular
+     function, and provide the evidence-backed replacement term(s). Otherwise,
+     generally use `REMOVE`, explaining that the generic annotation is
+     uninformative; removal does not mean the reported interaction is false.
+     Do not invent a specific function from interaction evidence alone. If the
+     relevant evidence cannot be accessed or adjudicated, the standing
+     `UNDECIDED` rule still applies.
+     Apply this policy to new reviews and to annotations touched during re-review.
+     Older untouched reviews may retain legacy actions; migrate those when they
+     are re-reviewed rather than treating their presence as an exception.
    - Consider specificity - terms that are too general should be modified to more specific functions
    - Watch for overly specific or contorted terms that might need generalization
    - Evaluate whether annotations truly represent core vs. peripheral functions

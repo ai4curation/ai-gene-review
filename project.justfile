@@ -1206,15 +1206,15 @@ validate-all:
 
 # Compliance report for recommended fields (separate from validation-all.tsv)
 compliance-all:
-    @echo "Analyzing recommended-field compliance..."
+    @echo "Analyzing evidence-aware compliance..."
     @mkdir -p reports
-    uv run ai-gene-review compliance --tsv-output reports/compliance-all.tsv "genes/*/*/*-ai-review.yaml"
+    uv run ai-gene-review compliance --config conf/qc_config.yaml --tsv-output reports/compliance-all.tsv --summary-output reports/compliance-summary.tsv "genes/*/*/*-ai-review.yaml"
 
 # Compliance report with HTML dashboard (linkml-data-qc)
 compliance-dashboard:
     @echo "Generating compliance dashboard..."
     @mkdir -p reports/compliance-dashboard
-    uv run linkml-data-qc --schema src/ai_gene_review/schema/gene_review.yaml --target-class GeneReview --dashboard-dir reports/compliance-dashboard genes --pattern "**/*-ai-review.yaml"
+    uv run ai-gene-review compliance --config conf/qc_config.yaml --tsv-output reports/compliance-all.tsv --summary-output reports/compliance-summary.tsv --dashboard-dir reports/compliance-dashboard "genes/*/*/*-ai-review.yaml"
 
 # Validate all gene review files (summary only, no details)
 validate-all-summary:
