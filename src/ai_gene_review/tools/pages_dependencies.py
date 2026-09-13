@@ -102,12 +102,38 @@ def _public_path(repo_root: Path, url: str) -> Path | None:
     return target
 
 
+def _off_base_repository_url(repo_root: Path, url: str) -> str | None:
+    """Flag likely missing-prefix links, leaving unrelated host projects alone."""
+    parsed = urlsplit(url)
+    if (
+        parsed.scheme not in {"http", "https"}
+        or parsed.netloc not in SITE_HOSTS
+        or parsed.path.startswith(BASE_PATH)
+    ):
+        return None
+    # Reuse containment/hidden-path checks before checking repository existence.
+    candidate = _public_path(
+        repo_root, SITE_ORIGIN + BASE_PATH + parsed.path.lstrip("/")
+    )
+    if candidate is None:
+        return None
+    candidates = [candidate]
+    if candidate.suffix.lower() == ".html":
+        candidates.append(candidate.with_suffix(".md"))
+    for path in candidates:
+        safe = _public_path(repo_root, SITE_ORIGIN + BASE_PATH + path.as_posix())
+        if safe is not None and (repo_root / safe).is_file():
+            return parsed._replace(query="", fragment="").geturl()
+    return None
+
+
 @dataclass
 class DependencyLinks:
     """Existing dependencies and unique missing local targets."""
 
     existing: set[Path] = field(default_factory=set)
     missing: set[Path] = field(default_factory=set)
+    off_base: set[str] = field(default_factory=set)
 
 
 @dataclass
@@ -129,6 +155,8 @@ class DependencyResolver:
             parser = _HTMLLinks()
             parser.feed(content)
             links = parser.links
+            # Static snapshot: apply the first base to the complete document;
+            # this does not simulate parser-time loads before a late base tag.
             document_url = urljoin(document_url, parser.base or "")
             scripts = [urljoin(document_url, src) for src in parser.scripts]
         elif relative.suffix.lower() == ".css":
@@ -145,6 +173,9 @@ class DependencyResolver:
         def collect(url: str) -> Path | None:
             target = _public_path(self.repo_root, url)
             if target is None:
+                off_base = _off_base_repository_url(self.repo_root, url)
+                if off_base is not None:
+                    result.off_base.add(off_base)
                 return None
             if (self.repo_root / target).is_file():
                 result.existing.add(target)

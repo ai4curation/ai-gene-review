@@ -5,8 +5,8 @@ from pathlib import Path
 from ai_gene_review.tools.pages_dependencies import DependencyResolver
 
 
-def test_missing_and_unsafe_links(tmp_path: Path):
-    outside = tmp_path.parent / "outside-pages-test.txt"
+def test_missing_and_unsafe_links(tmp_path: Path, tmp_path_factory):
+    outside = tmp_path_factory.mktemp("outside-pages") / "outside-pages-test.txt"
     outside.write_text("outside")
     (tmp_path / "escape.txt").symlink_to(outside)
     result = DependencyResolver(tmp_path).scan(
@@ -79,3 +79,41 @@ def test_base_srcset_and_css_urls(tmp_path: Path):
         Path("assets/theme.css"), '@import "other.css"; src: url(font.woff2)'
     )
     assert css.missing == {Path("assets/other.css"), Path("assets/font.woff2")}
+
+
+def test_off_base_links_only_flag_safe_repository_matches(tmp_path: Path):
+    (tmp_path / "research").mkdir()
+    (tmp_path / "research/report.md").write_text("report")
+    (tmp_path / "image.png").write_text("image")
+    (tmp_path / ".secret").write_text("private")
+    result = DependencyResolver(tmp_path).scan(
+        Path("index.html"),
+        """
+        <a href="/research/report.html">Report</a>
+        <img src="/image.png">
+        <a href="/other-project/">Other project</a>
+        <a href="/.secret">Hidden</a>
+        <a href="https://example.org/image.png">External</a>
+    """,
+    )
+    assert result.off_base == {
+        "https://ai4curation.io/research/report.html",
+        "https://ai4curation.io/image.png",
+    }
+    assert result.existing == set()
+    assert result.missing == set()
+
+
+def test_published_markdown_url_survives_project_renderer(tmp_path: Path):
+    from ai_gene_review.render_projects import process_markdown_content
+
+    target = tmp_path / "research/report.md"
+    target.parent.mkdir()
+    target.write_text("research")
+    url = "https://ai4curation.io/ai-gene-review/research/report.md"
+    html = process_markdown_content(f"[Full details]({url})")
+    result = DependencyResolver(tmp_path).scan(Path("pages/projects/report.html"), html)
+    assert f'href="{url}"' in html
+    assert result.existing == {Path("research/report.md")}
+    assert result.off_base == set()
+    assert result.missing == set()

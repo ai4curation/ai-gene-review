@@ -35,6 +35,7 @@ class SiteManifest:
     linked_source_files_not_staged: int
     linked_source_bytes_not_staged: int
     broken_local_link_paths: list[str]
+    off_base_path_urls: list[str]
     size_budget_bytes: int = PAGES_SIZE_BUDGET_BYTES
 
     @property
@@ -43,12 +44,18 @@ class SiteManifest:
         return len(self.broken_local_link_paths)
 
     @property
+    def off_base_path_links(self) -> int:
+        """Likely missing site-prefix links matching repository content."""
+        return len(self.off_base_path_urls)
+
+    @property
     def deployable(self) -> bool:
         """Readiness policy shared by CLI reporting and deployment."""
         return (
             self.total_bytes <= self.size_budget_bytes
             and self.linked_source_files_not_staged == 0
             and self.broken_local_links == 0
+            and self.off_base_path_links == 0
         )
 
 
@@ -85,9 +92,16 @@ def _safe_clean_output(repo_root: Path, output_dir: Path) -> None:
     resolved_output.mkdir(parents=True)
 
 
-def _stage_linked_files(
-    repo_root: Path, output_dir: Path
-) -> tuple[set[Path], set[Path]]:
+@dataclass(frozen=True)
+class StagingLinkAudit:
+    """Excluded absolute source paths, missing relative paths, and off-base URLs."""
+
+    excluded_sources: set[Path]
+    missing_paths: set[Path]
+    off_base_urls: set[str]
+
+
+def _stage_linked_files(repo_root: Path, output_dir: Path) -> StagingLinkAudit:
     """Copy static dependencies transitively and return any excluded public files.
 
     Scan each HTML/CSS/JS file only once. Referenced notes, downloads, reports,
@@ -101,6 +115,7 @@ def _stage_linked_files(
     scanned: set[Path] = set()
     omitted: set[Path] = set()
     broken: set[Path] = set()
+    off_base: set[str] = set()
     resolver = DependencyResolver(repo_root)
     while pending:
         relative = pending.pop()
@@ -110,6 +125,7 @@ def _stage_linked_files(
         content = (output_dir / relative).read_text(errors="ignore")
         links = resolver.scan(relative, content)
         broken.update(links.missing)
+        off_base.update(links.off_base)
         for target in links.existing:
             source = repo_root / target
             destination = output_dir / target
@@ -125,7 +141,11 @@ def _stage_linked_files(
                 _copy_file(source, destination)
             if target.suffix.lower() in TEXT_ASSETS and target not in scanned:
                 pending.append(target)
-    return omitted, {path for path in broken if not (output_dir / path).is_file()}
+    return StagingLinkAudit(
+        omitted,
+        {path for path in broken if not (output_dir / path).is_file()},
+        off_base,
+    )
 
 
 def stage_pages(repo_root: Path, output_dir: Path) -> SiteManifest:
@@ -182,9 +202,12 @@ def stage_pages(repo_root: Path, output_dir: Path) -> SiteManifest:
         _require_file(source)
         _copy_file(source, output_dir / "app" / browser_file)
 
-    linked_sources, broken_links = _stage_linked_files(repo_root, output_dir)
+    audit = _stage_linked_files(repo_root, output_dir)
+    linked_sources = audit.excluded_sources
+    broken_links = audit.missing_paths
     staged_files = [path for path in output_dir.rglob("*") if path.is_file()]
     manifest = SiteManifest(
+        off_base_path_urls=sorted(audit.off_base_urls),
         broken_local_link_paths=sorted(p.as_posix() for p in broken_links),
         total_bytes=sum(path.stat().st_size for path in staged_files),
         total_files=len(staged_files),
@@ -232,6 +255,7 @@ def main() -> None:
             {
                 **asdict(manifest),
                 "broken_local_links": manifest.broken_local_links,
+                "off_base_path_links": manifest.off_base_path_links,
                 "deployable": manifest.deployable,
             },
             indent=2,
@@ -260,6 +284,12 @@ def main() -> None:
             f"::warning title=Pages size budget exceeded::"
             f"Staged site is {size_mib:,.1f} MiB; warning threshold is "
             f"{manifest.size_budget_bytes:,} bytes. Reduce it before switching Pages to Actions."
+        )
+    if manifest.off_base_path_links:
+        print(
+            "::warning title=Pages links missing site prefix::"
+            f"{manifest.off_base_path_links:,} likely off-base links; "
+            "see off_base_path_urls in the manifest. Deployment is blocked."
         )
     if manifest.broken_local_links:
         print(

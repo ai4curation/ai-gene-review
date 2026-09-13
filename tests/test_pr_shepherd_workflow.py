@@ -171,6 +171,7 @@ def test_pages_deployment_requires_opt_in_and_publishable_artifact():
     summary = _step(build, "Summarize staged Pages site")["run"]
     assert ".deployable == true" in summary
     assert ".broken_local_links" in summary
+    assert ".off_base_path_links" in summary
     assert deploy["concurrency"] == {"group": "pages", "cancel-in-progress": False}
     assert deploy["permissions"] == {"pages": "write", "id-token": "write"}
     assert deploy["environment"]["name"] == "github-pages"

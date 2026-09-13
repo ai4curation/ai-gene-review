@@ -434,7 +434,7 @@ Notable proteins NOT in the 223K catalogue: TP53 (P04637), EGFR (P00533), NOTCH1
 
 ## SFT Catalogue Evaluation (45 proteins, 15 clades)
 
-Full details: [research/bioreason-sft-evaluation.md](/research/bioreason-sft-evaluation.md)
+Full details: [research/bioreason-sft-evaluation.md](https://ai4curation.io/ai-gene-review/research/bioreason-sft-evaluation.md)
 
 We evaluated 45 proteins from the HF SFT catalogue across 15 clades (DANRE, DICDI, METJA, MYCTU, PSEAE, ANOGA, ARATH, DROME, ECOLI, SCHPO, human, mouse, rat, worm, yeast), 3 proteins per clade, mixing well-characterized and poorly-characterized proteins.
 

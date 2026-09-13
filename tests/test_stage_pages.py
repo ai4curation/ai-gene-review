@@ -1,5 +1,8 @@
+from dataclasses import replace
+import json
 from pathlib import Path
 import subprocess
+import sys
 
 import pytest
 
@@ -320,8 +323,6 @@ def test_broken_links_block_deployment(tmp_path: Path) -> None:
     "size,deployable", [(1_000_000_000, True), (1_000_000_001, False)]
 )
 def test_exact_size_budget(tmp_path: Path, size: int, deployable: bool) -> None:
-    from dataclasses import replace
-
     _site_fixture(tmp_path)
     manifest = replace(stage_pages(tmp_path, tmp_path / "_site"), total_bytes=size)
     assert manifest.size_budget_bytes == 1_000_000_000
@@ -329,9 +330,6 @@ def test_exact_size_budget(tmp_path: Path, size: int, deployable: bool) -> None:
 
 
 def test_cli_serializes_readiness_and_reports_broken_links(tmp_path: Path) -> None:
-    import json
-    import sys
-
     _site_fixture(tmp_path)
     _write(tmp_path / "index.html", '<a href="missing.pdf">Missing</a>')
     result = subprocess.run(
@@ -352,5 +350,20 @@ def test_cli_serializes_readiness_and_reports_broken_links(tmp_path: Path) -> No
     assert manifest["deployable"] is False
     assert manifest["size_budget_bytes"] == 1_000_000_000
     assert manifest["broken_local_links"] == 1
+    assert manifest["off_base_path_links"] == 0
+    assert manifest["off_base_path_urls"] == []
     assert manifest["broken_local_link_paths"] == ["missing.pdf"]
     assert "Broken local Pages links" in result.stdout
+
+
+def test_off_base_link_blocks_deployment(tmp_path: Path) -> None:
+    _site_fixture(tmp_path)
+    _write(tmp_path / "index.html", '<a href="/research/report.html">Report</a>')
+    _write(tmp_path / "research/report.md")
+    manifest = stage_pages(tmp_path, tmp_path / "_site")
+    assert manifest.off_base_path_links == 1
+    assert manifest.off_base_path_urls == [
+        "https://ai4curation.io/research/report.html"
+    ]
+    assert manifest.broken_local_links == 0
+    assert not manifest.deployable
