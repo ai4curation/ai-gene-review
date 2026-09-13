@@ -1,5 +1,6 @@
 ---
 title: "Protein Families"
+template: family_index
 autolink_gene_symbols: false
 ---
 
@@ -28,3 +29,5 @@ Browse family-level assessments, focused family projects, and reviews of the map
 - [TreeGrafter](TREEGRAFTER.md) — automated placement on PANTHER trees and annotation transfer.
 
 [Browse all projects](all-projects.html) · [Browse gene reviews](../../app/index.html)
+
+[Catalog rendering and source links](FAMILIES/README.md)

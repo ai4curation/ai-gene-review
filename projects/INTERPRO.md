@@ -44,10 +44,10 @@ is preferable for an individual gene.
 
 ## What curators can act on
 
-1. **Assess the four removal proposals first:** ATP binding and protein
-   phosphorylation for IPR000719, superoxide metabolic process for IPR001424, and
-   ATP binding for IPR012724. Verify the cited exceptions and the current entry scope.
-2. **Resolve the proposed GTPase-activity addition for IPR020849.** Confirm that the
+1. **Assess the four removal proposals first:** ATP binding (GO:0005524) and protein
+   phosphorylation (GO:0006468) for IPR000719, superoxide metabolic process
+   (GO:0006801) for IPR001424, and ATP binding (GO:0005524) for IPR012724. Verify the cited exceptions and the current entry scope.
+2. **Resolve the proposed GTPase-activity (GO:0003924) addition for IPR020849.** Confirm that the
    assignment is supported across the entry, including divergent members.
 3. **Separate gene-level refinement from mapping-level error.** A `MODIFY` or
    `KEEP_AS_NON_CORE` decision on one gene does not by itself justify changing a

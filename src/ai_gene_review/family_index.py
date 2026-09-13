@@ -6,19 +6,23 @@ import re
 from collections import Counter
 from pathlib import Path
 from typing import Any
+from urllib.parse import quote
 
 import yaml
 
-PUBLIC_SOURCE = "https://github.com/ai4curation/ai-gene-review/blob/main/"
+PUBLIC_SOURCE = "https://github.com/ai4curation/ai-gene-review/blob/"
 
 
-def collect_family_reviews(repo_root: Path) -> list[dict[str, Any]]:
+def collect_family_reviews(
+    repo_root: Path, source_ref: str = "main"
+) -> list[dict[str, Any]]:
     """Index authored reviews, merging YAML and prose reports for the same entry.
 
     Metadata and deep-research files alone do not establish a reviewed family.
     Missing status/coherence stays unrecorded; a complete review does not imply
     family-wide term support. Pfam proposal status is not family review status.
     """
+    source_base = PUBLIC_SOURCE + quote(source_ref, safe="") + "/"
     paths = sorted((repo_root / "interpro").glob("*/*/*-review.yaml"))
     paths += sorted((repo_root / "interpro").glob("*/*/*-review.md"))
     grouped: dict[tuple[str, str], list[Path]] = {}
@@ -82,7 +86,7 @@ def collect_family_reviews(repo_root: Path) -> list[dict[str, Any]]:
         }
         source_links = [
             {
-                "url": PUBLIC_SOURCE + p.relative_to(repo_root).as_posix(),
+                "url": source_base + p.relative_to(repo_root).as_posix(),
                 "label": "YAML" if p.suffix == ".yaml" else "Report",
             }
             for p in sources
@@ -102,6 +106,7 @@ def collect_family_reviews(repo_root: Path) -> list[dict[str, Any]]:
             + [str(v) for term in searchable_terms for v in term.values()]
             + sorted(representatives)
         )
+        mapping = data.get("interpro") or {}
         rows.append(
             {
                 "id": identifier,
@@ -110,6 +115,10 @@ def collect_family_reviews(repo_root: Path) -> list[dict[str, Any]]:
                 "database": database.upper(),
                 "status": status,
                 "coherence": data.get("functional_coherence") or "NOT_RECORDED",
+                "mapping_viability": mapping.get("mapping_viability") or "NOT_RECORDED",
+                "go_status": mapping.get("go_status") or "NOT_RECORDED",
+                "viability_reason": mapping.get("viability_reason") or "",
+                "interpro_id": mapping.get("id") or "",
                 "scopes": scopes,
                 "terms": len(terms) + len(proposals),
                 "members": len(representatives)

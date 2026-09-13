@@ -5,11 +5,12 @@ This module converts project markdown files (from projects/) to HTML,
 automatically linking gene symbols to their corresponding gene review pages.
 """
 
+import os
 import re
 import shutil
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-from urllib.parse import unquote, urlparse
+from urllib.parse import quote, unquote, urlparse
 
 import markdown
 import yaml
@@ -1218,12 +1219,37 @@ def render_project(
         else:
             title = md_path.stem
 
-    # The Families landing page is a catalog derived from authored reviews.
+    # Catalog pages explicitly opt in, independent of their filename or depth.
     family_rows = None
-    if md_path.name == "FAMILIES.md" and md_path.parent.name == "projects":
+    page_template = frontmatter.get("template", "project")
+    if page_template not in {"project", "family_index"}:
+        raise ValueError(f"Unknown project template: {page_template!r}")
+    if page_template == "family_index":
         from ai_gene_review.family_index import collect_family_reviews
 
-        family_rows = collect_family_reviews(md_path.resolve().parent.parent)
+        source_root = (
+            projects_dir.resolve()
+            if projects_dir
+            else next(
+                (
+                    parent
+                    for parent in md_path.resolve().parents
+                    if parent.name == "projects"
+                ),
+                None,
+            )
+        )
+        if source_root is None:
+            raise ValueError(
+                "Family catalog requires projects_dir or a source under projects/"
+            )
+        source_ref = os.environ.get("AI_GENE_REVIEW_SOURCE_REF", "main")
+        family_rows = collect_family_reviews(source_root.parent, source_ref=source_ref)
+        for view in ("blob", "tree"):
+            github_base = f"https://github.com/ai4curation/ai-gene-review/{view}/"
+            html_content = html_content.replace(
+                github_base + "main/", github_base + quote(source_ref, safe="") + "/"
+            )
         if template_path is None:
             template_path = Path(__file__).parent / "templates" / "family_index.html.j2"
 

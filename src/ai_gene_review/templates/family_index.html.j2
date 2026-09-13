@@ -22,7 +22,7 @@
         .stats { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
         .stat { background: var(--bg-soft); padding: 8px 14px; border-radius: 6px; }
         .stat strong { color: var(--accent); font-size: 1.2rem; }
-        .toolbar { display: grid; grid-template-columns: minmax(220px, 2fr) repeat(3, minmax(150px, 1fr)) auto; gap: 12px; align-items: end; }
+        .toolbar { display: grid; grid-template-columns: minmax(220px, 2fr) repeat(4, minmax(130px, 1fr)) auto; gap: 12px; align-items: end; }
         label { display: block; font-size: .8rem; font-weight: 650; margin-bottom: 5px; }
         input, select, button { font: inherit; }
         input, select, .reset { border: 1px solid var(--border); border-radius: 6px; padding: 9px 10px; background: white; width: 100%; color: var(--text); }
@@ -59,7 +59,7 @@
 </head>
 <body>
 <main class="page">
-    <nav aria-label="Main navigation"><a href="../../index.html">Home</a><a href="../modules/index.html">Modules</a><a href="all-projects.html">Projects</a><a href="../../app/index.html">Gene browser</a></nav>
+    <nav aria-label="Main navigation"><a href="{{ projects_base_path }}../../index.html">Home</a><a href="{{ projects_base_path }}../modules/index.html">Modules</a><a href="{{ projects_base_path }}all-projects.html">Projects</a><a href="{{ projects_base_path }}../../app/index.html">Gene browser</a></nav>
     <header class="header">
         <h1>{{ title }}</h1>
         <p class="muted">Browse family and domain reviews by name, identifier, function, or representative protein.</p>
@@ -72,7 +72,7 @@
     <section class="panel" aria-label="Filter families">
         <div class="toolbar">
             <div><label for="family-search">Search families</label><input id="family-search" type="search" placeholder="Name, PTHR / PF ID, GO term…"></div>
-            {% for field, label in [('database', 'Database'), ('status', 'Review status'), ('coherence', 'Functional coherence')] %}
+            {% for field, label in [('database', 'Database'), ('status', 'Review status'), ('coherence', 'Functional coherence'), ('mapping_viability', 'InterPro mapping')] %}
             <div><label for="filter-{{ field }}">{{ label }}</label><select id="filter-{{ field }}" data-field="{{ field }}"><option value="">All</option>{% for value in family_rows|map(attribute=field)|unique|sort %}<option value="{{ value }}">{{ value|replace('_', ' ')|title }}</option>{% endfor %}</select></div>
             {% endfor %}
             <button class="reset" type="button" id="reset-filters">Reset</button>
@@ -85,17 +85,18 @@
                 {% for field, label in [('name', 'Family / domain'), ('database', 'Database'), ('status', 'Review status'), ('coherence', 'Coherence'), ('terms', 'Terms'), ('members', 'Representatives')] %}
                 <th scope="col" aria-sort="none"><button type="button" data-sort="{{ field }}">{{ label }}</button></th>
                 {% endfor %}
-                <th scope="col">Term scope</th><th scope="col">Sources</th>
+                <th scope="col">InterPro mapping</th><th scope="col">Term scope</th><th scope="col">Sources</th>
             </tr></thead>
             <tbody>
             {% for row in family_rows %}
-                <tr data-search="{{ row.search|lower }}" data-name="{{ row.name }}" data-database="{{ row.database }}" data-status="{{ row.status }}" data-coherence="{{ row.coherence }}" data-terms="{{ row.terms }}" data-members="{{ row.members if row.members is not none else -1 }}">
-                    <td class="family"><a class="family-name" href="{{ row.url }}">{{ row.name }}</a><div class="identifier">{{ row.id }}</div>{% if row.summary %}<details class="summary"><summary>Function summary</summary><p>{{ row.summary }}</p></details>{% endif %}</td>
+                <tr data-search="{{ row.search|lower }}" data-name="{{ row.name }}" data-database="{{ row.database }}" data-status="{{ row.status }}" data-coherence="{{ row.coherence }}" data-mapping_viability="{{ row.mapping_viability }}" data-terms="{{ row.terms }}" data-members="{{ row.members if row.members is not none else -1 }}">
+                    <td class="family"><a class="family-name" href="{{ row.url if row.url.startswith('https://') else projects_base_path ~ row.url }}">{{ row.name }}</a><div class="identifier">{{ row.id }}</div>{% if row.summary %}<details class="summary"><summary>Function summary</summary><p>{{ row.summary }}</p></details>{% endif %}</td>
                     <td><span class="pill">{{ row.database }}</span></td>
                     <td><span class="pill {{ 'complete' if row.status == 'COMPLETE' else '' }}">{{ row.status|replace('_', ' ')|title }}</span></td>
                     <td>{{ row.coherence|replace('_', ' ')|title }}</td>
                     <td>{{ row.terms }}</td>
                     <td>{{ row.members if row.members is not none else '—' }}</td>
+                    <td>{% if row.database == 'PFAM' %}<span class="pill">{{ row.mapping_viability|replace('_', ' ')|title }}</span><div class="identifier">{{ row.interpro_id }}</div><div class="muted">GO mapping: {{ row.go_status|replace('_', ' ')|title }}</div>{% if row.viability_reason %}<details class="summary"><summary>Mapping rationale</summary><p>{{ row.viability_reason }}</p></details>{% endif %}{% else %}—{% endif %}</td>
                     <td>{% for scope, count in row.scopes.items() %}<span class="scope">{{ scope|replace('_', ' ')|title }}: {{ count }}</span>{% else %}<span class="muted">Not recorded</span>{% endfor %}</td>
                     <td class="source-links">{% for source in row.sources %}<a href="{{ source.url }}">{{ source.label }} ↗</a>{% endfor %}{% if row.research %}<span class="muted">Research available</span>{% endif %}</td>
                 </tr>
@@ -104,7 +105,7 @@
         </table>
         <p id="empty-state" hidden>No families match these filters. Try another name or reset the filters.</p>
     </div>
-    <p class="muted">Terms count structured assessments or proposals; representatives count explicitly listed PANTHER members, not total family size. Source-only entries are excluded.</p>
+    <p class="muted">InterPro mapping reports the scope assessment for the InterPro entry associated with a Pfam family. Terms count structured assessments or proposals; representatives count explicitly listed PANTHER members, not total family size. Source-only entries are excluded.</p>
     <details class="panel collection-links"><summary>Related collections and focused family projects</summary>{{ content|safe }}</details>
     <footer>AI Gene Review · <a href="https://github.com/ai4curation/ai-gene-review/tree/main/interpro">Family review sources on GitHub</a></footer>
 </main>

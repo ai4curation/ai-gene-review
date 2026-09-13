@@ -425,6 +425,20 @@ def check_best_practices_rules(
                     check_type="file_is_directory",
                 )
 
+    # Additional review citations may point to local evidence outside references.
+    for i, annotation in enumerate(data.get("existing_annotations") or []):
+        if not isinstance(annotation, dict):
+            continue
+        review = annotation.get("review")
+        if not isinstance(review, dict):
+            continue
+        for j, ref_id in enumerate(review.get("additional_reference_ids") or []):
+            if isinstance(ref_id, str):
+                validate_file_reference(
+                    ref_id,
+                    f"existing_annotations[{i}].review.additional_reference_ids[{j}]",
+                )
+
     # Check file: references in main references section
     if "references" in data and data["references"]:
         for i, ref in enumerate(data["references"]):

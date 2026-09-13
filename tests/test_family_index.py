@@ -83,7 +83,7 @@ def test_project_render_builds_escaped_searchable_catalog(tmp_path):
     projects.mkdir()
     source = projects / "FAMILIES.md"
     source.write_text(
-        "---\ntitle: Protein Families\nautolink_gene_symbols: false\n---\nBrowse families.\n"
+        "---\ntitle: Protein Families\ntemplate: family_index\nautolink_gene_symbols: false\n---\nBrowse families.\n"
     )
     write_yaml(
         tmp_path / "interpro/panther/PTHR1/PTHR1-review.yaml",
@@ -115,7 +115,9 @@ def test_empty_review_yaml_renders_as_unrecorded(tmp_path, content):
     projects = tmp_path / "projects"
     projects.mkdir()
     source = projects / "FAMILIES.md"
-    source.write_text("---\ntitle: Families\nautolink_gene_symbols: false\n---\n")
+    source.write_text(
+        "---\ntitle: Families\ntemplate: family_index\nautolink_gene_symbols: false\n---\n"
+    )
     rows = collect_family_reviews(tmp_path)
     assert len(rows) == 1
     assert rows[0]["status"] == "NOT_RECORDED"
@@ -126,3 +128,80 @@ def test_empty_review_yaml_renders_as_unrecorded(tmp_path, content):
     )
     assert "PTHR1" in output.read_text()
     assert not warnings
+
+
+def test_pfam_mapping_assessment_is_distinct_from_coherence(tmp_path):
+    write_yaml(
+        tmp_path / "interpro/pfam/PF1/PF1-review.yaml",
+        {
+            "pfam_id": "PF1",
+            "pfam_name": "Example",
+            "interpro": {
+                "id": "InterPro:IPR1",
+                "go_status": "ABSENT",
+                "mapping_viability": "NOT_VIABLE",
+                "viability_reason": "Mixed catalytic members",
+            },
+        },
+    )
+    row = collect_family_reviews(tmp_path)[0]
+    assert row["mapping_viability"] == "NOT_VIABLE"
+    assert row["go_status"] == "ABSENT"
+    assert row["viability_reason"] == "Mixed catalytic members"
+    assert row["coherence"] == "NOT_RECORDED"
+
+
+def test_catalog_source_links_support_preview_revision(tmp_path):
+    write_yaml(tmp_path / "interpro/panther/PTHR1/PTHR1-review.yaml", {})
+    row = collect_family_reviews(tmp_path, source_ref="feature/catalog")[0]
+    assert "/blob/feature%2Fcatalog/" in row["sources"][0]["url"]
+
+
+@pytest.mark.parametrize("relative", ["CATALOG.md", "nested/CATALOG.md"])
+def test_family_template_frontmatter_works_for_renamed_and_relative_paths(
+    tmp_path, monkeypatch, relative
+):
+    projects = tmp_path / "projects"
+    source = projects / relative
+    source.parent.mkdir(parents=True)
+    source.write_text(
+        "---\ntitle: Families\ntemplate: family_index\nautolink_gene_symbols: false\n---\n"
+    )
+    write_yaml(
+        tmp_path / "interpro/panther/PTHR1/PTHR1-review.yaml",
+        {"family_name": "Example"},
+    )
+    monkeypatch.chdir(projects)
+    output, _ = render_project(
+        Path(relative),
+        tmp_path / "pages/projects",
+        tmp_path / "genes",
+        projects_dir=projects,
+    )
+    assert 'id="family-table"' in output.read_text()
+    assert "PTHR1" in output.read_text()
+
+
+def test_unknown_project_template_fails_explicitly(tmp_path):
+    source = tmp_path / "project.md"
+    source.write_text("---\ntitle: Catalog\ntemplate: family_typo\n---\n")
+    with pytest.raises(ValueError, match="Unknown project template"):
+        render_project(source, tmp_path / "out", tmp_path / "genes")
+
+
+def test_preview_revision_applies_to_catalog_and_related_source_links(
+    tmp_path, monkeypatch
+):
+    projects = tmp_path / "projects"
+    projects.mkdir()
+    source = projects / "FAMILIES.md"
+    source.write_text(
+        "---\ntitle: Families\ntemplate: family_index\nautolink_gene_symbols: false\n---\n"
+        "[Report](https://github.com/ai4curation/ai-gene-review/tree/main/reports)\n"
+    )
+    write_yaml(tmp_path / "interpro/panther/PTHR1/PTHR1-review.yaml", {})
+    monkeypatch.setenv("AI_GENE_REVIEW_SOURCE_REF", "feature/catalog")
+    output, _ = render_project(source, tmp_path / "pages/projects", tmp_path / "genes")
+    html = output.read_text()
+    assert "/blob/feature%2Fcatalog/interpro/" in html
+    assert "/tree/feature%2Fcatalog/reports" in html
