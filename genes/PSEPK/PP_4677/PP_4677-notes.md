@@ -46,3 +46,18 @@ Normalized curation statements used as exact YAML support:
   PMID:39693441. UniProt's statement that Q88DZ1 belongs to the CDP-alcohol
   phosphatidyltransferase "class-I family" uses a separate family-classification
   axis and therefore does not make Q88DZ1 a type-I PssA.
+
+## 2026-09-01 annotation-reviewer pass
+
+All four current GOA rows were re-reviewed. The generic `GO:0016020` membrane
+annotation is now `MODIFY` to `GO:0005886` plasma membrane, avoiding a
+redundant synthetic NEW row while preserving the eight-pass topology evidence.
+The specific phosphatidylserine-synthase activity remains ACCEPT, the broad
+phospholipid process remains non-core, and `GO:0016780` remains over-annotated.
+No current GOA row is PENDING.
+
+The OpenScientist report completed in 1508.52 seconds and independently
+corroborated the predicted EC 2.7.8.8 reaction, integral-membrane CDP-alcohol
+phosphatidyltransferase architecture, and lack of direct PP_4677 enzymology.
+Its "CDP-AP class-I" wording is the UniProt/InterPro family classification;
+the bacterial PssA architecture remains type II under PMID:39693441.

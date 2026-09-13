@@ -39,6 +39,21 @@ gocams/
     MODEL-src.yaml <- cached gocam-py model (activities/annotons; DO NOT EDIT)
     MODEL-review.yaml <- optional reviewer assessment
   index.tsv <- gene_product -> GO-CAM activity (annoton) index; join key to reviews/modules
+history/
+  genes/<ORGANISM>/<GENE>/ <- append-only curation session records (see docs/history.md)
+  modules/<SLUG>/, gocams/<MODEL>/, projects/<SLUG>/, schema/, other/
+
+## History records
+
+`history/` holds append-only curation session provenance, one YAML per session
+per target, kept outside the curated files themselves (mechanism ported from
+dismech). When a PR creates or edits curated content (a gene review, module,
+GO-CAM review, or project page), add a matching record — scaffold it with
+`just new-history` (never hand-write the filename/session id), edit the
+emitted `details`, then check it with `just validate-history <path>`. Records
+are append-only: never rewrite an existing record's `target.slug`/`target.path`;
+use `target.superseded_by` for renames. See `docs/history.md` for the format
+and `just backfill-history` for retrospectively generating records from PRs.
 
 You can regenerate the derived files by running commands like:
 
@@ -184,6 +199,38 @@ Therefore:
   **cached abstract explicitly states it** (e.g. "in nontransformed mammalian cells"). Do
   not infer the organism or assay details that the abstract does not state.
 
+### What an IBA asserts: read the phylogeny, not the donor count
+
+An IBA is **not** a pairwise similarity transfer. Behind every IBA is a PAINT curator's
+**IBD** (Inferred from Biological aspect of Descendant): the curator inspected the family
+tree and the MSA, read the experimental annotations of all extant members, judged at which
+node the function arose — sometimes recent, sometimes as deep as LUCA — and placed the
+assertion there. IBA rows follow mechanically from descent from that node. So an IBA carries
+a considered phylogenetic judgment, and challenging one means arguing with the node
+placement (is the target inside the clade that inherited the function? is there
+target-specific evidence of loss or divergence?), not with a similarity score.
+
+Two consequences that are easy to get backwards:
+
+- **A short `WITH/FROM` donor list is not weak support.** A node seeded by a single
+  well-characterized MOD or human gene can be entirely sound. Do not use donor count as a
+  proxy for evidential strength.
+- **The target appearing in its own `WITH/FROM` is correct and expected — not circular.**
+  When a gene has its own experimental annotation for the term, that annotation is one of
+  the descendant evidences the curator used to place the IBD, so the gene legitimately
+  appears among the sources of the IBA it later receives. It is a marker that experimental
+  grounding exists *on the target itself*, and the IBA then says something additional: that
+  the function is inherited rather than lineage-specific. **Never** mark such a source
+  `CIRCULAR_OR_REDUNDANT` or describe it as inflating support.
+
+Reserve `CIRCULAR_OR_REDUNDANT` for genuine circularity: a propagation whose source is
+itself a propagated annotation with no experimental grounding anywhere in the chain, or a
+source that adds nothing because the target already has stronger direct evidence for the
+same claim.
+
+See `projects/IBA_REVIEW.md` for the full propagation taxonomy and catalogued failure
+patterns.
+
 ### Term-id validation: GOA ids are trusted, your `core_functions` ids are checked
 
 Validation deliberately treats the two sources of GO term ids differently:
@@ -201,6 +248,48 @@ Validation deliberately treats the two sources of GO term ids differently:
 
 Rule of thumb: machine-sourced ids are trusted (other deterministic steps guarantee they
 are real GOA terms); author-supplied ids are checked hard.
+
+### PANTHER ids: never write a family label from memory
+
+PANTHER family/subfamily ids (`PANTHER:PTHR12345`, `PANTHER:PTHR12345:SF7`) used in
+modules are now hard-validated against `interpro/panther/panther.obo`, built from
+PANTHER's own HMM classifications. Two rules follow:
+
+- **`term.label` must be PANTHER's official name, verbatim.** It is not a place for your
+  description of the protein. Writing a plausible-sounding label is exactly how a wrong
+  family id stays hidden — the id is real, so nothing else catches it. Put your readable
+  description in `preferred_term`, which is free text and is not label-checked. Look the
+  name up:
+  `grep -A1 "^id: PANTHER:PTHR12345$" interpro/panther/panther.obo`
+- **The declared family must contain its own `representative_members`.** This is checked
+  against `interpro/panther/panther-members.tsv` and is a blocking error. If it fires,
+  the representative protein is usually right and the family id is wrong — look up the
+  member's real family rather than deleting the member. Accessions missing from the index
+  only warn; run `just refresh-panther-members` to add newly cited proteins.
+- **If a label mismatch names a *different protein*, fix the ID, not the label.** A
+  wildly-wrong label is weak evidence of a typo and strong evidence that the id was
+  guessed. An id invented at random is still a hallucination when it happens to resolve
+  to a real family, and rewriting its label to the official name converts a visible error
+  into an invisible one. `just fix-panther-labels` therefore refuses to touch these and
+  reports them for review (`--allow-divergent` overrides, only after you have checked the
+  id). Beware the inverse too: PANTHER family names are often dominated by one member, so
+  a correct id can legitimately carry a surprising name (`PTHR24322` = "PKSB" really does
+  contain DHRS3). The representative-member check is what tells the two cases apart.
+
+PTN ancestral nodes (`PANTHER:PTN...`) are checked separately, against PAINT data — see
+`validate_paint_ptns`. Their label is conventionally just the bare id.
+
+**If you cannot be sure, assert no id.** A family descriptor's `term` is optional.
+When you cannot establish that a PANTHER family corresponds to what the descriptor
+means, omit `term` entirely and keep `preferred_term` (free-text intent) and
+`representative_members` (the proteins themselves). An omitted id says "not
+established"; a wrong id says something false, and says it in a machine-readable
+field other tooling will believe. Never invent a plausible id to fill the slot, and
+never guess a replacement for one that failed validation -- re-pointing a family is
+a judgement about evolutionary placement, and doing it mechanically has previously
+broken real PAINT links. The same rule applies to evolutionary claims generally: if
+the PAINT evidence for a step is not clear, say nothing about it rather than
+asserting an inference the data does not support.
 
 ## Reviewing references
 
@@ -243,6 +332,16 @@ This complements (does not replace) the existing `is_invalid` (retracted/replace
 reference has not been manually adjudicated. **Verify, don't trust**: confirm a PMID against PubMed (or
 anchor a claim to a checkable fact such as the GOA evidence code) before marking it `VERIFIED` — an
 LLM-generated deep-research summary asserting a citation is not sufficient.
+
+**Deleted duplicate PMIDs and conflicting findings:** Keep GOA's
+`original_reference_id`. Record a verified canonical identifier in
+`reference_review.replacement` with `reference_id`, `reason`, and verification
+notes; fetch failure alone does not establish a remapping or retraction. Quote
+the canonical paper using its own `reference_id` in `review.supported_by`.
+For a statement from P1 contradicted by P2, use P1's
+`findings[].finding_review` with `finding_status`, `superseded_by`, and
+`supported_by` containing P2's exact snippet. See
+[Reference Curation](docs/reference_curation.md) for examples and validation rules.
 
 ## Tools
 
@@ -441,7 +540,11 @@ just deploy-browser    # update data.js + index.html for the interactive browser
 Output: `app/`
 
 ### CI automation
-The `generate-pages` workflow runs on push to main when gene YAMLs, schema, templates, or project markdown change. It renders everything and creates a PR. Pages deploy directly from main — no gh-pages branch needed for the static content.
+The `generate-pages` workflow runs daily at 08:23 UTC, with manual runs available
+through GitHub Actions. It renders everything and creates a PR. Its publication
+schedule is exempt from agent cron profiles. Gene reviews are validated in PR CI
+and by the weekly full validation workflow. Pages deploy directly from main — no
+gh-pages branch needed for the static content.
 
 ## General guidelines
 
