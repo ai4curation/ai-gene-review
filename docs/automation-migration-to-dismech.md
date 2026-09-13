@@ -262,14 +262,30 @@ routine event in the repo into a red X.
   that identity, so this does not block ordinary closing passes. It still
   affects the generated-page lane, whose independent approval is deliberately
   tied to `ai4c-reviewer`.
-- **A stale `dragon-ai-agent` collaborator entry remains** on the repo. The
-  account itself is deleted (`GET /users/dragon-ai-agent` 404s) so it grants
-  nothing, but the entry should be removed — that is a settings click, not a
-  code change. The recipes that re-added it, and that re-installed `PAT_FOR_PR`,
-  were removed in the cleanup PR; before that, a single `just gh-add-secrets`
-  would have reinstalled the exposed credential and undone this migration.
-  Worth remembering that a revoked token is not a revoked account, and a deleted
-  account is not a removed collaborator.
+- **`dragon-ai-agent` holds `admin` on this repository**, and is an active
+  `ai4curation` organization owner. This entry was described here as "stale" and
+  the account as "deleted"; both were wrong. In July the account was *suspended*
+  — `GET /users/dragon-ai-agent` 404s for a suspended account, which is easy to
+  misread as deletion, but the membership API returns `state: active` and a
+  deleted account would have lost that membership. It was then **unsuspended on
+  2026-08-05** and is operating again. So the grant is live, not vestigial:
+
+  ```
+  GET /repos/ai4curation/ai-gene-review/collaborators/dragon-ai-agent/permission
+      -> permission: admin
+  ```
+
+  No workflow here needs it — that is the point of this migration — so the
+  privilege is unearned. Reducing it is a settings change, not a code one.
+  The recipes that re-added the account and re-installed `PAT_FOR_PR` were
+  removed in the cleanup PR; before that, a single `just gh-add-secrets` would
+  have reinstalled the exposed credential and undone this migration.
+
+  Worth stating plainly, since it has now been misread in both directions: a
+  revoked token is not a revoked account, a suspended account is not a deleted
+  one, a deleted account is not a removed collaborator, and unsuspension
+  silently restores every privilege the account held. Membership and permission
+  endpoints are authoritative; `GET /users/:login` is not.
 - **The `PAT_FOR_PR` secret still exists**, though nothing references it — the
   only mentions left in the tree are two do-not-reintroduce comments
   (`justfile:180`, `ai.yml:187`) and this document. It
