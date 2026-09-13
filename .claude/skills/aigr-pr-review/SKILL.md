@@ -40,6 +40,18 @@ evidence quality, and whether the curation narrative is coherent.
 - Each annotation review should be supported by accessible evidence.
 - Check that cited PMIDs, GO references, file references, and supporting text actually justify the claimed action.
 - Do not accept unsupported `NEW` annotations.
+- For a `NEW` **process** term, check participation, not just evidence: does the gene
+  product execute a step of the process, or is it merely required for it, consumed by
+  it, or the thing it acts on? Knockout/rescue and human loss-of-function data
+  establish necessity, which is what being a substrate means, and do not settle this.
+- Treat "every other participant carries this term and this gene does not" as a red
+  flag rather than a justification. Ask for the comparator check — two or three other
+  gene products in the same role relative to the same kind of process — and check the
+  term's parents (a process under `GO:0006508 proteolysis` or another reaction-type
+  parent names the catalyst, not the substrate) and the cached GO-CAMs, which often
+  already contain the gene in the role GO intends for it.
+- Flag a proposed term that is an ancestor or descendant of another proposed term, or
+  of one the gene already carries, as redundant rather than additional.
 - If the relevant publication or evidence cannot be accessed, prefer `UNDECIDED`.
 
 3. Core function identification

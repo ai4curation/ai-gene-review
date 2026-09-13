@@ -1981,92 +1981,30 @@ Y2H_REASON = (
 # ---- NEW rows ------------------------------------------------------------
 
 NEW_ROWS = [
-    dict(
-        term=("GO:0002003", "angiotensin maturation"),
-        evidence_type="IMP",
-        reference="PMID:16116425",
-        qualifier="involved_in",
-        summary=(
-            "The GO term whose definition names angiotensinogen does not annotate "
-            "angiotensinogen. GO:0002003 is defined as 'The process leading to the attainment "
-            "of the full functional capacity of angiotensin by conversion of angiotensinogen "
-            "into mature angiotensin in the blood.' Querying QuickGO for it across human, "
-            "mouse and rat returns 110 annotations covering essentially every other "
-            "participant in the cascade - REN, ACE, ACE2, ENPEP, ANPEP, MME, PREP, PRCP, "
-            "CTSG, LVRN, Ace3, and even ATP6AP2, the (pro)renin receptor. Querying the same "
-            "endpoint for human AGT (P01019), rat Agt (P01015) and mouse Agt (P11859) "
-            "together returns zero annotations to this term - not one angiotensinogen in "
-            "any of the three species. Every enzyme that acts on angiotensinogen is "
-            "annotated to the process; the protein they act on is invisible. The evidence runs in both "
-            "directions. The evidence of record is human: biallelic loss-of-function "
-            "mutations in AGT cause renal tubular dysgenesis, which the authors attribute to "
-            "renin-angiotensin system inactivity - the absence of mature angiotensin in a "
-            "person lacking functional angiotensinogen. Mouse genetics corroborates in both "
-            "directions: deleting angiotensinogen abolishes plasma angiotensin I, and "
-            "re-expressing it by AAV in hepatocyte-specific Agt-null mice restores plasma "
-            "angiotensin II and suppresses the compensatory renin rise. The row is coded IMP "
-            "against the human phenotype rather than the mouse one, because the annotation "
-            "is on the human gene."
-        ),
-        reason=(
-            "A pathway-completeness gap rather than a doubtful inference. AGT is not merely "
-            "adjacent to this process, it is the substrate the process is defined as acting "
-            "on, and the same 'involved_in' qualifier is what every other participant uses. "
-            "Adding it makes the renin-angiotensin cascade traversable in GO from its source "
-            "protein rather than only from its enzymes."
-        ),
-        supported_by=[
-            ("PMID:16116425",
-             "We studied 11 individuals with renal tubular dysgenesis, belonging to nine "
-             "families, and found that they had homozygous or compound heterozygous "
-             "mutations in the genes encoding renin, angiotensinogen, angiotensin converting "
-             "enzyme or angiotensin II receptor type 1."),
-            ("PMID:16116425",
-             "We propose that renal lesions and early anuria result from chronic low "
-             "perfusion pressure of the fetal kidney, a consequence of renin-angiotensin "
-             "system inactivity."),
-            Q_KO, Q_RESCUE, Q_BURIED],
-    ),
-    dict(
-        term=("GO:0002002", "regulation of angiotensin levels in blood"),
-        evidence_type="IMP",
-        reference="PMID:16116425",
-        qualifier="involved_in",
-        summary=(
-            "The companion gap. GO:0002002 is defined as modulating 'the level of any of the "
-            "various angiotensinogen proteolytic products in the blood... by the proteolytic "
-            "cleavage of angiotensinogen, and its proteolytic products'. Like GO:0002003 it "
-            "is annotated to the cascade's enzymes and receptors (117 annotations across "
-            "human, mouse and rat) and to no angiotensinogen in any of those three "
-            "species - the same zero-hit query result as for GO:0002003. Angiotensinogen concentration "
-            "is rate-influencing rather than merely permissive: plasma AGT sits near the Km "
-            "for renin, the hypertension-associated M235T variant acts by raising "
-            "angiotensinogen concentration rather than by changing its function, and graded "
-            "restoration of AGT in null mice produces graded restoration of angiotensin II "
-            "and blood pressure."
-        ),
-        reason=(
-            "Distinct from GO:0002003: maturation is the conversion process, whereas this term "
-            "is about setting how much product there is. Both are absent, both are supported "
-            "by the same bidirectional perturbation data, and the concentration-dependence is "
-            "the specific reason angiotensinogen is a therapeutic target in its own right. "
-            "Like the maturation row, it is coded IMP against the human loss-of-function "
-            "phenotype - patients with biallelic AGT mutations have an inactive "
-            "renin-angiotensin system - with the mouse knockout and AAV-rescue data and the "
-            "M235T concentration effect as corroboration rather than as the evidence of "
-            "record."
-        ),
-        supported_by=[
-            ("PMID:16116425",
-             "We propose that renal lesions and early anuria result from chronic low "
-             "perfusion pressure of the fetal kidney, a consequence of renin-angiotensin "
-             "system inactivity."),
-            Q_RESCUE, Q_RESCUE_BP,
-                      ("PMID:20927107",
-                       "This strengthens previous deductions5,6 that the predisposition to "
-                       "hypertension results from the small increase in concentration of the "
-                       "polymorphic angiotensinogen rather than a change in its function.")],
-    ),
+    # Deliberately empty.
+    #
+    # An earlier draft proposed GO:0002003 (angiotensin maturation) and
+    # GO:0002002 (regulation of angiotensin levels in blood) as pathway-
+    # completeness gaps, on the ground that every enzyme acting on
+    # angiotensinogen carries them and angiotensinogen itself does not.
+    # That reasoning was wrong; see AGT-notes.md, "Why angiotensinogen is
+    # absent from GO:0002003". In short:
+    #
+    #  * GO:0002003 is_a GO:0016486 peptide hormone processing, and so sits
+    #    under protein processing / proteolysis. It describes the cleaving,
+    #    which renin and ACE do and angiotensinogen does not.
+    #  * GO applies the same rule to every other prohormone: INS is absent
+    #    from GO:0030070 insulin processing, POMC and NPPA from GO:0016486,
+    #    APP from GO:0034205 amyloid-beta formation. Only the proteases and
+    #    the processing machinery are annotated.
+    #  * GO's own causal model of this pathway (GO-CAM 6246724f00000549,
+    #    "Renin-angiotensin pathway (Human)") puts REN and ACE in
+    #    GO:0002003 and puts AGT in GO:0005179 hormone activity /
+    #    GO:0002034 instead, with angiotensinogen additionally present as a
+    #    molecule, i.e. as the proteases' input. The absence is a modelling
+    #    decision, not an oversight.
+    #  * GO:0002003 is part_of GO:0002002, so the two proposed rows were
+    #    parent and child of one another in any case.
 ]
 
 # ---------------------------------------------------------------------------
@@ -2163,7 +2101,7 @@ REFERENCES = [
                 "The foundational loss-of-function evidence, cited by GOA for this gene "
                 "nowhere at all. Homozygous Agt-null mice have no plasma immunoreactive "
                 "angiotensin I and a systolic pressure of 66.9 mm Hg against 100.4 in "
-                "wild-type. Supports both NEW rows and the core blood-pressure functions. "
+                "wild-type. Supports the core blood-pressure functions. "
                 "Abstract only; the quantitative result is in the abstract."
             ),
         ),
@@ -2181,7 +2119,7 @@ REFERENCES = [
                 "hepatocyte-specific Agt-null mice gave equivalent plasma angiotensin II, "
                 "systolic blood pressure and atherosclerotic lesion size. Directly tests the "
                 "PMID:20927107 redox model in vivo and finds the disulfide dispensable. Also "
-                "the source of the gain-of-function direction for both NEW rows."
+                "the gain-of-function counterpart to the PMID:7989296 knockout."
             ),
         ),
     ),
@@ -2779,8 +2717,9 @@ CORE_FUNCTIONS = [
         ],
         molecular_function=dict(id="GO:0002020", label="protease binding"),
         directly_involved_in=[
-            dict(id="GO:0002003", label="angiotensin maturation"),
-            dict(id="GO:0002002", label="regulation of angiotensin levels in blood"),
+            dict(id="GO:0003081",
+                 label="regulation of systemic arterial blood pressure by "
+                       "renin-angiotensin"),
         ],
         locations=[dict(id="GO:0005576", label="extracellular region")],
     ),
@@ -2818,25 +2757,24 @@ CORE_FUNCTIONS = [
         ],
         locations=[dict(id="GO:0005576", label="extracellular region")],
     ),
+    # The two receptor-binding arms are kept as separate core functions rather than one
+    # entry generalised to GO:0031701: molecular_function is single-valued, and collapsing
+    # them would drop the AGTR2 limb, whose output is the opposite sign to AGTR1's.
     dict(
         description=(
-            "Receptor ligand for the two angiotensin receptors, with opposing outputs. The "
-            "released octapeptide binds AGTR1, the receptor through which the pressor, "
-            "aldosterone-releasing and growth-promoting actions run, and AGTR2, through which "
-            "it engages SHP-1, inhibits ERK and can promote apoptosis. UniProt records both "
-            "interactions on the peptide chains rather than on full-length angiotensinogen "
-            "(PRO_0000032458 with AGTR1, PRO_0000032459 with AGTR2), which is the correct "
-            "reading of what does the binding. Further processing generates "
-            "angiotensin-(1-7), which acts through MAS1 and opposes several angiotensin II "
-            "effects, so a single gene supplies ligands for both limbs of the system."
+            "Receptor ligand for AGTR1, the pressor limb of the system. The released "
+            "octapeptide binds the type 1 receptor with high affinity and couples it to "
+            "phospholipase C and inositol phosphate turnover, and it is through this receptor "
+            "that the vasoconstrictor, aldosterone-releasing and growth-promoting actions run. "
+            "UniProt records the interaction on the peptide chain rather than on full-length "
+            "angiotensinogen (PRO_0000032458 with AGTR1), which is the correct reading of what "
+            "does the binding."
         ),
         supported_by=[
             dict(reference_id=Q_AT1A[0], supporting_text=Q_AT1A[1]),
-            dict(reference_id=Q_AT2_APOP[0], supporting_text=Q_AT2_APOP[1]),
+            dict(reference_id=Q_AT1_CA[0], supporting_text=Q_AT1_CA[1]),
             dict(reference_id="file:human/AGT/AGT-uniprot.txt",
                  supporting_text="PRO_0000032458; P30556: AGTR1; NbExp=2"),
-            dict(reference_id="file:human/AGT/AGT-uniprot.txt",
-                 supporting_text="PRO_0000032459; P50052: AGTR2; NbExp=2"),
         ],
         molecular_function=dict(id="GO:0031702", label="type 1 angiotensin receptor binding"),
         directly_involved_in=[
@@ -2846,13 +2784,41 @@ CORE_FUNCTIONS = [
         ],
         locations=[dict(id="GO:0005576", label="extracellular region")],
     ),
+    dict(
+        description=(
+            "Receptor ligand for AGTR2, the limb that opposes the AGTR1 output. The same "
+            "octapeptide binds the type 2 receptor, which engages SHP-1 as its proximal "
+            "effector, inhibits ERK and can drive apoptosis - the opposite sign to the AGTR1 "
+            "arm, which is why the two binding functions are recorded separately rather than "
+            "collapsed into the common parent. UniProt again places the interaction on the "
+            "peptide chain (PRO_0000032459 with AGTR2) rather than on full-length "
+            "angiotensinogen. Further processing of the same precursor generates "
+            "angiotensin-(1-7), which acts through MAS1 and likewise opposes several "
+            "angiotensin II effects, so a single gene supplies the ligands for both limbs of "
+            "the system."
+        ),
+        supported_by=[
+            dict(reference_id=Q_AT2_APOP[0], supporting_text=Q_AT2_APOP[1]),
+            dict(reference_id=Q_AT2_SHP1[0], supporting_text=Q_AT2_SHP1[1]),
+            dict(reference_id="file:human/AGT/AGT-uniprot.txt",
+                 supporting_text="PRO_0000032459; P50052: AGTR2; NbExp=2"),
+        ],
+        molecular_function=dict(id="GO:0031703", label="type 2 angiotensin receptor binding"),
+        directly_involved_in=[
+            dict(id="GO:0038166", label="angiotensin-activated signaling pathway"),
+        ],
+        locations=[dict(id="GO:0005576", label="extracellular region")],
+    ),
 ]
 
 KNOWLEDGE_GAPS = [
     dict(
         gap_statement=(
-            "Whether the Cys42-Cys162 (mature Cys18-Cys138) redox switch has any "
-            "physiological role is unresolved, and the two decisive experiments disagree."
+            "Whether the Cys42-Cys162 redox switch has any physiological role is unresolved, "
+            "and the two decisive experiments disagree. The bridge is Cys18-Cys138 in human "
+            "mature numbering (UniProt DISULFID 42..162 on a chain beginning at residue 25) "
+            "and Cys18-Cys137 in the mouse, which is the numbering used by the knock-in study "
+            "below; the two names denote the same conserved bond."
         ),
         boundary=(
             "Firmly established: the disulfide exists and is the only cysteine pair conserved "
@@ -3024,6 +2990,18 @@ KNOWLEDGE_GAPS = [
 ]
 
 SUGGESTED_QUESTIONS = [
+    dict(question=(
+        "For the GO editorial office: is there a way to make a prohormone's substrate role "
+        "machine-readable without annotating the precursor to the processing term? "
+        "GO:0002003 angiotensin maturation is_a GO:0016486 peptide hormone processing and so "
+        "sits under proteolysis, which is why angiotensinogen is correctly absent from it - "
+        "and equally why INS is absent from GO:0030070, POMC, NPPA, GCG and PENK from "
+        "GO:0016486, and APP from GO:0034205. The GO-CAM for this pathway "
+        "(6246724f00000549) does capture it, as UniProtKB:P01019 molecule instances feeding "
+        "the REN and ACE activities, but nothing equivalent survives in the GAF. Would "
+        "has_input extensions on the proteases' GO:0002003 rows be the intended answer, or "
+        "is substrate-side representation deliberately out of scope for standard "
+        "annotation?")),
     dict(question=(
         "For the PAINT curators of PTHR11461: would an IRD at the angiotensinogen node block "
         "GO:0004867 the way the existing IRD at PTN002606963 blocks GO:0005576 for the "
