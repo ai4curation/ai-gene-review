@@ -312,6 +312,21 @@ def test_family_atom_uses_concrete_representatives():
     assert hbdh.uniprots == ("Q88IC6", "Q02338")
 
 
+@pytest.mark.parametrize("representative_label", ["Species B", "B"])
+def test_explicit_gene_symbol_takes_precedence_over_family_labels(representative_label):
+    """An explicit gene names the candidate; family members still supply accessions."""
+    annoton = _annoton("a", "A", "P1")
+    annoton["participant"]["family"] = {"representative_members": [
+        {"preferred_term": representative_label, "term": {"id": "UniProtKB:P2"}},
+    ]}
+    circuit = compile_module({"module": {"id": "step", "annotons": [annoton]}})
+    atom, = iter_atoms(circuit)
+    assert atom.gene_symbols == ("A",)
+    assert atom.uniprots == ("P1", "P2")
+    ab = abduce(circuit, lambda candidate: False, asserted_active=True)
+    assert ab.gap_candidates == {"a": ["A"]}
+
+
 def test_atom_is_hashable():
     # frozen dataclass -> usable in sets (a regression we want to keep)
     atoms = set(iter_atoms(compile_module(_toy_module())))
