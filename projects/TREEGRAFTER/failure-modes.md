@@ -6,7 +6,7 @@ autolink_gene_symbols: false
 
 [← back to TreeGrafter Inference Evaluation](../TREEGRAFTER.md)
 
-This sub-page drills into the **159 down-graded** TreeGrafter annotations
+This sub-page drills into the **306 down-graded** TreeGrafter annotations
 (`REMOVE` / `MARK_AS_OVER_ANNOTATED` / `MODIFY` from the
 [main evaluation](../TREEGRAFTER.md)) and asks the question directly: **does it
 make sense where TreeGrafter placed the protein on the PANTHER tree?**
@@ -21,8 +21,55 @@ recorded for every protein:
 
 The join (graft node + family + subfamily + propagated term + reviewer action)
 is computed by [`analyze_placement.py`](analyze_placement.py) into
-[`treegrafter_placement.tsv`](treegrafter_placement.tsv). All 159 cases recover
-a subfamily; 156 recover a graft node.
+[`treegrafter_placement.tsv`](treegrafter_placement.tsv). 305 of the 306 cases
+recover a subfamily; 303 recover a graft node.
+
+Every one of the 306 is then assigned to one of the four failure modes below
+by [`classify_failure_modes.py`](classify_failure_modes.py) →
+[`treegrafter_failure_modes.tsv`](treegrafter_failure_modes.tsv). The
+assignment has two layers: a per-row curated table,
+[`failure_mode_curated.tsv`](failure_mode_curated.tsv) (163 rows, each with a
+one-line justification), which always wins; and a keyword heuristic over the
+GO aspect and the reviewer's `review.reason` for the rest (134 rows). The
+operational rule that separates modes 1 and 4: **if the PANTHER *subfamily*
+name already describes the protein correctly and the bad term came from a
+higher node, it is mode 1; if the subfamily itself is the wrong enzyme, it is
+mode 4.**
+
+Both tables are joined on `(file, term_id)`, never on the gene symbol: symbols
+are not unique across the corpus (`mdh` in METEA and PSEPK, `ALB` in CANLF and
+FELCA, the two PSEPK `dapF` paralogs), and a symbol-keyed join silently pulled
+one organism's `review.reason` onto another's row.
+
+**Sixty-eight of the 134 heuristic rows are decided by construction rather than
+by reading the reviewer:** 61 cellular-component terms (mode 3 by aspect alone)
+and 7 rows whose term is on an explicit low-information binding allowlist
+(`binding`, `protein binding`, `identical protein binding`, `small molecule
+binding` — mode 3 whatever the reason says). Terms that name a real ligand
+(`ubiquinone binding`, `double-stranded DNA binding`, `metal ion binding`) are
+*not* on that list and are decided from the reviewer's reason like any other
+row. That leaves 66 rows genuinely placed by keyword, which is the tier the
+second-pass curation below should target.
+
+| Mode | annotations | share | proteins | MF | BP | CC |
+|---|---:|---:|---:|---:|---:|---:|
+| 1 Granularity (family / node-level or sibling term) | 143 | 47% | 109 | 73 | 70 | 0 |
+| 3 Generic / out-of-context localization, binding or process | 109 | 36% | 94 | 18 | 30 | 61 |
+| 4 Within-superfamily mis-placement | 41 | 13% | 27 | 26 | 14 | 1 |
+| 2 Pseudo-enzyme / co-opted fold | 4 | 1% | 2 | 1 | 3 | 0 |
+| 0 Unclassified (heuristic declines; curation queue) | 9 | 3% | 8 | 5 | 4 | 0 |
+
+The `proteins` column counts distinct **review files**, not gene symbols: the
+898-row corpus spans 510 files but only 493 symbols, so a symbol-keyed count
+merges the two `mdh` proteins, the two `ALB` proteins and eight other
+cross-organism or paralogous symbol collisions. Counted by symbol, modes 3 and
+4 read 92 and 26.
+
+The 9 unclassified rows are deliberate: the reviewer's reason states a real
+problem but not in words the heuristic can safely map to a mode (`acoA`,
+`benB`, `davA`, `groES`, `nuoM`, `PP_0094`, `I7J3R9`, `NCGR_LOCUS1270` ×2).
+They are listed as mode 0 rather than pushed into the nearest bucket, and they
+are the next rows to hand-curate.
 
 ## Headline: placement is usually fine — the *term* is the problem
 
@@ -59,17 +106,26 @@ co-opted to a non-enzymatic role — something a tree graft cannot detect.
 
 | Gene | Propagated term | Subfamily | Reality |
 |---|---|---|---|
-| OCTS1 | `glutathione transferase activity` (OVER) | GLUTATHIONE S-TRANSFERASE | Octopus **S-crystallin**: GST fold, ~1/700–1/6000 of authentic GST activity; a structural eye-lens protein (PMID:7639695, PMID:27499004, PMID:8587103) |
-| TFP | `enzyme regulator activity` (MODIFY) | EPITHIOSPECIFIER PROTEIN | — |
-| IRE1 (T. reesei) | `unfolded protein binding` (OVER) | NON-SPECIFIC SER/THR KINASE | UPR sensor kinase/RNase, not a general chaperone |
+| OCTS1 | `glutathione transferase activity`, `glutathione metabolic process` (OVER) | GLUTATHIONE S-TRANSFERASE | Octopus **S-crystallin**: GST fold, ~1/700–1/6000 of authentic GST activity; a structural eye-lens protein (PMID:7639695, PMID:27499004, PMID:8587103) |
+| A0A8B6GS20 (MTMR9) | `phosphatidylinositol dephosphorylation` (MODIFY), `negative regulation of autophagy` (OVER) | myotubularin-related | **Pseudophosphatase**: lacks the catalytic cysteine; regulates active MTMR partners |
+
+Genuine pseudo-enzymes turn out to be **rare** in this corpus — four
+annotations on two genes. Two cases listed here on the earlier snapshot have
+been re-filed: TFP's `enzyme regulator activity` is an *outdated node term*
+(specifier proteins are now known to be Fe(II)-dependent C–S lyases; mode 1),
+and IRE1's `unfolded protein binding` is a generic/obsolete binding term on a
+sensor (mode 3).
 
 ### 3. Generic / out-of-context localization and process
 
 Low-information CC terms (`cytoplasm`, `cytosol`, `plasma membrane`, `nucleus`)
 or organism-context BP terms inherited from a distant ancestor, correct-ish but
 non-core or absent from the host. Examples: `relA` → `plasma membrane`, `dinB`
-→ `cytosol`, `zwf` → `pentose-phosphate shunt`, several *Pseudomonas putida*
-genes, and the `mcr` LPS-core process call above.
+→ `cytosol`, `fbp` → `sucrose biosynthetic process` (a pathway the host does
+not run), and several *Pseudomonas putida* genes. Note that `zwf` →
+`pentose-phosphate shunt` and the `mcr` LPS-core process call are **mode 1**,
+not mode 3 — both reasons state family/node-level propagation explicitly, and
+they appear in the mode-1 table above.
 
 ### 4. **True within-superfamily mis-placement** (the cases a re-run would change)
 
@@ -80,8 +136,27 @@ bioinformatic/structural check) would change the call.
 
 | Gene | Propagated term (down-graded) | Landed in subfamily | Should be |
 |---|---|---|---|
-| **aprA** (*Desulfovibrio*) | `succinate dehydrogenase activity` (REMOVE), `electron transfer activity`, `anaerobic respiration` | SUCCINATE DEHYDROGENASE [UBIQUINONE] FLAVOPROTEIN (PTHR11632:SF51) | **Adenylylsulfate (APS) reductase** α-subunit — shares the FAD fumarate-reductase/SDH flavoprotein fold but reduces APS, not succinate |
+| **aprA** (*Desulfovibrio*) | `succinate dehydrogenase activity` (REMOVE), `electron transfer activity` (its `anaerobic respiration` row is mode 1 — granularity, not mis-placement) | SUCCINATE DEHYDROGENASE [UBIQUINONE] FLAVOPROTEIN (PTHR11632:SF51) | **Adenylylsulfate (APS) reductase** α-subunit — shares the FAD fumarate-reductase/SDH flavoprotein fold but reduces APS, not succinate |
 | **fcs** (*P. putida*) | `medium-chain fatty acid-CoA ligase activity` (MODIFY), `fatty acid metabolic process` | 2-SUCCINYLBENZOATE–CoA LIGASE | **Feruloyl-CoA synthetase** — adjacent ANL adenylating-enzyme superfamily, wrong specific subfamily |
+| **mdh** (*P. putida* and *M. extorquens*, ×2 each) | `L-lactate dehydrogenase (NAD+) activity`, `lactate metabolic process` (REMOVE) | L-LACTATE DEHYDROGENASE (PTHR43128:**SF16**; the *family* PTHR43128 is `L-2-HYDROXYCARBOXYLATE DEHYDROGENASE (NAD(P)(+))`) | **Malate dehydrogenase** — LDH/MDH superfamily node |
+| **mqo1 / mqo2 / mqo3** | `(S)-2-hydroxyglutarate dehydrogenase activity` (REMOVE) | L-2-HYDROXYGLUTARATE DEHYDROGENASE, MITOCHONDRIAL | **Malate:quinone oxidoreductase** |
+| **dapE**, **pepV** | `acetylornithine deacetylase activity`, `L-arginine biosynthetic process` (REMOVE) | N-ACETYL-L-CITRULLINE DEACETYLASE (PTHR43808, M20A) | **DapE** succinyl-DAP desuccinylase / **PepV** dipeptidase — ArgE branch of a mixed M20A family |
+| **Q53353, lsdB, Saro_0802, Saro_2809** | `carotenoid dioxygenase activity`, `carotene catabolic process` (REMOVE/MODIFY) | CAROTENOID 9,10(9',10')-CLEAVAGE DIOXYGENASE (PTHR10543) | **Lignostilbene / resveratrol dioxygenases** (EC 1.13.11.43) — no stilbene subfamily exists |
+| **ptxD** | `glyoxylate reductase (NADPH)`, `hydroxypyruvate reductase` (REMOVE) | GLYOXYLATE/HYDROXYPYRUVATE REDUCTASE B | **Phosphonate dehydrogenase** (D-2-hydroxyacid DH superfamily) |
+| **mupP** | `phosphoglycolate phosphatase activity`, `DNA repair` (REMOVE) | PHOSPHOGLYCOLATE PHOSPHATASE (PTHR43434) | **MurNAc-6-phosphate phosphatase** (HAD superfamily) |
+| **quiA** | `quinoprotein glucose dehydrogenase activity` (OVER) | QUINOPROTEIN GLUCOSE DEHYDROGENASE | **Quinate dehydrogenase (quinone)** |
+| **kdsC**, **lytN**, **ADAR2**, **pvdD**, **davD**, **lpdV**, **ech**, **galB**, **mdr**, **PP_1257**, **K9IMD0** | see [`treegrafter_failure_modes.tsv`](treegrafter_failure_modes.tsv) | | KdsC in a mixed CMAS/KdsC family; an amidase in a lytic-transglycosylase subfamily; ADAR on the ADAT branch; a pyoverdine NRPS module carrying EntF terms; LPD-val vs LPD-glc across *P. putida* E3 paralogs; … |
+
+Mis-placements are **13% of the down-grades (41 annotations, 27 proteins)** —
+still the minority. This share was previously reported as 19% (58 annotations)
+from a looser heuristic that filed any reason containing `paralog` or `rather
+than` as mode 4; reasons that explicitly say *family-level propagation*
+(`zwf`, `scpC`, `paaF`/`paaH`/`paaJ`, the four `aroQ` rows) now correctly land
+in mode 1, which is what the operational rule above says they are.
+Almost all of them are the *same* pattern: a **mixed PANTHER family whose
+subfamilies are labelled by the best-studied member**, so an uncharacterised
+paralog in a different substrate class inherits that member's terms
+(LDH/MDH, M20A, CCD/stilbene dioxygenase, SDH/FRD/AprA, PDH/AcoA).
 
 ## Lightweight graft check (PANTHER vs InterPro, no re-run)
 
@@ -118,7 +193,7 @@ To test the graft-check conclusions independently, each propagated term was
 re-posed to OpenScientist as a **blinded** function-assignment hypothesis — the
 agent saw only *"GENE has \<propagated term\>"* (never the reviewer's action or
 the PANTHER subfamily name) using the dedicated
-[`treegrafter_function_hypothesis.md`](../../templates/treegrafter_function_hypothesis.md)
+[`treegrafter_function_hypothesis.md`](https://github.com/ai4curation/ai-gene-review/blob/main/templates/treegrafter_function_hypothesis.md)
 prompt, which asks it to actively test the three failure modes. Reports and
 provenance are committed under each gene's `*-hypotheses/` directory.
 
@@ -194,20 +269,30 @@ PAINT.
 
 ## What this means for the "re-run TreeGrafter" question
 
-For the **bulk** of failures (modes 1–3, ~90% of the down-grades), re-running
-TreeGrafter would reproduce the *same, sensible* placement — the fix belongs at
-the **annotation** level (propagate the subfamily-specific term, gate
-catalysis-implying MF behind active-site checks, suppress generic CC), not at
-the placement level. For the **handful** in mode 4 (`aprA`, `fcs`, candidate
-`tyrB`), the placement itself is the suspect, and an independent check — a
-TreeGrafter re-run inspecting the graft branch, or a structural/active-site
-analysis via OpenScientist — would be decisive.
+For the **bulk** of failures (modes 1–3, **84%** of the down-grades),
+re-running TreeGrafter would reproduce the *same, sensible* placement — the fix
+belongs at the **annotation** level (propagate the subfamily-specific term,
+gate catalysis-implying MF behind active-site checks, suppress generic CC), not
+at the placement level. For the **13%** in mode 4 (`aprA`, `fcs`, `mdh`,
+`mqo1–3`, `dapE`/`pepV`, the stilbene dioxygenases, …), the placement itself is
+the suspect — and because they cluster in a dozen mixed families (see the
+[family hotspots](../TREEGRAFTER.md#family-hotspots-upstream-targets)), the
+durable fix is a subfamily split or subfamily-level annotation in PAINT rather
+than a per-protein re-run.
+
+The main page's [corroboration analysis](../TREEGRAFTER.md#corroboration-treegrafter-only-vs-multi-method-vs-interpro2go-only)
+adds the operational lever: every annotation on this page is by construction an
+*uncorroborated* TreeGrafter call (`GO_REF:0000118`); the TreeGrafter calls
+that another pipeline reproduced surface under `GO_REF:0000120` and are
+accepted 77% of the time.
 
 ## Suggested follow-ups
 
 - ✅ **Blinded OpenScientist deep-dives** on the exemplars (done — see above);
   the agent refuted every completed case and recovered the correct function and
   failure mode without being told the answer.
+- ✅ **Classify every down-grade** (done — `classify_failure_modes.py`; 163 of
+  306 rows hand-curated). Remaining: second-pass the ~80 heuristic MF/BP rows.
 - **Scale the blinded check** as a routine QC pass over `GO_REF:0000118`
   annotations — the per-gene runs reliably flag exactly the failures TreeGrafter
   produces. The `treegrafter_function_hypothesis.md` prompt is the reusable
