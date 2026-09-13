@@ -6,6 +6,8 @@ oak_config := "conf/oak_config.yaml"
 ref_validator_config := "conf/reference_validator_config.yaml"
 term_validator := "scripts/run_term_validator.sh"
 ref_validator := "scripts/run_reference_validator.sh"
+history_schema_path := "src/ai_gene_review/schema/history.yaml"
+history_dir := "history"
 
 all: validate-all test
 
@@ -952,6 +954,14 @@ audit-fulltext-flags *args="":
 validate-references file:
     {{ref_validator}} validate data {{file}} --schema {{schema_path}} --target-class GeneReview --config {{ref_validator_config}}
 
+# Schema and source-evidence validation for external prediction review sidecars.
+# Missing publication caches are fetched; unavailable sources fail rather than
+# silently certifying an unchecked quotation. Caches remain regenerable context.
+[group('QC')]
+validate-predictions +files:
+    uv run linkml-validate --schema {{schema_path}} --target-class PredictionReview {{files}}
+    uv run python -m ai_gene_review.validation.prediction_evidence --fetch --require-excerpts --report reports/prediction-evidence.json {{files}}
+
 # Reference validation for all gene review files
 [group('QC')]
 validate-references-all:
@@ -1196,15 +1206,15 @@ validate-all:
 
 # Compliance report for recommended fields (separate from validation-all.tsv)
 compliance-all:
-    @echo "Analyzing recommended-field compliance..."
+    @echo "Analyzing evidence-aware compliance..."
     @mkdir -p reports
-    uv run ai-gene-review compliance --tsv-output reports/compliance-all.tsv "genes/*/*/*-ai-review.yaml"
+    uv run ai-gene-review compliance --config conf/qc_config.yaml --tsv-output reports/compliance-all.tsv --summary-output reports/compliance-summary.tsv "genes/*/*/*-ai-review.yaml"
 
 # Compliance report with HTML dashboard (linkml-data-qc)
 compliance-dashboard:
     @echo "Generating compliance dashboard..."
     @mkdir -p reports/compliance-dashboard
-    uv run linkml-data-qc --schema src/ai_gene_review/schema/gene_review.yaml --target-class GeneReview --dashboard-dir reports/compliance-dashboard genes --pattern "**/*-ai-review.yaml"
+    uv run ai-gene-review compliance --config conf/qc_config.yaml --tsv-output reports/compliance-all.tsv --summary-output reports/compliance-summary.tsv --dashboard-dir reports/compliance-dashboard "genes/*/*/*-ai-review.yaml"
 
 # Validate all gene review files (summary only, no details)
 validate-all-summary:
@@ -1496,6 +1506,14 @@ render-organism organism:
 # Render all gene reviews as HTML
 render-all:
     uv run python -m ai_gene_review.render --all genes/
+
+# Assemble the already-rendered public site without changing the active Pages source.
+# This transitional artifact preserves the URLs currently served from main:/.
+stage-pages:
+    uv run python -m ai_gene_review.tools.stage_pages --manifest _site-manifest.json
+
+# Build the complete disposable publication tree used by the Pages migration.
+build-pages: render-all render-projects validate-modules render-modules deploy-browser stage-pages
 
 # Render prediction evaluation table from *-predictions-review.yaml files
 render-prediction-eval pattern='genes/*/*/*-protnlm-predictions-review.yaml' output='pages/projects/PROTNLM_EVALUATION/protnlm-eval.html' title='ProtNLM-50 Prediction Evaluation':
@@ -2767,6 +2785,58 @@ scan-prose-panther *args="":
 [group('QC')]
 panther-report-stats *args="":
     uv run ai-gene-review panther-report-stats --output-dir . {{args}}
+
+# ============ History records (ported from dismech) ============
+# Append-only curation session history under history/. See docs/history.md.
+
+# Scaffold a new append-only history record (pass-through to scripts/new_history.py).
+# Run `just new-history --help` for all options. Prints the created path.
+# Example:
+#   just new-history --kind gene --organism human --slug CFAP300 --event CREATE \
+#     --outcome changed --summary "Create review: CFAP300" --agent-tool claude-code \
+#     --pr 2500 --details "..."
+# `[positional-arguments]` + "$@" is required, not stylistic: interpolating
+# {{ARGS}} joins the variadic args into one space-separated string and loses
+# shell quoting, so a multi-word --summary/--details would reach argparse as
+# separate tokens ("unrecognized arguments").
+[group('QC')]
+[positional-arguments]
+new-history *ARGS:
+    uv run python scripts/new_history.py "$@"
+
+# Validate a single history record
+[group('QC')]
+validate-history file:
+    uv run linkml-validate --schema {{history_schema_path}} --target-class HistoryRecord {{file}}
+
+# Validate all history records
+[group('QC')]
+validate-history-all:
+    #!/usr/bin/env bash
+    set -e
+    if [[ ! -d "{{history_dir}}" ]]; then
+        echo "No history directory found."
+        exit 0
+    fi
+    files=()
+    while IFS= read -r f; do
+        files+=("$f")
+    done < <(find "{{history_dir}}" -type f -name '*.yaml' | sort)
+    if [ ${#files[@]} -eq 0 ]; then
+        echo "No history YAML files found in {{history_dir}}."
+        exit 0
+    fi
+    printf 'Validating %s history record(s).\n' "${#files[@]}"
+    uv run linkml-validate --schema {{history_schema_path}} --target-class HistoryRecord "${files[@]}"
+
+# Retrospectively backfill history records from PR metadata (needs `gh`).
+# Prefer --state merged: an open PR's new targets are not on this checkout,
+# so its records get skipped as missing (see docs/history.md).
+# Example: just backfill-history --state merged --dry-run
+[group('QC')]
+[positional-arguments]
+backfill-history *ARGS:
+    uv run python scripts/backfill_history_from_prs.py "$@"
 
 # ============== PANTHER Family Reviews ==============
 

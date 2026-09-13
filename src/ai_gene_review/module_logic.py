@@ -63,6 +63,24 @@ class Atom:
     label: str
     gene_symbol: Optional[str]
     uniprot: Optional[str]
+    representative_gene_symbols: tuple[str, ...] = ()
+    representative_uniprots: tuple[str, ...] = ()
+
+    @property
+    def gene_symbols(self) -> tuple[str, ...]:
+        """Return every concrete symbol available for this step."""
+        return tuple(dict.fromkeys(
+            ([self.gene_symbol] if self.gene_symbol else [])
+            + list(self.representative_gene_symbols)
+        ))
+
+    @property
+    def uniprots(self) -> tuple[str, ...]:
+        """Return every concrete UniProt accession available for this step."""
+        return tuple(dict.fromkeys(
+            ([self.uniprot] if self.uniprot else [])
+            + list(self.representative_uniprots)
+        ))
 
     def __repr__(self) -> str:  # pragma: no cover - cosmetic
         return f"Atom({self.gene_symbol or self.node_id})"
@@ -114,12 +132,26 @@ def _uniprot_from_gene(gene: dict) -> Optional[str]:
 
 def _atom_from_annoton(annoton: dict) -> Atom:
     """Build an :class:`Atom` from an annoton dict."""
-    gene = (annoton.get("participant") or {}).get("gene") or {}
+    participant = annoton.get("participant") or {}
+    gene = participant.get("gene") or {}
+    representatives = ((participant.get("family") or {}).get("representative_members") or [])
+    representative_symbols = tuple(
+        symbol for member in representatives
+        if (symbol := _symbol_from_gene(member))
+    )
+    representative_uniprots = tuple(
+        accession for member in representatives
+        if (accession := _uniprot_from_gene(member))
+    )
+    gene_symbol = _symbol_from_gene(gene)
+    uniprot = _uniprot_from_gene(gene)
     return Atom(
         node_id=annoton.get("id", "?"),
         label=annoton.get("label", annoton.get("id", "?")),
-        gene_symbol=_symbol_from_gene(gene),
-        uniprot=_uniprot_from_gene(gene),
+        gene_symbol=gene_symbol or (representative_symbols[0] if representative_symbols else None),
+        uniprot=uniprot or (representative_uniprots[0] if representative_uniprots else None),
+        representative_gene_symbols=representative_symbols,
+        representative_uniprots=representative_uniprots,
     )
 
 
@@ -293,7 +325,7 @@ def abduce(circuit: Circuit, holds: Predicate, asserted_active: bool) -> Abducti
     sat = is_satisfied(circuit, holds)
     gaps = unsatisfied_steps(circuit, holds)
     gap_ids = [step_id(s) for s in gaps]
-    gap_candidates = {step_id(s): sorted({a.gene_symbol for a in iter_atoms(s) if a.gene_symbol})
+    gap_candidates = {step_id(s): sorted({symbol for a in iter_atoms(s) for symbol in a.gene_symbols})
                       for s in gaps}
     if sat and asserted_active:
         return Abduction("CONSISTENT_ACTIVE", True, True, True, gap_ids, gap_candidates, [])
@@ -325,4 +357,3 @@ def unsatisfied_steps(circuit: Circuit, holds: Predicate) -> list[Circuit]:
     if isinstance(circuit, And):
         return [c for c in circuit.children if not is_satisfied(c, holds)]
     return [] if is_satisfied(circuit, holds) else [circuit]
-
