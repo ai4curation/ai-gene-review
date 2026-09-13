@@ -11,7 +11,7 @@ This supplement documents analyses that are useful for reproducibility but are n
 
 The main RL benchmark is ARGO139, a fixed 139-gene set listed in `../genes.csv`. The main SFT term benchmark is ARGO95, the 95-gene ARGO139 subset present in the HuggingFace `wanglab/protein_catalogue` SFT download.
 
-ARGO139 uses agent-adjudicated local AIGR references, not independently expert-signed ground truth: as of the current refresh, 78 are `COMPLETE`, 46 `DRAFT`, 11 `IN_PROGRESS`, and 4 `INITIALIZED`. The RL performance set excludes the wrong-input `csr-1` export (n=138) and separately flags seven retained exports truncated at the 2,000-residue model limit.
+ARGO139 uses agent-adjudicated local AIGR references, not independently expert-signed ground truth: as of the current refresh, 79 are `COMPLETE`, 45 `DRAFT`, 11 `IN_PROGRESS`, and 4 `INITIALIZED`. The RL performance set excludes the wrong-input `csr-1` export (n=138) and separately flags seven retained exports truncated at the 2,000-residue model limit.
 
 **Table S1.** Cohorts emitted by `write_benchmark_sidecars.py`.
 
@@ -34,7 +34,7 @@ The key availability issue is simple: the HuggingFace `wanglab/protein_catalogue
 
 | Benchmark | Genes | Terms | CNN | NPI | PLI | COR | LSP | REP | UNC |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| ARGO95 (HF catalogue) | 95 | 955 | 681 (71.3%) | 115 (12.0%) | 5 (0.5%) | 23 (2.4%) | 43 (4.5%) | 29 (3.0%) | 59 (6.2%) |
+| ARGO95 (HF catalogue) | 95 | 955 | 682 (71.4%) | 113 (11.8%) | 5 (0.5%) | 23 (2.4%) | 43 (4.5%) | 29 (3.0%) | 60 (6.3%) |
 
 For comparison, the mixed-source ARGO139 view is retained as a source-diagnostic table, not as a primary SFT benchmark.
 
@@ -42,9 +42,9 @@ For comparison, the mixed-source ARGO139 view is retained as a source-diagnostic
 
 | Source | Genes | Terms | CNN | NPI | PLI | COR | LSP | REP | UNC |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| HF catalogue / ARGO95 | 95 | 955 | 681 (71.3%) | 115 (12.0%) | 5 (0.5%) | 23 (2.4%) | 43 (4.5%) | 29 (3.0%) | 59 (6.2%) |
+| HF catalogue / ARGO95 | 95 | 955 | 682 (71.4%) | 113 (11.8%) | 5 (0.5%) | 23 (2.4%) | 43 (4.5%) | 29 (3.0%) | 60 (6.3%) |
 | Web export | 44 | 9,742 | 2,321 (23.8%) | 42 (0.4%) | 0 (0.0%) | 7 (0.1%) | 388 (4.0%) | 1 (0.0%) | 6,983 (71.7%) |
-| Mixed-source ARGO139 total | 139 | 10,697 | 3,002 (28.1%) | 157 (1.5%) | 5 (0.0%) | 30 (0.3%) | 431 (4.0%) | 30 (0.3%) | 7,042 (65.8%) |
+| Mixed-source ARGO139 total | 139 | 10,697 | 3,003 (28.1%) | 155 (1.4%) | 5 (0.0%) | 30 (0.3%) | 431 (4.0%) | 30 (0.3%) | 7,043 (65.8%) |
 
 The DnaK comprehensive review moved zinc ion binding (`GO:0008270`) from
 `NPI` to `CNN`: PMID:11985624 directly identifies DnaK in a radioactive
@@ -66,9 +66,9 @@ The all-HF view is still useful as the broadest single-source HF view, but it is
 
 | Assessment | Count | % |
 |---|---:|---:|
-| CNN | 920 | 67.7 |
-| NPI | 169 | 12.4 |
-| UNC | 145 | 10.7 |
+| CNN | 921 | 67.8 |
+| NPI | 167 | 12.3 |
+| UNC | 146 | 10.8 |
 | LSP | 56 | 4.1 |
 | COR | 30 | 2.2 |
 | REP | 33 | 2.4 |
@@ -80,10 +80,10 @@ The all-source union is the broadest source-availability view, but it combines A
 
 | Assessment | Count | % |
 |---|---:|---:|
-| UNC | 7,128 | 64.2 |
-| CNN | 3,241 | 29.2 |
+| UNC | 7,129 | 64.2 |
+| CNN | 3,242 | 29.2 |
 | LSP | 444 | 4.0 |
-| NPI | 211 | 1.9 |
+| NPI | 209 | 1.9 |
 | COR | 37 | 0.3 |
 | REP | 34 | 0.3 |
 | PLI | 5 | 0.0 |
@@ -96,13 +96,15 @@ We computed a retrospective CAFA-style agreement score for ARGO95 SFT GO-term pr
 
 | Source | Genes | Scored direct predictions | Direct GOA terms | Precision | Recall | F1 |
 |---|---:|---:|---:|---:|---:|---:|
-| ARGO95 / HF catalogue | 95 | 952 | 2,382 | 0.865 | 0.479 | 0.617 |
+| ARGO95 / HF catalogue | 95 | 952 | 2,369 | 0.862 | 0.479 | 0.615 |
 | Web export | 44 | 9,730 | 3,885 | 0.780 | 0.533 | 0.633 |
-| Mixed-source ARGO139 total | 139 | 10,682 | 6,267 | 0.810 | 0.511 | 0.627 |
+| Mixed-source ARGO139 total | 139 | 10,682 | 6,254 | 0.809 | 0.511 | 0.626 |
 
-The score shows why aggregate GOA agreement is useful but incomplete. In the HF catalogue subset, 50/149 terms classified by AI-AUGR as NPI, PLI, or REP are exact matches to current GOA, and 121/149 have propagated overlap with current GOA. A GOA-agreement metric would reward some of these predictions despite evidence-grounded review classifying them as wrong or frequency-biased.
+The score shows why aggregate GOA agreement is useful but incomplete. In the HF catalogue subset, 47/147 terms classified by AI-AUGR as NPI, PLI, or REP are exact matches to current GOA, and 119/147 have propagated overlap with current GOA. A GOA-agreement metric would reward some of these predictions despite evidence-grounded review classifying them as wrong or frequency-biased.
 
 ![CAFA-style propagated F1 by aspect for ARGO95 SFT terms, with mixed-source diagnostics.](figures/cafa_style_argo139_sft.png)
+
+This diagnostic uses current local GOA, whereas the primary non-novelty counts use the frozen baseline. Consequently, 630 CNN terms are exact current-GOA matches here, compared with 635 exact frozen-GOA matches in the primary benchmark. Regeneration incorporates GOA refreshes already present in the repository as well as assessment changes.
 
 Full derived tables are in `../cafa-style/`.
 
@@ -116,7 +118,7 @@ A second rater scored 20 RL Functional Summaries without access to the first-rat
 
 ## S6. GO-GPT reviews
 
-The ARGO139 web-export leaf review is explicitly pending rather than a completed benchmark. Ontology-aware rebuilding retained 5,923 terms: 1,896 `CNN`, 125 `NPI`, 3 `LSP`, and 3,899 `UNC`. Accordingly, 137 documents are `DRAFT`; the fully resolved `BACSU/ftsZ` and manually reviewed `SCHPO/ral2` files are `COMPLETE`.
+The ARGO139 web-export leaf review is explicitly pending rather than a completed benchmark. Ontology-aware rebuilding retained 5,923 terms: 1,897 `CNN`, 124 `NPI`, 3 `LSP`, and 3,899 `UNC`. Accordingly, 137 documents are `DRAFT`; the fully resolved `BACSU/ftsZ` and manually reviewed `SCHPO/ral2` files are `COMPLETE`.
 
 A distinct supplemental analysis, `supplement_gogpt_overlap_300`, contains 8,871 GO-GPT predictions across 299 canonical genes. The historical cohort identifier is retained for continuity; the count fell from 300 after the duplicate `ARATH/Q9XIR4` alias for `ARATH/APO1` was removed. It is not the pending 5,923-term ARGO139 leaf set above and is not a paired ARGO139 BioReason-Pro result. This separate overlap analysis remains useful for showing how much apparent agreement changes when the reference set moves from raw GOA to AIGR core biology.
 
@@ -125,8 +127,8 @@ A distinct supplemental analysis, `supplement_gogpt_overlap_300`, contains 8,871
 | Reference level | Terms in reference | Predictions overlapping | % of 8,871 predictions |
 |---|---:|---:|---:|
 | Raw GOA | 2,954 | 1,035 | 11.7 |
-| Retained/replacement/proposed-new AIGR annotations | 2,761 | 849 | 9.6 |
-| All GO-valued AIGR core-function slots | 1,230 | 350 | 3.9 |
+| Retained/replacement/proposed-new AIGR annotations | 2,760 | 848 | 9.6 |
+| All GO-valued AIGR core-function slots | 1,233 | 351 | 4.0 |
 
 The core-function comparison includes HdeB's GO:0051082 match as an explicitly
 interim representation of in-situ holdase activity pending creation of the general
@@ -162,13 +164,31 @@ by these curation-only updates. SlyD is the exception: its committed GOA snapsho
 refetched, removing exact matches to obsolete `GO:0051082` and the active broad parents
 `GO:0016853` and `GO:0046872`. This reduced the raw and post-review reference totals and
 overlaps by three, while its term-less holdase core reduced the GO-valued core total and
-overlap by one. Thus the recorded denominator changes combine upstream reference
-curation with one explicit committed-snapshot refresh; the GO-GPT prediction set itself
+overlap by one. The CnoX comprehensive review likewise refetched its committed GOA
+snapshot, removing obsolete `GO:0051082` and two stale process rows, which reduced the
+raw reference total by three and the exact overlaps by two; its completed review added
+evidence-backed `GO:0009408` to the post-review set and dropped general redox homeostasis
+from the core, leaving `GO:0051087` as an evidence-backed core activity that GO-GPT did
+not predict.
+`BACSU/lipA` then followed the obsoletion of `GO:0009107`: both lipoate
+biosynthesis rows now resolve to the replacement `GO:0009249`, which the review already
+carried, so the post-review reference total fell by one distinct term, and the
+core-function slot keyed on the obsolete term was dropped, reducing the GO-valued core
+total by one. Neither exact-overlap count moved, because `GO:0009107` was never in the
+GO-GPT prediction set.
+
+Most recently, the `ARATH/AT1G06680` (PSBP1) re-review synthesized a core_functions
+block for the first time, adding four GO-valued core slots of which one
+(`GO:0019684`) is a predicted overlap, and stopped retaining `GO:0009535`
+post-review in favour of the narrower thylakoid-lumen term, dropping one predicted
+post-review overlap without changing the post-review total. Thus the recorded
+denominator changes combine upstream reference
+curation with two explicit committed-snapshot refreshes; the GO-GPT prediction set itself
 did not change.
 
 ![GO-GPT prediction overlap at three reference levels.](figures/three_level_overlap.png)
 
-GO-GPT emitted 8,871 predictions across 299 canonical genes (mean 29.7 per gene). Raw GOA agreement was 11.7%; exact agreement with all GO-valued AIGR core-function slots was 3.9%. The post-review layer retains `ACCEPT`, `KEEP_AS_NON_CORE`, `UNDECIDED`, and pending annotations, includes proposed annotations marked `NEW` (including annotations supported by nonexperimental evidence such as NAS or IEA), substitutes proposed replacements for `MODIFY`, excludes negated and rejected annotations, and unions in the core-function terms. Four of the 10 additional exact matches introduced by including `NEW` are broad localization terms (`GO:0016020` twice, `GO:0005829`, and `GO:0005576`), so the 9.6% agreement rate should not be read as independent experimental validation. This is a useful illustration of the CAFA-style scoring gap, but it is not used as a main BioReason-Pro benchmark result.
+GO-GPT emitted 8,871 predictions across 299 canonical genes (mean 29.7 per gene). Raw GOA agreement was 11.7%; exact agreement with all GO-valued AIGR core-function slots was 4.0%. The post-review layer retains `ACCEPT`, `KEEP_AS_NON_CORE`, `UNDECIDED`, and pending annotations, includes proposed annotations marked `NEW` (including annotations supported by nonexperimental evidence such as NAS or IEA), substitutes proposed replacements for `MODIFY`, excludes negated and rejected annotations, and unions in the core-function terms. Four of the 10 additional exact matches introduced by including `NEW` are broad localization terms (`GO:0016020` twice, `GO:0005829`, and `GO:0005576`), so the 9.6% agreement rate should not be read as independent experimental validation. This is a useful illustration of the CAFA-style scoring gap, but it is not used as a main BioReason-Pro benchmark result.
 
 ## S7. Reproducibility files
 

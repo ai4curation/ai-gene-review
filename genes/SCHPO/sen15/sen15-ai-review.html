@@ -1,0 +1,2638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>sen15 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>sen15</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q7LKV3" target="_blank" class="term-link">
+                        Q7LKV3
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Schizosaccharomyces pombe (strain 972 / ATCC 24843)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "sen15";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">8</span> Annotations</a>
+
+
+
+        <a href="#review-research" title="Deep research and hypothesis research reports"><span class="nav-count">1</span> Research</a>
+
+
+
+        <a href="#external-predictions" title="External predictions assessed separately from GOA annotations" class="nav-external"><span class="nav-count">1</span> External</a>
+
+
+
+        <a href="#review-core-functions" title="Core biological functions"><span class="nav-count">1</span> Core Function</a>
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">4</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">1</span> Documents</a>
+
+
+
+
+
+
+
+
+
+
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q7LKV3" data-a="DESCRIPTION: Sen15 is a small, conserved noncatalytic subunit o..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Sen15 is a small, conserved noncatalytic subunit of the heterotetrameric tRNA-splicing endonuclease complex. Together with Sen2, Sen34 and Sen54 it supports recognition and excision of introns from precursor tRNAs before the cleaved exons are ligated. The catalytic splice-site cleavage centers reside in Sen2 and Sen34. Nuclear and cytosolic pools have been reported in fission yeast localization screens.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000214" target="_blank" class="term-link">
+                                    GO:0000214
+                                </a>
+                            </span>
+                            <span class="term-label">tRNA-intron endonuclease complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7LKV3" data-a="GO:0000214" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> tRNA-intron endonuclease complex is supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target is a SEN15-family protein, supporting transfer of the characterized four-subunit tRNA-splicing endonuclease role. SEN2 and SEN34 encode the cleavage active sites; Sen15 is a noncatalytic participant in intron recognition/excision. Participation in the overall cleavage-and-ligation pathway does not assert that Sen15 ligates RNA.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9200603" target="_blank" class="term-link">
+                                        PMID:9200603
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Our results demonstrate that the eucaryal tRNA splicing endonuclease contains two functionally independent active sites for cleavage of the 5&#39; and 3&#39; splice sites, encoded by SEN2 and SEN34, respectively.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000214" target="_blank" class="term-link">
+                                    GO:0000214
+                                </a>
+                            </span>
+                            <span class="term-label">tRNA-intron endonuclease complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7LKV3" data-a="GO:0000214" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> tRNA-intron endonuclease complex is supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target is a SEN15-family protein, supporting transfer of the characterized four-subunit tRNA-splicing endonuclease role. SEN2 and SEN34 encode the cleavage active sites; Sen15 is a noncatalytic participant in intron recognition/excision. Participation in the overall cleavage-and-ligation pathway does not assert that Sen15 ligates RNA.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9200603" target="_blank" class="term-link">
+                                        PMID:9200603
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Our results demonstrate that the eucaryal tRNA splicing endonuclease contains two functionally independent active sites for cleavage of the 5&#39; and 3&#39; splice sites, encoded by SEN2 and SEN34, respectively.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000379" target="_blank" class="term-link">
+                                    GO:0000379
+                                </a>
+                            </span>
+                            <span class="term-label">tRNA-type intron splice site recognition and cleavage</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7LKV3" data-a="GO:0000379" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> tRNA-type intron splice site recognition and cleavage is supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target is a SEN15-family protein, supporting transfer of the characterized four-subunit tRNA-splicing endonuclease role. SEN2 and SEN34 encode the cleavage active sites; Sen15 is a noncatalytic participant in intron recognition/excision. Participation in the overall cleavage-and-ligation pathway does not assert that Sen15 ligates RNA.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9200603" target="_blank" class="term-link">
+                                        PMID:9200603
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Our results demonstrate that the eucaryal tRNA splicing endonuclease contains two functionally independent active sites for cleavage of the 5&#39; and 3&#39; splice sites, encoded by SEN2 and SEN34, respectively.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000379" target="_blank" class="term-link">
+                                    GO:0000379
+                                </a>
+                            </span>
+                            <span class="term-label">tRNA-type intron splice site recognition and cleavage</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7LKV3" data-a="GO:0000379" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> tRNA-type intron splice site recognition and cleavage is supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target is a SEN15-family protein, supporting transfer of the characterized four-subunit tRNA-splicing endonuclease role. SEN2 and SEN34 encode the cleavage active sites; Sen15 is a noncatalytic participant in intron recognition/excision. Participation in the overall cleavage-and-ligation pathway does not assert that Sen15 ligates RNA.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9200603" target="_blank" class="term-link">
+                                        PMID:9200603
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Our results demonstrate that the eucaryal tRNA splicing endonuclease contains two functionally independent active sites for cleavage of the 5&#39; and 3&#39; splice sites, encoded by SEN2 and SEN34, respectively.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003676" target="_blank" class="term-link">
+                                    GO:0003676
+                                </a>
+                            </span>
+                            <span class="term-label">nucleic acid binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q7LKV3" data-a="GO:0003676" data-r="GO_REF:0000002" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> nucleic acid binding is not fully resolved.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The Sen15 subunit supports an RNA-processing complex, but specific RNA contacts by the target or conserved contacts in a characterized Sen15 ortholog have not been established in the primary evidence inspected here. Complex membership alone does not resolve whether this particular subunit binds nucleic acid. Binding within an assembled complex would be sufficient; an isolated-subunit assay is not required.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9200603" target="_blank" class="term-link">
+                                        PMID:9200603
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Our results demonstrate that the eucaryal tRNA splicing endonuclease contains two functionally independent active sites for cleavage of the 5&#39; and 3&#39; splice sites, encoded by SEN2 and SEN34, respectively.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16823372
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ORFeome cloning and global analysis of protein localization ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q7LKV3" data-a="GO:0005634" data-r="PMID:16823372" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> nucleus is retained as an ancillary annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retain the PomBase localization observation from the fission yeast tagged-ORFeome screen. The accessible abstract documents the assay but not the individual localization image; the screen is not sufficient to identify which detected pool executes tRNA cleavage.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link">
+                                        PMID:16823372
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Next, we determined the localization of 4,431 proteins, corresponding to approximately 90% of the fission yeast proteome, by tagging each ORF with the yellow fluorescent protein.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16823372
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ORFeome cloning and global analysis of protein localization ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q7LKV3" data-a="GO:0005829" data-r="PMID:16823372" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> cytosol is retained as an ancillary annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Retain the PomBase localization observation from the fission yeast tagged-ORFeome screen. The accessible abstract documents the assay but not the individual localization image; the screen is not sufficient to identify which detected pool executes tRNA cleavage.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link">
+                                        PMID:16823372
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Next, we determined the localization of 4,431 proteins, corresponding to approximately 90% of the fission yeast proteome, by tagging each ORF with the yellow fluorescent protein.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006388" target="_blank" class="term-link">
+                                    GO:0006388
+                                </a>
+                            </span>
+                            <span class="term-label">tRNA splicing, via endonucleolytic cleavage and ligation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q7LKV3" data-a="GO:0006388" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> tRNA splicing, via endonucleolytic cleavage and ligation is supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target is a SEN15-family protein, supporting transfer of the characterized four-subunit tRNA-splicing endonuclease role. SEN2 and SEN34 encode the cleavage active sites; Sen15 is a noncatalytic participant in intron recognition/excision. Participation in the overall cleavage-and-ligation pathway does not assert that Sen15 ligates RNA.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/9200603" target="_blank" class="term-link">
+                                        PMID:9200603
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Our results demonstrate that the eucaryal tRNA splicing endonuclease contains two functionally independent active sites for cleavage of the 5&#39; and 3&#39; splice sites, encoded by SEN2 and SEN34, respectively.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section" id="review-core-functions">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Conserved noncatalytic participant in the tRNA-splicing endonuclease complex, supporting splice-site recognition and intron excision.</h3>
+                <span class="vote-buttons" data-g="Q7LKV3" data-a="FUNCTION: Conserved noncatalytic participant in the tRNA-spl..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000379" target="_blank" class="term-link">
+                                tRNA-type intron splice site recognition and cleavage
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000214" target="_blank" class="term-link">
+                            tRNA-intron endonuclease complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/9200603" target="_blank" class="term-link">
+                                PMID:9200603
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Our results demonstrate that the eucaryal tRNA splicing endonuclease contains two functionally independent active sites for cleavage of the 5&#39; and 3&#39; splice sites, encoded by SEN2 and SEN34, respectively.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link">
+                            PMID:16823372
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ORFeome cloning and global analysis of protein localization in the fission yeast Schizosaccharomyces pombe.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9200603" target="_blank" class="term-link">
+                            PMID:9200603
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The yeast tRNA splicing endonuclease: a tetrameric enzyme with two active site subunits homologous to the archaeal tRNA endonucleases.</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+    <section class="section external-predictions" id="external-predictions" aria-labelledby="external-predictions-title">
+        <h2 class="section-title" id="external-predictions-title">External Prediction Reviews</h2>
+        <p class="prediction-notice">These computational predictions are reviewed separately from the GOA annotation set used for this review.
+            The assessments below are from this project and do not constitute official GO annotations or endorsement by GO/UniProt.
+            They are not included in the existing annotation review above.</p>
+
+
+        <article class="prediction-review">
+        <h3>ProtNLM2 <span class="badge">External predictions</span></h3>
+        <p class="prediction-source"><a href="sen15-protnlm-predictions-review.yaml">View prediction review YAML</a> &middot; sen15-protnlm-predictions-review.yaml
+            &middot; Review status: COMPLETE</p>
+
+        <p>Sen15 participates noncatalytically in the tRNA-splicing endonuclease complex. The predicted tRNA-splicing process is correct and already established by curated annotations and conserved-family evidence.</p>
+
+        <p class="prediction-source">Review score: 2 = concordant with evidence; 1 = uncertain; 0 = discordant with evidence. This is an assessment score, not a model probability.</p>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006388" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:0006388
+                    </a>
+                    <span class="term-label">tRNA splicing, via endonucleolytic cleavage and ligation</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_BP</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-cnn">
+                        CNN — Correct but not novel
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 2/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM2
+                 &middot; Version: pre-release post-processed-2026_02_28k.xml
+
+                 &middot; <a href="#" target="_blank" class="term-link">file:SCHPO/sen15/sen15-protnlm-source.xml</a>
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> The SEN15-family assignment of the target and the PAINT-curated endonuclease-complex and splice-site-recognition assertions support a conserved noncatalytic role in pre-tRNA intron excision. The characterized budding yeast complex contains four subunits, with cleavage active sites in Sen2 and Sen34. Participation in the full splicing process does not require Sen15 itself to catalyze either cleavage or ligation. This exact process is already in GOA, and the corresponding endonuclease-participation biology is established, so the supported prediction is not novel.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/9200603" target="_blank" class="term-link">PMID:9200603</a>:
+
+
+                        <span class="finding-text">"Our results demonstrate that the eucaryal tRNA splicing endonuclease contains two functionally independent active sites for cleavage of the 5&#39; and 3&#39; splice sites, encoded by SEN2 and SEN34, respectively."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="sen15-uniprot.txt" target="_blank" class="term-link">file:SCHPO/sen15/sen15-uniprot.txt</a>:
+
+
+                        <span class="finding-text">"DR   InterPro; IPR042777; Sen15_fungi."</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        </article>
+
+    </section>
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section" id="review-research">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(sen15-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q7LKV3" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional annotation report: *Schizosaccharomyces pombe sen15* (Q7LKV3)</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">19 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-08T19:16:18.786344</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="sen15-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="functional-annotation-report-schizosaccharomyces-pombe-sen15-q7lkv3">Functional annotation report: <em>Schizosaccharomyces pombe sen15</em> (Q7LKV3)</h1>
+<h2 id="executive-conclusion">Executive conclusion</h2>
+<p>The supplied identifiers are mutually consistent: <strong>sen15</strong>, systematic ORF <strong>SPAC959.10</strong>, UniProt <strong>Q7LKV3</strong>, from <em>Schizosaccharomyces pombe</em> strain 972/ATCC 24843, denotes a probable fungal Sen15-family tRNA-splicing-endonuclease subunit. Its Sen15_fungi, tRNA-endonuclease-Sen15, and endonuclease-like domain assignments agree with that identity. No evidence was found that the symbol refers here to a different protein.</p>
+<p>However, literature specifically characterizing <strong>Q7LKV3/SPAC959.10</strong> is extremely limited. The defensible annotation is therefore that Q7LKV3 is the predicted <em>S. pombe</em> ortholog of <strong>Sen15</strong>, a principally <strong>non-catalytic architectural subunit</strong> of the heterotetrameric eukaryotic tRNA-splicing endonuclease. Direct biochemical activity, physical interactions, phenotype, abundance, and intracellular localization have not been demonstrated for Q7LKV3 in the literature retrieved. Mechanistic statements below are accordingly labeled as conserved inference rather than direct <em>S. pombe</em> evidence.</p>
+<h2 id="evidence-assessment">Evidence assessment</h2>
+<table>
+<thead>
+<tr>
+<th>Annotation claim</th>
+<th>Best evidence</th>
+<th>Source organism/system</th>
+<th>Evidence status for Q7LKV3</th>
+<th>Caveat</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity: <strong>sen15</strong>, ORF <strong>SPAC959.10</strong>, UniProt <strong>Q7LKV3</strong>; probable tRNA-splicing endonuclease subunit Sen15</td>
+<td>UniProt identity supplied for the specified target</td>
+<td><em>Schizosaccharomyces pombe</em> strain 972 / ATCC 24843</td>
+<td><strong>Direct database identity</strong></td>
+<td>No Q7LKV3-specific primary study was recovered; the functional qualifier remains “probable.”</td>
+</tr>
+<tr>
+<td>Sen15-family protein with <strong>Sen15_fungi</strong>, <strong>tRNA-endonuclease Sen15</strong>, and related endonuclease-like domains</td>
+<td>InterPro/Pfam domain assignments supplied with the target; these agree with conserved Sen15/TSEN15 architecture</td>
+<td><em>S. pombe</em> sequence plus comparative domain models</td>
+<td><strong>Direct database identity</strong></td>
+<td>Domain membership supports orthology and complex function but does not demonstrate catalytic activity or localization.</td>
+</tr>
+<tr>
+<td>Member of a four-subunit eukaryotic tRNA-splicing endonuclease</td>
+<td>Human TSEN comprises TSEN2, TSEN34, TSEN54, and TSEN15; the four recombinant subunits are sufficient for cleavage at both splice sites (sekulovski2023structuralbasisof pages 1-4, sekulovski2023structuralbasisof pages 4-7)</td>
+<td>Human recombinant TSEN and cryo-EM complexes</td>
+<td><strong>Strong conserved inference</strong></td>
+<td>Four-subunit membership has not been biochemically demonstrated for Q7LKV3 in the recovered literature.</td>
+</tr>
+<tr>
+<td>Sen15 is principally a <strong>non-catalytic architectural/assembly subunit</strong></td>
+<td>Human TSEN15 is classified as structural and showed no detectable direct pre-tRNA contact in one cryo-EM structure (sekulovski2023structuralbasisof pages 1-4, sekulovski2023structuralbasisof pages 4-7)</td>
+<td>Human TSEN</td>
+<td><strong>Strong conserved inference</strong></td>
+<td>Absence of observed RNA contact does not exclude transient or indirect contributions; Q7LKV3 itself has not been assayed.</td>
+</tr>
+<tr>
+<td>Sen15 cooperates with or structurally supports <strong>Sen34</strong></td>
+<td>Comparative literature describes yeast Sen15 as cooperating with Sen34 in functional multimerization; a human TSEN15–TSEN34 heterodimer preserves archaeal-like interactions (soma2013identificationofhighlydisrupted pages 5-6, sekulovski2023structuralbasisof pages 1-4)</td>
+<td>Unspecified yeast literature and human structural studies</td>
+<td><strong>Strong conserved inference</strong></td>
+<td>The yeast passage does not identify <em>S. pombe</em>, and a direct Q7LKV3–Sen34 interaction has not been reported.</td>
+</tr>
+<tr>
+<td>Sen15 is <strong>not assigned either splice-site catalytic reaction</strong></td>
+<td>Catalysis maps to Sen2/TSEN2 and Sen34/TSEN34, whereas Sen15 and Sen54 are non-catalytic subunits (sekulovski2023structuralbasisof pages 1-4, meineke2012insightsintoanticodon pages 38-42)</td>
+<td>Yeast comparative genetics and human TSEN</td>
+<td><strong>Strong conserved inference</strong></td>
+<td>Catalytic inactivity of purified Q7LKV3 has not been tested directly.</td>
+</tr>
+<tr>
+<td>Sen2 cleaves the <strong>5′ splice site</strong> and Sen34 cleaves the <strong>3′ splice site</strong></td>
+<td>Conserved Tyr/His/Lys catalytic centers and subunit-specific cleavage assignments are supported by genetic and structural data (sekulovski2023structuralbasisof pages 1-4, sekulovski2023structuralbasisof pages 7-9, meineke2012insightsintoanticodon pages 38-42)</td>
+<td>Yeast and human TSEN</td>
+<td><strong>Strong conserved inference</strong></td>
+<td>This assigns catalysis within the predicted <em>S. pombe</em> complex, not to Sen15 itself.</td>
+</tr>
+<tr>
+<td>Complex substrate: intron-containing nuclear <strong>pre-tRNAs</strong></td>
+<td>Eukaryotic TSEN excises intronic sequences from pre-tRNAs; human structures used pre-tRNA^Tyr and pre-tRNA^Arg and resolved bulge–helix splice-site recognition (sekulovski2023structuralbasisof pages 1-4, sekulovski2023structuralbasisof pages 4-7)</td>
+<td>Human TSEN–pre-tRNA cryo-EM complexes</td>
+<td><strong>Strong conserved inference</strong></td>
+<td>No individual <em>S. pombe</em> pre-tRNA substrates or Q7LKV3-dependent cleavage kinetics were identified.</td>
+</tr>
+<tr>
+<td>Cleavage products carry a <strong>2′,3′-cyclic phosphate</strong> on the 5′ exon and a <strong>5′-OH</strong> on the 3′ exon</td>
+<td>Established chemistry of eukaryotic tRNA-splicing endonuclease cleavage (hopper2010cellulardynamicsof pages 3-3)</td>
+<td>General eukaryotic/yeast tRNA-splicing pathway</td>
+<td><strong>Strong conserved inference</strong></td>
+<td>This is the reaction of the assembled endonuclease; Sen15 does not itself supply the catalytic centers.</td>
+</tr>
+<tr>
+<td>Biological pathway: endonucleolytic step of <strong>tRNA intron removal</strong>, followed by exon ligation and end repair</td>
+<td>Endonuclease cleavage initiates tRNA splicing; ligase and 2′-phosphotransferase subsequently complete repair (hopper2010cellulardynamicsof pages 3-3)</td>
+<td>Eukaryotic tRNA maturation</td>
+<td><strong>Strong conserved inference</strong></td>
+<td>Direct epistasis or pathway analysis for <em>S. pombe</em> sen15/Q7LKV3 was not recovered.</td>
+</tr>
+<tr>
+<td>Cellular localization in <em>S. pombe</em></td>
+<td>No direct Q7LKV3 localization evidence was found</td>
+<td><em>S. pombe</em></td>
+<td><strong>Unsupported</strong></td>
+<td>Budding-yeast Sen subunits occur on the cytoplasmic mitochondrial surface, whereas vertebrate TSEN is nuclear; this lineage variation makes transfer to fission yeast unsafe (hopper2010cellulardynamicsof pages 3-3, yoshihisa2014handlingtrnaintrons pages 7-8).</td>
+</tr>
+<tr>
+<td>Recent structural advance: 2023 cryo-EM resolved TSEN assembly, substrate positioning, and catalytic architecture</td>
+<td>Independent human TSEN studies reported 3.8 Å and 3.1 Å reconstructions and showed TSEN15 as structural rather than a major RNA-contacting subunit (hayne2023structuralbasisfor pages 1-2, sekulovski2023structuralbasisof pages 4-7)</td>
+<td>Human recombinant TSEN–pre-tRNA complexes</td>
+<td><strong>Strong conserved inference</strong></td>
+<td>These are mechanistically informative ortholog studies, not structures of Q7LKV3 or the <em>S. pombe</em> complex.</td>
+</tr>
+<tr>
+<td>Direct biochemical, interaction, phenotype, or localization characterization of Q7LKV3</td>
+<td>No specific study was recovered for Q7LKV3/SPAC959.10</td>
+<td><em>S. pombe</em></td>
+<td><strong>Unsupported</strong></td>
+<td>The most defensible annotation is therefore domain- and orthology-based: a probable non-catalytic Sen15-family component of the pre-tRNA splicing endonuclease.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Evidence-tier assessment of functional claims for </em>S. pombe<em> sen15/Q7LKV3, separating direct database identity from conserved mechanistic inference and unsupported organism-specific assertions.</em></p>
+<h2 id="1-molecular-function">1. Molecular function</h2>
+<h3 id="complex-and-structural-role">Complex and structural role</h3>
+<p>Eukaryotic tRNA-splicing endonuclease is generally a four-subunit assembly comprising Sen2/TSEN2, Sen34/TSEN34, Sen54/TSEN54, and Sen15/TSEN15. Human recombinant complexes containing these four proteins are sufficient for cleavage at both pre-tRNA splice sites. Recent structural work classifies TSEN2 and TSEN34 as catalytic and TSEN15 and TSEN54 as structural subunits. This architecture strongly supports assignment of <em>S. pombe</em> Q7LKV3 to the non-catalytic Sen15 position in the corresponding fungal complex. (sekulovski2023structuralbasisof pages 1-4, hayne2023structuralbasisfor pages 1-2, sekulovski2023structuralbasisof pages 4-7)</p>
+<p>Sen15’s most likely primary function is to <strong>stabilize or organize the catalytic assembly</strong>, especially the Sen34-containing half. Comparative literature describes yeast Sen15 as cooperating with Sen34 in functional multimerization, while structural work has demonstrated an archaeal-like TSEN15–TSEN34 interface in the human complex. One human disease-associated TSEN15 interface substitution, H116Y, destabilized the complex by approximately <strong>3.0 °C</strong>, illustrating how Sen15 can affect assembly without supplying a catalytic center. These observations support—but do not directly prove—a Q7LKV3–Sen34 architectural relationship in fission yeast. (sekulovski2023structuralbasisof pages 7-9, soma2013identificationofhighlydisrupted pages 5-6, sekulovski2023structuralbasisof pages 1-4)</p>
+<p>A 2023 cryo-EM study detected no direct pre-tRNA contact by human TSEN15, whereas TSEN54, TSEN34, and TSEN2 made substantial RNA contacts. TSEN15 should consequently not be annotated as the principal substrate-recognition or catalytic subunit. It may instead support catalytic-subunit geometry, RNA orientation near a splice site, assembly stability, or product handling. Some of these finer roles remain hypotheses even in the human system. (hayne2023structuralbasisfor pages 6-7, sekulovski2023structuralbasisof pages 4-7, hayne2023structuralbasisfor pages 4-6)</p>
+<h3 id="reaction-and-catalytic-assignment">Reaction and catalytic assignment</h3>
+<p>The assembled endonuclease catalyzes two phosphodiester-bond cleavages at the exon–intron boundaries of an intron-containing precursor tRNA:</p>
+<p><strong>intron-containing pre-tRNA → 5′ tRNA exon bearing a 2′,3′-cyclic phosphate + excised intron + 3′ tRNA exon bearing a 5′-OH.</strong></p>
+<p>Subsequent ligase and 2′-phosphotransferase reactions join and repair the exons to produce mature tRNA. Thus, sen15 functions in the <strong>endonucleolytic first stage of nuclear-encoded tRNA intron removal</strong>, upstream of exon ligation and final end repair. (hopper2010cellulardynamicsof pages 3-3)</p>
+<p>The conserved catalytic division of labor assigns the <strong>5′ splice-site cut to Sen2</strong> and the <strong>3′ splice-site cut to Sen34</strong>. Catalytic Tyr/His/Lys arrangements in these subunits mediate RNA transesterification; for the human TSEN34 site, structural analysis places Y247 to activate the attacking 2′-OH, H255 to protonate the leaving 5′ oxygen, and K286 to stabilize negative charge. Q7LKV3 itself is therefore not predicted to catalyze either cleavage. (sekulovski2023structuralbasisof pages 1-4, sekulovski2023structuralbasisof pages 7-9, meineke2012insightsintoanticodon pages 38-42)</p>
+<h2 id="2-substrate-specificity-and-recognition">2. Substrate specificity and recognition</h2>
+<p>The physiological substrate class is <strong>intron-containing pre-tRNA</strong>, not mature tRNA, mRNA, or a free RNA intron. Eukaryotic TSEN recognizes the folded tRNA body together with splice-junction geometry in the anticodon region. Human cryo-EM complexes with pre-tRNA^Tyr and pre-tRNA^Arg resolved a three-nucleotide bulge at the 3′ splice site and extensive positioning by TSEN34 and TSEN54. The mature tRNA body serves as an architectural reference, while catalytic subunits inspect the splice-junction RNA. (sekulovski2023structuralbasisof pages 1-4, hayne2023structuralbasisfor pages 1-2, sekulovski2023structuralbasisof pages 4-7)</p>
+<p>The recent human structures were obtained at <strong>3.8 Å</strong> for full-length TSEN–pre-tRNA^Tyr and <strong>3.1 Å</strong> for a truncated TSEN–pre-tRNA^Arg complex. TSEN34/TSEN54 contacted the mature tRNA body over approximately <strong>1,838.3 Å²</strong>, and their protein–protein interface covered approximately <strong>2,287.2 Å²</strong>. These quantitative results underscore that substrate recognition is distributed across the assembled complex rather than being an intrinsic RNA-binding activity of Sen15. (sekulovski2023structuralbasisof pages 4-7)</p>
+<p>No study retrieved identified which individual <em>S. pombe</em> intron-containing tRNAs depend on Q7LKV3, measured cleavage kinetics, or tested sequence preferences. It is therefore inappropriate to assign a specific tRNA isoacceptor to Sen15. The likely specificity is the collective specificity of the <em>S. pombe</em> Sen complex for structurally mature, intron-containing pre-tRNAs.</p>
+<h2 id="3-biological-process-and-pathway">3. Biological process and pathway</h2>
+<p>The immediate pathway is <strong>tRNA maturation/tRNA intron splicing</strong>, which supplies functional tRNAs for cytoplasmic translation. Sen15’s contribution is indirect but essential to reaction architecture: it enables productive assembly or geometry of the endonuclease rather than performing covalent chemistry itself. Comparative yeast literature calls Sen15 important for functional multimerization, although the cited passage does not specify <em>S. pombe</em>. (soma2013identificationofhighlydisrupted pages 5-6)</p>
+<p>Broader effects on translation, growth, stress responses, or RNA homeostasis would be expected if the complex failed, because unspliced pre-tRNAs would accumulate and mature tRNA production could decline. Nevertheless, no Q7LKV3-specific perturbation study was recovered, so such outcomes should be treated as pathway-level predictions—not demonstrated phenotypes of <em>S. pombe sen15</em>.</p>
+<h2 id="4-cellular-localization">4. Cellular localization</h2>
+<p><strong>The localization of Q7LKV3 in <em>S. pombe</em> is unresolved from the available evidence.</strong> This is important because tRNA-splicing localization varies markedly among eukaryotes. In <em>Saccharomyces cerevisiae</em>, Sen-complex subunits localize on the cytoplasmic face of mitochondria, whereas vertebrate TSEN is nuclear. Moreover, experimentally relocating all budding-yeast Sen subunits to the nucleus still permits pre-tRNA splicing, showing that mitochondrial-surface localization is not chemically required for cleavage, although relocation affects growth and rRNA maturation. (hopper2010cellulardynamicsof pages 3-3, yoshihisa2014handlingtrnaintrons pages 7-8)</p>
+<p>Accordingly, the budding-yeast mitochondrial-surface result must <strong>not</strong> be presented as established for fission yeast. A safe annotation is “intracellular component of the tRNA-splicing machinery; precise <em>S. pombe</em> compartment unknown.” Direct GFP tagging, biochemical fractionation, or proximity-labeling of Q7LKV3 would be required to resolve this point.</p>
+<h2 id="5-evolutionary-and-domain-evidence">5. Evolutionary and domain evidence</h2>
+<p>The supplied Sen15_fungi and tRNA-endonuclease-Sen15 domain assignments align with the conserved eukaryotic Sen15/TSEN15 lineage. Eukaryotic complexes are evolutionarily related to archaeal tRNA-splicing endonucleases, but eukaryotes distribute catalytic and structural functions among four differentiated proteins. Sen15 and Sen54 are the non-catalytic partners, while Sen2 and Sen34 retain the catalytic centers. (hayne2023structuralbasisfor pages 1-2, hopper2010cellulardynamicsof pages 3-3, meineke2012insightsintoanticodon pages 38-42)</p>
+<p>This domain/family agreement makes the functional annotation considerably stronger than an ORF-name match alone. It does not, however, establish localization, essentiality, physical interaction partners, or substrate kinetics for Q7LKV3.</p>
+<h2 id="6-recent-developments-20232024">6. Recent developments, 2023–2024</h2>
+<p>Two independent 2023 structural studies transformed understanding of eukaryotic TSEN by visualizing human heterotetramers bound to intron-containing pre-tRNAs. They established how the mature tRNA body, splice-site bulges, catalytic subunits, and structural scaffold cooperate. Importantly for Q7LKV3 annotation, these studies support TSEN15 as an assembly subunit rather than an autonomous nuclease or dominant RNA-binding protein. One study’s molecular-dynamics analysis used five simulations and <strong>5,000 configurations</strong>; only <strong>35 of 80 RNA nucleotides</strong> maintained complex contacts at least 75% of the time, illustrating a defined rather than indiscriminate RNA interface. (sekulovski2023structuralbasisof pages 4-7, hayne2023structuralbasisfor pages 20-24)</p>
+<p>Relevant primary publications are:</p>
+<ul>
+<li>Hayne CK <em>et al.</em> <strong>“Structural Basis for pre-tRNA Recognition and Processing by the Human tRNA Splicing Endonuclease Complex.”</strong> <em>Nature Structural &amp; Molecular Biology</em> 30, 824–833; published June 2023. DOI/URL: https://doi.org/10.1038/s41594-023-00991-z. (hayne2023structuralbasisfor pages 1-2)</li>
+<li>Sekulovski S <em>et al.</em> <strong>“Structural basis of substrate recognition by human tRNA splicing endonuclease TSEN.”</strong> <em>Nature Structural &amp; Molecular Biology</em>; 2023. DOI/URL: https://doi.org/10.1038/s41594-023-00992-y. (sekulovski2023structuralbasisof pages 1-4, sekulovski2023structuralbasisof pages 4-7)</li>
+</ul>
+<p>A 2024 review, Schultz and Kothe, <strong>“RNA modifying enzymes shape tRNA biogenesis and function,”</strong> <em>Journal of Biological Chemistry</em> 300:107488, published August 2024, DOI/URL https://doi.org/10.1016/j.jbc.2024.107488, emphasizes the integration of processing, modification, and compartmental trafficking. It does not provide direct Q7LKV3 characterization. No 2023–2024 primary study specifically analyzing <em>S. pombe</em> Sen15 was found.</p>
+<h2 id="7-current-applications-and-biological-relevance">7. Current applications and biological relevance</h2>
+<p>There is no documented clinical, industrial, or biotechnological implementation specific to Q7LKV3. Its present utility is principally as:</p>
+<ol>
+<li>a candidate component for reconstructing fission-yeast tRNA-splicing machinery;</li>
+<li>a comparative model for the evolution of archaeal and eukaryotic RNA endonucleases;</li>
+<li>a target for studying how structural subunits govern RNA-enzyme assembly; and</li>
+<li>a potential experimental handle for testing whether fission yeast uses nuclear, mitochondrial-surface, or another spatial organization of tRNA splicing.</li>
+</ol>
+<p>Human TSEN research has medical relevance because TSEN-complex mutations are associated with pontocerebellar hypoplasia, but that disease connection concerns human orthologs and should not be transferred to <em>S. pombe sen15</em>. The human complex has been estimated at only approximately <strong>100 molecules per cell</strong>, emphasizing its low abundance and the value of yeast systems for mechanistic experimentation. (sekulovski2023structuralbasisof pages 1-4)</p>
+<h2 id="8-recommended-annotation-and-confidence">8. Recommended annotation and confidence</h2>
+<p><strong>Recommended concise annotation:</strong></p>
+<blockquote>
+<p><em>Schizosaccharomyces pombe</em> Sen15 (Q7LKV3/SPAC959.10) is a probable non-catalytic Sen15-family subunit of the heterotetrameric tRNA-splicing endonuclease. It is predicted to associate with and structurally support the Sen34-containing catalytic module during recognition and endonucleolytic excision of introns from pre-tRNAs. The assembled complex generates 5′ exons with 2′,3′-cyclic-phosphate ends and 3′ exons with 5′-hydroxyl ends; Sen2 and Sen34, not Sen15, provide the catalytic centers. Its precise localization and organism-specific substrates in fission yeast remain unknown.</p>
+</blockquote>
+<p><strong>Confidence:</strong> high for protein identity, family membership, complex class, and non-catalytic architectural role; moderate for the specific Sen34-support relationship in <em>S. pombe</em>; low/unknown for localization, abundance, phenotype, essentiality, and individual tRNA substrates.</p>
+<p>The central limitation is the absence of direct Q7LKV3-focused biochemical or cell-biological literature. The report therefore avoids treating human TSEN15 or <em>S. cerevisiae</em> Sen15 observations as if they had been demonstrated in <em>S. pombe</em>.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(sekulovski2023structuralbasisof pages 1-4): Samoil Sekulovski, Lukas Sušac, Lukas S. Stelzl, Robert Tampé, and Simon Trowitzsch. Structural basis of substrate recognition by human trna splicing endonuclease tsen. bioRxiv, Sep 2023. URL: https://doi.org/10.1038/s41594-023-00992-y, doi:10.1038/s41594-023-00992-y. This article has 33 citations.</p>
+</li>
+<li>
+<p>(sekulovski2023structuralbasisof pages 4-7): Samoil Sekulovski, Lukas Sušac, Lukas S. Stelzl, Robert Tampé, and Simon Trowitzsch. Structural basis of substrate recognition by human trna splicing endonuclease tsen. bioRxiv, Sep 2023. URL: https://doi.org/10.1038/s41594-023-00992-y, doi:10.1038/s41594-023-00992-y. This article has 33 citations.</p>
+</li>
+<li>
+<p>(soma2013identificationofhighlydisrupted pages 5-6): Akiko Soma, Junichi Sugahara, Akinori Onodera, Nozomu Yachie, Akio Kanai, Satoru Watanabe, Hirofumi Yoshikawa, Mio Ohnuma, Haruko Kuroiwa, Tsuneyoshi Kuroiwa, and Yasuhiko Sekine. Identification of highly-disrupted trna genes in nuclear genome of the red alga, cyanidioschyzon merolae 10d. Scientific Reports, Jul 2013. URL: https://doi.org/10.1038/srep02321, doi:10.1038/srep02321. This article has 19 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(meineke2012insightsintoanticodon pages 38-42): B Meineke. Insights into anticodon nuclease toxicity and rescue by trna repair in vivo. Unknown journal, 2012.</p>
+</li>
+<li>
+<p>(sekulovski2023structuralbasisof pages 7-9): Samoil Sekulovski, Lukas Sušac, Lukas S. Stelzl, Robert Tampé, and Simon Trowitzsch. Structural basis of substrate recognition by human trna splicing endonuclease tsen. bioRxiv, Sep 2023. URL: https://doi.org/10.1038/s41594-023-00992-y, doi:10.1038/s41594-023-00992-y. This article has 33 citations.</p>
+</li>
+<li>
+<p>(hopper2010cellulardynamicsof pages 3-3): Anita K. Hopper, Dave A. Pai, and David R. Engelke. Cellular dynamics of trnas and their genes. FEBS letters, Jan 2010. URL: https://doi.org/10.1016/j.febslet.2009.11.053, doi:10.1016/j.febslet.2009.11.053. This article has 89 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yoshihisa2014handlingtrnaintrons pages 7-8): Tohru Yoshihisa. Handling trna introns, archaeal way and eukaryotic way. Frontiers in Genetics, Jul 2014. URL: https://doi.org/10.3389/fgene.2014.00213, doi:10.3389/fgene.2014.00213. This article has 145 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hayne2023structuralbasisfor pages 1-2): Cassandra K. Hayne, Kevin John U. Butay, Zachary D. Stewart, Juno M. Krahn, Lalith Perera, Jason G. Williams, Robert M. Petrovitch, Leesa J. Deterding, A. Gregory Matera, Mario J. Borgnia, and Robin E. Stanley. Structural basis for pre-trna recognition and processing by the human trna splicing endonuclease complex. bioRxiv, Sep 2023. URL: https://doi.org/10.1038/s41594-023-00991-z, doi:10.1038/s41594-023-00991-z. This article has 38 citations.</p>
+</li>
+<li>
+<p>(hayne2023structuralbasisfor pages 6-7): Cassandra K. Hayne, Kevin John U. Butay, Zachary D. Stewart, Juno M. Krahn, Lalith Perera, Jason G. Williams, Robert M. Petrovitch, Leesa J. Deterding, A. Gregory Matera, Mario J. Borgnia, and Robin E. Stanley. Structural basis for pre-trna recognition and processing by the human trna splicing endonuclease complex. bioRxiv, Sep 2023. URL: https://doi.org/10.1038/s41594-023-00991-z, doi:10.1038/s41594-023-00991-z. This article has 38 citations.</p>
+</li>
+<li>
+<p>(hayne2023structuralbasisfor pages 4-6): Cassandra K. Hayne, Kevin John U. Butay, Zachary D. Stewart, Juno M. Krahn, Lalith Perera, Jason G. Williams, Robert M. Petrovitch, Leesa J. Deterding, A. Gregory Matera, Mario J. Borgnia, and Robin E. Stanley. Structural basis for pre-trna recognition and processing by the human trna splicing endonuclease complex. bioRxiv, Sep 2023. URL: https://doi.org/10.1038/s41594-023-00991-z, doi:10.1038/s41594-023-00991-z. This article has 38 citations.</p>
+</li>
+<li>
+<p>(hayne2023structuralbasisfor pages 20-24): Cassandra K. Hayne, Kevin John U. Butay, Zachary D. Stewart, Juno M. Krahn, Lalith Perera, Jason G. Williams, Robert M. Petrovitch, Leesa J. Deterding, A. Gregory Matera, Mario J. Borgnia, and Robin E. Stanley. Structural basis for pre-trna recognition and processing by the human trna splicing endonuclease complex. bioRxiv, Sep 2023. URL: https://doi.org/10.1038/s41594-023-00991-z, doi:10.1038/s41594-023-00991-z. This article has 38 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="sen15-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>hopper2010cellulardynamicsof pages 3-3</li>
+<li>sekulovski2023structuralbasisof pages 4-7</li>
+<li>soma2013identificationofhighlydisrupted pages 5-6</li>
+<li>hayne2023structuralbasisfor pages 1-2</li>
+<li>sekulovski2023structuralbasisof pages 1-4</li>
+<li>meineke2012insightsintoanticodon pages 38-42</li>
+<li>sekulovski2023structuralbasisof pages 7-9</li>
+<li>yoshihisa2014handlingtrnaintrons pages 7-8</li>
+<li>hayne2023structuralbasisfor pages 6-7</li>
+<li>hayne2023structuralbasisfor pages 4-6</li>
+<li>hayne2023structuralbasisfor pages 20-24</li>
+<li>https://doi.org/10.1038/s41594-023-00991-z.</li>
+<li>https://doi.org/10.1038/s41594-023-00992-y.</li>
+<li>https://doi.org/10.1016/j.jbc.2024.107488,</li>
+<li>https://doi.org/10.1038/s41594-023-00992-y,</li>
+<li>https://doi.org/10.1038/srep02321,</li>
+<li>https://doi.org/10.1016/j.febslet.2009.11.053,</li>
+<li>https://doi.org/10.3389/fgene.2014.00213,</li>
+<li>https://doi.org/10.1038/s41594-023-00991-z,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(sen15-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q7LKV3" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="sen15-evidence-notes">sen15 evidence notes</h1>
+<p>Sen15 is a small, conserved noncatalytic subunit of the heterotetrameric tRNA-splicing endonuclease complex. Together with Sen2, Sen34 and Sen54 it supports recognition and excision of introns from precursor tRNAs before the cleaved exons are ligated. The catalytic splice-site cleavage centers reside in Sen2 and Sen34. Nuclear and cytosolic pools have been reported in fission yeast localization screens.</p>
+<h2 id="identity-and-prediction-provenance">Identity and prediction provenance</h2>
+<p>PomBase primary symbol sen15, locus SPAC959.10, current UniProt Q7LKV3. The supplied pre-release post-processed-2026_02_28k.xml is the source of the reviewed claims; its placeholder sequence, taxonomy and dates are not biological metadata. The current UniProt sequence is not established as the model input. Current API availability and published-list inclusion are separate properties; all biological judgments here concern the preserved original claims.</p>
+<h2 id="primary-evidence-inspected">Primary evidence inspected</h2>
+<ul>
+<li>[PMID:9200603 The yeast tRNA splicing endonuclease: a tetrameric enzyme with two active site subunits homologous to the archaeal tRNA endonucleases.] "Our results demonstrate that the eucaryal tRNA splicing endonuclease contains two functionally independent active sites for cleavage of the 5' and 3' splice sites, encoded by SEN2 and SEN34, respectively."</li>
+<li>[PMID:16823372 ORFeome cloning and global analysis of protein localization in the fission yeast Schizosaccharomyces pombe.] "Next, we determined the localization of 4,431 proteins, corresponding to approximately 90% of the fission yeast proteome, by tagging each ORF with the yellow fluorescent protein."</li>
+</ul>
+<h2 id="evidence-limits-and-adjudication">Evidence limits and adjudication</h2>
+<ul>
+<li>GO:0003676 (UNDECIDED): The Sen15 subunit supports an RNA-processing complex, but specific RNA contacts by the target or conserved contacts in a characterized Sen15 ortholog have not been established in the primary evidence inspected here. Complex membership alone does not resolve whether this particular subunit binds nucleic acid. Binding within an assembled complex would be sufficient; an isolated-subunit assay is not required.</li>
+<li>GO:0005634 (KEEP_AS_NON_CORE): Retain the PomBase localization observation from the fission yeast tagged-ORFeome screen. The accessible abstract documents the assay but not the individual localization image; the screen is not sufficient to identify which detected pool executes tRNA cleavage.</li>
+</ul>
+<p>Primary reports are interpreted at the species, assay and subunit level. Abstract-only experimental annotations are not rejected because a title foregrounds another subunit. PAINT asserts inheritance from a curated ancestral node; donor count and target self-inclusion are not objections. ARBA overlap is recorded only as provenance, never as biological validation. CNN and LSP reflect established biological knowledge, without asserting training-data membership.</p>
+<h2 id="provider-report-appraisal">Provider report appraisal</h2>
+<p>The Falcon report supports a noncatalytic architecture and highlights human TSEN15 structures lacking detectable direct RNA contacts. Its generic claim that no target localization data exist is incomplete because PomBase retains tagged-ORFeome observations. No compartment was inferred from budding-yeast mitochondrial localization.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q7LKV3
+gene_symbol: sen15
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:284812
+  label: Schizosaccharomyces pombe (strain 972 / ATCC 24843)
+description: Sen15 is a small, conserved noncatalytic subunit of the heterotetrameric tRNA-splicing endonuclease
+  complex. Together with Sen2, Sen34 and Sen54 it supports recognition and excision of introns from precursor
+  tRNAs before the cleaved exons are ligated. The catalytic splice-site cleavage centers reside in Sen2
+  and Sen34. Nuclear and cytosolic pools have been reported in fission yeast localization screens.
+existing_annotations:
+- term: &amp;id004
+    id: GO:0000214
+    label: tRNA-intron endonuclease complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  supporting_entities:
+  - PANTHER:PTN002003396
+  - SGD:S000004663
+  review:
+    summary: tRNA-intron endonuclease complex is supported.
+    action: ACCEPT
+    reason: The target is a SEN15-family protein, supporting transfer of the characterized four-subunit
+      tRNA-splicing endonuclease role. SEN2 and SEN34 encode the cleavage active sites; Sen15 is a noncatalytic
+      participant in intron recognition/excision. Participation in the overall cleavage-and-ligation pathway
+      does not assert that Sen15 ligates RNA.
+    supported_by:
+    - &amp;id001
+      reference_id: PMID:9200603
+      supporting_text: Our results demonstrate that the eucaryal tRNA splicing endonuclease contains two
+        functionally independent active sites for cleavage of the 5&#39; and 3&#39; splice sites, encoded by SEN2
+        and SEN34, respectively.
+- term:
+    id: GO:0000214
+    label: tRNA-intron endonuclease complex
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: part_of
+  supporting_entities:
+  - InterPro:IPR042777
+  review:
+    summary: tRNA-intron endonuclease complex is supported.
+    action: ACCEPT
+    reason: The target is a SEN15-family protein, supporting transfer of the characterized four-subunit
+      tRNA-splicing endonuclease role. SEN2 and SEN34 encode the cleavage active sites; Sen15 is a noncatalytic
+      participant in intron recognition/excision. Participation in the overall cleavage-and-ligation pathway
+      does not assert that Sen15 ligates RNA.
+    supported_by:
+    - *id001
+- term: &amp;id003
+    id: GO:0000379
+    label: tRNA-type intron splice site recognition and cleavage
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  supporting_entities:
+  - PANTHER:PTN002003396
+  - SGD:S000004663
+  review:
+    summary: tRNA-type intron splice site recognition and cleavage is supported.
+    action: ACCEPT
+    reason: The target is a SEN15-family protein, supporting transfer of the characterized four-subunit
+      tRNA-splicing endonuclease role. SEN2 and SEN34 encode the cleavage active sites; Sen15 is a noncatalytic
+      participant in intron recognition/excision. Participation in the overall cleavage-and-ligation pathway
+      does not assert that Sen15 ligates RNA.
+    supported_by:
+    - *id001
+- term:
+    id: GO:0000379
+    label: tRNA-type intron splice site recognition and cleavage
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  supporting_entities:
+  - InterPro:IPR042777
+  review:
+    summary: tRNA-type intron splice site recognition and cleavage is supported.
+    action: ACCEPT
+    reason: The target is a SEN15-family protein, supporting transfer of the characterized four-subunit
+      tRNA-splicing endonuclease role. SEN2 and SEN34 encode the cleavage active sites; Sen15 is a noncatalytic
+      participant in intron recognition/excision. Participation in the overall cleavage-and-ligation pathway
+      does not assert that Sen15 ligates RNA.
+    supported_by:
+    - *id001
+- term:
+    id: GO:0003676
+    label: nucleic acid binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  supporting_entities:
+  - InterPro:IPR011856
+  review:
+    summary: nucleic acid binding is not fully resolved.
+    action: UNDECIDED
+    reason: The Sen15 subunit supports an RNA-processing complex, but specific RNA contacts by the target
+      or conserved contacts in a characterized Sen15 ortholog have not been established in the primary
+      evidence inspected here. Complex membership alone does not resolve whether this particular subunit
+      binds nucleic acid. Binding within an assembled complex would be sufficient; an isolated-subunit
+      assay is not required.
+    supported_by:
+    - *id001
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: HDA
+  original_reference_id: PMID:16823372
+  qualifier: is_active_in
+  review:
+    summary: nucleus is retained as an ancillary annotation.
+    action: KEEP_AS_NON_CORE
+    reason: Retain the PomBase localization observation from the fission yeast tagged-ORFeome screen.
+      The accessible abstract documents the assay but not the individual localization image; the screen
+      is not sufficient to identify which detected pool executes tRNA cleavage.
+    supported_by:
+    - &amp;id002
+      reference_id: PMID:16823372
+      supporting_text: Next, we determined the localization of 4,431 proteins, corresponding to approximately
+        90% of the fission yeast proteome, by tagging each ORF with the yellow fluorescent protein.
+- term:
+    id: GO:0005829
+    label: cytosol
+  evidence_type: HDA
+  original_reference_id: PMID:16823372
+  qualifier: is_active_in
+  review:
+    summary: cytosol is retained as an ancillary annotation.
+    action: KEEP_AS_NON_CORE
+    reason: Retain the PomBase localization observation from the fission yeast tagged-ORFeome screen.
+      The accessible abstract documents the assay but not the individual localization image; the screen
+      is not sufficient to identify which detected pool executes tRNA cleavage.
+    supported_by:
+    - *id002
+- term:
+    id: GO:0006388
+    label: tRNA splicing, via endonucleolytic cleavage and ligation
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  supporting_entities:
+  - InterPro:IPR036167
+  review:
+    summary: tRNA splicing, via endonucleolytic cleavage and ligation is supported.
+    action: ACCEPT
+    reason: The target is a SEN15-family protein, supporting transfer of the characterized four-subunit
+      tRNA-splicing endonuclease role. SEN2 and SEN34 encode the cleavage active sites; Sen15 is a noncatalytic
+      participant in intron recognition/excision. Participation in the overall cleavage-and-ligation pathway
+      does not assert that Sen15 ligates RNA.
+    supported_by:
+    - *id001
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: PMID:16823372
+  title: ORFeome cloning and global analysis of protein localization in the fission yeast Schizosaccharomyces
+    pombe.
+  findings: []
+  full_text_unavailable: true
+- id: PMID:9200603
+  title: &#39;The yeast tRNA splicing endonuclease: a tetrameric enzyme with two active site subunits homologous
+    to the archaeal tRNA endonucleases.&#39;
+  findings: []
+  full_text_unavailable: true
+core_functions:
+- description: Conserved noncatalytic participant in the tRNA-splicing endonuclease complex, supporting
+    splice-site recognition and intron excision.
+  supported_by:
+  - *id001
+  directly_involved_in:
+  - *id003
+  in_complex: *id004
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

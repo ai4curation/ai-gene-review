@@ -1,0 +1,13 @@
+# GHSR evidence and annotation tracing
+
+GHSR recognizes acyl-ghrelin. The defining [PMID:10604470](https://pubmed.ncbi.nlm.nih.gov/10604470/), DOI [10.1038/45230](https://doi.org/10.1038/45230), explicitly distinguishes the GHSR pathway from hypothalamic growth-hormone-releasing hormone(GHRH). QuickGO definitions checked 2026-09-08: GO:0016520 binds GHRH, while GO:0001616 binds ghrelin. Human GOA nevertheless has GO:0016520 IDA rows citing this paper and PMID:8688086, plus a rat-derived IEA. The horse row transfers GO:0016520 from human Q92847/ENSP00000241256 under GO_REF:0000107. The correction therefore belongs on the human donor and horse target. It is a ligand/term mismatch, not an allegation of an unsupported experimental organism.
+
+Modern [PMID:35027551](https://pubmed.ncbi.nlm.nih.gov/35027551/) structures directly show active ghrelin receptor bound to ghrelin and G protein. The complete 366 aa horse receptor aligns at 95.1% identity with human Q92847 and retains all seven helices and key ligand-binding features. This grounds receptor-subfamily transfer beyond a generic GPCR-domain label.
+
+[PMID:42426797](https://pubmed.ncbi.nlm.nih.gov/42426797/), DOI [10.1186/s12917-026-05700-8](https://doi.org/10.1186/s12917-026-05700-8), full text cached, measures equine tissue GHSR transcripts and circulating ghrelin. “Sequencing confirmed both products were identical to the equine GHSR1a reference sequence”. The validated tissues are pituitary and adrenal medulla. This is horse-specific identity/expression evidence, not a ghrelin-versus-oxytocin ligand-binding experiment or proof of every inferred physiological role. A horse-specific Falcon job was launched for this reason; it exceeded the local 600s timeout and fallback failed with insufficient quota. Any later-arriving provider report is preserved separately.
+
+Human immune effects are supported by [PMID:15232612](https://pubmed.ncbi.nlm.nih.gov/15232612/). Human decidualization in [PMID:17494105](https://pubmed.ncbi.nlm.nih.gov/17494105/) is not generalized to horse uterine biology. Fine-grained neuronal and metabolic transfers require their own donor-specific assessments; general receptor conservation is not enough for every physiological term.
+
+## Research synthesis
+
+The completed human Falcon synthesis supports acyl-ghrelin recognition, constitutive activity, LEAP2 antagonism and context-dependent G-protein coupling. It distinguishes full-length GHSR1a from the truncated five-transmembrane GHSR1b form. The selected horse protein is a full-length seven-transmembrane receptor. Human signaling and the direct ghrelin-bound structures strengthen ligand specificity without establishing every fine-grained neuronal or endocrine transfer to horse.

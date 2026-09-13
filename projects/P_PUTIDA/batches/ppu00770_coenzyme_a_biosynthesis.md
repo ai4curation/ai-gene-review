@@ -91,6 +91,8 @@ The machine-generated source table is retained at
 
 Pull request: [#2180](https://github.com/ai4curation/ai-gene-review/pull/2180)
 (`codex/putida-pantothenate-coa-biosynthesis`).
+Evolutionary-evidence repair: [#2859](https://github.com/ai4curation/ai-gene-review/pull/2859)
+(`codex/putida-coa-repair-wave88`).
 
 ## Curation Decisions
 
@@ -138,13 +140,16 @@ route now represented explicitly in the reusable module.
 
 ## Validation
 
-Checkpoint results on 2026-07-18:
+Checkpoint results on 2026-09-01:
 
 - All 12 reviews pass schema, GO-term, reference, and best-practice validation.
 - Every fetched GOA row has a reviewed action and no `PENDING` values remain.
 - The module passes `ModuleReview` LinkML validation and the custom semantic
-  validator. The only advisory is that the established `NCBIfam:TIGR00521`
-  prefix is not configured for label lookup.
+  validator. Type I PanK and standalone PPCS are grounded on their exact
+  PANTHER subfamilies. The COASY PPAT variant uses the GO:0004595-bearing PAINT
+  node PTN000708653 rather than the unrelated mitochondrial-matrix node
+  PTN000075343. The only remaining advisory is that the established
+  `NCBIfam:TIGR00521` prefix is not configured for label lookup.
 - Deep-research frontmatter validation passes for all 12 gene reports, the
   species-aware module/pathway/taxon report, and the generic module report.
 - All 12 gene pages, the module page, and the project pages render successfully.

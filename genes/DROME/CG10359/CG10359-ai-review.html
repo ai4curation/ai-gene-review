@@ -1,0 +1,2408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CG10359 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CG10359</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/B7Z0B2" target="_blank" class="term-link">
+                        B7Z0B2
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Drosophila melanogaster</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CG10359";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">5</span> Annotations</a>
+
+
+
+        <a href="#review-research" title="Deep research and hypothesis research reports"><span class="nav-count">1</span> Research</a>
+
+
+
+
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">4</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">1</span> Documents</a>
+
+
+
+
+
+
+
+
+
+
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="B7Z0B2" data-a="DESCRIPTION: CG10359 is a 485-residue secretory-pathway protein..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CG10359 is a 485-residue secretory-pathway protein with a fibrinogen-like C-terminal domain. Its architecture supports an extracellular interaction role, while ligand specificity, membrane association, and receptor-mediated signaling remain uncertain.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001664" target="_blank" class="term-link">
+                                    GO:0001664
+                                </a>
+                            </span>
+                            <span class="term-label">G protein-coupled receptor binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="B7Z0B2" data-a="GO:0001664" data-r="GO_REF:0000024" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A specific GPCR interaction is not established by the fibrinogen-like domain.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The ISS assertion is a curated transfer rather than an experiment on this protein. Its fibrinogen-like domain and signal peptide support extracellular biology but do not identify a GPCR partner or establish conserved receptor binding.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG10359/CG10359-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR036056; Fibrinogen-like_C.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG10359/CG10359-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR014716; Fibrinogen_a/b/g_C_1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG10359/CG10359-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   SIGNAL          1..23
+FT                   /evidence=&#34;ECO:0000256|SAM:SignalP&#34;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG10359/CG10359-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   DOMAIN          263..477
+FT                   /note=&#34;Fibrinogen C-terminal&#34;
+FT                   /evidence=&#34;ECO:0000259|PROSITE:PS51406&#34;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007186" target="_blank" class="term-link">
+                                    GO:0007186
+                                </a>
+                            </span>
+                            <span class="term-label">G protein-coupled receptor signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="B7Z0B2" data-a="GO:0007186" data-r="GO_REF:0000024" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Participation in GPCR signaling requires a specific ligand-receptor relationship.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The sequence supports a secretory fibrinogen-domain protein but does not establish the receptor or pathway represented by this ISS annotation.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG10359/CG10359-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR036056; Fibrinogen-like_C.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG10359/CG10359-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR014716; Fibrinogen_a/b/g_C_1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG10359/CG10359-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   SIGNAL          1..23
+FT                   /evidence=&#34;ECO:0000256|SAM:SignalP&#34;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG10359/CG10359-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   DOMAIN          263..477
+FT                   /note=&#34;Fibrinogen C-terminal&#34;
+FT                   /evidence=&#34;ECO:0000259|PROSITE:PS51406&#34;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008061" target="_blank" class="term-link">
+                                    GO:0008061
+                                </a>
+                            </span>
+                            <span class="term-label">chitin binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="B7Z0B2" data-a="GO:0008061" data-r="GO_REF:0000024" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Chitin binding is not a universal fibrinogen-domain property.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The extracellular fold permits diverse ligands; target-specific binding or a resolved transfer from a characterized chitin-binding ortholog is needed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG10359/CG10359-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR036056; Fibrinogen-like_C.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG10359/CG10359-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR014716; Fibrinogen_a/b/g_C_1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG10359/CG10359-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   SIGNAL          1..23
+FT                   /evidence=&#34;ECO:0000256|SAM:SignalP&#34;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG10359/CG10359-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   DOMAIN          263..477
+FT                   /note=&#34;Fibrinogen C-terminal&#34;
+FT                   /evidence=&#34;ECO:0000259|PROSITE:PS51406&#34;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="B7Z0B2" data-a="GO:0016020" data-r="GO_REF:0000024" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Secretion does not by itself establish membrane association.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The source record contains a signal peptide at residues 1-23 but no retained transmembrane segment. Peripheral membrane binding remains possible; the ISS membrane assertion cannot be resolved from this architecture alone.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG10359/CG10359-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR036056; Fibrinogen-like_C.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG10359/CG10359-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR014716; Fibrinogen_a/b/g_C_1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG10359/CG10359-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   SIGNAL          1..23
+FT                   /evidence=&#34;ECO:0000256|SAM:SignalP&#34;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG10359/CG10359-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   DOMAIN          263..477
+FT                   /note=&#34;Fibrinogen C-terminal&#34;
+FT                   /evidence=&#34;ECO:0000259|PROSITE:PS51406&#34;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031012" target="_blank" class="term-link">
+                                    GO:0031012
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular matrix</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="B7Z0B2" data-a="GO:0031012" data-r="GO_REF:0000033" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Extracellular-matrix residence is more specific than secretory-pathway entry.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The IBA is a curated phylogenetic assertion, but a fibrinogen-like domain and signal peptide alone do not establish matrix residence. PMID:24675716 describes a candidate angiopoietin-like protein without establishing ligand or matrix binding. The relevant ancestral localization inference remains unresolved.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG10359/CG10359-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR036056; Fibrinogen-like_C.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG10359/CG10359-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR014716; Fibrinogen_a/b/g_C_1.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG10359/CG10359-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   SIGNAL          1..23
+FT                   /evidence=&#34;ECO:0000256|SAM:SignalP&#34;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG10359/CG10359-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   DOMAIN          263..477
+FT                   /note=&#34;Fibrinogen C-terminal&#34;
+FT                   /evidence=&#34;ECO:0000259|PROSITE:PS51406&#34;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:DROME/CG10359/CG10359-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">DROME/CG10359/CG10359-uniprot.txt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24675716" target="_blank" class="term-link">
+                            PMID:24675716
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Dying cells protect survivors from radiation-induced cell death in Drosophila.</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section" id="review-research">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CG10359-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="B7Z0B2" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional-annotation report: *Drosophila melanogaster* CG10359 / AAF47782 (UniProt B7Z0B2)</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">14 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-10T14:29:59.156100</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="CG10359-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="functional-annotation-report-drosophila-melanogaster-cg10359-aaf47782-uniprot-b7z0b2">Functional-annotation report: <em>Drosophila melanogaster</em> CG10359 / AAF47782 (UniProt B7Z0B2)</h1>
+<h2 id="executive-conclusion">Executive conclusion</h2>
+<p><strong>The gene symbol “AAF47782” is ambiguous as a biological name, and literature is limited for this specific protein.</strong> In this record, AAF47782 is best treated as a submitted sequence/accession-derived name for the <em>D. melanogaster</em> gene <strong>CG10359</strong> (FlyBase gene FBgn0035452), not as a widely used functional gene symbol. The target is UniProt <strong>B7Z0B2</strong>, described as a fibrinogen C-terminal domain-containing protein. Exact-identifier searches did not reveal evidence that the literature discussed below concerns a different organism or an unrelated same-symbol gene.</p>
+<p>The most defensible annotation is therefore: <strong>CG10359 encodes a poorly characterized, likely extracellular fibrinogen-related protein, possibly belonging to an angiopoietin-like structural class, whose biochemical ligand/receptor relationships and physiological function remain unknown.</strong> It has no demonstrated catalytic reaction or transporter substrate. Available experiments show regulation or detection in several contexts—irradiation/apoptosis, altered EGFR signaling, Mediator-module perturbation, and tissue secretomes—but do not establish a definitive signaling pathway or phenotype.</p>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Finding</th>
+<th>Evidence type</th>
+<th>Confidence</th>
+<th>Key limitation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity and domain architecture</td>
+<td>Target is <em>Drosophila melanogaster</em> CG10359 (aliases AAF47782 and FBpp0072995), represented by UniProt B7Z0B2 and annotated as a fibrinogen C-terminal domain-containing protein with Fibrinogen-like_C/Fibrinogen_C domain signatures.</td>
+<td>UniProt and InterPro/Pfam sequence-based annotation supplied with the query</td>
+<td>High for identity; moderate for domain assignment</td>
+<td>The submitted name “AAF47782” is not a conventional functional gene symbol; domain presence does not establish ligand, receptor, or biochemical activity.</td>
+</tr>
+<tr>
+<td>Radiation-responsive expression</td>
+<td>CG10359 mRNA was induced approximately 2 hours after irradiation; induction was absent or reduced/delayed in a <em>p53</em> mutant context in which radiation-induced caspase activation and apoptosis were impaired.</td>
+<td>Gene-specific transcript analysis in irradiated <em>Drosophila</em> wing imaginal discs (bilak2014dyingcellsprotect pages 8-8)</td>
+<td>Moderate</td>
+<td>Establishes an apoptosis/radiation-associated transcriptional response, not direct regulation by p53 or a functional role for the protein.</td>
+</tr>
+<tr>
+<td>Radiation-survival phenotype</td>
+<td>A chromosomal deficiency deleting CG10359 gave a reported negative result in the tested protection-from-cell-death assay.</td>
+<td>Genetic deletion/deficiency test; negative result not shown (bilak2014dyingcellsprotect pages 8-8)</td>
+<td>Low–moderate</td>
+<td>The deficiency may remove additional genes, and an unpublished negative result cannot exclude redundancy, context-specific activity, or incomplete assay sensitivity.</td>
+</tr>
+<tr>
+<td>Tie/Angiopoietin hypothesis</td>
+<td>CG10359 was described as one of five predicted <em>Drosophila</em> Angiopoietin homologs, but no CG10359–Tie binding, receptor activation, or requirement for Tie-dependent survival was demonstrated.</td>
+<td>Homology-based candidate designation plus absence of direct functional evidence (bilak2014dyingcellsprotect pages 8-8)</td>
+<td>Low</td>
+<td>Structural similarity to an Angiopoietin-like fibrinogen domain is insufficient to assign Tie as its receptor.</td>
+</tr>
+<tr>
+<td>EGFR-associated expression</td>
+<td>CG10359 was listed among genes upregulated under dominant-negative EGFR conditions relative to activated-EGFR wing-disc samples.</td>
+<td>Differential-expression screen (butchar2012newnegativefeedback pages 30-34)</td>
+<td>Moderate for expression association; low for pathway assignment</td>
+<td>No CG10359-specific RNAi phenotype or mechanistic validation was reported; the result does not prove that CG10359 is a direct EGFR target or feedback regulator.</td>
+</tr>
+<tr>
+<td>Mediator-associated expression</td>
+<td>CG10359 appeared among genes changing at least threefold after depletion of one or more Cdk8-module components (Cdk8, CycC, Med12, or Med13) in S2 cells.</td>
+<td>High-throughput knockdown expression profiling (kuuluvainen2014cyclindependentkinase8 pages 4-5)</td>
+<td>Low–moderate</td>
+<td>The available evidence does not specify the responsible knockdown, direction, exact fold change, or directness of regulation.</td>
+</tr>
+<tr>
+<td>Sex/developmental expression in another fly</td>
+<td>In the stalk-eyed fly <em>Teleopsis dalmanni</em>, the CG10359-designated orthology probe was male-biased in larval eye-antennal discs but female-biased in adult heads.</td>
+<td>Comparative microarray/orthology-context observation (wilkinson2013sexbiasedgeneexpression pages 3-4)</td>
+<td>Moderate for the <em>Teleopsis</em> dataset; very low for inference about <em>D. melanogaster</em></td>
+<td>This is not direct evidence about <em>D. melanogaster</em> CG10359 and provides no molecular-function or localization information.</td>
+</tr>
+<tr>
+<td>Secretome and tissue origin</td>
+<td>A 2025 bioRxiv secretome map detected retained isoform B7Z0B2 in assignments from muscle, heart, wing disc, and neurons, supporting extracellular secretion as a working localization hypothesis.</td>
+<td>Tissue-resolved proximity-labeling/proteomic secretome mapping (bosch2026multiomicmappingof pages 36-38)</td>
+<td>Moderate, provisional</td>
+<td>Non-peer-reviewed preprint; the excerpt provides no CG10359-specific secretion validation, abundance, signal-peptide result, binding partner, destination tissue, or trafficking measurement.</td>
+</tr>
+<tr>
+<td>Primary molecular function</td>
+<td>No enzyme reaction, catalytic substrate, transporter substrate, direct extracellular binding partner, or receptor has been demonstrated for CG10359.</td>
+<td>Evidence-gap assessment across the gene-specific studies above (kuuluvainen2014cyclindependentkinase8 pages 4-5, bilak2014dyingcellsprotect pages 8-8, butchar2012newnegativefeedback pages 30-34, bosch2026multiomicmappingof pages 36-38)</td>
+<td>High that function remains unestablished</td>
+<td>Future biochemical and genetic studies could revise this conclusion.</td>
+</tr>
+<tr>
+<td>Pathway and phenotype conclusion</td>
+<td>No definitive signaling pathway, essential biological process, or reproducible CG10359-specific organismal/cellular phenotype is currently established; radiation/apoptosis, EGFR, and Mediator results are expression associations rather than functional assignments.</td>
+<td>Integrated evidence assessment (kuuluvainen2014cyclindependentkinase8 pages 4-5, bilak2014dyingcellsprotect pages 8-8, butchar2012newnegativefeedback pages 30-34)</td>
+<td>High</td>
+<td>Sparse gene-specific literature and possible redundancy limit negative conclusions.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Evidence for CG10359/B7Z0B2 supports a predicted fibrinogen-domain, probably secreted protein, but does not yet establish its receptor, biochemical activity, pathway, or phenotype. The table separates direct observations from homology-based and high-throughput inferences.</em></p>
+<h2 id="1-identity-and-domain-verification">1. Identity and domain verification</h2>
+<p>The supplied identifiers are mutually consistent with a <em>Drosophila melanogaster</em> product: CG10359, Dmel\CG10359, FBpp0072995, AAF47782, and UniProt B7Z0B2. The UniProt record’s predicted fibrinogen-related architecture—InterPro IPR036056, IPR014716, IPR002181 and IPR050373, and Pfam PF00147—is compatible with a literature description of CG10359 as one of five <strong>predicted</strong> <em>Drosophila</em> angiopoietin homologs. Crucially, that publication did not establish angiopoietin activity, secretion, Tie binding, or receptor activation experimentally (Bilak et al., published 13 March 2014; https://doi.org/10.1371/journal.pgen.1004220). (bilak2014dyingcellsprotect pages 8-8)</p>
+<p>The term “fibrinogen C-terminal domain-containing” describes a conserved protein fold rather than a demonstrated fibrinogen/coagulation function. Domain similarity alone cannot determine whether CG10359 is a growth-factor ligand, pattern-recognition protein, extracellular-matrix component, or another type of binding protein. Broader fibrinogen-related-protein functions in other insects or invertebrates should therefore not be transferred to CG10359 without direct evidence.</p>
+<h2 id="2-primary-molecular-function">2. Primary molecular function</h2>
+<p>No purified-protein biochemical study, binding assay, receptor-activation assay, structural study, or substrate-specificity experiment was found for CG10359. Accordingly:</p>
+<ul>
+<li><strong>Enzymatic activity:</strong> none demonstrated.</li>
+<li><strong>Catalyzed reaction and substrate specificity:</strong> not applicable or unknown.</li>
+<li><strong>Transport activity and transported substrate:</strong> none demonstrated.</li>
+<li><strong>Direct binding partners:</strong> none established.</li>
+<li><strong>Receptor:</strong> unknown; <em>Drosophila</em> Tie is a hypothesis suggested by broad angiopoietin-like homology, not a demonstrated CG10359 receptor.</li>
+<li><strong>Structural role:</strong> a fibrinogen-related extracellular binding/scaffolding role is plausible from domain architecture, but has not been shown experimentally.</li>
+</ul>
+<p>Thus, assigning CG10359 as a Tie ligand, an innate-immune pattern-recognition receptor, or a matrix protein would currently be overannotation.</p>
+<h2 id="3-cellular-and-extracellular-localization">3. Cellular and extracellular localization</h2>
+<p>The strongest localization evidence is recent but provisional. A tissue-resolved <em>Drosophila</em> secretome study retained isoform B7Z0B2 in secretome assignments originating from <strong>muscle, heart, wing disc, and neurons</strong>. The map used empirical false-discovery thresholds based on secreted/receptor controls and intracellular negative controls, supporting extracellular secretion as a working model. However, the retrieved evidence gives no CG10359-specific signal-peptide result, abundance, independent secretion validation, destination tissue, or trafficking measurement. The work was posted as a <strong>bioRxiv preprint on 11 July 2025</strong> and was not peer reviewed (Bosch et al.; https://doi.org/10.1101/2025.07.09.659702). (bosch2026multiomicmappingof pages 36-38)</p>
+<p>Consequently, <strong>extracellular/secreted</strong> is the best current localization hypothesis, but it should be labeled provisional rather than experimentally definitive. There is no evidence that the mature protein functions in the nucleus, cytosol, or a specific organelle.</p>
+<h2 id="4-biological-processes-and-pathway-evidence">4. Biological processes and pathway evidence</h2>
+<h3 id="41-irradiation-apoptosis-and-p53-associated-regulation">4.1 Irradiation, apoptosis, and p53-associated regulation</h3>
+<p>In irradiated wing imaginal discs, CG10359 mRNA was induced approximately <strong>2 hours after irradiation</strong>, alongside <em>Pvf1</em> and <em>Pvf2</em>. This induction was lost in a <em>p53</em> mutant background in which radiation-induced caspase activation and apoptosis were reduced or delayed. The result places CG10359 transcription in an irradiation/apoptosis-associated response, but it does not distinguish direct p53 transcriptional control from an indirect consequence of dying cells (Bilak et al., 13 March 2014; https://doi.org/10.1371/journal.pgen.1004220). (bilak2014dyingcellsprotect pages 8-8)</p>
+<p>The same study’s functional evidence was negative: a chromosomal deficiency deleting CG10359 did not alter the tested protection produced by induced cell death. That negative result was not shown in detail and cannot exclude redundancy or another context-specific function, but it means CG10359 was <strong>not demonstrated to be required</strong> for Tie-dependent radiation protection. The study therefore supports CG10359 as a response-associated candidate, not as an established survival signal. (bilak2014dyingcellsprotect pages 8-8)</p>
+<h3 id="42-egfr-associated-expression">4.2 EGFR-associated expression</h3>
+<p>CG10359 was listed among transcripts upregulated in dominant-negative EGFR conditions relative to activated-EGFR wing-disc samples. This suggests that its transcription responds to EGFR pathway state, potentially inversely to pathway activity. No CG10359-specific RNAi phenotype or mechanistic validation was reported, however, so the result does not establish CG10359 as a direct EGFR target or negative-feedback regulator (Butchar et al., published August 2012; https://doi.org/10.1534/genetics.112.141093). (butchar2012newnegativefeedback pages 30-34)</p>
+<h3 id="43-mediatorcdk8-module-expression-screen">4.3 Mediator/Cdk8-module expression screen</h3>
+<p>CG10359 appeared in a heat map of genes changing by at least <strong>threefold</strong> after depletion of Cdk8, CycC, Med12, or Med13 in S2 cells. The available passage does not identify which perturbation affected CG10359, the direction or exact magnitude of change, or whether regulation was direct. It therefore provides evidence of transcriptional sensitivity to one or more Mediator-module perturbations, but no specific molecular pathway assignment (Kuuluvainen et al., published 6 June 2014; https://doi.org/10.1074/jbc.M113.541904). (kuuluvainen2014cyclindependentkinase8 pages 4-5)</p>
+<p>Although that study concerned Serpent-dependent innate-immunity genes, CG10359’s appearance in its profiling data is insufficient to annotate CG10359 itself as an immune effector or pattern-recognition molecule.</p>
+<h2 id="5-expression-and-comparative-evidence">5. Expression and comparative evidence</h2>
+<p>A stalk-eyed-fly study reported that a CG10359-designated orthology probe was male-biased in larval eye-antennal discs but female-biased in adult heads. The broader experiment assayed <strong>3,748 genes</strong>, of which <strong>985</strong> were sex-biased in larval eye discs and <strong>242</strong> in adult heads. This observation concerns <em>Teleopsis dalmanni</em>, not direct measurement of <em>D. melanogaster</em> CG10359, and cannot establish its fly localization or function (Wilkinson et al., published 21 March 2013; https://doi.org/10.1371/journal.pone.0059826). (wilkinson2013sexbiasedgeneexpression pages 3-4)</p>
+<h2 id="6-recent-developments-20232024">6. Recent developments, 2023–2024</h2>
+<p>No 2023–2024 publication retrieved by exact searches for CG10359, B7Z0B2, or AAF47782 provided direct molecular or genetic characterization of this protein. This is an important negative finding: there is no recent authoritative basis for upgrading CG10359 to a defined ligand, enzyme, immune receptor, or pathway component. The newest gene-specific evidence located was the 2025 secretome preprint, which advances localization by detecting B7Z0B2 in multiple tissue-origin secretomes but does not resolve mechanism. (bosch2026multiomicmappingof pages 36-38)</p>
+<h2 id="7-current-applications-and-real-world-implementation">7. Current applications and real-world implementation</h2>
+<p>No clinical, agricultural, diagnostic, or biotechnology application specific to CG10359 was identified. Its present value is principally as:</p>
+<ol>
+<li>a candidate extracellular protein in <em>Drosophila</em> tissue-to-tissue communication;</li>
+<li>a radiation/apoptosis-responsive transcript;</li>
+<li>a potential model for functional diversification of fibrinogen-related domains; and</li>
+<li>an uncharacterized target suitable for systematic functional annotation.</li>
+</ol>
+<p>These are research opportunities, not validated implementations.</p>
+<h2 id="8-expert-assessment-and-recommended-annotation">8. Expert assessment and recommended annotation</h2>
+<p>A conservative database annotation would be:</p>
+<blockquote>
+<p><strong>Predicted secreted fibrinogen C-terminal domain-containing protein; molecular function and physiological role unknown. CG10359 transcript responds to irradiation/apoptosis and to perturbations of EGFR and Mediator-module activity; evidence does not establish direct pathway membership, Tie-receptor engagement, or a required survival phenotype.</strong></p>
+</blockquote>
+<p>The highest-value experiments would be: endogenous epitope tagging to verify secretion and tissue source; a clean CRISPR null with rescue; purified-protein interactome or receptor-binding screens; Tie phosphorylation/activation assays; spatial expression after irradiation; and infection assays only if expression or binding data first support an immune role.</p>
+<h2 id="overall-confidence">Overall confidence</h2>
+<ul>
+<li><strong>Identity and organism:</strong> high.</li>
+<li><strong>Fibrinogen C-terminal-domain architecture:</strong> moderate-to-high, sequence based.</li>
+<li><strong>Extracellular secretion:</strong> moderate but provisional.</li>
+<li><strong>Radiation/apoptosis-associated transcription:</strong> moderate.</li>
+<li><strong>EGFR/Mediator associations:</strong> low-to-moderate and expression based.</li>
+<li><strong>Tie ligand, innate-immune receptor, or defined signaling role:</strong> low/unsupported.</li>
+<li><strong>Primary biochemical function and organismal phenotype:</strong> currently unknown.</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(bilak2014dyingcellsprotect pages 8-8): Amber Bilak, Lyle Uyetake, and Tin Tin Su. Dying cells protect survivors from radiation-induced cell death in drosophila. Mar 2014. URL: https://doi.org/10.1371/journal.pgen.1004220, doi:10.1371/journal.pgen.1004220. This article has 59 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(butchar2012newnegativefeedback pages 30-34): Jonathan P Butchar, Donna Cain, Sathiya N Manivannan, Andrea D McCue, Liana Bonanno, Sarah Halula, Sharon Truesdell, Christina L Austin, Thomas L Jacobsen, and Amanda Simcox. New negative feedback regulators of egfr signaling in drosophila. Genetics, 191:1213-1226, Aug 2012. URL: https://doi.org/10.1534/genetics.112.141093, doi:10.1534/genetics.112.141093. This article has 35 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(kuuluvainen2014cyclindependentkinase8 pages 4-5): Emilia Kuuluvainen, Heini Hakala, Essi Havula, Michelle Sahal Estimé, Mika Rämet, Ville Hietakangas, and Tomi P. Mäkelä. Cyclin-dependent kinase 8 module expression profiling reveals requirement of mediator subunits 12 and 13 for transcription of serpent-dependent innate immunity genes in drosophila. Jun 2014. URL: https://doi.org/10.1074/jbc.m113.541904, doi:10.1074/jbc.m113.541904. This article has 28 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(wilkinson2013sexbiasedgeneexpression pages 3-4): Gerald S. Wilkinson, Philip M. Johns, Jackie D. Metheny, and Richard H. Baker. Sex-biased gene expression during head development in a sexually dimorphic stalk-eyed fly. PLoS ONE, 8:e59826, Mar 2013. URL: https://doi.org/10.1371/journal.pone.0059826, doi:10.1371/journal.pone.0059826. This article has 30 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bosch2026multiomicmappingof pages 36-38): Justin A. Bosch, Pierre Michel Jean Beltran, Cooper Cavers, James Thai LaGraff, Randy Melanson, Ankita Singh, Weihang Chen, Yanhui Hu, Sudhir Gopal Tattikota, Ying Liu, Yousuf Hashmi, John M. Asara, Tess Branon, Alice Y. Ting, Steven A. Carr, and Norbert Perrimon. Multi-omic mapping of drosophila protein secretomes reveals tissue-specific origins and inter-organ trafficking. bioRxiv, Jul 2026. URL: https://doi.org/10.1101/2025.07.09.659702, doi:10.1101/2025.07.09.659702. This article has 4 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="CG10359-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>bilak2014dyingcellsprotect pages 8-8</li>
+<li>butchar2012newnegativefeedback pages 30-34</li>
+<li>wilkinson2013sexbiasedgeneexpression pages 3-4</li>
+<li>bosch2026multiomicmappingof pages 36-38</li>
+<li>https://doi.org/10.1371/journal.pgen.1004220</li>
+<li>https://doi.org/10.1101/2025.07.09.659702</li>
+<li>https://doi.org/10.1534/genetics.112.141093</li>
+<li>https://doi.org/10.1074/jbc.M113.541904</li>
+<li>https://doi.org/10.1371/journal.pone.0059826</li>
+<li>https://doi.org/10.1371/journal.pgen.1004220,</li>
+<li>https://doi.org/10.1534/genetics.112.141093,</li>
+<li>https://doi.org/10.1074/jbc.m113.541904,</li>
+<li>https://doi.org/10.1371/journal.pone.0059826,</li>
+<li>https://doi.org/10.1101/2025.07.09.659702,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CG10359-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="B7Z0B2" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="cg10359-b7z0b2-evidence-and-protnlm-claim-review">CG10359 (B7Z0B2): evidence and ProtNLM claim review</h1>
+<p>CG10359 is a 485-residue secretory-pathway protein with a fibrinogen-like C-terminal domain. Its architecture supports an extracellular interaction role, while ligand specificity, membrane association, and receptor-mediated signaling remain uncertain.</p>
+<p>Exact input: <a href="https://www.uniprot.org/uniprotkb/B7Z0B2/entry">B7Z0B2</a>, 485 residues. The accession was fetched explicitly with the gene-directory alias; no canonical-sequence substitution is made.</p>
+<p>Raw emitted predictions: <a href="CG10359-predictions-source.json">CG10359-predictions-source.json</a>. Source features: <a href="CG10359-uniprot.txt">CG10359-uniprot.txt</a>, with an exact extraction in <a href="CG10359-sequence-evidence.json">CG10359-sequence-evidence.json</a>.</p>
+<h2 id="sequence-and-domain-evidence">Sequence and domain evidence</h2>
+<p>These are sequence/domain observations or explicitly named feature predictions, not measurements of biological function. ARBA assertions and ProtNLM-derived UniProt names are not counted as validation.</p>
+<div class="codehilite"><pre><span></span><code>DR   InterPro; IPR036056; Fibrinogen-like_C.
+DR   InterPro; IPR014716; Fibrinogen_a/b/g_C_1.
+DR   InterPro; IPR002181; Fibrinogen_a/b/g_C_dom.
+DR   InterPro; IPR050373; Fibrinogen_C-term_domain.
+FT   SIGNAL          1..23
+FT                   /evidence=&quot;ECO:0000256|SAM:SignalP&quot;
+FT   DOMAIN          263..477
+FT                   /note=&quot;Fibrinogen C-terminal&quot;
+FT                   /evidence=&quot;ECO:0000259|PROSITE:PS51406&quot;
+</code></pre></div>
+
+<h2 id="protnlm-claims">ProtNLM claims</h2>
+<p>The snapshot emits names and location/keyword statements, with no GO or EC prediction for this target. Each actual statement is assessed below; no GO term has been substituted for it. Categories follow the function-prediction rubric, with nonspecific “uncharacterized” names marked UNC because they contain no testable function. CNN records an independently supported existing annotation; it does not assert a particular training-set composition.</p>
+<table>
+<thead>
+<tr>
+<th>Kind</th>
+<th>Verbatim emitted statement</th>
+<th>Assessment</th>
+<th>Evidence and limitation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td>Fibrinogen C-terminal domain-containing protein</td>
+<td>CNN</td>
+<td>PROSITE PS51406 and InterPro IPR002181 independently identify the fibrinogen C-terminal domain at residues 263-477. The domain name is accurate without implying a vertebrate coagulation function.</td>
+</tr>
+<tr>
+<td>Location</td>
+<td>Secreted (SL-0243)</td>
+<td>CNN</td>
+<td>A Phobius signal peptide at residues 1-23 together with the extracellular fibrinogen-like domain supports secretion. Existing curated extracellular-matrix localization is compatible; secretion does not independently establish matrix binding or a GPCR interaction.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="literature-evidence">Literature evidence</h2>
+<p>No target-specific primary finding is used to establish a molecular activity here. The current assessment is bounded by exact-record architecture and the explicitly identified curated inferences.</p>
+<h2 id="annotation-decisions">Annotation decisions</h2>
+<ul>
+<li>GO:0001664 G protein-coupled receptor binding (ISS): <strong>UNDECIDED</strong>. The ISS assertion is a curated transfer rather than an experiment on this protein. Its fibrinogen-like domain and signal peptide support extracellular biology but do not identify a GPCR partner or establish conserved receptor binding.</li>
+<li>GO:0007186 G protein-coupled receptor signaling pathway (ISS): <strong>UNDECIDED</strong>. The sequence supports a secretory fibrinogen-domain protein but does not establish the receptor or pathway represented by this ISS annotation.</li>
+<li>GO:0008061 chitin binding (ISS): <strong>UNDECIDED</strong>. The extracellular fold permits diverse ligands; target-specific binding or a resolved transfer from a characterized chitin-binding ortholog is needed.</li>
+<li>GO:0016020 membrane (ISS): <strong>UNDECIDED</strong>. The source record contains a signal peptide at residues 1-23 but no retained transmembrane segment. Peripheral membrane binding remains possible; the ISS membrane assertion cannot be resolved from this architecture alone.</li>
+<li>GO:0031012 extracellular matrix (IBA): <strong>UNDECIDED</strong>. The IBA is a curated phylogenetic assertion, but a fibrinogen-like domain and signal peptide alone do not establish matrix residence. PMID:24675716 describes a candidate angiopoietin-like protein without establishing ligand or matrix binding. The relevant ancestral localization inference remains unresolved.</li>
+</ul>
+<h2 id="research-assessment">Research assessment</h2>
+<p>The Falcon report identifies PMID:24675716 as a primary CG10359 lead. The full text describes CG10359 as a predicted angiopoietin homolog and reports a negative deficiency result in the tested protection assay; it does not establish a receptor-binding function. The report also cites a secretome preprint, but the specific raw B7Z0B2 assignment is not independently verified here and is not counted as experimental proof. Secretion is supported as a sequence-based hypothesis; extracellular-matrix residence and receptor specificity remain unresolved.</p>
+<p>Provider output: <a href="CG10359-deep-research-falcon.md">CG10359-deep-research-falcon.md</a>. Primary papers and source records, rather than provider verdicts, support the assessment.</p>
+<p>The annotation and prediction assessments are complete. UNC/UNDECIDED record delimited scientific or evidence uncertainty. Empty core-function lists indicate that no sufficiently resolved molecular activity can be asserted, rather than an unfinished review.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: B7Z0B2
+gene_symbol: CG10359
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:7227
+  label: Drosophila melanogaster
+description: CG10359 is a 485-residue secretory-pathway protein with a fibrinogen-like C-terminal domain.
+  Its architecture supports an extracellular interaction role, while ligand specificity, membrane association,
+  and receptor-mediated signaling remain uncertain.
+existing_annotations:
+- term:
+    id: GO:0001664
+    label: G protein-coupled receptor binding
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:O00602
+  review:
+    action: UNDECIDED
+    summary: A specific GPCR interaction is not established by the fibrinogen-like domain.
+    reason: The ISS assertion is a curated transfer rather than an experiment on this protein. Its fibrinogen-like
+      domain and signal peptide support extracellular biology but do not identify a GPCR partner or establish
+      conserved receptor binding.
+    supported_by:
+    - reference_id: file:DROME/CG10359/CG10359-uniprot.txt
+      supporting_text: DR   InterPro; IPR036056; Fibrinogen-like_C.
+    - reference_id: file:DROME/CG10359/CG10359-uniprot.txt
+      supporting_text: DR   InterPro; IPR014716; Fibrinogen_a/b/g_C_1.
+    - reference_id: file:DROME/CG10359/CG10359-uniprot.txt
+      supporting_text: &#39;FT   SIGNAL          1..23
+
+        FT                   /evidence=&#34;ECO:0000256|SAM:SignalP&#34;&#39;
+    - reference_id: file:DROME/CG10359/CG10359-uniprot.txt
+      supporting_text: &#39;FT   DOMAIN          263..477
+
+        FT                   /note=&#34;Fibrinogen C-terminal&#34;
+
+        FT                   /evidence=&#34;ECO:0000259|PROSITE:PS51406&#34;&#39;
+- term:
+    id: GO:0007186
+    label: G protein-coupled receptor signaling pathway
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: involved_in
+  supporting_entities:
+  - UniProtKB:O00602
+  review:
+    action: UNDECIDED
+    summary: Participation in GPCR signaling requires a specific ligand-receptor relationship.
+    reason: The sequence supports a secretory fibrinogen-domain protein but does not establish the receptor
+      or pathway represented by this ISS annotation.
+    supported_by:
+    - reference_id: file:DROME/CG10359/CG10359-uniprot.txt
+      supporting_text: DR   InterPro; IPR036056; Fibrinogen-like_C.
+    - reference_id: file:DROME/CG10359/CG10359-uniprot.txt
+      supporting_text: DR   InterPro; IPR014716; Fibrinogen_a/b/g_C_1.
+    - reference_id: file:DROME/CG10359/CG10359-uniprot.txt
+      supporting_text: &#39;FT   SIGNAL          1..23
+
+        FT                   /evidence=&#34;ECO:0000256|SAM:SignalP&#34;&#39;
+    - reference_id: file:DROME/CG10359/CG10359-uniprot.txt
+      supporting_text: &#39;FT   DOMAIN          263..477
+
+        FT                   /note=&#34;Fibrinogen C-terminal&#34;
+
+        FT                   /evidence=&#34;ECO:0000259|PROSITE:PS51406&#34;&#39;
+- term:
+    id: GO:0008061
+    label: chitin binding
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:Q8N539
+  review:
+    action: UNDECIDED
+    summary: Chitin binding is not a universal fibrinogen-domain property.
+    reason: The extracellular fold permits diverse ligands; target-specific binding or a resolved transfer
+      from a characterized chitin-binding ortholog is needed.
+    supported_by:
+    - reference_id: file:DROME/CG10359/CG10359-uniprot.txt
+      supporting_text: DR   InterPro; IPR036056; Fibrinogen-like_C.
+    - reference_id: file:DROME/CG10359/CG10359-uniprot.txt
+      supporting_text: DR   InterPro; IPR014716; Fibrinogen_a/b/g_C_1.
+    - reference_id: file:DROME/CG10359/CG10359-uniprot.txt
+      supporting_text: &#39;FT   SIGNAL          1..23
+
+        FT                   /evidence=&#34;ECO:0000256|SAM:SignalP&#34;&#39;
+    - reference_id: file:DROME/CG10359/CG10359-uniprot.txt
+      supporting_text: &#39;FT   DOMAIN          263..477
+
+        FT                   /note=&#34;Fibrinogen C-terminal&#34;
+
+        FT                   /evidence=&#34;ECO:0000259|PROSITE:PS51406&#34;&#39;
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB:Q8N539
+  review:
+    action: UNDECIDED
+    summary: Secretion does not by itself establish membrane association.
+    reason: The source record contains a signal peptide at residues 1-23 but no retained transmembrane
+      segment. Peripheral membrane binding remains possible; the ISS membrane assertion cannot be resolved
+      from this architecture alone.
+    supported_by:
+    - reference_id: file:DROME/CG10359/CG10359-uniprot.txt
+      supporting_text: DR   InterPro; IPR036056; Fibrinogen-like_C.
+    - reference_id: file:DROME/CG10359/CG10359-uniprot.txt
+      supporting_text: DR   InterPro; IPR014716; Fibrinogen_a/b/g_C_1.
+    - reference_id: file:DROME/CG10359/CG10359-uniprot.txt
+      supporting_text: &#39;FT   SIGNAL          1..23
+
+        FT                   /evidence=&#34;ECO:0000256|SAM:SignalP&#34;&#39;
+    - reference_id: file:DROME/CG10359/CG10359-uniprot.txt
+      supporting_text: &#39;FT   DOMAIN          263..477
+
+        FT                   /note=&#34;Fibrinogen C-terminal&#34;
+
+        FT                   /evidence=&#34;ECO:0000259|PROSITE:PS51406&#34;&#39;
+- term:
+    id: GO:0031012
+    label: extracellular matrix
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  supporting_entities:
+  - MGI:MGI:2665790
+  - MGI:MGI:99516
+  - PANTHER:PTN000441162
+  - RGD:3886
+  - UniProtKB:P55083
+  - UniProtKB:P55918
+  - UniProtKB:Q9UQP3
+  review:
+    action: UNDECIDED
+    summary: Extracellular-matrix residence is more specific than secretory-pathway entry.
+    reason: The IBA is a curated phylogenetic assertion, but a fibrinogen-like domain and signal peptide
+      alone do not establish matrix residence. PMID:24675716 describes a candidate angiopoietin-like protein
+      without establishing ligand or matrix binding. The relevant ancestral localization inference remains
+      unresolved.
+    supported_by:
+    - reference_id: file:DROME/CG10359/CG10359-uniprot.txt
+      supporting_text: DR   InterPro; IPR036056; Fibrinogen-like_C.
+    - reference_id: file:DROME/CG10359/CG10359-uniprot.txt
+      supporting_text: DR   InterPro; IPR014716; Fibrinogen_a/b/g_C_1.
+    - reference_id: file:DROME/CG10359/CG10359-uniprot.txt
+      supporting_text: &#39;FT   SIGNAL          1..23
+
+        FT                   /evidence=&#34;ECO:0000256|SAM:SignalP&#34;&#39;
+    - reference_id: file:DROME/CG10359/CG10359-uniprot.txt
+      supporting_text: &#39;FT   DOMAIN          263..477
+
+        FT                   /note=&#34;Fibrinogen C-terminal&#34;
+
+        FT                   /evidence=&#34;ECO:0000259|PROSITE:PS51406&#34;&#39;
+references:
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator
+    judgment of sequence similarity
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: file:DROME/CG10359/CG10359-uniprot.txt
+  title: DROME/CG10359/CG10359-uniprot.txt
+  findings: []
+- id: PMID:24675716
+  title: Dying cells protect survivors from radiation-induced cell death in Drosophila.
+  full_text_unavailable: false
+  findings: []
+core_functions: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

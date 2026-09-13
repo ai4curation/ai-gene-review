@@ -1,0 +1,2209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NARF - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>NARF</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/J3KS48" target="_blank" class="term-link">
+                        J3KS48
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Homo sapiens</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "NARF";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">1</span> Annotations</a>
+
+
+
+        <a href="#review-research" title="Deep research and hypothesis research reports"><span class="nav-count">1</span> Research</a>
+
+
+
+        <a href="#external-predictions" title="External predictions assessed separately from GOA annotations" class="nav-external"><span class="nav-count">1</span> External</a>
+
+
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">5</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">3</span> Documents</a>
+
+
+
+
+
+
+
+
+
+        <a href="#review-questions" title="Suggested questions for experts"><span class="nav-count">1</span> Questions</a>
+
+
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="J3KS48" data-a="DESCRIPTION: NARF is a nuclear prelamin A-associated protein re..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>NARF is a nuclear prelamin A-associated protein related to iron-only hydrogenases. The human J3KS48 product is a 217-residue form with major internal and C-terminal deletions relative to the 456-residue NARF reference. Its ability to localize to the nucleus, bind prelamin A or coordinate an iron-sulfur cluster is unresolved. NARF is distinct from the cytosolic iron-sulfur assembly factor NARFL/CIAO3.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="J3KS48" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nuclear localization is experimentally supported for human NARF, but J3KS48 deletes an internal segment and most of the reference C-terminal region. No localization assay or intact localization determinant has been established for this 217-residue product. The same-gene evidence makes nuclear localization plausible without resolving this product-specific transfer.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/10514485" target="_blank" class="term-link">
+                                        PMID:10514485
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">When a FLAG epitope-tagged Narf is expressed
+in HeLa cells, it is exclusively nuclear and partially co-localizes with the
+nuclear lamina.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/NARF/NARF-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">Selected J3KS48 has 217 residues; reference Q9UHQ1 has 456 residues.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10514485" target="_blank" class="term-link">
+                            PMID:10514485
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Prenylated prelamin A interacts with Narf, a novel nuclear protein.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human NARF constructs localize to nuclei and bind prenylated prelamin A; the paper does not establish activity of the selected 217-residue product.</div>
+
+                        <div class="finding-text">"When a FLAG epitope-tagged Narf is expressed
+in HeLa cells, it is exclusively nuclear and partially co-localizes with the
+nuclear lamina."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18270200" target="_blank" class="term-link">
+                            PMID:18270200
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A role for IOP1 in mammalian cytosolic iron-sulfur protein biogenesis.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Compared with IOP1 depletion, IOP2/NARF depletion did not impair cytosolic or mitochondrial aconitase activity, distinguishing the paralogs in this tested CIA phenotype.</div>
+
+                        <div class="finding-text">"Knockdown of IOP2, in contrast, had no
+effect on either."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/NARF/NARF-bioinformatics/RESULTS.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Exact NARF product-to-reference sequence mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/NARF/NARF-protnlm-source.json
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Frozen exact-input ProtNLM output and UniProt sequence for J3KS48</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section" id="review-questions">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does J3KS48 produce a stable endogenous protein, retain nuclear localization, or bind an iron-sulfur cluster despite the large deletions?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="J3KS48" data-a="Q: Does J3KS48 produce a stable endogenous protein, r..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+    <section class="section external-predictions" id="external-predictions" aria-labelledby="external-predictions-title">
+        <h2 class="section-title" id="external-predictions-title">External Prediction Reviews</h2>
+        <p class="prediction-notice">These computational predictions are reviewed separately from the GOA annotation set used for this review.
+            The assessments below are from this project and do not constitute official GO annotations or endorsement by GO/UniProt.
+            They are not included in the existing annotation review above.</p>
+
+
+        <article class="prediction-review">
+        <h3>ProtNLM2 <span class="badge">External predictions</span></h3>
+        <p class="prediction-source"><a href="NARF-protnlm-predictions-review.yaml">View prediction review YAML</a> &middot; NARF-protnlm-predictions-review.yaml
+            &middot; Review status: COMPLETE</p>
+
+        <p>The selected short NARF product has no demonstrated 4Fe–4S cluster binding. The accompanying function paragraph confuses NARF/IOP2 with the experimentally distinguished CIA paralog NARFL/IOP1.</p>
+
+        <p class="prediction-source">Review score: 2 = concordant with evidence; 1 = uncertain; 0 = discordant with evidence. This is an assessment score, not a model probability.</p>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051539" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:0051539
+                    </a>
+                    <span class="term-label">4 iron, 4 sulfur cluster binding</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_MF</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-unc">
+                        UNC — Uncertain
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 1/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM2
+                 &middot; Version: UniProt API snapshot 2026-09-10
+
+                 &middot; <a href="#" target="_blank" class="term-link">file:human/NARF/NARF-protnlm-source.json</a>
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> Hydrogenase-family homology makes iron-sulfur coordination a hypothesis, but it is not demonstrated for this NARF product. J3KS48 lacks much of the 456-residue reference protein. The IOP1/IOP2 knockdown comparison distinguishes CIA function but does not itself test cluster occupancy of NARF; it therefore cannot refute or validate this binding claim.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="NARF-bioinformatics/RESULTS.md" target="_blank" class="term-link">file:human/NARF/NARF-bioinformatics/RESULTS.md</a>:
+
+
+                        <span class="finding-text">"Selected J3KS48 has 217 residues; reference Q9UHQ1 has 456 residues."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18270200" target="_blank" class="term-link">PMID:18270200</a>:
+
+
+                        <span class="finding-text">"Knockdown of IOP2, in contrast, had no
+effect on either."</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        </article>
+
+    </section>
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section" id="review-research">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(NARF-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="J3KS48" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Human NARF Functional Annotation Report</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">42 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-10T14:34:00.701209</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="NARF-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="human-narf-functional-annotation-report">Human NARF Functional Annotation Report</h1>
+<h2 id="executive-summary">Executive summary</h2>
+<p>The requested target is <strong>human NARF (nuclear prelamin A recognition factor; IOP2/iron-only hydrogenase-like protein 2)</strong>. The supplied UniProt entry <strong>J3KS48</strong> is consistent with the human NARF locus and the stated hydrogenase-like domains, but most experimental literature refers to canonical human NARF accession <strong>Q9UHQ1</strong> or specific isoforms such as Q9UHQ1-4. Consequently, sequence-level conclusions should be mapped explicitly between J3KS48 and the canonical isoform before assigning residues or epitopes.</p>
+<p>NARF must not be confused with <strong>NARFL/IOP1</strong>. NARFL/IOP1—not NARF/IOP2—is the human paralogue with established activity in cytosolic iron–sulfur-protein maturation. Evidence that NARFL depletion affects Fe–S proteins or HIF-1α cannot be transferred to NARF (kriebel2018thenuclearenvelope pages 18-21).</p>
+<p>The best-supported primary annotation for NARF is a <strong>nuclear interaction and transcriptional-regulatory protein</strong>. It recognizes the farnesylated C-terminal tail of prelamin A and, in hypoxic breast-cancer cells, acts as an OCT4-associated coactivator that recruits the H3K27 demethylase KDM6A to pluripotency-gene regulatory regions. Despite its FeFe-hydrogenase-like sequence, <strong>no hydrogenase reaction, Fe–S-cluster occupancy, catalytic rate, or substrate specificity has been demonstrated for human NARF</strong> (barton1999prenylatedprelamina pages 8-9, barton1999prenylatedprelamina pages 7-8, yang2022narfisa pages 5-7).</p>
+<table>
+<thead>
+<tr>
+<th>Claim/domain</th>
+<th>Best evidence</th>
+<th>Confidence</th>
+<th>Caveat</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity: human NARF/IOP2, not NARFL/IOP1</td>
+<td>Human NARF was cloned as a ~52-kDa prelamin-A-binding protein; IOP2 is an alias. Comparative work distinguishes it from NARFL/IOP1, which has the established cytosolic Fe–S assembly role (barton1999prenylatedprelamina pages 4-6, kriebel2018thenuclearenvelope pages 18-21)</td>
+<td>High</td>
+<td>J3KS48 is an Ensembl-derived UniProt entry; most literature uses canonical NARF accession Q9UHQ1, so isoform and sequence mapping is essential.</td>
+</tr>
+<tr>
+<td>Nuclear localization</td>
+<td>Endogenous NARF occurred in HeLa nuclear fractions; FLAG-NARF was exclusively nuclear, partly colocalized with the lamina, and was extractable from nuclear envelopes with 0.5 M NaCl (barton1999prenylatedprelamina pages 8-9, barton1999prenylatedprelamina pages 6-6)</td>
+<td>High</td>
+<td>Extranuclear or mitochondrial staining has been reported, but possible antibody nonspecificity was acknowledged (ding2020nuclearprelamina pages 4-7).</td>
+</tr>
+<tr>
+<td>Farnesylated prelamin A recognition</td>
+<td>Yeast two-hybrid and GST pull-down experiments showed preferential binding to the prelamin-A C-terminal tail; CaaX mutation, CaaX deletion, or farnesyltransferase inhibition greatly reduced binding (barton1999prenylatedprelamina pages 7-8, barton1999prenylatedprelamina pages 1-1)</td>
+<td>High</td>
+<td>Binding is well supported, but its physiological consequence and whether NARF participates directly in lamin-A processing remain unresolved.</td>
+</tr>
+<tr>
+<td>Hydrogenase-like domains and catalysis</td>
+<td>Sequence homology encompasses an FeFe-hydrogenase H-cluster-like region and conserved cysteines (barton1999prenylatedprelamina pages 4-6)</td>
+<td>Low for enzyme activity</td>
+<td>No Fe–S occupancy, hydrogen reaction, catalytic rate, substrate specificity, or bona fide hydrogenase activity has been demonstrated; NARF lacks expected electron- and proton-delivery components (barton1999prenylatedprelamina pages 8-9).</td>
+</tr>
+<tr>
+<td>HIF-1/OCT4/KDM6A coactivator mechanism</td>
+<td>At 1% O₂, HIF-1 bound a response element 95 bp upstream of the NARF transcription start site. NARF associated with OCT4 and recruited KDM6A to NANOG, KLF4, and SOX2 regulatory sites, enabling loss of repressive H3K27me3 (yang2022narfisa pages 5-7, yang2022narfisa pages 2-3)</td>
+<td>Moderate–high</td>
+<td>Demonstrated mainly in breast-cancer cell lines and xenografts; independent replication and relevance to normal tissues remain limited.</td>
+</tr>
+<tr>
+<td>RNA-edited Alu exon</td>
+<td>A primate-specific NARF Alu exon uses A-to-I editing to create an AG 3′ splice site and convert a UAG stop codon to UGG. E1 editing was nearly 100%; mean E2–E5 editing was 53.6%, 26.1%, 7.9%, and 37.5% (levmaor2007rnaeditingmediatedexonevolution pages 3-4, levmaor2007rnaeditingmediatedexonevolution pages 1-2)</td>
+<td>High for RNA processing</td>
+<td>Tissue-dependent exon inclusion is established, but the abundance and biological function of the resulting protein isoform remain unclear.</td>
+</tr>
+<tr>
+<td>Breast-cancer stem-cell biology</td>
+<td>NARF knockdown reduced hypoxia-induced mammospheres and ALDH-positive cells and impaired tumor initiation and lung metastasis; across 1,218 TCGA breast tumors, NARF correlated with HIF and stem-cell signatures at R=0.42 and R=0.496 (yang2022narfisa pages 3-5, yang2022narfisa pages 2-3)</td>
+<td>Moderate–high preclinical</td>
+<td>Knockdown did not materially alter bulk primary-tumor growth in the tested model; no NARF-directed clinical therapy has been validated.</td>
+</tr>
+<tr>
+<td>Multiple sclerosis and iron</td>
+<td>In postmortem brains from 6 MS cases and 6 controls, intact NARF signal was associated with iron deposition; NARF overexpression increased cellular iron in triplicate CHP-212 assays (ding2020nuclearprelamina pages 1-2, ding2020nuclearprelamina pages 4-7, ding2020nuclearprelamina pages 2-4)</td>
+<td>Low–moderate</td>
+<td>The cohort was small, findings were largely qualitative, total NARF and transcript levels were unchanged, and antibody nonspecificity was possible; causality and direct iron binding were not shown.</td>
+</tr>
+<tr>
+<td>2023 sepsis biomarker</td>
+<td>Transcriptomic analysis identified NARF among nine progressively dysregulated genes; all nine were elevated by qPCR in a 69-sample clinical validation set (tong2023classificationofsubtypes pages 1-2, tong2023classificationofsubtypes pages 7-9)</td>
+<td>Low–moderate as biomarker</td>
+<td>This was a panel-level association; diagnostic performance and mechanistic relevance were not established specifically for NARF.</td>
+</tr>
+<tr>
+<td>2024 computational vaccine</td>
+<td>Immunoinformatics, docking, molecular-dynamics, and immune simulations predicted that a NARF-derived multi-epitope construct could engage TLR7 and support MHC-II presentation (paranthaman2024tacklingsuppressivecancer pages 1-2)</td>
+<td>Very low; translational hypothesis</td>
+<td>The study was entirely in silico, used canonical Q9UHQ1 rather than J3KS48, and lacks biochemical, cellular, animal, safety, or clinical validation.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Evidence-strength summary distinguishing experimentally established NARF functions from domain-based inference and early translational hypotheses. It also flags isoform mapping and NARFL/IOP1 confusion as major annotation risks.</em></p>
+<h2 id="1-identity-verification">1. Identity verification</h2>
+<h3 id="11-gene-symbol-and-protein-description">1.1 Gene symbol and protein description</h3>
+<p>The symbol <strong>NARF</strong> matches “nuclear prelamin A recognition factor.” The protein was originally isolated from a human yeast two-hybrid screen using the prelamin-A C-terminal tail and named for that interaction. A ~2-kb transcript and ~52-kDa protein were detected, with the protein size matching that predicted from the cloned human cDNA (barton1999prenylatedprelamina pages 4-6, barton1999prenylatedprelamina pages 1-1). The literature also uses <strong>IOP2</strong>, or iron-only hydrogenase-like protein 2, for this protein; a multiple-sclerosis study explicitly identifies NARF as IOP2 (ding2020nuclearprelamina pages 4-7).</p>
+<p>The organism is correctly <strong>Homo sapiens</strong>: the founding study cloned human NARF and examined endogenous or tagged protein in human HeLa and Raji cells (barton1999prenylatedprelamina pages 6-6, barton1999prenylatedprelamina pages 4-6).</p>
+<h3 id="12-accession-and-isoform-caution">1.2 Accession and isoform caution</h3>
+<p>The supplied J3KS48 record is an Ensembl-derived UniProt entry associated with ENSP00000462305.1, whereas most publications and the 2024 vaccine-design study use canonical UniProt <strong>Q9UHQ1</strong>. A proteomic study specifically detected peptides assigned to <strong>Q9UHQ1-4</strong>, showing that isoform selection is not merely nominal (paranthaman2024tacklingsuppressivecancer pages 1-2, ding2020nuclearprelamina pages 2-4). Functional claims at the gene level are applicable to NARF, but residue numbering, domain boundaries, molecular mass, and proposed epitopes should not automatically be transferred to J3KS48 without sequence alignment.</p>
+<h3 id="13-family-and-domains">1.3 Family and domains</h3>
+<p>The supplied InterPro/Pfam assignments—Cytosolic_Fe-S_CAF, Fe_hydrogenase, Fe_hydrogenase_lsu_C, and PF02906—are consistent with the reported evolutionary relationship to bacterial iron-only/FeFe hydrogenases and eukaryotic Nar1-like proteins. The original sequence analysis found 31% identity/41% similarity to budding-yeast Nar1, 32%/45% to the fission-yeast homologue, and 34%/44% to the <em>C. elegans</em> homologue, including conserved H-cluster-region cysteines (barton1999prenylatedprelamina pages 4-6).</p>
+<p>However, domain homology is not equivalent to catalytic annotation. The founding investigators explicitly noted that Fe–S incorporation and hydrogenase function had not been demonstrated and considered conventional hydrogenase activity unlikely because NARF lacks the expected electron-input and proton-delivery machinery (barton1999prenylatedprelamina pages 8-9). The conservative annotation is therefore <strong>“hydrogenase-like fold/domain protein of unknown intrinsic catalytic activity,” not “hydrogenase.”</strong></p>
+<h2 id="2-primary-molecular-function">2. Primary molecular function</h2>
+<h3 id="21-recognition-of-prenylated-prelamin-a">2.1 Recognition of prenylated prelamin A</h3>
+<p>NARF preferentially binds the C-terminal tail of <strong>prelamin A</strong>, the farnesylated precursor of mature lamin A. This conclusion is supported by independent yeast two-hybrid and GST pull-down experiments. Mature lamin A and other lamin-tail constructs showed little or no binding above background, whereas prenylated prelamin A bound strongly. Mutation or deletion of the CaaX cysteine markedly reduced binding (barton1999prenylatedprelamina pages 7-8).</p>
+<p>Pharmacological experiments supported a requirement for prenylation rather than an artifact of the constructs. FPT-II produced a dose-dependent reduction in radiolabeled prelamin-A prenylation and concurrent loss of NARF binding; adding inhibitor after translation did not disrupt binding. Cysteine carboxymethylation was not required (barton1999prenylatedprelamina pages 7-8). Thus, the best-defined “substrate-like” specificity is actually <strong>binding specificity for a farnesylated protein tail</strong>, not enzymatic substrate specificity.</p>
+<p>Whether NARF directly participates in ZMPSTE24-mediated prelamin-A processing, controls precursor residence at the lamina, or serves another scaffolding role remains unresolved. Binding alone does not establish that NARF is part of the proteolytic machinery.</p>
+<h3 id="22-hypoxia-induced-transcriptional-coactivator">2.2 Hypoxia-induced transcriptional coactivator</h3>
+<p>The strongest modern mechanistic work identifies NARF as a <strong>non-DNA-binding transcriptional coactivator</strong> in breast-cancer cells. Under hypoxia, HIF-1 induces NARF; NARF associates with OCT4 at regulatory regions of <strong>NANOG, KLF4, and SOX2</strong> and recruits the H3K27me3 demethylase <strong>KDM6A/UTX</strong>. KDM6A removes repressive H3K27 trimethylation, permitting expression of these pluripotency factors and supporting breast-cancer stem-cell specification (yang2022narfisa pages 5-7, yang2022narfisa pages 1-2).</p>
+<p>Key mechanistic evidence includes:</p>
+<ul>
+<li>Six breast-cancer lines—MCF-7, T47D, HCC1954, MDA-MB-231, SUM149, and SUM159—induced NARF RNA or protein at 1% versus 20% O₂. HIF-1α knockdown, but not HIF-2α knockdown, abolished induction; digoxin and acriflavine also blocked it (yang2022narfisa pages 2-3).</li>
+<li>HIF-1α and HIF-1β occupied a response element <strong>95 bp upstream</strong> of the NARF transcription start site. Hypoxic reporter induction required this site; a three-base mutation abolished the response (yang2022narfisa pages 2-3).</li>
+<li>Co-immunoprecipitation and ChIP-qPCR supported hypoxia-dependent NARF–OCT4 association and OCT4-dependent recruitment of NARF to NANOG, KLF4, and SOX2 regulatory regions (yang2022narfisa pages 3-5, yang2022narfisa pages 7-9).</li>
+<li>NARF knockdown diminished KDM6A recruitment and prevented or reduced local hypoxia-associated H3K27me3 depletion without changing total histone H3 (yang2022narfisa pages 5-7).</li>
+</ul>
+<p>This pathway can be summarized as:</p>
+<p><strong>Hypoxia → HIF-1 → NARF induction → OCT4-bound NARF → KDM6A recruitment → H3K27me3 removal → NANOG/KLF4/SOX2 activation → cancer-stem-cell phenotype.</strong></p>
+<h2 id="3-cellular-localization">3. Cellular localization</h2>
+<p>The strongest localization evidence places NARF in the <strong>nucleus</strong>, distributed through the nucleoplasm and partly associated with the nuclear lamina/envelope. Endogenous protein was recovered from HeLa nuclear fractions; FLAG-tagged NARF was exclusively nuclear and partly colocalized with the lamina. Extraction from nuclear envelopes with 0.5 M NaCl and the lack of a predicted transmembrane segment indicate a peripheral or protein-mediated nuclear-envelope association rather than an integral membrane protein (barton1999prenylatedprelamina pages 8-9, barton1999prenylatedprelamina pages 6-6, barton1999prenylatedprelamina pages 1-1).</p>
+<p>NARF was present in Raji cells lacking lamin A/C expression, demonstrating that its expression and nuclear residence do not strictly require lamin A/C (barton1999prenylatedprelamina pages 6-6). This is compatible with the later finding that it also functions at intranuclear chromatin-bound transcription complexes.</p>
+<p>A 2020 multiple-sclerosis paper described NARF as mitochondria-associated and observed non-nuclear astrocyte staining. The authors themselves cautioned that the staining could reflect nonspecific antibody reactivity (ding2020nuclearprelamina pages 1-2, ding2020nuclearprelamina pages 4-7). In the absence of stronger organelle-targeting or fractionation evidence, <strong>nuclear/nuclear-lamina localization should remain the primary annotation</strong>, while mitochondrial localization is provisional.</p>
+<h2 id="4-enzymatic-activity-and-ironsulfur-biology">4. Enzymatic activity and iron–sulfur biology</h2>
+<p>No reaction should currently be assigned to human NARF. Specifically, the literature does not demonstrate:</p>
+<ul>
+<li>reduction of protons to H₂ or oxidation of H₂;</li>
+<li>an electron donor or acceptor;</li>
+<li>kinetic parameters or substrate specificity;</li>
+<li>direct iron or Fe–S-cluster binding;</li>
+<li>spectroscopic identification of an H-cluster;</li>
+<li>rescue of a Nar1/Fe–S-biogenesis defect by human NARF.</li>
+</ul>
+<p>Human NARF and NARFL reportedly failed to rescue growth of Nar1-depleted yeast, so that experiment does not support conserved catalytic complementation (alicja2021theroleof pages 106-109). Moreover, assigning the established mammalian cytosolic iron–sulfur assembly function of NARFL/IOP1 to NARF/IOP2 would be paralogue conflation (kriebel2018thenuclearenvelope pages 18-21).</p>
+<p>Accordingly, the Cytosolic_Fe-S_CAF and hydrogenase-like annotations are valuable <strong>structural/evolutionary hypotheses</strong>, but the experimentally established molecular roles of NARF are presently protein recognition, scaffolding, and transcriptional coactivation.</p>
+<h2 id="5-transcript-processing-and-isoform-generation">5. Transcript processing and isoform generation</h2>
+<p>Human NARF contains a primate-specific, alternatively included <strong>Alu-derived exon</strong> whose exonization depends on A-to-I RNA editing. Pairing between sense and antisense Alu elements generates double-stranded RNA. Editing converts an AA sequence into a functional AG 3′ splice site and modifies exonic splicing enhancers; an additional editing event changes an in-frame UAG stop codon to UGG encoding tryptophan (levmaor2007rnaeditingmediatedexonevolution pages 3-4, levmaor2007rnaeditingmediatedexonevolution pages 1-2).</p>
+<p>The first exonic editing site, E1, was edited at nearly 100% in every tested tissue and cell line and remained &gt;97% after nonsense-mediated-decay inhibition. Mean editing at E2–E5 was 53.6%, 26.1%, 7.9%, and 37.5%, respectively. Exon inclusion occurred broadly but was highest in brain, kidney, and spleen and lowest in skeletal muscle (levmaor2007rnaeditingmediatedexonevolution pages 3-4). These data establish regulated transcript diversification, but the abundance, stability, and molecular function of the resulting protein isoform remain uncertain.</p>
+<p>A later Alzheimer’s-disease study found differential editing at a NARF site, reporting values of 35.515 versus 53.491, difference −17.975, P=0.002. The retrieved table excerpt did not unambiguously identify the corresponding tissue or group direction, and the bulk-tissue study could not establish causality (khermesh2016reducedlevelsof pages 6-7).</p>
+<h2 id="6-biological-processes-and-pathways">6. Biological processes and pathways</h2>
+<h3 id="nuclear-lamina-biology">Nuclear-lamina biology</h3>
+<p>The prelamin-A interaction places NARF at the interface of nuclear-envelope organization and lamin-A maturation. Nevertheless, no definitive evidence shows that NARF catalyzes prelamin-A cleavage or that NARF loss causes accumulation of farnesylated prelamin A. Its precise structural contribution to lamina integrity remains incompletely resolved (barton1999prenylatedprelamina pages 7-8, barton1999prenylatedprelamina pages 1-1).</p>
+<h3 id="hypoxia-and-chromatin-regulation">Hypoxia and chromatin regulation</h3>
+<p>The HIF-1/OCT4/KDM6A axis is the most precisely defined pathway. NARF connects an oxygen-responsive transcription factor to locus-specific removal of a repressive histone modification and thereby promotes stemness-associated transcription (yang2022narfisa pages 5-7, yang2022narfisa pages 2-3).</p>
+<h3 id="rna-editing-and-exon-evolution">RNA editing and exon evolution</h3>
+<p>NARF is also a well-characterized example of ADAR-dependent Alu exonization, illustrating how A-to-I editing can create a splice site, preserve an open reading frame, and generate a tissue-regulated primate exon (levmaor2007rnaeditingmediatedexonevolution pages 10-11, levmaor2007rnaeditingmediatedexonevolution pages 3-4).</p>
+<h3 id="iron-homeostasis-provisional">Iron homeostasis: provisional</h3>
+<p>The multiple-sclerosis study associated intact NARF with abnormal iron deposition and found that NARF overexpression increased iron content in CHP-212 neuronal cells. However, total NARF measured by dot blot and NARF transcript abundance were not significantly different between MS and control tissue; direct iron binding and causal mechanism were not demonstrated (ding2020nuclearprelamina pages 4-7). This should be annotated as a <strong>disease-associated hypothesis</strong>, not a settled physiological pathway.</p>
+<h2 id="7-disease-relevance-and-quantitative-evidence">7. Disease relevance and quantitative evidence</h2>
+<h3 id="breast-cancer">Breast cancer</h3>
+<p>NARF knockdown reduced hypoxia-induced mammosphere formation and ALDH-positive cells and impaired tumor initiation from <strong>1×10³</strong> orthotopically implanted MDA-MB-231 cells. In experiments using <strong>2×10⁶</strong> cells, knockdown impaired lung metastasis but did not materially alter bulk primary-tumor growth, suggesting preferential involvement in stemness and dissemination rather than general proliferation (yang2022narfisa pages 3-5, yang2022narfisa pages 12-13).</p>
+<p>Across <strong>1,218 TCGA breast tumors</strong>, NARF expression correlated with a 10-gene HIF signature at Pearson <strong>R=0.42</strong> and with a 20-gene breast-cancer-stem-cell signature at <strong>R=0.496</strong>. Additional analyses used 1,097 tumors and 114 adjacent normal samples, proteomic data from 125 tumors and 18 normal tissues, relapse-free-survival data from 4,929 patients, and immunohistochemistry/overall-survival data from 89 patients (yang2022narfisa pages 2-3, yang2022narfisa pages 9-12). These human associations support relevance but do not prove that inhibiting NARF will be safe or therapeutically effective.</p>
+<h3 id="multiple-sclerosis">Multiple sclerosis</h3>
+<p>Ding and colleagues examined postmortem brain from <strong>six MS cases and six controls</strong> using proteomics, immunoblotting, immunohistochemistry, and Prussian-blue staining. Western blots suggested increased intact NARF in MS, while total antigen and transcript levels were not significantly changed. Overexpression increased cellular iron in triplicate CHP-212 assays. Small sample size, qualitative pathology, uncertain antibody specificity, and lack of direct iron-binding evidence substantially limit causal interpretation (ding2020nuclearprelamina pages 1-2, ding2020nuclearprelamina pages 4-7, ding2020nuclearprelamina pages 2-4). The article was accepted 5 November 2019 and published in <em>Metabolic Brain Disease</em>; DOI: https://doi.org/10.1007/s11011-019-00515-z.</p>
+<h3 id="sepsis">Sepsis</h3>
+<p>A 2023 transcriptomic study identified NARF among nine genes progressively dysregulated across inferred sepsis states. All nine were elevated by qPCR in a <strong>69-sample clinical validation set</strong>, and expression correlated with inferred immune-cell composition (tong2023classificationofsubtypes pages 1-2, tong2023classificationofsubtypes pages 7-9). This is panel-level biomarker evidence rather than a NARF-specific mechanism or validated diagnostic. Published 21 August 2023; DOI: https://doi.org/10.3389/fcimb.2023.1226159.</p>
+<h3 id="progeroid-phenotypes">Progeroid phenotypes</h3>
+<p>Thesis-level work described a patient-associated NARF variant causing cytoplasmic accumulation, impaired nuclear import, homodimer-associated dominant-negative behavior, reduced proliferation, and DNA-repair defects. The work also reported interactions with lamin A and CBX5 (alicja2021theroleof pages 106-109). Because this evidence is not yet supported here by a peer-reviewed clinical genetics report with segregation and population data, it should be considered provisional rather than an established Mendelian NARF disorder.</p>
+<h2 id="8-recent-developments-and-applications-20232024">8. Recent developments and applications, 2023–2024</h2>
+<p>The 2023 sepsis work broadened NARF’s potential biomarker context but did not establish a biochemical role (tong2023classificationofsubtypes pages 1-2, tong2023classificationofsubtypes pages 7-9). No 2023–2024 primary mechanistic study retrieved in this search superseded the 2022 HIF-1/OCT4/KDM6A study.</p>
+<p>A study published <strong>22 February 2024</strong> designed a NARF-derived multi-epitope cancer-vaccine construct using immunoinformatics, docking, molecular dynamics, immune simulation, codon optimization, and in-silico insertion into pET-28(+). It predicted TLR7 engagement and MHC-II-mediated presentation (paranthaman2024tacklingsuppressivecancer pages 1-2). DOI: https://doi.org/10.3389/fphy.2024.1342115. This is not a real-world implementation: it used canonical Q9UHQ1 rather than J3KS48 and has no experimental expression, biochemical validation, immunogenicity, animal efficacy, toxicity, or clinical evidence. The authors explicitly stated that in-vitro and in-vivo evaluation is required (paranthaman2024tacklingsuppressivecancer pages 1-2).</p>
+<p>No approved NARF-targeted drug, diagnostic assay, vaccine, clinical trial, or routine clinical implementation was identified. Current applications are therefore <strong>preclinical target discovery, biomarker exploration, and computational therapeutic design</strong>.</p>
+<h2 id="9-expert-assessment-and-recommended-annotation">9. Expert assessment and recommended annotation</h2>
+<p>A defensible present-day functional annotation is:</p>
+<blockquote>
+<p><strong>Human NARF is a predominantly nuclear, hydrogenase-like protein that recognizes farnesylated prelamin A and can function as an OCT4-associated transcriptional coactivator by recruiting KDM6A to remove H3K27me3 at pluripotency-gene regulatory regions under HIF-1-driven hypoxia. Its intrinsic enzymatic activity, Fe–S-cluster occupancy, and physiological role in iron metabolism remain unproven.</strong></p>
+</blockquote>
+<p>Evidence is strongest for nuclear localization, prenylation-dependent prelamin-A binding, ADAR-dependent transcript processing, and the breast-cancer hypoxia/coactivator mechanism. Evidence is weaker for mitochondrial localization, direct iron handling, progeroid causation, and clinical biomarker utility. The 2024 vaccine concept remains computational.</p>
+<h3 id="priority-experiments">Priority experiments</h3>
+<ol>
+<li>Purify isoform-defined J3KS48 and Q9UHQ1 proteins and test metal/Fe–S occupancy by ICP-MS, UV–visible/EPR/Mössbauer spectroscopy, and intact-mass analysis.</li>
+<li>Test H₂ evolution/uptake and alternative redox reactions with defined electron donors and acceptors rather than inferring catalysis from domains.</li>
+<li>Use endogenous tagging and orthogonal microscopy/fractionation to resolve nuclear versus mitochondrial localization.</li>
+<li>Define whether NARF affects prelamin-A processing kinetics, residence time, or nuclear mechanics in knockout/rescue systems.</li>
+<li>Map OCT4-, KDM6A-, and prelamin-A-binding surfaces and determine whether the Alu-exon isoform alters these interactions.</li>
+<li>Validate the cancer mechanism in patient-derived organoids, immunocompetent models, and independent cohorts before therapeutic development.</li>
+</ol>
+<h2 id="key-publications">Key publications</h2>
+<ul>
+<li>Barton RM, Worman HJ. “Prenylated Prelamin A Interacts with Narf, a Novel Nuclear Protein.” Published October 1999. https://doi.org/10.1074/jbc.274.42.30008 (barton1999prenylatedprelamina pages 1-1)</li>
+<li>Lev-Maor G et al. “RNA-editing-mediated exon evolution.” Published 27 February 2007. https://doi.org/10.1186/gb-2007-8-2-r29 (levmaor2007rnaeditingmediatedexonevolution pages 1-2)</li>
+<li>Ding D et al. “Nuclear prelamin A recognition factor and iron dysregulation in multiple sclerosis.” Accepted 5 November 2019; 2020 volume. https://doi.org/10.1007/s11011-019-00515-z (ding2020nuclearprelamina pages 1-2)</li>
+<li>Yang Y et al. “NARF is a hypoxia-induced coactivator for OCT4-mediated breast cancer stem cell specification.” Published December 2022. https://doi.org/10.1126/sciadv.abo5000 (yang2022narfisa pages 2-3)</li>
+<li>Tong R et al. “Classification of subtypes and identification of dysregulated genes in sepsis.” Published 21 August 2023. https://doi.org/10.3389/fcimb.2023.1226159 (tong2023classificationofsubtypes pages 1-2)</li>
+<li>Paranthaman P, Veerappapillai S. “Tackling suppressive cancer microenvironment by NARF-derived immune modulatory vaccine and its validation using simulation strategies.” Published 22 February 2024. https://doi.org/10.3389/fphy.2024.1342115 (paranthaman2024tacklingsuppressivecancer pages 1-2)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(kriebel2018thenuclearenvelope pages 18-21): Maria Kriebel. The nuclear envelope proteins Kugelkern and Narf and their putative role in aging. PhD thesis, University Goettingen Repository, 2018. URL: https://doi.org/10.53846/goediss-7115, doi:10.53846/goediss-7115.</p>
+</li>
+<li>
+<p>(barton1999prenylatedprelamina pages 8-9): Racine M. Barton and Howard J. Worman. Prenylated prelamin a interacts with narf, a novel nuclear protein*. The Journal of Biological Chemistry, 274:30008-30018, Oct 1999. URL: https://doi.org/10.1074/jbc.274.42.30008, doi:10.1074/jbc.274.42.30008. This article has 152 citations.</p>
+</li>
+<li>
+<p>(barton1999prenylatedprelamina pages 7-8): Racine M. Barton and Howard J. Worman. Prenylated prelamin a interacts with narf, a novel nuclear protein*. The Journal of Biological Chemistry, 274:30008-30018, Oct 1999. URL: https://doi.org/10.1074/jbc.274.42.30008, doi:10.1074/jbc.274.42.30008. This article has 152 citations.</p>
+</li>
+<li>
+<p>(yang2022narfisa pages 5-7): Yongkang Yang, Chelsey Chen, Qiaozhu Zuo, Haiquan Lu, Shaima Salman, Yajing Lyu, Tina Yi-Ting Huang, Elizabeth E. Wicks, Walter Jackson, Emmanuel Datan, Ru Wang, Yufeng Wang, Nguyet Le, Yayun Zhu, Wenxin Qin, and Gregg L. Semenza. Narf is a hypoxia-induced coactivator for oct4-mediated breast cancer stem cell specification. Dec 2022. URL: https://doi.org/10.1126/sciadv.abo5000, doi:10.1126/sciadv.abo5000. This article has 29 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barton1999prenylatedprelamina pages 4-6): Racine M. Barton and Howard J. Worman. Prenylated prelamin a interacts with narf, a novel nuclear protein*. The Journal of Biological Chemistry, 274:30008-30018, Oct 1999. URL: https://doi.org/10.1074/jbc.274.42.30008, doi:10.1074/jbc.274.42.30008. This article has 152 citations.</p>
+</li>
+<li>
+<p>(barton1999prenylatedprelamina pages 6-6): Racine M. Barton and Howard J. Worman. Prenylated prelamin a interacts with narf, a novel nuclear protein*. The Journal of Biological Chemistry, 274:30008-30018, Oct 1999. URL: https://doi.org/10.1074/jbc.274.42.30008, doi:10.1074/jbc.274.42.30008. This article has 152 citations.</p>
+</li>
+<li>
+<p>(ding2020nuclearprelamina pages 4-7): Di Ding, Anddre Osmar Valdivia, and Sanjoy K. Bhattacharya. Nuclear prelamin a recognition factor and iron dysregulation in multiple sclerosis. Metabolic Brain Disease, 35:275-282, Dec 2020. URL: https://doi.org/10.1007/s11011-019-00515-z, doi:10.1007/s11011-019-00515-z. This article has 9 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(barton1999prenylatedprelamina pages 1-1): Racine M. Barton and Howard J. Worman. Prenylated prelamin a interacts with narf, a novel nuclear protein*. The Journal of Biological Chemistry, 274:30008-30018, Oct 1999. URL: https://doi.org/10.1074/jbc.274.42.30008, doi:10.1074/jbc.274.42.30008. This article has 152 citations.</p>
+</li>
+<li>
+<p>(yang2022narfisa pages 2-3): Yongkang Yang, Chelsey Chen, Qiaozhu Zuo, Haiquan Lu, Shaima Salman, Yajing Lyu, Tina Yi-Ting Huang, Elizabeth E. Wicks, Walter Jackson, Emmanuel Datan, Ru Wang, Yufeng Wang, Nguyet Le, Yayun Zhu, Wenxin Qin, and Gregg L. Semenza. Narf is a hypoxia-induced coactivator for oct4-mediated breast cancer stem cell specification. Dec 2022. URL: https://doi.org/10.1126/sciadv.abo5000, doi:10.1126/sciadv.abo5000. This article has 29 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(levmaor2007rnaeditingmediatedexonevolution pages 3-4): Galit Lev-Maor, Rotem Sorek, Erez Y Levanon, Nurit Paz, Eli Eisenberg, and Gil Ast. Rna-editing-mediated exon evolution. Genome Biology, 8:R29-R29, Feb 2007. URL: https://doi.org/10.1186/gb-2007-8-2-r29, doi:10.1186/gb-2007-8-2-r29. This article has 242 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(levmaor2007rnaeditingmediatedexonevolution pages 1-2): Galit Lev-Maor, Rotem Sorek, Erez Y Levanon, Nurit Paz, Eli Eisenberg, and Gil Ast. Rna-editing-mediated exon evolution. Genome Biology, 8:R29-R29, Feb 2007. URL: https://doi.org/10.1186/gb-2007-8-2-r29, doi:10.1186/gb-2007-8-2-r29. This article has 242 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yang2022narfisa pages 3-5): Yongkang Yang, Chelsey Chen, Qiaozhu Zuo, Haiquan Lu, Shaima Salman, Yajing Lyu, Tina Yi-Ting Huang, Elizabeth E. Wicks, Walter Jackson, Emmanuel Datan, Ru Wang, Yufeng Wang, Nguyet Le, Yayun Zhu, Wenxin Qin, and Gregg L. Semenza. Narf is a hypoxia-induced coactivator for oct4-mediated breast cancer stem cell specification. Dec 2022. URL: https://doi.org/10.1126/sciadv.abo5000, doi:10.1126/sciadv.abo5000. This article has 29 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ding2020nuclearprelamina pages 1-2): Di Ding, Anddre Osmar Valdivia, and Sanjoy K. Bhattacharya. Nuclear prelamin a recognition factor and iron dysregulation in multiple sclerosis. Metabolic Brain Disease, 35:275-282, Dec 2020. URL: https://doi.org/10.1007/s11011-019-00515-z, doi:10.1007/s11011-019-00515-z. This article has 9 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ding2020nuclearprelamina pages 2-4): Di Ding, Anddre Osmar Valdivia, and Sanjoy K. Bhattacharya. Nuclear prelamin a recognition factor and iron dysregulation in multiple sclerosis. Metabolic Brain Disease, 35:275-282, Dec 2020. URL: https://doi.org/10.1007/s11011-019-00515-z, doi:10.1007/s11011-019-00515-z. This article has 9 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tong2023classificationofsubtypes pages 1-2): R. Tong, Xianfei Ding, Fengyu Liu, Hongyi Li, Huan Liu, Hengli Song, Yuze Wang, Xiaojuan Zhang, Shaohua Liu, and Tongwen Sun. Classification of subtypes and identification of dysregulated genes in sepsis. Frontiers in Cellular and Infection Microbiology, Aug 2023. URL: https://doi.org/10.3389/fcimb.2023.1226159, doi:10.3389/fcimb.2023.1226159. This article has 15 citations.</p>
+</li>
+<li>
+<p>(tong2023classificationofsubtypes pages 7-9): R. Tong, Xianfei Ding, Fengyu Liu, Hongyi Li, Huan Liu, Hengli Song, Yuze Wang, Xiaojuan Zhang, Shaohua Liu, and Tongwen Sun. Classification of subtypes and identification of dysregulated genes in sepsis. Frontiers in Cellular and Infection Microbiology, Aug 2023. URL: https://doi.org/10.3389/fcimb.2023.1226159, doi:10.3389/fcimb.2023.1226159. This article has 15 citations.</p>
+</li>
+<li>
+<p>(paranthaman2024tacklingsuppressivecancer pages 1-2): Priyanga Paranthaman and Shanthi Veerappapillai. Tackling suppressive cancer microenvironment by narf-derived immune modulatory vaccine and its validation using simulation strategies. Frontiers in Physics, Feb 2024. URL: https://doi.org/10.3389/fphy.2024.1342115, doi:10.3389/fphy.2024.1342115. This article has 5 citations.</p>
+</li>
+<li>
+<p>(yang2022narfisa pages 1-2): Yongkang Yang, Chelsey Chen, Qiaozhu Zuo, Haiquan Lu, Shaima Salman, Yajing Lyu, Tina Yi-Ting Huang, Elizabeth E. Wicks, Walter Jackson, Emmanuel Datan, Ru Wang, Yufeng Wang, Nguyet Le, Yayun Zhu, Wenxin Qin, and Gregg L. Semenza. Narf is a hypoxia-induced coactivator for oct4-mediated breast cancer stem cell specification. Dec 2022. URL: https://doi.org/10.1126/sciadv.abo5000, doi:10.1126/sciadv.abo5000. This article has 29 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yang2022narfisa pages 7-9): Yongkang Yang, Chelsey Chen, Qiaozhu Zuo, Haiquan Lu, Shaima Salman, Yajing Lyu, Tina Yi-Ting Huang, Elizabeth E. Wicks, Walter Jackson, Emmanuel Datan, Ru Wang, Yufeng Wang, Nguyet Le, Yayun Zhu, Wenxin Qin, and Gregg L. Semenza. Narf is a hypoxia-induced coactivator for oct4-mediated breast cancer stem cell specification. Dec 2022. URL: https://doi.org/10.1126/sciadv.abo5000, doi:10.1126/sciadv.abo5000. This article has 29 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(alicja2021theroleof pages 106-109): Turotszy Alicja. The role of NARF and other novel progeria-associated genes/proteins in ageing processes. PhD thesis, University Goettingen Repository, 2021. URL: https://doi.org/10.53846/goediss-8405, doi:10.53846/goediss-8405.</p>
+</li>
+<li>
+<p>(khermesh2016reducedlevelsof pages 6-7): Khen Khermesh, Anna Maria D'Erchia, Michal Barak, Anita Annese, Chaim Wachtel, Erez Y. Levanon, Ernesto Picardi, and Eli Eisenberg. Reduced levels of protein recoding by a-to-i rna editing in alzheimer's disease. RNA, 22:290-302, Feb 2016. URL: https://doi.org/10.1261/rna.054627.115, doi:10.1261/rna.054627.115. This article has 188 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(levmaor2007rnaeditingmediatedexonevolution pages 10-11): Galit Lev-Maor, Rotem Sorek, Erez Y Levanon, Nurit Paz, Eli Eisenberg, and Gil Ast. Rna-editing-mediated exon evolution. Genome Biology, 8:R29-R29, Feb 2007. URL: https://doi.org/10.1186/gb-2007-8-2-r29, doi:10.1186/gb-2007-8-2-r29. This article has 242 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yang2022narfisa pages 12-13): Yongkang Yang, Chelsey Chen, Qiaozhu Zuo, Haiquan Lu, Shaima Salman, Yajing Lyu, Tina Yi-Ting Huang, Elizabeth E. Wicks, Walter Jackson, Emmanuel Datan, Ru Wang, Yufeng Wang, Nguyet Le, Yayun Zhu, Wenxin Qin, and Gregg L. Semenza. Narf is a hypoxia-induced coactivator for oct4-mediated breast cancer stem cell specification. Dec 2022. URL: https://doi.org/10.1126/sciadv.abo5000, doi:10.1126/sciadv.abo5000. This article has 29 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(yang2022narfisa pages 9-12): Yongkang Yang, Chelsey Chen, Qiaozhu Zuo, Haiquan Lu, Shaima Salman, Yajing Lyu, Tina Yi-Ting Huang, Elizabeth E. Wicks, Walter Jackson, Emmanuel Datan, Ru Wang, Yufeng Wang, Nguyet Le, Yayun Zhu, Wenxin Qin, and Gregg L. Semenza. Narf is a hypoxia-induced coactivator for oct4-mediated breast cancer stem cell specification. Dec 2022. URL: https://doi.org/10.1126/sciadv.abo5000, doi:10.1126/sciadv.abo5000. This article has 29 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="NARF-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>kriebel2018thenuclearenvelope pages 18-21</li>
+<li>ding2020nuclearprelamina pages 4-7</li>
+<li>barton1999prenylatedprelamina pages 4-6</li>
+<li>barton1999prenylatedprelamina pages 8-9</li>
+<li>paranthaman2024tacklingsuppressivecancer pages 1-2</li>
+<li>barton1999prenylatedprelamina pages 7-8</li>
+<li>yang2022narfisa pages 2-3</li>
+<li>yang2022narfisa pages 5-7</li>
+<li>barton1999prenylatedprelamina pages 6-6</li>
+<li>alicja2021theroleof pages 106-109</li>
+<li>levmaor2007rnaeditingmediatedexonevolution pages 3-4</li>
+<li>khermesh2016reducedlevelsof pages 6-7</li>
+<li>barton1999prenylatedprelamina pages 1-1</li>
+<li>levmaor2007rnaeditingmediatedexonevolution pages 1-2</li>
+<li>ding2020nuclearprelamina pages 1-2</li>
+<li>tong2023classificationofsubtypes pages 1-2</li>
+<li>yang2022narfisa pages 3-5</li>
+<li>ding2020nuclearprelamina pages 2-4</li>
+<li>tong2023classificationofsubtypes pages 7-9</li>
+<li>yang2022narfisa pages 1-2</li>
+<li>yang2022narfisa pages 7-9</li>
+<li>levmaor2007rnaeditingmediatedexonevolution pages 10-11</li>
+<li>yang2022narfisa pages 12-13</li>
+<li>yang2022narfisa pages 9-12</li>
+<li>https://doi.org/10.1007/s11011-019-00515-z.</li>
+<li>https://doi.org/10.3389/fcimb.2023.1226159.</li>
+<li>https://doi.org/10.3389/fphy.2024.1342115.</li>
+<li>https://doi.org/10.1074/jbc.274.42.30008</li>
+<li>https://doi.org/10.1186/gb-2007-8-2-r29</li>
+<li>https://doi.org/10.1007/s11011-019-00515-z</li>
+<li>https://doi.org/10.1126/sciadv.abo5000</li>
+<li>https://doi.org/10.3389/fcimb.2023.1226159</li>
+<li>https://doi.org/10.3389/fphy.2024.1342115</li>
+<li>https://doi.org/10.53846/goediss-7115,</li>
+<li>https://doi.org/10.1074/jbc.274.42.30008,</li>
+<li>https://doi.org/10.1126/sciadv.abo5000,</li>
+<li>https://doi.org/10.1007/s11011-019-00515-z,</li>
+<li>https://doi.org/10.1186/gb-2007-8-2-r29,</li>
+<li>https://doi.org/10.3389/fcimb.2023.1226159,</li>
+<li>https://doi.org/10.3389/fphy.2024.1342115,</li>
+<li>https://doi.org/10.53846/goediss-8405,</li>
+<li>https://doi.org/10.1261/rna.054627.115,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(NARF-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="J3KS48" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="narf-j3ks48-evidence-and-exact-input-prediction-review">NARF (J3KS48): evidence and exact-input prediction review</h1>
+<p>The ProtNLM function paragraph transfers the established function of NARFL/IOP1 to NARF/IOP2. Direct knockdown experiments distinguish these paralogs: NARF depletion did not decrease aconitase activity. The separate 4Fe–4S-binding claim remains uncertain, especially for the extensively truncated selected product.</p>
+<h2 id="input-identity-and-functional-boundary">Input identity and functional boundary</h2>
+<p>J3KS48 and Q9UHQ1 share HGNC:29916. The first 128 selected residues match reference 1–128, and selected 129–213 match reference 174–258. Most of the reference C-terminal region is absent. This same-gene bridge must not be confused with NARFL/CIAO3, a different gene.</p>
+<h2 id="biological-evidence">Biological evidence</h2>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/10514485/">PMID:10514485 — Prenylated prelamin A interacts with Narf, a novel nuclear protein.</a>: Human NARF constructs localize to nuclei and bind prenylated prelamin A; the paper does not establish activity of the selected 217-residue product.</li>
+</ul>
+<blockquote>
+<p>When a FLAG epitope-tagged Narf is expressed<br />
+in HeLa cells, it is exclusively nuclear and partially co-localizes with the<br />
+nuclear lamina.</p>
+</blockquote>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/18270200/">PMID:18270200 — A role for IOP1 in mammalian cytosolic iron-sulfur protein biogenesis.</a>: Compared with IOP1 depletion, IOP2/NARF depletion did not impair cytosolic or mitochondrial aconitase activity, distinguishing the paralogs in this tested CIA phenotype.</li>
+</ul>
+<blockquote>
+<p>Knockdown of IOP2, in contrast, had no<br />
+effect on either.</p>
+</blockquote>
+<h2 id="exact-non-go-claims">Exact non-GO claims</h2>
+<p>The complete emitted record is preserved in <a href="NARF-protnlm-source.json">NARF-protnlm-source.json</a>. Assessments below address the selected protein product; evidence on longer products is identified explicitly.</p>
+<h3 id="protein-name">Protein name</h3>
+<blockquote>
+<p>Uncharacterized protein</p>
+</blockquote>
+<p>The emitted name “Uncharacterized protein” makes no specific biochemical assertion. It omits the verifiable NARF gene identity and hydrogenase-family relationship.</p>
+<h3 id="function">Function</h3>
+<blockquote>
+<p>Component of the cytosolic iron-sulfur (Fe/S) protein assembly machinery. Required for maturation of extramitochondrial Fe/S proteins</p>
+</blockquote>
+<p>PLI (CS 0; PARALOG_OVERANNOTATION) for the claimed required CIA-machinery role. In the direct IOP1/IOP2 comparison, IOP1 knockdown impaired cytosolic aconitase while IOP2/NARF knockdown did not. This is a tested functional boundary, not an argument from a missing annotation. The experiments do not exclude every possible iron-related role for NARF. <a href="https://pubmed.ncbi.nlm.nih.gov/18270200">PMID:18270200</a>(https://pubmed.ncbi.nlm.nih.gov/18270200/).</p>
+<h3 id="location">Location</h3>
+<blockquote>
+<p>Nucleus</p>
+</blockquote>
+<p>UNC (CS 1) for this exact product. The donor Q9UHQ1 is the same gene, and the original NARF paper supports nuclear localization, but the large deletions in J3KS48 leave product-specific localization unresolved. <a href="https://pubmed.ncbi.nlm.nih.gov/10514485">PMID:10514485</a>(https://pubmed.ncbi.nlm.nih.gov/10514485/); <a href="NARF-bioinformatics/RESULTS.md">sequence mapping</a>.</p>
+<h2 id="emitted-go-claims">Emitted GO claims</h2>
+<p>All 1 emitted GO claims are individually assessed in <a href="NARF-protnlm-predictions-review.yaml">NARF-protnlm-predictions-review.yaml</a>.</p>
+<h2 id="family-integration">Family integration</h2>
+<p>PTHR11615 groups hydrogenase-related proteins with divergent cellular roles. Human NARF/IOP2 and NARFL/IOP1 cannot be treated as isofunctional because of their fold. The direct paralog comparison supplies a biological transfer boundary; no ancestral node placement or cluster occupancy is inferred.</p>
+<h2 id="evidence-limits">Evidence limits</h2>
+<p>The two primary references are abstract-only in the standard publication cache. Their abstracts explicitly report the nuclear localization and comparative knockdown results used here. Neither resolves function of J3KS48. A full molecular function is therefore not assigned to this short product.</p>
+<p>Exact sequence mapping: <a href="NARF-bioinformatics/RESULTS.md">NARF-bioinformatics/RESULTS.md</a>. Global alignments can place nonhomologous alternative tails opposite gaps or distant residues; only conserved segments and explicitly retained feature intervals support functional transfer.</p>
+<h2 id="research-integration">Research integration</h2>
+<p>The genuine Falcon report is retained. Its gene-level synthesis is interpreted through the exact product sequence and the primary sources above; the truncation boundary and paralog distinctions are assessed independently.</p>
+            </div>
+        </details>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioinformatics Results</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RESULTS.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="J3KS48" data-a="DOC: Bioinformatics Results" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="narf-exact-selected-product-and-same-gene-reference">NARF: exact selected product and same-gene reference</h1>
+<p>Selected J3KS48 has 217 residues; reference Q9UHQ1 has 456 residues.</p>
+<p>Biopython PairwiseAligner global BLOSUM62, gap open -10, extension -0.5.</p>
+<table>
+<thead>
+<tr>
+<th>Reference interval</th>
+<th>Selected interval</th>
+<th>Identical residues</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1–128</td>
+<td>1–128</td>
+<td>128</td>
+</tr>
+<tr>
+<td>174–258</td>
+<td>129–213</td>
+<td>85</td>
+</tr>
+<tr>
+<td>383–385</td>
+<td>214–216</td>
+<td>2</td>
+</tr>
+<tr>
+<td>456–456</td>
+<td>217–217</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p>Reference feature mapping (sequence coverage does not establish retained function):</p>
+<table>
+<thead>
+<tr>
+<th>Reference feature</th>
+<th>Interval</th>
+<th>Mapped / length</th>
+<th>Identical</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>A shared segment does not establish that a truncated product folds, is expressed, localizes, or catalyzes the full-length reaction.</p>
+<p>Inputs are the sibling frozen ProtNLM source and same-gene reference JSON files. Reproduce with <code>UV_NO_SYNC=1 uv run python compare_sequences.py</code> from this directory.</p>
+            </div>
+        </details>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Protnlm Function Review</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(NARF-protnlm-function-review.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="J3KS48" data-a="DOC: Protnlm Function Review" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="narf-protnlm-function-review">NARF: ProtNLM function review</h1>
+<p><a href="NARF-protnlm-source.json">Exact emitted record</a>, retrieved 2026-09-10T14:34:29.656376+00:00.</p>
+<h2 id="original-prediction-and-assessment">Original prediction and assessment</h2>
+<blockquote>
+<p>Component of the cytosolic iron-sulfur (Fe/S) protein assembly machinery. Required for maturation of extramitochondrial Fe/S proteins</p>
+</blockquote>
+<p>PLI (CS 0; PARALOG_OVERANNOTATION) for the claimed required CIA-machinery role. In the direct IOP1/IOP2 comparison, IOP1 knockdown impaired cytosolic aconitase while IOP2/NARF knockdown did not. This is a tested functional boundary, not an argument from a missing annotation. The experiments do not exclude every possible iron-related role for NARF. <a href="https://pubmed.ncbi.nlm.nih.gov/18270200">PMID:18270200</a>(https://pubmed.ncbi.nlm.nih.gov/18270200/).</p>
+<p>The assessment concerns the selected accession J3KS48. <a href="NARF-notes.md#exact-non-go-claims">Other emitted outputs and evidence context</a>.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: J3KS48
+gene_symbol: NARF
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9606
+  label: Homo sapiens
+description: NARF is a nuclear prelamin A-associated protein related to iron-only hydrogenases. The human
+  J3KS48 product is a 217-residue form with major internal and C-terminal deletions relative to the 456-residue
+  NARF reference. Its ability to localize to the nucleus, bind prelamin A or coordinate an iron-sulfur
+  cluster is unresolved. NARF is distinct from the cytosolic iron-sulfur assembly factor NARFL/CIAO3.
+existing_annotations:
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB-SubCell:SL-0191
+  review:
+    action: UNDECIDED
+    summary: Nuclear localization is experimentally supported for human NARF, but J3KS48 deletes an internal
+      segment and most of the reference C-terminal region. No localization assay or intact localization
+      determinant has been established for this 217-residue product. The same-gene evidence makes nuclear
+      localization plausible without resolving this product-specific transfer.
+    supported_by:
+    - reference_id: PMID:10514485
+      supporting_text: &#39;When a FLAG epitope-tagged Narf is expressed
+
+        in HeLa cells, it is exclusively nuclear and partially co-localizes with the
+
+        nuclear lamina.&#39;
+    - reference_id: file:human/NARF/NARF-bioinformatics/RESULTS.md
+      supporting_text: Selected J3KS48 has 217 residues; reference Q9UHQ1 has 456 residues.
+references:
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping,
+    accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: PMID:10514485
+  title: Prenylated prelamin A interacts with Narf, a novel nuclear protein.
+  findings:
+  - statement: Human NARF constructs localize to nuclei and bind prenylated prelamin A; the paper does
+      not establish activity of the selected 217-residue product.
+    supporting_text: &#39;When a FLAG epitope-tagged Narf is expressed
+
+      in HeLa cells, it is exclusively nuclear and partially co-localizes with the
+
+      nuclear lamina.&#39;
+  full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Primary report checked against the cached abstract/full text; the evidence scope is
+      stated in the finding.
+- id: PMID:18270200
+  title: A role for IOP1 in mammalian cytosolic iron-sulfur protein biogenesis.
+  findings:
+  - statement: Compared with IOP1 depletion, IOP2/NARF depletion did not impair cytosolic or mitochondrial
+      aconitase activity, distinguishing the paralogs in this tested CIA phenotype.
+    supporting_text: &#39;Knockdown of IOP2, in contrast, had no
+
+      effect on either.&#39;
+  full_text_unavailable: true
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Primary report checked against the cached abstract/full text; the evidence scope is
+      stated in the finding.
+- id: file:human/NARF/NARF-bioinformatics/RESULTS.md
+  title: Exact NARF product-to-reference sequence mapping
+- id: file:human/NARF/NARF-protnlm-source.json
+  title: Frozen exact-input ProtNLM output and UniProt sequence for J3KS48
+core_functions: []
+suggested_questions:
+- question: Does J3KS48 produce a stable endogenous protein, retain nuclear localization, or bind an iron-sulfur
+    cluster despite the large deletions?
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

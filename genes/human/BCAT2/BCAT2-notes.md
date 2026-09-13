@@ -66,3 +66,7 @@ ISS brown-fat annotations transferred from mouse.
 Cached key pubs 8702755 and 9165094 are ABSTRACT-ONLY (full_text_available: false); UniProt
 cites their full text for the experimental catalytic/function annotations — defer to curator,
 ACCEPT (do not REMOVE).
+
+## Paired horse benchmark evidence review
+
+The human reference supplies mechanistic evidence for the corresponding selected horse protein; the human conclusion alone is not validation of the horse sequence. The exact horse comparison is in `genes/HORSE/BCAT2/BCAT2-bioinformatics/RESULTS.md`. Research reports are source leads; annotation decisions cite the underlying publication or experimentally supported UniProt passages. Unresolved source-specific results retain UNDECIDED.

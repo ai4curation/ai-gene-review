@@ -2,9 +2,9 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-05-05T07:07:01.283612'
-end_time: '2026-05-05T07:21:02.424033'
-duration_seconds: 841.14
+start_time: '2026-09-11T20:48:53.204918'
+end_time: '2026-09-11T20:57:34.165284'
+duration_seconds: 520.96
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: ARATH
@@ -23,12 +23,23 @@ template_variables:
   protein_domains: Kinase-like_dom_sf. (IPR011009); Leu-rich_rpt. (IPR001611); Leu-rich_rpt_typical-subtyp.
     (IPR003591); LRR_dom_sf. (IPR032675); LRR_N_plant-typ. (IPR013210)
 provider_config:
-  timeout: 600
+  timeout: null
   max_retries: 3
   parameters:
     allowed_domains: []
     temperature: 0.1
-citation_count: 24
+    max_embedded_images: 8
+citation_count: 39
+artifact_count: 1
+artifact_sources:
+  edison_answer_artifacts: 1
+artifacts:
+- filename: artifact-00.md
+  path: FLS2-deep-research-falcon_artifacts/artifact-00.md
+  media_type: text/markdown
+  source: edison_answer_artifacts
+  data_storage_id: null
+  description: Edison artifact artifact-00
 ---
 
 ## Question
@@ -139,185 +150,190 @@ We are also interested in the signaling or biochemical pathways in which the gen
 
 Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
-## Research Report: Functional Annotation of **FLS2** (UniProt **Q9FL28**) in *Arabidopsis thaliana*
+# Research report: *Arabidopsis thaliana* FLS2 (UniProt Q9FL28)
 
-### 0) Target verification (mandatory)
-The literature evidence matches the UniProt target (**Q9FL28**) as *Arabidopsis thaliana* **FLAGELLIN-SENSING 2 (FLS2)**: a plasma membrane (PM)–localized leucine-rich repeat receptor-like kinase (LRR-RLK) that recognizes bacterial flagellin (flg22), recruits the co-receptor **BAK1**, and signals through the receptor-like cytoplasmic kinase **BIK1** to trigger pattern-triggered immunity (PTI). This domain architecture and biological role align with the UniProt description (extracellular LRRs + TM + intracellular Ser/Thr kinase). (wang2023modificationsoftwo pages 1-4, lee2024reprogrammingofflagellin pages 1-2, bai2023bik1proteinhomeostasis pages 1-2)
+## Executive summary
 
----
+The requested protein is unambiguously **FLAGELLIN-SENSING 2 (FLS2), encoded by At5g46330 in *Arabidopsis thaliana***. The literature identity, organism, locus, and architecture agree with UniProt Q9FL28: FLS2 is a precursor, single-pass leucine-rich-repeat receptor-like serine/threonine kinase (LRR-RK), with an N-terminal signal peptide, extracellular plant-type LRR ectodomain, transmembrane helix, and cytoplasmic kinase. No literature concerning a different same-symbol protein was used. At5g46330 is explicitly assigned to Arabidopsis FLS2, and functional FLS2 was detected as an approximately 175-kDa protein. (mueller2012chimericfls2receptors pages 10-11, chinchilla2006thearabidopsisreceptor pages 1-2)
 
-### 1) Key concepts and current understanding
+FLS2 is not primarily a metabolic enzyme or transporter. It is a **plasma-membrane pattern-recognition receptor (PRR)** whose extracellular ligand is flg22, a conserved 22-amino-acid epitope of bacterial flagellin. Ligand binding recruits the co-receptor BAK1/SERK3 and activates a kinase network involving receptor-associated BIK1 and RBOHD, producing calcium/ion-channel responses, reactive oxygen species (ROS), MAPK activation, transcriptional reprogramming, stomatal closure, callose deposition, and antibacterial pattern-triggered immunity (PTI). Activated FLS2 is subsequently internalized and degraded, limiting or reshaping signaling. (sun2013structuralbasisfor pages 2-3, dunning2007identificationandmutational pages 1-2, lee2024reprogrammingofflagellin pages 1-2, wang2024myosinximediatedbik1 pages 1-2)
 
-#### 1.1 Definitions and core concepts
-**Pattern recognition receptor (PRR) / MAMP receptor**: Cell-surface receptor that detects conserved microbial molecules (microbe-/pathogen-associated molecular patterns; MAMPs/PAMPs) and activates PTI. FLS2 is a prototypical PRR in plants. (wang2023modificationsoftwo pages 1-4, zhang2024unlockingnaturesdefense pages 1-2)
+The most important 2024 advances show that FLS2 signaling is spatially organized rather than arising from a freely mixed membrane system. Ser938 phosphorylation promotes FLS2 partitioning into REM1.3-associated nanodomains and endocytosis; myosin XIK and cortical actin recruit and immobilize BIK1 in these nanodomains; and synthetic small molecules can bias FLS2 toward restricted transcriptional outputs sufficient for antibacterial protection. (cui2024singlemoleculeanalysisreveals pages 1-2, wang2024myosinximediatedbik1 pages 7-8, lee2024reprogrammingofflagellin pages 5-6)
 
-**Ligand (MAMP) for FLS2**: The canonical ligand is **flg22**, an immunogenic **22–amino-acid** peptide epitope derived from bacterial flagellin. (wang2023modificationsoftwo pages 1-4, wan2017comparativeanalysisof pages 10-14)
+## Evidence-based functional annotation
 
-**Co-receptor**: Many LRR-RKs require a SERK-family co-receptor. For Arabidopsis FLS2, the co-receptor is **BAK1 (SERK3)**, which associates with FLS2 upon ligand perception to initiate signaling. (wang2023modificationsoftwo pages 1-4, bai2023bik1proteinhomeostasis pages 1-2)
-
-#### 1.2 Molecular function and reaction type (kinase activity)
-FLS2 is a **receptor Ser/Thr protein kinase** whose molecular function is to transduce an extracellular bacterial flagellin-derived peptide signal into intracellular phosphorylation cascades. Its role is not to catalyze small-molecule metabolism but to catalyze **protein phosphorylation** in receptor complex activation and downstream signal propagation (autophosphorylation/transphosphorylation within receptor complexes are described as early events). (wang2023modificationsoftwo pages 1-4)
-
-#### 1.3 Ligand specificity and receptor complex formation
-**Ligand binding site and structural principle**: Structural/functional synthesis places flg22 binding on the **concave surface of the FLS2 LRR domain** (reported as LRR3–LRR16 in a summarized structural description). (wan2017comparativeanalysisof pages 10-14)
-
-**Complex assembly kinetics**: flg22 induces association of FLS2 with BAK1 very rapidly (reported as detectable in **<15 seconds**). (wan2017comparativeanalysisof pages 10-14)
-
-**Core signaling complex**: Upon activation, FLS2 associates with **BAK1** and forms a complex that includes **BIK1**. Early events include **sequential auto- and trans-phosphorylation** in the heterotrimer and **mono-ubiquitination of BIK1**, leading to BIK1 release and downstream signaling. (wang2023modificationsoftwo pages 1-4)
-
-#### 1.4 Downstream signaling outputs (cellular and physiological)
-Across sources, FLS2 activation triggers hallmark PTI outputs: **ROS burst**, **Ca2+ influx/ion channel activation**, **MAP kinase activation**, **transcriptional reprogramming of defense genes**, **stomatal closure**, **callose deposition**, and prolonged outputs including **seedling growth inhibition** (a growth–defense tradeoff phenotype). (lee2024reprogrammingofflagellin pages 1-2, zhao2024structuralandbiochemical pages 1-2, wan2017comparativeanalysisof pages 10-14)
-
-A key mechanistic node is **BIK1**, which becomes hyper-phosphorylated upon PAMP perception and directly phosphorylates multiple effectors, including:
-- **RbohD** (NADPH oxidase) → ROS burst
-- **OSCA1.3** (Ca2+-permeable channel) and **CNGC2/CNGC4** (cyclic nucleotide-gated channels) → Ca2+ entry and stomatal immunity
-(bai2023bik1proteinhomeostasis pages 1-2)
-
----
-
-### 2) Subcellular localization and trafficking/turnover
-
-#### 2.1 Localization
-FLS2 is described as a **plasma membrane–localized** LRR-RLK. (wang2023modificationsoftwo pages 1-4, zhao2024structuralandbiochemical pages 1-2)
-
-#### 2.2 Endocytosis and receptor abundance control
-FLS2 abundance and signaling duration are regulated by both ubiquitin-mediated turnover and endomembrane trafficking:
-
-1) **Proteasome-associated attenuation**: In the presence of flagellin/flg22, BAK1 phosphorylates E3 ligases **PUB12/PUB13**, which then interact with and ubiquitinate FLS2 to attenuate signaling by promoting degradation via the ubiquitin–26S proteasome route (as described in the mechanistic summary). (wang2023modificationsoftwo pages 1-4)
-
-2) **Clathrin-dependent endocytosis and vacuolar routing**: Activated FLS2 is internalized by clathrin-dependent endocytosis and traffics through **TGN/early endosome (TGN/EE)**, intermediate compartments, and **late endosome/multivesicular body (LE/MVB)/PVC** before putative vacuolar breakdown. Dynamin-related proteins **DRP2B** and **DRP1A** contribute to endocytosis and regulate PM abundance of FLS2; ESCRT-I subunits **VPS28-2** and **VPS37-1** contribute to sorting activated FLS2 into MVB lumen for degradation. (wang2023modificationsoftwo pages 1-4)
-
----
-
-### 3) Recent developments and latest research (prioritizing 2023–2024)
-
-#### 3.1 2023: BIK1 homeostasis controls signaling amplitude downstream of FLS2
-A 2023 **Nature Communications** study describes how BIK1 protein abundance and activation state are tuned by competing ubiquitin ligases. **RGLG1/RGLG2** preferentially associate with hypo-phosphorylated BIK1 and promote its association with BAK1, while PUB25/PUB26 are known to promote BIK1 degradation; these interactions help maintain BIK1 homeostasis and thereby influence immune signaling downstream of PRRs such as FLS2. (bai2023bik1proteinhomeostasis pages 1-2)
-
-#### 3.2 2023: ESCRT-targeting E3 ligase circuit stabilizes FLS2 abundance
-A 2023 bioRxiv mechanistic study proposes that E3 ligase **XBAT35.2** associates with the FLS2/BAK1/BIK1 complex and ubiquitinates ESCRT-I subunits **VPS37-1** (K48-linked chains) and **VPS28-2** (K63-linked chains), reducing FLS2 vacuolar breakdown and thereby stabilizing FLS2 to enhance immunity. This work extends the mechanistic picture from “FLS2 is endocytosed” to “specific ubiquitin-regulated ESCRT steps modulate how much receptor is degraded.” (wang2023modificationsoftwo pages 1-4)
-
-#### 3.3 2024: Reprogramming FLS2 with biased/surrogate small-molecule ligands
-A 2024 **Nature Communications** paper conducted a large-scale reverse chemical screen against the FLS2 extracellular domain to test whether an LRR-RK can process structurally distinct ligands. Out of **22,618 compounds**, **84** interacted with FLS2ECD. Two synthetic small molecules were prioritized:
-- **Maya2 (FIC44)**: binds FLS2ECD with **Kd = 8.56 ± 3.07 µM** and induces the defense reporter **FRK1** in an **FLS2-dependent** manner.
-- **FIC04**: weaker binding (**Kd = 93.91 ± 19.51 µM**) and minimal FRK1 induction.
-The study interprets these as **biased (surrogate) ligands** that weakly activate FLS2 and drive antibacterial responses through gene-expression programs distinct from canonical flg22 signaling—an explicit translational entry point for chemical modulation of PRR outputs. (lee2024reprogrammingofflagellin pages 1-2, lee2024reprogrammingofflagellin media 139d0501)
-
-#### 3.4 2024: Updated structural/biochemical understanding of FLS2-like kinase activation (comparative insight)
-A 2024 **Plant Communications** study in rice provides a mechanistic structural framework relevant to FLS2-type receptors more generally: OsFLS2 kinase-domain structures (kinase-dead mutant) were solved with ATP/ADP at **1.98 Å** and **2.09 Å** resolution and indicate that an active-like conformation can occur without phosphorylation but with weak basal autophosphorylation. The work further shows reciprocal phosphorylation between OsFLS2 and a SERK co-receptor (OsSERK2), leading to rapid phosphorylation of downstream RLCKs. While this is rice, the paper explicitly frames Arabidopsis FLS2–BAK1 complex formation as the canonical paradigm and provides a 2024 “activation logic” that informs how FLS2-family kinase domains can be structurally poised for activation by SERKs. (zhao2024structuralandbiochemical pages 1-2)
-
----
-
-### 4) Current applications and real-world implementations
-
-#### 4.1 Chemical immune modulation (2024)
-The surrogate-ligand discovery for FLS2 supports the concept of **chemical elicitors** that target PRRs directly, not by mimicking microbial peptides but by binding the receptor ectodomain and eliciting a tuned/biased output (e.g., antibacterial restriction with distinct transcriptional programs). Quantitative support includes the size of the screen and measured binding affinities (Kd) for Maya2 and FIC04. (lee2024reprogrammingofflagellin pages 1-2, lee2024reprogrammingofflagellin media 139d0501)
-
-#### 4.2 PRR transfer, natural variation, and deployment considerations (2024)
-A 2024 review of PTI natural variation emphasizes that FLS2 is broadly conserved but that **species-specific differences** (ligand recognition strength, co-receptor/kinase-domain contributions to complex formation) impact translational deployment strategies. It highlights that **OsFLS2 can complement Arabidopsis fls2 mutants** (functional transfer/complementation) and notes naturally occurring loss-of-function variation affecting flg22-induced ROS in some crop germplasm (example: maize lines with LRR deletions lacking flg22-triggered ROS burst). These observations motivate receptor transfer/engineering while cautioning that co-receptor compatibility and ligand processing can be limiting factors. (hudson2024naturalvariationin pages 2-4)
-
-#### 4.3 Receptor engineering for expanded flagellin perception (preprint with 2024 DOI)
-A bioRxiv preprint (posted with DOI dated **2024-09-09**) describes a structure-guided workflow to engineer FLS2 homologs with **expanded perception** of polymorphic flg22 epitopes. It explicitly positions rational receptor engineering and PRR transfer as tools to enhance disease resistance, describing modeling thresholds (e.g., AlphaFold3 ipTM threshold **0.83** for best prediction accuracy) and public deposition of plasmids/data to accelerate downstream engineering efforts. (li2025unlockingexpandedflagellin pages 11-14)
-
----
-
-### 5) Expert opinions and synthesis from authoritative sources
-A 2024 MPMI distinguished review frames PM-localized receptor kinases/proteins (including LRR-RKs such as FLS2) as “border controls” that monitor invaders and initiate PTI, while also emphasizing immune homeostasis and the increasingly interconnected relationship between PTI and ETI in contemporary thinking. This is consistent with mechanistic studies showing that receptor abundance/turnover and output tuning are integral to preventing detrimental overactivation. (zhang2024unlockingnaturesdefense pages 1-2, wang2023modificationsoftwo pages 1-4)
-
----
-
-### 6) Key statistics and data points (recent and/or mechanistically precise)
-- flg22 length: **22 amino acids**. (wang2023modificationsoftwo pages 1-4)
-- FLS2–BAK1 association after flg22: detectable in **<15 s** (kinetic description in summarized mechanistic account). (wan2017comparativeanalysisof pages 10-14)
-- 2024 chemical screen size: **22,618 compounds**, **84** FLS2ECD interactors. (lee2024reprogrammingofflagellin pages 1-2)
-- Surrogate ligand binding affinities (MST): **Maya2 Kd = 8.56 ± 3.07 µM**; **FIC04 Kd = 93.91 ± 19.51 µM**. (lee2024reprogrammingofflagellin pages 1-2, lee2024reprogrammingofflagellin media 139d0501)
-- Rice FLS2-family kinase structural resolutions: **1.98 Å** and **2.09 Å** (ATP/ADP-bound). (zhao2024structuralandbiochemical pages 1-2)
-
----
-
-### Evidence-backed summary tables
-
-| Category | Details | Key sources |
-|---|---|---|
-| Identity/Type | Arabidopsis thaliana FLS2 (UniProt Q9FL28) matches the well-characterized FLAGELLIN-SENSING 2 receptor: a plasma-membrane localized leucine-rich repeat receptor-like serine/threonine kinase (LRR-RLK) with an extracellular LRR domain, a single transmembrane helix, and an intracellular kinase domain. The evidence consistently identifies it as the canonical bacterial flagellin receptor in Arabidopsis. | (wang2023modificationsoftwo pages 1-4, lee2024reprogrammingofflagellin pages 1-2, zhao2024structuralandbiochemical pages 1-2) |
-| Ligand specificity | FLS2 recognizes bacterial flagellin, especially the immunogenic 22-amino-acid peptide flg22; structural evidence places flg22 binding on the concave surface of the FLS2 LRR region. A 2024 study further showed that FLS2 can also be weakly activated by surrogate small molecules (for example Maya2), indicating some signaling flexibility beyond the canonical peptide ligand. | (wang2023modificationsoftwo pages 1-4, wan2017comparativeanalysisof pages 10-14, lee2024reprogrammingofflagellin pages 1-2, lee2024reprogrammingofflagellin media 139d0501) |
-| Coreceptor/complex | Upon flg22 perception, FLS2 rapidly associates with the co-receptor BAK1 at the plasma membrane and forms an activated signaling complex that also includes the RLCK BIK1. This complex undergoes sequential auto- and trans-phosphorylation, and ligand perception promotes BIK1 release for downstream signaling. | (wang2023modificationsoftwo pages 1-4, bai2023bik1proteinhomeostasis pages 1-2, wan2017comparativeanalysisof pages 10-14) |
-| Immediate downstream kinases | BIK1 is the principal immediate downstream cytoplasmic kinase highlighted in the evidence. After activation, BIK1 becomes hyper-phosphorylated and phosphorylates targets including RbohD, OSCA1.3, and CNGC2/CNGC4, linking the FLS2 complex to ROS production, Ca2+ influx, and stomatal immunity. | (bai2023bik1proteinhomeostasis pages 1-2, lee2024reprogrammingofflagellin pages 1-2) |
-| Early outputs | Canonical FLS2 signaling induces ROS/ROI production, ion-channel activation and Ca2+ entry, MAPK activation, defense gene transcription, stomatal closure, callose deposition, and prolonged seedling growth inhibition. These responses define FLS2 as a pattern-recognition receptor that initiates pattern-triggered immunity against bacterial pathogens. | (lee2024reprogrammingofflagellin pages 1-2, wan2017comparativeanalysisof pages 10-14, zhao2024structuralandbiochemical pages 1-2) |
-| Trafficking/turnover regulators | FLS2 abundance is tightly controlled by ubiquitination and endomembrane trafficking. PUB12/PUB13 ubiquitinate FLS2 after BAK1-dependent phosphorylation to promote proteasome-associated attenuation, while activated FLS2 undergoes clathrin-dependent endocytosis through TGN/EE to LE/MVB/PVC and likely vacuolar degradation; DRP2B, DRP1A, VPS28-2, and VPS37-1 contribute to these steps. | (wang2023modificationsoftwo pages 1-4) |
-| 2023-2024 developments/applications | Recent mechanistic advances include identification of XBAT35.2 as a positive regulator that stabilizes FLS2 by targeting ESCRT-I subunits VPS37-1 and VPS28-2, thereby limiting receptor vacuolar breakdown. In 2024, a reverse chemical screen of 22,618 compounds discovered biased surrogate ligands for FLS2, showing that receptor outputs can be chemically reprogrammed and suggesting translational opportunities for immune modulation and receptor engineering. | (wang2023modificationsoftwo pages 1-4, lee2024reprogrammingofflagellin pages 1-2) |
-| Key quantitative data | Supported quantitative points include: flg22 is a 22-aa peptide; ligand-induced FLS2-BAK1 association can occur in less than 15 s; the 2024 chemical screen tested 22,618 compounds and identified 84 FLS2ECD interactors; Maya2 bound FLS2ECD with Kd = 8.56 ± 3.07 µM, whereas FIC04 showed weaker binding with Kd = 93.91 ± 19.51 µM. In one construct-based assay series, flg22 was tested at 10 nM and Maya ligands at 1, 10, and 100 µM. | (wan2017comparativeanalysisof pages 10-14, lee2024reprogrammingofflagellin pages 1-2, lee2024reprogrammingofflagellin media 139d0501, lee2024reprogrammingofflagellin pages 6-7) |
+| Feature | Current conclusion | Strongest evidence | Key quantitative detail |
+|---|---|---|---|
+| Identity | **FLS2 is the correct target:** *Arabidopsis thaliana* gene **At5g46330**, encoding FLAGELLIN-SENSING 2 (**UniProt Q9FL28**); no different same-symbol protein is implicated. | At5g46330 is explicitly assigned to Arabidopsis FLS2 in receptor studies; loss-of-function mutations eliminate flagellin responsiveness, whereas heterologous expression transfers Arabidopsis-like perception ([Chinchilla et al., 2006](https://doi.org/10.1105/tpc.105.036574)) (mueller2012chimericfls2receptors pages 10-11, chinchilla2006thearabidopsisreceptor pages 1-2) | Functional FLS2 was detected as an approximately **175-kDa** polypeptide (chinchilla2006thearabidopsisreceptor pages 1-2). |
+| Architecture and protein class | A precursor, single-pass **LRR receptor-like Ser/Thr kinase**: N-terminal signal peptide, extracellular plant-type LRR ectodomain, one transmembrane helix, and cytosolic kinase domain. | Mutational and structural analyses establish the extracellular LRR ligand-binding surface and intracellular kinase-dependent signaling ([Dunning et al., 2007](https://doi.org/10.1105/tpc.106.048801); [Sun et al., 2013](https://doi.org/10.1126/science.1243825)) (sun2013structuralbasisfor pages 2-3, dunning2007identificationandmutational pages 1-2, chinchilla2006thearabidopsisreceptor pages 1-2) | The ectodomain contains approximately **28 LRRs**; responsiveness determinants concentrate in **LRRs 9–15**, especially 12–14 (roy2020effectofd122n pages 15-20, dunning2007identificationandmutational pages 1-2). |
+| Ligand (“substrate”) specificity | FLS2 is primarily a **signaling receptor**, not a metabolic enzyme. Its extracellular ligand is **flg22**, a conserved 22-amino-acid epitope of bacterial flagellin; ATP is used by the cytosolic kinase for protein phosphorylation after activation. | Chemical cross-linking and immunoprecipitation demonstrated direct FLS2–flg22 binding; receptor transfer conferred Arabidopsis-type specificity ([Chinchilla et al., 2006](https://doi.org/10.1105/tpc.105.036574)). The ternary-complex crystal structure defined peptide contacts ([Sun et al., 2013](https://doi.org/10.1126/science.1243825)) (sun2013structuralbasisfor pages 2-3, chinchilla2006thearabidopsisreceptor pages 1-2) | The **3.06-Å** structure shows FLS2 contacting both flg22 termini and BAK1 contacting the receptor-bound peptide’s C terminus (sun2013structuralbasisfor pages 2-3). |
+| Activation complex and pathway | flg22-bound FLS2 recruits co-receptor **BAK1/SERK3**. Reciprocal phosphorylation activates the receptor complex and associated **BIK1**; activated BIK1 dissociates and phosphorylates **RBOHD**, generating the apoplastic ROS burst and promoting ion fluxes, MAPKs, defense transcription, callose, stomatal closure, and antibacterial immunity. | Structural analysis supports ligand-induced FLS2–flg22–BAK1 assembly; genetics, co-immunoprecipitation, phosphoblots, and pathogen assays support the BIK1–RBOHD branch ([Sun et al., 2013](https://doi.org/10.1126/science.1243825); [Wang et al., 2024](https://doi.org/10.1073/pnas.2312415121)) (sun2013structuralbasisfor pages 2-3, wang2024myosinximediatedbik1 pages 1-2, wang2024myosinximediatedbik1 pages 3-4) | Wang et al. used **1 µM flg22 for 2–30 min** to assay complex activation and measured stomatal closure after **10 µM for 1 h**; RBOHD **Ser39** phosphorylation was strongly reduced when myosin-XI function was lost (wang2024myosinximediatedbik1 pages 3-4). |
+| Cellular localization and turnover | FLS2 acts at the **plasma membrane** of epidermal, mesophyll, guard, root, stem, and petal cells. Active ligand triggers endocytosis into vesicles and eventual degradation; surface receptor is replenished mainly by new synthesis. | Functional FLS2–GFP imaging, plasmolysis, ligand/antagonist specificity, pulse–wash experiments, and cycloheximide treatment ([Robatzek et al., 2006](https://doi.org/10.1101/gad.366506)) (robatzek2006ligandinducedendocytosisof pages 2-3) | After **10 µM flg22**, plasma-membrane signal disappeared and vesicles appeared within **20–40 min**; after a 20-min pulse, surface signal was nearly restored by **75 min**, but cycloheximide blocked replenishment (robatzek2006ligandinducedendocytosisof pages 2-3). |
+| Ser938 phosphorylation and nanodomains (2024) | Phosphorylation of cytosolic **Ser938** is dispensable for FLS2–BAK1 heterodimerization but promotes FLS2 partitioning into **AtRem1.3-associated sterol-rich nanodomains**, alters receptor mobility/lifetime, enhances endocytosis, and supports full immunity. | Single-particle tracking, FRET-FLIM/proximity assays, phospho-dead S938A and phosphomimetic S938D complementation, fluorescence-correlation spectroscopy, and vesicle imaging ([Cui et al., 2024; published 24 July 2024](https://doi.org/10.7554/eLife.91072.3)) (cui2024singlemoleculeanalysisreveals pages 4-5, cui2024singlemoleculeanalysisreveals pages 1-2, cui2024singlemoleculeanalysisreveals pages 7-9) | After **10 µM flg22**, WT and S938D formed vesicles by **15 min**, increasing through **30–60 min**, whereas S938A formed few; vesicle differences reached **p < 0.001** (cui2024singlemoleculeanalysisreveals pages 7-9). |
+| Myosin XIK–BIK1 nanodomain mechanism (2024) | **Myosin XIK**, acting with cortical actin and REM1.3 nanodomains, recruits and immobilizes BIK1 near FLS2, stabilizing preformed FLS2–BIK1 complexes. This is required for robust BIK1/RBOHD activation, ROS, stomatal defense, and flg22-induced bacterial resistance, but not for FLS2–BAK1 recruitment. | Direct pull-down, FRET-FLIM, co-immunoprecipitation, triple-myosin mutant/complementation, inhibitors, single-particle tracking, and *Pseudomonas* assays ([Wang et al., 2024; published 14 June 2024](https://doi.org/10.1073/pnas.2312415121)) (wang2024myosinximediatedbik1 pages 4-5, wang2024myosinximediatedbik1 pages 5-7, wang2024myosinximediatedbik1 pages 7-8, wang2024myosinximediatedbik1 pages 1-2, wang2024myosinximediatedbik1 pages 3-4) | BIK1 and FLS2 clusters averaged **0.28 ± 0.03 µm** and **0.27 ± 0.05 µm**. In the myosin-XI mutant, confined BIK1 fell from **31% to 6%** and its immobile fraction from **14% to 3%**; inhibiting myosin reduced FLS2–BIK1 correlation from **0.53 ± 0.11 to 0.28 ± 0.10** (wang2024myosinximediatedbik1 pages 4-5, wang2024myosinximediatedbik1 pages 5-7). |
+| Biased agonists and application (2024) | Synthetic ligands **Maya1** and **Maya2** weakly and atypically activate FLS2. They bypass much of canonical ROS/BIK1/MAPK signaling yet induce restricted, organ-dependent transcriptional programs sufficient for antibacterial priming—proof of concept for receptor-targeted immune activators rather than a deployed crop product. | A reverse chemical screen, purified-ectodomain binding, *fls2* dependency, receptor mutagenesis, RNA-seq, and *Pseudomonas syringae* challenge ([Lee et al., 2024; accepted 1 November 2024](https://doi.org/10.1038/s41467-024-54271-5)) (lee2024reprogrammingofflagellin pages 3-4, lee2024reprogrammingofflagellin pages 8-10, lee2024reprogrammingofflagellin pages 1-2, lee2024reprogrammingofflagellin pages 5-6) | Of **22,618** compounds, **84** bound the FLS2 ectodomain. Maya2 had **K₍d₎ = 8.56 ± 3.07 µM**; Maya1 and Maya2 regulated **156** and **113** FLS2-dependent genes, respectively, and reduced bacterial growth approximately **10-fold** in WT but not *fls2* plants (lee2024reprogrammingofflagellin pages 3-4, lee2024reprogrammingofflagellin pages 1-2, lee2024reprogrammingofflagellin pages 5-6). |
 
 
-*Table: This table summarizes the verified identity, molecular function, signaling role, localization, trafficking, and recent mechanistic advances for Arabidopsis thaliana FLS2 (UniProt Q9FL28). It is useful as a compact evidence-backed reference for building the full research report.*
+*Table: Concise evidence matrix for the verified Arabidopsis FLS2/Q9FL28 receptor, covering molecular function, localization, signaling, quantitative findings, and major 2024 mechanistic and translational developments.*
 
-| Source (first author, year) | Publication date (month/year if known) | Venue | Key finding related to FLS2 | Quantitative/statistical details | URL/DOI | Evidence citation ids |
-|---|---|---|---|---|---|---|
-| Bai, 2023 | Aug 2023 | Nature Communications | Defined a 2023 regulatory layer downstream of Arabidopsis FLS2 in which BIK1 homeostasis is maintained by interplay among ubiquitin ligases; BIK1 acts immediately downstream of FLS2/BAK1 and phosphorylates RbohD, OSCA1.3, and CNGC2/4 to drive ROS, Ca2+ influx, and stomatal immunity. | Peer-reviewed study; excerpt notes RGLG1/2 preferentially bind hypo-phosphorylated BIK1 and positively regulate immune signaling, while PUB25 mediates RGLG2 degradation. | https://doi.org/10.1038/s41467-023-40364-0 | (bai2023bik1proteinhomeostasis pages 1-2) |
-| Wang, 2023 | Aug 2023 | bioRxiv | Identified XBAT35.2 as a positive regulator of FLS2 abundance: it associates with FLS2/BAK1/BIK1 and ubiquitinates ESCRT-I subunits VPS37-1 and VPS28-2, limiting FLS2 vacuolar breakdown and stabilizing receptor-mediated immunity. | flg22 recognized as a 22-aa peptide; FLS2–BAK1 association described as instantaneous; XBAT35.2 adds K48-linked chains to VPS37-1 and K63-linked chains to VPS28-2. | https://doi.org/10.1101/2023.08.10.552820 | (wang2023modificationsoftwo pages 1-4) |
-| Zhang, 2024 | Feb 2024 | Molecular Plant-Microbe Interactions | Review synthesizing recent PRR knowledge and positioning FLS2 as a plasma-membrane RK sentinel for MAMP perception and PTI, useful for interpreting FLS2 in the broader receptor-network and immune-homeostasis context. | Review article; no new FLS2-specific quantitative measurements in excerpt. | https://doi.org/10.1094/MPMI-10-23-0177-HH | (zhang2024unlockingnaturesdefense pages 1-2) |
-| Zhao, 2024 | Mar 2024 | Plant Communications | Structural/biochemical work in rice provided a recent mechanistic model relevant to Arabidopsis FLS2: FLS2-type kinase domains can adopt an active conformation with weak basal autophosphorylation, while SERK co-receptors drive reciprocal phosphorylation and rapid RLCK phosphorylation. | OsFLS2 kinase-dead structures solved at 1.98 Å and 2.09 Å; enhanced OsFLS2–OsSERK2 interaction in presence of flg22; identifies recent mechanistic framework for FLS2-like activation. | https://doi.org/10.1016/j.xplc.2023.100785 | (zhao2024structuralandbiochemical pages 1-2) |
-| Hudson, 2024 | Mar 2024 | Molecular Plant Pathology | Review on natural PTI variation highlighting translational implications for FLS2 transfer/engineering: FLS2 is broadly conserved but ligand recognition and co-receptor requirements differ across species, affecting deployment strategies. | Notes OsFLS2 can complement Arabidopsis fls2 mutants; reports natural loss-of-function examples such as maize lines lacking flg22-triggered ROS burst due to LRR deletions; emphasizes species-specific ligand responses. | https://doi.org/10.1111/mpp.13445 | (hudson2024naturalvariationin pages 2-4) |
-| Lee, 2024 | Nov 2024 | Nature Communications | Discovered biased chemical ligands for Arabidopsis FLS2, showing that FLS2 can be weakly activated by noncanonical small molecules to induce antibacterial responses with unusual gene-expression outputs; a direct translational route toward chemical immune modulation. | Screened 22,618 compounds, found 84 FLS2ECD interactors; Maya2 bound FLS2ECD with Kd = 8.56 ± 3.07 µM; FIC04 with Kd = 93.91 ± 19.51 µM; flg22 tested at 10 nM and Maya ligands at 1, 10, 100 µM in follow-up assays. | https://doi.org/10.1038/s41467-024-54271-5 | (lee2024reprogrammingofflagellin pages 1-2, lee2024reprogrammingofflagellin pages 6-7, lee2024reprogrammingofflagellin media 139d0501) |
-| Li, 2025 | Sep 2025 (preprint; DOI dated 2024-09-09) | bioRxiv | Presented a rational receptor-engineering workflow to expand flagellin perception by modifying FLS2 homologs; supports translational use of engineered or transferred FLS2 variants for broader pathogen recognition. | Structural modeling retained complexes with ipTM > 0.8; AF3 ipTM threshold 0.83 gave highest prediction accuracy; residues within 5 Å of ligand/co-receptor were selected for engineering; public plasmids/data deposited. | https://doi.org/10.1101/2024.09.09.612155 | (li2025unlockingexpandedflagellin pages 1-4, li2025unlockingexpandedflagellin pages 11-14) |
+## 1. Identity and domain verification
 
+The gene symbol, locus, and protein description are concordant. Arabidopsis FLS2 is **At5g46330**, the receptor originally genetically defined by loss of flagellin sensitivity. Direct ligand-binding studies and heterologous expression established that this gene product determines Arabidopsis-type flg22 perception: chemical cross-linking and immunoprecipitation demonstrated FLS2–flg22 association, while expression of Arabidopsis FLS2 in tomato cells installed an additional receptor system with Arabidopsis-like ligand specificity. These results rule out annotation based solely on sequence similarity. (chinchilla2006thearabidopsisreceptor pages 1-2)
 
-*Table: This table summarizes 2023–2024 advances and closely related 2025 preprint developments with a 2024 DOI relevant to Arabidopsis FLS2, emphasizing mechanistic discoveries and translational applications such as receptor engineering and chemical elicitation.*
+Its architecture matches the supplied InterPro assignments. FLS2 has an N-terminal secretory signal, a large extracellular LRR solenoid, one membrane-spanning segment, and an intracellular Ser/Thr kinase domain. Approximately 28 LRRs are commonly assigned to the ectodomain. Mutational scanning localized important flg22-response determinants to LRRs 9–15, especially conserved solvent-exposed residues in LRRs 12–14. These functional data agree with the LRR, plant LRR-N-terminal, LRR-superfamily, kinase-like, and protein-kinase annotations supplied for Q9FL28. (roy2020effectofd122n pages 15-20, dunning2007identificationandmutational pages 1-2, chinchilla2006thearabidopsisreceptor pages 1-2)
 
----
+## 2. Primary molecular function and ligand specificity
 
-### Notes on evidence scope and limitations
-- Some foundational structural claims for Arabidopsis FLS2 (e.g., precise residues mediating flg22/BAK1 interfaces) are referenced by the recent sources but are not fully reproduced in the retrieved excerpts; the report therefore emphasizes claims explicitly stated in the extracted text and avoids adding unquoted residue-level details. (wan2017comparativeanalysisof pages 10-14, wang2023modificationsoftwo pages 1-4)
-- The rice structural study informs conserved activation mechanisms for FLS2-family receptors but is not direct experimental evidence on Arabidopsis Q9FL28 kinase-domain structure; it is presented as comparative mechanistic insight. (zhao2024structuralandbiochemical pages 1-2)
+FLS2 functions as a **cell-surface immune sensor and signal-transducing kinase**. Its biologically relevant extracellular ligand is bacterial flagellin, particularly the conserved flg22 peptide. In enzymatic terms, the cytoplasmic domain belongs to the Ser/Thr protein-kinase superfamily and transfers phosphate from ATP to protein substrates or receptor-complex components; however, the defining biological specificity is extracellular recognition of flg22 rather than small-molecule substrate turnover. (sun2013structuralbasisfor pages 2-3, chinchilla2006thearabidopsisreceptor pages 1-2)
 
+Direct biochemical evidence includes ligand cross-linking to immunoprecipitated FLS2 and receptor-transfer experiments showing that FLS2 determines perception specificity. Chimeric-receptor binding assays further showed that immunoprecipitated FLS2 binds radiolabeled flg22 without BAK1 or another SERK being obligatorily present, supporting FLS2 as the primary ligand-binding component. Distinct portions of its LRR ectodomain recognize different “address” and “message” regions of the peptide. (mueller2012chimericfls2receptors pages 10-11, chinchilla2006thearabidopsisreceptor pages 1-2)
+
+The highest-resolution mechanistic evidence is the **3.06-Å FLS2–flg22–BAK1 ectodomain crystal structure**, published in *Science* in November 2013. FLS2 contacts both ends of flg22 along the inner surface of its LRR solenoid: a relatively conserved site recognizes the peptide’s C-terminal region and a less conserved site contacts its N-terminal region. BAK1 contacts both FLS2 and the C terminus of receptor-bound flg22, making the ligand a molecular “glue” for co-receptor recruitment. Mutations at the structurally predicted interface impaired complex formation or downstream MPK phosphorylation. DOI: https://doi.org/10.1126/science.1243825. (sun2013structuralbasisfor pages 2-3)
+
+Ligand recognition is nevertheless evolutionarily variable. FLS2 LRR sequences are strongly conserved among most tested Arabidopsis accessions but more diverse among Brassicaceae homologues; experimentally altered solvent-exposed LRR residues can quantitatively reduce or abolish flg22 binding and responsiveness. This explains why flagellin epitopes or receptor orthologues from different species need not display identical recognition spectra. (dunning2007identificationandmutational pages 1-2)
+
+## 3. Cellular and tissue localization
+
+FLS2 performs initial recognition at the **plasma membrane**, with its LRR ectodomain facing the apoplast and its kinase domain facing the cytosol. Functional FLS2–GFP was observed at the cell periphery in roots, leaves, stems, and petals, including epidermal, mesophyll, and guard cells. Plasmolysis caused the fluorescent membrane and associated Hechtian strands to retract from the wall, directly supporting plasma-membrane rather than cell-wall localization. (robatzek2006ligandinducedendocytosisof pages 2-3)
+
+Localization is dynamic. Treatment with 10 µM active flg22 caused plasma-membrane fluorescence to disappear and intracellular vesicles to emerge within 20–40 minutes. Prolonged exposure caused loss of the GFP signal, consistent with degradation. In pulse–wash experiments, vesicles were evident approximately 10 minutes after washing and surface FLS2 was nearly restored by 75 minutes; cycloheximide blocked restoration, indicating replenishment by new synthesis rather than simple recycling. Inactive or antagonistic flg22 variants failed to trigger normal internalization, demonstrating ligand specificity. Published March 2006, DOI: https://doi.org/10.1101/gad.366506. (robatzek2006ligandinducedendocytosisof pages 2-3)
+
+Thus, the most precise localization annotation is: **plasma-membrane immune receptor that, after activation, enters endosomal trafficking and degradation pathways**. Endocytosis is not merely constitutive turnover; it is strongly accelerated by productive ligand recognition and is coupled to receptor activation state. (robatzek2006ligandinducedendocytosisof pages 2-3, cui2024singlemoleculeanalysisreveals pages 7-9)
+
+## 4. Signaling pathway
+
+### 4.1 Receptor-complex activation
+
+In resting cells, FLS2 associates with the receptor-like cytoplasmic kinase BIK1. flg22 binding rapidly recruits BAK1/SERK3 to generate the FLS2–flg22–BAK1 complex. Receptor-complex phosphorylation activates BIK1, which subsequently dissociates or changes association state and phosphorylates downstream targets, notably the NADPH oxidase RBOHD. Structural evidence shows that BAK1 is a genuine ligand-dependent co-receptor, not the primary flg22-binding receptor. (roy2020effectofd122n pages 15-20, sun2013structuralbasisfor pages 2-3, wang2024myosinximediatedbik1 pages 1-2)
+
+RBOHD phosphorylation—including BIK1-dependent Ser39 phosphorylation—drives the apoplastic oxidative burst. FLS2 signaling also activates ion channels and calcium-dependent signaling, MAPK cascades, and extensive defense-gene transcription. Established physiological outputs include ethylene production, stomatal closure, callose deposition, seedling-growth inhibition under prolonged stimulation, and increased resistance to *Pseudomonas syringae*. (dunning2007identificationandmutational pages 1-2, lee2024reprogrammingofflagellin pages 1-2, wang2024myosinximediatedbik1 pages 1-2, wang2024myosinximediatedbik1 pages 3-4)
+
+This pathway should not be interpreted as a strictly linear chain. BAK1 recruitment, BIK1 positioning, receptor phosphorylation, plasma-membrane nanodomain organization, ubiquitination, and endocytosis jointly regulate signal amplitude and duration. Recent evidence particularly supports preorganization of some FLS2–BIK1 complexes before ligand perception, followed by ligand-dependent recruitment of BAK1. (wang2024myosinximediatedbik1 pages 7-8, wang2024myosinximediatedbik1 pages 1-2)
+
+### 4.2 Biological process
+
+FLS2 mediates antibacterial **pattern-triggered immunity**, detecting an extracellular microbial structural protein before extensive invasion. Its principal role is therefore surveillance and rapid conversion of microbial-pattern recognition into cellular defense. The broad outputs are pleiotropic, but mechanistically informative endpoints are ROS generation, membrane/ion responses, MAPK and transcriptional activation, stomatal defense, cell-wall callose deposition, and restriction of bacterial growth. FLS2 mutations abolish or greatly reduce flagellin responses and increase susceptibility, while functional receptor expression restores perception. (dunning2007identificationandmutational pages 1-2, chinchilla2006thearabidopsisreceptor pages 1-2)
+
+## 5. Major developments in 2024
+
+### 5.1 Ser938 phosphorylation controls receptor dynamics
+
+Cui and colleagues used variable-angle TIRF microscopy, single-particle tracking, fluorescence-lifetime FRET, protein-proximity assays, fluorescence-correlation spectroscopy, and phosphosite mutants to connect FLS2 phosphorylation to nanoscale behavior. The phosphomimetic S938D receptor behaved broadly like wild-type FLS2, whereas non-phosphorylatable S938A lost much of the flg22-induced change in receptor lifetime and dynamics and supported weaker immunity. Importantly, all variants could still undergo FLS2–BAK1 heterodimerization, indicating that Ser938 phosphorylation acts mainly after or alongside co-receptor assembly rather than serving as an absolute assembly requirement. Version of record published 24 July 2024; DOI: https://doi.org/10.7554/eLife.91072.3. (cui2024singlemoleculeanalysisreveals pages 4-5, cui2024singlemoleculeanalysisreveals pages 1-2)
+
+After flg22 treatment, wild-type FLS2 and S938D increasingly associated with AtRem1.3-marked sterol-rich nanodomains; S938A showed little corresponding change. With 10 µM flg22, wild-type and S938D endocytic vesicles appeared by 15 minutes and increased at 30 and 60 minutes, whereas S938A produced few vesicles; reported vesicle-analysis differences reached p<0.001. The current interpretation is that Ser938 phosphorylation promotes sorting of active receptors into functional nanodomains, thereby supporting signaling and subsequent internalization. (cui2024singlemoleculeanalysisreveals pages 4-5, cui2024singlemoleculeanalysisreveals pages 7-9)
+
+### 5.2 Myosin XIK positions BIK1 in FLS2 nanodomains
+
+Wang and colleagues showed that myosin XIK interacts directly with the kinase domains of FLS2 and BIK1 and associates with the nanodomain protein REM1.3. Genetic depletion of three myosin-XI proteins, pharmacological myosin inhibition, or actin disruption reduced FLS2–BIK1 and BAK1–BIK1 association but left ligand-induced FLS2–BAK1 recruitment comparatively intact. Loss of myosin XI abolished or diminished flg22-induced BIK1 phosphorylation, RBOHD Ser39 phosphorylation, ROS production, stomatal closure, and flg22-mediated protection against *P. syringae*. XIK complementation restored these defects. Published 14 June 2024 in *PNAS*; DOI: https://doi.org/10.1073/pnas.2312415121. (wang2024myosinximediatedbik1 pages 1-2, wang2024myosinximediatedbik1 pages 3-4)
+
+Single-particle measurements quantified the underlying organization. BIK1 and FLS2 clusters averaged 0.28±0.03 and 0.27±0.05 µm in diameter, with respective densities of 131.03±10.51 and 139.21±8.69 clusters per 100 µm². Approximately 60% of BIK1 clusters persisted for less than five seconds; 31% showed confined movement within 0.5 µm, compared with 80% of FLS2 particles. In the myosin-XI mutant, confined BIK1 decreased from 31% to 6%, and its immobile fraction fell from 14% to 3%. Myosin inhibition decreased the FLS2–BIK1 Pearson colocalization coefficient from 0.53±0.11 to 0.28±0.10. These measurements support an expert model in which myosin XIK is a molecular scaffold that immobilizes enough BIK1 near FLS2 to permit fast, robust signaling. (wang2024myosinximediatedbik1 pages 4-5, wang2024myosinximediatedbik1 pages 5-7, wang2024myosinximediatedbik1 pages 7-8)
+
+### 5.3 Biased synthetic ligands reveal output flexibility
+
+Lee and colleagues screened **22,618 compounds** against purified FLS2 ectodomain; 84 displayed interaction signals, and downstream triage identified two synthetic weak agonists, Maya1 and Maya2. Maya2 bound FLS2 with Kd=8.56±3.07 µM, while a structurally related weak control had Kd=93.91±19.51 µM. Receptor mutagenesis showed that the synthetic ligands use partly different FLS2 residues from flg22, demonstrating that a single plant receptor can process chemically unrelated inputs. Accepted 1 November 2024 in *Nature Communications*; DOI: https://doi.org/10.1038/s41467-024-54271-5. (lee2024reprogrammingofflagellin pages 3-4, lee2024reprogrammingofflagellin pages 8-10, lee2024reprogrammingofflagellin pages 1-2)
+
+Unlike flg22, Maya1/2 produced little BIK1 phosphorylation, ROS, or MAPK activation, although Maya2 modestly activated MAPKs at 15 minutes. Nevertheless, Maya1 regulated 156 FLS2-dependent genes in leaves and Maya2 regulated 113 in roots. Of the Maya1-responsive genes, 62.8% overlapped the flg22 program and 37.2% were Maya1-specific; for Maya2, 43.4% overlapped and 56.6% were specific. Pretreatment reduced *P. syringae* DC3000 growth by approximately tenfold in wild type but not in *fls2*, including protection against a flagellin-deficient bacterial strain. This demonstrates that a restricted transcriptional sector can be sufficient for antibacterial protection without fully reproducing canonical flg22 signaling. (lee2024reprogrammingofflagellin pages 3-4, lee2024reprogrammingofflagellin pages 8-10, lee2024reprogrammingofflagellin pages 5-6)
+
+## 6. Applications and real-world implementation status
+
+FLS2 is widely implemented as an **experimental system** rather than as a mature commercial technology. Current uses include:
+
+1. **Standard PTI assays:** flg22–FLS2 is used to measure ROS bursts, MAPK activation, defense-gene expression, stomatal closure, callose, receptor complex assembly, and endocytosis.
+2. **Receptor engineering:** chimeric FLS2/EFR constructs and ectodomain mutagenesis map ligand-binding versus signal-transduction modules. Functional receptor chimeras demonstrate that ligand-sensing and intracellular signaling domains can be recombined. (mueller2012chimericfls2receptors pages 10-11, dunning2007identificationandmutational pages 1-2)
+3. **Cross-species receptor transfer:** Arabidopsis FLS2 expression installed Arabidopsis-like flg22 perception in tomato cells, providing proof that PRR transfer can add recognition capacity. This is compelling pre-application evidence, not by itself a field-deployed cultivar. (chinchilla2006thearabidopsisreceptor pages 1-2)
+4. **Chemical immune priming:** Maya1/2 provide proof of concept that small molecules can activate selected FLS2 outputs and reduce bacterial colonization. Their micromolar affinity, weak agonism, and current validation in controlled Arabidopsis experiments mean they are research leads rather than registered crop-protection products. (lee2024reprogrammingofflagellin pages 1-2, lee2024reprogrammingofflagellin pages 5-6)
+5. **Nanodomain and trafficking manipulation:** Ser938, REM1.3, myosin XIK, and BIK1 are candidate control points for tuning immune amplitude and duration. However, actomyosin and membrane trafficking have many cellular functions, making indiscriminate manipulation likely to cause off-target physiological effects. (cui2024singlemoleculeanalysisreveals pages 1-2, wang2024myosinximediatedbik1 pages 7-8)
+
+The main translational opportunity is to broaden microbial recognition or generate inducible chemical priming without constitutive defense activation. The principal constraints are pathogen variation in flg22, receptor/co-receptor compatibility across species, immune–growth trade-offs, receptor desensitization and turnover, and potential effects on beneficial microbiota. The 2024 biased-ligand work is particularly important because it suggests that protective transcription may be separable from energetically costly full-spectrum immune activation, but this remains a proof-of-concept hypothesis requiring crop, field, formulation, toxicology, and durability studies. (lee2024reprogrammingofflagellin pages 3-4, lee2024reprogrammingofflagellin pages 5-6)
+
+## 7. Overall expert assessment
+
+The assignment of Q9FL28/At5g46330 is exceptionally strong: genetic loss-of-function, direct ligand cross-linking, cross-species gain-of-function, high-resolution structural biology, mutagenesis, live-cell imaging, phosphoprotein assays, and pathogen challenges all converge on the same annotation. FLS2’s primary function can be stated with high confidence as **plasma-membrane recognition of bacterial flagellin/flg22 and initiation of BAK1/BIK1-dependent antibacterial PTI**. (sun2013structuralbasisfor pages 2-3, chinchilla2006thearabidopsisreceptor pages 1-2)
+
+The current mechanistic model has shifted from a simple ligand–receptor switch to a spatially and temporally regulated signaling platform. Ligand binding determines specificity; BAK1 completes the active extracellular complex; prepositioned BIK1 couples the receptor to RBOHD and other intracellular targets; phosphorylation and nanodomain partitioning regulate signaling competence; and endocytosis/degradation terminate or reshape the response. The strongest recent conclusion is that **membrane organization is itself part of FLS2 signal transduction**, not merely a consequence of activation. (cui2024singlemoleculeanalysisreveals pages 1-2, wang2024myosinximediatedbik1 pages 7-8, wang2024myosinximediatedbik1 pages 1-2)
+
+Remaining uncertainties include the complete physiological substrate repertoire of the FLS2 kinase, how signals are partitioned between plasma-membrane and endosomal compartments, the degree to which individual phosphosites act causally versus combinatorially, and whether biased small-molecule agonism can be converted into durable, economical crop protection. These limitations do not weaken the core annotation but define the main frontier for functional and translational research.
 
 References
 
-1. (wang2023modificationsoftwo pages 1-4): Chaofeng Wang, Yi Zhang, Bangjun Zhou, Pooja Raj Verma, Sadia Hamera, and Lirong Zeng. Modifications of two escrt-i subunits with distinct ubiquitin chains regulate plant immunity. bioRxiv, Aug 2023. URL: https://doi.org/10.1101/2023.08.10.552820, doi:10.1101/2023.08.10.552820. This article has 0 citations.
+1. (mueller2012chimericfls2receptors pages 10-11): Katharina Mueller, Pascal Bittel, Delphine Chinchilla, Anna K. Jehle, Markus Albert, Thomas Boller, and Georg Felix. Chimeric fls2 receptors reveal the basis for differential flagellin perception in <i>arabidopsis</i> and tomato. The Plant Cell, 24(5):2213-2224, May 2012. URL: https://doi.org/10.1105/tpc.112.096073, doi:10.1105/tpc.112.096073. This article has 110 citations.
 
-2. (lee2024reprogrammingofflagellin pages 1-2): Du-Hwa Lee, Ho-Seok Lee, Min-Soo Choi, Katarzyna Parys, Kaori L. Honda, Y. Kondoh, Jung-Min Lee, Natalie Edelbacher, Geon-Young Heo, Balaji Enugutti, Hiroyuki Osada, Ken Shirasu, and Youssef Belkhadir. Reprogramming of flagellin receptor responses with surrogate ligands. Nature Communications, Nov 2024. URL: https://doi.org/10.1038/s41467-024-54271-5, doi:10.1038/s41467-024-54271-5. This article has 8 citations and is from a highest quality peer-reviewed journal.
+2. (chinchilla2006thearabidopsisreceptor pages 1-2): Delphine Chinchilla, Zsuzsa Bauer, Martin Regenass, Thomas Boller, and Georg Felix. The <i>arabidopsis</i> receptor kinase fls2 binds flg22 and determines the specificity of flagellin perception. The Plant Cell, 18(2):465-476, Dec 2006. URL: https://doi.org/10.1105/tpc.105.036574, doi:10.1105/tpc.105.036574. This article has 1229 citations.
 
-3. (bai2023bik1proteinhomeostasis pages 1-2): Jiaojiao Bai, Yuanyuan Zhou, Jianhang Sun, Kexin Chen, Yufang Han, Ranran Wang, Yanmin Zou, Mingshuo Du, and Dongping Lu. Bik1 protein homeostasis is maintained by the interplay of different ubiquitin ligases in immune signaling. Nature Communications, Aug 2023. URL: https://doi.org/10.1038/s41467-023-40364-0, doi:10.1038/s41467-023-40364-0. This article has 32 citations and is from a highest quality peer-reviewed journal.
+3. (sun2013structuralbasisfor pages 2-3): Yadong Sun, Lei Li, Alberto P. Macho, Zhifu Han, Zehan Hu, Cyril Zipfel, Jian-Min Zhou, and Jijie Chai. Structural basis for flg22-induced activation of the arabidopsis fls2-bak1 immune complex. Science, 342:624-628, Nov 2013. URL: https://doi.org/10.1126/science.1243825, doi:10.1126/science.1243825. This article has 1012 citations and is from a highest quality peer-reviewed journal.
 
-4. (zhang2024unlockingnaturesdefense pages 1-2): Chao Zhang, Yingpeng Xie, Ping He, and Libo Shan. Unlocking nature's defense: plant pattern recognition receptors as guardians against pathogenic threats. Molecular plant-microbe interactions : MPMI, 37:MPMI10230177HH, Feb 2024. URL: https://doi.org/10.1094/mpmi-10-23-0177-hh, doi:10.1094/mpmi-10-23-0177-hh. This article has 47 citations.
+4. (dunning2007identificationandmutational pages 1-2): F. Mark Dunning, Wenxian Sun, Kristin L. Jansen, Laura Helft, and Andrew F. Bent. Identification and mutational analysis of <i>arabidopsis</i> fls2 leucine-rich repeat domain residues that contribute to flagellin perception. The Plant Cell, 19(10):3297-3313, Oct 2007. URL: https://doi.org/10.1105/tpc.106.048801, doi:10.1105/tpc.106.048801. This article has 189 citations.
 
-5. (wan2017comparativeanalysisof pages 10-14): Wei-Lin Wan. Comparative analysis of signaling pathways triggered by different pattern-recognition receptor-types. ArXiv, Dec 2017. URL: https://doi.org/10.15496/publikation-20566, doi:10.15496/publikation-20566. This article has 0 citations.
+5. (lee2024reprogrammingofflagellin pages 1-2): Du-Hwa Lee, Ho-Seok Lee, Min-Soo Choi, Katarzyna Parys, Kaori L. Honda, Y. Kondoh, Jung-Min Lee, Natalie Edelbacher, Geon-Young Heo, Balaji Enugutti, Hiroyuki Osada, Ken Shirasu, and Youssef Belkhadir. Reprogramming of flagellin receptor responses with surrogate ligands. Nature Communications, Nov 2024. URL: https://doi.org/10.1038/s41467-024-54271-5, doi:10.1038/s41467-024-54271-5. This article has 10 citations and is from a highest quality peer-reviewed journal.
 
-6. (zhao2024structuralandbiochemical pages 1-2): Qiaoqiao Zhao, Jinlin Bao, Huailong Li, Wei Hu, Yanqiong Kong, Yifeng Zhong, Qiang Fu, Guolyu Xu, Fenmei Liu, Xi Jiao, Jian Jin, and Zhenhua Ming. Structural and biochemical basis of fls2-mediated signal activation and transduction in rice. Plant Communications, 5:100785, Mar 2024. URL: https://doi.org/10.1016/j.xplc.2023.100785, doi:10.1016/j.xplc.2023.100785. This article has 28 citations and is from a peer-reviewed journal.
+6. (wang2024myosinximediatedbik1 pages 1-2): Bingxiao Wang, Zhaoyang Zhou, Jian-Min Zhou, and Jiejie Li. Myosin xi-mediated bik1 recruitment to nanodomains facilitates fls2–bik1 complex formation during innate immunity in arabidopsis. Proceedings of the National Academy of Sciences of the United States of America, Jun 2024. URL: https://doi.org/10.1073/pnas.2312415121, doi:10.1073/pnas.2312415121. This article has 14 citations and is from a highest quality peer-reviewed journal.
 
-7. (lee2024reprogrammingofflagellin media 139d0501): Du-Hwa Lee, Ho-Seok Lee, Min-Soo Choi, Katarzyna Parys, Kaori L. Honda, Y. Kondoh, Jung-Min Lee, Natalie Edelbacher, Geon-Young Heo, Balaji Enugutti, Hiroyuki Osada, Ken Shirasu, and Youssef Belkhadir. Reprogramming of flagellin receptor responses with surrogate ligands. Nature Communications, Nov 2024. URL: https://doi.org/10.1038/s41467-024-54271-5, doi:10.1038/s41467-024-54271-5. This article has 8 citations and is from a highest quality peer-reviewed journal.
+7. (cui2024singlemoleculeanalysisreveals pages 1-2): Yaning Cui, Hongping Qian, Jinhuan Yin, Changwen Xu, Pengyun Luo, Xi Zhang, Meng Yu, Bodan Su, Xiaojuan Li, and Jinxing Lin. Single-molecule analysis reveals the phosphorylation of fls2 governs its spatiotemporal dynamics and immunity. Jul 2024. URL: https://doi.org/10.7554/elife.91072.3, doi:10.7554/elife.91072.3. This article has 16 citations and is from a domain leading peer-reviewed journal.
 
-8. (hudson2024naturalvariationin pages 2-4): Asher Hudson, Alexander Mullens, Sarah Hind, Tiffany Jamann, and Peter Balint‐Kurti. Natural variation in the pattern‐triggered immunity response in plants: investigations, implications and applications. Molecular Plant Pathology, Mar 2024. URL: https://doi.org/10.1111/mpp.13445, doi:10.1111/mpp.13445. This article has 25 citations and is from a peer-reviewed journal.
+8. (wang2024myosinximediatedbik1 pages 7-8): Bingxiao Wang, Zhaoyang Zhou, Jian-Min Zhou, and Jiejie Li. Myosin xi-mediated bik1 recruitment to nanodomains facilitates fls2–bik1 complex formation during innate immunity in arabidopsis. Proceedings of the National Academy of Sciences of the United States of America, Jun 2024. URL: https://doi.org/10.1073/pnas.2312415121, doi:10.1073/pnas.2312415121. This article has 14 citations and is from a highest quality peer-reviewed journal.
 
-9. (li2025unlockingexpandedflagellin pages 11-14): Tianrun Li, Esteban Jarquin Bolanos, Danielle Stevens, Hanxu Sha, Daniil M Prigozhin, and Gitta Coaker. Unlocking expanded flagellin perception through rational receptor engineering. bioRxiv, Sep 2025. URL: https://doi.org/10.1101/2024.09.09.612155, doi:10.1101/2024.09.09.612155. This article has 25 citations.
+9. (lee2024reprogrammingofflagellin pages 5-6): Du-Hwa Lee, Ho-Seok Lee, Min-Soo Choi, Katarzyna Parys, Kaori L. Honda, Y. Kondoh, Jung-Min Lee, Natalie Edelbacher, Geon-Young Heo, Balaji Enugutti, Hiroyuki Osada, Ken Shirasu, and Youssef Belkhadir. Reprogramming of flagellin receptor responses with surrogate ligands. Nature Communications, Nov 2024. URL: https://doi.org/10.1038/s41467-024-54271-5, doi:10.1038/s41467-024-54271-5. This article has 10 citations and is from a highest quality peer-reviewed journal.
 
-10. (lee2024reprogrammingofflagellin pages 6-7): Du-Hwa Lee, Ho-Seok Lee, Min-Soo Choi, Katarzyna Parys, Kaori L. Honda, Y. Kondoh, Jung-Min Lee, Natalie Edelbacher, Geon-Young Heo, Balaji Enugutti, Hiroyuki Osada, Ken Shirasu, and Youssef Belkhadir. Reprogramming of flagellin receptor responses with surrogate ligands. Nature Communications, Nov 2024. URL: https://doi.org/10.1038/s41467-024-54271-5, doi:10.1038/s41467-024-54271-5. This article has 8 citations and is from a highest quality peer-reviewed journal.
+10. (roy2020effectofd122n pages 15-20): A Roy. Effect of d122n mutation in bak1 on structural integrity of protein complex consisting fls2, flg22 and bak1 ectodomain-a molecular dynamics study”. Unknown journal, 2020.
 
-11. (li2025unlockingexpandedflagellin pages 1-4): Tianrun Li, Esteban Jarquin Bolanos, Danielle Stevens, Hanxu Sha, Daniil M Prigozhin, and Gitta Coaker. Unlocking expanded flagellin perception through rational receptor engineering. bioRxiv, Sep 2025. URL: https://doi.org/10.1101/2024.09.09.612155, doi:10.1101/2024.09.09.612155. This article has 25 citations.
+11. (wang2024myosinximediatedbik1 pages 3-4): Bingxiao Wang, Zhaoyang Zhou, Jian-Min Zhou, and Jiejie Li. Myosin xi-mediated bik1 recruitment to nanodomains facilitates fls2–bik1 complex formation during innate immunity in arabidopsis. Proceedings of the National Academy of Sciences of the United States of America, Jun 2024. URL: https://doi.org/10.1073/pnas.2312415121, doi:10.1073/pnas.2312415121. This article has 14 citations and is from a highest quality peer-reviewed journal.
+
+12. (robatzek2006ligandinducedendocytosisof pages 2-3): Silke Robatzek, Delphine Chinchilla, and Thomas Boller. Ligand-induced endocytosis of the pattern recognition receptor fls2 in arabidopsis. Genes & development, 20 5:537-42, Mar 2006. URL: https://doi.org/10.1101/gad.366506, doi:10.1101/gad.366506. This article has 929 citations and is from a highest quality peer-reviewed journal.
+
+13. (cui2024singlemoleculeanalysisreveals pages 4-5): Yaning Cui, Hongping Qian, Jinhuan Yin, Changwen Xu, Pengyun Luo, Xi Zhang, Meng Yu, Bodan Su, Xiaojuan Li, and Jinxing Lin. Single-molecule analysis reveals the phosphorylation of fls2 governs its spatiotemporal dynamics and immunity. Jul 2024. URL: https://doi.org/10.7554/elife.91072.3, doi:10.7554/elife.91072.3. This article has 16 citations and is from a domain leading peer-reviewed journal.
+
+14. (cui2024singlemoleculeanalysisreveals pages 7-9): Yaning Cui, Hongping Qian, Jinhuan Yin, Changwen Xu, Pengyun Luo, Xi Zhang, Meng Yu, Bodan Su, Xiaojuan Li, and Jinxing Lin. Single-molecule analysis reveals the phosphorylation of fls2 governs its spatiotemporal dynamics and immunity. Jul 2024. URL: https://doi.org/10.7554/elife.91072.3, doi:10.7554/elife.91072.3. This article has 16 citations and is from a domain leading peer-reviewed journal.
+
+15. (wang2024myosinximediatedbik1 pages 4-5): Bingxiao Wang, Zhaoyang Zhou, Jian-Min Zhou, and Jiejie Li. Myosin xi-mediated bik1 recruitment to nanodomains facilitates fls2–bik1 complex formation during innate immunity in arabidopsis. Proceedings of the National Academy of Sciences of the United States of America, Jun 2024. URL: https://doi.org/10.1073/pnas.2312415121, doi:10.1073/pnas.2312415121. This article has 14 citations and is from a highest quality peer-reviewed journal.
+
+16. (wang2024myosinximediatedbik1 pages 5-7): Bingxiao Wang, Zhaoyang Zhou, Jian-Min Zhou, and Jiejie Li. Myosin xi-mediated bik1 recruitment to nanodomains facilitates fls2–bik1 complex formation during innate immunity in arabidopsis. Proceedings of the National Academy of Sciences of the United States of America, Jun 2024. URL: https://doi.org/10.1073/pnas.2312415121, doi:10.1073/pnas.2312415121. This article has 14 citations and is from a highest quality peer-reviewed journal.
+
+17. (lee2024reprogrammingofflagellin pages 3-4): Du-Hwa Lee, Ho-Seok Lee, Min-Soo Choi, Katarzyna Parys, Kaori L. Honda, Y. Kondoh, Jung-Min Lee, Natalie Edelbacher, Geon-Young Heo, Balaji Enugutti, Hiroyuki Osada, Ken Shirasu, and Youssef Belkhadir. Reprogramming of flagellin receptor responses with surrogate ligands. Nature Communications, Nov 2024. URL: https://doi.org/10.1038/s41467-024-54271-5, doi:10.1038/s41467-024-54271-5. This article has 10 citations and is from a highest quality peer-reviewed journal.
+
+18. (lee2024reprogrammingofflagellin pages 8-10): Du-Hwa Lee, Ho-Seok Lee, Min-Soo Choi, Katarzyna Parys, Kaori L. Honda, Y. Kondoh, Jung-Min Lee, Natalie Edelbacher, Geon-Young Heo, Balaji Enugutti, Hiroyuki Osada, Ken Shirasu, and Youssef Belkhadir. Reprogramming of flagellin receptor responses with surrogate ligands. Nature Communications, Nov 2024. URL: https://doi.org/10.1038/s41467-024-54271-5, doi:10.1038/s41467-024-54271-5. This article has 10 citations and is from a highest quality peer-reviewed journal.
+
+## Artifacts
+
+- [Edison artifact artifact-00](FLS2-deep-research-falcon_artifacts/artifact-00.md)
 
 ## Citations
 
-1. wang2023modificationsoftwo pages 1-4
-2. wan2017comparativeanalysisof pages 10-14
-3. zhao2024structuralandbiochemical pages 1-2
-4. hudson2024naturalvariationin pages 2-4
-5. li2025unlockingexpandedflagellin pages 11-14
+1. chinchilla2006thearabidopsisreceptor pages 1-2
+2. sun2013structuralbasisfor pages 2-3
+3. robatzek2006ligandinducedendocytosisof pages 2-3
+4. cui2024singlemoleculeanalysisreveals pages 7-9
+5. dunning2007identificationandmutational pages 1-2
 6. lee2024reprogrammingofflagellin pages 1-2
-7. zhang2024unlockingnaturesdefense pages 1-2
-8. lee2024reprogrammingofflagellin pages 6-7
-9. li2025unlockingexpandedflagellin pages 1-4
-10. https://doi.org/10.1038/s41467-023-40364-0
-11. https://doi.org/10.1101/2023.08.10.552820
-12. https://doi.org/10.1094/MPMI-10-23-0177-HH
-13. https://doi.org/10.1016/j.xplc.2023.100785
-14. https://doi.org/10.1111/mpp.13445
-15. https://doi.org/10.1038/s41467-024-54271-5
-16. https://doi.org/10.1101/2024.09.09.612155
-17. https://doi.org/10.1101/2023.08.10.552820,
-18. https://doi.org/10.1038/s41467-024-54271-5,
-19. https://doi.org/10.1038/s41467-023-40364-0,
-20. https://doi.org/10.1094/mpmi-10-23-0177-hh,
-21. https://doi.org/10.15496/publikation-20566,
-22. https://doi.org/10.1016/j.xplc.2023.100785,
-23. https://doi.org/10.1111/mpp.13445,
-24. https://doi.org/10.1101/2024.09.09.612155,
+7. cui2024singlemoleculeanalysisreveals pages 1-2
+8. lee2024reprogrammingofflagellin pages 5-6
+9. cui2024singlemoleculeanalysisreveals pages 4-5
+10. lee2024reprogrammingofflagellin pages 3-4
+11. lee2024reprogrammingofflagellin pages 8-10
+12. Chinchilla et al., 2006
+13. Dunning et al., 2007
+14. Sun et al., 2013
+15. Wang et al., 2024
+16. Robatzek et al., 2006
+17. Cui et al., 2024; published 24 July 2024
+18. Wang et al., 2024; published 14 June 2024
+19. Lee et al., 2024; accepted 1 November 2024
+20. https://doi.org/10.1105/tpc.105.036574
+21. https://doi.org/10.1105/tpc.106.048801
+22. https://doi.org/10.1126/science.1243825
+23. https://doi.org/10.1073/pnas.2312415121
+24. https://doi.org/10.1101/gad.366506
+25. https://doi.org/10.7554/eLife.91072.3
+26. https://doi.org/10.1038/s41467-024-54271-5
+27. https://doi.org/10.1126/science.1243825.
+28. https://doi.org/10.1101/gad.366506.
+29. https://doi.org/10.7554/eLife.91072.3.
+30. https://doi.org/10.1073/pnas.2312415121.
+31. https://doi.org/10.1038/s41467-024-54271-5.
+32. https://doi.org/10.1105/tpc.112.096073,
+33. https://doi.org/10.1105/tpc.105.036574,
+34. https://doi.org/10.1126/science.1243825,
+35. https://doi.org/10.1105/tpc.106.048801,
+36. https://doi.org/10.1038/s41467-024-54271-5,
+37. https://doi.org/10.1073/pnas.2312415121,
+38. https://doi.org/10.7554/elife.91072.3,
+39. https://doi.org/10.1101/gad.366506,

@@ -1,0 +1,2038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CG8745 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CG8745</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9VU95" target="_blank" class="term-link">
+                        Q9VU95
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Drosophila melanogaster</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CG8745";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">3</span> Annotations</a>
+
+
+
+        <a href="#review-research" title="Deep research and hypothesis research reports"><span class="nav-count">1</span> Research</a>
+
+
+
+
+
+        <a href="#review-core-functions" title="Core biological functions"><span class="nav-count">1</span> Core Function</a>
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">4</span> References</a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9VU95" data-a="DESCRIPTION: CG8745 is a 494-residue class-III pyridoxal-phosph..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CG8745 is a 494-residue class-III pyridoxal-phosphate-dependent enzyme related to ethanolamine-phosphate phospho-lyase/AGXT2L proteins. Its major and small PLP-enzyme domains support cofactor-dependent amino-compound metabolism. The precise physiological substrate and intracellular compartment in Drosophila remain unresolved; its historical aminotransferase-like name does not establish conventional aminotransferase activity.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                                    GO:0030170
+                                </a>
+                            </span>
+                            <span class="term-label">pyridoxal phosphate binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VU95" data-a="GO:0030170" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A PLP-dependent catalytic fold supports cofactor binding.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> CG8745 retains the major and small class-III PLP-dependent enzyme domains and the PLP attachment-site signature. This supports cofactor binding while leaving physiological substrate specificity distinct from the historical aminotransferase-like name.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG8745/CG8745-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">aminotransferase family. {ECO:0000305}.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0035094" target="_blank" class="term-link">
+                                    GO:0035094
+                                </a>
+                            </span>
+                            <span class="term-label">response to nicotine</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17237783" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17237783
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Quantitative trait transcripts for nicotine resistance in Dr...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VU95" data-a="GO:0035094" data-r="PMID:17237783" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The nicotine expression association is not resolved at the target level.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The accessible study reports transcript associations with nicotine resistance and emphasizes ornithine aminotransferase. Its abstract does not identify the CG8745 assay, and the target-specific expression result requires the full gene table. This is not evidence of misattribution and does not establish nicotine metabolism by CG8745.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/17237783" target="_blank" class="term-link">
+                                        PMID:17237783
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We performed a scan for such quantitative trait transcripts in adult female heads of the fruit fly (Drosophila melanogaster) that might explain variation for nicotine resistance.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050459" target="_blank" class="term-link">
+                                    GO:0050459
+                                </a>
+                            </span>
+                            <span class="term-label">ethanolamine-phosphate phospho-lyase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VU95" data-a="GO:0050459" data-r="GO_REF:0000024" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ethanolamine-phosphate phospho-lyase is a plausible ortholog-based reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The ISS source is human Q8TBG4/ETNPPL, and the target has the corresponding PLP-enzyme architecture. However, broad class-III domain membership and absence of conventional aminotransferase activity alone do not establish phosphoethanolamine turnover by CG8745; the donor biochemical evidence and fly substrate selectivity must be distinguished.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG8745/CG8745-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">aminotransferase family. {ECO:0000305}.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG8745/CG8745-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Does not seem to possess aminotransferase activity.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section" id="review-core-functions">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Binds the PLP cofactor through a conserved class-III enzyme architecture; the specific physiological reaction remains unresolved.</h3>
+                <span class="vote-buttons" data-g="Q9VU95" data-a="FUNCTION: Binds the PLP cofactor through a conserved class-I..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030170" target="_blank" class="term-link">
+                            pyridoxal phosphate binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:DROME/CG8745/CG8745-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">aminotransferase family. {ECO:0000305}.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation reference GO_REF:0000002</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation reference GO_REF:0000024</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17237783" target="_blank" class="term-link">
+                            PMID:17237783
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Quantitative trait transcripts for nicotine resistance in Drosophila melanogaster.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:DROME/CG8745/CG8745-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">CG8745-uniprot.txt</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section" id="review-research">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CG8745-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9VU95" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional-annotation report: *Drosophila melanogaster* CG8745 / UniProt Q9VU95</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">17 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-10T14:35:47.215626</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="CG8745-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="CG8745-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000028 The requested Figure 6, showing the correlations between Obp56h and CG8745 expression in male head tissue of both house fly (*Musca</a>
+                        <span>(image/png)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="functional-annotation-report-drosophila-melanogaster-cg8745-uniprot-q9vu95">Functional-annotation report: <em>Drosophila melanogaster</em> CG8745 / UniProt Q9VU95</h1>
+<h2 id="executive-conclusion">Executive conclusion</h2>
+<p><strong>Identity was verified before functional interpretation.</strong> The target is the <em>Drosophila melanogaster</em> gene <strong>CG8745</strong>, corresponding to the supplied UniProt accession <strong>Q9VU95</strong>. A 2024 <em>eLife</em> paper independently identifies <em>D. melanogaster</em> CG8745 and describes its product as a <strong>predicted ethanolamine-phosphate phospho-lyase</strong>. No conflicting same-symbol protein was identified. The supplied Aminotrans_3 and pyridoxal-phosphate-dependent transferase domains are consistent with the experimentally characterized class-III/fold-type-I PLP-enzyme architecture of human ETNPPL/Q8TBG4, the annotation template cited by UniProt. However, CG8745 itself has not been biochemically characterized. (vettraino2020ofosfoetanolaminafosfoliasidalla pages 21-26, vettraino2020ofosfoetanolaminafosfoliasidalla pages 33-39, delclos2024transregulationof pages 8-10)</p>
+<p>The most defensible annotation is therefore:</p>
+<blockquote>
+<p><strong>CG8745 encodes a probable PLP-dependent ethanolamine-phosphate phospho-lyase that may catabolize phosphoethanolamine and thereby regulate ethanolamine/Kennedy-pathway metabolism. The reaction, substrate specificity, oligomeric state, pathway role, and localization remain predictions for the fly protein.</strong></p>
+</blockquote>
+<p>The historical description “alanine–glyoxylate aminotransferase 2-like” should not be interpreted as proof of alanine:glyoxylate transaminase activity. Human ETNPPL is almost inactive as a transaminase and instead catalyzes phosphoethanolamine elimination. (vettraino2020ofosfoetanolaminafosfoliasidalla pages 21-26, vettraino2020ofosfoetanolaminafosfoliasidalla pages 26-29)</p>
+<h2 id="evidence-summary">Evidence summary</h2>
+<table>
+<thead>
+<tr>
+<th>Question</th>
+<th>Best-supported conclusion</th>
+<th>Evidence type</th>
+<th>Key evidence and quantitative details</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity</td>
+<td><strong>CG8745 is the <em>Drosophila melanogaster</em> gene associated with UniProt Q9VU95.</strong> It should not be confused with human ETNPPL/AGXT2L1 (Q8TBG4), which is used only as a functional homolog.</td>
+<td>Direct fly; database-predicted</td>
+<td>A 2024 <em>eLife</em> study explicitly identifies <em>D. melanogaster</em> CG8745 and its house-fly ortholog LOC101887703; the latter is the most central gene in the reported co-expression module (delclos2024transregulationof pages 8-10).</td>
+<td>High</td>
+</tr>
+<tr>
+<td>Molecular function and reaction</td>
+<td>Q9VU95 is <strong>predicted</strong> to be an ethanolamine-phosphate phospho-lyase-like enzyme, but catalytic activity has not been assayed in the fly protein. The hypothesized reaction is phosphoethanolamine → acetaldehyde + ammonia + inorganic phosphate.</td>
+<td>Database-predicted; ortholog biochemical</td>
+<td>Human ETNPPL catalyzes irreversible phosphoethanolamine 1,2-elimination and is nearly inactive as an aminotransferase; acetaldehyde formation was measured with an ADH/NADH-coupled assay (vettraino2020ofosfoetanolaminafosfoliasidalla pages 21-26, vettraino2020ofosfoetanolaminafosfoliasidalla pages 29-33). This chemistry remains unverified for CG8745.</td>
+<td>Moderate for inferred function; low for fly-specific reaction</td>
+</tr>
+<tr>
+<td>Substrate specificity</td>
+<td><strong>Phosphoethanolamine is the leading candidate substrate</strong>, but the substrate range and specificity of CG8745 are untested. An aminotransferase reaction with alanine/glyoxylate should not be assumed from the historical protein name.</td>
+<td>Ortholog biochemical</td>
+<td>Human ETNPPL strongly discriminates against related amino-acid substrates. For human ETNPPL only, phosphoethanolamine kinetics were reported as <em>K</em>ₘ = 1.10 ± 0.13 mM, <em>k</em>cat = 227 ± 7 s⁻¹, and <em>k</em>cat/<em>K</em>ₘ = 2.06 × 10⁵ M⁻¹ s⁻¹ (vettraino2020ofosfoetanolaminafosfoliasidalla pages 21-26, vettraino2020ofosfoetanolaminafosfoliasidalla pages 63-68).</td>
+<td>Moderate as a hypothesis; low for fly specificity</td>
+</tr>
+<tr>
+<td>Cofactor, fold, and domains</td>
+<td>CG8745/Q9VU95 is predicted to be a <strong>class-III, PLP-dependent aminotransferase-fold protein</strong>, consistent with the supplied Aminotrans_3 and PLP-transferase domain annotations. PLP binding has not been demonstrated experimentally for CG8745.</td>
+<td>Database-predicted; ortholog structural/biochemical</td>
+<td>Human ETNPPL is a fold-type-I/class-III PLP-family homodimer. Its 2.05 Å structure (PDB 6TOR) contains PMP in both active sites; the catalytic site lies at the dimer interface and includes Lys278. The solution dimer has an approximately 10 nm hydrodynamic diameter (vettraino2020ofosfoetanolaminafosfoliasidalla pages 33-39).</td>
+<td>High for family assignment; moderate for shared fly architecture</td>
+</tr>
+<tr>
+<td>Biochemical pathway</td>
+<td>The most plausible role is <strong>phosphoethanolamine catabolism</strong>, potentially regulating substrate availability for the CDP-ethanolamine/Kennedy pathway of phosphatidylethanolamine synthesis. This pathway placement is not directly demonstrated in flies.</td>
+<td>Ortholog biochemical and cell-biological inference</td>
+<td>In human cells, ETNPPL scavenges phosphoethanolamine, opposing its conversion by PCYT2 to CDP-ethanolamine. ETNPPL overexpression lowered the phosphoethanolamine:CDP-ethanolamine ratio in senescent fibroblasts (tighanimine2024ahomoeostaticswitch pages 12-13).</td>
+<td>Moderate for conserved pathway; low-to-moderate in flies</td>
+</tr>
+<tr>
+<td>Expression and regulatory evidence</td>
+<td>CG8745 is reported to be broadly transcribed and is negatively associated with Obp56h expression in adult male head data. Obp56h depletion causes increased CG8745 transcript abundance, establishing regulation of expression but not enzyme function.</td>
+<td>Direct fly</td>
+<td>In <em>D. melanogaster</em>, Obp56h RNAi increased CG8745 expression versus controls: Welch’s <em>t</em> = −4.27, <em>P</em> = 5.53 × 10⁻³. CG8745 and Obp56h expression were significantly negatively correlated in both <em>D. melanogaster</em> and house-fly male heads. The house-fly ortholog was upregulated in IIIM males by log₂ fold-change 2.21, adjusted <em>P</em> = 0.016 (delclos2024transregulationof pages 8-10, delclos2024transregulationof media 69947cb6).</td>
+<td>High for transcript regulation; low for physiological interpretation</td>
+</tr>
+<tr>
+<td>Subcellular localization</td>
+<td><strong>Unknown for CG8745.</strong> No fly protein-localization experiment was found, so cytosolic, nuclear, mitochondrial, or organ-specific localization should not be assigned.</td>
+<td>Direct fly evidence absent; ortholog cell-model evidence</td>
+<td>Transfected HA-tagged human ETNPPL appeared nuclear in Huh7 cells by anti-HA/DAPI/MitoTracker confocal microscopy, but this overexpression result cannot establish localization of endogenous fly CG8745 (holdaway2025alterationsinphosphatidylethanolamine pages 69-79, holdaway2025alterationsinphosphatidylethanolamine pages 59-69).</td>
+<td>Low</td>
+</tr>
+<tr>
+<td>Phenotype and biological role</td>
+<td>No CG8745-specific loss-of-function, overexpression, rescue, metabolomic, or viability phenotype was identified. Its correlation with an odorant-binding-protein network does not prove a role in courtship, olfaction, or behavior.</td>
+<td>Direct fly evidence limited</td>
+<td>The 2024 study manipulated Obp56h, not CG8745; it measured CG8745 transcript responses but did not assay CG8745 biochemical activity, protein localization, or a CG8745-dependent behavioral phenotype (delclos2024transregulationof pages 8-10, delclos2024transregulationof pages 10-12).</td>
+<td>High confidence that current direct evidence is insufficient</td>
+</tr>
+<tr>
+<td>Application or translational relevance</td>
+<td>CG8745 currently has <strong>no established real-world, clinical, or biotechnology application</strong>. Its principal value is as a candidate fly model for PLP-dependent phosphoethanolamine metabolism.</td>
+<td>Ortholog research application; no fly implementation</td>
+<td>Human ETNPPL is being used experimentally to alter phosphoethanolamine flux, lipid-droplet biology, senescence, and hepatic lipid metabolism; these are research applications rather than approved therapies or diagnostics and have not been validated through CG8745 (tighanimine2024ahomoeostaticswitch pages 12-13, tighanimine2024ahomoeostaticswitch pages 1-2, holdaway2025alterationsinphosphatidylethanolamine pages 111-116).</td>
+<td>High for absence of established application; low for translational extrapolation</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Evidence-tier summary for </em>Drosophila melanogaster<em> CG8745/Q9VU95, separating direct fly observations from database predictions and human-ortholog experiments. It highlights that the proposed enzymatic reaction and cellular localization remain untested in the fly protein.</em></p>
+<h2 id="1-identity-and-annotation-verification">1. Identity and annotation verification</h2>
+<h3 id="gene-and-organism">Gene and organism</h3>
+<p>The literature hit relevant to this exact locus concerns <strong><em>D. melanogaster</em> CG8745</strong>, not mammalian AGXT2, human ETNPPL/AGXT2L1, or an unrelated similarly named gene. Delclos and colleagues explicitly map house-fly LOC101887703 to the <em>D. melanogaster</em> ortholog CG8745 and identify CG8745 as a predicted ethanolamine-phosphate phospho-lyase. This agrees with the supplied UniProt record Q9VU95 and organism designation DROME. (delclos2024transregulationof pages 8-10)</p>
+<h3 id="domainfamily-consistency">Domain/family consistency</h3>
+<p>The supplied annotations—Aminotrans_3, Aminotrans_3_PPA_site, PyrdxlP-dep_Trfase, and major/small PLP-transferase domains—place Q9VU95 in the class-III subgroup of fold-type-I PLP-dependent enzymes. Human ETNPPL, UniProt Q8TBG4, is experimentally a dimeric fold-type-I/class-III PLP-family enzyme, providing strong architectural support for the family assignment but not direct proof of the fly reaction. (vettraino2020ofosfoetanolaminafosfoliasidalla pages 21-26, vettraino2020ofosfoetanolaminafosfoliasidalla pages 33-39)</p>
+<p>Thus, all three mandatory checks are satisfied: gene and accession are mutually consistent in the supplied record; the organism is <em>D. melanogaster</em>; and the literature’s predicted phospholyase function aligns with the stated PLP-enzyme domains. No literature on another “CG8745” was used as though it concerned Q9VU95.</p>
+<h2 id="2-probable-primary-molecular-function">2. Probable primary molecular function</h2>
+<h3 id="leading-reaction-hypothesis">Leading reaction hypothesis</h3>
+<p>By homology to human ETNPPL, the proposed reaction is an irreversible PLP-dependent 1,2-elimination:</p>
+<p><strong>O-phosphoethanolamine → acetaldehyde + NH₃/NH₄⁺ + inorganic phosphate</strong></p>
+<p>Human ETNPPL produces acetaldehyde from phosphoethanolamine in an alcohol-dehydrogenase/NADH-coupled assay. Mechanistically, phosphoethanolamine forms a PLP external aldimine, Cα deprotonation generates a quinonoid intermediate, phosphate is eliminated, and the resulting ethyleneamine intermediate hydrolyses to acetaldehyde and ammonia. (vettraino2020ofosfoetanolaminafosfoliasidalla pages 21-26, vettraino2020ofosfoetanolaminafosfoliasidalla pages 29-33)</p>
+<p>For human ETNPPL, phosphoethanolamine kinetics at 30 °C and pH 8 were reported as <strong>Km = 1.10 ± 0.13 mM</strong>, <strong>kcat = 227 ± 7 s⁻¹</strong>, and <strong>kcat/Km = 2.06 × 10⁵ M⁻¹ s⁻¹</strong>. These values demonstrate efficient phosphoethanolamine turnover by the human homolog, but they must not be assigned to CG8745 without recombinant fly-protein assays. (vettraino2020ofosfoetanolaminafosfoliasidalla pages 63-68)</p>
+<h3 id="substrate-specificity">Substrate specificity</h3>
+<p>Phosphoethanolamine is the leading candidate substrate. Human ETNPPL strongly discriminates against structurally related amino compounds and is nearly inactive as a conventional aminotransferase, indicating that the “alanine–glyoxylate aminotransferase 2-like” name reflects sequence history rather than established reaction specificity. No substrate panel, Km, kcat, isotope-tracing experiment, or product analysis has been reported for CG8745. (vettraino2020ofosfoetanolaminafosfoliasidalla pages 21-26, vettraino2020ofosfoetanolaminafosfoliasidalla pages 26-29)</p>
+<p>Accordingly, an alanine + glyoxylate transamination reaction should <strong>not</strong> be annotated for Q9VU95 as experimentally established. The safest machine-readable description would be “probable ethanolamine-phosphate phospho-lyase; substrate specificity inferred from homology.”</p>
+<h2 id="3-structural-and-catalytic-interpretation">3. Structural and catalytic interpretation</h2>
+<p>Human ETNPPL offers a well-defined structural template. Its crystal structure was solved at <strong>2.05 Å</strong> resolution and deposited as <strong>PDB 6TOR</strong>. The enzyme is a homodimer; dynamic light scattering gave an approximately <strong>10-nm</strong> solution diameter. Each monomer contains a large PLP-binding domain and smaller terminal lobes, while the active site is assembled at the dimer interface with residues contributed by both subunits. (vettraino2020ofosfoetanolaminafosfoliasidalla pages 29-33, vettraino2020ofosfoetanolaminafosfoliasidalla pages 33-39)</p>
+<p>The structure contained PMP in both active sites. Catalytic Lys278 was not covalently continuous with the cofactor density, and spectroscopy showed signals near 410 nm and 330 nm consistent with PLP and PMP states. The human and bacterial phospholyase structures share 39% sequence identity and superimpose with an RMSD of 1.54 Å over 654 Cα atoms. These observations explain why a sequence annotated as an “aminotransferase” can perform elimination chemistry. (vettraino2020ofosfoetanolaminafosfoliasidalla pages 33-39)</p>
+<p>For CG8745, this supports—but does not demonstrate—a PLP/PMP catalytic cycle and a likely dimeric architecture. An AlphaFold-like model alone would not resolve substrate specificity; conservation of the catalytic lysine and phosphate-recognition pocket, followed by biochemical testing, would be required.</p>
+<h2 id="4-biological-process-and-pathway-placement">4. Biological process and pathway placement</h2>
+<p>The probable pathway is <strong>phosphoethanolamine catabolism coupled to regulation of phosphatidylethanolamine synthesis</strong>. In the CDP-ethanolamine branch of the Kennedy pathway, phosphoethanolamine is converted by PCYT2 to CDP-ethanolamine and ultimately phosphatidylethanolamine. ETNPPL consumes the same phosphoethanolamine pool, potentially opposing Kennedy-pathway flux. (vettraino2020ofosfoetanolaminafosfoliasidalla pages 26-29, tighanimine2024ahomoeostaticswitch pages 1-2)</p>
+<p>A 2024 <em>Nature Metabolism</em> study used human ETNPPL overexpression as a phosphoethanolamine-scavenging intervention in Ras-induced senescent WI38 fibroblasts. ETNPPL lowered the phosphoethanolamine:CDP-ethanolamine ratio and altered senescence-marker expression; the broader study linked phosphoethanolamine and glycerol-3-phosphate accumulation to lipid-droplet biogenesis, triglyceride storage, phospholipid flux, and the senescence programme. Experiments used three biological replicates for the metabolite ratio and ETNPPL-overexpression comparisons, with reported intervention-associated P values in the 10⁻⁵–10⁻³ range for selected metabolic comparisons. Publication: February 2024; DOI/URL: https://doi.org/10.1038/s42255-023-00972-y. (tighanimine2024ahomoeostaticswitch pages 12-13, tighanimine2024ahomoeostaticswitch pages 1-2)</p>
+<p>This is important modern evidence for what ETNPPL-family chemistry can do in a cell, but it is not evidence that CG8745 controls senescence in flies. The fly pathway assignment remains a testable metabolic hypothesis.</p>
+<h2 id="5-expression-and-recent-direct-evidence-in-flies">5. Expression and recent direct evidence in flies</h2>
+<p>The strongest direct CG8745 evidence is transcriptional rather than biochemical. Delclos et al. reported that CG8745 is broadly expressed across <em>D. melanogaster</em> tissues and examined its relationship to the odorant-binding-protein gene <strong>Obp56h</strong> in male heads. CG8745 and Obp56h transcript levels were negatively correlated in <em>D. melanogaster</em>: the plotted regression had <strong>adjusted R² = 0.617, P = 0.013</strong>. The corresponding house-fly genes also showed a negative relationship, with <strong>adjusted R² = 0.283, P = 0.004</strong>. (delclos2024transregulationof pages 8-10, delclos2024transregulationof media 69947cb6)</p>
+<p>More importantly, Obp56h was experimentally depleted by RNAi in <em>D. melanogaster</em>. CG8745 expression was higher in Obp56h-knockdown flies than controls (<strong>Welch’s t = −4.27, P = 5.53 × 10⁻³</strong>), supporting a causal effect of Obp56h depletion on CG8745 transcript abundance. In house fly, the CG8745 ortholog LOC101887703 was a central co-expression-network hub and was upregulated in IIIM males by <strong>log₂ fold-change 2.21, adjusted P = 0.016</strong>. Publication: October 2024; DOI/URL: https://doi.org/10.7554/eLife.90349. (delclos2024transregulationof pages 8-10)</p>
+<p>The inspected figure directly shows these negative expression relationships in male head samples. (delclos2024transregulationof media 69947cb6)</p>
+<p>This evidence does <strong>not</strong> establish that CG8745 is an odorant-binding protein, signaling component, or determinant of courtship. The manipulation targeted Obp56h, not CG8745; no CG8745 knockout, overexpression, rescue, metabolomic analysis, enzyme assay, or behavioral test was reported. At present, the Obp56h result should be interpreted as regulation or co-regulation of CG8745 transcription in male heads, not as proof of CG8745’s physiological role. (delclos2024transregulationof pages 8-10, delclos2024transregulationof pages 10-12)</p>
+<h2 id="6-subcellular-and-tissue-localization">6. Subcellular and tissue localization</h2>
+<h3 id="fly-protein">Fly protein</h3>
+<p><strong>CG8745 protein localization is unknown.</strong> Broad RNA expression does not establish where the protein acts within a cell. No endogenous tagging, immunofluorescence, organelle fractionation, proximity labeling, signal-peptide analysis validated experimentally, or tissue-specific protein-localization study was found.</p>
+<p>It would therefore be inappropriate to label Q9VU95 as mitochondrial, cytosolic, nuclear, secreted, or membrane-associated on the present literature evidence.</p>
+<h3 id="ortholog-evidence-and-its-limitations">Ortholog evidence and its limitations</h3>
+<p>HA-tagged human ETNPPL expressed in Huh7 hepatoma cells appeared nuclear by anti-HA fluorescence microscopy with DAPI and MitoTracker controls. This was an overexpression system in cells without detectable endogenous ETNPPL, so it neither determines endogenous human localization with certainty nor transfers a nuclear assignment to CG8745. Mitochondrial metabolic effects of ETNPPL also do not establish mitochondrial residence. (holdaway2025alterationsinphosphatidylethanolamine pages 69-79, holdaway2025alterationsinphosphatidylethanolamine pages 59-69)</p>
+<h2 id="7-physiological-roles-phenotypes-and-applications">7. Physiological roles, phenotypes, and applications</h2>
+<p>No CG8745-specific loss-of-function phenotype, viability defect, developmental phenotype, metabolite alteration, or tissue-autonomous function was identified. Its precise biological process in <em>Drosophila</em> therefore remains unresolved.</p>
+<p>Human and mouse ETNPPL are being used experimentally to study phosphoethanolamine flux, phosphatidylethanolamine metabolism, senescence, lipid droplets, hepatic lipid handling, mitochondrial energetics, and cancer-associated metabolism. These constitute research applications, not approved diagnostics or therapies. In hepatocyte models, ETNPPL expression selectively reduced radiolabeled phosphoethanolamine, altered lipid storage and phospholipid labeling, reduced proliferation, and affected mitochondrial respiration; mouse knockout hepatocytes showed smaller lipid droplets and less lipid accumulation in the cited thesis work. However, mechanisms and human translation remain uncertain. (holdaway2025alterationsinphosphatidylethanolamine pages 59-69, holdaway2025alterationsinphosphatidylethanolamine pages 83-86, holdaway2025alterationsinphosphatidylethanolamine pages 111-116)</p>
+<p>CG8745 currently has <strong>no established real-world clinical or biotechnology application</strong>. Its practical value is as a candidate <em>Drosophila</em> model for PLP-dependent phosphoethanolamine metabolism and for testing whether this metabolic node intersects sensory-state-dependent transcription.</p>
+<h2 id="8-expert-assessment-and-recommended-annotation">8. Expert assessment and recommended annotation</h2>
+<p>The literature supports three evidence tiers:</p>
+<ol>
+<li><strong>Directly established in <em>D. melanogaster</em>:</strong> CG8745 is transcribed in multiple tissues; its male-head expression is negatively associated with Obp56h; and Obp56h RNAi increases CG8745 RNA.</li>
+<li><strong>Strongly predicted from sequence/domain annotation:</strong> Q9VU95 is a class-III PLP-enzyme-family protein and probable ethanolamine-phosphate phospho-lyase.</li>
+<li><strong>Established only in the human homolog:</strong> phosphoethanolamine elimination to acetaldehyde, ammonia, and phosphate; PLP/PMP chemistry; homodimeric structure; quantitative kinetics; and effects on Kennedy-pathway-associated metabolite flux.</li>
+</ol>
+<p>A conservative functional annotation is therefore:</p>
+<p><strong>Probable ethanolamine-phosphate phospho-lyase-like protein (PLP dependent); putatively catalyzes phosphoethanolamine degradation and modulates phosphatidylethanolamine precursor availability. Reaction, substrate range, physiological pathway, and localization have not been experimentally validated in <em>D. melanogaster</em>.</strong></p>
+<h2 id="9-highest-priority-experiments">9. Highest-priority experiments</h2>
+<p>The decisive study would purify recombinant Q9VU95 and measure phosphoethanolamine-dependent acetaldehyde, ammonia, and phosphate production by orthogonal assays, followed by a substrate panel and determination of Km and kcat. Catalytic-lysine mutation would test PLP dependence. Endogenous fluorescent tagging should establish tissue and organelle localization without overexpression. Finally, a clean CG8745 knockout combined with targeted phosphoethanolamine/CDP-ethanolamine/phosphatidylethanolamine metabolomics and tissue-specific rescue would determine whether the predicted reaction operates in vivo. Male-head experiments could then test whether the Obp56h-linked transcriptional relationship has metabolic or behavioral consequences.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(vettraino2020ofosfoetanolaminafosfoliasidalla pages 21-26): C Vettraino. O-fosfoetanolamina fosfo-liasi: dalla caratterizzazione strutturale ad applicazioni biomediche. Unknown journal, 2020.</p>
+</li>
+<li>
+<p>(vettraino2020ofosfoetanolaminafosfoliasidalla pages 33-39): C Vettraino. O-fosfoetanolamina fosfo-liasi: dalla caratterizzazione strutturale ad applicazioni biomediche. Unknown journal, 2020.</p>
+</li>
+<li>
+<p>(delclos2024transregulationof pages 8-10): Pablo J Delclos, Kiran Adhikari, Alexander B Mai, Oluwatomi Hassan, Alexander A Oderhowho, Vyshnika Sriskantharajah, Tammie Trinh, and Richard Meisel. Trans regulation of an odorant binding protein by a proto-y chromosome affects male courtship in house fly. eLife, Oct 2024. URL: https://doi.org/10.7554/elife.90349, doi:10.7554/elife.90349. This article has 2 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(vettraino2020ofosfoetanolaminafosfoliasidalla pages 26-29): C Vettraino. O-fosfoetanolamina fosfo-liasi: dalla caratterizzazione strutturale ad applicazioni biomediche. Unknown journal, 2020.</p>
+</li>
+<li>
+<p>(vettraino2020ofosfoetanolaminafosfoliasidalla pages 29-33): C Vettraino. O-fosfoetanolamina fosfo-liasi: dalla caratterizzazione strutturale ad applicazioni biomediche. Unknown journal, 2020.</p>
+</li>
+<li>
+<p>(vettraino2020ofosfoetanolaminafosfoliasidalla pages 63-68): C Vettraino. O-fosfoetanolamina fosfo-liasi: dalla caratterizzazione strutturale ad applicazioni biomediche. Unknown journal, 2020.</p>
+</li>
+<li>
+<p>(tighanimine2024ahomoeostaticswitch pages 12-13): Khaled Tighanimine, José Américo Nabuco Leva Ferreira Freitas, Ivan Nemazanyy, Alexia Bankolé, Delphine Benarroch-Popivker, Susanne Brodesser, Gregory Doré, Lucas Robinson, Paule Benit, Sophia Ladraa, Yara Bou Saada, Bertrand Friguet, Philippe Bertolino, David Bernard, Guillaume Canaud, Pierre Rustin, Eric Gilson, Oliver Bischof, Stefano Fumagalli, and Mario Pende. A homoeostatic switch causing glycerol-3-phosphate and phosphoethanolamine accumulation triggers senescence by rewiring lipid metabolism. Feb 2024. URL: https://doi.org/10.1038/s42255-023-00972-y, doi:10.1038/s42255-023-00972-y. This article has 78 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(delclos2024transregulationof media 69947cb6): Pablo J Delclos, Kiran Adhikari, Alexander B Mai, Oluwatomi Hassan, Alexander A Oderhowho, Vyshnika Sriskantharajah, Tammie Trinh, and Richard Meisel. Trans regulation of an odorant binding protein by a proto-y chromosome affects male courtship in house fly. eLife, Oct 2024. URL: https://doi.org/10.7554/elife.90349, doi:10.7554/elife.90349. This article has 2 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(holdaway2025alterationsinphosphatidylethanolamine pages 69-79): C Holdaway. Alterations in phosphatidylethanolamine metabolism impacts lipid storage and metabolism in hepatocytes. Unknown journal, 2025.</p>
+</li>
+<li>
+<p>(holdaway2025alterationsinphosphatidylethanolamine pages 59-69): C Holdaway. Alterations in phosphatidylethanolamine metabolism impacts lipid storage and metabolism in hepatocytes. Unknown journal, 2025.</p>
+</li>
+<li>
+<p>(delclos2024transregulationof pages 10-12): Pablo J Delclos, Kiran Adhikari, Alexander B Mai, Oluwatomi Hassan, Alexander A Oderhowho, Vyshnika Sriskantharajah, Tammie Trinh, and Richard Meisel. Trans regulation of an odorant binding protein by a proto-y chromosome affects male courtship in house fly. eLife, Oct 2024. URL: https://doi.org/10.7554/elife.90349, doi:10.7554/elife.90349. This article has 2 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(tighanimine2024ahomoeostaticswitch pages 1-2): Khaled Tighanimine, José Américo Nabuco Leva Ferreira Freitas, Ivan Nemazanyy, Alexia Bankolé, Delphine Benarroch-Popivker, Susanne Brodesser, Gregory Doré, Lucas Robinson, Paule Benit, Sophia Ladraa, Yara Bou Saada, Bertrand Friguet, Philippe Bertolino, David Bernard, Guillaume Canaud, Pierre Rustin, Eric Gilson, Oliver Bischof, Stefano Fumagalli, and Mario Pende. A homoeostatic switch causing glycerol-3-phosphate and phosphoethanolamine accumulation triggers senescence by rewiring lipid metabolism. Feb 2024. URL: https://doi.org/10.1038/s42255-023-00972-y, doi:10.1038/s42255-023-00972-y. This article has 78 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(holdaway2025alterationsinphosphatidylethanolamine pages 111-116): C Holdaway. Alterations in phosphatidylethanolamine metabolism impacts lipid storage and metabolism in hepatocytes. Unknown journal, 2025.</p>
+</li>
+<li>
+<p>(holdaway2025alterationsinphosphatidylethanolamine pages 83-86): C Holdaway. Alterations in phosphatidylethanolamine metabolism impacts lipid storage and metabolism in hepatocytes. Unknown journal, 2025.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="CG8745-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000028 The requested Figure 6, showing the correlations between Obp56h and CG8745 expression in male head tissue of both house fly (*Musca" src="CG8745-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>delclos2024transregulationof pages 8-10</li>
+<li>vettraino2020ofosfoetanolaminafosfoliasidalla pages 33-39</li>
+<li>tighanimine2024ahomoeostaticswitch pages 12-13</li>
+<li>vettraino2020ofosfoetanolaminafosfoliasidalla pages 63-68</li>
+<li>vettraino2020ofosfoetanolaminafosfoliasidalla pages 21-26</li>
+<li>vettraino2020ofosfoetanolaminafosfoliasidalla pages 26-29</li>
+<li>vettraino2020ofosfoetanolaminafosfoliasidalla pages 29-33</li>
+<li>holdaway2025alterationsinphosphatidylethanolamine pages 69-79</li>
+<li>holdaway2025alterationsinphosphatidylethanolamine pages 59-69</li>
+<li>delclos2024transregulationof pages 10-12</li>
+<li>tighanimine2024ahomoeostaticswitch pages 1-2</li>
+<li>holdaway2025alterationsinphosphatidylethanolamine pages 111-116</li>
+<li>holdaway2025alterationsinphosphatidylethanolamine pages 83-86</li>
+<li>https://doi.org/10.1038/s42255-023-00972-y.</li>
+<li>https://doi.org/10.7554/eLife.90349.</li>
+<li>https://doi.org/10.7554/elife.90349,</li>
+<li>https://doi.org/10.1038/s42255-023-00972-y,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9VU95
+gene_symbol: CG8745
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:7227
+  label: Drosophila melanogaster
+description: CG8745 is a 494-residue class-III pyridoxal-phosphate-dependent enzyme related to ethanolamine-phosphate
+  phospho-lyase/AGXT2L proteins. Its major and small PLP-enzyme domains support cofactor-dependent amino-compound
+  metabolism. The precise physiological substrate and intracellular compartment in Drosophila remain unresolved;
+  its historical aminotransferase-like name does not establish conventional aminotransferase activity.
+existing_annotations:
+- term:
+    id: GO:0030170
+    label: pyridoxal phosphate binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  supporting_entities:
+  - InterPro:IPR005814
+  review:
+    action: ACCEPT
+    summary: A PLP-dependent catalytic fold supports cofactor binding.
+    reason: CG8745 retains the major and small class-III PLP-dependent enzyme domains and the PLP attachment-site
+      signature. This supports cofactor binding while leaving physiological substrate specificity distinct
+      from the historical aminotransferase-like name.
+    supported_by:
+    - reference_id: file:DROME/CG8745/CG8745-uniprot.txt
+      supporting_text: aminotransferase family. {ECO:0000305}.
+- term:
+    id: GO:0035094
+    label: response to nicotine
+  evidence_type: IEP
+  original_reference_id: PMID:17237783
+  qualifier: involved_in
+  review:
+    action: UNDECIDED
+    summary: The nicotine expression association is not resolved at the target level.
+    reason: The accessible study reports transcript associations with nicotine resistance and emphasizes
+      ornithine aminotransferase. Its abstract does not identify the CG8745 assay, and the target-specific
+      expression result requires the full gene table. This is not evidence of misattribution and does
+      not establish nicotine metabolism by CG8745.
+    supported_by:
+    - reference_id: PMID:17237783
+      supporting_text: We performed a scan for such quantitative trait transcripts in adult female heads
+        of the fruit fly (Drosophila melanogaster) that might explain variation for nicotine resistance.
+- term:
+    id: GO:0050459
+    label: ethanolamine-phosphate phospho-lyase activity
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: enables
+  supporting_entities:
+  - UniProtKB:Q8TBG4
+  review:
+    action: UNDECIDED
+    summary: Ethanolamine-phosphate phospho-lyase is a plausible ortholog-based reaction.
+    reason: The ISS source is human Q8TBG4/ETNPPL, and the target has the corresponding PLP-enzyme architecture.
+      However, broad class-III domain membership and absence of conventional aminotransferase activity
+      alone do not establish phosphoethanolamine turnover by CG8745; the donor biochemical evidence and
+      fly substrate selectivity must be distinguished.
+    supported_by:
+    - reference_id: file:DROME/CG8745/CG8745-uniprot.txt
+      supporting_text: aminotransferase family. {ECO:0000305}.
+    - reference_id: file:DROME/CG8745/CG8745-uniprot.txt
+      supporting_text: Does not seem to possess aminotransferase activity.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation reference GO_REF:0000002
+  findings: []
+- id: GO_REF:0000024
+  title: Gene Ontology annotation reference GO_REF:0000024
+  findings: []
+- id: PMID:17237783
+  title: Quantitative trait transcripts for nicotine resistance in Drosophila melanogaster.
+  findings: []
+  full_text_unavailable: true
+- id: file:DROME/CG8745/CG8745-uniprot.txt
+  title: CG8745-uniprot.txt
+  findings: []
+core_functions:
+- description: Binds the PLP cofactor through a conserved class-III enzyme architecture; the specific
+    physiological reaction remains unresolved.
+  molecular_function:
+    id: GO:0030170
+    label: pyridoxal phosphate binding
+  supported_by:
+  - reference_id: file:DROME/CG8745/CG8745-uniprot.txt
+    supporting_text: aminotransferase family. {ECO:0000305}.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
