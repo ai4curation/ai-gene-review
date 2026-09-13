@@ -1,10 +1,12 @@
 """Security contracts for the deterministic PR Shepherd closing pass."""
 
 import re
+import os
 import subprocess
 from pathlib import Path
 
 import yaml
+import pytest
 
 
 ROOT = Path(__file__).parents[1]
@@ -49,6 +51,101 @@ def test_merge_controller_is_a_separate_job_with_trusted_checkout():
     assert checkout["with"]["ref"] == "${{ github.event.repository.default_branch }}"
     assert checkout["with"]["token"] == "${{ github.token }}"
     assert checkout["with"]["persist-credentials"] is False
+
+
+def test_review_recovery_has_an_independent_runner_budget_and_credential():
+    workflow = _workflow(SHEPHERD)
+    jobs = workflow["jobs"]
+    assert "concurrency" not in workflow
+    assert len({job["concurrency"]["group"] for job in jobs.values()}) == len(jobs)
+    retry = jobs["retry-reviews"]
+    assert "needs" not in retry
+    assert "run_agent" not in retry["if"]
+    assert "merge_mode" not in retry["if"]
+    assert retry["permissions"] == {
+        "contents": "read",
+        "actions": "read",
+        "pull-requests": "read",
+    }
+    assert retry["env"]["RETRY_LIMIT"] == "${{ inputs.max_review_retries || '5' }}"
+    checkout = _step(retry, "Checkout trusted default branch")
+    assert checkout["with"]["ref"] == "${{ github.event.repository.default_branch }}"
+    assert checkout["with"]["persist-credentials"] is False
+    assert not any("claude-code-action" in use for use in _action_uses(retry))
+    token = _step(retry, "Generate scoped retry token")
+    assert "env.RETRY_MODE == 'execute'" in token["if"]
+    assert "env.RETRY_LIMIT != '0'" in token["if"]
+    assert {k: v for k, v in token["with"].items() if k.startswith("permission-")} == {
+        "permission-actions": "write"
+    }
+    run = _step(retry, "Retry failed reviews (deterministic)")
+    assert run["env"]["GH_TOKEN"] == "${{ github.token }}"
+    assert run["env"]["GH_RETRY_TOKEN"] == "${{ steps.retry-token.outputs.token }}"
+    inputs = workflow[True]["workflow_dispatch"]["inputs"]
+    assert inputs["review_retry_mode"]["default"] == "audit"
+
+
+@pytest.mark.parametrize(
+    ("mode", "limit", "pr", "expected_mode"),
+    [
+        ("audit", "5", "2804", "--dry-run"),
+        ("execute", "5", "", "--execute"),
+        ("execute", "0", "", "--dry-run"),
+    ],
+)
+def test_retry_workflow_invokes_explicit_modes(
+    tmp_path, mode, limit, pr, expected_mode
+):
+    """Exercise the actual shell so zero budgets and audit cannot issue writes."""
+    retry = _workflow(SHEPHERD)["jobs"]["retry-reviews"]
+    script = _step(retry, "Retry failed reviews (deterministic)")["run"]
+    uv = tmp_path / "uv"
+    uv.write_text('#!/bin/sh\nprintf "%s\\n" "$@"\n')
+    uv.chmod(0o755)
+    env = dict(
+        os.environ,
+        PATH=f"{tmp_path}:{os.environ['PATH']}",
+        RETRY_MODE=mode,
+        RETRY_LIMIT=limit,
+        RETRY_DELAY="1",
+        SPECIFIC_PR=pr,
+        GITHUB_REPOSITORY="ai4curation/ai-gene-review",
+    )
+    result = subprocess.run(
+        ["bash", "-c", script], env=env, text=True, capture_output=True, check=True
+    )
+    args = result.stdout.splitlines()
+    assert expected_mode in args
+    assert ("--execute" in args) != ("--dry-run" in args)
+    assert args[args.index("--max-retries") + 1] == limit
+    assert ("--specific-pr" in args) == bool(pr)
+
+
+def test_review_triggers_share_one_lane_without_comment_cancellation():
+    workflow = _workflow(CLAUDE_REVIEW)
+    assert workflow["run-name"].startswith("Review PR #")
+    assert {"opened", "synchronize", "reopened", "ready_for_review"} <= set(
+        workflow[True]["pull_request"]["types"]
+    )
+    group = workflow["concurrency"]["group"]
+    assert "claude-review-${{ github.event_name }}" not in group
+    assert "github.event.comment.body == '/review'" in group
+    assert "github.event.comment.author_association" in group
+    assert "format('ignored-{0}', github.run_id)" in group
+    assert workflow["concurrency"]["cancel-in-progress"] is True
+
+
+def test_agent_scope_includes_maintainer_codex_branches_without_retry_overlap():
+    prompt = _step(_workflow(SHEPHERD)["jobs"]["shepherd"], "Run PR Shepherd")["with"][
+        "prompt"
+    ]
+    assert "`codex/`" in prompt
+    assert "gh pr list --limit 1000" in prompt
+    assert "Never modify human-authored PRs." not in prompt
+    assert "SPECIFIC_PR does not bypass" in prompt
+    assert "independent deterministic retry-reviews" in prompt
+    assert "Do not rerun them or dispatch replacements here" in prompt
+    assert "Failed runs outside the 30-day window or at the 50-attempt limit" in prompt
 
 
 def test_audit_and_execute_have_literal_modes_and_distinct_tokens():

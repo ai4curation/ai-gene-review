@@ -22,6 +22,23 @@ on:
         required: true
         default: true
         type: boolean
+      review_retry_mode:
+        description: "Independent failed-review recovery (scheduled runs execute)"
+        required: true
+        default: audit
+        type: choice
+        options:
+          - audit
+          - execute
+          - "off"
+      review_retry_delay_hours:
+        description: "Minimum hours after a failed review attempt (0 bypasses backoff)"
+        default: "1"
+        type: string
+      max_review_retries:
+        description: "Maximum failed review runs to retry (0 disables retries)"
+        default: "5"
+        type: string
       merge_mode:
         description: "Deterministic closing pass (execute requires the protected-main feature flag)"
         required: true
@@ -48,23 +65,75 @@ on:
         default: ""
         type: string
 
-concurrency:
-  group: pr-shepherd
-  cancel-in-progress: false
-
 permissions:
-  # Keep the built-in token read-only. The two jobs mint separate, short-lived
-  # App tokens for their own writes; the deterministic job receives no writer
-  # credential at all in audit mode.
+  # Keep the built-in token read-only. Each job mints a separate, short-lived
+  # App token for its writes; deterministic audit jobs receive no writer token.
   contents: read
   pull-requests: read
   checks: read
   statuses: read
 
 jobs:
+  retry-reviews:
+    # Recovery must not compete with the LLM shortlist or wait for its runner.
+    if: >-
+      ${{ github.event_name == 'schedule' ||
+          (github.event_name == 'workflow_dispatch' && inputs.review_retry_mode != 'off') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    concurrency:
+      group: pr-shepherd-review-retries
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+    env:
+      RETRY_MODE: ${{ github.event_name == 'schedule' && 'execute' || inputs.review_retry_mode || 'audit' }}
+      RETRY_DELAY: ${{ inputs.review_retry_delay_hours || '1' }}
+      RETRY_LIMIT: ${{ inputs.max_review_retries || '5' }}
+      SPECIFIC_PR: ${{ inputs.pr_number || '' }}
+    steps:
+      - name: Checkout trusted default branch
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          token: ${{ github.token }}
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Generate scoped retry token
+        id: retry-token
+        if: ${{ env.RETRY_MODE == 'execute' && env.RETRY_LIMIT != '0' }}
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.AI4C_AGENT_APP_ID }}
+          private-key: ${{ secrets.AI4C_AGENT_PRIVATE_KEY }}
+          permission-actions: write
+
+      - name: Retry failed reviews (deterministic)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_RETRY_TOKEN: ${{ steps.retry-token.outputs.token }}
+        run: |
+          set -euo pipefail
+          args=(--repo "$GITHUB_REPOSITORY" --min-delay-hours "$RETRY_DELAY" --max-retries "$RETRY_LIMIT")
+          if [ "$RETRY_MODE" = "execute" ] && [ "$RETRY_LIMIT" != "0" ]; then
+            args+=(--execute)
+          else
+            args+=(--dry-run)
+          fi
+          if [ -n "$SPECIFIC_PR" ]; then args+=(--specific-pr "$SPECIFIC_PR"); fi
+          uv run --python 3.12 --no-project python scripts/retry_failed_reviews.py "${args[@]}"
+
   shepherd:
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.run_agent }}
     runs-on: ubuntu-latest
+    concurrency:
+      group: pr-shepherd-agent
+      cancel-in-progress: false
     # A GitHub App installation token expires 60 minutes after it is minted and
     # does not refresh. Keep the job inside that window so a long run cannot
     # finish its analysis and then 401 on every push.
@@ -149,6 +218,13 @@ jobs:
             after pushing a fix commit you do NOT need to (and should NOT) manually re-trigger
             review; the push itself is enough.
 
+            Failed/timed-out review runs belong to the independent deterministic retry-reviews
+            job while GitHub permits rerunning them (created less than 30 days ago and fewer
+            than 50 attempts). Do not rerun them or dispatch replacements here during that
+            window. Failed runs outside the 30-day window or at the 50-attempt limit need a
+            new dispatch and remain in your recovery scope, alongside missing/cancelled
+            reviews and successful runs that posted no formal verdict.
+
             Start by reading the full contents of CLAUDE.md. Follow all repository conventions.
             In particular:
             - Never edit derived files: *-uniprot.txt, *-goa.tsv, *-deep-research*.md,
@@ -160,16 +236,19 @@ jobs:
 
             Candidate PRs:
             - If SPECIFIC_PR is set, inspect only that PR.
-            - Otherwise list open PRs in REPO and consider PRs that match EITHER criterion:
+            - Otherwise list open PRs in REPO with `gh pr list --limit 1000` (the default
+              first page hides older PRs) and consider PRs that match EITHER criterion:
               (a) authored by: `ai4c-agent`, `app/claude`, `app/github-actions`,
                   `github-actions[bot]`, or any bot/app author, OR
               (b) the head branch name starts with `feat/review-`, `chore/`, `claude/`,
-                  `auto/`, or `curation/` (these are agent-created branches).
+                  `auto/`, `codex/`, or `curation/` (these are agent-created branches,
+                  including when a maintainer is the recorded author).
             - A PR matching either (a) or (b) is a candidate. Do not act on PRs that match
               neither criterion.
             - EXCLUDE every PR whose head starts with `auto/generate-`, even when it matches
               the author rule or SPECIFIC_PR. Generated artifacts have a separate deterministic
               lifecycle; do not edit, review, dispatch, comment on, mark ready, or merge them.
+            - Exclude assigned PRs, PRs labeled `shepherd:hold`, and fork PRs from tending.
 
             Gather enough context for each candidate before choosing:
             - PR metadata: author, draft state, base/head refs, head SHA, updated/created time,
@@ -183,7 +262,7 @@ jobs:
               CHANGES_REQUESTED, REVIEW_REQUIRED, or a comment's prose as approval.
             - Read review bodies only to understand and repair requested changes.
             - Only the deterministic controller below may decide that a PR is merge-ready; it
-              separately verifies reviewer identity, reviewed head SHA, base freshness, holds,
+              separately verifies reviewed head SHA, merge state, holds,
               and required checks.
 
             Classify each candidate into one of these states:
@@ -191,21 +270,23 @@ jobs:
             - APPROVED + DIRTY: formal reviewDecision is approval but branch is behind or
               conflicted.
             - CHANGES_REQUESTED: latest effective review has genuinely blocking issues.
-            - REVIEW_REQUIRED + cancelled review: the PR still requires review and the current
-              or latest Claude review run was cancelled or never completed after the latest
-              head SHA.
+            - REVIEW_REQUIRED + review gap: no formal verdict exists for the current head,
+              and the latest review was cancelled, is missing, or succeeded without posting
+              a verdict, or failed but is too old/exhausted for GitHub to rerun it.
+              Retryable failed/timed-out runs belong to retry-reviews; queued/running
+              reviews need no duplicate dispatch.
 
             Prioritize the most stuck PRs in this order:
             1. APPROVED + DIRTY PRs that can be updated without a rebase or force-push.
             2. Stale CHANGES_REQUESTED PRs, oldest updated first.
-            3. REVIEW_REQUIRED PRs whose review was cancelled or missing after the latest push.
+            3. REVIEW_REQUIRED PRs with a review gap, oldest updated first.
 
             Then process only the highest-ranked PRs up to MAX_PRS.
 
             Allowed actions by state:
             - APPROVED + CLEAN:
               - Take no action. Do not mark a draft ready, merge, or enable auto-merge. The
-                deterministic controller owns this state and is currently report-only.
+                deterministic controller owns this state and enforces its own rollout flag.
             - APPROVED + DIRTY:
               - First try GitHub's update-branch API with the current head SHA.
               - If update-branch reports conflicts, you may attempt a local merge from the base
@@ -230,7 +311,7 @@ jobs:
                 committing and pushing.
               - Commit a small fix on top of the PR branch and push normally. Do not rebase,
                 reset, or force-push.
-            - REVIEW_REQUIRED + cancelled review:
+            - REVIEW_REQUIRED + review gap:
               - This state has no new push to auto-trigger review, so explicitly re-trigger it:
                 `gh workflow run claude-code-review.yml --repo "$REPO" --ref main -f pr_number=PR_NUMBER`
               - Leave a short comment only if useful to explain the re-trigger.
@@ -247,7 +328,8 @@ jobs:
             - NEVER merge a PR, enable auto-merge, approve a review, close a PR, or mark a draft
               ready. Those transitions belong to deterministic policy or a human maintainer.
             - Never force-push, rebase, reset, or rewrite PR history.
-            - Never modify human-authored PRs.
+            - Never modify human-authored PRs outside the recognized agent branch prefixes
+              above. SPECIFIC_PR does not bypass these candidate rules or exclusions.
             - If you are unsure about a biological, ontological, or evidence fix, post a
               clarifying comment on the PR instead of guessing.
             - Spend this run on the selected PRs only.
@@ -298,6 +380,9 @@ jobs:
       ${{ github.event_name == 'schedule' ||
           (github.event_name == 'workflow_dispatch' && inputs.merge_mode != 'off') }}
     runs-on: ubuntu-latest
+    concurrency:
+      group: pr-shepherd-merge-ready
+      cancel-in-progress: false
     timeout-minutes: 15
     env:
       # Scheduled execution remains feature-gated even with strict main
