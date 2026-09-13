@@ -343,21 +343,14 @@ through `--trusted-reviewer`, but the production workflow does not enable it.
 The exact-head binding itself is always enforced: at least one approval must
 refer to the precise PR commit that the controller is about to merge.
 
-Broad author/head ingress does not mean broad file scope. The controller also
-requires every changed path to sit under one of these conservative curation and
-data prefixes by default: `genes/`, `genesets/`, `gocams/`, `interpro/`,
-`modules/`, `pages/`, `projects/`, `publications/`, `reactome/`, `rules/`,
-`terms/`, `families/`, or `research/`. A PR that mixes an allowed data change
-with even one path outside that set is ineligible. Repeatable CLI additions can
-expand the prefix set through `--allowed-path-prefix` for a deliberate one-off
-policy; each addition must be a normalized directory prefix ending in `/`, so
-`src/` cannot accidentally authorize a sibling such as `src_generated/`. The
-production workflow passes none. Every path outside the thirteen listed
-prefixes is therefore out of scope and requires a manual merge. Examples
-include
-infrastructure and self-modifying automation under `.github/`, `scripts/`,
-`src/`, and `tests/`, as well as `docs/`, `reports/`, and top-level
-build/configuration files.
+The production closing pass has no file-path allowlist. An approved, green,
+conflict-free PR is not blocked because it changes caches, history, code,
+workflows, or documentation. Regenerating a cache during conflict repair is a
+separate concern from deciding whether a conflict-free PR can merge.
+The optional `--allowed-path-prefix` argument restricts an explicitly scoped
+manual invocation; it is not enabled by the production workflow. Each prefix
+must be a normalized directory ending in `/`, so `src/` cannot accidentally
+authorize a sibling such as `src_generated/`.
 
 The controller requires all of these at fresh reads immediately before merge:
 
@@ -366,7 +359,6 @@ The controller requires all of these at fresh reads immediately before merge:
 - no `shepherd:hold` label and no `auto/generate-*` head branch;
 - GitHub's aggregate review decision is `APPROVED`;
 - at least one approval is bound to the exact current PR head;
-- every changed file is inside the conservative path-prefix policy above;
 - GitHub reports mergeable and clean;
 - all reported checks are complete/non-failing, and `test (3.12)` is explicitly
   successful.
@@ -388,7 +380,7 @@ assignment, or `shepherd:hold` when fresh content needs additional observation
 time.
 
 Reads use the built-in read-only token. A separately scoped ai4c-agent token
-(Contents write + pull-request write) is supplied only to the head-pinned merge
+(Contents write + pull-request write + Workflows write) is supplied only to the head-pinned merge
 and best-effort courtesy-comment subprocesses. API uncertainty fails an execute
 run red. A positively observed head movement is instead a benign skip:
 concurrent automation changed the candidate, so its new state must pass a later
@@ -413,6 +405,16 @@ rule in repository settings or with
   Actions App (`app_id: 15368`);
 - one approving review is required and stale approvals are dismissed; requiring
   a separate approval for the latest push is disabled, matching DisMech;
+- the approval policy intentionally accepts bot-only approval on infrastructure
+  paths as well as curation paths, per the maintainer's direction for PR #3041.
+  An AI-approved PR may therefore update the automation's own merge policy.
+  There is no additional human or CODEOWNERS gate for `.github/`, `scripts/`,
+  or `src/`; do not infer one from `.protected`. The same current-head approval,
+  CI, conflict, hold, and age checks apply to all files;
+- the ai4c-agent App registration and installation grant **Workflows: write**, in
+  addition to Contents and Pull requests write, so the merge token can support
+  workflow-changing PRs without a file-path exception. The separate reviewer
+  token remains scoped to Pull requests write only;
 - unresolved review conversations block merging;
 - the ai4c-agent and ai4c-reviewer Apps have no pull-request bypass allowance,
   while force pushes and branch deletion remain disabled;
@@ -425,6 +427,16 @@ rule in repository settings or with
 
 If any setting is weakened later, set the flag false and cancel any in-flight
 Shepherd run.
+
+During the PR #3041 review, the live merge flag was already `true` (set August
+10), and `main` required one review with stale-review dismissal and no CODEOWNERS
+requirement. The ai4c-agent App and its ai4curation installation both lacked
+Workflows write. Before merging the token-permission change in #3041, add that
+permission in the [App registration](https://github.com/settings/apps/ai4c-agent/permissions)
+and approve it for the [ai4curation installation](https://github.com/organizations/ai4curation/settings/installations/130616615).
+Requesting it in YAML cannot expand the installation's grant; token minting will
+fail until the grant is approved. GitHub documents this two-step process in
+[Changing App permissions](https://docs.github.com/en/apps/maintaining-github-apps/modifying-a-github-app-registration#changing-the-permissions-of-a-github-app).
 
 Generated-page PRs use a separate lane. Their workflow's staged-file allowlist
 proves the commit contains derived artifacts only and always builds from the
@@ -480,3 +492,81 @@ synthetic record for every existing review, and do not make history coverage a
 merge requirement until normal human and agent curation paths reliably emit
 records. Rendering per-gene history on the site can follow once real records
 exist.
+
+## September 2026: stalled PRs and independent review recovery
+
+[PR #2804](https://github.com/ai4curation/ai-gene-review/pull/2804) was formally
+approved on August 31 against its current head, `80209fb14c296fba3484e600c6bced5f91a00e9a`.
+Its September 12 stall was after review: the
+[closing pass](https://github.com/ai4curation/ai-gene-review/actions/runs/34724996466/job/103637476941)
+reported `changed files outside the allowed path scope: cache/go/terms.csv`.
+Six other PRs had the same cache-file exclusion, and two were excluded for
+curation history. The default file-path veto is removed entirely: a conflict-free
+PR does not need a filename exception once review and checks pass. An explicit
+manual `--allowed-path-prefix` restriction remains available. Approval,
+current-head binding, CI, and branch-protection requirements still apply.
+
+DisMech's separate `retry-reviews` job is ported here as
+`scripts/retry_failed_reviews.py`. It retries existing failed or timed-out review
+jobs without waiting for the agent's shortlist or the merge controller. Each
+job has its own concurrency group. The retry job uses a read token for discovery
+and a separate App token with only Actions write permission for rerun requests;
+it never pushes, merges, or posts PR comments.
+
+Scheduled retry passes execute with a default budget of five PRs. Manual runs
+default to `review_retry_mode=audit`; `execute` enables reruns and `off` disables
+the lane. `max_review_retries=0` also disables recovery without minting a writer
+token. `review_retry_delay_hours` defaults to one; successive attempts back off
+to six and then 24 hours. `pr_number` narrows recovery to a specific PR.
+Standalone script invocations also default to audit; live operation requires
+both `--execute` and `GH_RETRY_TOKEN`.
+Set the repository variable `PR_SHEPHERD_RETRY_ENABLED=false` to switch scheduled
+recovery to audit without minting a writer token; an unset or other value keeps
+the live schedule. Manual `review_retry_mode` remains independent. This switch
+does not cancel requests accepted by previous sweeps.
+
+The retry sweep checks the current PR and attempt again before acting, skips
+superseded commits, completed formal verdicts, generated-page branches, and
+already running or newer reviews, and reports actions and deferrals in the
+Actions summary. Draft state, author identity, assignment, PR age, and merge
+eligibility do not suppress recovery of an already-triggered review. GitHub's
+[rerun limits](https://docs.github.com/en/actions/how-tos/manage-workflow-runs/re-run-workflows-and-jobs)
+restrict this lane to runs less than 30 days old and below the attempt limit.
+Missing/cancelled reviews, successful runs without a verdict, and expired or
+exhausted failures still need a new dispatch from the tending agent.
+
+A live dry run exposed an additional global stall in the copied recovery logic:
+[run 32212423440](https://github.com/ai4curation/ai-gene-review/actions/runs/32212423440)
+had been marked queued since August 19, with no jobs and no API PR association.
+The original unresolved-active-run guard made that one record veto every retry.
+Recovery now reports an unassociated queue record as a diagnostic when a fresh
+read confirms it is still queued, has no jobs, and has had no updates for at
+least 24 hours. It does not cancel or restart that record. Fresh queues, other
+active states, nonempty job lists, and uncertain reads still defer recovery.
+This is a liveness policy for duplicate-review prevention, not a claim that the
+old run is terminal; a dormant run could theoretically start later.
+
+The tending prompt now recognizes maintainer-created `codex/` branches and
+requests an explicit large PR inventory instead of the CLI's first page. It
+respects assignments and holds. Review runs have a numeric PR run name for
+recovery, and real review triggers share one concurrency lane per PR. Ordinary
+comments use a separate lane so a skipped comment event cannot cancel a review.
+Reopening a PR or marking it ready also triggers review.
+
+These changes do not require merge queues. DisMech's queue enqueueing and
+deterministic candidate-selection policy have not been ported: AIGR retains its
+protected direct-merge policy. The LLM still selects which branches to tend;
+this port makes failed review recovery independent, rather than replacing all
+tending with a deterministic shortlist.
+
+Read-only verification after these changes found #2804 eligible under the full
+closing predicate, including its 41 paths, formal approval, current head,
+mergeability, and CI. A one-day retry audit with a two-PR budget selected #3006
+and #3005, deferred #3008 and #3007 at the budget, and reported no errors. Neither
+audit issued GitHub writes.
+
+Per-PR API errors deliberately make the retry job red after it writes its full
+summary and processes the other candidates. This keeps failures visible while
+isolating malformed payloads and transient errors to the affected PR. Red does
+not mean that earlier retry requests were rolled back; the summary identifies
+the accepted requests and failures separately.

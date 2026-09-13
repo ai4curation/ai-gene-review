@@ -373,54 +373,69 @@ def test_recorded_stale_base_does_not_block_an_independent_pr():
 # Changed-file path scope
 
 
-def test_default_allowed_path_prefixes_are_the_conservative_content_set():
-    assert auto_merge.DEFAULT_ALLOWED_PATH_PREFIXES == (
-        "genes/",
-        "genesets/",
-        "gocams/",
-        "interpro/",
-        "modules/",
-        "pages/",
-        "projects/",
-        "publications/",
-        "reactome/",
-        "rules/",
-        "terms/",
-        "families/",
-        "research/",
-    )
-
-
-def test_allowed_path_canary_mix_is_eligible():
-    canaries = [
-        f"{prefix}path-canary.yaml"
-        for prefix in auto_merge.DEFAULT_ALLOWED_PATH_PREFIXES
+def test_pr_2804_style_curation_with_shared_go_cache_is_eligible():
+    # Representative paths from PR #2804: its cache update was the sole scope veto.
+    files = [
+        "cache/go/terms.csv",
+        "genes/PSEPK/PP_0075/PP_0075-ai-review.yaml",
+        "genes/PSEPK/PP_0076/PP_0076-ai-review.html",
+        "genes/PSEPK/betC/betC-notes.md",
+        "modules/bacterial_choline_o_sulfate_uptake_and_desulfation.yaml",
+        "pages/modules/bacterial_choline_o_sulfate_uptake_and_desulfation.html",
+        "projects/P_PUTIDA/batches/choline_o_sulfate_uptake_desulfation.md",
+        "publications/PMID_17116241.md",
     ]
-    assert decide(make_pr(changedFiles=len(canaries), changed_files=canaries)).eligible
+    assert decide(
+        make_pr(number=2804, changedFiles=len(files), changed_files=files),
+        required_checks=[REQUIRED_CHECK],
+    ).eligible
+
+
+def test_curation_history_is_eligible_with_its_curated_content():
+    files = [
+        "genes/human/EXAMPLE/EXAMPLE-ai-review.yaml",
+        "history/genes/human/EXAMPLE/session.yaml",
+        "modules/example.yaml",
+        "history/modules/example/session.yaml",
+        "gocams/example/example-review.yaml",
+        "history/gocams/example/session.yaml",
+        "projects/EXAMPLE.md",
+        "history/projects/EXAMPLE/session.yaml",
+    ]
+    assert decide(make_pr(changedFiles=len(files), changed_files=files)).eligible
 
 
 @pytest.mark.parametrize(
-    "disallowed",
+    "path",
     [
         ".github/workflows/main.yaml",
         "scripts/release.py",
         "src/ai_gene_review/cli.py",
+        "docs/policy.md",
         "pyproject.toml",
+        "cache/go/terms.csv",
+        "cache/go/other.csv",
+        "cache/go/terms.csv.bak",
+        "cache/go/terms.csv/nested.yaml",
+        "cache/go/terms.csv-malicious",
+        "cache/other/terms.csv",
+        "history/schema/session.yaml",
+        "history/other/session.yaml",
+        "history/session.yaml",
+        "history/genes-other/session.yaml",
     ],
 )
-def test_one_disallowed_path_vetoes_otherwise_allowed_changes(disallowed):
+def test_default_scope_accepts_all_normalized_repo_paths(path):
     decision = decide(
         make_pr(
             changedFiles=2,
             changed_files=[
                 "genes/human/EXAMPLE/EXAMPLE-ai-review.yaml",
-                disallowed,
+                path,
             ],
         )
     )
-    assert not decision.eligible
-    assert "outside the allowed path scope" in decision.reason
-    assert disallowed in decision.reason
+    assert decision.eligible
 
 
 @pytest.mark.parametrize("changed_files", [None, [], [None], [""], [{}]])
@@ -431,13 +446,24 @@ def test_missing_empty_or_malformed_changed_files_fail_closed(changed_files):
     assert "file" in decision.reason
 
 
-def test_additional_path_prefix_expands_without_replacing_defaults():
+def test_explicit_path_prefixes_define_the_entire_optional_scope():
     pr = make_pr(
         changedFiles=2,
         changed_files=["genes/human/EXAMPLE/review.yaml", "docs/policy.md"],
     )
-    assert not decide(pr).eligible
-    assert decide(pr, allowed_path_prefixes=["docs/"]).eligible
+    assert decide(pr).eligible
+    restricted = decide(pr, allowed_path_prefixes=["docs/"])
+    assert not restricted.eligible
+    assert "outside the allowed path scope" in restricted.reason
+    assert "genes/human/EXAMPLE/review.yaml" in restricted.reason
+    assert decide(pr, allowed_path_prefixes=["docs/", "genes/"]).eligible
+
+
+@pytest.mark.parametrize("path", ["genes-other/review.yaml", "genes.md"])
+def test_explicit_path_prefix_requires_a_directory_boundary(path):
+    decision = decide(make_pr(changed_files=[path]), allowed_path_prefixes=["genes/"])
+    assert not decision.eligible
+    assert path in decision.reason
 
 
 @pytest.mark.parametrize("count", [None, True, 0, -1, "1"])
@@ -483,6 +509,9 @@ def test_duplicate_rest_filenames_fail_closed():
         "genes\\human\\review.yaml",
         "genes/human/review.yaml\n.github/workflows/main.yaml",
         " genes/human/review.yaml",
+        "cache/go/./terms.csv",
+        "cache/go/terms.csv ",
+        "history/genes/../../schema/session.yaml",
     ],
 )
 def test_non_normalized_repo_paths_fail_closed(path):
@@ -491,18 +520,47 @@ def test_non_normalized_repo_paths_fail_closed(path):
     assert "non-normalized changed-file path" in decision.reason
 
 
-def test_rename_source_path_is_also_within_the_perimeter():
+def test_default_scope_accepts_renames_across_repo_directories():
     moved_from_infrastructure = make_pr(
         changed_files=["genes/human/EXAMPLE/moved.yaml"],
         previous_changed_filenames=[".github/workflows/main.yaml"],
     )
-    assert not decide(moved_from_infrastructure).eligible
+    assert decide(moved_from_infrastructure).eligible
+    assert not decide(
+        moved_from_infrastructure, allowed_path_prefixes=["genes/"]
+    ).eligible
     assert decide(
         make_pr(
             changed_files=["genes/human/EXAMPLE/new.yaml"],
             previous_changed_filenames=["genes/human/EXAMPLE/old.yaml"],
-        )
+        ),
+        allowed_path_prefixes=["genes/"],
     ).eligible
+
+
+@pytest.mark.parametrize(
+    ("prefix", "allowed", "disallowed"),
+    [
+        ("cache/go/", "cache/go/terms.csv", "cache/other/terms.csv"),
+        (
+            "history/genes/",
+            "history/genes/human/EXAMPLE/session.yaml",
+            "history/schema/session.yaml",
+        ),
+        ("genes/", "genes/human/EXAMPLE/review.yaml", ".github/workflows/main.yaml"),
+    ],
+)
+@pytest.mark.parametrize("rename_into_allowed_scope", [False, True])
+def test_explicit_scope_checks_both_rename_paths(
+    prefix, allowed, disallowed, rename_into_allowed_scope
+):
+    old, new = (disallowed, allowed) if rename_into_allowed_scope else (allowed, disallowed)
+    decision = decide(
+        make_pr(changed_files=[new], previous_changed_filenames=[old]),
+        allowed_path_prefixes=[prefix],
+    )
+    assert not decision.eligible
+    assert disallowed in decision.reason
 
 
 # Check rollup and named required checks
@@ -1084,14 +1142,20 @@ def test_hold_added_after_verification_blocks_execute(monkeypatch, tmp_path):
     assert "state changed after verification: held by label" in summary
 
 
-def test_disallowed_path_added_on_second_read_blocks_execute(monkeypatch, tmp_path):
+def test_explicit_path_scope_is_enforced_again_on_second_read(monkeypatch, tmp_path):
     initial = make_pr(number=42)
     changed = make_pr(number=42, changed_files=["scripts/new_release.py"])
     code, merges, summary = _run_main(
         monkeypatch,
         tmp_path,
         views=[initial, changed],
-        args=("--execute", "--required-check", REQUIRED_CHECK),
+        args=(
+            "--execute",
+            "--required-check",
+            REQUIRED_CHECK,
+            "--allowed-path-prefix",
+            "genes/",
+        ),
     )
     assert code == 0
     assert merges == []
@@ -1156,7 +1220,17 @@ def test_head_movement_during_final_file_read_is_a_benign_skip(monkeypatch, tmp_
     assert "head moved during the file-list read" in summary
 
 
-def test_allowed_path_cli_extension_preserves_default_paths(monkeypatch, tmp_path):
+@pytest.mark.parametrize(
+    ("path_args", "eligible"),
+    [
+        ((), True),
+        (("--allowed-path-prefix", "docs/"), False),
+        (("--allowed-path-prefix", "docs/", "--allowed-path-prefix", "genes/"), True),
+    ],
+)
+def test_allowed_path_cli_is_an_optional_restriction(
+    monkeypatch, tmp_path, path_args, eligible
+):
     view = make_pr(
         number=42,
         changedFiles=2,
@@ -1166,11 +1240,14 @@ def test_allowed_path_cli_extension_preserves_default_paths(monkeypatch, tmp_pat
         monkeypatch,
         tmp_path,
         view=view,
-        args=("--dry-run", "--allowed-path-prefix", "docs/"),
+        args=("--dry-run", *path_args),
     )
     assert code == 0
     assert merges == []
-    assert "Would merge 1" in summary
+    assert ("Would merge 1" in summary) is eligible
+    if not eligible:
+        assert "outside the allowed path scope" in summary
+        assert "genes/human/EXAMPLE/review.yaml" in summary
 
 
 def test_execute_and_dry_run_are_mutually_exclusive(monkeypatch):

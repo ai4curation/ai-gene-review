@@ -1,8 +1,9 @@
 name: Claude Code Review
+run-name: 'Review PR #${{ github.event.pull_request.number || github.event.issue.number || inputs.pr_number }}'
 
 on:
   pull_request:
-    types: [opened, synchronize]
+    types: [opened, synchronize, reopened, ready_for_review]
   issue_comment:
     types: [created]
   workflow_dispatch:
@@ -13,7 +14,14 @@ on:
         type: number
 
 concurrency:
-  group: claude-review-${{ github.event_name }}-${{ github.event.pull_request.number || github.event.issue.number || github.event.inputs.pr_number }}
+  # All actual review triggers share a PR lane. An ordinary issue comment must
+  # not cancel that PR's running review before the job-level filter skips it.
+  group: >-
+    claude-review-${{ github.event_name == 'issue_comment' &&
+      !(github.event.issue.pull_request != null && github.event.comment.body == '/review' &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)) &&
+      format('ignored-{0}', github.run_id) ||
+      github.event.pull_request.number || github.event.issue.number || inputs.pr_number }}
   cancel-in-progress: true
 
 jobs:
@@ -23,7 +31,7 @@ jobs:
         (
           github.event_name == 'pull_request' &&
           github.event.pull_request.head.repo.full_name == github.repository &&
-          github.event.pull_request.head.ref != 'auto/generate-pages' &&
+          !startsWith(github.event.pull_request.head.ref, 'auto/generate-') &&
           github.actor != 'dependabot[bot]'
         ) ||
         github.event_name == 'workflow_dispatch' ||
