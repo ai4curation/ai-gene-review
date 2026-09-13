@@ -12,8 +12,6 @@ from typing import List, Optional
 import typer
 from typing_extensions import Annotated
 
-from linkml_data_qc.analyzer import ComplianceAnalyzer
-
 from ai_gene_review.etl.gene import fetch_gene_data, fetch_gene_data_ncRNA, expand_organism_name
 from ai_gene_review.etl.publication import (
     cache_publications,
@@ -986,8 +984,46 @@ def compliance(
             help="Output compliance results to TSV file (default: stdout)",
         ),
     ] = None,
+    config: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--config", "-c", help="QC policy YAML (defaults to packaged gene policy)"
+        ),
+    ] = None,
+    schema_only: Annotated[
+        bool,
+        typer.Option(help="Use raw schema recommendations without contextual rules"),
+    ] = False,
+    summary_output: Annotated[
+        Optional[Path],
+        typer.Option(help="Write per-file weighted scores and threshold counts as TSV"),
+    ] = None,
+    json_output: Annotated[
+        Optional[Path],
+        typer.Option(
+            help="Write complete reports, including applicable denominators, as JSON"
+        ),
+    ] = None,
+    dashboard_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            help="Generate an HTML dashboard from the same contextual reports"
+        ),
+    ] = None,
+    fail_on_threshold: Annotated[
+        bool, typer.Option(help="Exit nonzero when configured thresholds are missed")
+    ] = False,
 ):
-    """Analyze recommended-field compliance using linkml-data-qc."""
+    """Analyze configurable evidence-aware compliance (advisory by default)."""
+    import json
+    from ai_gene_review.compliance import (
+        GeneComplianceAnalyzer,
+        GeneQCConfig,
+        default_config_path,
+    )
+
+    if config is not None and schema_only:
+        raise typer.BadParameter("--config and --schema-only are mutually exclusive")
     all_files: list[Path] = []
     for pattern in yaml_files:
         if "*" in str(pattern):
@@ -1005,11 +1041,16 @@ def compliance(
         raise typer.Exit(code=1)
 
     schema_path = schema or get_schema_path()
-    analyzer = ComplianceAnalyzer(str(schema_path))
+    policy_path = config or default_config_path()
+    policy = GeneQCConfig() if schema_only else GeneQCConfig.from_yaml(policy_path)
+    analyzer = GeneComplianceAnalyzer(schema_path, policy)
 
     rows: list[tuple[str, str, str, str]] = []
+    reports = []
     for yaml_file in all_files:
-        report = analyzer.analyze_file(str(yaml_file), "GeneReview")
+        report = analyzer.analyze_file(yaml_file)
+        report.config_path = None if schema_only else str(policy_path)
+        reports.append(report)
         for path_score in report.path_scores:
             for slot_score in path_score.slot_scores:
                 if slot_score.populated == 0:
@@ -1034,6 +1075,28 @@ def compliance(
         tsv_output.write_text("\n".join(output_lines) + "\n")
     else:
         typer.echo("\n".join(output_lines))
+
+    if summary_output:
+        summary_output.parent.mkdir(parents=True, exist_ok=True)
+        lines = [
+            "file_path\tglobal_compliance\tweighted_compliance\ttotal_checks\ttotal_populated\tthreshold_violations"
+        ]
+        lines.extend(
+            f"{r.file_path}\t{r.global_compliance:.2f}\t{r.weighted_compliance:.2f}\t{r.total_checks}\t{r.total_populated}\t{len(r.threshold_violations)}"
+            for r in reports
+        )
+        summary_output.write_text("\n".join(lines) + "\n")
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(
+            json.dumps([r.model_dump(mode="json") for r in reports], indent=2) + "\n"
+        )
+    if dashboard_dir:
+        from linkml_data_qc.html_dashboard import generate_html_dashboard_multi
+
+        generate_html_dashboard_multi(reports, dashboard_dir)
+    if fail_on_threshold and any(r.threshold_violations for r in reports):
+        raise typer.Exit(code=1)
 
 
 def _print_issue(issue, indent="  "):

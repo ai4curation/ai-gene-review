@@ -179,6 +179,58 @@ def validate_reference_finding_supporting_text(
             )
 
 
+def validate_reference_replacements(
+    data: Dict[str, Any], report: ValidationReport,
+) -> None:
+    """Require declared replacement targets and reject self-links and cycles.
+
+    This checks curated metadata only; it never rewrites a source identifier or
+    changes the publication against which a snippet is validated.
+    """
+    references = [r for r in data.get("references", []) if isinstance(r, dict)]
+    reference_ids = {r.get("id") for r in references}
+    replacements = {}
+    paths = {}
+    for i, reference in enumerate(references):
+        review = reference.get("reference_review") or {}
+        replacement = review.get("replacement") or {}
+        target = replacement.get("reference_id")
+        if not target:
+            continue
+        source = reference.get("id")
+        path = f"references[{i}].reference_review.replacement.reference_id"
+        message = None
+        if target == source:
+            message = f"Reference {source} cannot replace itself"
+        elif target not in reference_ids:
+            message = f"Replacement references non-existent reference ID: {target}"
+        if message:
+            report.add_issue(
+                ValidationSeverity.ERROR, message, path=path,
+                validation_category="BestPractices", check_type="reference_replacement",
+            )
+        else:
+            replacements[source] = target
+            paths[source] = path
+
+    checked = set()
+    for source in replacements:
+        trail = set()
+        current = source
+        while current in replacements and current not in checked:
+            if current in trail:
+                report.add_issue(
+                    ValidationSeverity.ERROR,
+                    f"Reference replacement cycle includes {current}",
+                    path=paths[current], validation_category="BestPractices",
+                    check_type="reference_replacement",
+                )
+                break
+            trail.add(current)
+            current = replacements[current]
+        checked.update(trail)
+
+
 def load_schema() -> SchemaView:
     """Load the LinkML schema.
 
@@ -306,6 +358,7 @@ def check_best_practices_rules(
 
     if check_supporting_text:
         validate_reference_finding_supporting_text(data, report, publications_dir)
+    validate_reference_replacements(data, report)
 
     # Check for TODO in description
     if "description" in data and "TODO" in str(data["description"]):
