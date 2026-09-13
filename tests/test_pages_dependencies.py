@@ -117,3 +117,36 @@ def test_published_markdown_url_survives_project_renderer(tmp_path: Path):
     assert result.existing == {Path("research/report.md")}
     assert result.off_base == set()
     assert result.missing == set()
+
+
+def test_umbrella_homepage_is_not_a_missing_prefix(tmp_path: Path):
+    (tmp_path / "index.html").write_text("project homepage")
+    result = DependencyResolver(tmp_path).scan(
+        Path("index.html"),
+        """
+        <a href="https://ai4curation.io">Organization</a>
+        <a href="https://ai4curation.io/">Organization</a>
+        <a href="/">Organization</a>
+        <a href="/index.html">Organization</a>
+        <a href="/%69ndex.html?view=all#top">Organization</a>
+        <a href="https://ai4curation.github.io/">Organization</a>
+    """,
+    )
+    assert result.off_base == set()
+    assert result.missing == set()
+    assert result.existing == set()
+
+
+def test_off_base_encoded_filename_and_markdown_fallback(tmp_path: Path):
+    (tmp_path / "report#1?.md").write_text("report")
+    result = DependencyResolver(tmp_path).scan(
+        Path("index.html"),
+        """
+        <a href="/report%231%3F.md">Raw</a>
+        <a href="/report%231%3F.html?view=all#section">Rendered</a>
+    """,
+    )
+    assert result.off_base == {
+        "https://ai4curation.io/report%231%3F.md",
+        "https://ai4curation.io/report%231%3F.html",
+    }

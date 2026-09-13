@@ -6,7 +6,7 @@ import re
 from dataclasses import dataclass, field
 from html.parser import HTMLParser
 from pathlib import Path
-from urllib.parse import unquote, urljoin, urlsplit
+from urllib.parse import quote, unquote, urljoin, urlsplit
 
 
 BASE_PATH = "/ai-gene-review/"
@@ -115,15 +115,23 @@ def _off_base_repository_url(repo_root: Path, url: str) -> str | None:
     candidate = _public_path(
         repo_root, SITE_ORIGIN + BASE_PATH + parsed.path.lstrip("/")
     )
-    if candidate is None:
+    # The organization homepage is a legitimate destination shared by projects.
+    if candidate is None or candidate == Path("index.html"):
         return None
-    candidates = [candidate]
+    normalized_url = parsed._replace(query="", fragment="").geturl()
+    if (repo_root / candidate).is_file():
+        return normalized_url
     if candidate.suffix.lower() == ".html":
-        candidates.append(candidate.with_suffix(".md"))
-    for path in candidates:
-        safe = _public_path(repo_root, SITE_ORIGIN + BASE_PATH + path.as_posix())
-        if safe is not None and (repo_root / safe).is_file():
-            return parsed._replace(query="", fragment="").geturl()
+        # Only the fallback needs another safety check (it may be a symlink).
+        # Encode the decoded filename so literal # and ? remain path characters.
+        fallback_url = (
+            SITE_ORIGIN
+            + BASE_PATH
+            + quote(candidate.with_suffix(".md").as_posix(), safe="/")
+        )
+        fallback = _public_path(repo_root, fallback_url)
+        if fallback is not None and (repo_root / fallback).is_file():
+            return normalized_url
     return None
 
 

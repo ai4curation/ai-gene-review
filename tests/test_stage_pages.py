@@ -361,6 +361,8 @@ def test_off_base_link_blocks_deployment(tmp_path: Path) -> None:
     _write(tmp_path / "index.html", '<a href="/research/report.html">Report</a>')
     _write(tmp_path / "research/report.md")
     manifest = stage_pages(tmp_path, tmp_path / "_site")
+    assert not (tmp_path / "_site/research/report.md").exists()
+    assert not (tmp_path / "_site/research/report.html").exists()
     assert manifest.off_base_path_links == 1
     assert manifest.off_base_path_urls == [
         "https://ai4curation.io/research/report.html"

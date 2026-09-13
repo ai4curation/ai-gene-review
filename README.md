@@ -424,7 +424,8 @@ and `size_budget_bytes`. `broken_local_links` counts distinct missing paths;
 `broken_local_link_paths` lists them for diagnosis. `off_base_path_links` counts same-host URLs outside
 `/ai-gene-review/` that match a safe repository file (including an existing
 Markdown source for an HTML target); `off_base_path_urls` lists those suspected
-prefix errors. Unmatched URLs outside the site prefix may belong to other
+prefix errors. Links to the umbrella homepage (including `/index.html`) are
+allowed. Unmatched URLs outside the site prefix may belong to other
 projects and are not checked. Diagnostic lists are retained in full for machine
 processing rather than truncated; the workflow summary shows only counts.
 This static audit does not guarantee dynamically constructed JavaScript URLs or
