@@ -162,10 +162,12 @@ Per-partner rows are in `huri_partners.tsv`.
 chain *does* pass through the ER and Golgi, so sharing a compartment name with a
 secretory-pathway protein proves nothing on its own. It is **which face** of that
 compartment. APOC4 is lumenal throughout its transit and extracellular thereafter;
-it never faces the cytosol, the mitochondrial matrix or the nucleus. Every one of
-the 23 partners does its work on the cytosolic side or inside an organelle APOC4
-never enters, and a Gal4 two-hybrid scores interactions in the yeast nucleus —
-precisely the compartment the target cannot occupy.
+it never faces the cytosol, the mitochondrial matrix or the nucleus. Twenty-one of
+the 23 partners do their work on the cytosolic side or inside an organelle APOC4
+never enters; the two that are not in that class are handled below. And whatever
+their native compartment, all 23 pairs were scored by a Gal4 two-hybrid in the
+yeast nucleus — a compartment the target cannot occupy at all — so the assay could
+not have observed any of them where it matters.
 
 Five partners (MICOS10, MICOS13, MAIP1, BCL2L2, TIMMDC1) are curated *exclusively*
 to the mitochondrion, which has no connection to the secretory pathway at all;
