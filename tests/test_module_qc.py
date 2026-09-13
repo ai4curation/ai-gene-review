@@ -172,6 +172,26 @@ def test_protein_complex_active_units_grounded():
     assert groundings == [{"id": "UniProtKB:Q8NFJ9", "label": "BBS1"}]
 
 
+@pytest.mark.parametrize("selector_type,slot", [("ORTHOLOG_OF", "ortholog_of"), ("HOMOLOG_OF", "homolog_of")])
+def test_homology_selector_anchor_is_grounded(selector_type, slot):
+    node = {
+        "id": "n",
+        "annotons": [
+            {
+                "participant": {
+                    "selector_type": selector_type,
+                    slot: {
+                        "preferred_term": "E. coli BetT",
+                        "term": {"id": "UniProtKB:P0ABC9"},
+                    },
+                }
+            }
+        ],
+    }
+    groundings = node_representative_groundings(node)
+    assert groundings == [{"id": "UniProtKB:P0ABC9", "label": "E. coli BetT"}]
+
+
 def test_bbsome_leaf_grounding():
     # bbsome.yaml grounds most subunits to concrete UniProt accessions, but the
     # cargo-trafficking leaf references the BBSome only by its GO complex term
