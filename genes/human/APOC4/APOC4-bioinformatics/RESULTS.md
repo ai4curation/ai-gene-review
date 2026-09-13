@@ -10,10 +10,12 @@ Reproduce with:
 ```bash
 uv run python family_taxonomy.py
 uv run python amphipathic_helix.py
+uv run python huri_partner_topology.py
 ```
 
 Run date: 2026-09-12. Outputs are also written to `family_taxonomy_result.json`,
-`family_members.tsv` and `amphipathic_helix_result.json`.
+`family_members.tsv`, `amphipathic_helix_result.json`, `huri_partners.tsv` and
+`huri_partner_topology_result.json`.
 
 ---
 
@@ -127,6 +129,58 @@ high-moment segments in the human mature chain rather than two. The window
 definition differs from whatever the original authors used, so this is a
 difference in method rather than a contradiction, and nothing in the review rests
 on the count being two or three.
+
+## 3. Can APOC4 reach the compartment its 23 two-hybrid partners occupy?
+
+**Why it matters.** All 23 GO:0005515 rows on APOC4 come from one reference,
+PMID:32296183 (HuRI), a systematic yeast two-hybrid screen. The review marks every
+one `MARK_AS_OVER_ANNOTATED`, and that judgement rests on where the partners live.
+Those counts are load-bearing for 23 annotation decisions, so they should be
+re-runnable rather than asserted.
+
+**Method.** `huri_partner_topology.py` takes the 23 `WITH/FROM` entities exactly as
+GOA records them, fetches each from UniProt (rejecting any inactive entry rather
+than scoring it), and records the verbatim `SUBCELLULAR LOCATION` values plus
+whether the protein has a transmembrane segment or a cleaved signal peptide. It
+asserts first that the target itself resolves to APOC4_HUMAN, is curated Secreted,
+and carries a signal peptide.
+
+**Result.**
+
+| quantity | value |
+|---|---|
+| partners resolved | 23 / 23 |
+| with a curated Secreted or Extracellular location | **0** |
+| with a curated mitochondrial location | 10 |
+| with a transmembrane segment | 10 |
+| with a cleaved signal peptide | 1 (THBD) |
+| with no curated subcellular location at all | 1 (SYT16) |
+
+Per-partner rows are in `huri_partners.tsv`.
+
+**Interpretation.** The useful distinction is not "intracellular" — APOC4's mature
+chain *does* pass through the ER and Golgi, so sharing a compartment name with a
+secretory-pathway protein proves nothing on its own. It is **which face** of that
+compartment. APOC4 is lumenal throughout its transit and extracellular thereafter;
+it never faces the cytosol, the mitochondrial matrix or the nucleus. Every one of
+the 23 partners does its work on the cytosolic side or inside an organelle APOC4
+never enters, and a Gal4 two-hybrid scores interactions in the yeast nucleus —
+precisely the compartment the target cannot occupy.
+
+Five partners (MICOS10, MICOS13, MAIP1, BCL2L2, TIMMDC1) are curated *exclusively*
+to the mitochondrion, which has no connection to the secretory pathway at all;
+those rows get the sharpest version of the argument. THBD is the one partial
+exception and is flagged as such in its own row: as a single-pass type I membrane
+protein it genuinely presents an extracellular domain to flowing blood, so an
+encounter with a plasma apolipoprotein is not topologically absurd — but that is
+exactly the topology a nuclear two-hybrid cannot test, and no follow-up experiment
+exists. SYT16 has no curated location, so its pair cannot be assessed for
+compartment compatibility either way.
+
+This analysis does **not** show the interactions are false. It shows the assay could
+not have observed them in a physiological compartment, and that no orthogonal
+experiment has since done so — which is the basis for over-annotation rather than
+removal.
 
 ## Caveats
 

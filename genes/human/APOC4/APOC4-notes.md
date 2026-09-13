@@ -220,16 +220,25 @@ binary PPIs". Reference-projection test (QuickGO `downloadSearch?reference=PMID:
 export): **85,343 annotations across 6,769 distinct gene products, of which 84,937 are GO:0005515.**
 APOC4's 23 rows are 23 of those.
 
-Resolving every partner in UniProt (subcellular location field, by script — `.scratch/APOC4_partners.py`)
-gives a topologically impossible set for a secreted plasma apolipoprotein. Counted rather than eyeballed:
+Resolving every partner in UniProt (subcellular location field, by
+`APOC4-bioinformatics/huri_partner_topology.py`, whose per-partner output is committed as
+`huri_partners.tsv`) gives a topologically impossible set for a secreted plasma apolipoprotein.
+Counted rather than eyeballed:
 **0 of 23 have a curated Secreted or Extracellular location, 10 of 23 carry a curated mitochondrial
 location** (IFI27, MICOS10, MICOS13, LETMD1, MAIP1, BCL2L2, TIMMDC1, DIABLO, NFU1, RSAD2), **10 of 23
 have a transmembrane segment, 1 (THBD) has a cleaved signal peptide, and 1 (SYT16) has no curated
 location at all**. The remainder are cytosolic, nuclear or endomembrane (GAD2, TPRG1, APOL2, UBQLN1,
 UBQLN2, SENP2, SNAP47, GSDMA, PORCN, TBC1D20, TMEM14B). Not one is a plasma or lipoprotein-associated
-protein. THBD is the single partial exception worth stating: as a single-pass type I membrane protein it
-does present an extracellular domain to flowing blood, so an encounter is not topologically absurd — but
-that is precisely the topology a nuclear Gal4 two-hybrid cannot test. APOC4 carries a cleaved signal
+protein. The load-bearing distinction is not "intracellular" — APOC4's mature chain does transit the ER
+and Golgi lumen on the way out of the hepatocyte — but which *face* of the compartment: APOC4 is lumenal
+then extracellular, and never faces the cytosol, the mitochondrial matrix or the nucleus, which is where
+all 23 partners work. Five (MICOS10, MICOS13, MAIP1, BCL2L2, TIMMDC1) are curated exclusively to the
+mitochondrion, which has no secretory-pathway connection at all. THBD is the single partial exception
+worth stating: as a single-pass type I membrane protein it does present an extracellular domain to
+flowing blood, so an encounter is not topologically absurd — but that is precisely the topology a nuclear
+Gal4 two-hybrid cannot test. A reader checking UniProt will see `NbExp=3` on every one of these pairs;
+that is HuRI's own screen-and-retest count from this single publication, not three independent studies.
+APOC4 carries a cleaved signal
 peptide (`FT   SIGNAL          1..27`) and never occupies the compartment in which any of these was
 tested; in Y2H both partners are expressed as Gal4 fusions in the yeast nucleus, so the assay cannot
 put apoC-IV where its own biology happens. HuRI itself notes "the majority of PPIs in HuRI were found
