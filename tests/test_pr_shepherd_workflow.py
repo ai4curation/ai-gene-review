@@ -155,6 +155,32 @@ def test_shadow_pages_failures_do_not_block_regeneration():
     assert "::warning" in warning["run"]
 
 
+def test_pages_deployment_requires_opt_in_and_publishable_artifact():
+    """Only a complete, within-budget artifact may reach the Pages environment."""
+    jobs = _workflow(GENERATE_PAGES)["jobs"]
+    build = jobs["generate-pages"]
+    deploy = jobs["deploy-pages"]
+    assert deploy["needs"] == "generate-pages"
+    assert "vars.PAGES_ARTIFACT_DEPLOY_ENABLED == 'true'" in deploy["if"]
+    assert "needs.generate-pages.outputs.deployable == 'true'" in deploy["if"]
+    assert "steps.shadow-upload.outcome == 'success'" in build["outputs"]["deployable"]
+    assert (
+        "steps.shadow-summary.outputs.deployable == 'true'"
+        in build["outputs"]["deployable"]
+    )
+    summary = _step(build, "Summarize staged Pages site")["run"]
+    assert ".deployable == true" in summary
+    assert ".broken_local_links" in summary
+    assert ".off_base_path_links" in summary
+    assert deploy["concurrency"] == {"group": "pages", "cancel-in-progress": False}
+    assert deploy["permissions"] == {"pages": "write", "id-token": "write"}
+    assert deploy["environment"]["name"] == "github-pages"
+    assert (
+        _step(deploy, "Deploy validated Pages artifact")["uses"]
+        == "actions/deploy-pages@v4"
+    )
+
+
 def test_generated_pages_waits_for_ci_and_exact_head_approval():
     workflow = _workflow(GENERATE_PAGES)
     job = workflow["jobs"]["generate-pages"]

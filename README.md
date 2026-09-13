@@ -401,9 +401,48 @@ uses `<repo-root>/_site`. Shadow build failures warn
 without blocking regeneration PRs. The live site continues to publish
 from `main:/` until the shadow artifact has been verified.
 
+Staging also follows local links from published HTML and CSS, plus literal
+JavaScript fetch()/import() URLs, copying reports, notes, images, and downloads at
+their existing paths. Links and file contents are unchanged. Dynamic JavaScript
+URLs still require browser checks. Deleted reviews' orphan HTML remains excluded.
+The manifest's `linked_source_files_not_staged` and corresponding byte count
+specifically report these excluded orphan review pages. Independently linked
+notes, reports, and images remain publishable even without a review YAML; removing
+a review alone is not a request to unpublish its supporting research.
+
+The publication boundary is reachable, non-hidden files inside this repository
+at the existing site paths. Navigation and dependencies are followed transitively,
+without extension filters, depth limits, or per-file truncation that would break
+existing links. Oversized artifacts are reported and blocked, not silently pruned.
+Reducing generated HTML duplication is separate work needed before the live switch.
+
+The deployment job is disabled unless `PAGES_ARTIFACT_DEPLOY_ENABLED=true` is set
+in repository Actions variables. It requires a successful upload, at most
+1,000,000,000 uncompressed bytes, no excluded orphan review pages, and no missing
+static local targets, and no likely missing site-prefix links. The CLI and CI use the same manifest `deployable` decision
+and `size_budget_bytes`. `broken_local_links` counts distinct missing paths;
+`broken_local_link_paths` lists them for diagnosis. `off_base_path_links` counts same-host URLs outside
+`/ai-gene-review/` that match a safe repository file (including an existing
+Markdown source for an HTML target); `off_base_path_urls` lists those suspected
+prefix errors. Unmatched URLs outside the site prefix may belong to other
+projects and are not checked. Diagnostic lists are retained in full for machine
+processing rather than truncated; the workflow summary shows only counts.
+This static audit does not guarantee dynamically constructed JavaScript URLs or
+fragment anchors work.
+
+Keep the current Pages source until the artifact meets those checks and passes
+browser smoke checks. Then change the repository's Pages source to **GitHub
+Actions** (for example, `gh api --method PUT repos/ai4curation/ai-gene-review/pages -f build_type=workflow`), set `PAGES_ARTIFACT_DEPLOY_ENABLED=true` in repository
+Actions variables, and dispatch Generate Pages. Both settings are required.
+
+Once enabled, the artifact built from the checked-out source on `main` is
+authoritative for the live site. It deploys without waiting for the legacy
+regeneration PR to merge; that PR only commits derived output back to `main`.
+
 The Generate Pages workflow runs daily at 08:23 UTC and can also be started with
 GitHub Actions' **Run workflow** button. Each run rebuilds the full site, so merged
-content normally appears after the next daily regeneration PR is merged.
+content currently appears after the next daily regeneration PR is merged. With
+Actions deployment enabled, it appears after the next successful daily deployment.
 Agent cron profiles do not control this publication schedule. Manual runs wait for
 an active build to finish instead of cancelling it. Gene review validation remains
 in PR CI and the weekly full validation workflow.

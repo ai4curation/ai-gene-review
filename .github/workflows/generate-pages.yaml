@@ -15,6 +15,8 @@ jobs:
   generate-pages:
     runs-on: ubuntu-latest
     timeout-minutes: 120
+    outputs:
+      deployable: ${{ steps.shadow-upload.outcome == 'success' && steps.shadow-summary.outputs.deployable == 'true' }}
     permissions:
       # Scopes the default GITHUB_TOKEN only; the branch push and the PR are made
       # with the ai4c-agent App token below.
@@ -73,10 +75,8 @@ jobs:
       - name: Deploy browser app (data.js + index.html)
         run: just deploy-browser
 
-      # Shadow-build the candidate artifact that will replace the current main:/
-      # publishing source.  It is uploaded for inspection but not deployed yet,
-      # so this migration cannot disturb the live site or legacy regeneration
-      # PRs.  The staging command reports the uncompressed 1 GiB Pages budget.
+      # Build the candidate artifact for inspection. Publication remains opt-in
+      # and separately gated on completeness and the supported size budget.
       # Keep every shadow step non-blocking so failures cannot skip the legacy
       # regeneration lane. Only summarize/upload a successfully staged tree.
       - name: Stage GitHub Pages artifact
@@ -89,11 +89,17 @@ jobs:
         if: steps.shadow-stage.outcome == 'success'
         continue-on-error: true
         shell: bash
+        env:
+          PAGES_ARTIFACT_DEPLOY_ENABLED: ${{ vars.PAGES_ARTIFACT_DEPLOY_ENABLED }}
         run: |
           {
             echo "## Shadow GitHub Pages artifact"
             echo
-            echo "This artifact is not deployed; Pages still publishes from \`main:/\`."
+            if [ "$PAGES_ARTIFACT_DEPLOY_ENABLED" = "true" ]; then
+              echo "Actions deployment is enabled for artifacts that pass the publication checks."
+            else
+              echo "This is a shadow artifact; Actions deployment is disabled."
+            fi
             echo
             echo "| Metric | Value |"
             echo "|---|---:|"
@@ -102,9 +108,18 @@ jobs:
             echo "| Gene pages | $(jq -r .gene_pages _site-manifest.json) |"
             echo "| Project pages | $(jq -r .project_pages _site-manifest.json) |"
             echo "| Module pages | $(jq -r .module_pages _site-manifest.json) |"
-            echo "| Linked source files not staged | $(jq -r .linked_source_files_not_staged _site-manifest.json) |"
-            echo "| Linked source MiB not staged | $(jq -r '.linked_source_bytes_not_staged / 1048576 | round' _site-manifest.json) |"
+            echo "| Excluded orphan review pages | $(jq -r .linked_source_files_not_staged _site-manifest.json) |"
+            echo "| Excluded orphan review MiB | $(jq -r '.linked_source_bytes_not_staged / 1048576 | round' _site-manifest.json) |"
+            echo "| Likely missing site-prefix links | $(jq -r .off_base_path_links _site-manifest.json) |"
+            echo "| Broken local targets | $(jq -r .broken_local_links _site-manifest.json) |"
+            echo "| Size budget (bytes) | $(jq -r .size_budget_bytes _site-manifest.json) |"
           } >> "$GITHUB_STEP_SUMMARY"
+          if jq -e '.deployable == true' _site-manifest.json > /dev/null; then
+            echo "deployable=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "deployable=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=Pages deployment blocked::The artifact exceeds the supported size budget or has excluded or missing static local targets. The existing site will remain deployed."
+          fi
 
       - name: Upload shadow GitHub Pages artifact
         id: shadow-upload
@@ -419,3 +434,23 @@ jobs:
             --squash \
             --match-head-commit "$EXPECTED_HEAD" \
             || echo "Auto-merge could not be enabled; PR #$PR_NUMBER left open for manual merge."
+
+  deploy-pages:
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    needs: generate-pages
+    if: >-
+      ${{ vars.PAGES_ARTIFACT_DEPLOY_ENABLED == 'true' &&
+          needs.generate-pages.outputs.deployable == 'true' }}
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy validated Pages artifact
+        id: deployment
+        uses: actions/deploy-pages@v4

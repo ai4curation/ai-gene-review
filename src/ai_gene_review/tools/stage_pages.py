@@ -10,18 +10,17 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import shutil
 import subprocess
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from urllib.parse import unquote, urlsplit
+
+from ai_gene_review.tools.pages_dependencies import TEXT_ASSETS, DependencyResolver
 
 
+PAGES_SIZE_BUDGET_BYTES = 1_000_000_000
 MIB = 1024 * 1024
 BROWSER_FILES = ("index.html", "data.js", "schema.js")
-LINK_PATTERN = re.compile(r"(?:href|src)=[\"']([^\"']+)[\"']", re.IGNORECASE)
-PAGES_BASE_PATH = "/ai-gene-review/"
 
 
 @dataclass(frozen=True)
@@ -35,6 +34,29 @@ class SiteManifest:
     module_pages: int
     linked_source_files_not_staged: int
     linked_source_bytes_not_staged: int
+    broken_local_link_paths: list[str]
+    off_base_path_urls: list[str]
+    size_budget_bytes: int = PAGES_SIZE_BUDGET_BYTES
+
+    @property
+    def broken_local_links(self) -> int:
+        """Number of distinct missing static local targets."""
+        return len(self.broken_local_link_paths)
+
+    @property
+    def off_base_path_links(self) -> int:
+        """Likely missing site-prefix links matching repository content."""
+        return len(self.off_base_path_urls)
+
+    @property
+    def deployable(self) -> bool:
+        """Readiness policy shared by CLI reporting and deployment."""
+        return (
+            self.total_bytes <= self.size_budget_bytes
+            and self.linked_source_files_not_staged == 0
+            and self.broken_local_links == 0
+            and self.off_base_path_links == 0
+        )
 
 
 def _copy_file(source: Path, destination: Path) -> None:
@@ -54,7 +76,9 @@ def _safe_clean_output(repo_root: Path, output_dir: Path) -> None:
     if resolved_output == resolved_root or resolved_root not in resolved_output.parents:
         raise ValueError("Pages output directory must be inside the repository root")
     if resolved_output != resolved_root / "_site":
-        raise ValueError("Pages output directory must be the repository's _site directory")
+        raise ValueError(
+            "Pages output directory must be the repository's _site directory"
+        )
     git_root = subprocess.run(
         ["git", "-C", str(resolved_root), "rev-parse", "--show-toplevel"],
         capture_output=True,
@@ -68,47 +92,67 @@ def _safe_clean_output(repo_root: Path, output_dir: Path) -> None:
     resolved_output.mkdir(parents=True)
 
 
-def _linked_source_files_not_staged(
-    repo_root: Path, output_dir: Path
-) -> set[Path]:
-    """Find existing repository files linked by HTML but absent from the artifact."""
+@dataclass(frozen=True)
+class StagingLinkAudit:
+    """Excluded absolute source paths, missing relative paths, and off-base URLs."""
 
-    dependencies: set[Path] = set()
-    for staged_html in output_dir.rglob("*.html"):
-        html_relative = staged_html.relative_to(output_dir)
-        for raw_link in LINK_PATTERN.findall(staged_html.read_text(errors="ignore")):
-            parsed = urlsplit(raw_link)
-            if parsed.scheme or parsed.netloc or not parsed.path:
-                continue
-            if raw_link.startswith(("#", "data:", "mailto:", "javascript:")):
-                continue
+    excluded_sources: set[Path]
+    missing_paths: set[Path]
+    off_base_urls: set[str]
 
-            link_path = unquote(parsed.path)
-            if link_path.startswith(PAGES_BASE_PATH):
-                target_relative = Path(link_path.removeprefix(PAGES_BASE_PATH))
-            elif link_path.startswith("/"):
-                # A root-relative URL outside this project site is not a local
-                # repository dependency.
-                continue
-            else:
-                target_relative = html_relative.parent / link_path
 
-            repository_target = (repo_root / target_relative).resolve()
-            try:
-                repository_relative = repository_target.relative_to(repo_root)
-            except ValueError:
-                continue
-            staged_target = output_dir / repository_relative
-            if repository_target.is_file() and not staged_target.is_file():
-                dependencies.add(repository_target)
-    return dependencies
+def _stage_linked_files(repo_root: Path, output_dir: Path) -> StagingLinkAudit:
+    """Copy static dependencies transitively and return any excluded public files.
+
+    Scan each HTML/CSS/JS file only once. Referenced notes, downloads, reports,
+    images, and their dependencies keep their paths and original bytes.
+    """
+    pending = [
+        p.relative_to(output_dir)
+        for p in output_dir.rglob("*")
+        if p.is_file() and p.suffix.lower() in TEXT_ASSETS
+    ]
+    scanned: set[Path] = set()
+    omitted: set[Path] = set()
+    broken: set[Path] = set()
+    off_base: set[str] = set()
+    resolver = DependencyResolver(repo_root)
+    while pending:
+        relative = pending.pop()
+        if relative in scanned:
+            continue
+        scanned.add(relative)
+        content = (output_dir / relative).read_text(errors="ignore")
+        links = resolver.scan(relative, content)
+        broken.update(links.missing)
+        off_base.update(links.off_base)
+        for target in links.existing:
+            source = repo_root / target
+            destination = output_dir / target
+            if not destination.is_file():
+                # Keep the existing exclusion of orphan review HTML, even if an
+                # old index still links to it. Report it instead of publishing it.
+                if (
+                    source.name.endswith("-ai-review.html")
+                    and not source.with_suffix(".yaml").is_file()
+                ):
+                    omitted.add(source)
+                    continue
+                _copy_file(source, destination)
+            if target.suffix.lower() in TEXT_ASSETS and target not in scanned:
+                pending.append(target)
+    return StagingLinkAudit(
+        omitted,
+        {path for path in broken if not (output_dir / path).is_file()},
+        off_base,
+    )
 
 
 def stage_pages(repo_root: Path, output_dir: Path) -> SiteManifest:
     """Copy the current generated site into ``output_dir``.
 
     The staged layout deliberately matches the current ``main:/`` Pages URLs.
-    Gene source material is not copied: only rendered review HTML is published.
+    Linked source material and supplemental reports retain their public paths.
     ``pages/`` remains a transitional mixed-output area and is copied wholesale
     until its manually maintained inputs are separated in a later migration.
     ``output_dir`` must resolve to the repository's dedicated ``_site`` directory.
@@ -132,11 +176,11 @@ def stage_pages(repo_root: Path, output_dir: Path) -> SiteManifest:
     gene_pages = [review.with_suffix(".html") for review in review_files]
     missing_pages = [page for page in gene_pages if not page.is_file()]
     if missing_pages:
-        preview = ", ".join(str(path.relative_to(repo_root)) for path in missing_pages[:5])
+        preview = ", ".join(
+            str(path.relative_to(repo_root)) for path in missing_pages[:5]
+        )
         suffix = (
-            ""
-            if len(missing_pages) <= 5
-            else f" (and {len(missing_pages) - 5} more)"
+            "" if len(missing_pages) <= 5 else f" (and {len(missing_pages) - 5} more)"
         )
         raise FileNotFoundError(f"Missing rendered gene pages: {preview}{suffix}")
 
@@ -158,16 +202,22 @@ def stage_pages(repo_root: Path, output_dir: Path) -> SiteManifest:
         _require_file(source)
         _copy_file(source, output_dir / "app" / browser_file)
 
+    audit = _stage_linked_files(repo_root, output_dir)
+    linked_sources = audit.excluded_sources
+    broken_links = audit.missing_paths
     staged_files = [path for path in output_dir.rglob("*") if path.is_file()]
-    linked_sources = _linked_source_files_not_staged(repo_root, output_dir)
     manifest = SiteManifest(
+        off_base_path_urls=sorted(audit.off_base_urls),
+        broken_local_link_paths=sorted(p.as_posix() for p in broken_links),
         total_bytes=sum(path.stat().st_size for path in staged_files),
         total_files=len(staged_files),
         gene_pages=len(gene_pages),
         project_pages=len(list((output_dir / "pages" / "projects").rglob("*.html"))),
         module_pages=len(list((output_dir / "pages" / "modules").rglob("*.html"))),
         linked_source_files_not_staged=len(linked_sources),
-        linked_source_bytes_not_staged=sum(path.stat().st_size for path in linked_sources),
+        linked_source_bytes_not_staged=sum(
+            path.stat().st_size for path in linked_sources
+        ),
     )
 
     if manifest.project_pages == 0:
@@ -187,12 +237,6 @@ def _parse_args() -> argparse.Namespace:
         help="Repository root (default: current directory)",
     )
     parser.add_argument(
-        "--warn-size-mib",
-        type=int,
-        default=1024,
-        help="Warn when the uncompressed site exceeds this many MiB",
-    )
-    parser.add_argument(
         "--manifest",
         type=Path,
         help="Optional path for a JSON size/count report (outside the site is recommended)",
@@ -206,7 +250,18 @@ def main() -> None:
     output_dir = repo_root / "_site"
 
     manifest = stage_pages(repo_root, output_dir)
-    manifest_json = json.dumps(asdict(manifest), indent=2) + "\n"
+    manifest_json = (
+        json.dumps(
+            {
+                **asdict(manifest),
+                "broken_local_links": manifest.broken_local_links,
+                "off_base_path_links": manifest.off_base_path_links,
+                "deployable": manifest.deployable,
+            },
+            indent=2,
+        )
+        + "\n"
+    )
 
     if args.manifest:
         manifest_path = args.manifest
@@ -224,19 +279,31 @@ def main() -> None:
         f"{manifest.project_pages:,} projects, "
         f"{manifest.module_pages:,} modules"
     )
-    if size_mib > args.warn_size_mib:
+    if manifest.total_bytes > manifest.size_budget_bytes:
         print(
             f"::warning title=Pages size budget exceeded::"
             f"Staged site is {size_mib:,.1f} MiB; warning threshold is "
-            f"{args.warn_size_mib:,} MiB. Reduce it before switching Pages to Actions."
+            f"{manifest.size_budget_bytes:,} bytes. Reduce it before switching Pages to Actions."
+        )
+    if manifest.off_base_path_links:
+        print(
+            "::warning title=Pages links missing site prefix::"
+            f"{manifest.off_base_path_links:,} likely off-base links; "
+            "see off_base_path_urls in the manifest. Deployment is blocked."
+        )
+    if manifest.broken_local_links:
+        print(
+            "::warning title=Broken local Pages links::"
+            f"{manifest.broken_local_links:,} missing static targets; "
+            "see broken_local_link_paths in the manifest. Deployment is blocked."
         )
     if manifest.linked_source_files_not_staged:
         linked_size_mib = manifest.linked_source_bytes_not_staged / MIB
         print(
             "::warning title=Linked files are outside the Pages artifact::"
-            f"Rendered HTML links to {manifest.linked_source_files_not_staged:,} "
+            f"Published files link to {manifest.linked_source_files_not_staged:,} "
             f"existing repository files ({linked_size_mib:,.1f} MiB) that are not "
-            "staged. These links must be repointed or the assets hosted before deployment."
+            "staged. Resolve these omissions before deployment."
         )
 
 
