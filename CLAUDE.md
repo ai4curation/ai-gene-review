@@ -39,6 +39,21 @@ gocams/
     MODEL-src.yaml <- cached gocam-py model (activities/annotons; DO NOT EDIT)
     MODEL-review.yaml <- optional reviewer assessment
   index.tsv <- gene_product -> GO-CAM activity (annoton) index; join key to reviews/modules
+history/
+  genes/<ORGANISM>/<GENE>/ <- append-only curation session records (see docs/history.md)
+  modules/<SLUG>/, gocams/<MODEL>/, projects/<SLUG>/, schema/, other/
+
+## History records
+
+`history/` holds append-only curation session provenance, one YAML per session
+per target, kept outside the curated files themselves (mechanism ported from
+dismech). When a PR creates or edits curated content (a gene review, module,
+GO-CAM review, or project page), add a matching record — scaffold it with
+`just new-history` (never hand-write the filename/session id), edit the
+emitted `details`, then check it with `just validate-history <path>`. Records
+are append-only: never rewrite an existing record's `target.slug`/`target.path`;
+use `target.superseded_by` for renames. See `docs/history.md` for the format
+and `just backfill-history` for retrospectively generating records from PRs.
 
 You can regenerate the derived files by running commands like:
 
@@ -152,7 +167,9 @@ ActionEnum:
         description: The annotation is not clear, and the reviewer is not sure what to do with it. ALWAYS USE THIS IF YOU ARE UNABLE TO ACCESS
           RELEVANT PUBLICATIONS
       NEW:
-        
+        description: This is a proposed annotation, not one that exists in the existing GO annotations. Use this to propose a new annotation
+          not covered by the existing GO annotations. Use this conservatively, do not over-annotate, especially for biological process.
+          Do not use for indirect or pleiotropic effects. Be sure you have good evidence, this can be from multiple sources.
 ```      
 
 ### Do not overrule curators from incomplete evidence
@@ -184,6 +201,115 @@ Therefore:
   **cached abstract explicitly states it** (e.g. "in nontransformed mammalian cells"). Do
   not infer the organism or assay details that the abstract does not state.
 
+### Do not add what curators deliberately declined to add
+
+The mirror image of the rule above, and the one that governs `NEW`. Everything else
+in this document is an audit of assertions that exist; `NEW` is the one action that
+manufactures an assertion, and it needs its own bar.
+
+**A gene product is `involved_in` a process only if the product itself does some of the
+work of that process — catalysing a step, or contributing the structure or cofactor
+activity that a step depends on.** Being consumed by the process, being required for it,
+or being the thing it acts on is not participation. The distinction matters most where
+the evidence is strongest: knockout abolishes the outcome, rescue restores it, and
+human loss-of-function is lethal — all of which establish that the gene product is
+**necessary**, which is exactly what being a substrate means. Necessity evidence and
+participation evidence are indistinguishable in a GAF row, so ask explicitly *which
+entity performs the step* before proposing a process term, and do not let a mountain
+of perturbation data stand in for an answer.
+
+**"Every other participant has this term and my gene does not" is not evidence of a
+gap.** It is usually evidence that the term means something your gene does not do.
+Before proposing `NEW` on that reasoning, run the comparator check: name two or three
+other gene products standing in the **same role** relative to the same kind of process,
+and see
+whether they carry the term. This converts "the curators overlooked it" from an
+assumption into a prediction you can falsify in one QuickGO query, and a systematic
+absence across species and MODs should be read as a convention you have not yet
+identified, not as a twenty-year oversight.
+
+A worked example, from a review where this went wrong (`genes/human/AGT`, PR #2972).
+`GO:0002003 angiotensin maturation` is annotated to every protease that acts on
+angiotensinogen — REN, ACE, ACE2, ENPEP, MME and a dozen more — and to no
+angiotensinogen in human, mouse or rat. That was read as a pathway-completeness gap.
+The comparator check settles it the other way in a single query: INS is absent from
+`GO:0030070` insulin processing, whose annotations are the convertases; POMC, GCG,
+PENK and NPPA are absent from `GO:0016486` peptide hormone processing, on which CORIN
+sits but its substrate pro-ANP does not; APP is absent from `GO:0034205` amyloid-beta
+formation among 182 annotations. The reason is structural: `GO:0002003 is_a GO:0016486`
+peptide hormone processing, under protein processing and proteolysis — the term
+describes the cleaving, and the substrate does none of it.
+
+The convention is not absolute, and the exceptions tell you where the line is. GO
+*does* annotate thyroglobulin to `GO:0006590` thyroid hormone generation, fibrinogen to
+`GO:0042730` fibrinolysis, and C3 to `GO:0006956` complement activation. Each of those
+substrates does some of the work, and the three span the range of what that can mean.
+Thyroglobulin is the **scaffold** case: TPO catalyses the iodination and the coupling,
+but thyroglobulin supplies the tyrosyl residues and holds the donor and acceptor pair in
+position — and `GO:0006590` carries both, the peroxidase and the scaffold, each by IDA.
+Fibrin is the **cofactor** case: it polymerises, then accelerates its own lysis by acting
+as the template for tPA-mediated plasminogen activation. C3 is the **chemistry** case: it
+carries an internal thioester that cleavage exposes, which C3b then uses to form its own
+covalent bond to the target surface. Angiotensinogen is none of the three — it supplies
+no residue to the product beyond the bond that is cut, positions nothing, and catalyses
+nothing; renin performs every step of the conversion. So the test is never "is my gene
+the substrate" but "does my gene do any of the work", and a fibrinogen-shaped case can
+legitimately carry the term.
+
+Therefore, before proposing a `NEW` process term:
+
+- **Name the entity that performs the step.** If the answer is another gene product,
+  the term belongs to that one. Necessity evidence does not answer this question.
+- **Run the comparator check** above, and treat a systematic absence as a convention
+  to identify rather than a gap to fill.
+- **Read the term's parents.** They usually say what kind of thing carries the term.
+  A process under `GO:0006508 proteolysis` names whatever does the cleaving — which is
+  the substrate itself in the autoprocessing case (`GO:0016540`), and otherwise is not.
+- **Check `gocams/index.tsv` and the cached models.** They often contain the gene
+  already, in the role GO intends for it — the renin-angiotensin model
+  (`gocams/6246724f00000549/`) has AGT twice over, as the hormone-activity node and as
+  the proteases' input molecule. A curator
+  who modelled the pathway, included your gene, and gave it a different term made a
+  decision to argue with explicitly, not an absence to fill in.
+- **Reject a term that is an ancestor or descendant** of another you are proposing, or
+  of one the gene already carries. That is redundancy, not added coverage.
+
+Where a substrate relationship genuinely needs to be machine-readable, the GO mechanism
+for it lives on the enzyme (`has input`), not on the substrate. Raise it as a
+`suggested_questions` entry rather than asserting it as an annotation.
+
+### What an IBA asserts: read the phylogeny, not the donor count
+
+An IBA is **not** a pairwise similarity transfer. Behind every IBA is a PAINT curator's
+**IBD** (Inferred from Biological aspect of Descendant): the curator inspected the family
+tree and the MSA, read the experimental annotations of all extant members, judged at which
+node the function arose — sometimes recent, sometimes as deep as LUCA — and placed the
+assertion there. IBA rows follow mechanically from descent from that node. So an IBA carries
+a considered phylogenetic judgment, and challenging one means arguing with the node
+placement (is the target inside the clade that inherited the function? is there
+target-specific evidence of loss or divergence?), not with a similarity score.
+
+Two consequences that are easy to get backwards:
+
+- **A short `WITH/FROM` donor list is not weak support.** A node seeded by a single
+  well-characterized MOD or human gene can be entirely sound. Do not use donor count as a
+  proxy for evidential strength.
+- **The target appearing in its own `WITH/FROM` is correct and expected — not circular.**
+  When a gene has its own experimental annotation for the term, that annotation is one of
+  the descendant evidences the curator used to place the IBD, so the gene legitimately
+  appears among the sources of the IBA it later receives. It is a marker that experimental
+  grounding exists *on the target itself*, and the IBA then says something additional: that
+  the function is inherited rather than lineage-specific. **Never** mark such a source
+  `CIRCULAR_OR_REDUNDANT` or describe it as inflating support.
+
+Reserve `CIRCULAR_OR_REDUNDANT` for genuine circularity: a propagation whose source is
+itself a propagated annotation with no experimental grounding anywhere in the chain, or a
+source that adds nothing because the target already has stronger direct evidence for the
+same claim.
+
+See `projects/IBA_REVIEW.md` for the full propagation taxonomy and catalogued failure
+patterns.
+
 ### Term-id validation: GOA ids are trusted, your `core_functions` ids are checked
 
 Validation deliberately treats the two sources of GO term ids differently:
@@ -201,6 +327,48 @@ Validation deliberately treats the two sources of GO term ids differently:
 
 Rule of thumb: machine-sourced ids are trusted (other deterministic steps guarantee they
 are real GOA terms); author-supplied ids are checked hard.
+
+### PANTHER ids: never write a family label from memory
+
+PANTHER family/subfamily ids (`PANTHER:PTHR12345`, `PANTHER:PTHR12345:SF7`) used in
+modules are now hard-validated against `interpro/panther/panther.obo`, built from
+PANTHER's own HMM classifications. Two rules follow:
+
+- **`term.label` must be PANTHER's official name, verbatim.** It is not a place for your
+  description of the protein. Writing a plausible-sounding label is exactly how a wrong
+  family id stays hidden — the id is real, so nothing else catches it. Put your readable
+  description in `preferred_term`, which is free text and is not label-checked. Look the
+  name up:
+  `grep -A1 "^id: PANTHER:PTHR12345$" interpro/panther/panther.obo`
+- **The declared family must contain its own `representative_members`.** This is checked
+  against `interpro/panther/panther-members.tsv` and is a blocking error. If it fires,
+  the representative protein is usually right and the family id is wrong — look up the
+  member's real family rather than deleting the member. Accessions missing from the index
+  only warn; run `just refresh-panther-members` to add newly cited proteins.
+- **If a label mismatch names a *different protein*, fix the ID, not the label.** A
+  wildly-wrong label is weak evidence of a typo and strong evidence that the id was
+  guessed. An id invented at random is still a hallucination when it happens to resolve
+  to a real family, and rewriting its label to the official name converts a visible error
+  into an invisible one. `just fix-panther-labels` therefore refuses to touch these and
+  reports them for review (`--allow-divergent` overrides, only after you have checked the
+  id). Beware the inverse too: PANTHER family names are often dominated by one member, so
+  a correct id can legitimately carry a surprising name (`PTHR24322` = "PKSB" really does
+  contain DHRS3). The representative-member check is what tells the two cases apart.
+
+PTN ancestral nodes (`PANTHER:PTN...`) are checked separately, against PAINT data — see
+`validate_paint_ptns`. Their label is conventionally just the bare id.
+
+**If you cannot be sure, assert no id.** A family descriptor's `term` is optional.
+When you cannot establish that a PANTHER family corresponds to what the descriptor
+means, omit `term` entirely and keep `preferred_term` (free-text intent) and
+`representative_members` (the proteins themselves). An omitted id says "not
+established"; a wrong id says something false, and says it in a machine-readable
+field other tooling will believe. Never invent a plausible id to fill the slot, and
+never guess a replacement for one that failed validation -- re-pointing a family is
+a judgement about evolutionary placement, and doing it mechanically has previously
+broken real PAINT links. The same rule applies to evolutionary claims generally: if
+the PAINT evidence for a step is not clear, say nothing about it rather than
+asserting an inference the data does not support.
 
 ## Reviewing references
 
@@ -243,6 +411,16 @@ This complements (does not replace) the existing `is_invalid` (retracted/replace
 reference has not been manually adjudicated. **Verify, don't trust**: confirm a PMID against PubMed (or
 anchor a claim to a checkable fact such as the GOA evidence code) before marking it `VERIFIED` — an
 LLM-generated deep-research summary asserting a citation is not sufficient.
+
+**Deleted duplicate PMIDs and conflicting findings:** Keep GOA's
+`original_reference_id`. Record a verified canonical identifier in
+`reference_review.replacement` with `reference_id`, `reason`, and verification
+notes; fetch failure alone does not establish a remapping or retraction. Quote
+the canonical paper using its own `reference_id` in `review.supported_by`.
+For a statement from P1 contradicted by P2, use P1's
+`findings[].finding_review` with `finding_status`, `superseded_by`, and
+`supported_by` containing P2's exact snippet. See
+[Reference Curation](docs/reference_curation.md) for examples and validation rules.
 
 ## Tools
 
@@ -441,7 +619,11 @@ just deploy-browser    # update data.js + index.html for the interactive browser
 Output: `app/`
 
 ### CI automation
-The `generate-pages` workflow runs on push to main when gene YAMLs, schema, templates, or project markdown change. It renders everything and creates a PR. Pages deploy directly from main — no gh-pages branch needed for the static content.
+The `generate-pages` workflow runs daily at 08:23 UTC, with manual runs available
+through GitHub Actions. It renders everything and creates a PR. Its publication
+schedule is exempt from agent cron profiles. Gene reviews are validated in PR CI
+and by the weekly full validation workflow. Pages deploy directly from main — no
+gh-pages branch needed for the static content.
 
 ## General guidelines
 

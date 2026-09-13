@@ -6,6 +6,8 @@ oak_config := "conf/oak_config.yaml"
 ref_validator_config := "conf/reference_validator_config.yaml"
 term_validator := "scripts/run_term_validator.sh"
 ref_validator := "scripts/run_reference_validator.sh"
+history_schema_path := "src/ai_gene_review/schema/history.yaml"
+history_dir := "history"
 
 all: validate-all test
 
@@ -91,23 +93,53 @@ sync-codex-skills:
 # Fetch gene data from UniProt and GOA
 # Use --alias to specify a custom directory name and file prefix
 # Use --force to overwrite existing UniProt and GOA files
+# Accession precedence: --uniprot-id, existing review id, then symbol resolution
 # Example: just fetch-gene 9BACT F0JBF1 --alias HgcB
 # Example: just fetch-gene human TP53 --force
-fetch-gene organism gene *args="":
+[positional-arguments]
+fetch-gene organism gene *args:
     #!/usr/bin/env bash
+    set -euo pipefail
+    organism="$1"
+    gene="$2"
+    shift 2
+
+    force=0
+    file_prefix="$gene"
+    expect_alias=0
+    for arg in "$@"; do
+        if (( expect_alias == 1 )); then
+            file_prefix="$arg"
+            expect_alias=0
+            continue
+        fi
+        case "$arg" in
+            --alias|-a) expect_alias=1 ;;
+            --alias=*) file_prefix="${arg#--alias=}" ;;
+            -a?*) file_prefix="${arg#-a}" ;;
+            -fa) force=1; expect_alias=1 ;;
+            -fa?*) force=1; file_prefix="${arg#-fa}" ;;
+            --force|-f) force=1 ;;
+            --) break ;;
+        esac
+    done
+    if [ -z "$file_prefix" ]; then
+        file_prefix="$gene"
+    fi
+
     # Check if gene directory already exists and warn if --force not used
-    gene_dir="genes/{{organism}}/{{gene}}"
-    if [[ "{{args}}" != *"--force"* ]] && [ -d "$gene_dir" ]; then
-        uniprot_file="$gene_dir/{{gene}}-uniprot.txt"
-        goa_file="$gene_dir/{{gene}}-goa.tsv"
+    gene_dir="genes/$organism/$file_prefix"
+    if (( force == 0 )) && [ -d "$gene_dir" ]; then
+        uniprot_file="$gene_dir/$file_prefix-uniprot.txt"
+        goa_file="$gene_dir/$file_prefix-goa.tsv"
         if [ -f "$uniprot_file" ] || [ -f "$goa_file" ]; then
-            echo "⚠️  Gene data for {{organism}}/{{gene}} already exists."
+            echo "⚠️  Gene data for $organism/$file_prefix already exists."
             echo "   To prevent churn, existing files will not be overwritten unless they differ from remote."
-            echo "   Use 'just fetch-gene {{organism}} {{gene}} --force' to force overwrite."
+            echo "   Add --force to this command to force overwrite."
             echo ""
         fi
     fi
-    uv run --no-dev ai-gene-review fetch-gene {{organism}} {{gene}} --output-dir . {{args}}
+    uv run --no-dev ai-gene-review fetch-gene "$organism" "$gene" --output-dir . "$@"
 
 # Fetch ncRNA gene data from RNAcentral
 # Use --alias to specify a custom directory name and file prefix
@@ -115,12 +147,24 @@ fetch-gene organism gene *args="":
 # Example: just fetch-ncrna human SNORD3A
 # Example: just fetch-ncrna human XIST --alias lncRNA-XIST
 # Example: just fetch-ncrna human U1 --rnacentral-id URS000012345_9606
-fetch-ncrna organism gene *args="":
-    uv run ai-gene-review fetch-ncrna {{organism}} {{gene}} --output-dir . {{args}}
+[positional-arguments]
+fetch-ncrna organism gene *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    organism="$1"
+    gene="$2"
+    shift 2
+    uv run ai-gene-review fetch-ncrna "$organism" "$gene" --output-dir . "$@"
 
 # Fetch ncRNA gene data from RNAcentral (alias for consistency)
-fetch-rna-gene organism gene *args="":
-    uv run ai-gene-review fetch-ncrna {{organism}} {{gene}} --output-dir . {{args}}
+[positional-arguments]
+fetch-rna-gene organism gene *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    organism="$1"
+    gene="$2"
+    shift 2
+    uv run ai-gene-review fetch-ncrna "$organism" "$gene" --output-dir . "$@"
 
 # Fetch gene descriptions from external sources (Alliance_Imported, Alliance_Automated, UniProt, RefSeq)
 # Example: just fetch-descriptions yeast CAT2
@@ -146,6 +190,54 @@ fetch-panther-paint family *args="":
 # Families whose members resolve to no node-level annotations are skipped.
 fetch-panther-paint-all *args="":
     uv run ai-gene-review fetch-panther-paint --all --output-dir . {{args}}
+
+# Regenerate the PANTHER IBA project tables through public wrapper recipes.
+# These may download cached PAINT source data on the first run.
+[group('QC')]
+refresh-panther-iba-propagation:
+    uv run python projects/PANTHER_IBA_REVIEW/extract_iba_propagation.py
+
+[group('QC')]
+refresh-panther-iba-node-annotations:
+    uv run python projects/PANTHER_IBA_REVIEW/extract_node_annotations.py
+
+[group('QC')]
+refresh-panther-iba-function-losses:
+    uv run python projects/PANTHER_IBA_REVIEW/extract_function_losses.py
+
+[group('QC')]
+refresh-panther-iba-project: refresh-panther-iba-propagation refresh-panther-iba-node-annotations refresh-panther-iba-function-losses
+
+# Rebuild interpro/panther/panther.obo from PANTHER's HMM classifications.
+# This is the authority behind PANTHER family/subfamily id + label validation
+# (conf/oak_config.yaml routes the PANTHER prefix at it). Re-run after a PANTHER
+# release bump, then re-run `just validate-modules`.
+# NOTE ON CHURN: the artifact is ~14 MB / 700k lines and is regenerated wholesale,
+# so a release bump rewrites the entire file in one commit. That is the price of
+# offline, reproducible, pinned-release validation; expect the diff to be large
+# and review it by the reported family/subfamily counts rather than line by line.
+# A bump will also surface label drift as new validation errors -- run
+# `just fix-panther-labels` afterwards, and check any DIVERGENT labels by hand.
+[group('QC')]
+build-panther-obo *args="":
+    uv run ai-gene-review build-panther-obo --output-dir . {{args}}
+
+# Refresh interpro/panther/panther-members.tsv (UniProt accession -> PANTHER
+# family) for the accessions cited as representative_members in modules/.
+# This backs the check that a declared family really contains its own member,
+# which is what distinguishes a mis-grounded family from a mislabelled one.
+# Run after adding modules that cite new representative proteins.
+[group('QC')]
+refresh-panther-members *args="":
+    uv run ai-gene-review refresh-panther-members --output-dir . {{args}}
+
+# Verify every committed interpro/panther/*/*-paint.tsv row against PANTHER's
+# upstream IBD.gaf. PTN claims are validated against slices that curation PRs
+# commit alongside the claim, so without this the check is self-certifying.
+# Network-bound; intended for the scheduled full run rather than per-PR CI.
+[group('QC')]
+verify-panther-paint *args="":
+    uv run ai-gene-review verify-panther-paint --output-dir . {{args}}
 
 # Fetch and cache a single GO-CAM model to gocams/<id>/<id>-src.yaml
 # Example: just fetch-gocam gomodel:568b0f9600000284
@@ -188,6 +280,12 @@ descriptions-status organism *args="":
 #   just litscan-module-member --date-from 2026-01-01 --date-to 2026-06-19
 litscan-module-member *args="":
     uv run ai-gene-review litscan module-member {{args}}
+
+# Generic provider-selecting entry point documented in AGENTS.md and automation prompts.
+# Supports --provider, --alias, --fallback, --timeout, and --extra-args (which must come last).
+# Example: just deep-research human TP53 --provider perplexity
+deep-research organism gene_id *args="":
+    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} {{args}}
 
 # Deep research using OpenAI (GPT models)
 # Gene symbol automatically looked up from UniProt file if --alias not provided
@@ -257,7 +355,7 @@ deep-research-asta organism gene_id *args="":
 #   just deep-research-codex human TP53
 #   just deep-research-codex METEA C5B1I4 --alias mllA
 deep-research-codex organism gene_id *args="":
-    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} cyberian --extra-args --param agent_type=codex {{args}}
+    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} codex {{args}}
 
 # Deep research on an InterPro entry (family/domain) behind InterPro2GO annotations.
 # Metadata is auto-fetched and cached under interpro/<database>/<ID>/ if absent.
@@ -272,108 +370,216 @@ deep-research-interpro-family interpro_id provider="falcon" *args="":
 
 # Fetch Edison/Falcon artifacts for a deep research trajectory and attach them to a report
 # Example: just fetch-research-artifacts <trajectory-id> genes/human/TP53/TP53-deep-research-falcon.md
-fetch-research-artifacts trajectory_id research_file *args="":
-    uv run python scripts/fetch_edison_artifacts.py {{trajectory_id}} {{research_file}} {{args}}
+[positional-arguments]
+fetch-research-artifacts trajectory_id research_file *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    trajectory_id="$1"
+    research_file="$2"
+    shift 2
+    uv run python scripts/fetch_edison_artifacts.py "$trajectory_id" "$research_file" "$@"
 
 # Index Edison/Falcon artifacts recorded in deep research report frontmatter
 # Examples:
 #   just index-research-artifacts
 #   just index-research-artifacts --check
-index-research-artifacts *args="":
-    uv run python scripts/index_research_artifacts.py {{args}}
+[positional-arguments]
+index-research-artifacts *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run python scripts/index_research_artifacts.py "$@"
 
 # List focused hypothesis research candidates for one gene
 # Examples:
 #   just gene-hypothesis-list human TP53
 #   just gene-hypothesis-list human TP53 --missing-provider openscientist
-gene-hypothesis-list organism gene *args="":
-    uv run python scripts/gene_hypothesis_deep_research.py list {{organism}} {{gene}} {{args}}
+[positional-arguments]
+gene-hypothesis-list organism gene *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    organism="$1"
+    gene="$2"
+    shift 2
+    uv run python scripts/gene_hypothesis_deep_research.py list "$organism" "$gene" "$@"
 
 # Run focused deep research for one gene-level curation hypothesis
 # Dry-run is recommended while selecting a source record.
 # Examples:
 #   just gene-hypothesis-research openscientist human TP53 --annotation-term-id GO:0003677 --dry-run
 #   just gene-hypothesis-research falcon human TP53 --focus-type core-function --hypothesis "TP53 directly binds DNA"
-gene-hypothesis-research provider organism gene *args="":
+[positional-arguments]
+gene-hypothesis-research provider organism gene *args:
     #!/usr/bin/env bash
     set -euo pipefail
-    provider="{{provider}}"
-    args=( {{args}} )
+    provider="$1"
+    organism="$2"
+    gene="$3"
+    shift 3
+    args=("$@")
     # OpenScientist defaults: >=3 iterations for a real run, and a generous job
     # timeout. Fold-discovery / structural runs routinely exceed the upstream
     # 3600s default (they cancel mid-analysis), so default to 7200s -- the
     # maximum the API allows (OpenScientistParams.timeout is capped at le=7200).
     # Keep --timeout-seconds (subprocess wall) above this; the script default does.
     if [[ "$provider" == "openscientist" ]]; then
+        has_separator=false
+        has_max_iterations=false
+        has_timeout=false
+        expect_param=false
+        if [[ ${#args[@]} -gt 0 ]]; then
+            for arg in "${args[@]}"; do
+                if [[ "$has_separator" == false ]]; then
+                    if [[ "$arg" == "--" ]]; then has_separator=true; fi
+                    continue
+                fi
+                if [[ "$expect_param" == true ]]; then
+                    if [[ "$arg" == max_iterations=* ]]; then has_max_iterations=true; fi
+                    if [[ "$arg" == timeout=* ]]; then has_timeout=true; fi
+                    expect_param=false
+                    continue
+                fi
+                case "$arg" in
+                    --param) expect_param=true ;;
+                    --param=max_iterations=*) has_max_iterations=true ;;
+                    --param=timeout=*) has_timeout=true ;;
+                esac
+            done
+        fi
         extra=()
-        if [[ "${args[*]}" != *"max_iterations"* ]]; then extra+=(--param max_iterations=3); fi
-        if [[ "${args[*]}" != *"timeout="* ]]; then extra+=(--param timeout=7200); fi
+        if [[ "$has_max_iterations" == false ]]; then extra+=(--param max_iterations=3); fi
+        if [[ "$has_timeout" == false ]]; then extra+=(--param timeout=7200); fi
         if [[ ${#extra[@]} -gt 0 ]]; then
-            if [[ " ${args[*]} " == *" -- "* ]]; then
+            if [[ "$has_separator" == true ]]; then
                 args+=("${extra[@]}")
             else
                 args+=(-- "${extra[@]}")
             fi
         fi
     fi
-    uv run python scripts/gene_hypothesis_deep_research.py run {{organism}} {{gene}} "$provider" "${args[@]}"
+    if [[ ${#args[@]} -gt 0 ]]; then
+        uv run python scripts/gene_hypothesis_deep_research.py run "$organism" "$gene" "$provider" "${args[@]}"
+    else
+        uv run python scripts/gene_hypothesis_deep_research.py run "$organism" "$gene" "$provider"
+    fi
 
 # Run focused deep research for every core_functions[*] record in one gene
 # Existing provider outputs are skipped unless --overwrite is supplied.
 # Examples:
 #   just gene-hypothesis-research-all-core openscientist human SCO1 --dry-run
 #   just gene-hypothesis-research-all-core openscientist human SCO1 -- --param use_hypotheses=true
-gene-hypothesis-research-all-core provider organism gene *args="":
+[positional-arguments]
+gene-hypothesis-research-all-core provider organism gene *args:
     #!/usr/bin/env bash
     set -euo pipefail
-    provider="{{provider}}"
-    args=( {{args}} )
+    provider="$1"
+    organism="$2"
+    gene="$3"
+    shift 3
+    args=("$@")
     # OpenScientist defaults: >=3 iterations for a real run, and a generous job
     # timeout. Fold-discovery / structural runs routinely exceed the upstream
     # 3600s default (they cancel mid-analysis), so default to 7200s -- the
     # maximum the API allows (OpenScientistParams.timeout is capped at le=7200).
     # Keep --timeout-seconds (subprocess wall) above this; the script default does.
     if [[ "$provider" == "openscientist" ]]; then
+        has_separator=false
+        has_max_iterations=false
+        has_timeout=false
+        expect_param=false
+        if [[ ${#args[@]} -gt 0 ]]; then
+            for arg in "${args[@]}"; do
+                if [[ "$has_separator" == false ]]; then
+                    if [[ "$arg" == "--" ]]; then has_separator=true; fi
+                    continue
+                fi
+                if [[ "$expect_param" == true ]]; then
+                    if [[ "$arg" == max_iterations=* ]]; then has_max_iterations=true; fi
+                    if [[ "$arg" == timeout=* ]]; then has_timeout=true; fi
+                    expect_param=false
+                    continue
+                fi
+                case "$arg" in
+                    --param) expect_param=true ;;
+                    --param=max_iterations=*) has_max_iterations=true ;;
+                    --param=timeout=*) has_timeout=true ;;
+                esac
+            done
+        fi
         extra=()
-        if [[ "${args[*]}" != *"max_iterations"* ]]; then extra+=(--param max_iterations=3); fi
-        if [[ "${args[*]}" != *"timeout="* ]]; then extra+=(--param timeout=7200); fi
+        if [[ "$has_max_iterations" == false ]]; then extra+=(--param max_iterations=3); fi
+        if [[ "$has_timeout" == false ]]; then extra+=(--param timeout=7200); fi
         if [[ ${#extra[@]} -gt 0 ]]; then
-            if [[ " ${args[*]} " == *" -- "* ]]; then
+            if [[ "$has_separator" == true ]]; then
                 args+=("${extra[@]}")
             else
                 args+=(-- "${extra[@]}")
             fi
         fi
     fi
-    uv run python scripts/gene_hypothesis_deep_research.py run-all-core {{organism}} {{gene}} "$provider" "${args[@]}"
+    if [[ ${#args[@]} -gt 0 ]]; then
+        uv run python scripts/gene_hypothesis_deep_research.py run-all-core "$organism" "$gene" "$provider" "${args[@]}"
+    else
+        uv run python scripts/gene_hypothesis_deep_research.py run-all-core "$organism" "$gene" "$provider"
+    fi
 
 # Run one synthesis query over all core_functions[*] records in one gene
 # Examples:
 #   just gene-hypothesis-research-combined-core openscientist human SCO1 --dry-run
 #   just gene-hypothesis-research-combined-core openscientist human SCO1 -- --param use_hypotheses=true
-gene-hypothesis-research-combined-core provider organism gene *args="":
+[positional-arguments]
+gene-hypothesis-research-combined-core provider organism gene *args:
     #!/usr/bin/env bash
     set -euo pipefail
-    provider="{{provider}}"
-    args=( {{args}} )
+    provider="$1"
+    organism="$2"
+    gene="$3"
+    shift 3
+    args=("$@")
     # OpenScientist defaults: >=3 iterations for a real run, and a generous job
     # timeout. Fold-discovery / structural runs routinely exceed the upstream
     # 3600s default (they cancel mid-analysis), so default to 7200s -- the
     # maximum the API allows (OpenScientistParams.timeout is capped at le=7200).
     # Keep --timeout-seconds (subprocess wall) above this; the script default does.
     if [[ "$provider" == "openscientist" ]]; then
+        has_separator=false
+        has_max_iterations=false
+        has_timeout=false
+        expect_param=false
+        if [[ ${#args[@]} -gt 0 ]]; then
+            for arg in "${args[@]}"; do
+                if [[ "$has_separator" == false ]]; then
+                    if [[ "$arg" == "--" ]]; then has_separator=true; fi
+                    continue
+                fi
+                if [[ "$expect_param" == true ]]; then
+                    if [[ "$arg" == max_iterations=* ]]; then has_max_iterations=true; fi
+                    if [[ "$arg" == timeout=* ]]; then has_timeout=true; fi
+                    expect_param=false
+                    continue
+                fi
+                case "$arg" in
+                    --param) expect_param=true ;;
+                    --param=max_iterations=*) has_max_iterations=true ;;
+                    --param=timeout=*) has_timeout=true ;;
+                esac
+            done
+        fi
         extra=()
-        if [[ "${args[*]}" != *"max_iterations"* ]]; then extra+=(--param max_iterations=3); fi
-        if [[ "${args[*]}" != *"timeout="* ]]; then extra+=(--param timeout=7200); fi
+        if [[ "$has_max_iterations" == false ]]; then extra+=(--param max_iterations=3); fi
+        if [[ "$has_timeout" == false ]]; then extra+=(--param timeout=7200); fi
         if [[ ${#extra[@]} -gt 0 ]]; then
-            if [[ " ${args[*]} " == *" -- "* ]]; then
+            if [[ "$has_separator" == true ]]; then
                 args+=("${extra[@]}")
             else
                 args+=(-- "${extra[@]}")
             fi
         fi
     fi
-    uv run python scripts/gene_hypothesis_deep_research.py run-combined-core {{organism}} {{gene}} "$provider" "${args[@]}"
+    if [[ ${#args[@]} -gt 0 ]]; then
+        uv run python scripts/gene_hypothesis_deep_research.py run-combined-core "$organism" "$gene" "$provider" "${args[@]}"
+    else
+        uv run python scripts/gene_hypothesis_deep_research.py run-combined-core "$organism" "$gene" "$provider"
+    fi
 
 # Find independent literature support for a gene-function hypothesis via deep research
 # Recall-tuned (expect false positives an agent then sifts); general-purpose,
@@ -383,19 +589,49 @@ gene-hypothesis-research-combined-core provider organism gene *args="":
 #   just gene-function-support asta human TP53 --hypothesis "TP53 is a sequence-specific DNA-binding transcription factor" --dry-run
 #   just gene-function-support asta human TP53 --annotation-term-id GO:0003700
 #   just gene-function-support asta human TP53 --term-id GO:0003700 --term-label "DNA-binding transcription factor activity"
-gene-function-support provider organism gene *args="":
+[positional-arguments]
+gene-function-support provider organism gene *args:
     #!/usr/bin/env bash
     set -euo pipefail
-    provider="{{provider}}"
-    args=( {{args}} )
-    if [[ "$provider" == "openscientist" && "${args[*]}" != *"max_iterations"* ]]; then
-        if [[ " ${args[*]} " == *" -- "* ]]; then
+    provider="$1"
+    organism="$2"
+    gene="$3"
+    shift 3
+    args=("$@")
+    # Support runs have a 5400s Python wall timeout, so only add the iteration
+    # default here; a 7200s provider timeout would outlive the wrapper process.
+    has_separator=false
+    has_max_iterations=false
+    expect_param=false
+    if [[ ${#args[@]} -gt 0 ]]; then
+        for arg in "${args[@]}"; do
+            if [[ "$has_separator" == false ]]; then
+                if [[ "$arg" == "--" ]]; then has_separator=true; fi
+                continue
+            fi
+            if [[ "$expect_param" == true ]]; then
+                if [[ "$arg" == max_iterations=* ]]; then has_max_iterations=true; fi
+                expect_param=false
+                continue
+            fi
+            case "$arg" in
+                --param) expect_param=true ;;
+                --param=max_iterations=*) has_max_iterations=true ;;
+            esac
+        done
+    fi
+    if [[ "$provider" == "openscientist" && "$has_max_iterations" == false ]]; then
+        if [[ "$has_separator" == true ]]; then
             args+=(--param max_iterations=3)
         else
             args+=(-- --param max_iterations=3)
         fi
     fi
-    uv run python scripts/gene_hypothesis_deep_research.py run-function-support {{organism}} {{gene}} "$provider" "${args[@]}"
+    if [[ ${#args[@]} -gt 0 ]]; then
+        uv run python scripts/gene_hypothesis_deep_research.py run-function-support "$organism" "$gene" "$provider" "${args[@]}"
+    else
+        uv run python scripts/gene_hypothesis_deep_research.py run-function-support "$organism" "$gene" "$provider"
+    fi
 
 # List IBA annotations that are candidates for support-finding research
 # By default only IBAs lacking independent PMID/DOI support are listed.
@@ -403,8 +639,14 @@ gene-function-support provider organism gene *args="":
 #   just gene-iba-support-list human CFAP300
 #   just gene-iba-support-list human CFAP300 --missing-provider asta
 #   just gene-iba-support-list human CFAP300 --include-supported
-gene-iba-support-list organism gene *args="":
-    uv run python scripts/gene_hypothesis_deep_research.py list-iba {{organism}} {{gene}} {{args}}
+[positional-arguments]
+gene-iba-support-list organism gene *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    organism="$1"
+    gene="$2"
+    shift 2
+    uv run python scripts/gene_hypothesis_deep_research.py list-iba "$organism" "$gene" "$@"
 
 # Find independent literature support for a gene's IBA annotations via deep research
 # Thin wrapper over gene-function-support: feeds each IBA annotation in as a
@@ -415,35 +657,85 @@ gene-iba-support-list organism gene *args="":
 #   just gene-iba-support-research asta human CFAP300 --dry-run
 #   just gene-iba-support-research asta human CFAP300 --annotation-term-id GO:0005737
 #   just gene-iba-support-research asta human CFAP300 --include-supported
-gene-iba-support-research provider organism gene *args="":
+[positional-arguments]
+gene-iba-support-research provider organism gene *args:
     #!/usr/bin/env bash
     set -euo pipefail
-    provider="{{provider}}"
-    args=( {{args}} )
-    if [[ "$provider" == "openscientist" && "${args[*]}" != *"max_iterations"* ]]; then
-        if [[ " ${args[*]} " == *" -- "* ]]; then
+    provider="$1"
+    organism="$2"
+    gene="$3"
+    shift 3
+    args=("$@")
+    # Support runs have a 5400s Python wall timeout, so only add the iteration
+    # default here; a 7200s provider timeout would outlive the wrapper process.
+    has_separator=false
+    has_max_iterations=false
+    expect_param=false
+    if [[ ${#args[@]} -gt 0 ]]; then
+        for arg in "${args[@]}"; do
+            if [[ "$has_separator" == false ]]; then
+                if [[ "$arg" == "--" ]]; then has_separator=true; fi
+                continue
+            fi
+            if [[ "$expect_param" == true ]]; then
+                if [[ "$arg" == max_iterations=* ]]; then has_max_iterations=true; fi
+                expect_param=false
+                continue
+            fi
+            case "$arg" in
+                --param) expect_param=true ;;
+                --param=max_iterations=*) has_max_iterations=true ;;
+            esac
+        done
+    fi
+    if [[ "$provider" == "openscientist" && "$has_max_iterations" == false ]]; then
+        if [[ "$has_separator" == true ]]; then
             args+=(--param max_iterations=3)
         else
             args+=(-- --param max_iterations=3)
         fi
     fi
-    uv run python scripts/gene_hypothesis_deep_research.py run-iba-support {{organism}} {{gene}} "$provider" "${args[@]}"
+    if [[ ${#args[@]} -gt 0 ]]; then
+        uv run python scripts/gene_hypothesis_deep_research.py run-iba-support "$organism" "$gene" "$provider" "${args[@]}"
+    else
+        uv run python scripts/gene_hypothesis_deep_research.py run-iba-support "$organism" "$gene" "$provider"
+    fi
 
 # ============== ASSAY_TO_FUNCTION readout-mining pipeline ==============
 
 # Mine review prose and the publications corpus for assay/readout usage, then
 # QC + flag re-review candidates. Always inspect reports/*matched_string_counts*
 # for substring false positives before trusting a class total.
-assay-mine *args="":
-    uv run python projects/ASSAY_TO_FUNCTION/mine_readouts.py {{args}}
-    uv run python projects/ASSAY_TO_FUNCTION/mine_papers.py {{args}}
+[positional-arguments]
+assay-mine *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run python projects/ASSAY_TO_FUNCTION/mine_readouts.py "$@"
+    uv run python projects/ASSAY_TO_FUNCTION/mine_papers.py "$@"
 
-assay-flag *args="":
-    uv run python projects/ASSAY_TO_FUNCTION/flag_candidates.py {{args}}
+# Broader, paper-only join across primary and supporting references. Keep its
+# outputs separate from the canonical primary-reference reports by default.
+[positional-arguments]
+assay-mine-supporting *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run python projects/ASSAY_TO_FUNCTION/mine_papers.py \
+        --include-supporting \
+        --out-dir projects/ASSAY_TO_FUNCTION/reports/with_supporting \
+        "$@"
+
+[positional-arguments]
+assay-flag *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run python projects/ASSAY_TO_FUNCTION/flag_candidates.py "$@"
 
 # Consolidate the 60-class catalog + mined matches into summary TSV/MD + figure.
-assay-consolidate *args="":
-    uv run --with matplotlib python projects/ASSAY_TO_FUNCTION/consolidate.py {{args}}
+[positional-arguments]
+assay-consolidate *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run --with matplotlib python projects/ASSAY_TO_FUNCTION/consolidate.py "$@"
 
 # Stage (human-gated) OpenScientist hypothesis prompts from flagged_candidates.tsv.
 # This writes committed prompt.md files and prints submit commands but NEVER
@@ -452,8 +744,11 @@ assay-consolidate *args="":
 # Examples:
 #   just assay-stage-hypotheses --discriminator indirect_ligand --max 5
 #   just assay-stage-hypotheses --gene STAT3 --go-id GO:0030335
-assay-stage-hypotheses *args="":
-    uv run python projects/ASSAY_TO_FUNCTION/stage_hypotheses.py {{args}}
+[positional-arguments]
+assay-stage-hypotheses *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    uv run python projects/ASSAY_TO_FUNCTION/stage_hypotheses.py "$@"
 
 # Term deep research (open-ended biological concepts)
 # Examples:
@@ -478,7 +773,7 @@ term-deep-research-cyberian concept *args="":
     uv run python scripts/concept_deep_research_wrapper.py "{{concept}}" cyberian {{args}}
 
 term-deep-research-codex concept *args="":
-    uv run python scripts/concept_deep_research_wrapper.py "{{concept}}" cyberian --extra-args --param agent_type=codex {{args}}
+    uv run python scripts/concept_deep_research_wrapper.py "{{concept}}" codex {{args}}
 
 # Module deep research (targets module YAMLs and writes beside the YAML by default)
 # Examples:
@@ -518,16 +813,57 @@ module-pathway-deep-research-falcon module pathway organism *args="":
     uv run python scripts/module_pathway_taxon_deep_research_wrapper.py "{{module}}" "{{pathway}}" "{{organism}}" falcon {{args}}
 
 # Fetch a specific PMID
-fetch-pmid pmid output_dir="publications":
-    uv run ai-gene-review fetch-pmid {{pmid}} --output-dir {{output_dir}}
+[positional-arguments]
+fetch-pmid pmid *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    pmids=("$1")
+    shift
+    while (( $# > 0 )) && [[ "$1" =~ ^(PMID:)?[0-9]+$ ]]; do
+        pmids+=("$1")
+        shift
+    done
+    output_dir="publications"
+    if (( $# > 0 )) && [[ "$1" != -* ]]; then
+        output_dir="$1"
+        shift
+    fi
+    uv run ai-gene-review fetch-pmid "${pmids[@]}" --output-dir "$output_dir" "$@"
 
 # Fetch all PMIDs referenced in a gene's review file
-fetch-gene-pmids organism gene output_dir="publications":
-    uv run ai-gene-review fetch-gene-pmids {{organism}} {{gene}} --output-dir {{output_dir}}
+[positional-arguments]
+fetch-gene-pmids organism gene *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    organism="$1"
+    gene="$2"
+    shift 2
+    output_dir="publications"
+    if (( $# > 0 )) && [[ "$1" != -* ]]; then
+        output_dir="$1"
+        shift
+    fi
+    uv run ai-gene-review fetch-gene-pmids "$organism" "$gene" --output-dir "$output_dir" "$@"
+
+# Fetch FEBA/RB-TnSeq fitness evidence for a bacterial gene.
+# Writes genes/ORGANISM/GENE/GENE-fitness.md.
+# Example: just fetch-fitness ECOLI SlyD
+fetch-fitness organism gene:
+    uv run python scripts/fetch_fitness_data.py {{organism}} {{gene}}
 
 # Fetch PMIDs from a file
-fetch-pmids-from-file file output_dir="publications":
-    uv run ai-gene-review fetch-pmids-from-file {{file}} --output-dir {{output_dir}}
+[positional-arguments]
+fetch-pmids-from-file file *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    input_file="$1"
+    shift
+    output_dir="publications"
+    if (( $# > 0 )) && [[ "$1" != -* ]]; then
+        output_dir="$1"
+        shift
+    fi
+    uv run ai-gene-review fetch-pmids-from-file "$input_file" --output-dir "$output_dir" "$@"
 
 # Refresh PMID titles in gene review YAML files (replaces TODO placeholders with actual titles)
 refresh-pmid-titles organism="" gene="":
@@ -617,6 +953,14 @@ audit-fulltext-flags *args="":
 [group('QC')]
 validate-references file:
     {{ref_validator}} validate data {{file}} --schema {{schema_path}} --target-class GeneReview --config {{ref_validator_config}}
+
+# Schema and source-evidence validation for external prediction review sidecars.
+# Missing publication caches are fetched; unavailable sources fail rather than
+# silently certifying an unchecked quotation. Caches remain regenerable context.
+[group('QC')]
+validate-predictions +files:
+    uv run linkml-validate --schema {{schema_path}} --target-class PredictionReview {{files}}
+    uv run python -m ai_gene_review.validation.prediction_evidence --fetch --require-excerpts --report reports/prediction-evidence.json {{files}}
 
 # Reference validation for all gene review files
 [group('QC')]
@@ -862,15 +1206,15 @@ validate-all:
 
 # Compliance report for recommended fields (separate from validation-all.tsv)
 compliance-all:
-    @echo "Analyzing recommended-field compliance..."
+    @echo "Analyzing evidence-aware compliance..."
     @mkdir -p reports
-    uv run ai-gene-review compliance --tsv-output reports/compliance-all.tsv "genes/*/*/*-ai-review.yaml"
+    uv run ai-gene-review compliance --config conf/qc_config.yaml --tsv-output reports/compliance-all.tsv --summary-output reports/compliance-summary.tsv "genes/*/*/*-ai-review.yaml"
 
 # Compliance report with HTML dashboard (linkml-data-qc)
 compliance-dashboard:
     @echo "Generating compliance dashboard..."
     @mkdir -p reports/compliance-dashboard
-    uv run linkml-data-qc --schema src/ai_gene_review/schema/gene_review.yaml --target-class GeneReview --dashboard-dir reports/compliance-dashboard genes --pattern "**/*-ai-review.yaml"
+    uv run ai-gene-review compliance --config conf/qc_config.yaml --tsv-output reports/compliance-all.tsv --summary-output reports/compliance-summary.tsv --dashboard-dir reports/compliance-dashboard "genes/*/*/*-ai-review.yaml"
 
 # Validate all gene review files (summary only, no details)
 validate-all-summary:
@@ -1163,6 +1507,14 @@ render-organism organism:
 render-all:
     uv run python -m ai_gene_review.render --all genes/
 
+# Assemble the already-rendered public site without changing the active Pages source.
+# This transitional artifact preserves the URLs currently served from main:/.
+stage-pages:
+    uv run python -m ai_gene_review.tools.stage_pages --manifest _site-manifest.json
+
+# Build the complete disposable publication tree used by the Pages migration.
+build-pages: render-all render-projects validate-modules render-modules deploy-browser stage-pages
+
 # Render prediction evaluation table from *-predictions-review.yaml files
 render-prediction-eval pattern='genes/*/*/*-protnlm-predictions-review.yaml' output='pages/projects/PROTNLM_EVALUATION/protnlm-eval.html' title='ProtNLM-50 Prediction Evaluation':
     uv run python -m ai_gene_review.render_prediction_eval '{{pattern}}' -o '{{output}}' --title '{{title}}'
@@ -1172,6 +1524,26 @@ render-bioreason-eval:
     uv run python -m ai_gene_review.render_prediction_eval 'genes/*/*/*-sft-predictions.yaml' -o 'pages/projects/BIOREASON_COMPARISON/sft-eval.html' --title 'BioReason-Pro SFT Prediction Evaluation'
     uv run python -m ai_gene_review.render_prediction_eval 'genes/*/*/*-gogpt-leaf-predictions.yaml' -o 'pages/projects/BIOREASON_COMPARISON/gogpt-eval.html' --title 'BioReason-Pro GO-GPT Prediction Evaluation'
     uv run python -m ai_gene_review.render_prediction_eval 'projects/BIOREASON_COMPARISON/recapitulation-experiment/claude-expt-1/genes/ECOLI/*/*-det-predictions-review.yaml' -o 'pages/projects/BIOREASON_COMPARISON/deepectf-eval.html' --title 'BioReason-Pro DeepECTF Evaluation (ESR-ECOLI-DET-Mini)'
+
+# Refresh the deterministic BioReason benchmark cohort, gene, quality, and metrics sidecars
+refresh-bioreason-benchmark-sidecars:
+    uv run python projects/BIOREASON_COMPARISON/write_benchmark_sidecars.py
+
+# Audit SFT prediction reviews against the current GOA/AIGR snapshot without writing
+check-bioreason-sft-reviews:
+    uv run python scripts/auto_review_sft_predictions.py
+
+# Refresh SFT prediction reviews against the current GOA/AIGR snapshot
+refresh-bioreason-sft-reviews:
+    uv run python scripts/auto_review_sft_predictions.py --apply
+
+# Check committed GO-GPT leaf reviews against their raw BioReason web exports
+check-gogpt-web-exports:
+    uv run python scripts/gogpt_predict.py --check-web-exports
+
+# Refresh committed GO-GPT leaf reviews from their raw BioReason web exports
+refresh-gogpt-web-exports:
+    uv run python scripts/gogpt_predict.py --refresh-web-exports
 
 # Render project markdown files to HTML with auto-linked gene symbols
 render-projects:
@@ -1196,20 +1568,28 @@ render-module module:
 # CREATES:
 #   - {rule_id}-review.html
 # Example: just render-rule ARBA00026249
-render-rule rule_id cache_dir="rules/arba": (analyze-rule rule_id)
-    uv run python -c "from ai_gene_review.etl.rule_analysis import render_rule_review_html; from pathlib import Path; render_rule_review_html('{{rule_id}}', Path('{{cache_dir}}'))"
+[positional-arguments]
+render-rule rule_id cache_dir="rules/arba": (analyze-rule rule_id "--cache-dir" cache_dir)
+    #!/usr/bin/env bash
+    set -euo pipefail
+    rule_id="$1"
+    cache_dir="$2"
+    uv run python -c 'import sys; from pathlib import Path; from ai_gene_review.etl.rule_analysis import render_rule_review_html; render_rule_review_html(sys.argv[1], Path(sys.argv[2]))' "$rule_id" "$cache_dir"
 
 # Render all rule reviews as HTML (automatically analyzes first if needed)
+[positional-arguments]
 render-all-rules cache_dir="rules/arba":
     #!/usr/bin/env bash
-    echo "Rendering all rule reviews in {{cache_dir}}..."
+    set -euo pipefail
+    cache_dir="$1"
+    echo "Rendering all rule reviews in $cache_dir..."
     count=0
-    for review_yaml in {{cache_dir}}/*/*-review.yaml; do
+    for review_yaml in "$cache_dir"/*/*-review.yaml; do
         if [ -f "$review_yaml" ]; then
             rule_id=$(basename "$review_yaml" | sed 's/-review.yaml$//')
             echo "  Processing $rule_id..."
             # Use just to call render-rule which has analyze-rule as dependency
-            just render-rule "$rule_id" "{{cache_dir}}"
+            just render-rule "$rule_id" "$cache_dir"
             count=$((count + 1))
         fi
     done
@@ -2066,19 +2446,26 @@ clean-imodulondb-cache:
 # This creates:
 #   - {cache_dir}/{rule_id}/{rule_id}-review.yaml with all required fields (WILL NOT OVERWRITE)
 #   - {cache_dir}/{rule_id}/{rule_id}.enriched.json (if missing)
-# Then run these commands in order:
+# For ARBA rules, then run these commands in order:
 #   1. just analyze-rule {rule_id}      # Generate analysis files
 #   2. just sync-rule-review-single {rule_id}  # Populate entries field
 #   3. just rules-deep-research-perplexity {rule_id}  # Research literature
 #   4. Edit the review YAML to fill in TODO placeholders
 #   5. just render-rule {rule_id}       # Generate HTML
+# For UniRule, continue with deep research and manual editing only;
+# post-enrichment analysis-dependent workflows currently support ARBA IDs only.
 # Examples:
 #   just init-rule-review ARBA00026249
 #   just init-rule-review UR000000070 --cache-dir rules/unirule
 # If you get "Review file already exists" error:
 #   rm rules/arba/ARBA00026249/ARBA00026249-review.yaml  # Then re-run init-rule-review
-init-rule-review rule_id *args="":
-    uv run python -c "from ai_gene_review.etl.rule_review_init import init_rule_review; from pathlib import Path; init_rule_review('{{rule_id}}', cache_dir=Path('rules/arba'))"
+[positional-arguments]
+init-rule-review rule_id *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    rule_id="$1"
+    shift
+    uv run ai-gene-review init-rule-review "$rule_id" "$@"
 
 # Sync ARBA rules with GO annotations from UniProt (stores in rules/arba/)
 # By default only syncs rules that have GO term annotations
@@ -2130,8 +2517,13 @@ rules-validate *args="":
 #   - Requires {rule_id}-review.yaml to exist (create with init-rule-review first)
 #   - Requires {rule_id}-analysis.yaml (created automatically by analyze-rule dependency)
 # Example: just sync-rule-review-single ARBA00027128
-sync-rule-review-single rule_id cache_dir="rules/arba": (analyze-rule rule_id)
-    uv run ai-gene-review rules-sync {{cache_dir}}/{{rule_id}}/{{rule_id}}-review.yaml
+[positional-arguments]
+sync-rule-review-single rule_id cache_dir="rules/arba": (analyze-rule rule_id "--cache-dir" cache_dir)
+    #!/usr/bin/env bash
+    set -euo pipefail
+    rule_id="$1"
+    cache_dir="$2"
+    uv run ai-gene-review rules-sync "$cache_dir/$rule_id/$rule_id-review.yaml"
 
 # Sync rule review YAML files with analysis data (pairwise_overlap sections)
 # Examples:
@@ -2173,6 +2565,16 @@ sync-ipr2go cache_dir="rules/arba":
     @echo "Syncing InterPro2GO mappings to {{cache_dir}}..."
     uv run python -c "from ai_gene_review.etl.rule_analysis import fetch_interpro2go_mappings; from pathlib import Path; mappings = fetch_interpro2go_mappings(Path('{{cache_dir}}')); print(f'✓ Cached {len(mappings)} InterPro → GO mappings')"
 
+[positional-arguments]
+_validate-arba-analysis-id rule_id:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    rule_id="$1"
+    if [[ ! "$rule_id" =~ ^ARBA[0-9]{8}$ ]]; then
+        printf "error: unsupported rule ID '%s'; post-enrichment analysis currently supports ARBA######## IDs only\n" "$rule_id" >&2
+        exit 2
+    fi
+
 # Analyze an ARBA rule for InterPro overlap and ipr2go redundancy
 # Outputs YAML, JSON, and text formats
 # DEPENDENCIES:
@@ -2185,54 +2587,76 @@ sync-ipr2go cache_dir="rules/arba":
 # Example: just analyze-rule ARBA00026249
 # Example: just analyze-rule ARBA00026249 --cache-dir rules/arba
 # NOTE: Skips analysis if enriched.json AND analysis.yaml already exist (lazy evaluation)
-analyze-rule rule_id *args="":
+[positional-arguments]
+analyze-rule rule_id *args: (_validate-arba-analysis-id rule_id)
     #!/usr/bin/env bash
     set -euo pipefail  # Fail fast on errors, undefined variables, and pipe failures
 
-    cache_dir="rules/arba"
-    if [[ "{{args}}" == *"--cache-dir"* ]]; then
-        cache_dir=$(echo "{{args}}" | sed -n 's/.*--cache-dir \([^ ]*\).*/\1/p')
-    fi
+    rule_id="$1"
+    shift
 
-    # Extract rule type from ID
-    if [[ "{{rule_id}}" == ARBA* ]]; then
-        rule_dir="$cache_dir/{{rule_id}}"
-    else
-        rule_dir="$cache_dir/{{rule_id}}"
-    fi
+    cache_dir="rules/arba"
+    force=false
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --cache-dir)
+                if [[ $# -lt 2 ]]; then
+                    printf "error: --cache-dir requires a path\n" >&2
+                    exit 2
+                fi
+                if [[ -z "$2" || "$2" == --* ]]; then
+                    printf "error: --cache-dir requires a path\n" >&2
+                    exit 2
+                fi
+                cache_dir="$2"
+                shift 2
+                ;;
+            --force)
+                force=true
+                shift
+                ;;
+            *)
+                printf "error: unsupported analyze-rule argument '%s'\n" "$1" >&2
+                exit 2
+                ;;
+        esac
+    done
+
+    rule_dir="$cache_dir/$rule_id"
 
     mkdir -p "$rule_dir"
 
     # Check if analysis files already exist (lazy evaluation)
-    enriched_file="$rule_dir/{{rule_id}}.enriched.json"
-    analysis_yaml="$rule_dir/{{rule_id}}-analysis.yaml"
+    enriched_file="$rule_dir/$rule_id.enriched.json"
+    analysis_yaml="$rule_dir/$rule_id-analysis.yaml"
 
-    if [ -f "$enriched_file" ] && [ -f "$analysis_yaml" ]; then
-        echo "✓ Analysis files already exist for {{rule_id}}, skipping expensive rebuild"
+    if [[ "$force" == false && -f "$enriched_file" && -f "$analysis_yaml" ]]; then
+        echo "✓ Analysis files already exist for $rule_id, skipping expensive rebuild"
         echo "  - $enriched_file"
         echo "  - $analysis_yaml"
         echo "  Use --force to rebuild (add to args)"
         exit 0
     fi
 
-    echo "Analyzing {{rule_id}}..."
+    echo "Analyzing $rule_id..."
 
     # Run analysis once and save all formats (efficient)
-    uv run python examples/rule_analysis_demo.py {{rule_id}} \
+    uv run python examples/rule_analysis_demo.py "$rule_id" \
         --cache-dir "$cache_dir" \
         --output-dir "$rule_dir" \
         --no-report
 
     echo ""
     echo "✓ Analysis complete. Files created:"
-    echo "  - $rule_dir/{{rule_id}}-analysis.yaml"
-    echo "  - $rule_dir/{{rule_id}}-analysis.json"
-    echo "  - $rule_dir/{{rule_id}}-analysis.txt"
-    echo "  - $rule_dir/{{rule_id}}-heatmap.png"
+    echo "  - $rule_dir/$rule_id-analysis.yaml"
+    echo "  - $rule_dir/$rule_id-analysis.json"
+    echo "  - $rule_dir/$rule_id-analysis.txt"
+    echo "  - $rule_dir/$rule_id-heatmap.png"
     echo ""
     echo "Text report:"
     echo "----------------------------------------"
-    cat "$rule_dir/{{rule_id}}-analysis.txt"
+    cat "$rule_dir/$rule_id-analysis.txt"
 
 # ============== AI4CUI Dashboard ==============
 
@@ -2261,11 +2685,12 @@ ui-legacy port="5123":
 
 # Run GO-GPT prediction for a gene (outputs PredictionReview YAML)
 # Requires: GO-GPT model at ~/repos/BioReason-Pro/models/gogpt
+# Set BIOREASON_PYTHON to override the default ~/repos/BioReason-Pro/.venv interpreter.
 # Examples:
 #   just gogpt-predict human TP53
 #   just gogpt-predict PSEPK rpoS
 gogpt-predict organism gene:
-    ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py {{organism}} {{gene}} --output-dir .
+    uv run python -m ai_gene_review.run_bioreason_python scripts/gogpt_predict.py {{organism}} {{gene}} --output-dir .
 
 # Run GO-GPT prediction and compare with curated review
 # Outputs GENE-gogpt-predictions.yaml in PredictionReview schema format
@@ -2273,11 +2698,11 @@ gogpt-predict organism gene:
 #   just gogpt-compare human TP53
 #   just gogpt-compare PSEPK rpoS
 gogpt-compare organism gene:
-    ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py {{organism}} {{gene}} --compare --output-dir .
+    uv run python -m ai_gene_review.run_bioreason_python scripts/gogpt_predict.py {{organism}} {{gene}} --compare --output-dir .
 
 # Alias for gogpt-compare
 gogpt-review organism gene:
-    ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py {{organism}} {{gene}} --compare --output-dir .
+    uv run python -m ai_gene_review.run_bioreason_python scripts/gogpt_predict.py {{organism}} {{gene}} --compare --output-dir .
 
 # Run GO-GPT predictions for all genes in an organism
 gogpt-predict-organism organism:
@@ -2290,7 +2715,7 @@ gogpt-predict-organism organism:
             uniprot="$gene_dir/${gene}-uniprot.txt"
             if [ -f "$uniprot" ]; then
                 echo "Processing $gene..."
-                ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py {{organism}} "$gene" --compare --output-dir . 2>&1 || echo "  Failed: $gene"
+                uv run python -m ai_gene_review.run_bioreason_python scripts/gogpt_predict.py {{organism}} "$gene" --compare --output-dir . 2>&1 || echo "  Failed: $gene"
                 count=$((count + 1))
             fi
         fi
@@ -2311,7 +2736,7 @@ gogpt-compare-all:
                 uniprot="$gene_dir/${gene}-uniprot.txt"
                 if [ -f "$review" ] && [ -f "$uniprot" ]; then
                     echo "Comparing $organism/$gene..."
-                    ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py "$organism" "$gene" --compare --output-dir . 2>&1 || echo "  Failed: $organism/$gene"
+                    uv run python -m ai_gene_review.run_bioreason_python scripts/gogpt_predict.py "$organism" "$gene" --compare --output-dir . 2>&1 || echo "  Failed: $organism/$gene"
                     total=$((total + 1))
                 fi
             fi
@@ -2335,3 +2760,118 @@ cron-profile-preview name:
 # `on.schedule` block, leaving workflow_dispatch intact.
 cron-profile name:
     uv run python scripts/apply_cron_profile.py {{name}}
+
+# Rewrite PANTHER family/subfamily term.label values to PANTHER's official names.
+# `term.label` must be verifiable; put your own description in `preferred_term`.
+# Descriptors whose family does not contain their representative member are
+# skipped -- relabelling those would hide a wrong family id. Fix the id first.
+# Example: just fix-panther-labels --apply
+[group('QC')]
+fix-panther-labels *args="":
+    uv run ai-gene-review fix-panther-labels --output-dir . {{args}}
+
+# Check PANTHER family ids written into module PROSE (notes/description/statement)
+# against interpro/panther/panther-members.tsv. Module validation only reads
+# term.id/label pairs, so a PANTHER id in free text is invisible to it -- nine
+# such claims were contradicted by the repo's own data. Catches 7 of those 9;
+# symbol-phrased and first-of-a-shared-pair claims are documented misses.
+[group('QC')]
+scan-prose-panther *args="":
+    uv run python -m ai_gene_review.validation.prose_panther_scan {{args}}
+
+# Print every row of the PANTHER review report's scope table.
+# That table went stale four times because its rows had no committed
+# derivation; paste this output over the table after a merge.
+[group('QC')]
+panther-report-stats *args="":
+    uv run ai-gene-review panther-report-stats --output-dir . {{args}}
+
+# ============ History records (ported from dismech) ============
+# Append-only curation session history under history/. See docs/history.md.
+
+# Scaffold a new append-only history record (pass-through to scripts/new_history.py).
+# Run `just new-history --help` for all options. Prints the created path.
+# Example:
+#   just new-history --kind gene --organism human --slug CFAP300 --event CREATE \
+#     --outcome changed --summary "Create review: CFAP300" --agent-tool claude-code \
+#     --pr 2500 --details "..."
+# `[positional-arguments]` + "$@" is required, not stylistic: interpolating
+# {{ARGS}} joins the variadic args into one space-separated string and loses
+# shell quoting, so a multi-word --summary/--details would reach argparse as
+# separate tokens ("unrecognized arguments").
+[group('QC')]
+[positional-arguments]
+new-history *ARGS:
+    uv run python scripts/new_history.py "$@"
+
+# Validate a single history record
+[group('QC')]
+validate-history file:
+    uv run linkml-validate --schema {{history_schema_path}} --target-class HistoryRecord {{file}}
+
+# Validate all history records
+[group('QC')]
+validate-history-all:
+    #!/usr/bin/env bash
+    set -e
+    if [[ ! -d "{{history_dir}}" ]]; then
+        echo "No history directory found."
+        exit 0
+    fi
+    files=()
+    while IFS= read -r f; do
+        files+=("$f")
+    done < <(find "{{history_dir}}" -type f -name '*.yaml' | sort)
+    if [ ${#files[@]} -eq 0 ]; then
+        echo "No history YAML files found in {{history_dir}}."
+        exit 0
+    fi
+    printf 'Validating %s history record(s).\n' "${#files[@]}"
+    uv run linkml-validate --schema {{history_schema_path}} --target-class HistoryRecord "${files[@]}"
+
+# Retrospectively backfill history records from PR metadata (needs `gh`).
+# Prefer --state merged: an open PR's new targets are not on this checkout,
+# so its records get skipped as missing (see docs/history.md).
+# Example: just backfill-history --state merged --dry-run
+[group('QC')]
+[positional-arguments]
+backfill-history *ARGS:
+    uv run python scripts/backfill_history_from_prs.py "$@"
+
+# ============== PANTHER Family Reviews ==============
+
+# Validate curated PANTHER family reviews, in four stages:
+#   1. structural schema validation against FamilyReview;
+#   2. GO term id/label validation via linkml-term-validator;
+#   3. residue-site validation -- every curated position resolved against the
+#      anchor's actual UniProt sequence, plus controls, PAINT node assertions and
+#      PANTHER id/label/membership;
+#   4. cross-checks against the gene corpus, and gene-level residue claims.
+# Sequences are cached under .cache/uniprot_seq (restored in CI by actions/cache).
+validate-families:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    files=$(find interpro/panther -name "PTHR*-review.yaml" 2>/dev/null | sort)
+    if [ -z "$files" ]; then
+        echo "No family review YAML files found"
+        exit 0
+    fi
+    rc=0
+    while IFS= read -r f; do
+        echo "Schema-validating $f"
+        uv run linkml-validate --schema src/ai_gene_review/schema/family_review.yaml \
+            --target-class FamilyReview "$f" || rc=1
+    done <<< "$files"
+    echo "Validating GO term ids and labels..."
+    while IFS= read -r f; do
+        uv run linkml-term-validator validate-data "$f" \
+            -s src/ai_gene_review/schema/family_review.yaml \
+            -t FamilyReview --labels -c conf/oak_config.yaml || rc=1
+    done <<< "$files"
+    echo "Validating curated residue sites against UniProt sequences..."
+    uv run python -m ai_gene_review.validation.family_residue_validator || rc=1
+    echo "Cross-checking family reviews against the gene corpus..."
+    uv run python -m ai_gene_review.validation.family_gene_crosscheck || rc=1
+    echo "Validating gene-level residue claims..."
+    uv run python -m ai_gene_review.validation.gene_residue_claims || rc=1
+    exit $rc

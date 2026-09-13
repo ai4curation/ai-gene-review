@@ -1,0 +1,27 @@
+set shell := ["bash", "-euo", "pipefail", "-c"]
+
+python := "uv run --no-project --python 3.10.9 python"
+target_input := "../LOXHD1-uniprot.txt"
+negative_control_input := "../../LOX/LOX-uniprot.txt"
+positive_control_input := "../../GLRX3/GLRX3-uniprot.txt"
+
+analyze input output repeat_label="PLAT":
+    {{python}} analyze_uniprot_architecture.py --uniprot {{input}} --output-dir {{output}} --repeat-label {{repeat_label}}
+
+target:
+    just analyze {{target_input}} results PLAT
+
+control:
+    just analyze {{negative_control_input}} control-results/lox-negative PLAT
+    just analyze {{positive_control_input}} control-results/glrx3-positive Glutaredoxin
+
+all: target control
+
+check:
+    {{python}} -c 'from pathlib import Path; source = Path("analyze_uniprot_architecture.py").read_text(); compile(source, "analyze_uniprot_architecture.py", "exec")'
+    test -s results/domains.tsv
+    test -s results/isoform_repeat_effects.tsv
+    test -s results/repeat_pairwise_identity.tsv
+    test -s results/summary.json
+    test -s control-results/lox-negative/summary.json
+    test -s control-results/glrx3-positive/summary.json

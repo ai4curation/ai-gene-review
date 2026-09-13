@@ -6,12 +6,11 @@ import shutil
 import subprocess
 import time
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import List, Optional
 
 import typer
 from typing_extensions import Annotated
-
-from linkml_data_qc.analyzer import ComplianceAnalyzer
 
 from ai_gene_review.etl.gene import fetch_gene_data, fetch_gene_data_ncRNA, expand_organism_name
 from ai_gene_review.etl.publication import (
@@ -182,12 +181,23 @@ def fetch_gene(
                 if (
                     result["annotations_added"] > 0
                     or result.get("references_added", 0) > 0
+                    or result.get("qualifiers_backfilled", 0) > 0
+                    or result.get("supporting_entities_backfilled", 0) > 0
                 ):
                     parts = []
                     if result["annotations_added"] > 0:
                         parts.append(f"{result['annotations_added']} annotations")
                     if result.get("references_added", 0) > 0:
                         parts.append(f"{result.get('references_added', 0)} references")
+                    if result.get("qualifiers_backfilled", 0) > 0:
+                        parts.append(
+                            f"qualifiers on {result.get('qualifiers_backfilled', 0)} annotations"
+                        )
+                    if result.get("supporting_entities_backfilled", 0) > 0:
+                        parts.append(
+                            "supporting entities on "
+                            f"{result.get('supporting_entities_backfilled', 0)} annotations"
+                        )
                     typer.echo(
                         f"  - {file_prefix}-ai-review.yaml (added {' and '.join(parts)})"
                     )
@@ -643,6 +653,45 @@ def _validate_gene_review_cli(
     return report
 
 
+def _validate_rule_review_cli(
+    yaml_file: Path,
+    schema_path: Path,
+) -> ValidationReport:
+    """Validate one rule review with the standard LinkML CLI tools."""
+    yaml_file = yaml_file.resolve()
+    schema_path = schema_path.resolve()
+    report = ValidationReport(file_path=yaml_file, is_valid=True)
+
+    if not yaml_file.exists():
+        report.add_issue(
+            ValidationSeverity.ERROR,
+            f"File not found: {yaml_file}",
+            path=None,
+            validation_category="FileValidator",
+            check_type="file_exists",
+        )
+        return report
+
+    project_root = get_project_root()
+    _run_validation_command(
+        report,
+        "Schema validation",
+        [
+            *_tool_command("linkml-validate"),
+            "--schema",
+            str(schema_path),
+            "--target-class",
+            "RuleReview",
+            str(yaml_file),
+        ],
+        "SchemaValidator",
+        "linkml_validate",
+        cwd=project_root,
+    )
+
+    return report
+
+
 def _validate_multiple_files_cli(
     yaml_files: list[Path],
     schema_path: Path,
@@ -935,8 +984,46 @@ def compliance(
             help="Output compliance results to TSV file (default: stdout)",
         ),
     ] = None,
+    config: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--config", "-c", help="QC policy YAML (defaults to packaged gene policy)"
+        ),
+    ] = None,
+    schema_only: Annotated[
+        bool,
+        typer.Option(help="Use raw schema recommendations without contextual rules"),
+    ] = False,
+    summary_output: Annotated[
+        Optional[Path],
+        typer.Option(help="Write per-file weighted scores and threshold counts as TSV"),
+    ] = None,
+    json_output: Annotated[
+        Optional[Path],
+        typer.Option(
+            help="Write complete reports, including applicable denominators, as JSON"
+        ),
+    ] = None,
+    dashboard_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            help="Generate an HTML dashboard from the same contextual reports"
+        ),
+    ] = None,
+    fail_on_threshold: Annotated[
+        bool, typer.Option(help="Exit nonzero when configured thresholds are missed")
+    ] = False,
 ):
-    """Analyze recommended-field compliance using linkml-data-qc."""
+    """Analyze configurable evidence-aware compliance (advisory by default)."""
+    import json
+    from ai_gene_review.compliance import (
+        GeneComplianceAnalyzer,
+        GeneQCConfig,
+        default_config_path,
+    )
+
+    if config is not None and schema_only:
+        raise typer.BadParameter("--config and --schema-only are mutually exclusive")
     all_files: list[Path] = []
     for pattern in yaml_files:
         if "*" in str(pattern):
@@ -954,11 +1041,16 @@ def compliance(
         raise typer.Exit(code=1)
 
     schema_path = schema or get_schema_path()
-    analyzer = ComplianceAnalyzer(str(schema_path))
+    policy_path = config or default_config_path()
+    policy = GeneQCConfig() if schema_only else GeneQCConfig.from_yaml(policy_path)
+    analyzer = GeneComplianceAnalyzer(schema_path, policy)
 
     rows: list[tuple[str, str, str, str]] = []
+    reports = []
     for yaml_file in all_files:
-        report = analyzer.analyze_file(str(yaml_file), "GeneReview")
+        report = analyzer.analyze_file(yaml_file)
+        report.config_path = None if schema_only else str(policy_path)
+        reports.append(report)
         for path_score in report.path_scores:
             for slot_score in path_score.slot_scores:
                 if slot_score.populated == 0:
@@ -983,6 +1075,28 @@ def compliance(
         tsv_output.write_text("\n".join(output_lines) + "\n")
     else:
         typer.echo("\n".join(output_lines))
+
+    if summary_output:
+        summary_output.parent.mkdir(parents=True, exist_ok=True)
+        lines = [
+            "file_path\tglobal_compliance\tweighted_compliance\ttotal_checks\ttotal_populated\tthreshold_violations"
+        ]
+        lines.extend(
+            f"{r.file_path}\t{r.global_compliance:.2f}\t{r.weighted_compliance:.2f}\t{r.total_checks}\t{r.total_populated}\t{len(r.threshold_violations)}"
+            for r in reports
+        )
+        summary_output.write_text("\n".join(lines) + "\n")
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(
+            json.dumps([r.model_dump(mode="json") for r in reports], indent=2) + "\n"
+        )
+    if dashboard_dir:
+        from linkml_data_qc.html_dashboard import generate_html_dashboard_multi
+
+        generate_html_dashboard_multi(reports, dashboard_dir)
+    if fail_on_threshold and any(r.threshold_violations for r in reports):
+        raise typer.Exit(code=1)
 
 
 def _print_issue(issue, indent="  "):
@@ -1245,41 +1359,55 @@ def seed_goa(
     # Initialize validator
     validator = GOAValidator()
 
-    # First check what's missing
-    if yaml_file.exists():
-        typer.echo(f"Checking {yaml_file.name} for missing annotations...")
-        result = validator.validate_against_goa(yaml_file, goa_file)
-
-        if not result.missing_in_yaml:
-            typer.echo(
-                "✓ No missing annotations to seed - YAML already contains all GOA annotations"
-            )
-            return
-
-        typer.echo(f"Found {len(result.missing_in_yaml)} missing annotations to seed:")
-        for ann in result.missing_in_yaml[:5]:  # Show first 5
-            typer.echo(f"  - {ann.go_id} ({ann.go_term})")
-        if len(result.missing_in_yaml) > 5:
-            typer.echo(f"  ... and {len(result.missing_in_yaml) - 5} more")
-    else:
-        typer.echo("Creating new YAML file with all GOA annotations...")
-
-    if dry_run:
-        typer.echo("\n--dry-run specified, no changes will be made")
-        return
+    # Validation permits historical source collapse. Always ask the seeder what
+    # needs expansion/backfill instead of treating validation success as a no-op.
+    typer.echo(f"Checking {yaml_file.name} for missing annotations and source metadata...")
 
     # Perform the seeding
     try:
-        added_count, output_path, refs_added = validator.seed_missing_annotations(
-            yaml_file, goa_file, output, fetch_titles=fetch_titles
+        if dry_run:
+            with TemporaryDirectory(prefix="aigr-seed-preview-") as preview_dir:
+                added, _, refs, qualifiers, sources = validator.seed_missing_annotations(
+                    yaml_file, goa_file, Path(preview_dir) / "preview.yaml",
+                    fetch_titles=False,
+                )
+            typer.echo(
+                f"Would add {added} annotations and {refs} references; "
+                f"backfill {qualifiers} qualifiers and {sources} supporting-entity lists."
+            )
+            typer.echo("--dry-run specified, no changes will be made")
+            return
+
+        (
+            added_count,
+            output_path,
+            refs_added,
+            qualifiers_backfilled,
+            supporting_entities_backfilled,
+        ) = (
+            validator.seed_missing_annotations(
+                yaml_file, goa_file, output, fetch_titles=fetch_titles
+            )
         )
 
-        if added_count > 0 or refs_added > 0:
+        if (
+            added_count > 0
+            or refs_added > 0
+            or qualifiers_backfilled > 0
+            or supporting_entities_backfilled > 0
+        ):
             parts = []
             if added_count > 0:
                 parts.append(f"{added_count} annotations")
             if refs_added > 0:
                 parts.append(f"{refs_added} references")
+            if qualifiers_backfilled > 0:
+                parts.append(f"qualifiers on {qualifiers_backfilled} annotations")
+            if supporting_entities_backfilled > 0:
+                parts.append(
+                    "supporting entities on "
+                    f"{supporting_entities_backfilled} annotations"
+                )
             typer.echo(f"\n✓ Successfully added {' and '.join(parts)} to {output_path}")
             typer.echo("\nNote: Review sections left empty for AI to complete")
         else:
@@ -2674,6 +2802,27 @@ def rules_export(
     typer.echo(f"✓ GO summary written to {summary_path}")
 
 
+@app.command("init-rule-review")
+def init_rule_review_cli(
+    rule_id: Annotated[
+        str,
+        typer.Argument(help="ARBA or UniRule identifier"),
+    ],
+    cache_dir: Annotated[
+        Path,
+        typer.Option(
+            "--cache-dir",
+            "-d",
+            help="Family-specific rules cache directory",
+        ),
+    ] = Path("rules/arba"),
+) -> None:
+    """Create a rule-review YAML stub without overwriting an existing review."""
+    from ai_gene_review.etl.rule_review_init import init_rule_review
+
+    init_rule_review(rule_id, cache_dir=cache_dir)
+
+
 @app.command()
 def rules_validate(
     files: Annotated[
@@ -2695,9 +2844,7 @@ def rules_validate(
 ):
     """Validate rule review YAML files against the LinkML schema.
 
-    Validates RuleReview files including:
-    - Schema compliance (RuleReview class)
-    - PMID title verification (catches hallucinated references)
+    Validates RuleReview files for schema compliance with the RuleReview class.
 
     Examples:
         # Validate a specific review
@@ -2709,8 +2856,6 @@ def rules_validate(
         # Validate with verbose output
         ai-gene-review rules-validate --all -v
     """
-    from ai_gene_review.validation.validator import validate_rule_review
-
     # Collect files to validate
     all_files: list[Path] = []
 
@@ -2731,14 +2876,17 @@ def rules_validate(
     # Track results
     valid_count = 0
     invalid_count = 0
+    schema_path = get_schema_path()
 
     for yaml_file in all_files:
-        report = validate_rule_review(yaml_file)
+        report = _validate_rule_review_cli(yaml_file, schema_path)
 
         if report.is_valid:
             valid_count += 1
             if verbose:
                 typer.echo(f"✓ {yaml_file}")
+                for issue in report.issues:
+                    _print_issue(issue)
         else:
             invalid_count += 1
             typer.echo(f"✗ {yaml_file}", err=True)
@@ -2853,6 +3001,14 @@ def render_projects(
         Path,
         typer.Option("--genes-dir", "-g", help="Genes directory for symbol index"),
     ] = Path("genes"),
+    source_ref: Annotated[
+        str,
+        typer.Option(
+            "--source-ref",
+            help="Git branch or commit for family catalog source links",
+            envvar="AI_GENE_REVIEW_SOURCE_REF",
+        ),
+    ] = "main",
     all_projects: Annotated[
         bool,
         typer.Option("--all", "-a", help="Render all project files in projects/"),
@@ -2902,6 +3058,7 @@ def render_projects(
             projects_dir=Path("projects"),
             output_dir=output_dir,
             genes_dir=genes_dir,
+            source_ref=source_ref,
         )
 
         if verbose and warnings:
@@ -2923,6 +3080,7 @@ def render_projects(
                     md_file,
                     output_dir=output_dir,
                     genes_dir=genes_dir,
+                    source_ref=source_ref,
                     projects_dir=Path("projects"),
                 )
                 total_warnings.extend(warnings)
@@ -3007,9 +3165,22 @@ def render_modules(
         typer.echo(f"\nRendered {len(output_paths)} module page(s) to {output_dir}")
     elif files:
         total_warnings = []
-        for module_file in files:
+        had_errors = False
+        for requested_file in files:
+            module_file = requested_file
+            if not module_file.exists() and module_file.parent == Path("."):
+                filename = (
+                    module_file.name
+                    if module_file.suffix == ".yaml"
+                    else f"{module_file.name}.yaml"
+                )
+                candidate = modules_dir / filename
+                if candidate.exists():
+                    module_file = candidate
+
             if not module_file.exists():
-                typer.echo(f"Error: File not found: {module_file}", err=True)
+                typer.echo(f"Error: File not found: {requested_file}", err=True)
+                had_errors = True
                 continue
 
             try:
@@ -3028,9 +3199,12 @@ def render_modules(
                     typer.echo(f"Rendered {module_file} -> {output_path}")
             except Exception as error:
                 typer.echo(f"Error rendering {module_file}: {error}", err=True)
+                had_errors = True
 
         if total_warnings and not verbose:
             typer.echo(f"\n{len(total_warnings)} warnings total (use --verbose to see all)")
+        if had_errors:
+            raise typer.Exit(code=1)
     else:
         typer.echo("Please specify file(s) or use --all to render all modules", err=True)
         raise typer.Exit(code=1)
@@ -3403,7 +3577,7 @@ def fetch_panther_paint(
             "Resolving PTN nodes for ALL cached families (single leaf-GAF pass; "
             "this downloads/caches PAINT GAFs)..."
         )
-        counts = fetch_all_family_paint(
+        counts, removed = fetch_all_family_paint(
             panther_root, cache_dir=cache, force_download=force_download
         )
         total = sum(counts.values())
@@ -3411,6 +3585,10 @@ def fetch_panther_paint(
             f"✓ Wrote PAINT slices for {len(counts)} family/families "
             f"({total} node-level annotations total)."
         )
+        if removed:
+            typer.echo(
+                f"  Removed {len(removed)} stale slice(s): {', '.join(removed)}"
+            )
         return
 
     if not family:
@@ -3435,6 +3613,10 @@ def fetch_panther_paint(
         extra_uniprot=extra_uniprot,
         force_download=force_download,
     )
+    if tsv_path is None:
+        typer.echo(f"✓ {family}: {len(nodes)} node(s), no node-level annotations")
+        typer.echo("  No PAINT slice retained; any stale slice was removed.")
+        return
     n_annotations = sum(1 for _ in tsv_path.read_text().splitlines()) - 1
     typer.echo(
         f"✓ {family}: {len(nodes)} node(s), {n_annotations} node-level annotation(s)"
@@ -3876,6 +4058,652 @@ def scan_module(
         p.write_text("\t".join(cols) + "\n" + "\n".join(
             "\t".join(str(r[c]) for c in cols) for r in rows) + "\n")
         typer.echo(f"wrote {p}", err=True)
+
+
+@app.command()
+def build_panther_obo(
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option("--output-dir", help="Repository root (default: cwd)."),
+    ] = None,
+    cache_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            help="Where to cache the download (default: <repo>/.cache/panther)."
+        ),
+    ] = None,
+    force_download: Annotated[
+        bool, typer.Option("--force-download", help="Re-download even if cached.")
+    ] = False,
+):
+    """Build interpro/panther/panther.obo from PANTHER HMM classifications.
+
+    PANTHER family/subfamily ids have no ontology to validate against, and
+    InterPro indexes only families (204 for every :SF accession). This converts
+    PANTHER's own classification file into an OBO that OAK reads via the
+    ``simpleobo:`` adapter, giving existence and label checking for both module
+    and gene-review validation.
+
+    Example:
+        ai-gene-review build-panther-obo
+    """
+    from ai_gene_review.etl.panther_families import (
+        fetch_hmm_classifications,
+        parse_hmm_classifications,
+        write_panther_obo,
+    )
+
+    repo_root = output_dir or Path.cwd()
+    cache = cache_dir or (repo_root / ".cache" / "panther")
+    source = fetch_hmm_classifications(cache, force_download=force_download)
+    entries = parse_hmm_classifications(source.read_text().splitlines())
+    out_path = write_panther_obo(
+        entries, repo_root / "interpro" / "panther" / "panther.obo"
+    )
+    families = sum(1 for e in entries if not e.is_subfamily)
+    typer.echo(
+        f"✓ Wrote {out_path} ({families} families, "
+        f"{len(entries) - families} subfamilies)."
+    )
+
+
+@app.command()
+def refresh_panther_members(
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option("--output-dir", help="Repository root (default: cwd)."),
+    ] = None,
+    cache_dir: Annotated[
+        Optional[Path],
+        typer.Option(help="Where to cache downloads (default: <repo>/.cache/panther)."),
+    ] = None,
+    organism: Annotated[
+        Optional[List[str]],
+        typer.Option(
+            "--organism",
+            help="PANTHER organism slug to include (repeatable). Defaults to the "
+            "set covering species curated in this repository.",
+        ),
+    ] = None,
+    no_uniprot_fallback: Annotated[
+        bool,
+        typer.Option(
+            "--no-uniprot-fallback",
+            help="Skip the UniProt lookup for accessions PANTHER's per-organism "
+            "files do not cover (offline / faster, but lower coverage).",
+        ),
+    ] = False,
+):
+    """Refresh interpro/panther/panther-members.tsv from PANTHER classifications.
+
+    Builds a pruned UniProt-accession -> PANTHER-family index covering every
+    accession cited in modules/: all ``representative_members`` whether or not
+    their descriptor carries a family id (an ungrounded descriptor is precisely
+    the one whose members need resolving), plus accessions appearing only in
+    prose. Accessions that resolve nowhere are recorded in the file. This is what
+    catches a mis-grounded family (as opposed to a merely mislabelled one): the
+    declared family must actually contain the protein the descriptor names.
+
+    Example:
+        ai-gene-review refresh-panther-members --organism human --organism e_coli
+    """
+    from ai_gene_review.etl.panther_families import (
+        DEFAULT_ORGANISMS,
+        build_member_index,
+        fetch_panther_from_uniprot,
+        fetch_sequence_classification,
+        write_member_index,
+    )
+    import yaml
+
+    from ai_gene_review.validation.module_validator import (
+        iter_all_representative_accessions,
+    )
+    from ai_gene_review.validation.prose_panther_scan import collect_claims
+
+    repo_root = output_dir or Path.cwd()
+    cache = cache_dir or (repo_root / ".cache" / "panther")
+    organisms = list(organism) if organism else list(DEFAULT_ORGANISMS)
+
+    # Every representative member, grounded or not -- an ungrounded descriptor's
+    # members are the ones whose real family most needs resolving -- plus the
+    # accessions cited only in prose, which the prose scan checks.
+    accessions: set[str] = set()
+    for path in sorted((repo_root / "modules").rglob("*.yaml")):
+        doc = yaml.safe_load(path.read_text())
+        accessions.update(iter_all_representative_accessions(doc))
+    prose = {c.accession for c in collect_claims(repo_root / "modules")}
+    accessions.update(prose)
+    typer.echo(
+        f"{len(accessions)} accessions cited in modules/ "
+        f"({len(prose)} of them appearing in prose)"
+    )
+
+    # Family reviews name proteins under a declared subfamily -- representative
+    # members and the positive/negative controls that make a residue site
+    # falsifiable. Those are exactly the assertions the member index exists to
+    # check, so they must be indexed too or the check reports UNRESOLVED forever.
+    family_accessions: set[str] = set()
+    for path in sorted((repo_root / "interpro" / "panther").glob("PTHR*/PTHR*-review.yaml")):
+        doc = yaml.safe_load(path.read_text()) or {}
+        for sub in doc.get("subfamilies") or []:
+            for member in sub.get("representative_members") or []:
+                if isinstance(member, dict) and member.get("id"):
+                    family_accessions.add(member["id"].split(":")[-1])
+        for site in doc.get("residue_sites") or []:
+            for key in ("positive_controls", "negative_controls"):
+                for ctl in site.get(key) or []:
+                    if isinstance(ctl, dict) and ctl.get("id"):
+                        family_accessions.add(ctl["id"].split(":")[-1])
+            anchor = site.get("anchor")
+            if isinstance(anchor, dict) and anchor.get("id"):
+                family_accessions.add(anchor["id"].split(":")[-1])
+    if family_accessions:
+        typer.echo(
+            f"{len(family_accessions)} accessions cited in family reviews "
+            f"({len(family_accessions - accessions)} not already covered)"
+        )
+    accessions.update(family_accessions)
+
+    paths = []
+    for slug in organisms:
+        classification = fetch_sequence_classification(slug, cache)
+        if classification is None:
+            typer.echo(f"  ⚠ no PANTHER classification for organism '{slug}'")
+            continue
+        paths.append(classification)
+
+    index = build_member_index(accessions, paths)
+    from_files = len(index)
+
+    if not no_uniprot_fallback:
+        unresolved = accessions - set(index)
+        if unresolved:
+            typer.echo(
+                f"resolving {len(unresolved)} remaining accession(s) via UniProt..."
+            )
+            index.update(fetch_panther_from_uniprot(unresolved))
+
+    unresolved = accessions - set(index)
+    out_path = write_member_index(
+        index,
+        repo_root / "interpro" / "panther" / "panther-members.tsv",
+        unresolved,
+        consulted_uniprot=not no_uniprot_fallback,
+    )
+    typer.echo(
+        f"✓ Wrote {out_path}: {len(index)}/{len(accessions)} accessions resolved "
+        f"({from_files} from {len(paths)} organism classification(s), "
+        f"{len(index) - from_files} from UniProt); "
+        f"{len(unresolved)} unresolved, recorded in the file."
+    )
+
+
+@app.command()
+def verify_panther_paint(
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option("--output-dir", help="Repository root (default: cwd)."),
+    ] = None,
+    cache_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            help="Where to cache the download (default: <repo>/.cache/panther)."
+        ),
+    ] = None,
+):
+    """Verify committed PAINT slices against PANTHER's upstream IBD.gaf.
+
+    PTN claims are validated against ``interpro/panther/*/*-paint.tsv`` slices
+    that curation PRs commit alongside the claim, so the check is self-certifying
+    unless something independently confirms those slices are genuine. This
+    re-derives them from upstream and checks BOTH directions: no committed row
+    may be absent upstream (fabrication), and no slice may omit a row upstream
+    records for a node it already carries (pruning). The second matters most --
+    the loss check can only fire when the slice contains the IRD/IKR row, so a
+    slice with its loss rows removed would defeat it while every remaining row
+    still verified as genuine.
+
+    Example:
+        ai-gene-review verify-panther-paint
+    """
+    from ai_gene_review.etl.panther_families import (
+        fetch_ibd_gaf,
+        find_pruned_paint_rows,
+        load_committed_paint_rows,
+        parse_ibd_row_keys,
+    )
+
+    repo_root = output_dir or Path.cwd()
+    cache = cache_dir or (repo_root / ".cache" / "panther")
+    upstream = parse_ibd_row_keys(fetch_ibd_gaf(cache).read_text().splitlines())
+    committed = load_committed_paint_rows(repo_root / "interpro" / "panther")
+
+    unbacked = sorted(
+        (source, key)
+        for key, sources in committed.items()
+        if key not in upstream
+        for source in sources
+    )
+    typer.echo(
+        f"upstream IBD.gaf: {len(upstream)} node annotations; "
+        f"committed slices: {len(committed)} rows"
+    )
+    pruned = find_pruned_paint_rows(committed, upstream)
+    failed = False
+
+    if unbacked:
+        for source, key in unbacked[:50]:
+            typer.echo(f"❌ {source}: {key} is not present upstream")
+        typer.echo(
+            f"❌ {len(unbacked)} committed PAINT row(s) have no upstream backing."
+        )
+        failed = True
+
+    if pruned:
+        for node, rows in sorted(pruned.items())[:50]:
+            lost = sorted(r for r in rows if r[3] or r[2] in ("IRD", "IKR"))
+            typer.echo(
+                f"❌ {node}: slice omits {len(rows)} upstream row(s)"
+                + (f", including {len(lost)} loss row(s): {lost[:3]}" if lost else "")
+            )
+        typer.echo(
+            f"❌ {len(pruned)} node(s) have upstream rows missing from their "
+            "committed slice; re-fetch with `just fetch-panther-paint <FAMILY>`."
+        )
+        failed = True
+
+    if failed:
+        raise typer.Exit(code=1)
+    nodes_checked = len({key[0] for key in committed})
+    typer.echo(
+        f"✓ All {len(committed)} committed rows are backed by upstream IBD.gaf, "
+        f"and each of the {nodes_checked} nodes present in a slice carries every "
+        "upstream row for that node."
+    )
+
+
+@app.command()
+def fix_panther_labels(
+    files: Annotated[
+        Optional[List[Path]],
+        typer.Argument(help="Module YAML files (default: all of modules/)."),
+    ] = None,
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option("--output-dir", help="Repository root (default: cwd)."),
+    ] = None,
+    apply: Annotated[
+        bool, typer.Option("--apply", help="Write changes (default: dry run).")
+    ] = False,
+    allow_divergent: Annotated[
+        bool,
+        typer.Option(
+            "--allow-divergent",
+            help="Also rewrite labels that describe a different protein than the "
+            "id's official name. Held back by default because that pattern "
+            "usually means the ID is wrong; only pass this after checking.",
+        ),
+    ] = False,
+):
+    """Rewrite PANTHER family/subfamily labels to their official PANTHER names.
+
+    `term.label` on a PANTHER id must be PANTHER's own name so it can be
+    verified; the curator's readable description belongs in `preferred_term`.
+    Descriptors whose declared family does not contain their representative
+    member are deliberately SKIPPED -- relabelling those would hide a wrong
+    family id behind an authoritative-looking name. Fix the id first.
+
+    Example:
+        ai-gene-review fix-panther-labels --apply
+    """
+    import yaml
+
+    from ai_gene_review.etl.panther_families import (
+        load_obo_names,
+        rewrite_panther_labels,
+    )
+    from ai_gene_review.validation.module_validator import (
+        iter_family_member_uses,
+        load_member_index,
+        load_paint_index,
+        validate_family_members,
+    )
+
+    repo_root = output_dir or Path.cwd()
+    names = load_obo_names(repo_root / "interpro" / "panther" / "panther.obo")
+    member_index = load_member_index(
+        repo_root / "interpro" / "panther" / "panther-members.tsv"
+    )
+    # Same PAINT-corroboration rule the validator applies, so a grounding the
+    # validator merely warns about is not treated here as disputed.
+    paint_index = load_paint_index(repo_root / "interpro" / "panther")
+    targets = list(files) if files else sorted((repo_root / "modules").rglob("*.yaml"))
+
+    total = 0
+    held_back: list[tuple[Path, str, str, str, bool]] = []
+    for path in targets:
+        text = path.read_text()
+        doc = yaml.safe_load(text)
+        skip: set[str] = set()
+        corroborated: set[str] = set()
+        for use in iter_family_member_uses(doc):
+            errors, _ = validate_family_members([use], member_index, paint_index)
+            if errors:
+                skip.update(use.declared_family_curies)
+            elif any(a in member_index for a in use.representative_accessions):
+                corroborated.update(use.declared_family_curies)
+        new_text, changes, deferred = rewrite_panther_labels(
+            text, names, skip, allow_divergent=allow_divergent
+        )
+        held_back.extend(
+            (path, curie, old, new, curie in corroborated)
+            for curie, old, new in deferred
+        )
+        if not changes:
+            continue
+        total += len(changes)
+        typer.echo(f"{path}:")
+        for curie, old, new in changes:
+            typer.echo(f"  {curie}: {old!r} -> {new!r}")
+        if skip:
+            typer.echo(f"  (skipped {len(skip)} id(s) with disputed grounding)")
+        if apply:
+            path.write_text(new_text)
+
+    if held_back:
+        typer.echo(
+            f"\n⚠  {len(held_back)} label(s) NOT rewritten: the current label "
+            "describes a different protein than the id's official name, which "
+            "usually means the ID is wrong, not the label. A guessed id that "
+            "happens to resolve is still a hallucination; rewriting its label "
+            "would hide that. Check each id, then re-run with --allow-divergent "
+            "for any that are genuinely just mislabelled."
+        )
+        for path, curie, old, new, is_corroborated in held_back:
+            verdict = (
+                "id confirmed by its representative member"
+                if is_corroborated
+                else "NO representative member confirms this id"
+            )
+            typer.echo(f"  {path.name}: {curie}  [{verdict}]")
+            typer.echo(f"      label says : {old!r}")
+            typer.echo(f"      PANTHER    : {new!r}")
+
+    typer.echo(
+        f"{'Applied' if apply else 'Would apply'} {total} label correction(s)"
+        + ("" if apply else "; re-run with --apply")
+    )
+
+
+@app.command()
+def panther_report_stats(
+    output_dir: Annotated[
+        Optional[Path],
+        typer.Option("--output-dir", help="Repository root (default: cwd)."),
+    ] = None,
+):
+    """Print every row of the PANTHER review report's scope table.
+
+    That table has gone stale four times in this branch's history, each time
+    because its rows had no committed derivation and had to be hand-edited
+    after a merge. Prescribing "run validate-modules and scan-prose-panther"
+    covered three of eight rows, so the next merger would see no discrepancy
+    and leave the rest stale. This derives all of them.
+
+    Example:
+        just panther-report-stats
+    """
+    import collections
+    import re
+
+    import yaml
+
+    from ai_gene_review.etl.panther_families import (
+        load_member_index,
+        load_member_index_gaps,
+        load_subfamily_counts,
+    )
+    from ai_gene_review.validation.module_validator import (
+        HETEROGENEOUS_FAMILY_SUBFAMILIES,
+        count_ungrounded_families,
+        iter_ancestral_node_uses,
+        iter_family_member_uses,
+        load_paint_index,
+        SubfamilyPrecision,
+        subfamily_precision_case,
+    )
+    from ai_gene_review.validation.prose_panther_scan import collect_claims
+
+    repo_root = output_dir or Path.cwd()
+    family_re = re.compile(r"^PANTHER:(PTHR\d+)(?::(SF\d+))?$")
+
+    files = sorted((repo_root / "modules").rglob("*.yaml"))
+    family_level = subfamily_level = ungrounded = nodes = 0
+    ungrounded_modules: set[str] = set()
+    distinct_nodes: set[str] = set()
+    thin_annotations = total_annotations = 0
+    family_uses: list = []
+    divergent_reported: set[tuple[str, str, str]] = set()
+    annotation_depth: dict[tuple[str, str, str], bool] = {}
+    paint_index = load_paint_index(repo_root / "interpro" / "panther")
+
+    def _seed_tokens(row) -> set:
+        """Seeds as written, one token per protein.
+
+        Not unioned with row.uniprot_seed_accessions: that property strips the
+        "UniProtKB:" prefix, so the union counts every UniProt seed twice and
+        makes thin nodes look well-supported.
+        """
+        return {s.strip() for s in row.seeds.split("|") if s.strip()}
+
+    for path in files:
+        document = yaml.safe_load(path.read_text())
+        count = count_ungrounded_families(document)
+        if count:
+            ungrounded += count
+            ungrounded_modules.add(path.name)
+        for node_use in iter_ancestral_node_uses(document):
+            nodes += 1
+            distinct_nodes.add(node_use.ptn_curie)
+            rows = [
+                r
+                for r in paint_index.get(node_use.ptn_curie, [])
+                if r.evidence == "IBD" and not r.negated
+            ]
+            if not rows:
+                continue
+            # Counted per ANNOTATION, which is the unit the figure is about:
+            # each row's with/from is the seed set backing that one term, and
+            # "weak support for propagating a specific function" is a claim
+            # about a term, not about a node. Aggregating to the node first
+            # forces a quantifier choice that changes the answer a lot (every
+            # annotation thin vs some annotation thin differ by ~1.6x on the
+            # node count) and either way credits or blames a term with evidence
+            # that does not back it.
+            #
+            # An annotation is (aspect, term), NOT a row. The same PAINT
+            # annotation is committed once per family slice whose tree contains
+            # the node -- PTN000010968's GO:0008168 sits in three -- and
+            # load_paint_index appends across slices. Counting rows would let
+            # "how many slices we happened to commit" masquerade as citation
+            # frequency, inflating the denominator by 120 and, because the
+            # duplicates are overwhelmingly thick, deflating the thin fraction.
+            depth: dict[tuple[str, str], int] = {}
+            for row in rows:
+                key = (row.aspect, row.go_id)
+                seeds = len(_seed_tokens(row))
+                if (
+                    depth.get(key, seeds) != seeds
+                    and (node_use.ptn_curie, *key) not in divergent_reported
+                ):
+                    divergent_reported.add((node_use.ptn_curie, *key))
+                    # Byte-identical across slices today, so this is unreachable
+                    # now; without it a future release shipping divergent copies
+                    # would make the figure depend on glob order, silently.
+                    typer.echo(
+                        f"note: {node_use.ptn_curie} {row.go_id} carries "
+                        f"differing seed counts across family slices "
+                        f"({depth[key]} vs {seeds}); using the larger",
+                        err=True,
+                    )
+                depth[key] = max(depth.get(key, 0), seeds)
+            for (aspect, go_id), seeds in depth.items():
+                total_annotations += 1
+                thin = seeds <= 3
+                annotation_depth[(node_use.ptn_curie, aspect, go_id)] = thin
+                if thin:
+                    thin_annotations += 1
+        for use in iter_family_member_uses(document):
+            match = family_re.match(sorted(use.declared_family_curies)[0])
+            if not match:
+                continue
+            declared_at_subfamily = bool(match.group(2))
+            if declared_at_subfamily:
+                subfamily_level += 1
+            else:
+                family_level += 1
+            family_uses.append((use, declared_at_subfamily))
+
+    members = repo_root / "interpro" / "panther" / "panther-members.tsv"
+    index = load_member_index(members)
+    subfamily_counts = load_subfamily_counts(
+        repo_root / "interpro" / "panther" / "panther.obo"
+    )
+
+    # Section 1's precision figures, from the validator's own predicate rather
+    # than a second implementation of it. Counting these independently is how
+    # the report came to publish 206 where the sweep warned 199.
+    single_subfamily = heterogeneous = precision_checkable = 0
+    precision_status: collections.Counter = collections.Counter()
+    proteins_by_family: dict[str, set] = {}
+    for use, _declared_at_subfamily in family_uses:
+        # Attribute each member to the family the committed index says it is in,
+        # not to every family its descriptor declares. A descriptor may span
+        # families deliberately -- peroxisome-lifecycle declares PTHR12652 and
+        # PTHR20990 because PANTHER splits those paralogs, and says so in its own
+        # prose -- and unioning made each family look ambiguous on the other's
+        # proteins. That counted the descriptors most explicit about the split as
+        # evidence that ids cannot distinguish between them.
+        declared_bases = {
+            base_match.group(1)
+            for curie in use.declared_family_curies
+            if (base_match := family_re.match(curie)) and not base_match.group(2)
+        }
+        for accession in use.representative_accessions:
+            family_sf = index.get(accession)
+            if family_sf is None:
+                continue
+            base = family_sf.split(":", 1)[0]
+            if base in declared_bases:
+                # The index settles which declared family this member belongs to.
+                credit = {base}
+            else:
+                # The index places it outside every declared family. That is the
+                # UniProt/PAINT disagreement the sweep warns about separately
+                # (P08887 in PTHR23036 against a PAINT node in PTHR23037), not a
+                # multi-family split, and the module's grounding is the only
+                # claim available -- so it still counts toward what the declared
+                # id is being asked to cover. Dropping it would understate.
+                credit = declared_bases
+            for family in credit:
+                proteins_by_family.setdefault(family, set()).add(accession)
+        # Ask the predicate which of its outcomes this was rather than
+        # reconstructing a partial version of it here. Family-level-plus-a-
+        # resolvable-member is NOT the same as checkable: it also admits
+        # grounding-inconsistent descriptors (a correctness finding the sweep
+        # reports separately) and members with no subfamily recorded, so its
+        # complement was not the members-spread population it claimed to be.
+        case = subfamily_precision_case(use, index, subfamily_counts)
+        precision_status[case.status.value] += 1
+        if case.status.is_checkable:
+            precision_checkable += 1
+        if case.status is not SubfamilyPrecision.SINGLE_SUBFAMILY:
+            continue
+        single_subfamily += 1
+        if case.subfamily_count >= HETEROGENEOUS_FAMILY_SUBFAMILIES:
+            heterogeneous += 1
+    ambiguous = {b: p for b, p in proteins_by_family.items() if len(p) > 1}
+    gaps = load_member_index_gaps(members)
+    collected = len(index) + len(gaps.absent) + len(gaps.unchecked)
+    claims = collect_claims(repo_root / "modules")
+    checked = sum(1 for c in claims if c.accession in index)
+
+    typer.echo("| | count |")
+    typer.echo("|---|---|")
+    typer.echo(f"| module files | {len(files)} |")
+    typer.echo(
+        "| family/subfamily descriptors with an id and a representative member | "
+        f"{family_level + subfamily_level:,} |"
+    )
+    typer.echo(f"| declared at family level | {family_level} |")
+    typer.echo(f"| declared at subfamily level | {subfamily_level} |")
+    typer.echo(
+        f"| family descriptors asserting no id | {ungrounded} "
+        f"(across {len(ungrounded_modules)} modules) |"
+    )
+    # Named "citations" because iter_ancestral_node_uses yields once per
+    # ancestral_nodes[] entry: PTN001230349 alone is cited 29 times. A ratio
+    # whose numerator counts distinct nodes and whose denominator counts
+    # citations would silently mix populations.
+    typer.echo(
+        f"| PAINT node citations | {nodes} (of {len(distinct_nodes)} distinct nodes) |"
+    )
+    # Two aggregations of the same per-annotation measure. The distinct count
+    # describes the evidence base; the citation-weighted one describes how much
+    # of the propagation in use rests on it. Reporting one silently would pick
+    # a headline (52% vs 37%) without saying which question it answers.
+    distinct_thin = sum(1 for thin in annotation_depth.values() if thin)
+    typer.echo(
+        f"| PAINT annotations resting on <=3 seeds | {distinct_thin} / "
+        f"{len(annotation_depth)} distinct (node, term) "
+        f"= {thin_annotations} / {total_annotations} citation-weighted |"
+    )
+    typer.echo(
+        f"| family-level groundings with all members in one subfamily | "
+        f"{single_subfamily} / {precision_checkable} checkable "
+        f"(of {family_level} declared) |"
+    )
+    typer.echo(
+        f"| ...in families split into {HETEROGENEOUS_FAMILY_SUBFAMILIES}+ subfamilies "
+        f"(the advisory) | {heterogeneous} |"
+    )
+    # Emitting the whole partition keeps the report from quoting a breakdown
+    # that nothing computes -- the exact failure this command exists to stop.
+    # Family-level statuses only: declared-at-subfamily descriptors are excluded
+    # before the denominator is formed, so listing them beside the others mixes
+    # populations. They also happen to number 101, exactly the same as the rest
+    # of the 907, so the row would read as arithmetically consistent while its
+    # leading term came from a different set.
+    rest = {
+        status: count
+        for status, count in precision_status.items()
+        if status
+        not in (
+            SubfamilyPrecision.SINGLE_SUBFAMILY.value,
+            SubfamilyPrecision.DECLARED_AT_SUBFAMILY.value,
+        )
+    }
+    typer.echo(
+        f"| ...why the other {sum(rest.values())} family-level ones are not | "
+        + ", ".join(
+            f"{count} {status.replace('_', ' ')}"
+            # Secondary key on the status name: without it, equal counts fall
+            # back to Counter insertion order, so the row would depend on the
+            # order descriptors happen to appear in the tree.
+            for status, count in sorted(rest.items(), key=lambda kv: (-kv[1], kv[0]))
+        )
+        + " |"
+    )
+    typer.echo(
+        f"| family ids covering more than one distinct protein | {len(ambiguous)} "
+        f"(over {len(set().union(*ambiguous.values())) if ambiguous else 0} proteins) |"
+    )
+    typer.echo(f"| prose PANTHER claims checked | {checked} / {len(claims)} |")
+    typer.echo(
+        "| cited accessions resolved to a PANTHER family | "
+        f"{len(index):,} / {collected:,} |"
+    )
 
 
 def main():

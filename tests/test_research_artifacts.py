@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import importlib.util
+import subprocess
 import sys
 from pathlib import Path
 
@@ -149,3 +150,53 @@ trajectory_id: same-tid
         "human/GENE/GENE-deep-research-falcon.md",
         "human/GENE/GENE-deep-research-openai.md",
     ]
+
+
+def test_fetch_research_artifacts_wrapper_preserves_spaced_report_path(tmp_path):
+    """The Just wrapper must pass a missing multiword path as one argument."""
+    report = tmp_path / "missing report with spaces.md"
+
+    result = subprocess.run(
+        [
+            "just",
+            "fetch-research-artifacts",
+            "trajectory-1",
+            str(report),
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=30,
+    )
+
+    assert result.returncode == 1
+    assert f"research file not found: {report}" in result.stderr
+    assert "unrecognized arguments" not in result.stderr
+
+
+def test_index_research_artifacts_wrapper_preserves_spaced_paths(tmp_path):
+    """The Just wrapper must preserve root and output path boundaries."""
+    genes_root = tmp_path / "genes with spaces"
+    genes_root.mkdir()
+    output = tmp_path / "reports with spaces" / "artifact index.yaml"
+
+    result = subprocess.run(
+        [
+            "just",
+            "index-research-artifacts",
+            "--root",
+            str(genes_root),
+            "--output",
+            str(output),
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=30,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert output.exists()
+    assert "Indexed 0 reports" in result.stdout

@@ -430,14 +430,24 @@ class TestResolveGeneToUniprotPrimarySymbolPreference:
         # Must not have consulted TrEMBL for human
         assert mock_lookup.call_count == 1
 
+    @patch(
+        "ai_gene_review.etl.gene.fetch_uniprot_data",
+        side_effect=ValueError("not a real accession"),
+    )
     @patch("ai_gene_review.etl.gene.uniprot_by_gene_taxon")
-    def test_worm_no_hits_anywhere_raises(self, mock_lookup):
-        """Non-human gene with no Swiss-Prot or TrEMBL hits at all must raise."""
+    def test_worm_no_hits_anywhere_raises(self, mock_lookup, mock_fetch):
+        """Non-human gene with no Swiss-Prot or TrEMBL hits at all must raise.
+
+        ``nonexistent-gene`` matches the accession-like syntax checked before
+        gene-name lookup, so mock that preliminary fetch to keep this unit test
+        hermetic when UniProt DNS or network access is unavailable.
+        """
         mock_lookup.return_value = []
 
         with pytest.raises(ValueError):
             resolve_gene_to_uniprot("nonexistent-gene", "worm")
 
+        mock_fetch.assert_called_once_with("nonexistent-gene")
         # Should have tried both Swiss-Prot and TrEMBL
         assert mock_lookup.call_count == 2
 

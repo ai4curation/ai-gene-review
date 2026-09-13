@@ -30,7 +30,14 @@ GENERIC_TERMS = {
     "GO:0097159",
     "GO:1901363",
 }
-RETAINED_ACTIONS = {"", "ACCEPT", "KEEP_AS_NON_CORE", "UNDECIDED", "PENDING"}
+DIRECT_POST_REVIEW_ACTIONS = {
+    "",
+    "ACCEPT",
+    "KEEP_AS_NON_CORE",
+    "NEW",
+    "UNDECIDED",
+    "PENDING",
+}
 CORE_SINGLE_TERM_SLOTS = (
     "molecular_function",
     "contributes_to_molecular_function",
@@ -83,7 +90,7 @@ def get_core_terms(review_file: Path) -> set[str]:
 
 
 def get_post_review_terms(review_file: Path) -> set[str]:
-    """Level 2: retained/replacement annotations plus AIGR core-function terms."""
+    """Level 2: retained/replacement/new annotations plus AIGR core terms."""
     review = yaml.safe_load(review_file.read_text(encoding="utf-8")) or {}
     terms: set[str] = set()
 
@@ -94,7 +101,7 @@ def get_post_review_terms(review_file: Path) -> set[str]:
         action = str(annotation_review.get("action") or "")
         if action == "MODIFY":
             terms.update(ids(annotation_review.get("proposed_replacement_terms", []) or []))
-        elif action in RETAINED_ACTIONS:
+        elif action in DIRECT_POST_REVIEW_ACTIONS:
             if identifier := go_id(annotation.get("term")):
                 terms.add(identifier)
 
@@ -184,7 +191,7 @@ def write_figure(
     labels = [
         "GO-GPT predictions\nemitted",
         "Match raw GOA",
-        "Match retained/replacement\nAIGR annotations",
+        "Match retained/replacement/\nproposed-new AIGR annotations",
         "Match agent-adjudicated\nAIGR core functions",
     ]
     colors = ["#d9e7f4", "#9ac7df", "#4f9dca", "#0b5fa5"]

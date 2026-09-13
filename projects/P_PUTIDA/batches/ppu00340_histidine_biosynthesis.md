@@ -25,36 +25,38 @@ autolink_gene_symbols: false
 - [x] Complete the OpenScientist evidence pass, recording provider timeouts and cross-report support.
 - [x] Validate module and gene reviews.
 - [x] Render module, gene, and project pages.
-- [ ] Open one draft PR for this module/pathway.
+- [x] Open one PR for this module/pathway.
 - [ ] Shepherd the PR through review, CI, and merge readiness.
 
 ## Satisfiability
 
 | Order | Reaction or role | PSEPK gene(s) | UniProt | Decision |
 |---|---|---|---|---|
-| 1 | ATP phosphoribosyltransferase, short-form catalytic and regulatory subunits | `hisG`, `hisZ` | Q88P87, Q88DD7 | Covered |
+| 1 | ATP phosphoribosyltransferase, short-form catalytic and regulatory subunits | `hisG`, `hisZ` | Q88P87, Q88DD7 | Covered by the short-form architecture variant; reusable module also models long-form HisG |
 | 2 | Phosphoribosyl-ATP diphosphatase | `hisE` | Q88D14 | Covered; activity was mislabeled as HisI in the old module |
 | 3 | Phosphoribosyl-AMP cyclohydrolase | `hisI` | Q88D15 | Covered; ARBA diphosphatase co-annotation removed |
 | 4 | ProFAR isomerase | `hisA` | Q88R42 | Covered; TreeGrafter tryptophan-process annotation removed because KT2440 has separate TrpF |
 | 5 | Imidazole-glycerol-phosphate synthase | `hisF`, `hisH` | Q88R41, Q88R44 | Covered as a two-subunit coupled activity |
 | 6 | Imidazoleglycerol-phosphate dehydratase | `hisB` | Q88R45 | Covered by monofunctional IGPD |
 | 7 | Histidinol-phosphate aminotransferase | `hisC` | Q88P86 | Covered |
-| 8 | Histidinol-phosphate phosphatase | `PP_3157`, `PP_5147` | Q88I44, Q88CN3 | Covered by unrelated IMPase-like HisN and monofunctional HAD-family candidates; both annotations accepted, with their in vivo division of labor unresolved |
+| 8 | Histidinol-phosphate phosphatase | `PP_3157`, `PP_5147` | Q88I44, Q88CN3 | Two unrelated candidates; neither exact KT2440 activity is established, so both gene-level decisions are `UNDECIDED` |
 | 9 | Histidinol dehydrogenase | `hisD` | P59400 | Covered; performs both terminal oxidations |
 
-The pathway is satisfiable in KT2440. PRPP production is shared upstream
+The pathway is candidate-level satisfiable in KT2440, but the exact protein or
+proteins carrying step 8 remain unresolved. PRPP production is shared upstream
 metabolism and is not modeled as a required histidine-specific part.
 
 ## Phosphatase Redundancy
 
-`PP_3157` (Q88I44) belongs to the experimentally defined IMPase-like HisN
-family, while `PP_5147` (Q88CN3) is a close full-length ortholog of the
-experimentally validated Pseudomonas aeruginosa HAD-family enzyme PA0335. The
-module therefore models the reaction as an enzyme-family variant set with
-`ONE_OR_MORE` selection and uses both exact PSEPK UniProt exemplars. Direct
-KT2440 genetics and substrate-specific assays are still needed to establish
-whether both proteins carry physiologically important flux and which is
-dominant under histidine limitation.
+`PP_3157` (Q88I44) is an exact member of the experimentally defined IMPase-like
+HisN family, while `PP_5147` (Q88CN3) is a HAD-family candidate related to the
+experimentally validated Pseudomonas aeruginosa enzyme PA0335. The module
+therefore models the reaction as an enzyme-family variant set with `ONE_OR_MORE`
+selection, but treats both PSEPK proteins as candidates rather than active
+exemplars. `TIGR01490` is omitted because its official `HAD-SF-IB-hyp1` scope
+does not establish histidinol-phosphate specificity. Direct KT2440 genetics and
+substrate-specific assays are needed to identify the physiological enzyme or
+enzymes.
 
 ## Excluded Candidates
 
@@ -73,9 +75,11 @@ dominant under histidine limitation.
   process module node.
 - The generic module uses activity-based names for reactions whose HisE/HisI
   symbols vary across taxa.
-- Every leaf has a concrete PSEPK UniProt exemplar. HisZ is represented as the
-  regulatory role required by the short-form HisG architecture, without
-  claiming it is universal to long-form ATPPRT enzymes.
+- The first reaction uses an `EXACTLY_ONE` architecture variant set: short-form
+  HisG plus HisZ, exemplified by PSEPK, or a long-form single-chain HisG.
+- Every PSEPK-selected leaf has a concrete PSEPK UniProt candidate. HisZ is
+  confined to the short-form architecture and is not required by long-form
+  ATPPRT enzymes.
 - The phosphatase leaf is an explicit enzyme-family variant set. It also uses
   reviewed Pseudomonas aeruginosa PA0335 (UniProtKB:Q9I6F6) as the direct
   experimental exemplar for the HAD-family implementation.
@@ -83,13 +87,12 @@ dominant under histidine limitation.
 
 ## Research Status
 
-The module/pathway/taxon OpenScientist report supports the pathway boundary,
-ordered activities, and overall KT2440 satisfiability. Its recommendation to
-exclude `PP_5147` is not adopted because the report missed the direct
-Pseudomonas HAD-family evidence: PA0335 is genetically and biochemically
-validated as a monofunctional histidinol-phosphate phosphatase, and Q88CN3 is a
-close full-length ortholog. Gene-level reports and primary evidence therefore
-take precedence for that candidate decision.
+The module/pathway/taxon OpenScientist report supports the pathway boundary and
+ordered activities. PA0335 is genetically and biochemically validated as a
+monofunctional HAD-family histidinol-phosphate phosphatase, but the cached
+primary evidence does not establish Q88CN3 orthology or substrate specificity.
+The PSEPK phosphatase step therefore remains a documented satisfiability gap
+between two credible candidates rather than a resolved assignment.
 
 The first gene-level OpenScientist submissions inherited the wrapper's
 600-second default and timed out before the provider's normal completion
@@ -104,7 +107,10 @@ completed HisH/HisF complex report and its exact UniProt record.
 
 ## Validation
 
-All 12 selected gene reviews pass `just validate`. The module passes LinkML
-`ModuleReview` validation and the dedicated module validator; its only messages
-are expected namespace-label warnings for InterPro, Pfam, and NCBIfam family
-selectors. The module, gene-review, and project pages render successfully.
+All 12 selected gene reviews pass `just validate`; the two unresolved
+phosphatase reviews carry the expected warning that no core function is
+asserted. The module passes LinkML `ModuleReview` validation and the dedicated
+module validator. Its only messages are expected namespace-label warnings for
+InterPro, Pfam, and NCBIfam selectors, plus confirmation that the uncertain HAD
+family ID was omitted. The changed module, gene-review, and project pages render
+successfully.
