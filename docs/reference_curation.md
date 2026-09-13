@@ -12,7 +12,10 @@ Record an established mapping on the original reference:
 ```yaml
 references:
   - id: PMID:34521819
-    title: Deleted duplicate record of PMID:32953130
+    title: >-
+      SARS-CoV-2 N protein antagonizes type I interferon signaling by suppressing
+      phosphorylation and nuclear translocation of STAT1 and STAT2.
+    is_invalid: true
     reference_review:
       replacement:
         reference_id: PMID:32953130
@@ -38,6 +41,20 @@ self-replacements and replacement cycles fail best-practice validation. Existing
 reviews without this optional metadata remain valid. Record the mapping's source
 and verification in `replacement.review_notes`.
 
+For a deleted duplicate, retain `is_invalid: true` on the old reference alongside
+`replacement`. The flag describes the replaced record; it does not invalidate the
+canonical paper or establish that its findings were retracted. This is consistent
+with `mark_invalid_pmids()`, which otherwise re-adds the flag. Keep the publication
+title in `title` (for a verified duplicate, use the cached canonical title), and put
+the deletion explanation and the title's provenance in `replacement.review_notes`.
+Do not mark the canonical reference invalid merely because an obsolete ID points
+to it.
+
+`replacement.reason` explains the identifier mapping; `reference_review.correctness`
+assesses citation correctness and scientific soundness. A `DUPLICATE_RECORD`
+mapping does not imply `correctness: WRONG_IDENTIFIER`, because both records
+identify the same paper. Leave correctness unset until separately assessed.
+
 When a PMID fetch fails, inspect the PubMed web page for an explicit redirection
 notice. E-utilities may return an empty result or error for a deleted duplicate
 without identifying the retained record. A fetch failure alone establishes
@@ -58,7 +75,8 @@ review:
 
 This metadata does **not** silently redirect validation or fetches. LRV checks
 each snippet against its explicit `reference_id`. The old reference may still
-produce an advisory fetch warning until upstream LRV supports curated mappings.
+produce an advisory fetch warning until upstream LRV supports curated mappings;
+`is_invalid: true` is not currently guaranteed to suppress LRV's fetch warning.
 Do not copy canonical publication text into the old PMID's cache or rewrite the
 GOA-derived identifier to silence that warning. Duplicate-record deletion does
 not imply that the paper or its findings were retracted.

@@ -6,10 +6,11 @@ import sys
 
 import pytest
 from pydantic import ValidationError
-from linkml_runtime.utils.schemaview import SchemaView
+from linkml_runtime.utils.schemaview import SchemaView  # type: ignore[import-untyped]
 
 from ai_gene_review.datamodel.gene_review_model import GeneReview, ReferenceReview
 from ai_gene_review.validation import validate_gene_review
+from ai_gene_review.utils.pmid_utils import mark_invalid_pmids
 import yaml
 
 
@@ -23,7 +24,7 @@ def review_data():
         "taxon": {"id": "NCBITaxon:9606", "label": "Homo sapiens"},
         "description": "Synthetic fixture for reference metadata.",
         "references": [
-            {"id": "PMID:1", "title": "Deleted duplicate", "reference_review": {
+            {"id": "PMID:1", "title": "Deleted duplicate", "is_invalid": True, "reference_review": {
                 "replacement": {"reference_id": "PMID:2", "reason": "DUPLICATE_RECORD"},
                 "review_notes": "Synthetic verified duplicate mapping.",
             }},
@@ -53,6 +54,16 @@ def test_metadata_roundtrip_preserves_each_source():
     assert data["references"][0]["reference_review"]["replacement"]["reference_id"] == "PMID:2"
     evidence = data["references"][1]["findings"][0]["finding_review"]["supported_by"][0]
     assert evidence == {"reference_id": "PMID:3", "supporting_text": "A cofactor was required."}
+    assert data["references"][0]["is_invalid"] is True
+
+
+def test_invalid_pmid_tool_preserves_curated_replacement(tmp_path):
+    """An invalid source record and its valid replacement coexist without churn."""
+    data = review_data()
+    path = tmp_path / "review.yaml"
+    path.write_text(yaml.safe_dump(data))
+    assert mark_invalid_pmids(path, ["PMID:1"]) == 0
+    assert yaml.safe_load(path.read_text()) == data
 
 
 @pytest.mark.parametrize("replacement", [
