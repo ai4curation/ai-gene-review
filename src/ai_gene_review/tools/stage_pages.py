@@ -10,18 +10,16 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import shutil
 import subprocess
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from urllib.parse import unquote, urlsplit
+from ai_gene_review.tools.pages_dependencies import TEXT_ASSETS, linked_repository_files
 
 
 MIB = 1024 * 1024
 BROWSER_FILES = ("index.html", "data.js", "schema.js")
-LINK_PATTERN = re.compile(r"(?:href|src)=[\"']([^\"']+)[\"']", re.IGNORECASE)
-PAGES_BASE_PATH = "/ai-gene-review/"
+
 
 
 @dataclass(frozen=True)
@@ -68,47 +66,42 @@ def _safe_clean_output(repo_root: Path, output_dir: Path) -> None:
     resolved_output.mkdir(parents=True)
 
 
-def _linked_source_files_not_staged(
-    repo_root: Path, output_dir: Path
-) -> set[Path]:
-    """Find existing repository files linked by HTML but absent from the artifact."""
+def _stage_linked_files(repo_root: Path, output_dir: Path) -> set[Path]:
+    """Copy static dependencies transitively and return any excluded public files.
 
-    dependencies: set[Path] = set()
-    for staged_html in output_dir.rglob("*.html"):
-        html_relative = staged_html.relative_to(output_dir)
-        for raw_link in LINK_PATTERN.findall(staged_html.read_text(errors="ignore")):
-            parsed = urlsplit(raw_link)
-            if parsed.scheme or parsed.netloc or not parsed.path:
-                continue
-            if raw_link.startswith(("#", "data:", "mailto:", "javascript:")):
-                continue
-
-            link_path = unquote(parsed.path)
-            if link_path.startswith(PAGES_BASE_PATH):
-                target_relative = Path(link_path.removeprefix(PAGES_BASE_PATH))
-            elif link_path.startswith("/"):
-                # A root-relative URL outside this project site is not a local
-                # repository dependency.
-                continue
-            else:
-                target_relative = html_relative.parent / link_path
-
-            repository_target = (repo_root / target_relative).resolve()
-            try:
-                repository_relative = repository_target.relative_to(repo_root)
-            except ValueError:
-                continue
-            staged_target = output_dir / repository_relative
-            if repository_target.is_file() and not staged_target.is_file():
-                dependencies.add(repository_target)
-    return dependencies
+    Scan each HTML/CSS/JS file only once. Referenced notes, downloads, reports,
+    images, and their dependencies keep their paths and original bytes.
+    """
+    pending = [p.relative_to(output_dir) for p in output_dir.rglob("*")
+               if p.is_file() and p.suffix.lower() in TEXT_ASSETS]
+    scanned: set[Path] = set()
+    omitted: set[Path] = set()
+    while pending:
+        relative = pending.pop()
+        if relative in scanned:
+            continue
+        scanned.add(relative)
+        content = (output_dir / relative).read_text(errors="ignore")
+        for target in linked_repository_files(repo_root, relative, content):
+            source = repo_root / target
+            destination = output_dir / target
+            if not destination.is_file():
+                # Keep the existing exclusion of orphan review HTML, even if an
+                # old index still links to it. Report it instead of publishing it.
+                if source.name.endswith("-ai-review.html") and not source.with_suffix(".yaml").is_file():
+                    omitted.add(source)
+                    continue
+                _copy_file(source, destination)
+            if target.suffix.lower() in TEXT_ASSETS and target not in scanned:
+                pending.append(target)
+    return omitted
 
 
 def stage_pages(repo_root: Path, output_dir: Path) -> SiteManifest:
     """Copy the current generated site into ``output_dir``.
 
     The staged layout deliberately matches the current ``main:/`` Pages URLs.
-    Gene source material is not copied: only rendered review HTML is published.
+    Linked source material and supplemental reports retain their public paths.
     ``pages/`` remains a transitional mixed-output area and is copied wholesale
     until its manually maintained inputs are separated in a later migration.
     ``output_dir`` must resolve to the repository's dedicated ``_site`` directory.
@@ -158,8 +151,8 @@ def stage_pages(repo_root: Path, output_dir: Path) -> SiteManifest:
         _require_file(source)
         _copy_file(source, output_dir / "app" / browser_file)
 
+    linked_sources = _stage_linked_files(repo_root, output_dir)
     staged_files = [path for path in output_dir.rglob("*") if path.is_file()]
-    linked_sources = _linked_source_files_not_staged(repo_root, output_dir)
     manifest = SiteManifest(
         total_bytes=sum(path.stat().st_size for path in staged_files),
         total_files=len(staged_files),
@@ -234,9 +227,9 @@ def main() -> None:
         linked_size_mib = manifest.linked_source_bytes_not_staged / MIB
         print(
             "::warning title=Linked files are outside the Pages artifact::"
-            f"Rendered HTML links to {manifest.linked_source_files_not_staged:,} "
+            f"Published files link to {manifest.linked_source_files_not_staged:,} "
             f"existing repository files ({linked_size_mib:,.1f} MiB) that are not "
-            "staged. These links must be repointed or the assets hosted before deployment."
+            "staged. Resolve these omissions before deployment."
         )
 
 

@@ -401,6 +401,16 @@ uses `<repo-root>/_site`. Shadow build failures warn
 without blocking regeneration PRs. The live site continues to publish
 from `main:/` until the shadow artifact has been verified.
 
+Staging also follows local links from published HTML and CSS, plus literal
+JavaScript fetch()/import() URLs, copying reports, notes, images, and downloads at
+their existing paths. Links and file contents are unchanged. Dynamic JavaScript
+URLs still require browser checks. Deleted reviews' orphan HTML remains excluded.
+
+The deployment job is disabled unless `PAGES_ARTIFACT_DEPLOY_ENABLED=true` is set
+in repository Actions variables. It requires a successful upload, at most
+1,000,000,000 uncompressed bytes, and no omitted existing static dependencies.
+Keep the current Pages source until the complete artifact meets those checks.
+
 The Generate Pages workflow runs daily at 08:23 UTC and can also be started with
 GitHub Actions' **Run workflow** button. Each run rebuilds the full site, so merged
 content normally appears after the next daily regeneration PR is merged.
