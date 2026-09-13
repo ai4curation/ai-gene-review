@@ -115,7 +115,7 @@ def test_argo95_exact_goa_reads_the_declared_baseline_commit(monkeypatch) -> Non
         set(module.read_rl_gene_list()), policy
     )
     assert summary == {
-        "cnn_exact_frozen_goa": 635,
+        "cnn_exact_frozen_goa": 635,  # Includes restored SIR2 GO:0006303 CNN.
         "cnn_other_established_basis": 47,
         "cor_exact_frozen_goa": 0,
     }
@@ -398,6 +398,8 @@ def test_publication_headlines_match_generated_metrics() -> None:
     assert "**71.4% CNN**" in slides
     assert "**15.4% NPI/PLI/REP**" in slides
     assert "**2.4% COR**" in slides
+    for slide_text in (slides, slides_html):
+        assert f"{sft['cnn_exact_frozen_goa']} exact GOA" in slide_text
 
     with (PROJECT_DIR / "cafa-style" / "argo139_prediction_goa_overlap.csv").open() as handle:
         incorrect_hf = [

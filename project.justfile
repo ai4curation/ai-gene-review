@@ -1206,15 +1206,15 @@ validate-all:
 
 # Compliance report for recommended fields (separate from validation-all.tsv)
 compliance-all:
-    @echo "Analyzing recommended-field compliance..."
+    @echo "Analyzing evidence-aware compliance..."
     @mkdir -p reports
-    uv run ai-gene-review compliance --tsv-output reports/compliance-all.tsv "genes/*/*/*-ai-review.yaml"
+    uv run ai-gene-review compliance --config conf/qc_config.yaml --tsv-output reports/compliance-all.tsv --summary-output reports/compliance-summary.tsv "genes/*/*/*-ai-review.yaml"
 
 # Compliance report with HTML dashboard (linkml-data-qc)
 compliance-dashboard:
     @echo "Generating compliance dashboard..."
     @mkdir -p reports/compliance-dashboard
-    uv run linkml-data-qc --schema src/ai_gene_review/schema/gene_review.yaml --target-class GeneReview --dashboard-dir reports/compliance-dashboard genes --pattern "**/*-ai-review.yaml"
+    uv run ai-gene-review compliance --config conf/qc_config.yaml --tsv-output reports/compliance-all.tsv --summary-output reports/compliance-summary.tsv --dashboard-dir reports/compliance-dashboard "genes/*/*/*-ai-review.yaml"
 
 # Validate all gene review files (summary only, no details)
 validate-all-summary:
@@ -1506,6 +1506,14 @@ render-organism organism:
 # Render all gene reviews as HTML
 render-all:
     uv run python -m ai_gene_review.render --all genes/
+
+# Assemble the already-rendered public site without changing the active Pages source.
+# This transitional artifact preserves the URLs currently served from main:/.
+stage-pages:
+    uv run python -m ai_gene_review.tools.stage_pages --manifest _site-manifest.json
+
+# Build the complete disposable publication tree used by the Pages migration.
+build-pages: render-all render-projects validate-modules render-modules deploy-browser stage-pages
 
 # Render prediction evaluation table from *-predictions-review.yaml files
 render-prediction-eval pattern='genes/*/*/*-protnlm-predictions-review.yaml' output='pages/projects/PROTNLM_EVALUATION/protnlm-eval.html' title='ProtNLM-50 Prediction Evaluation':

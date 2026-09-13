@@ -118,7 +118,7 @@ A second rater scored 20 RL Functional Summaries without access to the first-rat
 
 ## S6. GO-GPT reviews
 
-The ARGO139 web-export leaf review is explicitly pending rather than a completed benchmark. Ontology-aware rebuilding retained 5,923 terms: 1,896 `CNN`, 125 `NPI`, 3 `LSP`, and 3,899 `UNC`. Accordingly, 137 documents are `DRAFT`; the fully resolved `BACSU/ftsZ` and manually reviewed `SCHPO/ral2` files are `COMPLETE`.
+The ARGO139 web-export leaf review is explicitly pending rather than a completed benchmark. Ontology-aware rebuilding retained 5,923 terms: 1,897 `CNN`, 124 `NPI`, 3 `LSP`, and 3,899 `UNC`. Accordingly, 137 documents are `DRAFT`; the fully resolved `BACSU/ftsZ` and manually reviewed `SCHPO/ral2` files are `COMPLETE`.
 
 A distinct supplemental analysis, `supplement_gogpt_overlap_300`, contains 8,871 GO-GPT predictions across 299 canonical genes. The historical cohort identifier is retained for continuity; the count fell from 300 after the duplicate `ARATH/Q9XIR4` alias for `ARATH/APO1` was removed. It is not the pending 5,923-term ARGO139 leaf set above and is not a paired ARGO139 BioReason-Pro result. This separate overlap analysis remains useful for showing how much apparent agreement changes when the reference set moves from raw GOA to AIGR core biology.
 

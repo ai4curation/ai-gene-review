@@ -530,7 +530,11 @@ just deploy-browser    # update data.js + index.html for the interactive browser
 Output: `app/`
 
 ### CI automation
-The `generate-pages` workflow runs on push to main when gene YAMLs, schema, templates, or project markdown change. It renders everything and creates a PR. Pages deploy directly from main — no gh-pages branch needed for the static content.
+The `generate-pages` workflow runs daily at 08:23 UTC, with manual runs available
+through GitHub Actions. It renders everything and creates a PR. Its publication
+schedule is exempt from agent cron profiles. Gene reviews are validated in PR CI
+and by the weekly full validation workflow. Pages deploy directly from main — no
+gh-pages branch needed for the static content.
 
 ## General guidelines
 
