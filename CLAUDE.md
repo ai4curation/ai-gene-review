@@ -242,14 +242,18 @@ describes the cleaving, and the substrate does none of it.
 The convention is not absolute, and the exceptions tell you where the line is. GO
 *does* annotate thyroglobulin to `GO:0006590` thyroid hormone generation, fibrinogen to
 `GO:0042730` fibrinolysis, and C3 to `GO:0006956` complement activation. Each of those
-substrates does chemistry or contributes structure — the thyroid hormone's covalent
-bonds are formed inside the thyroglobulin chain from its own tyrosyl residues; fibrin
-polymerises and then accelerates its own lysis by acting as a cofactor for plasminogen
-activation; C3 carries an internal thioester that cleavage exposes, which C3b then uses
-to form its own covalent bond to the target surface. Angiotensinogen does none of that:
-renin performs every step of its conversion. So the test is never "is my gene the substrate"
-but "does my gene do any of the work", and a fibrinogen-shaped case can legitimately
-carry the term.
+substrates does some of the work, and the three span the range of what that can mean.
+Thyroglobulin is the **scaffold** case: TPO catalyses the iodination and the coupling,
+but thyroglobulin supplies the tyrosyl residues and holds the donor and acceptor pair in
+position — and `GO:0006590` carries both, the peroxidase and the scaffold, each by IDA.
+Fibrin is the **cofactor** case: it polymerises, then accelerates its own lysis by acting
+as the template for tPA-mediated plasminogen activation. C3 is the **chemistry** case: it
+carries an internal thioester that cleavage exposes, which C3b then uses to form its own
+covalent bond to the target surface. Angiotensinogen is none of the three — it supplies
+no residue to the product beyond the bond that is cut, positions nothing, and catalyses
+nothing; renin performs every step of the conversion. So the test is never "is my gene
+the substrate" but "does my gene do any of the work", and a fibrinogen-shaped case can
+legitimately carry the term.
 
 Therefore, before proposing a `NEW` process term:
 
