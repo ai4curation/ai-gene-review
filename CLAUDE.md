@@ -207,9 +207,10 @@ The mirror image of the rule above, and the one that governs `NEW`. Everything e
 in this document is an audit of assertions that exist; `NEW` is the one action that
 manufactures an assertion, and it needs its own bar.
 
-**A gene product is `involved_in` a process only if the product itself executes some
-step of that process.** Being consumed by the process, being required for it, or
-being the thing it acts on is not participation. The distinction matters most where
+**A gene product is `involved_in` a process only if the product itself does some of the
+work of that process — catalysing a step, or contributing the structure or cofactor
+activity that a step depends on.** Being consumed by the process, being required for it,
+or being the thing it acts on is not participation. The distinction matters most where
 the evidence is strongest: knockout abolishes the outcome, rescue restores it, and
 human loss-of-function is lethal — all of which establish that the gene product is
 **necessary**, which is exactly what being a substrate means. Necessity evidence and

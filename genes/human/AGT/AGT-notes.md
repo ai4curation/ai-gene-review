@@ -186,13 +186,17 @@ are not passive in three different ways, and it is worth being precise about
 which — an earlier draft of this note implied thyroglobulin does its own
 chemistry, and it does not.
 
-Thyroglobulin is a **scaffold**. `TPO` catalyses both the iodination of the
-tyrosyl residues and the coupling that joins two iodotyrosines; thyroglobulin
-supplies those residues and holds the donor and acceptor in position. Both are
-annotated to `GO:0006590` by IDA (checked live in QuickGO), which is the clearest
-available signal that GO puts the catalyst and the scaffold of a reaction on the
-same process term. GO's comment on the term is consistent with this: the hormone
-"can only be formed by the proteolysis of a larger molecule".
+Thyroglobulin is a **scaffold**. Thyroid peroxidase (TPO, P07202) does the
+chemistry — UniProt's function line for it is "Iodination and coupling of the
+hormonogenic tyrosines in thyroglobulin to yield the thyroid hormones T(3) and
+T(4)", and every one of its curated catalytic-activity reactions is written on a
+`[thyroglobulin]`-bound residue, e.g. `[thyroglobulin]-L-tyrosine + iodide + H2O2
++ H(+) = [thyroglobulin]-3-iodo-L-tyrosine + 2 H2O`. Thyroglobulin supplies those
+tyrosines and holds the donor and acceptor in position; it catalyses nothing.
+Both TG and TPO are annotated to `GO:0006590` by IDA (checked live in QuickGO,
+among 49 human annotations that also include DUOX1/2, SLC5A5 and DIO1/2), which
+is the clearest available signal that GO puts the catalyst and the scaffold of a
+reaction on the same process term.
 
 Fibrin is a **cofactor**: it polymerises, then accelerates its own lysis by
 serving as the template for tPA-mediated plasminogen activation. C3 does its own

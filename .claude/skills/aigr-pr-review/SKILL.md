@@ -41,9 +41,12 @@ evidence quality, and whether the curation narrative is coherent.
 - Check that cited PMIDs, GO references, file references, and supporting text actually justify the claimed action.
 - Do not accept unsupported `NEW` annotations.
 - For a `NEW` **process** term, check participation, not just evidence: does the gene
-  product execute a step of the process, or is it merely required for it, consumed by
-  it, or the thing it acts on? Knockout/rescue and human loss-of-function data
-  establish necessity, which is what being a substrate means, and do not settle this.
+  product do any of the work — catalyse a step, or contribute the structure or cofactor
+  activity a step depends on — or is it merely required for the process, consumed by it,
+  or the thing it acts on? Knockout/rescue and human loss-of-function data establish
+  necessity, which is what being a substrate means, and do not settle this. A substrate
+  that scaffolds or catalyses part of its own conversion can legitimately carry the term
+  (CLAUDE.md works thyroglobulin, fibrinogen and C3 through the three cases).
 - Treat "every other participant carries this term and this gene does not" as a red
   flag rather than a justification. Ask for the comparator check — two or three other
   gene products in the same role relative to the same kind of process — and check the

@@ -42,9 +42,12 @@ The exception is if you think there are key annotations missing. In this case yo
 Before adding a `NEW` process term, satisfy two tests that evidence alone does not
 cover (see "Do not add what curators deliberately declined to add" in CLAUDE.md):
 
-- **Participation.** The gene product must itself execute some step of the process.
-  Being required for the process, being consumed by it, or being what it acts on is
-  not participation. Knockout/rescue data establishes necessity, which is precisely
+- **Participation.** The gene product must do some of the work: catalyse a step, or
+  contribute the structure or cofactor activity a step depends on. Being required for
+  the process, being consumed by it, or being what it acts on is not participation.
+  (Thyroglobulin passes on the middle clause, not the first — TPO catalyses, while
+  thyroglobulin supplies and positions the residues; see CLAUDE.md for the three
+  shapes this takes.) Knockout/rescue data establishes necessity, which is precisely
   what being a substrate means — so it cannot settle this question on its own. Ask
   which entity performs the step.
 - **Comparator check.** If your argument is "every other participant carries this term
@@ -149,7 +152,7 @@ You should make use of:
    - **MODIFY**: Essence is sound but better terms exist (provide proposed_replacement_terms). Use this if the term is too deep or too shallow
    - **MARK_AS_OVER_ANNOTATED**: Not wrong but likely over-annotation
    - **UNDECIDED**: Unclear annotation requiring more evidence (always use if unable to access relevant publications)
-   - **NEW**: ONLY use this to suggest completely new annotations not in the set already provided by GO. You will need to come up with the evidence and reference. Also apply the participation and comparator tests above — a gene product is `involved_in` a process only if it executes a step of it
+   - **NEW**: ONLY use this to suggest completely new annotations not in the set already provided by GO. You will need to come up with the evidence and reference. Also apply the participation and comparator tests above — a gene product is `involved_in` a process only if it does some of the work of it
 
 Note that duplicates (i.e exact same GO ID) are perfectly fine, there is no need to favor one evidence code over another.
 
