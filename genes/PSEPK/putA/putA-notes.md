@@ -10,3 +10,10 @@
 - The completed OpenScientist report was used for literature retrieval. Its
   family-level mechanistic claims were retained only where corroborated by the
   cached publications or exact UniProt record.
+- 2026-08-31 clarification: PMID:10613867 directly links PutA to growth on
+  proline and supports a fused two-step product, but assignment of the PRODH
+  and GSALDH regions in that abstract is based on sequence homology rather than
+  direct catalytic-domain assays.
+- 2026-08-31 evidence update: PMID:18767154 directly tested the P. putida PutA
+  N-terminal RHH domain and operator DNA by gel mobility-shift assays and NMR,
+  supporting sequence-specific put control-region binding.

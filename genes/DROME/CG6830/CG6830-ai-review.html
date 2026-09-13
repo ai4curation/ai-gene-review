@@ -1,0 +1,1830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CG6830 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CG6830</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9VGJ8" target="_blank" class="term-link">
+                        Q9VGJ8
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Drosophila melanogaster</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CG6830";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">1</span> Annotations</a>
+
+
+
+        <a href="#review-research" title="Deep research and hypothesis research reports"><span class="nav-count">1</span> Research</a>
+
+
+
+
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">2</span> References</a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9VGJ8" data-a="DESCRIPTION: CG6830 is an 891-residue ecdysteroid-kinase-like f..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CG6830 is an 891-residue ecdysteroid-kinase-like family protein containing two CHK-like kinase domains. The arthropod EcKL family has expanded into branches proposed to phosphorylate endogenous steroids or xenobiotic compounds. The physiological substrate and catalytic properties of CG6830 itself remain unresolved.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0106389" target="_blank" class="term-link">
+                                    GO:0106389
+                                </a>
+                            </span>
+                            <span class="term-label">ecdysteroid 22-kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">TAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/32540344" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:32540344
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Genomic and transcriptomic analyses in Drosophila suggest th...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VGJ8" data-a="GO:0106389" data-r="PMID:32540344" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ecdysteroid 22-phosphorylation is not established for CG6830.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The cited study explicitly proposes a detoxification-kinase hypothesis and analyzes gene-family evolution and expression. The exact target has two CHK-like domains, but those observations neither establish ecdysteroid as its substrate nor prove loss of kinase activity. Target-specific turnover assays are needed to distinguish endogenous steroid phosphorylation from other EcKL chemistry.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/32540344" target="_blank" class="term-link">
+                                        PMID:32540344
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We propose the hypothesis that members of the
+arthropod-specific ecdysteroid kinase-like (EcKL) gene family encode
+detoxicative kinases.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG6830/CG6830-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">/note=&#34;CHK kinase-like&#34;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/32540344" target="_blank" class="term-link">
+                            PMID:32540344
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Genomic and transcriptomic analyses in Drosophila suggest that the ecdysteroid kinase-like (EcKL) gene family encodes the &#39;detoxification-by-phosphorylation&#39; enzymes of insects.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:DROME/CG6830/CG6830-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">CG6830-uniprot.txt</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section" id="review-research">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CG6830-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9VGJ8" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional-annotation report: *Drosophila melanogaster* CG6830</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">16 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-10T14:58:41.186181</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="CG6830-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="CG6830-deep-research-falcon_artifacts/image-1.png" class="term-link">## Context ID: pqac-00000020 Figure 3C from page 7 of the document is provided, showing the mapping of EcKL subfamilies, Diptera OLCs, and Drosophila GLCs (incl</a>
+                        <span>(image/png)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="functional-annotation-report-drosophila-melanogaster-cg6830">Functional-annotation report: <em>Drosophila melanogaster</em> CG6830</h1>
+<h2 id="executive-conclusion">Executive conclusion</h2>
+<p><strong>CG6830 (FlyBase FBgn0037934; UniProt Q9VGJ8; Dro24-1) is a poorly characterized <em>D. melanogaster</em> ecdysteroid-kinase-like (EcKL) protein.</strong> Its best-supported annotation is currently <strong>a putative cytosolic, ATP-dependent small-molecule kinase</strong>, but its physiological substrate, reaction product, pathway, and intracellular localization have not been experimentally established. Phylogenetically, Dro24 maps to EcKL <strong>subfamily H</strong>, Diptera order-level clade <strong>Dip4</strong>, and Drosophila genus-level clade <strong>Dro24</strong>; its composite “detoxification score” is 3, the authors’ threshold for a detoxification candidate rather than a validated assignment. (scanlan2024phylogenomicsofthe pages 7-8, scanlan2024phylogenomicsofthe media 97f2158b, scanlan2024phylogenomicsofthe pages 2-3)</p>
+<p>The only direct CG6830 experiment located was reported in August 2024: in a screen of 13 additional EcKL genes, ubiquitous CG6830 misexpression was one of only two interventions—alongside CG5644 misexpression—that caused significant developmental arrest before adulthood. This gain-of-function result shows that excessive CG6830 activity or abundance can disrupt development, but it does not identify the normal substrate, tissue of action, biochemical pathway, or endogenous requirement. (scanlan2024geneticcharacterizationof pages 11-12)</p>
+<p>A critical identity issue emerged during verification: <strong>Wallflower/Wall is CG13813, not CG6830</strong>. The extensive Wall knockout, RNAi, overexpression, tissue-specific, and <em>Cyp18a1</em> interaction experiments in the same 2024 study must therefore not be attributed to CG6830. CG6830 was tested separately in the additional-gene misexpression screen. (scanlan2024geneticcharacterizationof pages 11-12, scanlan2024geneticcharacterizationof pages 2-3)</p>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Best-supported conclusion</th>
+<th>Evidence type</th>
+<th>Confidence</th>
+<th>Important limitation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity</td>
+<td><strong>CG6830</strong> (<em>D. melanogaster</em>), FlyBase <strong>FBgn0037934</strong>, UniProt <strong>Q9VGJ8</strong>, also annotated <strong>Dro24-1</strong>.</td>
+<td>Database identifiers supplied for the target; literature cross-check</td>
+<td>High</td>
+<td>No extensively characterized gene name was found.</td>
+</tr>
+<tr>
+<td>Domain/family</td>
+<td>Encodes a <strong>CHK/choline-kinase-like, ecdysteroid-kinase-like (EcKL) domain protein</strong>, consistent with a kinase-like small-molecule phosphotransferase.</td>
+<td>Domain annotation and family-level comparative analysis</td>
+<td>Moderate–high</td>
+<td>A kinase-like fold does not establish catalytic activity or substrate; “CHK-like” does not mean checkpoint kinase. (scanlan2024phylogenomicsofthe pages 2-3, scanlan2024phylogenomicsofthe pages 4-5)</td>
+</tr>
+<tr>
+<td>Phylogenetic placement</td>
+<td>Dro24 maps to <strong>EcKL subfamily H</strong>, Diptera order-level clade <strong>Dip4</strong>, and Drosophila genus-level clade <strong>Dro24</strong>; its reported maximum detoxification score is <strong>3</strong>.</td>
+<td>2024 phylogenomics</td>
+<td>High for placement; moderate for score interpretation</td>
+<td>Clade membership and score indicate candidacy, not biochemical function. (scanlan2024phylogenomicsofthe pages 7-8, scanlan2024phylogenomicsofthe media 97f2158b)</td>
+</tr>
+<tr>
+<td>Direct misexpression phenotype</td>
+<td>In a screen of <strong>13 additional EcKL genes</strong>, ubiquitous CG6830 misexpression was one of only <strong>two</strong> constructs, with CG5644, causing significant developmental arrest before adulthood.</td>
+<td>Direct transgenic misexpression screen</td>
+<td>Moderate</td>
+<td>Gain-of-function toxicity does not reveal the endogenous substrate, normal requirement, affected tissue, or mechanism. (scanlan2024geneticcharacterizationof pages 11-12)</td>
+</tr>
+<tr>
+<td>Catalytic reaction/substrate</td>
+<td><strong>Unknown.</strong> No purified-enzyme assay, defined substrate, product, phosphate position, or kinetic measurement was found for CG6830.</td>
+<td>Evidence-gap assessment</td>
+<td>High</td>
+<td>EcKL-family chemistry cannot be transferred directly to CG6830. (scanlan2024geneticcharacterizationof pages 11-12, scanlan2024phylogenomicsofthe pages 12-13)</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>No experimentally established subcellular localization was found; EcKLs are generally predicted to be <strong>cytosolic</strong> small-molecule kinases.</td>
+<td>Family-level prediction</td>
+<td>Low for CG6830</td>
+<td>The family prediction is not CG6830-specific localization evidence. (scanlan2024phylogenomicsofthe pages 2-3)</td>
+</tr>
+<tr>
+<td>Pathway</td>
+<td>No specific endogenous signaling or metabolic pathway has been demonstrated for CG6830.</td>
+<td>Evidence-gap assessment</td>
+<td>High</td>
+<td>Developmental arrest after misexpression is too nonspecific to assign a pathway. (scanlan2024geneticcharacterizationof pages 11-12)</td>
+</tr>
+<tr>
+<td>Detoxification hypothesis</td>
+<td>Subfamily-H/Dip4 context and Dro24 detoxification score <strong>3</strong> support a testable role in xenobiotic or small-molecule phosphorylation.</td>
+<td>Phylogenomic association and composite candidacy score</td>
+<td>Low–moderate</td>
+<td>No xenobiotic substrate or detoxification reaction has been demonstrated; family-size associations do not prove individual-gene function. (scanlan2024phylogenomicsofthe pages 7-8, scanlan2024phylogenomicsofthe pages 12-13, scanlan2024phylogenomicsofthe pages 11-12)</td>
+</tr>
+<tr>
+<td>Ecdysteroid hypothesis</td>
+<td>Ecdysteroids are possible family-level substrates, but CG6830 is <strong>not established as an ecdysteroid kinase</strong>. The two biochemically characterized insect EcKL ecdysteroid kinases are in subfamilies <strong>A and D</strong>, not H.</td>
+<td>Comparative biochemical and phylogenetic inference</td>
+<td>Low</td>
+<td>No CG6830 assay demonstrates phosphorylation of 20-hydroxyecdysone or another ecdysteroid. (scanlan2024phylogenomicsofthe pages 6-7, scanlan2024phylogenomicsofthe pages 2-3)</td>
+</tr>
+<tr>
+<td>Confusion warning</td>
+<td><strong>Wallflower (Wall) is CG13813, not CG6830.</strong> The extensive Wall knockout, RNAi, overexpression, and Cyp18a1-interaction results must not be attributed to CG6830; CG6830 appears separately in the 13-gene misexpression screen.</td>
+<td>Literal-identifier/full-text verification</td>
+<td>High</td>
+<td>Failure to resolve this discrepancy would substantially overstate CG6830-specific evidence. (scanlan2024geneticcharacterizationof pages 11-12, scanlan2024geneticcharacterizationof pages 2-3)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Evidence-graded conclusions for Drosophila CG6830 separate direct observations from family-level inference and unresolved questions. The table also flags the critical distinction between CG6830 and Wallflower/CG13813.</em></p>
+<h2 id="1-target-identification-and-nomenclature">1. Target identification and nomenclature</h2>
+<p>The requested target is:</p>
+<ul>
+<li><strong>Organism:</strong> <em>Drosophila melanogaster</em> (fruit fly)</li>
+<li><strong>Gene:</strong> <strong>CG6830</strong></li>
+<li><strong>FlyBase identifier:</strong> <strong>FBgn0037934</strong></li>
+<li><strong>UniProt accession:</strong> <strong>Q9VGJ8</strong></li>
+<li><strong>Reported synonym:</strong> <strong>Dro24-1</strong></li>
+<li><strong>Protein annotation:</strong> CHK kinase-like domain-containing/EcKL protein</li>
+<li><strong>Domain resources supplied with the target:</strong> InterPro IPR015897, IPR004119 and IPR011009; Pfam PF02958</li>
+</ul>
+<p>The 2024 insect EcKL phylogeny independently places the Drosophila <strong>Dro24</strong> lineage within Diptera clade <strong>Dip4</strong> and EcKL <strong>subfamily H</strong>, supporting alignment between the supplied Dro24-1 designation and the expected protein family. (scanlan2024phylogenomicsofthe pages 7-8, scanlan2024phylogenomicsofthe media 97f2158b)</p>
+<h3 id="essential-disambiguation">Essential disambiguation</h3>
+<p>Full-text checking revealed that the 2024 paper’s principal gene “Wallflower” is <strong>CG13813</strong>, while CG6830 appears as a separate gene in a screen of 13 additional EcKLs. Consequently, results such as Wall null-mutant viability, Wall RNAi artifacts, tissue-specific Wall phenotypes, and the failure of <em>Cyp18a1</em> mutation to suppress Wall toxicity are <strong>not CG6830 data</strong>. (scanlan2024geneticcharacterizationof pages 11-12, scanlan2024geneticcharacterizationof pages 2-3)</p>
+<p>This distinction also means that CG6830 should not be called Wallflower on present evidence. The literature for this specific target is limited rather than ambiguous at the accession level.</p>
+<h2 id="2-key-concepts-and-molecular-function-interpretation">2. Key concepts and molecular-function interpretation</h2>
+<h3 id="eckl-proteins">EcKL proteins</h3>
+<p>The EcKL family comprises insect kinase-like proteins implicated in small-molecule phosphorylation. EcKLs are predicted to be cytosolic enzymes, and family-level evidence connects different members to steroid-hormone metabolism and xenobiotic tolerance. Nevertheless, nearly all individual EcKL substrates remain unknown. (scanlan2024phylogenomicsofthe pages 1-2, scanlan2024phylogenomicsofthe pages 2-3)</p>
+<p>The proposed generic chemistry is:</p>
+<p><strong>ATP + hydroxyl-bearing small molecule → ADP + phosphorylated small molecule</strong></p>
+<p>For xenobiotics, phosphorylation of a hydroxyl group adds a negatively charged phosphate, potentially changing solubility, transport, sequestration, or biological activity. This is a family-level model, not a demonstrated CG6830 reaction. (scanlan2024phylogenomicsofthe pages 1-2)</p>
+<h3 id="meaning-of-chk-kinase-like">Meaning of “CHK kinase-like”</h3>
+<p>In this annotation context, “CHK-like” denotes a <strong>choline-kinase-like structural/domain relationship</strong>, not evidence that CG6830 is a DNA-damage checkpoint kinase such as Chk1/Chk2. Nor does the domain name establish choline as the substrate. Choline/aminoglycoside kinase-like proteins belong to the broader protein-kinase-like structural superfamily, whose conserved core supports ATP binding and phosphotransfer but whose substrate specificities have diverged substantially. Accordingly, CG6830 should not presently be annotated as a protein kinase, checkpoint kinase, or choline kinase on domain name alone.</p>
+<h3 id="what-is-known-about-eckl-substrate-specificity">What is known about EcKL substrate specificity?</h3>
+<p>Only two insect EcKL genes were reported as having strong genetic and biochemical support for ecdysteroid-kinase activity. Both catalyze phosphorylation at ecdysteroid C-22: <em>Bombyx mori</em> BmEc22K lies in subfamily A, whereas <em>Anopheles gambiae</em> AgEcK2 lies in subfamily D and acts on 20-hydroxyecdysone. Insect ecdysteroid conjugates phosphorylated at C-2, C-3, C-22, and C-26 have been reported more generally, but the responsible enzymes are incompletely resolved. (scanlan2024phylogenomicsofthe pages 6-7, scanlan2024phylogenomicsofthe pages 12-13, scanlan2024phylogenomicsofthe pages 2-3)</p>
+<p>CG6830 lies in <strong>subfamily H</strong>, not A or D. The occurrence of confirmed C-22 kinases in two separate subfamilies illustrates why EcKL membership does not establish a shared steroid substrate. The activity may have evolved independently, or related ancestral proteins may have undergone substantial substrate shifts. (scanlan2024phylogenomicsofthe pages 6-7)</p>
+<p><strong>Therefore, CG6830’s catalyzed reaction and substrate specificity are unknown.</strong> No evidence located demonstrates phosphorylation of choline, 20-hydroxyecdysone, another ecdysteroid, caffeine, an insecticide, a protein, or any other defined substrate.</p>
+<h2 id="3-direct-experimental-evidence-for-cg6830">3. Direct experimental evidence for CG6830</h2>
+<p>Scanlan and Robin’s 2024 G3 study screened 13 additional Drosophila EcKL genes using pre-existing UAS open-reading-frame lines with ubiquitous tub-GAL4-driven misexpression. Only <strong>CG6830 and CG5644</strong> caused significant developmental arrest before adulthood. CG5644 subsequently received a separate prothoracic-gland test, but comparable mechanistic follow-up was not reported for CG6830. (scanlan2024geneticcharacterizationof pages 11-12)</p>
+<h3 id="interpretation">Interpretation</h3>
+<p>This result supports three limited conclusions:</p>
+<ol>
+<li>The CG6830 transgene has a biologically active or toxic effect when expressed ubiquitously.</li>
+<li>The effect occurs before adult emergence and is therefore capable of perturbing development.</li>
+<li>CG6830 merits focused biochemical and tissue-specific investigation.</li>
+</ol>
+<p>It does <strong>not</strong> establish that CG6830 is normally essential, that developmental regulation is its primary role, or that arrest is caused by ecdysteroid depletion. Overexpression can create nonphysiological substrate depletion, ectopic product accumulation, ATP burden, protein misfolding, or activity in tissues where the endogenous protein is absent. The precise arrest stage, tissue dependence, rescue, catalytic-dead control, endogenous loss-of-function phenotype, and relevant metabolite were not established in the located CG6830-specific evidence. (scanlan2024geneticcharacterizationof pages 11-12)</p>
+<h2 id="4-biological-process-and-pathway-hypotheses">4. Biological process and pathway hypotheses</h2>
+<h3 id="41-xenobiotic-detoxification-leading-but-unproven-hypothesis">4.1 Xenobiotic detoxification: leading but unproven hypothesis</h3>
+<p>The strongest current hypothesis is a role in <strong>small-molecule or xenobiotic metabolism</strong>. In the 2024 phylogenomic classification, Dro24 belongs to the expanded subfamily-H Dip4 clade and has a maximum detoxification score of <strong>3</strong>. The score integrated properties such as phylogenetic stability, chemical induction, and tissue-specific expression; DS ≥3 was used to designate candidates, not confirmed detoxification enzymes. (scanlan2024phylogenomicsofthe pages 6-7, scanlan2024phylogenomicsofthe pages 7-8, scanlan2024phylogenomicsofthe media 97f2158b)</p>
+<p>Several expanded subfamily-H Diptera clades have genetic associations with tolerance to caffeine, kojic acid, ethanol, imidacloprid, or methylmercury. However, these findings concern other clades or genes and cannot be transferred to CG6830 as substrate assignments. The 2024 authors explicitly recommended experimental testing of Dip1, Dip3, and Dip4 genes rather than treating their functions as established. (scanlan2024phylogenomicsofthe pages 7-8, scanlan2024phylogenomicsofthe pages 12-13)</p>
+<p>Thus, an appropriate provisional Gene Ontology-style description would be <strong>“putative small-molecule kinase; possible role in xenobiotic metabolism”</strong>, with low-to-moderate confidence. “Caffeine kinase,” “insecticide-metabolizing enzyme,” or another substrate-specific label would be unsupported.</p>
+<h3 id="42-ecdysteroid-metabolism-plausible-family-context-weak-cg6830-support">4.2 Ecdysteroid metabolism: plausible family context, weak CG6830 support</h3>
+<p>EcKL enzymes can reversibly phosphorylate ecdysteroids, a mechanism implicated in steroid storage, inactivation, or recycling. Yet CG6830’s subfamily-H placement is distant from the two characterized ecdysteroid 22-kinases in subfamilies A and D. No CG6830-specific enzyme assay, steroid-metabolomics result, endocrine phenotype, or genetic interaction establishes an ecdysteroid role. (scanlan2024phylogenomicsofthe pages 6-7, scanlan2024phylogenomicsofthe pages 2-3)</p>
+<p>The developmental arrest caused by CG6830 overexpression is compatible with disruption of hormone metabolism but is not diagnostic: many metabolic disturbances produce pre-adult lethality. CG6830 should therefore remain <strong>an ecdysteroid-kinase candidate only at low confidence</strong>, not an annotated EcK.</p>
+<h3 id="43-protein-phosphorylation-or-canonical-signaling">4.3 Protein phosphorylation or canonical signaling</h3>
+<p>No evidence supports CG6830 as a kinase acting on proteins or as a component of a canonical receptor/second-messenger pathway. Its kinase-like fold is more consistent with ATP-dependent small-molecule phosphotransfer, but even catalytic competence remains unverified for purified CG6830. (scanlan2024phylogenomicsofthe pages 2-3, scanlan2024phylogenomicsofthe pages 4-5)</p>
+<h2 id="5-cellular-and-anatomical-localization">5. Cellular and anatomical localization</h2>
+<p>No CG6830-specific fluorescent localization, immunostaining, biochemical fractionation, secretion assay, or organelle-targeting study was found. The EcKL family is generally described as comprising predicted <strong>cytosolic small-molecule kinases</strong>, making the cytosol the best working hypothesis. This is a low-confidence inference rather than direct localization evidence. (scanlan2024phylogenomicsofthe pages 2-3)</p>
+<p>Likewise, the current evidence does not identify the endogenous tissue in which CG6830 acts. The expression features reported for Wall/CG13813—including midgut and ring-gland expression—must not be assigned to CG6830. (scanlan2024geneticcharacterizationof pages 3-5, scanlan2024geneticcharacterizationof pages 2-3)</p>
+<h2 id="6-recent-developments-and-quantitative-context">6. Recent developments and quantitative context</h2>
+<p>The most important recent advances are two 2024 studies:</p>
+<ol>
+<li><strong>Scanlan JL and Robin C, “Phylogenomics of the Ecdysteroid Kinase-like (EcKL) Gene Family in Insects Highlights Roles in Both Steroid Hormone Metabolism and Detoxification.”</strong> <em>Genome Biology and Evolution</em> 16(2), advance publication <strong>31 January 2024</strong>. URL: https://doi.org/10.1093/gbe/evae019. The study manually analyzed EcKLs from <strong>140 insect genomes</strong>, identified at least <strong>13 subfamilies</strong>, and reported a mean of <strong>30</strong> and median of <strong>26</strong> EcKL genes per genome, ranging from <strong>12 to 105</strong>. (scanlan2024phylogenomicsofthe pages 1-2, scanlan2024phylogenomicsofthe pages 3-4, scanlan2024phylogenomicsofthe pages 4-5)</li>
+</ol>
+<p>Diet significantly predicted EcKL family size (F4,135 = 7.56, P &lt; 1.0 × 10−4). Estimated xenobiotic diversity also predicted EcKL copy number in both the complete dataset (F2,137 = 29.4, P &lt; 1.0 × 10−4) and a reduced 115-species dataset (F2,112 = 27.1, P &lt; 1.0 × 10−4). These comparative associations support a broad detoxification role but do not establish the function of CG6830 individually. (scanlan2024phylogenomicsofthe pages 8-9)</p>
+<p>The family is highly divergent: 11 of 13 subfamilies had minimum within-subfamily sequence identity below 30%, and most between-subfamily minima were below 20%. This divergence strongly limits substrate transfer by homology alone. (scanlan2024phylogenomicsofthe pages 6-7)</p>
+<ol>
+<li><strong>Scanlan JL and Robin C, “Genetic characterization of candidate ecdysteroid kinases in Drosophila melanogaster.”</strong> <em>G3: Genes, Genomes, Genetics</em> 14(11), published <strong>August 2024</strong>. URL: https://doi.org/10.1093/g3journal/jkae204. This study supplied the only direct CG6830 evidence located: significant pre-adult arrest after ubiquitous misexpression in a 13-gene additional-EcKL screen. (scanlan2024geneticcharacterizationof pages 11-12)</li>
+</ol>
+<p>No 2023–2024 study located provided a CG6830 substrate, structure, endogenous localization, or loss-of-function characterization.</p>
+<h2 id="7-current-applications-and-real-world-relevance">7. Current applications and real-world relevance</h2>
+<p>CG6830 has no validated clinical, agricultural, or biotechnological implementation. Its potential relevance is prospective:</p>
+<ul>
+<li><strong>Insecticide biology:</strong> If Dip4/subfamily-H proteins phosphorylate xenobiotics, CG6830 could help explain metabolic tolerance or susceptibility to insecticides. This requires direct exposure and metabolite studies.</li>
+<li><strong>Environmental toxicology:</strong> Drosophila offers a tractable system for testing whether CG6830 modifies responses to plant allelochemicals, pollutants, or dietary toxins.</li>
+<li><strong>Insect endocrinology:</strong> If CG6830 acts on an endogenous steroid or other developmental metabolite, its overexpression phenotype could reveal previously unrecognized metabolic regulation.</li>
+<li><strong>Comparative enzymology:</strong> CG6830 is a useful representative of a poorly characterized, rapidly evolving kinase family in which structural similarity has not translated into predictable substrate specificity.</li>
+</ul>
+<p>These are research applications, not established real-world functions.</p>
+<h2 id="8-expert-assessment-and-confidence-ranked-annotation">8. Expert assessment and confidence-ranked annotation</h2>
+<h3 id="high-confidence">High confidence</h3>
+<ul>
+<li>The target is <em>D. melanogaster</em> CG6830/FBgn0037934/Q9VGJ8/Dro24-1.</li>
+<li>It encodes an EcKL/choline-kinase-like-domain protein.</li>
+<li>Dro24 is assigned to EcKL subfamily H and Diptera clade Dip4.</li>
+<li>Ubiquitous CG6830 misexpression can cause significant pre-adult developmental arrest.</li>
+<li>Its physiological substrate and precise reaction are unknown. (scanlan2024geneticcharacterizationof pages 11-12, scanlan2024phylogenomicsofthe media 97f2158b)</li>
+</ul>
+<h3 id="moderate-confidence">Moderate confidence</h3>
+<ul>
+<li>CG6830 is likely an ATP-dependent small-molecule phosphotransferase, based on its domain and family.</li>
+<li>It is a reasonable candidate for xenobiotic-related metabolism because its Dro24 lineage has DS = 3 and lies in an expanded subfamily-H clade. (scanlan2024phylogenomicsofthe pages 7-8, scanlan2024phylogenomicsofthe pages 2-3)</li>
+</ul>
+<h3 id="low-confidencespeculative">Low confidence/speculative</h3>
+<ul>
+<li>Cytosolic localization.</li>
+<li>Direct participation in detoxification.</li>
+<li>Phosphorylation of an endogenous developmental metabolite.</li>
+<li>Ecdysteroid-kinase activity.</li>
+</ul>
+<h3 id="unsupported-and-should-not-be-annotated">Unsupported and should not be annotated</h3>
+<ul>
+<li>A specific substrate or phosphate position.</li>
+<li>Choline-kinase or checkpoint-kinase function.</li>
+<li>Protein-kinase signaling activity.</li>
+<li>Midgut, ring-gland, tracheal, epidermal, muscle, or fat-body localization based on Wall/CG13813 experiments.</li>
+<li>A normal developmental requirement inferred solely from overexpression lethality.</li>
+</ul>
+<h2 id="9-experiments-needed-for-definitive-annotation">9. Experiments needed for definitive annotation</h2>
+<p>The highest-priority validation program would be:</p>
+<ol>
+<li>Generate independent CG6830 null alleles and test viability, fertility, development, and toxin sensitivity under basal and challenge conditions.</li>
+<li>Endogenously tag CG6830 to measure tissue, developmental-stage, and subcellular localization without overexpression.</li>
+<li>Purify wild-type and catalytic-site-mutant protein and screen ATP-dependent phosphorylation against ecdysteroids, choline-related metabolites, phenolics, glycosides, insecticides, and other candidate xenobiotics.</li>
+<li>Confirm products by LC–MS/MS and determine phosphate position, Km, kcat, ATP dependence, and cofactor requirements.</li>
+<li>Perform untargeted metabolomics after knockout and inducible expression; prioritize metabolites changing reciprocally between conditions.</li>
+<li>Repeat misexpression with a catalytically inactive construct. Loss of developmental arrest would connect the phenotype to phosphotransfer rather than nonspecific protein toxicity.</li>
+<li>Test genetic and metabolomic rescue with candidate substrates/products and examine Dip4 orthologs across Diptera.</li>
+</ol>
+<h2 id="final-functional-annotation">Final functional annotation</h2>
+<p>The most defensible current description is:</p>
+<blockquote>
+<p><strong>CG6830 encodes a poorly characterized EcKL/choline-kinase-like-domain protein, probably an intracellular ATP-dependent small-molecule kinase. Phylogenomic evidence places it in the subfamily-H Dip4/Dro24 lineage and makes xenobiotic metabolism a plausible hypothesis. Ubiquitous misexpression causes pre-adult developmental arrest, but no endogenous substrate, catalytic product, physiological pathway, loss-of-function phenotype, tissue of action, or subcellular localization has been established.</strong></p>
+</blockquote>
+<p>Accordingly, precise enzyme nomenclature should be deferred until biochemical substrate and product identification.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(scanlan2024phylogenomicsofthe pages 7-8): Jack L Scanlan and Charles Robin. Phylogenomics of the ecdysteroid kinase-like (eckl) gene family in insects highlights roles in both steroid hormone metabolism and detoxification. Jan 2024. URL: https://doi.org/10.1093/gbe/evae019, doi:10.1093/gbe/evae019. This article has 11 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(scanlan2024phylogenomicsofthe media 97f2158b): Jack L Scanlan and Charles Robin. Phylogenomics of the ecdysteroid kinase-like (eckl) gene family in insects highlights roles in both steroid hormone metabolism and detoxification. Jan 2024. URL: https://doi.org/10.1093/gbe/evae019, doi:10.1093/gbe/evae019. This article has 11 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(scanlan2024phylogenomicsofthe pages 2-3): Jack L Scanlan and Charles Robin. Phylogenomics of the ecdysteroid kinase-like (eckl) gene family in insects highlights roles in both steroid hormone metabolism and detoxification. Jan 2024. URL: https://doi.org/10.1093/gbe/evae019, doi:10.1093/gbe/evae019. This article has 11 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(scanlan2024geneticcharacterizationof pages 11-12): Jack L Scanlan and Charles Robin. Genetic characterization of candidate ecdysteroid kinases in <i>drosophila melanogaster</i>. Aug 2024. URL: https://doi.org/10.1093/g3journal/jkae204, doi:10.1093/g3journal/jkae204. This article has 5 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(scanlan2024geneticcharacterizationof pages 2-3): Jack L Scanlan and Charles Robin. Genetic characterization of candidate ecdysteroid kinases in <i>drosophila melanogaster</i>. Aug 2024. URL: https://doi.org/10.1093/g3journal/jkae204, doi:10.1093/g3journal/jkae204. This article has 5 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(scanlan2024phylogenomicsofthe pages 4-5): Jack L Scanlan and Charles Robin. Phylogenomics of the ecdysteroid kinase-like (eckl) gene family in insects highlights roles in both steroid hormone metabolism and detoxification. Jan 2024. URL: https://doi.org/10.1093/gbe/evae019, doi:10.1093/gbe/evae019. This article has 11 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(scanlan2024phylogenomicsofthe pages 12-13): Jack L Scanlan and Charles Robin. Phylogenomics of the ecdysteroid kinase-like (eckl) gene family in insects highlights roles in both steroid hormone metabolism and detoxification. Jan 2024. URL: https://doi.org/10.1093/gbe/evae019, doi:10.1093/gbe/evae019. This article has 11 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(scanlan2024phylogenomicsofthe pages 11-12): Jack L Scanlan and Charles Robin. Phylogenomics of the ecdysteroid kinase-like (eckl) gene family in insects highlights roles in both steroid hormone metabolism and detoxification. Jan 2024. URL: https://doi.org/10.1093/gbe/evae019, doi:10.1093/gbe/evae019. This article has 11 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(scanlan2024phylogenomicsofthe pages 6-7): Jack L Scanlan and Charles Robin. Phylogenomics of the ecdysteroid kinase-like (eckl) gene family in insects highlights roles in both steroid hormone metabolism and detoxification. Jan 2024. URL: https://doi.org/10.1093/gbe/evae019, doi:10.1093/gbe/evae019. This article has 11 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(scanlan2024phylogenomicsofthe pages 1-2): Jack L Scanlan and Charles Robin. Phylogenomics of the ecdysteroid kinase-like (eckl) gene family in insects highlights roles in both steroid hormone metabolism and detoxification. Jan 2024. URL: https://doi.org/10.1093/gbe/evae019, doi:10.1093/gbe/evae019. This article has 11 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(scanlan2024geneticcharacterizationof pages 3-5): Jack L Scanlan and Charles Robin. Genetic characterization of candidate ecdysteroid kinases in <i>drosophila melanogaster</i>. Aug 2024. URL: https://doi.org/10.1093/g3journal/jkae204, doi:10.1093/g3journal/jkae204. This article has 5 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(scanlan2024phylogenomicsofthe pages 3-4): Jack L Scanlan and Charles Robin. Phylogenomics of the ecdysteroid kinase-like (eckl) gene family in insects highlights roles in both steroid hormone metabolism and detoxification. Jan 2024. URL: https://doi.org/10.1093/gbe/evae019, doi:10.1093/gbe/evae019. This article has 11 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(scanlan2024phylogenomicsofthe pages 8-9): Jack L Scanlan and Charles Robin. Phylogenomics of the ecdysteroid kinase-like (eckl) gene family in insects highlights roles in both steroid hormone metabolism and detoxification. Jan 2024. URL: https://doi.org/10.1093/gbe/evae019, doi:10.1093/gbe/evae019. This article has 11 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="CG6830-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a><br />
+<img alt="## Context ID: pqac-00000020 Figure 3C from page 7 of the document is provided, showing the mapping of EcKL subfamilies, Diptera OLCs, and Drosophila GLCs (incl" src="CG6830-deep-research-falcon_artifacts/image-1.png" /></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>scanlan2024geneticcharacterizationof pages 11-12</li>
+<li>scanlan2024phylogenomicsofthe pages 2-3</li>
+<li>scanlan2024phylogenomicsofthe pages 1-2</li>
+<li>scanlan2024phylogenomicsofthe pages 6-7</li>
+<li>scanlan2024phylogenomicsofthe pages 8-9</li>
+<li>scanlan2024phylogenomicsofthe pages 7-8</li>
+<li>scanlan2024geneticcharacterizationof pages 2-3</li>
+<li>scanlan2024phylogenomicsofthe pages 4-5</li>
+<li>scanlan2024phylogenomicsofthe pages 12-13</li>
+<li>scanlan2024phylogenomicsofthe pages 11-12</li>
+<li>scanlan2024geneticcharacterizationof pages 3-5</li>
+<li>scanlan2024phylogenomicsofthe pages 3-4</li>
+<li>https://doi.org/10.1093/gbe/evae019.</li>
+<li>https://doi.org/10.1093/g3journal/jkae204.</li>
+<li>https://doi.org/10.1093/gbe/evae019,</li>
+<li>https://doi.org/10.1093/g3journal/jkae204,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9VGJ8
+gene_symbol: CG6830
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:7227
+  label: Drosophila melanogaster
+description: CG6830 is an 891-residue ecdysteroid-kinase-like family protein containing two CHK-like kinase
+  domains. The arthropod EcKL family has expanded into branches proposed to phosphorylate endogenous steroids
+  or xenobiotic compounds. The physiological substrate and catalytic properties of CG6830 itself remain
+  unresolved.
+existing_annotations:
+- term:
+    id: GO:0106389
+    label: ecdysteroid 22-kinase activity
+  evidence_type: TAS
+  original_reference_id: PMID:32540344
+  qualifier: enables
+  review:
+    action: UNDECIDED
+    summary: Ecdysteroid 22-phosphorylation is not established for CG6830.
+    reason: The cited study explicitly proposes a detoxification-kinase hypothesis and analyzes gene-family
+      evolution and expression. The exact target has two CHK-like domains, but those observations neither
+      establish ecdysteroid as its substrate nor prove loss of kinase activity. Target-specific turnover
+      assays are needed to distinguish endogenous steroid phosphorylation from other EcKL chemistry.
+    supported_by:
+    - reference_id: PMID:32540344
+      supporting_text: &#39;We propose the hypothesis that members of the
+
+        arthropod-specific ecdysteroid kinase-like (EcKL) gene family encode
+
+        detoxicative kinases.&#39;
+    - reference_id: file:DROME/CG6830/CG6830-uniprot.txt
+      supporting_text: /note=&#34;CHK kinase-like&#34;
+references:
+- id: PMID:32540344
+  title: Genomic and transcriptomic analyses in Drosophila suggest that the ecdysteroid kinase-like (EcKL)
+    gene family encodes the &#39;detoxification-by-phosphorylation&#39; enzymes of insects.
+  findings: []
+  full_text_unavailable: true
+- id: file:DROME/CG6830/CG6830-uniprot.txt
+  title: CG6830-uniprot.txt
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

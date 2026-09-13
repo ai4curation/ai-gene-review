@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retrieval recall in production use (PAINT campaign, n=91) - AI Gene Review Projects</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-primary: #3498db;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .breadcrumb {
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .breadcrumb a {
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: #374151;
+        }
+
+        h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-top: 1.25rem;
+            margin-bottom: 0.5rem;
+            color: #4b5563;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        a {
+            color: var(--color-primary);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Gene symbol links */
+        .content a[href*="/genes/"] {
+            background-color: #dbeafe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-weight: 500;
+        }
+
+        .content a[href*="/genes/"]:hover {
+            background-color: #bfdbfe;
+        }
+
+        ul, ol {
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+        }
+
+        li {
+            margin-bottom: 0.25rem;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 0.875em;
+        }
+
+        pre {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+
+        blockquote {
+            border-left: 4px solid var(--color-primary);
+            margin-left: 0;
+            padding-left: 1.5rem;
+            color: #4b5563;
+            font-style: italic;
+            margin-bottom: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--bg-light);
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+
+        tr:hover {
+            background-color: #f3f4f6;
+        }
+
+        /* Mermaid diagrams */
+        .mermaid {
+            text-align: center;
+            margin: 2rem 0;
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .mermaid svg {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Warnings section */
+        .warnings {
+            background-color: #fef3c7;
+            border: 1px solid #fde68a;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .warnings h3 {
+            color: #92400e;
+            margin-top: 0;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .warnings ul {
+            margin-bottom: 0;
+            color: #78350f;
+        }
+
+        /* Task lists (checkboxes) */
+        li input[type="checkbox"] {
+            margin-right: 0.5rem;
+        }
+
+        /* Status badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.625rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-success {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-warning {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-info {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        /* Project meta: maturity + tag badges */
+        .project-meta { margin-bottom: 0.5rem; }
+        .project-meta .badge { margin: 0 0.25rem 0.25rem 0; }
+        .gene-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.375rem;
+            margin-bottom: 1rem;
+        }
+        .gene-list a,
+        .gene-list span {
+            background-color: #dbeafe;
+            border-radius: 0.25rem;
+            color: #1e40af;
+            display: inline-block;
+            font-weight: 500;
+            padding: 0.125rem 0.375rem;
+        }
+        .gene-list a:hover {
+            background-color: #bfdbfe;
+            text-decoration: none;
+        }
+        .m-SCOPING     { background: #fef3c7; color: #92400e; }
+        .m-IN_PROGRESS { background: #dbeafe; color: #1e40af; }
+        .m-MATURE      { background: #dcfce7; color: #166534; }
+        .m-COMPLETE    { background: #d1fae5; color: #065f46; }
+        .m-ARCHIVED    { background: #f3f4f6; color: #6b7280; }
+        .badge.tag { text-transform: none; }
+        .t-FLAGSHIP       { background: #fae8ff; color: #86198f; }
+        .t-BIOLOGY_DOMAIN { background: #e0f2fe; color: #075985; }
+        .t-PIPELINE       { background: #ede9fe; color: #5b21b6; }
+        .t-OBSOLETION     { background: #fee2e2; color: #991b1b; }
+
+        /* Manual reviews */
+        .manual-reviews {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem 1.25rem;
+            margin-bottom: 2rem;
+        }
+        .manual-reviews h3 { margin-top: 0; margin-bottom: 0.75rem; font-size: 1rem; }
+        .manual-reviews .review { padding: 0.5rem 0; }
+        .manual-reviews .review + .review { border-top: 1px dashed var(--border-color); }
+        .manual-reviews .review-head { margin-bottom: 0.25rem; }
+        .manual-reviews .review-head .badge { margin-right: 0.5rem; }
+        .manual-reviews .review-head .who { font-weight: 600; }
+        .manual-reviews .review-head .when { color: var(--text-muted); font-size: 0.85rem; margin-left: 0.5rem; }
+        .manual-reviews .review-notes { margin: 0.25rem 0; }
+        .manual-reviews .review-todos { margin: 0.25rem 0 0.5rem; }
+        .badge.r-READY             { background: #dcfce7; color: #166534; }
+        .badge.r-CHANGES_REQUESTED { background: #fee2e2; color: #991b1b; }
+
+        /* Content wrapper */
+        .content {
+            margin-bottom: 2rem;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            text-align: center;
+        }
+
+        footer small {
+            display: block;
+        }
+    </style>
+    <!-- Mermaid.js for diagram rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#3498db',
+                primaryTextColor: '#fff',
+                primaryBorderColor: '#2c3e50',
+                lineColor: '#333',
+                secondaryColor: '#ecf0f1',
+                tertiaryColor: '#f39c12'
+            },
+            flowchart: {
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+</head>
+<body>
+    <nav class="breadcrumb">
+        <a href="../../../../index.html">Home</a> &raquo;
+        <a href="../../index.html">Projects</a> &raquo;
+        Retrieval recall in production use (PAINT campaign, n=91)
+    </nav>
+
+    <header class="header">
+        <h1>Retrieval recall in production use (PAINT campaign, n=91)</h1>
+
+
+
+    </header>
+
+
+
+
+
+    <div class="content">
+        <h1 id="retrieval-recall-in-production-use-paint-campaign-n91">Retrieval recall in production use (PAINT campaign, n=91)</h1>
+<p>The other cohorts in this project evaluate what Affinage <em>says</em> — whether its GO<br />
+grounding matches the curated function, whether its narrative recovers what the<br />
+grounding drops. This one evaluates what it <em>finds</em>. Across 91 human genes<br />
+reviewed with Affinage as the deep-research provider, how much of the literature<br />
+the finished review depends on did Affinage actually supply?</p>
+<p>Numbers here are generated by <a href="../retrieval_recall.py"><code>retrieval_recall.py</code></a>;<br />
+see <a href="paint-campaign/summary.html"><code>paint-campaign/summary.md</code></a> for the per-gene<br />
+table and <a href="paint-campaign/per-gene.json"><code>paint-campaign/per-gene.json</code></a> for raw<br />
+counts. Re-run with <code>uv run python retrieval_recall.py --all</code>.</p>
+<h2 id="bottom-line">Bottom line</h2>
+<p><strong>Affinage supplies about half the references a review has to go find, and its<br />
+trust gates cannot tell you which half is missing.</strong></p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PMIDs Affinage returned</td>
+<td>1344</td>
+</tr>
+<tr>
+<td>PMIDs cited by the finished reviews</td>
+<td>1626</td>
+</tr>
+<tr>
+<td>... already supplied by GOA (no search needed)</td>
+<td>908</td>
+</tr>
+<tr>
+<td><strong>References the reviews had to find</strong></td>
+<td><strong>718</strong></td>
+</tr>
+<tr>
+<td>... supplied by Affinage</td>
+<td>371</td>
+</tr>
+<tr>
+<td><strong>Pooled novel-reference recall</strong></td>
+<td><strong>52%</strong></td>
+</tr>
+<tr>
+<td>Fraction of Affinage's returned refs the reviews used</td>
+<td>39%</td>
+</tr>
+</tbody>
+</table>
+<p>The denominator matters. Counting every PMID in a finished review makes recall<br />
+look like 32%, but roughly 56% of those references arrive prepackaged in the GOA<br />
+file — the reviewer is handed them and no retrieval is involved. Scoring a<br />
+retrieval provider against references it was never asked to retrieve measures<br />
+nothing. Restricted to the 718 references the reviewer genuinely had to locate,<br />
+recall is 52%.</p>
+<p>The complementary 61% figure — Affinage references the review never cited — is<br />
+the ordinary cost of a literature sweep and not by itself a defect. A provider<br />
+that returns twenty papers of which eight are load-bearing has done useful work.</p>
+<h2 id="precision-is-gated-recall-is-not">Precision is gated; recall is not</h2>
+<p><code>gates_passed: True</code> certifies that the citations in a report are real,<br />
+resolvable, and quoted correctly. That is a precision guarantee, and it holds up.<br />
+What it cannot certify is that the report found the papers that decide the<br />
+review, because nothing in the pipeline measures recall.</p>
+<p>The gap is not hypothetical. Two verified cases from this campaign, both on genes<br />
+whose reports were otherwise clean:</p>
+<ul>
+<li><strong><a href="../../../../genes/human/ADAMTSL1/ADAMTSL1-ai-review.html">ADAMTSL1</a></strong> — <code>PMID:22242013</code> carries the only molecular-function experiment<br />
+  ever performed on the human protein, a measured <a href="../../../../genes/human/SPR/SPR-ai-review.html">SPR</a> negative against both<br />
+  fibrillin-1 and ADAMTS-10. The finished review cites it seven times. It appears<br />
+  zero times in the Affinage report, and it is absent from GOA. It surfaced only<br />
+  because a sibling agent reviewing <a href="../../../../genes/human/ADAMTSL3/ADAMTSL3-ai-review.html">ADAMTSL3</a> read a paper titled for the partner.</li>
+<li><strong><a href="../../../../genes/human/ACTG2/ACTG2-ai-review.html">ACTG2</a></strong> — <code>PMID:38820162</code> (2024 cryo-EM of <a href="../../../../genes/human/ACTG2/ACTG2-ai-review.html">ACTG2</a> filaments) supplied four of<br />
+  five proposed new annotations and is cited 29 times in the review. Zero<br />
+  mentions in the Affinage report. It carries no GO annotations at all.</li>
+</ul>
+<p>Both are the same shape: the decisive paper for a sparsely-annotated gene is<br />
+usually titled for something else — a partner, a complex, a paralogue, or the<br />
+well-characterised family member. A symbol-keyed search does not reach it, and a<br />
+measured negative, which is the most decision-relevant evidence available on a<br />
+dark gene, is almost never in the title.</p>
+<h2 id="recall-does-not-depend-on-how-well-studied-the-gene-is">Recall does not depend on how well-studied the gene is</h2>
+<p>The sorted per-gene table invites a tempting misreading. Genes at the 100%-recall<br />
+end (<a href="../../../../genes/human/RAD51C/RAD51C-ai-review.html">RAD51C</a>, <a href="../../../../genes/human/RFWD3/RFWD3-ai-review.html">RFWD3</a>, <a href="../../../../genes/human/SLX4/SLX4-ai-review.html">SLX4</a>, <a href="../../../../genes/human/UBE2T/UBE2T-ai-review.html">UBE2T</a>, <a href="../../../../genes/human/XRCC2/XRCC2-ai-review.html">XRCC2</a>) are all well-characterised, and five of<br />
+the seven at the 0% end (<a href="../../../../genes/human/AADACL2/AADACL2-ai-review.html">AADACL2</a>/3/4, <a href="../../../../genes/human/ACP7/ACP7-ai-review.html">ACP7</a>, <a href="../../../../genes/human/ACTL10/ACTL10-ai-review.html">ACTL10</a>) have no GOA references at<br />
+all, which looks like a clean story about the provider failing on dark genes.</p>
+<p>The 100% end is an artifact of small denominators. Those genes had one to five<br />
+novel references each, and a gene with a single novel reference scores 0% or 100%<br />
+and nothing in between.</p>
+<p>The 0% end does not hold up either. The other two zero-recall genes are not<br />
+obscure: by the script's own banding, <a href="../../../../genes/human/ACTR8/ACTR8-ai-review.html">ACTR8</a> has 12 GOA references and sits in the<br />
+well-studied band, and <a href="../../../../genes/human/ACTR1B/ACTR1B-ai-review.html">ACTR1B</a> has 8 and sits in the medium band.</p>
+<p>Pooling references within bands of curation depth removes both effects:</p>
+<table>
+<thead>
+<tr>
+<th>curation depth</th>
+<th style="text-align: right;">genes</th>
+<th style="text-align: right;">novel refs</th>
+<th style="text-align: right;">supplied</th>
+<th style="text-align: right;">recall</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dark (0-2 GOA refs)</td>
+<td style="text-align: right;">25</td>
+<td style="text-align: right;">167</td>
+<td style="text-align: right;">87</td>
+<td style="text-align: right;">52%</td>
+</tr>
+<tr>
+<td>medium (3-9)</td>
+<td style="text-align: right;">41</td>
+<td style="text-align: right;">436</td>
+<td style="text-align: right;">220</td>
+<td style="text-align: right;">50%</td>
+</tr>
+<tr>
+<td>well-studied (10+)</td>
+<td style="text-align: right;">24</td>
+<td style="text-align: right;">115</td>
+<td style="text-align: right;">64</td>
+<td style="text-align: right;">56%</td>
+</tr>
+</tbody>
+</table>
+<p>Recall is flat. Affinage misses about half the findable literature regardless of<br />
+how much prior curation exists.</p>
+<p>What differs across the bands is the <strong>consequence</strong> of a miss, not its rate. On<br />
+a well-studied gene, half the literature still leaves several independent papers<br />
+establishing the same function, and the review survives. On a dark gene, half the<br />
+literature can mean the difference between one functional experiment and none —<br />
+which is exactly what happened with <a href="../../../../genes/human/ADAMTSL1/ADAMTSL1-ai-review.html">ADAMTSL1</a> and <a href="../../../../genes/human/ACTG2/ACTG2-ai-review.html">ACTG2</a>.</p>
+<h2 id="silent-empty-returns">Silent empty returns</h2>
+<p>Six reports returned zero PMIDs: <a href="../../../../genes/human/AADACL2/AADACL2-ai-review.html">AADACL2</a>, <a href="../../../../genes/human/AADACL3/AADACL3-ai-review.html">AADACL3</a>, <a href="../../../../genes/human/AADACL4/AADACL4-ai-review.html">AADACL4</a>, <a href="../../../../genes/human/ACP7/ACP7-ai-review.html">ACP7</a>, <a href="../../../../genes/human/ACTL10/ACTL10-ai-review.html">ACTL10</a>, <a href="../../../../genes/human/ACTR8/ACTR8-ai-review.html">ACTR8</a>.<br />
+Their reviews went on to cite 6, 3, 4, 1, 2 and 27 references respectively, all<br />
+found by other means.</p>
+<p>Two features make this worse than a low score. The AADACL cluster is an entire<br />
+paralogue family returning nothing, suggesting the failure attaches to a<br />
+neighbourhood of sequence space rather than to individual queries. And an empty<br />
+report is not flagged: <a href="../../../../genes/human/ACTL10/ACTL10-ai-review.html">ACTL10</a>'s carries <code>gates_passed: True</code>, which is<br />
+technically correct — a report with no citations has no false citations — but<br />
+reads as success. A gate that passes vacuously on empty input is a gate worth<br />
+changing.</p>
+<p>Only one further gene, <a href="../../../../genes/human/ACTR1B/ACTR1B-ai-review.html">ACTR1B</a>, received a non-empty report that supplied none of<br />
+its novel references — so outside the six empty returns, a report that contains<br />
+citations at all almost always contributes at least one.</p>
+<h2 id="recommendations">Recommendations</h2>
+<p>Treat Affinage as a strong first pass, not as the literature search. It front-loads<br />
+the obvious references cheaply, and 56 of 91 reviews with a committed report cite<br />
+it as a source, so the reports are used rather than filed and ignored.</p>
+<p>For any gene where the review turns on a small number of experiments, search<br />
+independently on partners, complexes, family members and paralogues, and run<br />
+QuickGO by reference on load-bearing PMIDs to see what else they annotate. This<br />
+is already standing practice for the per-gene review agents in this campaign and<br />
+is what surfaced both documented misses above.</p>
+<p>Two changes would make the provider's own output more honest without touching<br />
+retrieval: report an explicit zero-citation warning rather than passing gates<br />
+vacuously, and record in the gene notes when the reviewer found a load-bearing<br />
+reference the provider missed. Recall cannot be measured at all unless the misses<br />
+are written down somewhere.</p>
+<h2 id="limits-of-this-analysis">Limits of this analysis</h2>
+<p><strong>52% is an upper bound, for two reasons, and the second is the larger one.</strong></p>
+<p>The reviews were written <em>with the Affinage report in hand</em> — 56 of the 91 cite it<br />
+as a source. The reference set being scored is therefore partly <strong>caused by</strong> the<br />
+thing being scored: a paper Affinage surfaced is more likely to end up in the<br />
+review than an equally relevant paper it did not, so the numerator is enriched by<br />
+construction. Measuring recall against a reviewer who read the report is not the<br />
+same as measuring it against an independent literature search, and the honest<br />
+reading of 52% is "of the references that ended up mattering, Affinage had already<br />
+supplied about half" — not "Affinage finds half of what is findable." A clean<br />
+estimate would need reviews written blind to the report.</p>
+<p>Recall is also measured against a single finished review per gene, which is an<br />
+imperfect standard in the other direction: a reference neither Affinage nor the<br />
+reviewer found is invisible here.</p>
+<p>Reference sets are compared by PMID string matching, so a paper cited in the<br />
+report by DOI or title alone would score as a miss. In this cohort that caveat<br />
+never bites — no Affinage report cites by DOI anywhere.</p>
+<p>The 91 scored genes are those with a committed Affinage report, not a random<br />
+sample of the campaign. Genes where the provider errored and the reviewer moved<br />
+on without committing a report are absent, which biases the sample toward<br />
+successful runs.</p>
+<p>Gate statistics are thin: only 33 of 91 reports carry a <code>gates_passed</code> field at<br />
+all (29 True, 4 False), the remaining 58 predating the field.</p>
+    </div>
+
+    <footer>
+        <small>Generated from paint-campaign.md</small>
+        <small>AI Gene Review Project</small>
+    </footer>
+</body>
+</html>

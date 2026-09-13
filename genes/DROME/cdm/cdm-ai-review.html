@@ -1,0 +1,4017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cdm - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>cdm</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9VEC5" target="_blank" class="term-link">
+                        Q9VEC5
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Drosophila melanogaster</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "cdm";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">19</span> Annotations</a>
+
+
+
+        <a href="#review-research" title="Deep research and hypothesis research reports"><span class="nav-count">1</span> Research</a>
+
+
+
+        <a href="#external-predictions" title="External predictions assessed separately from GOA annotations" class="nav-external"><span class="nav-count">2</span> External</a>
+
+
+
+        <a href="#review-core-functions" title="Core biological functions"><span class="nav-count">1</span> Core Function</a>
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">10</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">1</span> Documents</a>
+
+
+
+
+
+
+
+
+
+
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9VEC5" data-a="DESCRIPTION: Cadmus is Drosophila importin-13, a Ran-regulated ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Cadmus is Drosophila importin-13, a Ran-regulated karyopherin that shuttles protein cargo between cytoplasm and nucleus. It recognizes the Mago-Y14 heterodimer through a conserved folded interaction surface. Cadmus is expressed in and around neuronal and muscle nuclei and supports synaptic homeostasis, including postsynaptic control of presynaptic transmitter release.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005049" target="_blank" class="term-link">
+                                    GO:0005049
+                                </a>
+                            </span>
+                            <span class="term-label">nuclear export signal receptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VEC5" data-a="GO:0005049" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cadmus is the bidirectional importin-13 transport receptor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cadmus is the bidirectional importin-13 transport receptor. Fly Imp13 is structurally characterized with its import cargo Mago-Y14, while mammalian Imp13 directly exports eIF1A; the conserved importin-13 mechanism and curated phylogenetic assignment support nuclear export without claiming a fly eIF1A assay.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20122403" target="_blank" class="term-link">
+                                        PMID:20122403
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The heterodimer is imported back into the nucleus by Importin 13
+(Imp13), a member of the karyopherin-beta family of transport factors. We have
+elucidated the structural basis of the Mago-Y14 nuclear import cycle. The 3.35 A
+structure of the Drosophila Imp13-Mago-Y14 complex shows that Imp13 forms a
+ring-like molecule, reminiscent of Crm1, and encircles the Mago-Y14 cargo with a
+conserved interaction surface.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11447110" target="_blank" class="term-link">
+                                        PMID:11447110
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Imp13 also shows export activity towards the translation initiation factor eIF1A</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VEC5" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cadmus localizes in and around neuronal and muscle nuclei, consistent with its nuclear transport cycle.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cadmus localizes in and around neuronal and muscle nuclei, consistent with its nuclear transport cycle.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19403829" target="_blank" class="term-link">
+                                        PMID:19403829
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Imp13 is expressed in and around nuclei of both neurons and
+muscles.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17287812" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17287812
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular mechanism of the nuclear protein import cycle.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VEC5" data-a="GO:0005634" data-r="PMID:17287812" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cadmus localizes in and around neuronal and muscle nuclei, consistent with its nuclear transport cycle.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cadmus localizes in and around neuronal and muscle nuclei, consistent with its nuclear transport cycle.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19403829" target="_blank" class="term-link">
+                                        PMID:19403829
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Imp13 is expressed in and around nuclei of both neurons and
+muscles.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20122403" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20122403
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Nuclear import mechanism of the EJC component Mago-Y14 revea...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VEC5" data-a="GO:0005634" data-r="PMID:20122403" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cadmus localizes in and around neuronal and muscle nuclei, consistent with its nuclear transport cycle.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cadmus localizes in and around neuronal and muscle nuclei, consistent with its nuclear transport cycle.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19403829" target="_blank" class="term-link">
+                                        PMID:19403829
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Imp13 is expressed in and around nuclei of both neurons and
+muscles.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005635" target="_blank" class="term-link">
+                                    GO:0005635
+                                </a>
+                            </span>
+                            <span class="term-label">nuclear envelope</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VEC5" data-a="GO:0005635" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The nuclear-envelope annotation captures the pore-associated transport step of a shuttling karyopherin.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The nuclear-envelope annotation captures the pore-associated transport step of a shuttling karyopherin. Fly Imp13 is observed in perinuclear structures, and its conserved import cycle requires nuclear pore passage; it is not an integral nuclear-envelope membrane protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19403829" target="_blank" class="term-link">
+                                        PMID:19403829
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Imp13 is expressed in and around nuclei of both neurons and
+muscles.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20122403" target="_blank" class="term-link">
+                                        PMID:20122403
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The heterodimer is imported back into the nucleus by Importin 13
+(Imp13), a member of the karyopherin-beta family of transport factors. We have
+elucidated the structural basis of the Mago-Y14 nuclear import cycle. The 3.35 A
+structure of the Drosophila Imp13-Mago-Y14 complex shows that Imp13 forms a
+ring-like molecule, reminiscent of Crm1, and encircles the Mago-Y14 cargo with a
+conserved interaction surface.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006606" target="_blank" class="term-link">
+                                    GO:0006606
+                                </a>
+                            </span>
+                            <span class="term-label">protein import into nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VEC5" data-a="GO:0006606" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cadmus binds the Mago-Y14 cargo and mediates its nuclear import.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cadmus binds the Mago-Y14 cargo and mediates its nuclear import. The Drosophila Imp13-Mago-Y14 structure directly establishes the import complex; recognition involves a folded cargo surface rather than requiring a classical linear NLS.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20122403" target="_blank" class="term-link">
+                                        PMID:20122403
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The heterodimer is imported back into the nucleus by Importin 13
+(Imp13), a member of the karyopherin-beta family of transport factors. We have
+elucidated the structural basis of the Mago-Y14 nuclear import cycle. The 3.35 A
+structure of the Drosophila Imp13-Mago-Y14 complex shows that Imp13 forms a
+ring-like molecule, reminiscent of Crm1, and encircles the Mago-Y14 cargo with a
+conserved interaction surface.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006606" target="_blank" class="term-link">
+                                    GO:0006606
+                                </a>
+                            </span>
+                            <span class="term-label">protein import into nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VEC5" data-a="GO:0006606" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cadmus binds the Mago-Y14 cargo and mediates its nuclear import.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cadmus binds the Mago-Y14 cargo and mediates its nuclear import. The Drosophila Imp13-Mago-Y14 structure directly establishes the import complex; recognition involves a folded cargo surface rather than requiring a classical linear NLS.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20122403" target="_blank" class="term-link">
+                                        PMID:20122403
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The heterodimer is imported back into the nucleus by Importin 13
+(Imp13), a member of the karyopherin-beta family of transport factors. We have
+elucidated the structural basis of the Mago-Y14 nuclear import cycle. The 3.35 A
+structure of the Drosophila Imp13-Mago-Y14 complex shows that Imp13 forms a
+ring-like molecule, reminiscent of Crm1, and encircles the Mago-Y14 cargo with a
+conserved interaction surface.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006886" target="_blank" class="term-link">
+                                    GO:0006886
+                                </a>
+                            </span>
+                            <span class="term-label">intracellular protein transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VEC5" data-a="GO:0006886" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Intracellular protein transport is correct but broader than the characterized importin-13 nuclear import pathway.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Intracellular protein transport is correct but broader than the characterized importin-13 nuclear import pathway. Mago-Y14 is a direct fly cargo; protein import into nucleus is the more informative process.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006606" target="_blank" class="term-link">
+                                    protein import into nucleus
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20122403" target="_blank" class="term-link">
+                                        PMID:20122403
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The heterodimer is imported back into the nucleus by Importin 13
+(Imp13), a member of the karyopherin-beta family of transport factors. We have
+elucidated the structural basis of the Mago-Y14 nuclear import cycle. The 3.35 A
+structure of the Drosophila Imp13-Mago-Y14 complex shows that Imp13 forms a
+ring-like molecule, reminiscent of Crm1, and encircles the Mago-Y14 cargo with a
+conserved interaction surface.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007270" target="_blank" class="term-link">
+                                    GO:0007270
+                                </a>
+                            </span>
+                            <span class="term-label">neuron-neuron synaptic transmission</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14504225" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14504225
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A genetic screen for synaptic transmission mutants mapping t...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VEC5" data-a="GO:0007270" data-r="PMID:14504225" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cadmus loss perturbs visual-system transmission and synaptic homeostasis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cadmus loss perturbs visual-system transmission and synaptic homeostasis. Mutant and genomic-rescue experiments connect CG7212/imp13 to the original visual screen; at the NMJ the protein acts in muscle to alter presynaptic release. These are supported organismal consequences of a nuclear transport receptor rather than a transmitter receptor or direct vesicle-release factor.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19403829" target="_blank" class="term-link">
+                                        PMID:19403829
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">every aspect of the eye phenotype is rescued by the genomic transgene</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19403829" target="_blank" class="term-link">
+                                        PMID:19403829
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">imp13 is required in the muscles to
+control presynaptic release.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031267" target="_blank" class="term-link">
+                                    GO:0031267
+                                </a>
+                            </span>
+                            <span class="term-label">small GTPase binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VEC5" data-a="GO:0031267" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ran binding controls cargo release in the importin-13 transport cycle.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Ran binding controls cargo release in the importin-13 transport cycle. The human Imp13-RanGTP structure and conserved fly cargo-binding structure support this mechanistic interaction; the term does not imply indiscriminate binding to all small GTPases.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20122403" target="_blank" class="term-link">
+                                        PMID:20122403
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">human Imp13 bound to
+RanGTP</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042331" target="_blank" class="term-link">
+                                    GO:0042331
+                                </a>
+                            </span>
+                            <span class="term-label">phototaxis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/14504225" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:14504225
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    A genetic screen for synaptic transmission mutants mapping t...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VEC5" data-a="GO:0042331" data-r="PMID:14504225" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cadmus loss perturbs visual-system transmission and synaptic homeostasis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cadmus loss perturbs visual-system transmission and synaptic homeostasis. Mutant and genomic-rescue experiments connect CG7212/imp13 to the original visual screen; at the NMJ the protein acts in muscle to alter presynaptic release. These are supported organismal consequences of a nuclear transport receptor rather than a transmitter receptor or direct vesicle-release factor.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19403829" target="_blank" class="term-link">
+                                        PMID:19403829
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">every aspect of the eye phenotype is rescued by the genomic transgene</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19403829" target="_blank" class="term-link">
+                                        PMID:19403829
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">imp13 is required in the muscles to
+control presynaptic release.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042564" target="_blank" class="term-link">
+                                    GO:0042564
+                                </a>
+                            </span>
+                            <span class="term-label">NLS-dependent protein nuclear import complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20122403" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20122403
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Nuclear import mechanism of the EJC component Mago-Y14 revea...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VEC5" data-a="GO:0042564" data-r="PMID:20122403" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cadmus binds the Mago-Y14 cargo and mediates its nuclear import.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cadmus binds the Mago-Y14 cargo and mediates its nuclear import. The Drosophila Imp13-Mago-Y14 structure directly establishes the import complex; recognition involves a folded cargo surface rather than requiring a classical linear NLS.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20122403" target="_blank" class="term-link">
+                                        PMID:20122403
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The heterodimer is imported back into the nucleus by Importin 13
+(Imp13), a member of the karyopherin-beta family of transport factors. We have
+elucidated the structural basis of the Mago-Y14 nuclear import cycle. The 3.35 A
+structure of the Drosophila Imp13-Mago-Y14 complex shows that Imp13 forms a
+ring-like molecule, reminiscent of Crm1, and encircles the Mago-Y14 cargo with a
+conserved interaction surface.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042564" target="_blank" class="term-link">
+                                    GO:0042564
+                                </a>
+                            </span>
+                            <span class="term-label">NLS-dependent protein nuclear import complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17287812" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17287812
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular mechanism of the nuclear protein import cycle.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VEC5" data-a="GO:0042564" data-r="PMID:17287812" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cadmus binds the Mago-Y14 cargo and mediates its nuclear import.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cadmus binds the Mago-Y14 cargo and mediates its nuclear import. The Drosophila Imp13-Mago-Y14 structure directly establishes the import complex; recognition involves a folded cargo surface rather than requiring a classical linear NLS.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20122403" target="_blank" class="term-link">
+                                        PMID:20122403
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The heterodimer is imported back into the nucleus by Importin 13
+(Imp13), a member of the karyopherin-beta family of transport factors. We have
+elucidated the structural basis of the Mago-Y14 nuclear import cycle. The 3.35 A
+structure of the Drosophila Imp13-Mago-Y14 complex shows that Imp13 forms a
+ring-like molecule, reminiscent of Crm1, and encircles the Mago-Y14 cargo with a
+conserved interaction surface.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043243" target="_blank" class="term-link">
+                                    GO:0043243
+                                </a>
+                            </span>
+                            <span class="term-label">positive regulation of protein-containing complex disassembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17287812" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17287812
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular mechanism of the nuclear protein import cycle.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VEC5" data-a="GO:0043243" data-r="PMID:17287812" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cargo release entails disassembly of the receptor-cargo transport complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cargo release entails disassembly of the receptor-cargo transport complex. Structural comparison explains RanGTP-dependent release of Mago-Y14 from importin-13; this is not disassembly of the mature exon junction complex on mRNA.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20122403" target="_blank" class="term-link">
+                                        PMID:20122403
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Mago-Y14 is released in the nucleus by a steric hindrance
+mechanism.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0045202" target="_blank" class="term-link">
+                                    GO:0045202
+                                </a>
+                            </span>
+                            <span class="term-label">synapse</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000108
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VEC5" data-a="GO:0045202" data-r="GO_REF:0000108" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Synaptic function does not establish endogenous residence at the synapse.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Synaptic function does not establish endogenous residence at the synapse. The rescuing genomic tagged protein was detected in muscle nuclei but not at the NMJ synapse; synaptic fluorescence occurred under overexpression. Thus the logical process-to-location transfer is stronger than the localization evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19403829" target="_blank" class="term-link">
+                                        PMID:19403829
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Imp13 expression only in the muscle nuclei but not at the synapse</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050804" target="_blank" class="term-link">
+                                    GO:0050804
+                                </a>
+                            </span>
+                            <span class="term-label">modulation of chemical synaptic transmission</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19403829" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19403829
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Importin 13 regulates neurotransmitter release at the Drosop...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VEC5" data-a="GO:0050804" data-r="PMID:19403829" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cadmus loss perturbs visual-system transmission and synaptic homeostasis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cadmus loss perturbs visual-system transmission and synaptic homeostasis. Mutant and genomic-rescue experiments connect CG7212/imp13 to the original visual screen; at the NMJ the protein acts in muscle to alter presynaptic release. These are supported organismal consequences of a nuclear transport receptor rather than a transmitter receptor or direct vesicle-release factor.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19403829" target="_blank" class="term-link">
+                                        PMID:19403829
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">every aspect of the eye phenotype is rescued by the genomic transgene</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19403829" target="_blank" class="term-link">
+                                        PMID:19403829
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">imp13 is required in the muscles to
+control presynaptic release.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051168" target="_blank" class="term-link">
+                                    GO:0051168
+                                </a>
+                            </span>
+                            <span class="term-label">nuclear export</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/17287812" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:17287812
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Molecular mechanism of the nuclear protein import cycle.
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VEC5" data-a="GO:0051168" data-r="PMID:17287812" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cadmus is the bidirectional importin-13 transport receptor.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cadmus is the bidirectional importin-13 transport receptor. Fly Imp13 is structurally characterized with its import cargo Mago-Y14, while mammalian Imp13 directly exports eIF1A; the conserved importin-13 mechanism and curated phylogenetic assignment support nuclear export without claiming a fly eIF1A assay.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20122403" target="_blank" class="term-link">
+                                        PMID:20122403
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The heterodimer is imported back into the nucleus by Importin 13
+(Imp13), a member of the karyopherin-beta family of transport factors. We have
+elucidated the structural basis of the Mago-Y14 nuclear import cycle. The 3.35 A
+structure of the Drosophila Imp13-Mago-Y14 complex shows that Imp13 forms a
+ring-like molecule, reminiscent of Crm1, and encircles the Mago-Y14 cargo with a
+conserved interaction surface.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/11447110" target="_blank" class="term-link">
+                                        PMID:11447110
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Imp13 also shows export activity towards the translation initiation factor eIF1A</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051170" target="_blank" class="term-link">
+                                    GO:0051170
+                                </a>
+                            </span>
+                            <span class="term-label">import into nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">NAS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20122403" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20122403
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Nuclear import mechanism of the EJC component Mago-Y14 revea...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VEC5" data-a="GO:0051170" data-r="PMID:20122403" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cadmus binds the Mago-Y14 cargo and mediates its nuclear import.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cadmus binds the Mago-Y14 cargo and mediates its nuclear import. The Drosophila Imp13-Mago-Y14 structure directly establishes the import complex; recognition involves a folded cargo surface rather than requiring a classical linear NLS.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20122403" target="_blank" class="term-link">
+                                        PMID:20122403
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The heterodimer is imported back into the nucleus by Importin 13
+(Imp13), a member of the karyopherin-beta family of transport factors. We have
+elucidated the structural basis of the Mago-Y14 nuclear import cycle. The 3.35 A
+structure of the Drosophila Imp13-Mago-Y14 complex shows that Imp13 forms a
+ring-like molecule, reminiscent of Crm1, and encircles the Mago-Y14 cargo with a
+conserved interaction surface.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061608" target="_blank" class="term-link">
+                                    GO:0061608
+                                </a>
+                            </span>
+                            <span class="term-label">nuclear import signal receptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9VEC5" data-a="GO:0061608" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cadmus binds the Mago-Y14 cargo and mediates its nuclear import.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Cadmus binds the Mago-Y14 cargo and mediates its nuclear import. The Drosophila Imp13-Mago-Y14 structure directly establishes the import complex; recognition involves a folded cargo surface rather than requiring a classical linear NLS.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20122403" target="_blank" class="term-link">
+                                        PMID:20122403
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The heterodimer is imported back into the nucleus by Importin 13
+(Imp13), a member of the karyopherin-beta family of transport factors. We have
+elucidated the structural basis of the Mago-Y14 nuclear import cycle. The 3.35 A
+structure of the Drosophila Imp13-Mago-Y14 complex shows that Imp13 forms a
+ring-like molecule, reminiscent of Crm1, and encircles the Mago-Y14 cargo with a
+conserved interaction surface.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section" id="review-core-functions">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Recognizes protein cargo for nuclear import through the nuclear pore.</h3>
+                <span class="vote-buttons" data-g="Q9VEC5" data-a="FUNCTION: Recognizes protein cargo for nuclear import throug..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0061608" target="_blank" class="term-link">
+                            nuclear import signal receptor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006606" target="_blank" class="term-link">
+                                protein import into nucleus
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20122403" target="_blank" class="term-link">
+                                PMID:20122403
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The heterodimer is imported back into the nucleus by Importin 13
+(Imp13), a member of the karyopherin-beta family of transport factors. We have
+elucidated the structural basis of the Mago-Y14 nuclear import cycle. The 3.35 A
+structure of the Drosophila Imp13-Mago-Y14 complex shows that Imp13 forms a
+ring-like molecule, reminiscent of Crm1, and encircles the Mago-Y14 cargo with a
+conserved interaction surface.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/14504225" target="_blank" class="term-link">
+                            PMID:14504225
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">A genetic screen for synaptic transmission mutants mapping to the right arm of chromosome 3 in Drosophila.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17287812" target="_blank" class="term-link">
+                            PMID:17287812
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Molecular mechanism of the nuclear protein import cycle.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19403829" target="_blank" class="term-link">
+                            PMID:19403829
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Importin 13 regulates neurotransmitter release at the Drosophila neuromuscular junction.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20122403" target="_blank" class="term-link">
+                            PMID:20122403
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Nuclear import mechanism of the EJC component Mago-Y14 revealed by structural studies of importin 13.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11447110" target="_blank" class="term-link">
+                            PMID:11447110
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Importin 13: a novel mediator of nuclear import and export.</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+    <section class="section external-predictions" id="external-predictions" aria-labelledby="external-predictions-title">
+        <h2 class="section-title" id="external-predictions-title">External Prediction Reviews</h2>
+        <p class="prediction-notice">These computational predictions are reviewed separately from the GOA annotation set used for this review.
+            The assessments below are from this project and do not constitute official GO annotations or endorsement by GO/UniProt.
+            They are not included in the existing annotation review above.</p>
+
+
+        <article class="prediction-review">
+        <h3>ProtNLM2 <span class="badge">External predictions</span></h3>
+        <p class="prediction-source"><a href="cdm-protnlm-predictions-review.yaml">View prediction review YAML</a> &middot; cdm-protnlm-predictions-review.yaml
+            &middot; Review status: COMPLETE</p>
+
+        <p>Both broad transport predictions are correct but less precise than the characterized nuclear cargo-transport function.</p>
+
+        <p class="prediction-source">Review score: 2 = concordant with evidence; 1 = uncertain; 0 = discordant with evidence. This is an assessment score, not a model probability.</p>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006913" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:0006913
+                    </a>
+                    <span class="term-label">nucleocytoplasmic transport</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_BP</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-lsp">
+                        LSP — Less precise than existing annotation
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 2/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM2
+                 &middot; Version: UniProt API snapshot 2026-09-08
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> Nucleocytoplasmic transport is supported by the direct fly Imp13-Mago-Y14 import complex and the conserved bidirectional importin-13 cycle. It is broader than the existing protein-import and export annotations.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20122403" target="_blank" class="term-link">PMID:20122403</a>:
+
+
+                        <span class="finding-text">"The heterodimer is imported back into the nucleus by Importin 13
+(Imp13), a member of the karyopherin-beta family of transport factors. We have
+elucidated the structural basis of the Mago-Y14 nuclear import cycle. The 3.35 A
+structure of the Drosophila Imp13-Mago-Y14 complex shows that Imp13 forms a
+ring-like molecule, reminiscent of Crm1, and encircles the Mago-Y14 cargo with a
+conserved interaction surface."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11447110" target="_blank" class="term-link">PMID:11447110</a>:
+
+
+                        <span class="finding-text">"Imp13 also shows export activity towards the translation initiation factor eIF1A"</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006886" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:0006886
+                    </a>
+                    <span class="term-label">intracellular protein transport</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_BP</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-lsp">
+                        LSP — Less precise than existing annotation
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 2/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM2
+                 &middot; Version: UniProt API snapshot 2026-09-08
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> Cadmus directly carries Mago-Y14 in nuclear import. Intracellular protein transport is correct but less specific than the supported nuclear-import annotation already in GOA.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20122403" target="_blank" class="term-link">PMID:20122403</a>:
+
+
+                        <span class="finding-text">"The heterodimer is imported back into the nucleus by Importin 13
+(Imp13), a member of the karyopherin-beta family of transport factors. We have
+elucidated the structural basis of the Mago-Y14 nuclear import cycle. The 3.35 A
+structure of the Drosophila Imp13-Mago-Y14 complex shows that Imp13 forms a
+ring-like molecule, reminiscent of Crm1, and encircles the Mago-Y14 cargo with a
+conserved interaction surface."</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        </article>
+
+    </section>
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section" id="review-research">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(cdm-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9VEC5" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional annotation report: *Drosophila melanogaster cdm/imp13* (Q9VEC5)</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">6 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-08T17:58:07.924627</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="cdm-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="functional-annotation-report-drosophila-melanogaster-cdmimp13-q9vec5">Functional annotation report: <em>Drosophila melanogaster cdm/imp13</em> (Q9VEC5)</h1>
+<h2 id="executive-conclusion">Executive conclusion</h2>
+<p>The identity check is positive but requires careful nomenclature. The supplied UniProt entry Q9VEC5 corresponds to <em>Drosophila melanogaster</em> <strong>CG7212</strong>, called <strong>imp13/Imp13 (Importin-13)</strong> in the principal functional literature; <em>cdm</em> is an alias in the supplied record but is not the preferred symbol in that study. Independent mutations in CG7212—including Q351STOP, Q811STOP, and G875D alleles—plus complementation and genomic rescue establish that CG7212 encodes the studied fly Importin-13. The protein has the characteristic importin-β N-terminal domain, consistent with the supplied ARM-like/importin-β-family annotations. This report does not incorporate findings about unrelated genes called <em>cdm</em> in other organisms. (giagtzoglou2009importin13regulates pages 3-5)</p>
+<p>The most defensible primary annotation is: <strong>an importin-β-family nucleocytoplasmic transport receptor required for normal synaptic physiology and postsynaptic muscle architecture</strong>. At the larval neuromuscular junction (NMJ), Imp13 acts principally in muscle, in or around muscle nuclei, to support muscle/SSR development and a retrograde mechanism that restrains presynaptic neurotransmitter release. Its exact physiologically relevant Drosophila cargoes, cargo selectivity, and Ran-dependent biochemical cycle have not been identified directly. (giagtzoglou2009importin13regulates pages 8-10, giagtzoglou2009importin13regulates pages 5-6, giagtzoglou2009importin13regulates pages 1-2)</p>
+<h2 id="1-identity-terminology-and-domain-consistency">1. Identity, terminology, and domain consistency</h2>
+<p>The definitive fly study identified CG7212 as the Drosophila homolog of Importin-13 and named it <em>imp13</em>. Causal assignment was unusually strong: multiple independent molecular lesions were found, strong loss-of-function/null alleles were analyzed, and a tagged genomic construct rescued lethality and associated phenotypes. The study also identified the characteristic N-terminal importin-β domain. These results align with Q9VEC5’s classification in the importin-β family and with its Importin-beta_N, importin-beta-like nuclear-transport-receptor, ARM-like, and ARM-type-fold annotations. (giagtzoglou2009importin13regulates pages 5-6, giagtzoglou2009importin13regulates pages 3-5)</p>
+<p>Importin-β-family proteins are soluble karyopherins rather than enzymes or membrane transporters. Accordingly, “substrate” here means a macromolecular cargo bound and moved through nuclear pore complexes, not a small molecule converted in a catalytic reaction. The ARM/HEAT-repeat-like architecture is consistent with an extended, conformationally adaptable cargo-binding scaffold, although no structure of fly Q9VEC5 was identified in the retrieved literature.</p>
+<h2 id="2-molecular-function-established-versus-inferred">2. Molecular function: established versus inferred</h2>
+<h3 id="directly-established-in-drosophila">Directly established in Drosophila</h3>
+<p>Fly Imp13 is required for regulated synaptic transmission, muscle growth, and formation of the subsynaptic reticulum. Its concentration in or around nuclei and its importin-β-family domain strongly support a nuclear-transport function, but the fly experiments did <strong>not</strong> identify the transported cargo responsible for the synaptic phenotypes. Consequently, annotation as a nucleocytoplasmic transport receptor is well supported by orthology, domain composition, and localization, whereas a specific Drosophila cargo annotation is not. (giagtzoglou2009importin13regulates pages 5-6, giagtzoglou2009importin13regulates pages 3-5, giagtzoglou2009importin13regulates pages 1-2)</p>
+<h3 id="conserved-mechanism-inferred-from-mammalian-importin-13">Conserved mechanism inferred from mammalian Importin-13</h3>
+<p>The foundational mammalian study showed that Importin-13 is unusual because it can mediate transport in both directions. It imports UBC9, the SUMO-conjugating enzyme, and RBM8/Y14-containing complexes, while exporting translation-initiation factor eIF1A. Import cargo binds preferentially under low-RanGTP cytoplasmic conditions and is released by RanGTP in the nucleus; eIF1A export-complex formation involves RanGTP, and cytoplasmic release is additionally coupled to loading of import cargo. These are authoritative biochemical precedents for the protein family, but they are <strong>not direct demonstrations that Q9VEC5 transports the fly orthologs of UBC9, RBM8/Y14, or eIF1A</strong>. (mingot2001importin13a pages 1-2, mingot2001importin13a pages 2-3)</p>
+<p>Thus, the likely pathway is the Ran-regulated nuclear-transport cycle, but the exact fly cargo, direction of transport relevant to synapses, and causal downstream nuclear program remain unresolved. Importantly, actin is not established as a Q9VEC5 cargo in the retrieved fly or foundational mammalian studies. It should not be assigned as an Imp13 substrate without direct binding and transport evidence. (giagtzoglou2009importin13regulates pages 8-10, mingot2001importin13a pages 1-2, mingot2001importin13a pages 2-3)</p>
+<h2 id="3-cellular-and-tissue-localization">3. Cellular and tissue localization</h2>
+<p>Imp13 is expressed in and around nuclei in both neurons and muscles. In larval brain it is enriched in neurons and occurs in other cells considered likely to include glia. At the larval NMJ, endogenous Imp13 was detected in <strong>muscle nuclei rather than concentrated at the synaptic membrane</strong>, placing the best-supported site of action in the muscle nucleocytoplasmic/perinuclear compartment. (giagtzoglou2009importin13regulates pages 5-6, giagtzoglou2009importin13regulates pages 1-2)</p>
+<p>This localization is important mechanistically: the protein is unlikely to be a structural component of the active zone or postsynaptic receptor complex. Instead, it probably regulates nuclear access or export of factors that influence muscle growth, SSR organization, and release of an unidentified retrograde signal. Dynamic passage through nuclear pores was not directly imaged in flies, so this last step remains a family-based inference.</p>
+<h2 id="4-neuromuscular-junction-function-and-pathway-placement">4. Neuromuscular-junction function and pathway placement</h2>
+<p>Loss of <em>imp13</em> reduces muscle growth and disrupts thickness and density of the SSR, the elaborate postsynaptic membrane system surrounding motor-neuron boutons. Major presynaptic structural features are comparatively preserved. Muscle-specific Imp13 expression rescues muscle size and SSR abnormalities, establishing a muscle-autonomous developmental or organizational requirement. (giagtzoglou2009importin13regulates pages 5-6, giagtzoglou2009importin13regulates pages 1-2)</p>
+<p>The physiological phenotype is nevertheless presynaptic: <em>imp13</em> mutants exhibit increased neurotransmitter-release probability and quantal content. Muscle-specific rescue corrects the excessive release and paired-pulse-depression phenotypes, whereas neuronal rescue does not. The parsimonious model is therefore:</p>
+<p><strong>muscle-nuclear Imp13-dependent transport → postsynaptic transcriptional/biochemical state and SSR organization → unidentified retrograde signal → restraint of presynaptic vesicle release.</strong> (giagtzoglou2009importin13regulates pages 8-10)</p>
+<p>This places Imp13 in synaptic homeostasis or trans-synaptic regulation rather than directly in the synaptic-vesicle fusion machinery. The identity of the retrograde signal and the transported cargo upstream of it remain unknown.</p>
+<h2 id="5-electrophysiological-and-quantitative-evidence">5. Electrophysiological and quantitative evidence</h2>
+<p>At low extracellular Ca²⁺, mutants have increased evoked release and quantal content, together with stronger paired-pulse depression, consistent with higher initial release probability. Differences were observed at 0.35–0.5 mM extracellular Ca²⁺, whereas at 2 mM Ca²⁺ EJP amplitudes were similar among genotypes, plausibly because release approaches saturation at the higher concentration. Ca²⁺ cooperativity was not detectably altered. (giagtzoglou2009importin13regulates pages 8-10)</p>
+<p>Several controls narrow the mechanism. Miniature EJP amplitude and frequency were normal, cumulative miniature-amplitude distributions were unchanged, and GluRIIA/GluRIIB receptor abundance was not altered. Therefore, neither quantal size nor a gross change in postsynaptic glutamate-receptor content explains the increased evoked response. Bruchpilot-positive active-zone abundance was also not increased. Resting presynaptic bouton Ca²⁺ was modestly elevated and may contribute to enhanced release, although the evidence does not prove it is the initiating consequence of muscle Imp13 loss. (giagtzoglou2009importin13regulates pages 8-10, giagtzoglou2009importin13regulates pages 5-6, giagtzoglou2009importin13regulates pages 10-11)</p>
+<h2 id="6-visual-system-function">6. Visual-system function</h2>
+<p>Photoreceptor-restricted <em>imp13</em> loss causes absent electroretinogram ON/OFF transients and severely reduced photoreceptor responses. Restricting the defect to photoreceptors reproduces the phenotype seen when both pre- and postsynaptic visual neurons are mutant, supporting a presynaptic requirement in this tissue. Photoreceptor development, R7/R8 targeting, synaptic-cartridge formation, and total synapse number are broadly normal, although capitate projections are shallower. Thus, the visual phenotype primarily reflects defective phototransduction/transmission rather than gross failure of neuronal development. (giagtzoglou2009importin13regulates pages 3-5, giagtzoglou2009importin13regulates pages 3-3)</p>
+<p>The contrast between a presynaptic photoreceptor requirement and a postsynaptic muscle requirement at the NMJ indicates that Imp13’s cellular role is context dependent. This is compatible with tissue-specific cargo availability or different nuclear programs, but neither explanation has yet been tested directly.</p>
+<h2 id="7-recent-developments-20232024">7. Recent developments, 2023–2024</h2>
+<p>No 2023–2024 primary study directly re-characterizing Drosophila CG7212/Imp13 was identified in the searches. The major recent development is therefore cross-species. Bin and colleagues reported in <em>Nature Communications</em> in May 2024 that zebrafish Importin-13b is selectively required for growth of Mauthner-axon diameter. Loss reduced neurofilament number and spacing and slowed conduction in proportion to diameter, without reducing axonal length, neuronal soma size, firing precision, or high-frequency firing. Normal Mauthner axons expanded from approximately 1.0 μm at two days post-fertilization to approximately 3.5 μm at five days. These findings reinforce a conserved connection between Importin-13-family proteins and neuronal morphology/physiology, but they do not establish an axon-caliber function for fly Q9VEC5. (bin2024importin13dependentaxon pages 1-3)</p>
+<p>The current expert interpretation should therefore remain conservative: recent vertebrate work broadens the plausible neuronal functions of Importin-13, while the direct Drosophila annotation still rests chiefly on the rigorous 2009 genetic, ultrastructural, localization, and electrophysiological study.</p>
+<h2 id="8-applications-and-real-world-implementation">8. Applications and real-world implementation</h2>
+<p>For current research practice, Q9VEC5 is most useful as a genetically tractable model for linking nuclear transport to trans-synaptic homeostasis. Tissue-specific rescue allows investigators to distinguish neuronal from muscle requirements, while larval NMJ electrophysiology provides sensitive readouts of release probability, quantal content, and retrograde signaling. Photoreceptor electroretinography provides a second, mechanistically distinct neuronal assay. These are experimental applications rather than clinical implementations; no therapeutic or commercial implementation specific to Drosophila Q9VEC5 was identified.</p>
+<p>The most informative next experiments would be muscle-specific Imp13 interactomics under native expression, compartment-resolved proteomics, direct cargo-binding and nuclear-transport assays, and rescue with cargo-binding- or Ran-interaction-defective Imp13 variants. Candidate cargoes suggested by mammalian work should be tested rather than assumed.</p>
+<h2 id="evidence-and-confidence-summary">Evidence and confidence summary</h2>
+<table>
+<thead>
+<tr>
+<th>Claim/topic</th>
+<th>Direct Drosophila evidence</th>
+<th>Key observation</th>
+<th>Interpretation</th>
+<th>Confidence/limitation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene identity</td>
+<td><strong>Yes</strong></td>
+<td>Genetic mapping, independent mutant lesions—including Q351STOP, Q811STOP, and G875D—and genomic rescue identify <strong>CG7212</strong> as <em>Drosophila melanogaster</em> <strong>imp13/Importin-13</strong>, corresponding to the supplied Q9VEC5/<em>cdm</em> record. (giagtzoglou2009importin13regulates pages 3-5)</td>
+<td>Q9VEC5 should be annotated primarily as fly CG7212/Imp13; <em>cdm</em> is an alias and must not be conflated with similarly named genes.</td>
+<td><strong>High.</strong> Identity is supported by genetics and rescue. The principal paper uses <em>imp13</em>, not <em>cdm</em>.</td>
+</tr>
+<tr>
+<td>Protein family and domain</td>
+<td><strong>Yes; no fly structure reported</strong></td>
+<td>Fly Imp13 contains the characteristic N-terminal importin-β domain and was identified as the fly homolog of Importin-13. (giagtzoglou2009importin13regulates pages 3-5, giagtzoglou2009importin13regulates pages 1-2)</td>
+<td>Consistent with the supplied ARM-like/importin-β-family annotations and a role as a karyopherin-type nucleocytoplasmic transport receptor.</td>
+<td><strong>High for family; moderate for mechanistic detail.</strong> Domain homology does not identify fly cargoes or transport direction.</td>
+</tr>
+<tr>
+<td>Cellular localization</td>
+<td><strong>Yes</strong></td>
+<td>Imp13 is expressed in and around nuclei of neurons and muscles. In larval brain it is enriched in neurons and present in additional cells, probably glia. At the larval NMJ, endogenous protein was detected in muscle nuclei rather than concentrated at the synapse. (giagtzoglou2009importin13regulates pages 5-6, giagtzoglou2009importin13regulates pages 1-2)</td>
+<td>The best-supported site of action is the nucleocytoplasmic or perinuclear compartment, especially muscle nuclei at the NMJ.</td>
+<td><strong>High for observed localization.</strong> The glial assignment is tentative, and dynamic nuclear-pore shuttling was not directly measured in flies.</td>
+</tr>
+<tr>
+<td>NMJ postsynaptic muscle action and retrograde control</td>
+<td><strong>Yes</strong></td>
+<td>Muscle-specific Imp13 expression rescues mutant release and paired-pulse-depression phenotypes, whereas neuronal expression does not. Loss of muscle Imp13 increases presynaptic release probability and quantal content. (giagtzoglou2009importin13regulates pages 8-10)</td>
+<td>Imp13 acts postsynaptically in muscle to control a retrograde process that restrains presynaptic neurotransmitter release.</td>
+<td><strong>High for tissue requirement and physiological direction; moderate for pathway mechanism.</strong> The retrograde signal and relevant cargo remain unknown.</td>
+</tr>
+<tr>
+<td>Muscle growth and subsynaptic reticulum morphology</td>
+<td><strong>Yes</strong></td>
+<td>Mutants have reduced muscle growth and abnormal subsynaptic-reticulum thickness and density, while major presynaptic structural features are preserved. Muscle-specific expression rescues these defects. (giagtzoglou2009importin13regulates pages 5-6, giagtzoglou2009importin13regulates pages 1-2)</td>
+<td>Imp13 has a muscle-autonomous role in postsynaptic growth and organization of the SSR, the specialized postsynaptic membrane system.</td>
+<td><strong>High.</strong> The transported molecule linking nuclear transport to SSR architecture was not identified.</td>
+</tr>
+<tr>
+<td>NMJ electrophysiology</td>
+<td><strong>Yes</strong></td>
+<td>Under low extracellular Ca²⁺, mutants show increased evoked-release probability and quantal content, stronger paired-pulse depression, and modestly elevated resting bouton Ca²⁺. At 2 mM Ca²⁺, EJP amplitude is similar among genotypes, whereas differences appear at 0.35–0.5 mM Ca²⁺. mEJP amplitude and frequency, glutamate-receptor abundance, and Ca²⁺ cooperativity are unchanged. Brp-positive active-zone number is not increased. (giagtzoglou2009importin13regulates pages 8-10, giagtzoglou2009importin13regulates pages 5-6, giagtzoglou2009importin13regulates pages 10-11)</td>
+<td>Imp13 normally restrains presynaptic vesicle release without altering quantal size or postsynaptic receptor abundance; the phenotype is strongest when release is not saturated by high Ca²⁺.</td>
+<td><strong>High for phenotype; moderate for mechanism.</strong> Elevated bouton Ca²⁺ may contribute but does not establish the causal retrograde pathway.</td>
+</tr>
+<tr>
+<td>Visual-system role</td>
+<td><strong>Yes</strong></td>
+<td>Photoreceptor-restricted loss reproduces absent ON/OFF electroretinogram transients and severely reduced photoreceptor responses. Axonal targeting and synapse number are broadly normal, although capitate projections are shallower. (giagtzoglou2009importin13regulates pages 3-5, giagtzoglou2009importin13regulates pages 3-3)</td>
+<td>Imp13 is required presynaptically in photoreceptors for normal phototransduction and visual transmission, rather than principally for photoreceptor development or synapse formation.</td>
+<td><strong>High for functional requirement; moderate for mechanism.</strong> This presynaptic requirement differs from the postsynaptic muscle requirement at the NMJ.</td>
+</tr>
+<tr>
+<td>Fly cargo specificity</td>
+<td><strong>No specific cargo directly established</strong></td>
+<td>The definitive fly study demonstrates physiological and localization phenotypes but does not identify a protein imported or exported by CG7212/Imp13. (giagtzoglou2009importin13regulates pages 8-10, giagtzoglou2009importin13regulates pages 3-5, giagtzoglou2009importin13regulates pages 1-2)</td>
+<td>Q9VEC5 is best described as a probable bidirectional nuclear-transport receptor whose biologically decisive fly cargoes remain unknown.</td>
+<td><strong>High confidence that the cited fly evidence does not define cargo specificity.</strong> Mammalian cargo assignments should not be transferred directly to flies.</td>
+</tr>
+<tr>
+<td>Mammalian cargo precedent</td>
+<td><strong>No; cross-species evidence only</strong></td>
+<td>Mammalian Importin-13 imports UBC9 and RBM8/Y14 and exports eIF1A. (mingot2001importin13a pages 1-2, mingot2001importin13a pages 2-3)</td>
+<td>These findings illustrate the receptor family’s ability to transport distinct folded cargoes in opposite directions and provide hypotheses for fly studies.</td>
+<td><strong>Moderate as evolutionary inference; not direct Q9VEC5 annotation.</strong> Orthology does not prove that fly Imp13 transports the same cargoes.</td>
+</tr>
+<tr>
+<td>Ran-dependent transport mechanism</td>
+<td><strong>Not directly demonstrated for fly Q9VEC5</strong></td>
+<td>In mammalian systems, import cargo binds Importin-13 under low-RanGTP cytoplasmic conditions and is released by nuclear RanGTP. Stable eIF1A export-complex formation involves RanGTP, with cytoplasmic release additionally promoted by import-cargo loading. (mingot2001importin13a pages 1-2, mingot2001importin13a pages 2-3)</td>
+<td>Q9VEC5 probably participates in the canonical Ran-gradient-driven karyopherin cycle, but its exact fly transport cycle has not been biochemically tested.</td>
+<td><strong>High for mammalian Importin-13; moderate for fly inference.</strong> This mechanism is inferred rather than experimentally established in <em>Drosophila</em>.</td>
+</tr>
+<tr>
+<td>Recent 2024 neuronal context</td>
+<td><strong>No; zebrafish evidence only</strong></td>
+<td>A 2024 zebrafish study found that <em>ipo13b</em> loss selectively reduces Mauthner-axon diameter, neurofilament number and spacing, and conduction speed without reducing axonal length or cell-body size. Normal Mauthner diameter increased from about 1.0 μm at 2 dpf to about 3.5 μm at 5 dpf. (bin2024importin13dependentaxon pages 1-3)</td>
+<td>This supports a conserved neuronal-growth role for Importin-13-family proteins but does not demonstrate an axon-caliber function for fly Q9VEC5.</td>
+<td><strong>High for zebrafish; low-to-moderate for fly extrapolation.</strong> No 2023–2024 direct re-characterization of fly CG7212/Imp13 was identified.</td>
+</tr>
+<tr>
+<td>Actin cargo status</td>
+<td><strong>No</strong></td>
+<td>The direct fly Imp13 study does not identify actin as cargo, and the foundational mammalian study reports other cargoes rather than actin. (giagtzoglou2009importin13regulates pages 8-10, giagtzoglou2009importin13regulates pages 5-6, mingot2001importin13a pages 1-2, mingot2001importin13a pages 2-3)</td>
+<td>Actin should <strong>not</strong> be annotated as a demonstrated Q9VEC5/Imp13 substrate on the available evidence.</td>
+<td><strong>High for absence of support in the cited studies.</strong> Evidence involving other actin importins cannot be reassigned to Imp13 without direct validation.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table distinguishes direct Drosophila findings for CG7212/Imp13 from mammalian mechanistic inference and recent zebrafish context. It highlights strong genetic and physiological evidence while identifying unresolved cargo specificity and transport mechanisms.</em></p>
+<h2 id="overall-annotation-recommendation">Overall annotation recommendation</h2>
+<p><strong>Recommended primary function:</strong> Importin-β-family nucleocytoplasmic transport receptor, probably operating through the Ran gradient and capable in principle of bidirectional cargo transport.</p>
+<p><strong>Best-supported biological role in Drosophila:</strong> In larval muscle nuclei, Imp13 supports muscle growth and SSR architecture and enables a retrograde homeostatic pathway that limits presynaptic neurotransmitter release. It is also required presynaptically for normal photoreceptor function and visual transmission. (giagtzoglou2009importin13regulates pages 8-10, giagtzoglou2009importin13regulates pages 5-6, giagtzoglou2009importin13regulates pages 3-5)</p>
+<p><strong>Localization:</strong> Nuclear/perinuclear in neurons and muscles; directly observed in muscle nuclei at the NMJ rather than as a synapse-enriched structural protein. (giagtzoglou2009importin13regulates pages 5-6, giagtzoglou2009importin13regulates pages 1-2)</p>
+<p><strong>Cargo/substrate specificity:</strong> Unknown for Q9VEC5. Mammalian UBC9 and RBM8/Y14 import and eIF1A export are useful hypotheses, not validated fly cargo assignments. Actin is not a demonstrated cargo. (mingot2001importin13a pages 1-2, mingot2001importin13a pages 2-3)</p>
+<h2 id="key-sources">Key sources</h2>
+<ol>
+<li>Giagtzoglou N, Lin YQ, Haueter C, Bellen HJ. “Importin 13 Regulates Neurotransmitter Release at the Drosophila Neuromuscular Junction.” <em>Journal of Neuroscience</em>. Published April 2009; 29:5628–5639. https://doi.org/10.1523/JNEUROSCI.0794-09.2009. (giagtzoglou2009importin13regulates pages 8-10, giagtzoglou2009importin13regulates pages 3-5)</li>
+<li>Mingot J-M, Kostka S, Kraft R, Hartmann E, Görlich D. “Importin 13: a novel mediator of nuclear import and export.” <em>EMBO Journal</em>. Published July 2001; 20:3685–3694. https://doi.org/10.1093/emboj/20.14.3685. (mingot2001importin13a pages 1-2, mingot2001importin13a pages 2-3)</li>
+<li>Bin JM et al. “Importin 13-dependent axon diameter growth regulates conduction speeds along myelinated CNS axons.” <em>Nature Communications</em>. Published May 2024. Retrieved record URL: https://doi.org/10.1101/2023.05.19.541431. This source concerns zebrafish, not Drosophila. (bin2024importin13dependentaxon pages 1-3)</li>
+</ol>
+<p>References</p>
+<ol>
+<li>
+<p>(giagtzoglou2009importin13regulates pages 3-5): Nikolaos Giagtzoglou, Yong Qi Lin, Claire Haueter, and Hugo J. Bellen. Importin 13 regulates neurotransmitter release at the drosophila neuromuscular junction. The Journal of Neuroscience, 29:5628-5639, Apr 2009. URL: https://doi.org/10.1523/jneurosci.0794-09.2009, doi:10.1523/jneurosci.0794-09.2009. This article has 31 citations.</p>
+</li>
+<li>
+<p>(giagtzoglou2009importin13regulates pages 8-10): Nikolaos Giagtzoglou, Yong Qi Lin, Claire Haueter, and Hugo J. Bellen. Importin 13 regulates neurotransmitter release at the drosophila neuromuscular junction. The Journal of Neuroscience, 29:5628-5639, Apr 2009. URL: https://doi.org/10.1523/jneurosci.0794-09.2009, doi:10.1523/jneurosci.0794-09.2009. This article has 31 citations.</p>
+</li>
+<li>
+<p>(giagtzoglou2009importin13regulates pages 5-6): Nikolaos Giagtzoglou, Yong Qi Lin, Claire Haueter, and Hugo J. Bellen. Importin 13 regulates neurotransmitter release at the drosophila neuromuscular junction. The Journal of Neuroscience, 29:5628-5639, Apr 2009. URL: https://doi.org/10.1523/jneurosci.0794-09.2009, doi:10.1523/jneurosci.0794-09.2009. This article has 31 citations.</p>
+</li>
+<li>
+<p>(giagtzoglou2009importin13regulates pages 1-2): Nikolaos Giagtzoglou, Yong Qi Lin, Claire Haueter, and Hugo J. Bellen. Importin 13 regulates neurotransmitter release at the drosophila neuromuscular junction. The Journal of Neuroscience, 29:5628-5639, Apr 2009. URL: https://doi.org/10.1523/jneurosci.0794-09.2009, doi:10.1523/jneurosci.0794-09.2009. This article has 31 citations.</p>
+</li>
+<li>
+<p>(mingot2001importin13a pages 1-2): J. Mingot, S. Kostka, R. Kraft, E. Hartmann, and D. Görlich. Importin 13: a novel mediator of nuclear import and export. The EMBO Journal, 20:3685-3694, Jul 2001. URL: https://doi.org/10.1093/emboj/20.14.3685, doi:10.1093/emboj/20.14.3685. This article has 291 citations.</p>
+</li>
+<li>
+<p>(mingot2001importin13a pages 2-3): J. Mingot, S. Kostka, R. Kraft, E. Hartmann, and D. Görlich. Importin 13: a novel mediator of nuclear import and export. The EMBO Journal, 20:3685-3694, Jul 2001. URL: https://doi.org/10.1093/emboj/20.14.3685, doi:10.1093/emboj/20.14.3685. This article has 291 citations.</p>
+</li>
+<li>
+<p>(giagtzoglou2009importin13regulates pages 10-11): Nikolaos Giagtzoglou, Yong Qi Lin, Claire Haueter, and Hugo J. Bellen. Importin 13 regulates neurotransmitter release at the drosophila neuromuscular junction. The Journal of Neuroscience, 29:5628-5639, Apr 2009. URL: https://doi.org/10.1523/jneurosci.0794-09.2009, doi:10.1523/jneurosci.0794-09.2009. This article has 31 citations.</p>
+</li>
+<li>
+<p>(giagtzoglou2009importin13regulates pages 3-3): Nikolaos Giagtzoglou, Yong Qi Lin, Claire Haueter, and Hugo J. Bellen. Importin 13 regulates neurotransmitter release at the drosophila neuromuscular junction. The Journal of Neuroscience, 29:5628-5639, Apr 2009. URL: https://doi.org/10.1523/jneurosci.0794-09.2009, doi:10.1523/jneurosci.0794-09.2009. This article has 31 citations.</p>
+</li>
+<li>
+<p>(bin2024importin13dependentaxon pages 1-3): Jenea M Bin, Daumante Suminaite, Silvia K. Benito-Kwiecinski, Linde Kegel, Maria Rubio-Brotons, Jason J Early, Daniel Soong, Matthew R Livesey, Richard J Poole, and David A Lyons. Importin 13-dependent axon diameter growth regulates conduction speeds along myelinated cns axons. Nature Communications, May 2024. URL: https://doi.org/10.1101/2023.05.19.541431, doi:10.1101/2023.05.19.541431. This article has 30 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="cdm-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>https://doi.org/10.1523/JNEUROSCI.0794-09.2009.</li>
+<li>https://doi.org/10.1093/emboj/20.14.3685.</li>
+<li>https://doi.org/10.1101/2023.05.19.541431.</li>
+<li>https://doi.org/10.1523/jneurosci.0794-09.2009,</li>
+<li>https://doi.org/10.1093/emboj/20.14.3685,</li>
+<li>https://doi.org/10.1101/2023.05.19.541431,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(cdm-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9VEC5" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="cadmus-cdmimp13-evidence-notes">Cadmus (cdm/Imp13) evidence notes</h1>
+<p>Q9VEC5 is the 971-residue product of current FlyBase FBgn0261532, formerly CG7212/imp13. PA and PB encode identical proteins (AAF55502/NP_650682 and AGB96076/NP_001262696), as recorded in the saved FlyBase report. The current symbol cdm is retained rather than replacing it with an older literature synonym. <a href="https://flybase.org/reports/FBgn0261532">FlyBase</a>.</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/20122403">PMID:20122403</a>(https://pubmed.ncbi.nlm.nih.gov/20122403/) explicitly reports a “Drosophila Imp13-Mago-Y14 complex” and a “human Imp13 bound to RanGTP” structure. This identifies direct fly import-cargo recognition and a conserved mechanism; it does not identify the particular cargo responsible for every synaptic phenotype. The cache is abstract-only, so no claims about uninspected residue-level experiments are made. The fly structural observation supplies independent support for the PAINT transport assignments.</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/11447110">PMID:11447110</a>(https://pubmed.ncbi.nlm.nih.gov/11447110/) reports “Imp13 also shows export activity towards the translation initiation factor eIF1A”. Export in the fly is a conserved importin-13 inference, supported by its diagnostic identity and the phylogenetic annotation, not a claimed direct Drosophila eIF1A transport assay. QuickGO lookup of the older Ran-binding identifier GO:0008536 resolved to GO:0031267; the existing small-GTPase-binding identifier is retained.</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/19403829">PMID:19403829</a>(https://pmc.ncbi.nlm.nih.gov/articles/PMC4011492/) is cached with full text and establishes the connection between CG7212 mutations, genomic rescue, visual phenotypes and postsynaptic control of presynaptic release. The decisive localization qualification is “Imp13 expression only in the muscle nuclei but not at the synapse” for the rescuing genomic construct; NMJ synaptic fluorescence occurred under overexpression. Accordingly, the process-derived synapse IEA is over-annotated; it is not evidence against the observed synaptic physiological role. Nuclear/perinuclear localization and transport are core; visual and transmission phenotypes are non-core.</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/14504225">PMID:14504225</a>(https://pubmed.ncbi.nlm.nih.gov/14504225/) remains abstract-only after full-text retrieval was attempted. The 2009 follow-up independently connects the mutant locus to Imp13 and rescues the visual phenotype, so there is no basis to overturn the original curated behavioral/transmission annotations from incomplete access.</p>
+<p>The Falcon report completed and its principal fly genetics/localization synthesis agrees with the directly inspected 2009 source. However, it missed the 2010 Drosophila Imp13-Mago-Y14 structure and therefore overstates the absence of characterized fly cargoes. Its claim that cdm is merely an alias is also superseded by the current FlyBase symbol. Those limitations are recorded here; the provider text is preserved untouched. The YAML relies on the primary publications, rather than adding a redundant provider citation to suppress an advisory.</p>
+<p>Both ProtNLM GO predictions are LSP: nucleocytoplasmic transport and intracellular protein transport are broader than supported specific protein nuclear import/export. Agreement with ARBA is not used as evidence, and overlap alone is not asserted to establish training-set contamination.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9VEC5
+gene_symbol: cdm
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:7227
+  label: Drosophila melanogaster
+description: Cadmus is Drosophila importin-13, a Ran-regulated karyopherin that shuttles protein cargo
+  between cytoplasm and nucleus. It recognizes the Mago-Y14 heterodimer through a conserved folded interaction
+  surface. Cadmus is expressed in and around neuronal and muscle nuclei and supports synaptic homeostasis,
+  including postsynaptic control of presynaptic transmitter release.
+existing_annotations:
+- term:
+    id: GO:0005049
+    label: nuclear export signal receptor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  supporting_entities:
+  - PANTHER:PTN000270925
+  - SGD:S000002984
+  review:
+    action: ACCEPT
+    summary: Cadmus is the bidirectional importin-13 transport receptor.
+    reason: Cadmus is the bidirectional importin-13 transport receptor. Fly Imp13 is structurally characterized
+      with its import cargo Mago-Y14, while mammalian Imp13 directly exports eIF1A; the conserved importin-13
+      mechanism and curated phylogenetic assignment support nuclear export without claiming a fly eIF1A
+      assay.
+    supported_by:
+    - &amp;id003
+      reference_id: PMID:20122403
+      supporting_text: &#39;The heterodimer is imported back into the nucleus by Importin 13
+
+        (Imp13), a member of the karyopherin-beta family of transport factors. We have
+
+        elucidated the structural basis of the Mago-Y14 nuclear import cycle. The 3.35 A
+
+        structure of the Drosophila Imp13-Mago-Y14 complex shows that Imp13 forms a
+
+        ring-like molecule, reminiscent of Crm1, and encircles the Mago-Y14 cargo with a
+
+        conserved interaction surface.&#39;
+    - &amp;id005
+      reference_id: PMID:11447110
+      supporting_text: Imp13 also shows export activity towards the translation initiation factor eIF1A
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB-SubCell:SL-0191
+  review:
+    action: ACCEPT
+    summary: Cadmus localizes in and around neuronal and muscle nuclei, consistent with its nuclear transport
+      cycle.
+    reason: Cadmus localizes in and around neuronal and muscle nuclei, consistent with its nuclear transport
+      cycle.
+    supported_by: &amp;id001
+    - &amp;id002
+      reference_id: PMID:19403829
+      supporting_text: &#39;Imp13 is expressed in and around nuclei of both neurons and
+
+        muscles.&#39;
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: NAS
+  original_reference_id: PMID:17287812
+  qualifier: located_in
+  review:
+    action: ACCEPT
+    summary: Cadmus localizes in and around neuronal and muscle nuclei, consistent with its nuclear transport
+      cycle.
+    reason: Cadmus localizes in and around neuronal and muscle nuclei, consistent with its nuclear transport
+      cycle.
+    supported_by: *id001
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: NAS
+  original_reference_id: PMID:20122403
+  qualifier: located_in
+  review:
+    action: ACCEPT
+    summary: Cadmus localizes in and around neuronal and muscle nuclei, consistent with its nuclear transport
+      cycle.
+    reason: Cadmus localizes in and around neuronal and muscle nuclei, consistent with its nuclear transport
+      cycle.
+    supported_by: *id001
+- term:
+    id: GO:0005635
+    label: nuclear envelope
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  supporting_entities:
+  - PANTHER:PTN000270925
+  - UniProtKB:Q9Y5L0
+  review:
+    action: ACCEPT
+    summary: The nuclear-envelope annotation captures the pore-associated transport step of a shuttling
+      karyopherin.
+    reason: The nuclear-envelope annotation captures the pore-associated transport step of a shuttling
+      karyopherin. Fly Imp13 is observed in perinuclear structures, and its conserved import cycle requires
+      nuclear pore passage; it is not an integral nuclear-envelope membrane protein.
+    supported_by:
+    - *id002
+    - *id003
+- term:
+    id: GO:0006606
+    label: protein import into nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  supporting_entities:
+  - AGI_LocusCode:AT5G62600
+  - FB:FBgn0031456
+  - PANTHER:PTN000270925
+  - RGD:620071
+  - SGD:S000002984
+  - SGD:S000005686
+  - UniProtKB:O94829
+  - UniProtKB:Q9Y5L0
+  review:
+    action: ACCEPT
+    summary: Cadmus binds the Mago-Y14 cargo and mediates its nuclear import.
+    reason: Cadmus binds the Mago-Y14 cargo and mediates its nuclear import. The Drosophila Imp13-Mago-Y14
+      structure directly establishes the import complex; recognition involves a folded cargo surface rather
+      than requiring a classical linear NLS.
+    supported_by: &amp;id004
+    - *id003
+- term:
+    id: GO:0006606
+    label: protein import into nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: involved_in
+  supporting_entities:
+  - ARBA:ARBA00028627
+  review:
+    action: ACCEPT
+    summary: Cadmus binds the Mago-Y14 cargo and mediates its nuclear import.
+    reason: Cadmus binds the Mago-Y14 cargo and mediates its nuclear import. The Drosophila Imp13-Mago-Y14
+      structure directly establishes the import complex; recognition involves a folded cargo surface rather
+      than requiring a classical linear NLS.
+    supported_by: *id004
+- term:
+    id: GO:0006886
+    label: intracellular protein transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  supporting_entities:
+  - InterPro:IPR001494
+  review:
+    action: MODIFY
+    summary: Intracellular protein transport is correct but broader than the characterized importin-13
+      nuclear import pathway.
+    reason: Intracellular protein transport is correct but broader than the characterized importin-13
+      nuclear import pathway. Mago-Y14 is a direct fly cargo; protein import into nucleus is the more
+      informative process.
+    supported_by: *id004
+    proposed_replacement_terms:
+    - id: GO:0006606
+      label: protein import into nucleus
+- term:
+    id: GO:0007270
+    label: neuron-neuron synaptic transmission
+  evidence_type: IMP
+  original_reference_id: PMID:14504225
+  qualifier: involved_in
+  review:
+    action: KEEP_AS_NON_CORE
+    summary: Cadmus loss perturbs visual-system transmission and synaptic homeostasis.
+    reason: Cadmus loss perturbs visual-system transmission and synaptic homeostasis. Mutant and genomic-rescue
+      experiments connect CG7212/imp13 to the original visual screen; at the NMJ the protein acts in muscle
+      to alter presynaptic release. These are supported organismal consequences of a nuclear transport
+      receptor rather than a transmitter receptor or direct vesicle-release factor.
+    supported_by:
+    - reference_id: PMID:19403829
+      supporting_text: every aspect of the eye phenotype is rescued by the genomic transgene
+    - reference_id: PMID:19403829
+      supporting_text: &#39;imp13 is required in the muscles to
+
+        control presynaptic release.&#39;
+- term:
+    id: GO:0031267
+    label: small GTPase binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  supporting_entities:
+  - InterPro:IPR001494
+  review:
+    action: ACCEPT
+    summary: Ran binding controls cargo release in the importin-13 transport cycle.
+    reason: Ran binding controls cargo release in the importin-13 transport cycle. The human Imp13-RanGTP
+      structure and conserved fly cargo-binding structure support this mechanistic interaction; the term
+      does not imply indiscriminate binding to all small GTPases.
+    supported_by:
+    - reference_id: PMID:20122403
+      supporting_text: &#39;human Imp13 bound to
+
+        RanGTP&#39;
+- term:
+    id: GO:0042331
+    label: phototaxis
+  evidence_type: IMP
+  original_reference_id: PMID:14504225
+  qualifier: involved_in
+  review:
+    action: KEEP_AS_NON_CORE
+    summary: Cadmus loss perturbs visual-system transmission and synaptic homeostasis.
+    reason: Cadmus loss perturbs visual-system transmission and synaptic homeostasis. Mutant and genomic-rescue
+      experiments connect CG7212/imp13 to the original visual screen; at the NMJ the protein acts in muscle
+      to alter presynaptic release. These are supported organismal consequences of a nuclear transport
+      receptor rather than a transmitter receptor or direct vesicle-release factor.
+    supported_by:
+    - reference_id: PMID:19403829
+      supporting_text: every aspect of the eye phenotype is rescued by the genomic transgene
+    - reference_id: PMID:19403829
+      supporting_text: &#39;imp13 is required in the muscles to
+
+        control presynaptic release.&#39;
+- term:
+    id: GO:0042564
+    label: NLS-dependent protein nuclear import complex
+  evidence_type: IPI
+  original_reference_id: PMID:20122403
+  qualifier: part_of
+  review:
+    action: ACCEPT
+    summary: Cadmus binds the Mago-Y14 cargo and mediates its nuclear import.
+    reason: Cadmus binds the Mago-Y14 cargo and mediates its nuclear import. The Drosophila Imp13-Mago-Y14
+      structure directly establishes the import complex; recognition involves a folded cargo surface rather
+      than requiring a classical linear NLS.
+    supported_by: *id004
+- term:
+    id: GO:0042564
+    label: NLS-dependent protein nuclear import complex
+  evidence_type: NAS
+  original_reference_id: PMID:17287812
+  qualifier: part_of
+  review:
+    action: ACCEPT
+    summary: Cadmus binds the Mago-Y14 cargo and mediates its nuclear import.
+    reason: Cadmus binds the Mago-Y14 cargo and mediates its nuclear import. The Drosophila Imp13-Mago-Y14
+      structure directly establishes the import complex; recognition involves a folded cargo surface rather
+      than requiring a classical linear NLS.
+    supported_by: *id004
+- term:
+    id: GO:0043243
+    label: positive regulation of protein-containing complex disassembly
+  evidence_type: NAS
+  original_reference_id: PMID:17287812
+  qualifier: involved_in
+  review:
+    action: ACCEPT
+    summary: Cargo release entails disassembly of the receptor-cargo transport complex.
+    reason: Cargo release entails disassembly of the receptor-cargo transport complex. Structural comparison
+      explains RanGTP-dependent release of Mago-Y14 from importin-13; this is not disassembly of the mature
+      exon junction complex on mRNA.
+    supported_by:
+    - reference_id: PMID:20122403
+      supporting_text: &#39;Mago-Y14 is released in the nucleus by a steric hindrance
+
+        mechanism.&#39;
+- term:
+    id: GO:0045202
+    label: synapse
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  qualifier: located_in
+  supporting_entities:
+  - GO:0007270
+  review:
+    action: MARK_AS_OVER_ANNOTATED
+    summary: Synaptic function does not establish endogenous residence at the synapse.
+    reason: Synaptic function does not establish endogenous residence at the synapse. The rescuing genomic
+      tagged protein was detected in muscle nuclei but not at the NMJ synapse; synaptic fluorescence occurred
+      under overexpression. Thus the logical process-to-location transfer is stronger than the localization
+      evidence.
+    supported_by:
+    - reference_id: PMID:19403829
+      supporting_text: Imp13 expression only in the muscle nuclei but not at the synapse
+- term:
+    id: GO:0050804
+    label: modulation of chemical synaptic transmission
+  evidence_type: IMP
+  original_reference_id: PMID:19403829
+  qualifier: involved_in
+  review:
+    action: KEEP_AS_NON_CORE
+    summary: Cadmus loss perturbs visual-system transmission and synaptic homeostasis.
+    reason: Cadmus loss perturbs visual-system transmission and synaptic homeostasis. Mutant and genomic-rescue
+      experiments connect CG7212/imp13 to the original visual screen; at the NMJ the protein acts in muscle
+      to alter presynaptic release. These are supported organismal consequences of a nuclear transport
+      receptor rather than a transmitter receptor or direct vesicle-release factor.
+    supported_by:
+    - reference_id: PMID:19403829
+      supporting_text: every aspect of the eye phenotype is rescued by the genomic transgene
+    - reference_id: PMID:19403829
+      supporting_text: &#39;imp13 is required in the muscles to
+
+        control presynaptic release.&#39;
+- term:
+    id: GO:0051168
+    label: nuclear export
+  evidence_type: NAS
+  original_reference_id: PMID:17287812
+  qualifier: involved_in
+  review:
+    action: ACCEPT
+    summary: Cadmus is the bidirectional importin-13 transport receptor.
+    reason: Cadmus is the bidirectional importin-13 transport receptor. Fly Imp13 is structurally characterized
+      with its import cargo Mago-Y14, while mammalian Imp13 directly exports eIF1A; the conserved importin-13
+      mechanism and curated phylogenetic assignment support nuclear export without claiming a fly eIF1A
+      assay.
+    supported_by:
+    - *id003
+    - *id005
+- term:
+    id: GO:0051170
+    label: import into nucleus
+  evidence_type: NAS
+  original_reference_id: PMID:20122403
+  qualifier: involved_in
+  review:
+    action: ACCEPT
+    summary: Cadmus binds the Mago-Y14 cargo and mediates its nuclear import.
+    reason: Cadmus binds the Mago-Y14 cargo and mediates its nuclear import. The Drosophila Imp13-Mago-Y14
+      structure directly establishes the import complex; recognition involves a folded cargo surface rather
+      than requiring a classical linear NLS.
+    supported_by: *id004
+- term:
+    id: GO:0061608
+    label: nuclear import signal receptor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  supporting_entities:
+  - PANTHER:PTN000270925
+  - SGD:S000002984
+  review:
+    action: ACCEPT
+    summary: Cadmus binds the Mago-Y14 cargo and mediates its nuclear import.
+    reason: Cadmus binds the Mago-Y14 cargo and mediates its nuclear import. The Drosophila Imp13-Mago-Y14
+      structure directly establishes the import complex; recognition involves a folded cargo surface rather
+      than requiring a classical linear NLS.
+    supported_by: *id004
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping,
+    accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology links
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: PMID:14504225
+  title: A genetic screen for synaptic transmission mutants mapping to the right arm of chromosome 3 in
+    Drosophila.
+  findings: []
+  full_text_unavailable: true
+- id: PMID:17287812
+  title: Molecular mechanism of the nuclear protein import cycle.
+  findings: []
+  full_text_unavailable: true
+- id: PMID:19403829
+  title: Importin 13 regulates neurotransmitter release at the Drosophila neuromuscular junction.
+  findings: []
+  full_text_unavailable: false
+- id: PMID:20122403
+  title: Nuclear import mechanism of the EJC component Mago-Y14 revealed by structural studies of importin
+    13.
+  findings: []
+  full_text_unavailable: true
+- id: PMID:11447110
+  title: &#39;Importin 13: a novel mediator of nuclear import and export.&#39;
+  full_text_unavailable: true
+  findings: []
+core_functions:
+- description: Recognizes protein cargo for nuclear import through the nuclear pore.
+  molecular_function:
+    id: GO:0061608
+    label: nuclear import signal receptor activity
+  directly_involved_in:
+  - id: GO:0006606
+    label: protein import into nucleus
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  supported_by: *id004
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
