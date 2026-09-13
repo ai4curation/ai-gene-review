@@ -52,7 +52,8 @@ cover (see "Do not add what curators deliberately declined to add" in CLAUDE.md)
   relative to the same kind of process and query whether they carry it. A systematic
   absence across species and MODs is a convention you have not identified yet, not a
   curation lapse. Check the term's parents too: a process under `GO:0006508 proteolysis`
-  or another reaction-type parent names the catalyst, not the substrate.
+  names whatever does the cleaving, which is the substrate itself in the autoprocessing
+  case (`GO:0016540`) and otherwise is not.
 
 2. **Critical Evaluation**: You must not accept existing annotations as gospel, regardless of whether they are marked as experimental (EXP, IDA, IPI, etc.) or computational (IEA, ISS, etc.). Many GO terms represent over-annotations that need correction.
 

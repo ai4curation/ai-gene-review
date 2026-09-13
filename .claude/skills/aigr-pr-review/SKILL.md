@@ -47,9 +47,10 @@ evidence quality, and whether the curation narrative is coherent.
 - Treat "every other participant carries this term and this gene does not" as a red
   flag rather than a justification. Ask for the comparator check — two or three other
   gene products in the same role relative to the same kind of process — and check the
-  term's parents (a process under `GO:0006508 proteolysis` or another reaction-type
-  parent names the catalyst, not the substrate) and the cached GO-CAMs, which often
-  already contain the gene in the role GO intends for it.
+  term's parents (a process under `GO:0006508 proteolysis` names whatever does the
+  cleaving, which is the substrate itself in the autoprocessing case, `GO:0016540`,
+  and otherwise is not) and the cached GO-CAMs, which often already contain the gene
+  in the role GO intends for it.
 - Flag a proposed term that is an ancestor or descendant of another proposed term, or
   of one the gene already carries, as redundant rather than additional.
 - If the relevant publication or evidence cannot be accessed, prefer `UNDECIDED`.

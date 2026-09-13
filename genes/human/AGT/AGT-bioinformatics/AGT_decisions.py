@@ -3001,7 +3001,12 @@ SUGGESTED_QUESTIONS = [
         "the REN and ACE activities, but nothing equivalent survives in the GAF. Would "
         "has_input extensions on the proteases' GO:0002003 rows be the intended answer, or "
         "is substrate-side representation deliberately out of scope for standard "
-        "annotation?")),
+        "annotation? The concrete instance in this review is the GO:0005515 -> GO:0002020 "
+        "protease binding MODIFY on the renin interaction: that is an MF on the substrate "
+        "side of an enzyme-substrate pair, justified here by a 670 A2 body-to-body "
+        "interface and specificity determinants outside renin's catalytic cleft rather "
+        "than by the cleavage itself, and it is the annotation a decision on this question "
+        "would settle.")),
     dict(question=(
         "For the PAINT curators of PTHR11461: would an IRD at the angiotensinogen node block "
         "GO:0004867 the way the existing IRD at PTN002606963 blocks GO:0005576 for the "

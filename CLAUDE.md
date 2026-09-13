@@ -239,6 +239,16 @@ formation among 182 annotations. The reason is structural: `GO:0002003 is_a GO:0
 peptide hormone processing, under protein processing and proteolysis — the term
 describes the cleaving, and the substrate does none of it.
 
+The convention is not absolute, and the exceptions tell you where the line is. GO
+*does* annotate thyroglobulin to `GO:0006590` thyroid hormone generation, fibrinogen to
+`GO:0042730` fibrinolysis, and C3 to `GO:0006956` complement activation. Each of those
+substrates does chemistry or contributes structure — the thyroid hormone's covalent
+bonds are formed inside the thyroglobulin chain from its own tyrosyl residues; fibrin
+polymerises and then accelerates its own lysis. Angiotensinogen does none of that: renin
+performs every step of its conversion. So the test is never "is my gene the substrate"
+but "does my gene do any of the work", and a fibrinogen-shaped case can legitimately
+carry the term.
+
 Therefore, before proposing a `NEW` process term:
 
 - **Name the entity that performs the step.** If the answer is another gene product,
