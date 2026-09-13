@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - AI Gene Review</title>
+    <style>
+        :root { --bg-page: #f7f8fb; --bg-panel: #fff; --bg-soft: #f2f6f8; --border: #d9e1e7; --text: #17212b; --muted: #526171; --accent: #0f766e; --accent-soft: #dff4f0; --blue: #2563eb; }
+        * { box-sizing: border-box; }
+        body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; color: var(--text); background: var(--bg-page); line-height: 1.55; }
+        a { color: var(--blue); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        :focus-visible { outline: 3px solid #b45309; outline-offset: 3px; }
+        .page { max-width: 1440px; margin: auto; padding: 24px; }
+        nav { margin-bottom: 16px; font-size: .9rem; }
+        nav a { margin-right: 16px; }
+        .header, .panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 22px 24px; margin-bottom: 18px; }
+        h1 { margin: 0 0 8px; font-size: 2rem; }
+        h2 { font-size: 1.25rem; }
+        .muted, .summary { color: var(--muted); }
+        .header p { margin: 6px 0; }
+        .stats { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+        .stat { background: var(--bg-soft); padding: 8px 14px; border-radius: 6px; }
+        .stat strong { color: var(--accent); font-size: 1.2rem; }
+        .toolbar { display: grid; grid-template-columns: minmax(220px, 2fr) repeat(4, minmax(130px, 1fr)) auto; gap: 12px; align-items: end; }
+        label { display: block; font-size: .8rem; font-weight: 650; margin-bottom: 5px; }
+        input, select, button { font: inherit; }
+        input, select, .reset { border: 1px solid var(--border); border-radius: 6px; padding: 9px 10px; background: white; width: 100%; color: var(--text); }
+        button { cursor: pointer; }
+        .reset { color: var(--accent); }
+        .results { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: .85rem; margin: 14px 0; }
+        .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; background: white; }
+        table { border-collapse: collapse; width: 100%; font-size: .85rem; }
+        th, td { padding: 13px 12px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+        th { background: var(--bg-soft); white-space: nowrap; }
+        th button { border: 0; background: transparent; color: inherit; font-weight: 700; padding: 0; text-align: left; }
+        th[aria-sort="ascending"] button::after { content: ' ↑'; }
+        th[aria-sort="descending"] button::after { content: ' ↓'; }
+        tbody tr:hover { background: #f8fbfc; }
+        .family { min-width: 270px; max-width: 440px; }
+        .family-name { display: block; font-weight: 650; font-size: .94rem; }
+        .identifier { font-family: ui-monospace, monospace; font-size: .78rem; margin: 3px 0; }
+        .summary { margin-top: 6px; font-size: .8rem; }
+        .summary summary { cursor: pointer; }
+        .summary p { margin: 6px 0; }
+        .pill { display: inline-block; background: var(--bg-soft); padding: 3px 7px; border-radius: 5px; font-size: .72rem; white-space: nowrap; }
+        .complete { background: var(--accent-soft); color: #095e56; }
+        .scope { display: block; white-space: nowrap; margin-bottom: 4px; font-size: .75rem; }
+        .source-links a { display: block; white-space: nowrap; }
+        #empty-state { padding: 24px; text-align: center; }
+        .collection-links { margin-top: 24px; }
+        .collection-links > summary { cursor: pointer; font-weight: 650; color: var(--accent); }
+        .collection-links table { margin: 14px 0; }
+        footer { margin: 20px 0; font-size: .8rem; color: var(--muted); }
+        [hidden] { display: none !important; }
+        @media (max-width: 1000px) { .toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+        @media (max-width: 600px) { .page { padding: 14px; } .header, .panel { padding: 18px; } .toolbar { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+<main class="page">
+    <nav aria-label="Main navigation"><a href="{{ projects_base_path }}../../index.html">Home</a><a href="{{ projects_base_path }}../modules/index.html">Modules</a><a href="{{ projects_base_path }}all-projects.html">Projects</a><a href="{{ projects_base_path }}../../app/index.html">Gene browser</a></nav>
+    <header class="header">
+        <h1>{{ title }}</h1>
+        <p class="muted">Browse family and domain reviews by name, identifier, function, or representative protein.</p>
+        <div class="stats">
+            <span class="stat"><strong>{{ family_rows|length }}</strong> reviewed entries</span>
+            <span class="stat"><strong>{{ family_rows|selectattr('status', 'equalto', 'COMPLETE')|list|length }}</strong> marked complete</span>
+            <span class="stat"><strong>{{ family_rows|selectattr('research')|list|length }}</strong> with research reports</span>
+        </div>
+    </header>
+    <section class="panel" aria-label="Filter families">
+        <div class="toolbar">
+            <div><label for="family-search">Search families</label><input id="family-search" type="search" placeholder="Name, PTHR / PF ID, GO term…"></div>
+            {% for field, label in [('database', 'Database'), ('status', 'Review status'), ('coherence', 'Functional coherence'), ('mapping_viability', 'InterPro mapping (Pfam)')] %}
+            {% set option_rows = family_rows|selectattr('database', 'equalto', 'PFAM')|list if field == 'mapping_viability' else family_rows %}
+            <div><label for="filter-{{ field }}">{{ label }}</label><select id="filter-{{ field }}" data-field="{{ field }}"><option value="">All</option>{% for value in option_rows|map(attribute=field)|unique|sort %}<option value="{{ value }}">{{ value|replace('_', ' ')|title }}</option>{% endfor %}</select></div>
+            {% endfor %}
+            <button class="reset" type="button" id="reset-filters">Reset</button>
+        </div>
+    </section>
+    <div class="results"><span id="result-count" role="status" aria-live="polite">Showing {{ family_rows|length }} of {{ family_rows|length }} entries</span><span class="muted">Complete review ≠ family-wide term support. “Not recorded” means no explicit assessment.</span></div>
+    <div class="table-wrap" role="region" aria-label="Family reviews" tabindex="0">
+        <table id="family-table">
+            <thead><tr>
+                {% for field, label in [('name', 'Family / domain'), ('database', 'Database'), ('status', 'Review status'), ('coherence', 'Coherence'), ('terms', 'Terms'), ('members', 'Representatives')] %}
+                <th scope="col" aria-sort="none"><button type="button" data-sort="{{ field }}">{{ label }}</button></th>
+                {% endfor %}
+                <th scope="col">InterPro mapping</th><th scope="col">Term scope</th><th scope="col">Sources</th>
+            </tr></thead>
+            <tbody>
+            {% for row in family_rows %}
+                <tr data-search="{{ row.search|lower }}" data-name="{{ row.name }}" data-database="{{ row.database }}" data-status="{{ row.status }}" data-coherence="{{ row.coherence }}" data-mapping_viability="{{ row.mapping_viability }}" data-terms="{{ row.terms }}" data-members="{{ row.members if row.members is not none else -1 }}">
+                    <td class="family"><a class="family-name" href="{{ row.url if row.url.startswith('https://') else projects_base_path ~ row.url }}">{{ row.name }}</a><div class="identifier">{{ row.id }}</div>{% if row.summary %}<details class="summary"><summary>Function summary</summary><p>{{ row.summary }}</p></details>{% endif %}</td>
+                    <td><span class="pill">{{ row.database }}</span></td>
+                    <td><span class="pill {{ 'complete' if row.status == 'COMPLETE' else '' }}">{{ row.status|replace('_', ' ')|title }}</span></td>
+                    <td>{{ row.coherence|replace('_', ' ')|title }}</td>
+                    <td>{{ row.terms }}</td>
+                    <td>{{ row.members if row.members is not none else '—' }}</td>
+                    <td>{% if row.database == 'PFAM' %}<span class="pill">{{ row.mapping_viability|replace('_', ' ')|title }}</span><div class="identifier">{{ row.interpro_id }}</div><div class="muted">GO mapping: {{ row.go_status|replace('_', ' ')|title }}</div>{% if row.viability_reason %}<details class="summary"><summary>Mapping rationale</summary><p>{{ row.viability_reason }}</p></details>{% endif %}{% else %}—{% endif %}</td>
+                    <td>{% for scope, count in row.scopes.items() %}<span class="scope">{{ scope|replace('_', ' ')|title }}: {{ count }}</span>{% else %}<span class="muted">Not recorded</span>{% endfor %}</td>
+                    <td class="source-links">{% for source in row.sources %}<a href="{{ source.url }}">{{ source.label }} ↗</a>{% endfor %}{% if row.research %}<span class="muted">Research available</span>{% endif %}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        <p id="empty-state" hidden>No families match these filters. Try another name or reset the filters.</p>
+    </div>
+    <p class="muted">InterPro mapping reports the scope assessment for the InterPro entry associated with a Pfam family. Terms count structured assessments or proposals; representatives count explicitly listed PANTHER members, not total family size. Source-only entries are excluded.</p>
+    <details class="panel collection-links"><summary>Related collections and focused family projects</summary>{{ content|safe }}</details>
+    <footer>AI Gene Review · <a href="https://github.com/ai4curation/ai-gene-review/tree/{{ source_ref }}/interpro">Family review sources on GitHub</a></footer>
+</main>
+<script>
+(() => {
+    const body = document.querySelector('#family-table tbody');
+    const rows = Array.from(body.rows);
+    const search = document.getElementById('family-search');
+    const filters = Array.from(document.querySelectorAll('select[data-field]'));
+    const counter = document.getElementById('result-count');
+    function filterRows() {
+        const words = search.value.trim().toLowerCase().split(/\s+/).filter(Boolean);
+        let count = 0;
+        rows.forEach(row => {
+            const matches = words.every(word => row.dataset.search.includes(word)) && filters.every(select => !select.value || ((select.dataset.field !== 'mapping_viability' || row.dataset.database === 'PFAM') && row.dataset[select.dataset.field] === select.value));
+            row.hidden = !matches;
+            if (matches) count++;
+        });
+        counter.textContent = `Showing ${count} of ${rows.length} entries`;
+        document.getElementById('empty-state').hidden = count !== 0;
+    }
+    search.addEventListener('input', filterRows);
+    filters.forEach(select => select.addEventListener('change', filterRows));
+    document.getElementById('reset-filters').addEventListener('click', () => {
+        search.value = '';
+        filters.forEach(select => select.value = '');
+        filterRows();
+        search.focus();
+    });
+    document.querySelectorAll('[data-sort]').forEach(button => button.addEventListener('click', () => {
+        const header = button.closest('th');
+        const ascending = header.getAttribute('aria-sort') !== 'ascending';
+        document.querySelectorAll('th[aria-sort]').forEach(th => th.setAttribute('aria-sort', 'none'));
+        header.setAttribute('aria-sort', ascending ? 'ascending' : 'descending');
+        const field = button.dataset.sort;
+        rows.sort((a, b) => {
+            const comparison = ['terms', 'members'].includes(field) ? Number(a.dataset[field]) - Number(b.dataset[field]) : a.dataset[field].localeCompare(b.dataset[field], undefined, {numeric: true, sensitivity: 'base'});
+            return ascending ? comparison : -comparison;
+        }).forEach(row => body.appendChild(row));
+    }));
+})();
+</script>
+</body>
+</html>
