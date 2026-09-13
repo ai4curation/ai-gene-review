@@ -7,6 +7,9 @@ species: [ECOLI]
 
 # Validating E. coli ML Predictions
 
+[Function prediction evaluation index](FUNCTION_PREDICTION_EVALUATION.md)
+
+
 ## Overview
 
 This project evaluates GO annotations for E. coli genes highlighted in de Crecy-Lagard et al. (2025)
