@@ -982,21 +982,33 @@ routine event in the repo into a red X.</p>
   that identity, so this does not block ordinary closing passes. It still
   affects the generated-page lane, whose independent approval is deliberately
   tied to <code>ai4c-reviewer</code>.</li>
-<li><strong>A stale <code>dragon-ai-agent</code> collaborator entry remains</strong> on the repo. The
-  account itself is deleted (<code>GET /users/dragon-ai-agent</code> 404s) so it grants
-  nothing, but the entry should be removed — that is a settings click, not a
-  code change. The recipes that re-added it, and that re-installed <code>PAT_FOR_PR</code>,
-  were removed in the cleanup PR; before that, a single <code>just gh-add-secrets</code>
-  would have reinstalled the exposed credential and undone this migration.
-  Worth remembering that a revoked token is not a revoked account, and a deleted
-  account is not a removed collaborator.</li>
-<li><strong>The <code>PAT_FOR_PR</code> secret still exists</strong>, though nothing references it — the
+<li><strong><code>dragon-ai-agent</code> holds <code>admin</code> on this repository</strong>, and is an active
+  <code>ai4curation</code> organization owner. This entry was described here as "stale" and
+  the account as "deleted"; both were wrong. In July the account was <em>suspended</em>
+  — <code>GET /users/dragon-ai-agent</code> 404s for a suspended account, which is easy to
+  misread as deletion, but the membership API returns <code>state: active</code> and a
+  deleted account would have lost that membership. It was then <strong>unsuspended on
+  2026-08-05</strong> and is operating again. So the grant is live, not vestigial:</li>
+</ul>
+<p><code>GET /repos/ai4curation/ai-gene-review/collaborators/dragon-ai-agent/permission
+      -&gt; permission: admin</code></p>
+<p>No workflow here needs it — that is the point of this migration — so the
+  privilege is unearned. Reducing it is a settings change, not a code one.
+  The recipes that re-added the account and re-installed <code>PAT_FOR_PR</code> were
+  removed in the cleanup PR; before that, a single <code>just gh-add-secrets</code> would
+  have reinstalled the exposed credential and undone this migration.</p>
+<p>Worth stating plainly, since it has now been misread in both directions: a
+  revoked token is not a revoked account, a suspended account is not a deleted
+  one, a deleted account is not a removed collaborator, and unsuspension
+  silently restores every privilege the account held. Membership and permission
+  endpoints are authoritative; <code>GET /users/:login</code> is not.
+- <strong>The <code>PAT_FOR_PR</code> secret still exists</strong>, though nothing references it — the
   only mentions left in the tree are two do-not-reintroduce comments
   (<code>justfile:180</code>, <code>ai.yml:187</code>) and this document. It
   should be deleted. Note it is already non-functional — a checkout using it
   fails outright, which is how <code>pr-shepherd</code> came to fail 121 runs in a row — so
-  deleting it is bookkeeping rather than a cutover.</li>
-<li><strong>Five workflows run with <code>--dangerously-skip-permissions</code></strong>:
+  deleting it is bookkeeping rather than a cutover.
+- <strong>Five workflows run with <code>--dangerously-skip-permissions</code></strong>:
   <code>arba-issue-monitor</code>, <code>curation-scanner</code>, <code>go-annotation-scanner</code>,
   <code>pr-shepherd</code> and <code>weekly-compliance</code>. Not just the scanners —
   <strong><code>pr-shepherd</code> reads PR titles, bodies, diffs and review comments</strong>, a wider
@@ -1004,20 +1016,19 @@ routine event in the repo into a red X.</p>
   prompt-level untrusted-input guardrail and the App token's scope, not tool
   restriction. <code>litscan-module-member</code>, <code>claude-code-review</code> and <code>claude</code> all
   enumerate <code>--allowedTools</code> instead, so the precedent for tightening the other
-  five is already in the repo.</li>
-<li><strong><code>.github/actions/claude-code-action</code> is a partly-unmanaged agent path.</strong> It
+  five is already in the repo.
+- <strong><code>.github/actions/claude-code-action</code> is a partly-unmanaged agent path.</strong> It
   is an older composite — <code>npm install -g</code> plus a CBORG endpoint — sitting behind
   <code>claude-issue-summarize</code> and <code>claude-issue-triage</code>. The manifest and checkout
   tests do reach it, but the pinned-SHA, input-vocabulary and central-model
   guards do not: it never calls <code>anthropics/claude-code-action</code>, and it is not in
   <code>agent-config.yaml</code>, so its model and its agent version are uncontrolled.
-  Migrating it is its own change.</li>
-<li><strong><code>weekly-compliance</code> has no post-run assertion that it opened a PR.</strong> The
+  Migrating it is its own change.
+- <strong><code>weekly-compliance</code> has no post-run assertion that it opened a PR.</strong> The
   missing token that made it a no-op is fixed and its output is captured, but
   "the agent ran cleanly and produced nothing" is still indistinguishable from
   "there was nothing to fix." Closing that needs a decision about what should
-  happen on a week with no low-scoring files, not just a check.</li>
-</ul>
+  happen on a week with no low-scoring files, not just a check.</p>
 <h2 id="not-adopted">Not adopted</h2>
 <p>dismech has scanners this repo deliberately did not take: <code>discussion-scanner</code>,
 <code>literature-scan</code>, <code>preprint-scan</code>, <code>knowledge-gap-scan</code>. ai-gene-review does
