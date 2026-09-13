@@ -244,8 +244,10 @@ The convention is not absolute, and the exceptions tell you where the line is. G
 `GO:0042730` fibrinolysis, and C3 to `GO:0006956` complement activation. Each of those
 substrates does chemistry or contributes structure — the thyroid hormone's covalent
 bonds are formed inside the thyroglobulin chain from its own tyrosyl residues; fibrin
-polymerises and then accelerates its own lysis. Angiotensinogen does none of that: renin
-performs every step of its conversion. So the test is never "is my gene the substrate"
+polymerises and then accelerates its own lysis by acting as a cofactor for plasminogen
+activation; C3 carries an internal thioester that cleavage exposes, which C3b then uses
+to form its own covalent bond to the target surface. Angiotensinogen does none of that:
+renin performs every step of its conversion. So the test is never "is my gene the substrate"
 but "does my gene do any of the work", and a fibrinogen-shaped case can legitimately
 carry the term.
 
