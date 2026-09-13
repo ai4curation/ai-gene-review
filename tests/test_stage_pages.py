@@ -369,3 +369,31 @@ def test_off_base_link_blocks_deployment(tmp_path: Path) -> None:
     ]
     assert manifest.broken_local_links == 0
     assert not manifest.deployable
+
+
+def test_stage_shares_real_renderer_assets_and_counts_final_bytes(
+    tmp_path: Path,
+) -> None:
+    from ai_gene_review.render import enrich_gene_data, render_html
+
+    _site_fixture(tmp_path)
+    template = (
+        Path(__file__).parents[1] / "src/ai_gene_review/templates/gene_review.html.j2"
+    )
+    html = render_html(enrich_gene_data({"gene_symbol": "ABC1"}), template)
+    source = tmp_path / "genes/human/ABC1/ABC1-ai-review.html"
+    source.write_text(html)
+    _write(tmp_path / "genes/human/DEF1/DEF1-ai-review.yaml")
+    _write(tmp_path / "genes/human/DEF1/DEF1-ai-review.html", html)
+    output = tmp_path / "_site"
+    manifest = stage_pages(tmp_path, output)
+    assert manifest.shared_asset_bytes_saved > 25_000
+    assert manifest.total_bytes == sum(
+        p.stat().st_size for p in output.rglob("*") if p.is_file()
+    )
+    assert source.read_text() == html
+    assert (
+        '<link rel="stylesheet" href="../../../_pages-assets/'
+        in (output / "genes/human/ABC1/ABC1-ai-review.html").read_text()
+    )
+    assert len(list((output / "_pages-assets").iterdir())) == 3
