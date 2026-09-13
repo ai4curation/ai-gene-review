@@ -9,7 +9,7 @@ import re
 import shutil
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
-from urllib.parse import unquote, urlparse
+from urllib.parse import quote, unquote, urlparse
 
 import markdown
 import yaml
@@ -1101,6 +1101,7 @@ def render_project(
     genes_dir: Path = Path("genes"),
     template_path: Optional[Path] = None,
     projects_dir: Optional[Path] = None,
+    source_ref: str = "main",
 ) -> Tuple[Path, List[str]]:
     """Render a single project markdown file to HTML.
 
@@ -1119,6 +1120,7 @@ def render_project(
         projects_dir: Root projects directory; when given, the output path
             mirrors ``md_path``'s location relative to it. When ``None`` the
             file is rendered flat as ``output_dir/<stem>.html``.
+        source_ref: Git revision for catalog GitHub links; defaults to main.
 
     Returns:
         Tuple of (output_path, list_of_warnings)
@@ -1218,6 +1220,39 @@ def render_project(
         else:
             title = md_path.stem
 
+    # Catalog pages explicitly opt in, independent of their filename or depth.
+    family_rows = None
+    page_template = frontmatter.get("template", "project")
+    if page_template not in {"project", "family_index"}:
+        raise ValueError(f"Unknown project template: {page_template!r}")
+    if page_template == "family_index":
+        from ai_gene_review.family_index import collect_family_reviews
+
+        source_root = (
+            projects_dir.resolve()
+            if projects_dir
+            else next(
+                (
+                    parent
+                    for parent in md_path.resolve().parents
+                    if parent.name == "projects"
+                ),
+                None,
+            )
+        )
+        if source_root is None:
+            raise ValueError(
+                "Family catalog requires projects_dir or a source under projects/"
+            )
+        family_rows = collect_family_reviews(source_root.parent, source_ref=source_ref)
+        for view in ("blob", "tree"):
+            github_base = f"https://github.com/ai4curation/ai-gene-review/{view}/"
+            html_content = html_content.replace(
+                github_base + "main/", github_base + quote(source_ref, safe="") + "/"
+            )
+        if template_path is None:
+            template_path = Path(__file__).parent / "templates" / "family_index.html.j2"
+
     # Set up template
     if template_path is None:
         module_dir = Path(__file__).parent
@@ -1238,6 +1273,8 @@ def render_project(
         title=title,
         content=html_content,
         source_file=md_path.name,
+        family_rows=family_rows,
+        source_ref=quote(source_ref, safe=""),
         warnings=warnings,
         frontmatter=frontmatter,
         projects_base_path="../" * subdir_depth,
@@ -1293,6 +1330,7 @@ def render_project_bundle(
     genes_dir: Path = Path("genes"),
     template_path: Optional[Path] = None,
     projects_dir: Path = Path("projects"),
+    source_ref: str = "main",
 ) -> Tuple[List[Path], List[str]]:
     """Render a project page plus its same-named supporting folder.
 
@@ -1313,6 +1351,7 @@ def render_project_bundle(
             genes_dir=genes_dir,
             template_path=template_path,
             projects_dir=projects_dir,
+            source_ref=source_ref,
         )
         output_paths.append(output_path)
         index_path = write_readme_index_alias(bundle_file, output_path, projects_dir)
@@ -1489,6 +1528,7 @@ def render_all_projects(
     projects_dir: Path = Path("projects"),
     output_dir: Path = Path("pages/projects"),
     genes_dir: Path = Path("genes"),
+    source_ref: str = "main",
 ) -> Tuple[List[Path], List[str]]:
     """Render all project markdown files to HTML.
 
@@ -1496,6 +1536,7 @@ def render_all_projects(
         projects_dir: Directory containing project markdown files
         output_dir: Directory for output HTML files
         genes_dir: Path to the genes directory
+        source_ref: Git revision for catalog GitHub links; defaults to main.
 
     Returns:
         Tuple of (list_of_output_paths, list_of_all_warnings)
@@ -1528,6 +1569,7 @@ def render_all_projects(
                 output_dir=output_dir,
                 genes_dir=genes_dir,
                 projects_dir=projects_dir,
+                source_ref=source_ref,
             )
             output_paths.append(output_path)
             index_path = write_readme_index_alias(md_file, output_path, projects_dir)
