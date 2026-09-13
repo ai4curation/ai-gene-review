@@ -14,6 +14,15 @@ import subprocess
 import sys
 from pathlib import Path
 
+PROVIDERS = (
+    "openai",
+    "perplexity",
+    "perplexity-lite",
+    "falcon",
+    "cyberian",
+    "codex",
+)
+
 
 def slugify(text: str) -> str:
     """Convert text to a unix-friendly slug.
@@ -38,7 +47,12 @@ def run_deep_research(
 ) -> int:
     """Run deep-research-client with proper arguments."""
     # Map internal provider names to deep-research-client provider names
-    actual_provider = "perplexity" if provider == "perplexity-lite" else provider
+    if provider == "perplexity-lite":
+        actual_provider = "perplexity"
+    elif provider == "codex":
+        actual_provider = "cyberian"
+    else:
+        actual_provider = provider
 
     if use_template:
         cmd = [
@@ -81,6 +95,9 @@ def run_deep_research(
             str(output_path),
         ]
 
+    if provider == "codex":
+        cmd.extend(["--param", "agent_type=codex"])
+
     if extra_args:
         cmd.extend(extra_args)
 
@@ -96,7 +113,7 @@ def main() -> int:
     parser.add_argument("concept", help="Concept or pathway name (quote if it has spaces)")
     parser.add_argument(
         "provider",
-        choices=["openai", "perplexity", "perplexity-lite", "falcon", "cyberian"],
+        choices=PROVIDERS,
         help="Deep research provider",
     )
     parser.add_argument(

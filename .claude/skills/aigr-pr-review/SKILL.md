@@ -32,7 +32,8 @@ evidence quality, and whether the curation narrative is coherent.
 1. GO term specificity and aspect correctness
 - Prefer the most accurate GO term supported by the evidence, not the nearest generic match.
 - Flag terms that are too broad, too narrow, or placed in the wrong GO aspect.
-- Be especially skeptical of vague terms like `protein binding` when a more informative MF term is available.
+- For generic protein binding, follow the action policy in the
+  [annotation-reviewer skill](../annotation-reviewer/SKILL.md).
 - If recommending `MODIFY`, provide the concrete replacement term(s) with GO IDs.
 
 2. Evidence quality

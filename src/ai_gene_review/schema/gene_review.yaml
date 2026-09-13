@@ -189,7 +189,9 @@ slots:
   original_reference_id:
     range: Reference
     inlined: false
-    description: ID of the original reference
+    description: ID of the original source reference, preserved as supplied by GOA/UniProt.
+      Curate identifier replacements in references.reference_review.replacement and cite
+      the actual evidence source in review.supported_by; do not rewrite this provenance.
   retired:
     range: boolean
     description: Whether the annotation is retired or replaced
@@ -211,6 +213,12 @@ slots:
     description: Manual reviewer assessment of this reference (relevance, and citation
       correctness / scientific soundness). Reviewer-supplied, distinct from the
       machine-fetched id/title.
+  replacement:
+    range: ReferenceReplacement
+    inlined: true
+    description: Manually established replacement for this reference identifier. This records
+      identifier provenance, not a biological contradiction or retraction, and does not
+      implicitly redirect supporting_text to another publication.
   relevance:
     range: ReferenceRelevanceEnum
     description: Reviewer judgment of how relevant the reference is to the gene's function
@@ -474,6 +482,21 @@ classes:
       - relevance
       - correctness
       - review_notes
+      - replacement
+
+  ReferenceReplacement:
+    description: A curated identifier remapping. Keep the original Reference.id and
+      original_reference_id; declare the target in references and explicitly cite it in
+      supported_by when quoting its text. Record how the mapping was established in
+      review_notes. A duplicate-record deletion is not a retraction of the paper.
+    slots:
+      - reference_id
+      - review_notes
+    attributes:
+      reason:
+        range: ReferenceReplacementReasonEnum
+        required: true
+        description: Why the source identifier should resolve to the target reference.
 
   Finding:
     description: A finding is a statement about a gene, which is supported by a reference.
@@ -495,6 +518,12 @@ classes:
       - finding_status
       - superseded_by
       - review_notes
+      - supported_by
+    slot_usage:
+      supported_by:
+        description: Evidence for this assessment, including exact snippets from the papers
+          that contradict, overturn, or corroborate the original finding. Each snippet is
+          attributed to its explicit reference_id, not the parent finding's publication.
 
   SupportingTextInReference:
     description: A supporting text in a reference.
@@ -1291,6 +1320,130 @@ classes:
         description: >-
           Source genes, gene products, PANTHER nodes, family nodes, or other
           source entities inspected for the propagated annotation.
+      residue_claims:
+        range: ResidueClaim
+        multivalued: true
+        inlined_as_list: true
+        description: >-
+          Machine-checkable form of a residue-level argument, e.g. "this protein
+          lost the catalytic cysteine". Optional and additive: the vast majority of
+          existing reviews state such arguments only in review.reason prose, and
+          those are grandfathered, never invalidated. Supply this whenever a NEW
+          review rests on residue gain, loss, or retention, so a validator can
+          resolve the claim against the actual sequences and contradict it.
+
+          This exists because the argument is cheap to assert and hard to check. A
+          survey of 17 "lacks the catalytic residue" claims in this repo found 4
+          where the site was fully intact -- CASP12 (truncated instead), LPA
+          (activation junction), AZIN1 (lost substrate contacts, kept the catalytic
+          Cys) and HSPA13 (a different domain). Each conclusion happened to survive
+          for another reason, so nothing caught the faulty mechanism.
+      residue_claims_not_applicable:
+        range: string
+        description: >-
+          Why this annotation's argument cannot be expressed as a residue claim, for
+          cases that are genuinely not point-residue questions -- capping versus
+          severing (CAPG), holdase versus foldase (CRYAA), or a whole domain absent
+          rather than residues substituted (MEFV, RAD51C). Recording the reason keeps
+          the escape valve honest rather than silent.
+
+  ResidueClaim:
+    description: >-
+      A claim that a specific position in THIS gene's protein does or does not carry
+      the residue an anchor protein has at the corresponding position.
+
+      Both sides carry an explicit position and residue, which is what makes the claim
+      checkable without an alignment: the anchor and target residues are each resolved
+      directly against their own sequences. The alignment is only needed to confirm the
+      two positions genuinely correspond, so a claim remains partially verifiable even
+      when no alignment is pinned.
+
+      Positions are always in each protein's own native numbering, never an alignment
+      column -- columns shift when PANTHER re-releases a family, and a stale column
+      still resolves, to the wrong residue.
+    attributes:
+      claim_type:
+        range: ResidueClaimEnum
+        required: true
+        description: Whether the target lost, retained, or substituted the residue.
+      site_ref:
+        range: string
+        pattern: "^PANTHER:PTHR[0-9]{5}#[a-z0-9_]+$"
+        description: >-
+          Optional reference to a curated family-level residue site, as
+          ``<family_id>#<site_id>`` (e.g. PANTHER:PTHR11022#zn_triad). When given, the
+          validator additionally checks that the site exists in that family review and
+          that the anchor position is one the site declares -- which is what stops a
+          gene review and a family review drifting apart.
+      anchor:
+        range: ResiduePosition
+        inlined: true
+        required: true
+        description: >-
+          The comparator: a protein known to have the functional residue, and where.
+      target:
+        range: ResiduePosition
+        inlined: true
+        description: >-
+          The corresponding position in this gene's own protein. Omit only when the
+          region is unalignable, in which case say so in comment; a missing target is
+          weaker evidence than a stated substitution.
+      role:
+        range: string
+        description: Mechanistic role of the anchor residue (e.g. "metal ligand", "nucleophile").
+      method:
+        range: ResidueClaimMethodEnum
+        required: true
+        description: How the correspondence between anchor and target positions was established.
+      alignment_release:
+        range: string
+        description: >-
+          Version of the alignment *resource* the correspondence was taken from, when
+          one exists -- e.g. "PANTHER 19.0" or "Pfam 37.0". A tool name or a script
+          path is not a release and does not belong here; put that in comment.
+
+          Omit it for an alignment computed ad hoc. That is not a gap: the claim states
+          both positions and both residues, so the alignment is only how the
+          correspondence was *discovered*, while the evidence is the two sequence
+          lookups the validator performs. Pinning matters for a shared resource whose
+          coordinates can shift under you, not for a one-off computation.
+      comment:
+        range: string
+        description: Short note, e.g. why the target position is absent rather than substituted.
+
+  ResiduePosition:
+    description: A single residue in a named protein, in that protein's own numbering.
+    attributes:
+      accession:
+        range: string
+        required: true
+        description: UniProt CURIE, e.g. UniProtKB:Q96PD5.
+      position:
+        range: integer
+        required: true
+        minimum_value: 1
+        description: 1-based position in this protein's own sequence.
+      residue:
+        range: string
+        required: true
+        pattern: "^[ACDEFGHIKLMNPQRSTVWYUO]$"
+        description: >-
+          Single-letter residue expected at that position. U and O are permitted for
+          selenocysteine and pyrrolysine -- a catalytic position can legitimately be
+          selenocysteine, as in SEPHS2.
+      sequence_version: 
+        range: integer
+        minimum_value: 1
+        description: >-
+          UniProt sequence version (the SV in a P49903.2 style citation) the position
+          was read against. Record it: an amino-acid sequence is not immutable. SEPHS2
+          is already on sequence version 3, and a corrected or re-chosen canonical
+          sequence shifts every downstream position, so an unversioned claim can go
+          silently wrong -- or worse, keep passing against a different residue that
+          happens to match.
+
+          The validator compares this against the current record and, when they differ,
+          says so explicitly rather than letting a stale claim look verified.
 
   PropagationSource:
     description: >-
@@ -2474,6 +2627,40 @@ enums:
       CIRCULAR_PROPAGATION:
         description: Propagation chain depends on another propagated annotation rather than independent source evidence.
 
+  ResidueClaimEnum:
+    description: What a residue claim asserts about the target protein.
+    permissible_values:
+      LOST:
+        description: >-
+          The target does not carry the anchor's functional residue -- it is
+          substituted, or no residue aligns to that position at all.
+      RETAINED:
+        description: >-
+          The target does carry the residue. Worth recording explicitly: a retained
+          site refutes a "lacks the catalytic residue" argument, which is how the
+          CASP12 and LPA errors would have been caught.
+      SUBSTITUTED:
+        description: >-
+          The residue differs but the substitution is conservative or otherwise
+          argued not to abolish function. Distinct from LOST, which asserts the
+          function is gone.
+
+  ResidueClaimMethodEnum:
+    description: How the anchor-to-target position correspondence was established.
+    permissible_values:
+      MSA:
+        description: Multiple sequence alignment; record the alignment_release.
+      STRUCTURE:
+        description: Structural superposition or a solved complex.
+      UNIPROT_FEATURE:
+        description: >-
+          Both positions read from UniProt feature tables on their own records, with
+          no alignment step.
+      LITERATURE:
+        description: >-
+          A publication states the correspondence directly; cite it in
+          review.supported_by.
+
   PropagationSourceStatusEnum:
     description: Mechanical status of a source entity with respect to a propagated target annotation.
     permissible_values:
@@ -2509,6 +2696,8 @@ enums:
           sometimes terms can also be overly specific and contorted, so in some cases you might want to generalize
       MARK_AS_OVER_ANNOTATED:
         description: The term is not entirely wrong, but likely represents an over-annotation of the gene
+        see_also:
+          - https://github.com/ai4curation/ai-gene-review/blob/main/.claude/skills/annotation-reviewer/SKILL.md
       UNDECIDED:
         description: The annotation is not clear, and the reviewer is not sure what to do with it. ALWAYS USE THIS IF YOU ARE UNABLE TO ACCESS
           RELEVANT PUBLICATIONS
@@ -3129,6 +3318,30 @@ enums:
           supplied the wrong input (e.g. the sequence of a different gene), so every output
           describes the wrong protein. Recorded to distinguish upstream pipeline mistakes
           from genuine model mispredictions.
+      DOMAIN_ARCHITECTURE_MISMATCH:
+        description: >-
+          The predicted activity requires a domain, catalytic region, or complete
+          architecture absent from the selected protein. Includes transfer of a
+          multidomain donor's activity through a shared noncatalytic domain.
+          Does not establish that the target is a fold-retaining pseudoenzyme,
+          that its gene model is wrong, or that the historical model input differed.
+      COMPLEX_ACTIVITY_TRANSFER:
+        description: >-
+          Intrinsic catalytic activity of a molecular complex is assigned to a
+          noncatalytic accessory subunit. Participation in the complex or its
+          biological process does not establish that the subunit catalyzes the reaction.
+
+
+  ReferenceReplacementReasonEnum:
+    description: Reason for a manually verified identifier replacement, distinct from
+      the empirical standing of a publication's findings.
+    permissible_values:
+      DUPLICATE_RECORD:
+        description: Source record was deleted or merged as a duplicate of the target record.
+      REPLACED_RECORD:
+        description: The source authority explicitly replaced this record with the target record.
+      WRONG_IDENTIFIER:
+        description: The original citation used the wrong identifier; the target identifies the intended paper.
 
   ReferenceRelevanceEnum:
     description: Reviewer's assessment of how relevant a reference is to the gene's function and review.
