@@ -222,8 +222,8 @@ APOC4's 23 rows are 23 of those.
 
 Resolving every partner in UniProt (subcellular location field, by
 `APOC4-bioinformatics/huri_partner_topology.py`, whose per-partner output is committed as
-`huri_partners.tsv`) gives a topologically impossible set for a secreted plasma apolipoprotein.
-Counted rather than eyeballed:
+`huri_partners.tsv`) gives a partner set with no plasma protein in it at all — nothing of the kind a
+secreted apolipoprotein actually encounters. Counted rather than eyeballed:
 **0 of 23 have a curated Secreted or Extracellular location, 10 of 23 carry a curated mitochondrial
 location** (IFI27, MICOS10, MICOS13, LETMD1, MAIP1, BCL2L2, TIMMDC1, DIABLO, NFU1, RSAD2), **10 of 23
 have a transmembrane segment, 1 (THBD) has a cleaved signal peptide, and 1 (SYT16) has no curated
