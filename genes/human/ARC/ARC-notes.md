@@ -319,15 +319,26 @@ protein), **P25815** S100P, **Q9H788** SH2D4A (SH2 domain-containing protein 4A)
 TBX18 (T-box transcription factor 18). None is a neuronal protein, none appears in the Arc
 mechanistic literature, and none has functional follow-up with Arc. Meanwhile the partners that
 *do* have mechanism — endophilin 2/3 (SH3GL2/SH3GL3), dynamin 2, CaMKIIβ, PSEN1 — are recorded
-in UniProt only as `By similarity` and have no human IPI row at all. The four rows are
-`MARK_AS_OVER_ANNOTATED`: reproducible high-throughput hits with no biology attached, and
-`GO:0005515` tells us nothing anyway.
+in UniProt only as `By similarity` and have no human IPI row at all.
+
+All four rows are `REMOVE`, following the protein-binding policy in
+`.claude/skills/annotation-reviewer/SKILL.md` (added to main while this review was in progress):
+`GO:0005515` is not an over-annotation, because its problem is absence of functional information
+rather than a claim exceeding the evidence, so `MARK_AS_OVER_ANNOTATED` is the wrong action.
+`MODIFY` is unavailable here — an all-by-all two-hybrid screen with no follow-up supports no
+specific molecular function for these pairs, and inventing one from interaction evidence alone is
+what the policy forbids. Removal says the term is uninformative, not that the interaction is
+false; the interactions remain in IntAct and in UniProt's INTERACTION block. The informative MF
+the record was actually missing is added separately as `GO:0030674` on the characterised
+partners (see §7).
 
 ## 6. Per-row issues found
 
 Actions across the 57 GOA rows plus 5 NEW rows (62 entries): 38 ACCEPT, 13 KEEP_AS_NON_CORE,
-5 MARK_AS_OVER_ANNOTATED, 1 MODIFY, 5 NEW. No REMOVE — nothing in this record is contradicted,
-and the weak rows are weak by provenance rather than wrong in substance. 48 rows carry a
+4 REMOVE, 1 MARK_AS_OVER_ANNOTATED, 1 MODIFY, 5 NEW. The four REMOVEs are all `GO:0005515`
+protein binding and are removals on informativeness grounds under the skill's protein-binding
+policy (§5), not because anything is contradicted: no substantive claim in this record is
+refuted, and the weak rows are weak by provenance rather than wrong in substance. 48 rows carry a
 `propagation_review` (all 6 IBAs, all 23 ISS including the 5 NEW rows, and all 19 IEAs — i.e.
 every row with `supporting_entities`), enumerating 70 source entities in total. Root causes are
 35 `NO_FAILURE_CORE`, 9 `NO_FAILURE_NON_CORE`, 3 `SOURCE_WEAK_OR_INFERRED` and 1
