@@ -191,3 +191,69 @@ def test_goa_sorting_no_iba():
         # Should be sorted by date (most recent first)
         assert annotations[0] == ("GO:0005737", "20210101")  # More recent
         assert annotations[1] == ("GO:0005515", "20200101")  # Older
+
+
+def test_goa_deduplicates_identical_projected_rows():
+    """Annotation extensions must not create duplicate rows in the TSV projection."""
+
+    base_result = {
+        "geneProductId": "UniProtKB:TEST",
+        "symbol": "TEST",
+        "goId": "GO:0034506",
+        "goName": "chromosome, centromeric core domain",
+        "goEvidence": "IDA",
+        "date": "20091201",
+        "goAspect": "C",
+        "evidenceCode": "ECO:0000314",
+        "reference": "PMID:19217403",
+        "assignedBy": "PomBase",
+        "taxonId": 4896,
+        "taxonName": "Schizosaccharomyces pombe",
+        "name": "Centromere protein Scm3",
+    }
+    mock_data = {
+        "results": [
+            {
+                **base_result,
+                "id": "annotation-1",
+                "extensions": [
+                    {
+                        "relation": "existence_overlaps",
+                        "connectedXrefs": [{"db": "GO", "id": "0000088"}],
+                    }
+                ],
+            },
+            {
+                **base_result,
+                "id": "annotation-2",
+                "extensions": [
+                    {
+                        "relation": "existence_overlaps",
+                        "connectedXrefs": [{"db": "GO", "id": "0000093"}],
+                    }
+                ],
+            },
+            {
+                **base_result,
+                "id": "annotation-3",
+                "withFrom": [
+                    {"connectedXrefs": [{"db": "PomBase", "id": "SPAC25G10.01"}]}
+                ],
+            },
+        ],
+        "numberOfHits": 3,
+    }
+
+    with patch("requests.get") as mock_get:
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = mock_data
+        mock_get.return_value = mock_response
+
+        data_lines = fetch_goa_data("TEST").strip().split("\n")[1:]
+
+    assert len(data_lines) == 2
+    assert {line.split("\t")[10] for line in data_lines} == {
+        "",
+        "PomBase:SPAC25G10.01",
+    }
