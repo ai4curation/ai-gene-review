@@ -7,8 +7,8 @@ RHEA:22812 and RHEA:23700
 [file:PSEPK/folD2/folD2-uniprot.txt
 "DE   RecName: Full=Bifunctional protein FolD 2"; "Xref=Rhea:RHEA:22812";
 "Xref=Rhea:RHEA:23700"]. Q88KM5 and Q88LI7 are both assigned to
-PTHR48099:SF5 in the local member table, while PTN000002250 has positive IBD
-rows for GO:0004488 and GO:0004477
+PTHR48099:SF5 in the local member table. PAINT places the bacterial GO:0004488
+assertion at PTN000002429 and the broader GO:0004477 assertion at PTN000002250
 [file:interpro/panther/PTHR48099/PTHR48099-paint.tsv].
 
 The final OpenScientist gene report independently recovers the bifunctional

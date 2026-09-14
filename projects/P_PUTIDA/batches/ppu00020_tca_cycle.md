@@ -64,7 +64,7 @@ autolink_gene_symbols: false
 
 ## Notes
 
-Generated UTC: 2026-07-12T00:20:26.410305+00:00
+Generated UTC: 2026-09-01T06:53:58.399357+00:00
 
 Completed pass:
 
@@ -72,3 +72,20 @@ Completed pass:
   OpenScientist module/pathway reports.
 - Generated OpenScientist gene-level reports for all 30 batch genes.
 - Curated and validated all 30 selected PSEPK gene review files.
+
+## Follow-up module repair
+
+The eight-step oxidative cycle is retained, but pyruvate carboxylase has been
+removed as a ninth part because it is an external anaplerotic input rather than
+a cyclic reaction. The mixed cytosol/plasma-membrane module-level locations
+were also removed; membrane localization remains only on the succinate
+dehydrogenase leaf.
+
+Every retained step now has concrete PSEPK UniProt exemplars. SucC/SucD and
+SdhA/SdhB/SdhC/SdhD are represented as assembled complexes rather than as a
+single unspecified protein selected only by collective molecular function.
+Alternative aconitases, NADP-dependent isocitrate dehydrogenases, fumarases,
+and malate-oxidation enzymes remain alternative implementations of their
+respective steps, not extra required steps. LpdG remains a provisional E3
+exemplar because the physiological division of labor among KT2440 Lpd-family
+enzymes is unresolved.
