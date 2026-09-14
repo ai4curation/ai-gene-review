@@ -34,6 +34,12 @@ metadata snapshot. This phase deliberately separates metadata discovery from
 full gene-review seeding: the first pass uses UniProt REST TSV metadata only,
 not full UniProt flat files, GOA downloads, PMID caches, or review YAML stubs.
 
+The current focused batch is
+[phosphatidylglycerol and cardiolipin biosynthesis](P_PUTIDA/batches/ppu00564_bacterial_phosphatidylglycerol_cardiolipin_biosynthesis.md).
+It curates the connected route from CDP-diacylglycerol through
+phosphatidylglycerol to alternative bacterial cardiolipin synthase reactions,
+with uncertain PSEPK PLD-family paralogs kept as explicit knowledge gaps.
+
 Lightweight data products:
 
 - `projects/P_PUTIDA/fetch_uniprot_metadata.py` downloads basic UniProt metadata
@@ -68,6 +74,9 @@ Lightweight data products:
   checklist from KEGG/UniPathway membership.
 - `projects/P_PUTIDA/batches/ppu00400_tryptophan_biosynthesis.md` is the first
   pilot pathway checklist.
+- [Gallate catabolism batch](P_PUTIDA/batches/ppu00362_bacterial_gallate_catabolism.md)
+  curates the optional GalP entry context and the required GalA-D-B-C reaction
+  sequence represented by the reusable bacterial module.
 
 While the Edison-backed Falcon route is unavailable, use OpenScientist for
 gene-level research with a full two-hour provider allowance:
@@ -345,6 +354,8 @@ or are differently named / fused in *Pseudomonas* (trpG, pheC, tyrA).
 - [x] Complete Falcon module + pathway + PSEPK research for `ppu00400`.
 - [x] Fetch, run Asta, curate, and validate the first pilot gene batch: 28/28 KEGG `ppu00400` members.
 - [x] Open the first module/pathway PR for `ppu00400` / `tryptophan_biosynthesis`: [PR #1874](https://github.com/ai4curation/ai-gene-review/pull/1874).
+- [x] Curate the `ppu00470` D-amino-acid cell-wall precursor-supply boundary,
+  preserving the unresolved cytoplasmic D-alanine source as a real hole.
 - [ ] Publish the focused five-part `bacterial_aspartate_to_threonine_biosynthesis`
   batch with eight reviewed PSEPK pathway/paralog candidates.
 - [ ] For each later module batch, full `fetch-gene` only the genes selected by module review.
@@ -353,6 +364,21 @@ or are differently named / fused in *Pseudomonas* (trpG, pheC, tyrA).
 # NOTES
 
 ## 2026-08-11
+
+Curated the focused D-amino-acid cell-wall precursor-supply batch from broad
+KEGG pathway `ppu00470`. The reusable module has three substantive parts:
+MurI-dependent D-glutamate production, cytoplasmic D-alanine production, and
+D-Ala-D-Ala ligation. The Ddl step uses DdlA-like and DdlB-like PANTHER
+subfamilies as potentially redundant variants rather than inventing distinct
+reactions for each KT2440 paralog.
+
+The pathway is not fully satisfiable from current evidence. Q88GJ9 Alr/BSR has
+a signal peptide, experimentally detected periplasmic activity, strong
+lysine/arginine preference, and no detectable peptidoglycan effect under the
+tested conditions. Q88CB2 DadX is cytoplasmic and alanine-specific, but its
+direct contribution to cell-wall D-alanine has not been tested. The batch
+therefore records DadX as `candidate_uncertain` and does not force either
+racemase into the species-specific module assignment.
 
 Started the focused bacterial aspartate-to-threonine batch from current
 `origin/main`. The new boundary contains five ordered reactions: two shared

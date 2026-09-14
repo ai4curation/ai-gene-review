@@ -43,6 +43,10 @@ def test_is_uniprot_accession_false_for_gene_symbols(value: str) -> None:
     assert not is_uniprot_accession(value)
 
 
+def test_is_uniprot_accession_rejects_trailing_newline() -> None:
+    assert not is_uniprot_accession("Q9H2V7\n")
+
+
 def test_extract_uniprot_fields_parses_family_and_domains() -> None:
     uniprot_text = (
         "ID   SPNS1_HUMAN             Reviewed;         528 AA.\n"

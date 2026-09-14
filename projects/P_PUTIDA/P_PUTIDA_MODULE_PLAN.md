@@ -19,6 +19,24 @@ The first pass is intentionally light: build a whole-proteome metadata table fro
 UniProt REST, group genes into pathway/module buckets, and identify holes or
 over-annotations before running full `fetch-gene`, GOA review, or deep research.
 
+## Current batch: ppu00564 / bacterial phosphatidylglycerol and cardiolipin biosynthesis
+
+Batch files:
+
+- `projects/P_PUTIDA/batches/ppu00564_bacterial_phosphatidylglycerol_cardiolipin_biosynthesis.tsv`
+- `projects/P_PUTIDA/batches/ppu00564_bacterial_phosphatidylglycerol_cardiolipin_biosynthesis.md`
+
+The selected boundary begins with CDP-diacylglycerol and contains a coherent
+two-step phosphatidylglycerol submodule followed by alternative cardiolipin
+synthase variants. The six selected PSEPK reviews are `pgsA`, `pgpA`, `clsA`,
+`clsB`, `PP_0892`, and `PP_5276`. PP_0892 and PP_5276 are retained as explicit
+curation questions rather than forced into the named ClsB and ClsC roles.
+
+All required OpenScientist gene, module, and module-plus-pathway-plus-taxon jobs
+were started with long allowances. The module uses exact PSEPK UniProt
+exemplars and a characterized E. coli ClsC exemplar to separate the PG+PG and
+PE+PG cardiolipin reactions.
+
 ## First-pass data
 
 Use the project-local downloader:
@@ -251,6 +269,29 @@ Each module batch should leave behind:
 - One focused pull request containing the module, its selected gene reviews,
   research artifacts, batch record, rendered outputs, and validation results.
 
+## Active batch: ppu00470 / d_amino_acid_cell_wall_precursor_supply
+
+Batch files:
+
+- `projects/P_PUTIDA/batches/ppu00470_d_amino_acid_cell_wall_precursor_supply.tsv`
+- `projects/P_PUTIDA/batches/ppu00470_d_amino_acid_cell_wall_precursor_supply.md`
+
+Status as of 2026-08-11:
+
+- A reusable three-part module covers D-glutamate production, cytoplasmic
+  D-alanine production, and D-Ala-D-Ala ligation while excluding downstream
+  Mur ligases and D-amino-acid catabolism.
+- MurI covers D-glutamate production. DdlA and DdlB ground two PANTHER
+  orthology variants that perform the same ligation reaction.
+- Periplasmic Q88GJ9 Alr/BSR is excluded from cytoplasmic D-alanine supply.
+  DadX is the leading cytoplasmic candidate, but direct genetic or flux
+  evidence for peptidoglycan supply is absent, so the step remains an honest
+  `candidate_uncertain` hole.
+- PP_5673 is assigned to the DdlB-like family and retained as a second concrete
+  exemplar of that variant. Convergent HAMAP, catalytic-site, and PANTHER
+  evidence supports its function, while the UniProt record itself remains
+  unreviewed.
+
 ## Wave 42 batch: bacterial aspartate-to-threonine biosynthesis
 
 Batch files:
@@ -274,7 +315,7 @@ Status as of 2026-08-11:
 - The historical all-pathway preservation commit is used read-only for evidence
   recovery; its broad module boundary is not restored.
 
-## Active batch: ppu00220 / arginine_biosynthesis
+## Completed batch: ppu00220 / arginine_biosynthesis
 
 Batch files:
 
@@ -412,6 +453,40 @@ Main curation conclusions from this batch:
   PanD module step. KT2440 likely uses reductive pyrimidine degradation.
 - PP_0922 AcpH and MazG are pathway-map spillover involved in carrier-protein
   turnover and nucleotide-pool turnover, respectively, not CoA synthesis.
+
+## Current batch: ppu00270 / bacterial cysteine biosynthesis via O-acetylserine
+
+Batch files:
+
+- `projects/P_PUTIDA/batches/ppu00270_bacterial_cysteine_biosynthesis_via_o_acetylserine.tsv`
+- `projects/P_PUTIDA/batches/ppu00270_bacterial_cysteine_biosynthesis_via_o_acetylserine.md`
+
+Status as of 2026-08-11:
+
+- 3 target genes selected and curated: `cysE`/PP_0840, `cysK`/PP_4571,
+  and `cysM`/PP_1654.
+- Species-neutral module YAML seeded:
+  `modules/bacterial_cysteine_biosynthesis_via_o_acetylserine.yaml`.
+- OpenScientist gene retrieval is complete for `cysK`; `cysE` and `cysM`
+  retrieval remains active and is not a gate for the draft review.
+- OpenScientist generic-module and PSEPK pathway/taxon retrieval remain active.
+- Current UniProt records and full-text Pseudomonas literature independently
+  support the curated route and CysK/CysM variant boundary.
+
+Main curation conclusions from this batch:
+
+- The reusable module has two required biochemical parts: CysE-mediated serine
+  O-acetylation and CysK/CysM-mediated sulfide incorporation.
+- CysK and CysM are modeled as alternative family variants for the terminal
+  reaction, grounded with exact UniProt exemplars and CysK/CysM PANTHER
+  subfamilies. Thiosulfate use is not asserted for KT2440 CysM without direct
+  target evidence.
+- Sulfate activation and reduction supply sulfide but are upstream context,
+  outside this module boundary.
+- Other KT2440 serine acetyltransferase-like candidates remain a targeted
+  paralog-resolution question rather than speculative module leaves.
+- Live route-specific GO:0006535 is used for authored core functions and the
+  module concept; broad GO:0019344 annotations remain valid.
 
 ## Previous batch: ppu00622 / benzoate_upper_pathway
 
