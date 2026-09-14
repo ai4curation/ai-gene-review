@@ -14,6 +14,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+import yaml
 
 from ai_gene_review.module_logic import (
     Atom,
@@ -360,3 +361,42 @@ def test_atom_is_hashable():
     atoms = set(iter_atoms(compile_module(_toy_module())))
     assert len(atoms) == 5
     assert all(isinstance(a, Atom) for a in atoms)
+
+
+def test_methionine_family_gap_candidates_are_symbols():
+    """Exercise the curated family-bearing input that exposed organism tokens."""
+    circuit = compile_module_file(METHIONINE)
+    result = abduce(circuit, lambda atom: "metH" in atom.gene_symbols, asserted_active=True)
+    assert result.classification == "ABDUCTION_TARGET"
+    assert result.gap_candidates["acylation"] == ["MetX", "MetXS", "metA", "metX"]
+    assert result.gap_candidates["sulfur_incorporation"] == [
+        "MetB", "MetC", "MetY", "MetZ", "metB", "metC", "metY", "metZ"
+    ]
+
+
+@pytest.mark.parametrize("module,expected", [
+    ("methylcitrate_cycle", {"PrpE", "PrpC", "PrpD", "AcnD", "PrpF", "AcnB", "AcnA-I", "PrpB"}),
+    ("bacterial_aminoacyl_trna_charging", {"GltX", "ArgS", "AsnS", "GluRS", "GatA", "GatB", "GatC"}),
+])
+def test_family_representatives_do_not_use_organism_tokens(module, expected):
+    document = yaml.safe_load((Path("modules") / f"{module}.yaml").read_text())
+
+    def members_in(value):
+        if isinstance(value, dict):
+            yield from value.get("representative_members", [])
+            for child in value.values():
+                yield from members_in(child)
+        elif isinstance(value, list):
+            for child in value:
+                yield from members_in(child)
+
+    # Include representatives nested inside complexes as well as direct steps;
+    # compile_node's complex traversal is separate from descriptor extraction.
+    circuit = compile_module({"module": {"id": "representatives", "annotons": [{
+        "id": "all_members",
+        "participant": {"family": {"representative_members": list(members_in(document))}},
+    }]}})
+    symbols = {symbol for atom in iter_atoms(circuit) for symbol in atom.representative_gene_symbols}
+    assert expected <= symbols
+    assert not (symbols & {"PSEPK", "ECOLI", "Mycobacterium", "Escherichia",
+                          "Corynebacterium", "Thermosynechococcus"})

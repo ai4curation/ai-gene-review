@@ -112,6 +112,12 @@ Predicate = Callable[[Atom], bool]
 def _symbol_from_gene(gene: dict) -> Optional[str]:
     """Pull a leading gene symbol out of a GeneDescriptor's ``preferred_term``.
 
+    Descriptors used by this engine must be symbol-first, including family
+    representatives: write "MetXS (PSEPK)", not "PSEPK MetXS". Organism names
+    and prose are not parsed as a source of gene identifiers.
+
+    >>> _symbol_from_gene({"preferred_term": "MetXS (PSEPK)"})
+    'MetXS'
     >>> _symbol_from_gene({"preferred_term": "PCK1 (cytosolic PEPCK)"})
     'PCK1'
     """
