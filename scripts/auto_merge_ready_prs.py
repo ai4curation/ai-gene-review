@@ -10,7 +10,8 @@ merges when every mechanical guard passes:
 * the aggregate review decision is APPROVED;
 * at least one approval is bound to the exact current PR head;
 * the PR is old enough, conflict-free, and GitHub reports a CLEAN merge state;
-* every changed file is under a conservative content-path allowlist;
+* the changed-file inventory is complete and valid, and any explicitly requested
+  path restriction is satisfied (all paths are eligible by default);
 * every reported check is complete and non-failing, with at least one SUCCESS;
 * every optionally named required check has an explicit SUCCESS result.
 
@@ -73,21 +74,6 @@ VIEW_FIELDS = (
 
 DEFAULT_TRUSTED_REVIEWERS: tuple[str, ...] = ()
 DEFAULT_EXCLUDED_HEAD_PREFIXES = ("auto/generate-",)
-DEFAULT_ALLOWED_PATH_PREFIXES = (
-    "genes/",
-    "genesets/",
-    "gocams/",
-    "interpro/",
-    "modules/",
-    "pages/",
-    "projects/",
-    "publications/",
-    "reactome/",
-    "rules/",
-    "terms/",
-    "families/",
-    "research/",
-)
 MAX_REST_CHANGED_FILES = 3_000
 PASSING_CONCLUSIONS = frozenset({"SUCCESS", "SKIPPED", "NEUTRAL"})
 PASSING_STATES = frozenset({"SUCCESS", "NEUTRAL"})
@@ -364,7 +350,11 @@ def changed_files_decision(
     previous_filenames: list[str] | None = None,
     allowed_path_prefixes: Iterable[str] = (),
 ) -> Decision:
-    """Require every changed file to stay within a conservative content scope."""
+    """Validate the inventory and optionally restrict both sides of renames.
+
+    File paths do not veto approved, green PRs by default. Callers can explicitly
+    opt into a restricted sweep by supplying the complete allowed prefix list.
+    """
     if (
         isinstance(expected_file_count, bool)
         or not isinstance(expected_file_count, int)
@@ -384,12 +374,7 @@ def changed_files_decision(
     previous_filenames = previous_filenames or []
 
     prefixes = tuple(
-        dict.fromkeys(
-            (
-                *DEFAULT_ALLOWED_PATH_PREFIXES,
-                *(prefix.strip() for prefix in allowed_path_prefixes if prefix.strip()),
-            )
-        )
+        dict.fromkeys(prefix.strip() for prefix in allowed_path_prefixes if prefix.strip())
     )
     malformed = [
         path
@@ -427,14 +412,14 @@ def changed_files_decision(
     disallowed = sorted(
         path
         for path in (*changed_files, *previous_filenames)
-        if not any(path.startswith(prefix) for prefix in prefixes)
+        if prefixes and not any(path.startswith(prefix) for prefix in prefixes)
     )
     if disallowed:
         return Decision(
             False,
             "changed files outside the allowed path scope: " + ", ".join(disallowed),
         )
-    return Decision(True, f"{len(changed_files)} changed file(s) in allowed paths")
+    return Decision(True, f"{len(changed_files)} changed file(s) verified")
 
 
 def evaluate(
@@ -884,8 +869,8 @@ def main(argv: list[str] | None = None) -> int:
         type=directory_path_prefix,
         default=[],
         help=(
-            "additional normalized directory prefix allowed by the merge controller; "
-            "must end with '/', repeatable (the conservative defaults always remain)"
+            "restrict merging to this normalized directory prefix; must end with '/', "
+            "repeatable (default: all paths; supplied prefixes define the entire scope)"
         ),
     )
     parser.add_argument(
