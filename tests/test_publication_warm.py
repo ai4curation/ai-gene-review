@@ -23,9 +23,11 @@ from ai_gene_review.etl.publication_warm import (
     apply_full_text,
     find_warm_candidates,
     identifiers_from_frontmatter,
+    is_usable_full_text,
     mark_attempted,
     parse_publication_file,
     warm_publication,
+    warm_publications,
 )
 
 
@@ -74,6 +76,18 @@ def test_parse_publication_file_roundtrip(tmp_path: Path) -> None:
     assert "## Abstract" in body
 
 
+def test_parse_publication_file_ignores_dashes_inside_values(tmp_path: Path) -> None:
+    # A "---" embedded mid-line (e.g. in a title) must not end the frontmatter.
+    path = tmp_path / "PMID_2.md"
+    path.write_text(
+        "---\npmid: '2'\ntitle: alpha---beta studies\nfull_text_available: false\n---\n"
+        "\n# alpha---beta studies\n\n## Abstract\n\nText.\n"
+    )
+    frontmatter, body = parse_publication_file(path)
+    assert frontmatter["title"] == "alpha---beta studies"
+    assert body.startswith("\n\n# alpha---beta studies")
+
+
 def test_find_warm_candidates_selects_unattempted_without_full_text(
     tmp_path: Path,
 ) -> None:
@@ -119,6 +133,27 @@ def test_mark_attempted_preserves_body(tmp_path: Path) -> None:
     assert find_warm_candidates(tmp_path) == []
 
 
+def test_mark_attempted_keeps_body_byte_identical(tmp_path: Path) -> None:
+    # PubMed abstracts are hard-wrapped with trailing spaces; a frontmatter-only
+    # change must not rewrite them (supporting_text is matched verbatim).
+    path = tmp_path / "PMID_510.md"
+    body = "\n\n# T\n\n## Abstract\n\nRegulation of body length \nand tail rays. \n"
+    path.write_text("---\npmid: '510'\nfull_text_available: false\n---" + body)
+    frontmatter, parsed_body = parse_publication_file(path)
+    mark_attempted(path, frontmatter, parsed_body)
+
+    content = path.read_text()
+    assert "Regulation of body length \nand tail rays. \n" in content
+    assert read_frontmatter(path)["full_text_attempted"] is True
+
+
+def test_find_warm_candidates_retry_attempted(tmp_path: Path) -> None:
+    write_pub(tmp_path, "520", full_text_attempted=True)
+    assert find_warm_candidates(tmp_path) == []
+    retried = find_warm_candidates(tmp_path, include_attempted=True)
+    assert [c.pmid for c in retried] == ["520"]
+
+
 def test_apply_full_text_appends_section_and_tags(tmp_path: Path) -> None:
     path = write_pub(tmp_path, "600", doi="10.1/q")
     frontmatter, body = parse_publication_file(path)
@@ -130,7 +165,7 @@ def test_apply_full_text_appends_section_and_tags(tmp_path: Path) -> None:
         extraction_method="pdf",
         provider="unpaywall",
         oa_status="gold",
-        license="cc-by",
+        license_name="cc-by",
         full_text_url="https://example.org/x.pdf",
     )
 
@@ -218,3 +253,209 @@ def test_warm_publication_full_text_via_provider_chain(
     miss_frontmatter = read_frontmatter(miss)
     assert miss_frontmatter["full_text_available"] is False
     assert miss_frontmatter["full_text_attempted"] is True
+
+
+ABSTRACT = (
+    "The CLAVATA1 and CLAVATA3 genes are required to maintain the balance "
+    "between cell proliferation and organ formation at the shoot and flower "
+    "meristems. CLV1 encodes a receptor-like protein kinase present in two "
+    "protein complexes in vivo, one of approximately 185 kD and one of 450 kD."
+)
+BODY_WITH_ABSTRACT = f"\n\n# T\n\n## Abstract\n\n{ABSTRACT}\n"
+
+
+def test_is_usable_full_text_rejects_paywall_preview() -> None:
+    preview = (
+        "Nature volume 22, pages 291-294. 912 Accesses. "
+        + ABSTRACT
+        + " This is a preview of subscription content, access via your institution. "
+        "Subscribe to this journal. " + "Padding sentence about nothing. " * 50
+    )
+    assert is_usable_full_text(preview, BODY_WITH_ABSTRACT) is False
+
+
+def test_is_usable_full_text_rejects_pmc_pdf_stub() -> None:
+    stub = (
+        ABSTRACT
+        + " The Full Text of this article is available as aPDF(683.6 KB). "
+        "Articles are provided here courtesy of Oxford University Press. "
+        + "Reference list entry. " * 60
+    )
+    assert is_usable_full_text(stub, BODY_WITH_ABSTRACT) is False
+
+
+def test_is_usable_full_text_rejects_abstract_echo() -> None:
+    echo = ABSTRACT + " Keywords: meristem, kinase."
+    assert is_usable_full_text(echo, BODY_WITH_ABSTRACT) is False
+
+
+def test_is_usable_full_text_accepts_genuine_body_text() -> None:
+    genuine = ABSTRACT + " INTRODUCTION. " + "Novel experimental detail sentence. " * 40
+    assert is_usable_full_text(genuine, BODY_WITH_ABSTRACT) is True
+
+
+@pytest.fixture
+def configurable_provider():
+    """Register a provider whose located result is set per-test."""
+    from linkml_reference_validator.etl.fulltext.base import (
+        FullTextProvider,
+        FullTextProviderRegistry,
+    )
+
+    class ConfigurableProvider(FullTextProvider):
+        location = None
+        error: Exception | None = None
+
+        @classmethod
+        def name(cls) -> str:
+            return "warm-test-configurable"
+
+        def locate(self, ids, config):
+            if self.error is not None:
+                raise self.error
+            return self.location
+
+    provider = ConfigurableProvider()
+    FullTextProviderRegistry.register_instance("warm-test-configurable", provider)
+    yield provider
+    FullTextProviderRegistry._by_name.pop("warm-test-configurable", None)
+
+
+def make_fetcher(tmp_path: Path):
+    from linkml_reference_validator.models import ReferenceValidationConfig
+    from linkml_reference_validator.etl.reference_fetcher import ReferenceFetcher
+
+    return ReferenceFetcher(ReferenceValidationConfig(cache_dir=tmp_path / "lrv"))
+
+
+def test_warm_publication_rejects_short_text(tmp_path: Path, configurable_provider) -> None:
+    from linkml_reference_validator.models import FullTextLocation
+
+    configurable_provider.location = FullTextLocation(
+        text="Too short to be full text.", format_hint="text", provider="x"
+    )
+    path = write_pub(tmp_path, "801")
+    outcome = warm_publication(
+        path, make_fetcher(tmp_path), providers=["warm-test-configurable"]
+    )
+    assert outcome == "attempted"
+    assert read_frontmatter(path)["full_text_available"] is False
+
+
+def test_warm_publication_ignores_non_open_location(
+    tmp_path: Path, configurable_provider
+) -> None:
+    from linkml_reference_validator.models import FullTextLocation
+
+    configurable_provider.location = FullTextLocation(
+        text="Private library text. " * 100,
+        format_hint="text",
+        provider="zotero",
+        access_type="user_library",
+    )
+    path = write_pub(tmp_path, "802")
+    outcome = warm_publication(
+        path, make_fetcher(tmp_path), providers=["warm-test-configurable"]
+    )
+    assert outcome == "attempted"
+    assert read_frontmatter(path)["full_text_available"] is False
+    assert "Private library text" not in path.read_text()
+
+
+def test_warm_publication_ignores_bronze_without_license(
+    tmp_path: Path, configurable_provider
+) -> None:
+    from linkml_reference_validator.models import FullTextLocation
+
+    configurable_provider.location = FullTextLocation(
+        text="Publisher free-to-read text with no license. " * 50,
+        format_hint="text",
+        provider="unpaywall",
+        oa_status="bronze",
+    )
+    path = write_pub(tmp_path, "803")
+    outcome = warm_publication(
+        path, make_fetcher(tmp_path), providers=["warm-test-configurable"]
+    )
+    assert outcome == "attempted"
+    assert read_frontmatter(path)["full_text_available"] is False
+
+
+def test_warm_publication_rejects_stub_text_as_clean_miss(
+    tmp_path: Path, configurable_provider
+) -> None:
+    from linkml_reference_validator.models import FullTextLocation
+
+    configurable_provider.location = FullTextLocation(
+        text="This is a preview of subscription content, access via your institution. "
+        * 30,
+        format_hint="html",
+        provider="openalex",
+        oa_status="green",
+    )
+    path = write_pub(tmp_path, "804")
+    outcome = warm_publication(
+        path, make_fetcher(tmp_path), providers=["warm-test-configurable"]
+    )
+    assert outcome == "attempted"
+    assert read_frontmatter(path)["full_text_available"] is False
+
+
+def test_warm_publication_transient_error_leaves_record_retryable(
+    tmp_path: Path, configurable_provider
+) -> None:
+    configurable_provider.error = RuntimeError("socket timeout")
+    path = write_pub(tmp_path, "805")
+    before = path.read_text()
+    outcome = warm_publication(
+        path, make_fetcher(tmp_path), providers=["warm-test-configurable"]
+    )
+    assert outcome == "transient_error"
+    assert path.read_text() == before
+    assert [c.pmid for c in find_warm_candidates(tmp_path)] == ["805"]
+
+
+def test_warm_publications_survives_record_level_failure(
+    tmp_path: Path, monkeypatch
+) -> None:
+    # A single record whose processing raises must not abort the sweep.
+    write_pub(tmp_path, "901")
+    write_pub(tmp_path, "902")
+
+    import ai_gene_review.etl.publication_warm as warm_module
+
+    real_warm = warm_module.warm_publication
+
+    def exploding_warm(path, fetcher, providers=None):
+        if "901" in path.name:
+            raise RuntimeError("boom")
+        return real_warm(path, fetcher, providers)
+
+    monkeypatch.setattr(warm_module, "warm_publication", exploding_warm)
+    stats = warm_publications(
+        publications_dir=tmp_path,
+        delay=0,
+        providers=["nonexistent-provider"],
+        fetcher=make_fetcher(tmp_path),
+    )
+    assert stats["processed"] == 2
+    assert stats["transient_error"] == 1
+    assert stats["attempted"] == 1
+
+
+def test_apply_full_text_normalizes_pmc_url(tmp_path: Path) -> None:
+    path = write_pub(tmp_path, "950")
+    frontmatter, body = parse_publication_file(path)
+    apply_full_text(
+        path,
+        frontmatter,
+        body,
+        text="Body text.",
+        extraction_method="html",
+        provider="openalex",
+        full_text_url="https://www.ncbi.nlm.nih.gov/pmc/articles/144183",
+    )
+    assert (
+        read_frontmatter(path)["full_text_url"]
+        == "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC144183"
+    )

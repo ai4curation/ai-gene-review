@@ -34,14 +34,37 @@ attempt tagging** in the cache frontmatter:
 
 Because attempts are durable, `just warm-publications 200` run repeatedly
 drains the backlog incrementally, is idempotent, and is safe to interrupt —
-exactly dismech's resumable bounded-sweep model.
+exactly dismech's resumable bounded-sweep model. If the provider chain or the
+acceptance guards improve, `--retry-attempted` re-targets records a previous
+sweep already concluded on.
 
-## Access policy
+## Acceptance guards
+
+Length alone does not make text "full text". Before a record is upgraded, the
+retrieved text must pass content-quality guards (`is_usable_full_text`):
+
+- **No paywall/stub markers** — publisher subscription previews ("This is a
+  preview of subscription content", "Subscribe to this journal") and PMC
+  scanned-PDF stub pages ("The Full Text of this article is available as a
+  PDF") are boilerplate around an abstract, not body text.
+- **Substantially more than the cached abstract** — text that merely re-emits
+  the abstract with a keywords line or courtesy footer is rejected.
+
+Rejected text counts as a clean miss: the record is tagged
+`full_text_attempted: true` with `full_text_available` left `false`. This
+matters because `full_text_available:` is the field gene reviews consult to
+decide whether the reviewer can see what a curator saw (see CLAUDE.md).
+
+## Access and licensing policy
 
 Only locations LRV classifies as public (`access_type` absent or `"open"`) are
 merged into the shared cache, mirroring LRV's own rule that private-library
-full text (e.g. Zotero) never enters a committed cache. PDFs are not stored;
-only extracted text is kept.
+full text (e.g. Zotero) never enters a committed cache. **Bronze** OA (free to
+read on the publisher's site but with no open license) is additionally
+excluded unless the location carries an explicit license, since committing
+that text would redistribute it without redistribution rights; any license the
+provider reports is persisted in the `license` frontmatter field. PDFs are not
+stored; only extracted text is kept.
 
 ## Commands
 

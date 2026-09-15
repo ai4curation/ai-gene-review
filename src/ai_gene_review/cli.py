@@ -1837,6 +1837,14 @@ def warm_publications(
             "(default: pmc,epmc_preprint,unpaywall,openalex)",
         ),
     ] = None,
+    retry_attempted: Annotated[
+        bool,
+        typer.Option(
+            "--retry-attempted",
+            help="Also re-attempt records already tagged full_text_attempted "
+            "(use after the provider chain or acceptance guards improve)",
+        ),
+    ] = False,
 ):
     """Warm the publications cache via the linkml-reference-validator full-text chain.
 
@@ -1867,7 +1875,17 @@ def warm_publications(
         delay=delay,
         providers=provider_list,
         dry_run=dry_run,
+        retry_attempted=retry_attempted,
     )
+    if dry_run:
+        would_attempt = (
+            stats["candidates"] if limit is None else min(limit, stats["candidates"])
+        )
+        typer.echo(
+            f"Dry run: would attempt {would_attempt} of {stats['candidates']} "
+            "candidates in the backlog"
+        )
+        return
     typer.echo("=" * 60)
     typer.echo("WARM SWEEP SUMMARY")
     typer.echo("=" * 60)

@@ -45,6 +45,19 @@ from linkml_reference_validator.models import ReferenceIdentifiers
 logger = logging.getLogger(__name__)
 
 FULL_TEXT_HEADER = "## Full Text"
+ABSTRACT_HEADER = "## Abstract"
+
+# Marker phrases that identify publisher paywall previews and PMC scanned-PDF
+# stub pages. Text carrying any of these is boilerplate around an abstract,
+# not body text, and must never be recorded as full text (PR #3048 review).
+FULL_TEXT_STUB_MARKERS = (
+    "This is a preview of subscription content",
+    "The Full Text of this article is available as a",
+    "Subscribe to this journal",
+    "access via your institution",
+)
+
+_FRONTMATTER_DELIMITER = re.compile(r"^---[ \t]*$", re.MULTILINE)
 
 
 @dataclass
@@ -67,25 +80,28 @@ def parse_publication_file(path: Path) -> Tuple[Dict[str, Any], str]:
         ValueError: If the file has no parseable YAML frontmatter.
     """
     content = path.read_text()
-    if not content.startswith("---"):
+    # Delimiters must be whole lines: a "---" embedded in a title or abstract
+    # must not end the frontmatter of a file this module rewrites in place.
+    delimiters = list(_FRONTMATTER_DELIMITER.finditer(content))
+    if len(delimiters) < 2 or delimiters[0].start() != 0:
         raise ValueError(f"No frontmatter in {path}")
-    parts = content.split("---", 2)
-    if len(parts) < 3:
-        raise ValueError(f"Malformed frontmatter in {path}")
-    frontmatter = yaml.safe_load(parts[1])
+    frontmatter = yaml.safe_load(content[delimiters[0].end() : delimiters[1].start()])
     if not isinstance(frontmatter, dict):
         raise ValueError(f"Frontmatter is not a mapping in {path}")
-    return frontmatter, parts[2]
+    return frontmatter, content[delimiters[1].end() :]
 
 
 def find_warm_candidates(
     publications_dir: Path = Path("publications"),
+    include_attempted: bool = False,
 ) -> List[WarmCandidate]:
     """Find cached publications that need a (first) full-text attempt.
 
     A candidate lacks full text — ``full_text_available`` false, or no
     ``## Full Text`` section despite the flag — and has never been durably
-    attempted (no ``full_text_attempted: true``).
+    attempted (no ``full_text_attempted: true``). Pass ``include_attempted``
+    to re-target records a previous sweep concluded on, e.g. after the
+    provider chain or acceptance guards have improved.
     """
     candidates: List[WarmCandidate] = []
     for md_file in sorted(publications_dir.glob("PMID_*.md")):
@@ -95,7 +111,7 @@ def find_warm_candidates(
             logger.warning("Skipping unparseable %s: %s", md_file.name, exc)
             continue
 
-        if frontmatter.get("full_text_attempted"):
+        if frontmatter.get("full_text_attempted") and not include_attempted:
             continue
         has_full_text = bool(frontmatter.get("full_text_available")) and (
             FULL_TEXT_HEADER in body
@@ -134,14 +150,17 @@ def identifiers_from_frontmatter(frontmatter: Dict[str, Any]) -> ReferenceIdenti
 def _rewrite(path: Path, frontmatter: Dict[str, Any], body: str) -> None:
     """Write frontmatter + body back in the repo's cache format.
 
-    Trailing per-line whitespace is stripped, matching
-    ``Publication.to_markdown`` so rewrites stay clean for Git tooling.
+    The body is written verbatim: cached abstracts keep PubMed's hard-wrapped
+    trailing whitespace so a frontmatter-only change round-trips the body
+    byte-identically. These bodies are the verbatim source that
+    ``supporting_text`` quotes are matched against, and rewriting them also
+    buries the real diff in whitespace churn (PR #3048 review). Newly added
+    full text is cleaned in :func:`apply_full_text` instead.
     """
     frontmatter_text = yaml.dump(
         frontmatter, default_flow_style=False, allow_unicode=True, sort_keys=False
     )
     markdown = f"---\n{frontmatter_text}---{body}"
-    markdown = re.sub(r"[ \t]+(?=\r?$)", "", markdown, flags=re.MULTILINE)
     if not markdown.endswith("\n"):
         markdown += "\n"
     path.write_text(markdown)
@@ -153,6 +172,76 @@ def mark_attempted(path: Path, frontmatter: Dict[str, Any], body: str) -> None:
     _rewrite(path, frontmatter, body)
 
 
+def _normalize_pmc_url(url: str) -> str:
+    """Insert the canonical ``PMC`` prefix into bare-numeric PMC article URLs.
+
+    OpenAlex records PMC locations as ``.../pmc/articles/144183``; the
+    canonical citable form is ``.../pmc/articles/PMC144183``.
+
+    Examples:
+        >>> _normalize_pmc_url("https://www.ncbi.nlm.nih.gov/pmc/articles/144183")
+        'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC144183'
+        >>> _normalize_pmc_url("https://example.org/x.pdf")
+        'https://example.org/x.pdf'
+    """
+    return re.sub(r"(/pmc/articles/)(\d+)", r"\1PMC\2", url)
+
+
+def _abstract_text(body: str) -> str:
+    """Extract the ``## Abstract`` section text from a cache-file body."""
+    start = body.find(ABSTRACT_HEADER)
+    if start == -1:
+        return ""
+    section = body[start + len(ABSTRACT_HEADER) :]
+    next_heading = section.find("\n## ")
+    if next_heading != -1:
+        section = section[:next_heading]
+    return section.strip()
+
+
+def is_usable_full_text(text: str, body: str) -> bool:
+    """Return True if retrieved text is genuine body text for this record.
+
+    Guards the acceptance criterion for "this is full text" (PR #3048 review):
+    an HTML scrape of a paywalled article or a PMC scanned-PDF record clears a
+    bare length threshold while containing only the abstract plus publisher
+    boilerplate. Marking such records ``full_text_available: true`` is worse
+    than useless here, because that flag decides whether a reviewer may
+    second-guess a curator's experimental annotation (see CLAUDE.md).
+
+    Rejects:
+    - text carrying a paywall/stub marker phrase (``FULL_TEXT_STUB_MARKERS``);
+    - text that is contained in the already-cached abstract;
+    - text that adds less than ``MIN_FULL_TEXT_CHARS`` of content beyond the
+      cached abstract (an abstract re-emitted with a keywords line or footer).
+    """
+    for marker in FULL_TEXT_STUB_MARKERS:
+        if marker in text:
+            return False
+
+    # Alphanumeric-only normalization: HTML scrapes drop spacing around
+    # italics ("1-day-oldbcl-2knockout" vs the abstract's "1-day-old bcl-2
+    # knockout"), so whitespace-normalized comparison misses abstract echoes.
+    def normalize(value: str) -> str:
+        return re.sub(r"[^a-z0-9]", "", value.lower())
+
+    normalized_text = normalize(text)
+    normalized_abstract = normalize(_abstract_text(body))
+    if not normalized_abstract:
+        return True
+    if normalized_text in normalized_abstract:
+        return False
+    # Compare via a mid-abstract probe rather than full containment: cached
+    # abstracts often carry a PubMed citation header the provider text lacks.
+    probe_start = max(0, (len(normalized_abstract) - 200) // 2)
+    probe = normalized_abstract[probe_start : probe_start + 200]
+    if probe and probe in normalized_text:
+        added = len(normalized_text) - len(normalized_abstract)
+        if added < MIN_FULL_TEXT_CHARS:
+            return False
+    return True
+
+
 def apply_full_text(
     path: Path,
     frontmatter: Dict[str, Any],
@@ -162,7 +251,7 @@ def apply_full_text(
     extraction_method: str,
     provider: str,
     oa_status: Optional[str] = None,
-    license: Optional[str] = None,
+    license_name: Optional[str] = None,
     full_text_url: Optional[str] = None,
 ) -> None:
     """Merge retrieved full text into a cache file with provenance tags."""
@@ -172,16 +261,19 @@ def apply_full_text(
     frontmatter["full_text_attempted"] = True
     if oa_status:
         frontmatter["oa_status"] = oa_status
-    if license:
-        frontmatter["license"] = license
+    if license_name:
+        frontmatter["license"] = license_name
     if full_text_url:
-        frontmatter["full_text_url"] = full_text_url
+        frontmatter["full_text_url"] = _normalize_pmc_url(full_text_url)
 
-    # Replace any existing (stale/partial) Full Text section outright.
+    # Replace any existing (stale/partial) Full Text section outright. Only
+    # the newly added text is whitespace-cleaned; the existing body is kept
+    # verbatim (see _rewrite).
+    cleaned = re.sub(r"[ \t]+(?=\r?$)", "", text.strip(), flags=re.MULTILINE)
     section_start = body.find(FULL_TEXT_HEADER)
     if section_start != -1:
         body = body[:section_start].rstrip("\n") + "\n"
-    body = body.rstrip("\n") + f"\n\n{FULL_TEXT_HEADER}\n\n{text.strip()}\n"
+    body = body.rstrip("\n") + f"\n\n{FULL_TEXT_HEADER}\n\n{cleaned}\n"
     _rewrite(path, frontmatter, body)
 
 
@@ -230,6 +322,17 @@ def warm_publication(
                 ids.pmid,
             )
             continue
+        if location.oa_status == "bronze" and not location.license:
+            # Bronze = free to read on the publisher site with NO open license:
+            # committing that text redistributes it without redistribution
+            # rights. Require an explicit license before merging (PR #3048
+            # review finding 6).
+            logger.info(
+                "Ignoring bronze full text without a license from '%s' for PMID:%s",
+                provider_name,
+                ids.pmid,
+            )
+            continue
 
         # LRV's blessed download/sniff/extract path. `_materialize` is the same
         # routine `ReferenceFetcher.fetch` uses internally; it is not yet public
@@ -241,6 +344,13 @@ def warm_publication(
             had_error = True
         if not text or len(text.strip()) < MIN_FULL_TEXT_CHARS:
             continue
+        if not is_usable_full_text(text, body):
+            logger.info(
+                "Rejecting stub/preview text from '%s' for PMID:%s",
+                provider_name,
+                ids.pmid,
+            )
+            continue
 
         apply_full_text(
             path,
@@ -250,7 +360,7 @@ def warm_publication(
             extraction_method=fmt or "text",
             provider=location.provider or provider_name,
             oa_status=location.oa_status,
-            license=location.license,
+            license_name=location.license,
             full_text_url=location.url,
         )
         return "full_text"
@@ -268,6 +378,7 @@ def warm_publications(
     providers: Optional[List[str]] = None,
     dry_run: bool = False,
     fetcher: Optional[ReferenceFetcher] = None,
+    retry_attempted: bool = False,
 ) -> Dict[str, int]:
     """Run a bounded, resumable full-text warm sweep over the cache.
 
@@ -279,12 +390,17 @@ def warm_publications(
         providers: Provider-chain override (default: LRV config order).
         dry_run: Report candidates without touching the network or files.
         fetcher: Pre-built ReferenceFetcher (built with defaults if omitted).
+        retry_attempted: Also re-attempt records already tagged
+            ``full_text_attempted: true`` — for when the provider chain or
+            acceptance guards have improved since a previous sweep.
 
     Returns:
         Counts: ``candidates``, ``processed``, ``full_text``, ``attempted``,
         ``transient_error``.
     """
-    candidates = find_warm_candidates(publications_dir)
+    candidates = find_warm_candidates(
+        publications_dir, include_attempted=retry_attempted
+    )
     stats = {
         "candidates": len(candidates),
         "processed": 0,
@@ -311,7 +427,11 @@ def warm_publications(
 
     total = len(candidates)
     for i, candidate in enumerate(candidates):
-        outcome = warm_publication(candidate.path, fetcher, providers)
+        try:  # external system boundary: one record must not abort a bounded sweep
+            outcome = warm_publication(candidate.path, fetcher, providers)
+        except Exception as exc:
+            logger.warning("Record PMID:%s failed: %s", candidate.pmid, exc)
+            outcome = "transient_error"
         stats[outcome] += 1
         stats["processed"] += 1
         print(f"[{i + 1}/{total}] PMID:{candidate.pmid} -> {outcome}")
