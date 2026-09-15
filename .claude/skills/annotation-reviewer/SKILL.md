@@ -39,6 +39,26 @@ Note that there should be an entry under `existing_annotations` for every line i
 
 The exception is if you think there are key annotations missing. In this case you should add entries, completing the `term` portion yourself, with `action: NEW`. Only do this for annotations not covered or with `proposed_replacement_terms` in existing annotations.
 
+Before adding a `NEW` process term, satisfy two tests that evidence alone does not
+cover (see "Do not add what curators deliberately declined to add" in CLAUDE.md):
+
+- **Participation.** The gene product must do some of the work: catalyse a step, or
+  contribute the structure or cofactor activity a step depends on. Being required for
+  the process, being consumed by it, or being what it acts on is not participation.
+  (Thyroglobulin passes as the scaffold case, not as the catalyst — TPO catalyses,
+  while thyroglobulin supplies and positions the residues; CLAUDE.md works the three
+  shapes through: scaffold, cofactor, chemistry.) Knockout/rescue data establishes
+  necessity, which is precisely what being a substrate means — so it cannot settle
+  this question on its own. Ask which entity performs the step, and if it is not your
+  gene, whether your gene supplies structure or cofactor activity the step depends on.
+- **Comparator check.** If your argument is "every other participant carries this term
+  and my gene does not", name two or three other gene products in the **same role**
+  relative to the same kind of process and query whether they carry it. A systematic
+  absence across species and MODs is a convention you have not identified yet, not a
+  curation lapse. Check the term's parents too: a process under `GO:0006508 proteolysis`
+  names whatever does the cleaving, which is the substrate itself in the autoprocessing
+  case (`GO:0016540`) and otherwise is not.
+
 2. **Critical Evaluation**: You must not accept existing annotations as gospel, regardless of whether they are marked as experimental (EXP, IDA, IPI, etc.) or computational (IEA, ISS, etc.). Many GO terms represent over-annotations that need correction.
 
 However, in general IBA annotations have undergone extensive review as well as making phylogenetic sense, they often frequently represent the term at the right level of specificity. However, they can be conservative and missing functions.
@@ -133,7 +153,7 @@ You should make use of:
    - **MODIFY**: Essence is sound but better terms exist (provide proposed_replacement_terms). Use this if the term is too deep or too shallow
    - **MARK_AS_OVER_ANNOTATED**: Not wrong but likely over-annotation
    - **UNDECIDED**: Unclear annotation requiring more evidence (always use if unable to access relevant publications)
-   - **NEW**: ONLY use this to suggest completely new annotations not in the set already provided by GO. You will need to come up with the evidence and reference
+   - **NEW**: ONLY use this to suggest completely new annotations not in the set already provided by GO. You will need to come up with the evidence and reference. Also apply the participation and comparator tests above — a gene product is `involved_in` a process only if it does some of the work of it (catalysing a step, or contributing structure or cofactor activity a step depends on), and not merely because it is required for, consumed by, or acted on by it
 
 Note that duplicates (i.e exact same GO ID) are perfectly fine, there is no need to favor one evidence code over another.
 
@@ -164,7 +184,19 @@ experimental annotations whose full text you have not read.
    - Citations to relevant literature when available
 
 6. **Quality Standards**: 
-   - Avoid accepting vague terms like 'protein binding' - seek more informative molecular function terms
+   - **Generic protein binding is not over-annotation.** Do not use
+     `MARK_AS_OVER_ANNOTATED` for `GO:0005515` (`protein binding`): its problem is
+     lack of functional information, not a claim that exceeds the evidence.
+     Use `MODIFY` when the cited paper supports a more informative molecular
+     function, and provide the evidence-backed replacement term(s). Otherwise,
+     generally use `REMOVE`, explaining that the generic annotation is
+     uninformative; removal does not mean the reported interaction is false.
+     Do not invent a specific function from interaction evidence alone. If the
+     relevant evidence cannot be accessed or adjudicated, the standing
+     `UNDECIDED` rule still applies.
+     Apply this policy to new reviews and to annotations touched during re-review.
+     Older untouched reviews may retain legacy actions; migrate those when they
+     are re-reviewed rather than treating their presence as an exception.
    - Consider specificity - terms that are too general should be modified to more specific functions
    - Watch for overly specific or contorted terms that might need generalization
    - Evaluate whether annotations truly represent core vs. peripheral functions

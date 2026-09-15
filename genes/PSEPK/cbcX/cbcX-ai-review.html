@@ -1,0 +1,2325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cbcX - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>cbcX</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88R38" target="_blank" class="term-link">
+                        Q88R38
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "cbcX";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88R38" data-a="DESCRIPTION: CbcX is the periplasmic choline-binding component ..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CbcX is the periplasmic choline-binding component of the modular Cbc ABC importer. It captures choline and presents it to the CbcWV membrane and ATPase core; carnitine recognition is instead supplied by CaiX.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015871" target="_blank" class="term-link">
+                                    GO:0015871
+                                </a>
+                            </span>
+                            <span class="term-label">choline transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R38" data-a="GO:0015871" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CbcX supplies choline specificity to the Cbc importer.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental work on orthologous Pseudomonas Cbc systems establishes CbcX-dependent choline uptake.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19919675" target="_blank" class="term-link">
+                                        PMID:19919675
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">CbcXWV is sufficient to transport choline and betaine but not carnitine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022857" target="_blank" class="term-link">
+                                    GO:0022857
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R38" data-a="GO:0022857" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CbcX contributes substrate recognition but does not itself span the membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The permease CbcW forms the membrane path; the periplasmic CbcX binding protein contributes to transporter activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19919675" target="_blank" class="term-link">
+                                        PMID:19919675
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The core transporter CbcWV also interacts with the carnitine-specific SBP CaiX (K(m), 24 microM) and the betaine-specific SBP BetX (K(m), 0.6 microM).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015220" target="_blank" class="term-link">
+                                    GO:0015220
+                                </a>
+                            </span>
+                            <span class="term-label">choline transmembrane transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19919675" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19919675
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The ATP-binding cassette transporter Cbc (choline/betaine/ca...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R38" data-a="GO:0015220" data-r="PMID:19919675" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CbcX contributes substrate recognition to choline transport by the Cbc complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The binding protein is one component of the multi-subunit transporter and does not enable transport alone.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19919675" target="_blank" class="term-link">
+                                        PMID:19919675
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The core transporter CbcWV also interacts with the carnitine-specific SBP CaiX (K(m), 24 microM) and the betaine-specific SBP BetX (K(m), 0.6 microM).</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033265" target="_blank" class="term-link">
+                                    GO:0033265
+                                </a>
+                            </span>
+                            <span class="term-label">choline binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R38" data-a="GO:0033265" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Choline binding is the direct molecular function of CbcX.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Orthologous CbcX proteins bind choline preferentially and deliver it to CbcWV.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19919675" target="_blank" class="term-link">
+                                        PMID:19919675
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The SBP encoded by the cbcXWV operon, CbcX, binds choline with a high affinity (K(m), 2.6 microM)</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042597" target="_blank" class="term-link">
+                                    GO:0042597
+                                </a>
+                            </span>
+                            <span class="term-label">periplasmic space</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R38" data-a="GO:0042597" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The signal-peptide-bearing substrate receptor acts in the periplasm.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> CbcX is a soluble substrate-binding component of a Gram-negative ABC importer.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/cbcX/cbcX-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SIGNAL          1..21</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043190" target="_blank" class="term-link">
+                                    GO:0043190
+                                </a>
+                            </span>
+                            <span class="term-label">ATP-binding cassette (ABC) transporter complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R38" data-a="GO:0043190" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CbcX is the interchangeable choline-binding component of the Cbc ABC importer.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> It docks with the CbcWV core to support substrate uptake.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19919675" target="_blank" class="term-link">
+                                        PMID:19919675
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a core transporter preferentially interacting with ligand-bound versus ligand-free SBPs</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/cbcX/cbcX-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">CbcX is the periplasmic **substrate-binding protein (SBP)**</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055085" target="_blank" class="term-link">
+                                    GO:0055085
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R38" data-a="GO:0055085" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This broad process is valid but less informative than choline transport.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> CbcX participates in transmembrane uptake through the Cbc complex, but choline transport is the useful process term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19919675" target="_blank" class="term-link">
+                                        PMID:19919675
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The Cbc transporter of Pseudomonas spp. is required for the uptake of QACs</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Periplasmic choline recognition for the CbcWV ABC importer.</h3>
+                <span class="vote-buttons" data-g="Q88R38" data-a="FUNCTION: Periplasmic choline recognition for the CbcWV ABC ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033265" target="_blank" class="term-link">
+                            choline binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015871" target="_blank" class="term-link">
+                                choline transport
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042597" target="_blank" class="term-link">
+                                periplasmic space
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19919675" target="_blank" class="term-link">
+                                PMID:19919675
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The SBP encoded by the cbcXWV operon, CbcX, binds choline with a high affinity (K(m), 2.6 microM)</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19919675" target="_blank" class="term-link">
+                            PMID:19919675
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The ATP-binding cassette transporter Cbc (choline/betaine/carnitine) recruits multiple substrate-binding proteins with strong specificity for distinct quaternary ammonium compounds.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Establishes CbcX as the choline-selective binding component of a shared CbcWV transporter core.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/cbcX/cbcX-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB record for cbcX</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Provides the PP_0296 identity, signal peptide, and OpuAC-family domains.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/cbcX/cbcX-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO annotations for cbcX</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Contains the six annotations reviewed here.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/cbcX/cbcX-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research report for cbcX</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Distinguishes choline-selective CbcX from carnitine-selective CaiX and the CbcWV core.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What are the quantitative choline and betaine affinities of KT2440 CbcX itself?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88R38" data-a="Q: What are the quantitative choline and betaine affi..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure binding of purified Q88R38 to choline, glycine betaine, and carnitine and test uptake complementation with CbcWV.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: ligand-binding and transport assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88R38" data-a="EXPERIMENT: Measure binding of purified Q88R38 to choline, gly..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(cbcX-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88R38" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: **cbcX** (PP_0296, UniProt Q88R38)</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-13T05:46:26.335196</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="cbcX-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="cbcX-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-cbcx-pp_0296-uniprot-q88r38">Functional Annotation Report: <strong>cbcX</strong> (PP_0296, UniProt Q88R38)</h1>
+<h3 id="pseudomonas-putida-kt2440-choline-substrate-binding-protein-of-the-cbc-abc-transporter"><em>Pseudomonas putida</em> KT2440 — Choline substrate-binding protein of the Cbc ABC transporter</h3>
+<hr />
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (Answer to the Research Question)</h2>
+<p><strong>cbcX / PP_0296 (Q88R38) encodes the periplasmic, choline-specific substrate-binding protein (SBP) of the Cbc (choline/betaine/carnitine) ATP-binding-cassette (ABC) import system.</strong> Its primary molecular function is to capture the quaternary-ammonium compound <strong>choline</strong> from the periplasm with high affinity (and glycine betaine with lower affinity) and deliver it to the membrane-embedded <strong>CbcWV</strong> permease/ATPase core for ATP-driven uptake into the cytoplasm. It is <strong>not itself a catalytic enzyme or a membrane transporter</strong>; despite the EC 3.6.3.32 tag inherited from the transport reaction of the whole complex, CbcX is the recognition/receptor subunit. The imported choline is subsequently oxidized (BetAB) to the osmoprotectant <strong>glycine betaine</strong>, supporting osmotic-stress tolerance, and can also be catabolized as a <strong>carbon/nitrogen source</strong>. CbcX carries out its function in the <strong>periplasm</strong> (it bears a cleavable Sec signal peptide and adopts the class-II periplasmic-binding-protein / "Venus-flytrap" fold).</p>
+<p>Identity is confirmed: the UniProt description ("Choline / betaine / carnitine ABC transporter-substrate binding protein"), gene symbol (cbcX), domains (OpuAC/PF04069; IPR017783 ABC_choline_sub-bd), and <em>P. putida</em> KT2440 genomic context all match the experimentally characterized Cbc system of <em>Pseudomonas</em> and its orthologs. There is no gene-symbol ambiguity.</p>
+<hr />
+<h2 id="2-geneprotein-identity-verification">2. Gene/Protein Identity Verification</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UniProt accession</td>
+<td>Q88R38</td>
+<td>UniProt</td>
+</tr>
+<tr>
+<td>Gene symbol / locus</td>
+<td>cbcX / PP_0296</td>
+<td>UniProt, KEGG <code>ppu:PP_0296</code></td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> KT2440</td>
+<td>UniProt</td>
+</tr>
+<tr>
+<td>Length</td>
+<td>315 aa</td>
+<td>UniProt</td>
+</tr>
+<tr>
+<td>Signal peptide</td>
+<td>residues 1–21 (Sec; cleaved), mature chain 22–315</td>
+<td>UniProt</td>
+</tr>
+<tr>
+<td>Domain</td>
+<td>ABC-type glycine betaine transport SBP, res. 29–284</td>
+<td>UniProt</td>
+</tr>
+<tr>
+<td>Pfam / InterPro</td>
+<td>PF04069 (OpuAC); IPR017783, IPR007210</td>
+<td>UniProt/InterPro</td>
+</tr>
+<tr>
+<td>Ortholog group</td>
+<td>eggNOG COG2113; KEGG K02002</td>
+<td>UniProt/KEGG</td>
+</tr>
+<tr>
+<td>Fold</td>
+<td>Periplasmic binding protein-like II (SSF53850; Gene3D 3.40.190.10/100)</td>
+<td>UniProt</td>
+</tr>
+<tr>
+<td>Genomic neighbour</td>
+<td>PP_0295 = CbcW permease (K02001)</td>
+<td>KEGG</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Conclusion:</strong> All annotations converge on a single, unambiguous assignment. The gene is correctly identified; the symbol is not confused with any unrelated "cbcX."</p>
+<hr />
+<h2 id="3-primary-function-and-substrate-specificity">3. Primary Function and Substrate Specificity</h2>
+<p>CbcX is the periplasmic <strong>substrate-binding protein (SBP)</strong> — the receptor subunit — of a Type I ABC importer. Its direct experimental characterization comes from the orthologous Cbc system of <em>Pseudomonas syringae</em>/<em>P. aeruginosa</em>, where the SBP encoded by the <strong>cbcXWV</strong> operon binds:</p>
+<ul>
+<li><strong>Choline</strong> with high affinity — K_m ≈ <strong>2.6 µM</strong> (preferred substrate)</li>
+<li><strong>Glycine betaine</strong> with lower affinity — K_m ≈ <strong>24.2 µM</strong></li>
+</ul>
+<p>Critically, <strong>CbcXWV-mediated betaine uptake does not occur in the presence of choline</strong>, establishing choline as the physiologically dominant substrate of CbcX (Chen et al. 2010, PMID 19919675). The <em>P. putida</em> KT2440 protein (PP_0296) is the direct ortholog and carries the identical annotation and KEGG ortholog (K02002).</p>
+<p>Within the transporter, CbcX supplies <strong>specificity</strong>: the shared <strong>CbcWV</strong> core also partners with dedicated SBPs for other quaternary amines — <strong>BetX</strong> (betaine-specific, K_m ≈ 0.6 µM) and <strong>CaiX</strong> (carnitine-specific, K_m ≈ 24 µM) (Chen et al. 2010). Short-chain acylcarnitines and free carnitine are imported through the <strong>CaiX–CbcWV</strong> assembly (Meadows et al. 2018, PMID 29517479), independently confirming CbcWV as a common translocation core served by interchangeable binding proteins. <strong>CbcX is therefore the choline-recognition module of this modular importer.</strong></p>
+<blockquote>
+<p>Note on EC 3.6.3.32: this number denotes the <em>choline-transporting ATPase</em> reaction of the intact ABC complex (ATP + H₂O + choline_out → ADP + Pᵢ + choline_in). CbcX contributes the substrate-recognition step but has no intrinsic ATPase/hydrolase activity — the ATPase resides in the CbcV nucleotide-binding subunit.</p>
+</blockquote>
+<hr />
+<h2 id="4-structural-basis-of-substrate-recognition">4. Structural Basis of Substrate Recognition</h2>
+<p>CbcX belongs to the <strong>OpuAC / ProX family of class-II periplasmic binding proteins</strong> (Pfam PF04069; SSF53850). Structural understanding derives from crystallized orthologs of the same fold:</p>
+<ul>
+<li><strong>ChoX</strong> (<em>Sinorhizobium meliloti</em>), the direct ortholog of CbcX, was crystallized bound to <strong>choline</strong> and <strong>acetylcholine</strong>, plus closed-unliganded and semi-closed states — revealing the canonical two-lobe <strong>"Venus-flytrap"</strong> SBP architecture (Oswald et al. 2008, PMID 18779321; Oswald et al. 2009, PMID 19642870). Chen et al. reported that ChoX and CbcX share very similar binding properties.</li>
+<li>In the <em>Agrobacterium tumefaciens</em> <strong>ChoXWV</strong> ortholog, two pocket <strong>tryptophan residues (W40, W87)</strong> are essential for choline binding, and the model is built on <em>S. meliloti</em> ChoX; the system is a high-affinity transporter "with a preference for choline" (Aktas et al. 2011, PMID 21803998).</li>
+<li>The paradigm compatible-solute SBP <strong>ProX</strong> (<em>E. coli</em>) shows that <strong>cation-π interactions</strong> between the ligand's positively charged quaternary amine and a <strong>rectangular box of three tryptophans</strong> are the key determinants of high-affinity binding (Schiefner et al. 2004, PMID 14612446).</li>
+</ul>
+<p><strong>Mechanistic inference:</strong> CbcX recognizes the trimethyl-ammonium head-group of choline through cation-π interactions inside an aromatic (tryptophan) cage and closes around the ligand in a Venus-flytrap motion, priming delivery to CbcWV. This explains both the high affinity and the selectivity for choline over structural analogues.</p>
+<hr />
+<h2 id="5-subcellular-localization">5. Subcellular Localization</h2>
+<p>CbcX carries out its function in the <strong>periplasm</strong> (outside the cytoplasmic membrane):</p>
+<ul>
+<li>It bears a <strong>cleavable N-terminal Sec signal peptide (residues 1–21)</strong> with a mature chain beginning at residue 22 — the hallmark of a <strong>soluble periplasmic protein</strong> (not a lipobox-anchored lipoprotein). This contrasts with the <em>Bacillus subtilis</em> ortholog OpuAC, which is a membrane-anchored lipoprotein because Gram-positive SBPs must be tethered (Kempf et al. 1997, PMID 9335265).</li>
+<li>Chen et al. (2010) explicitly describe the Cbc system as using "multiple <strong>periplasmic</strong> substrate-binding proteins."</li>
+<li>The mature protein diffuses in the periplasmic space, scavenges choline that crosses the outer membrane, and docks onto the periplasmic face of the CbcWV inner-membrane complex to release ligand for translocation.</li>
+</ul>
+<hr />
+<h2 id="6-biological-process-pathway-context">6. Biological Process / Pathway Context</h2>
+<p>CbcX is the <strong>entry gatekeeper</strong> of a quaternary-ammonium-compound assimilation and osmoadaptation module in <em>P. putida</em>:</p>
+<div class="codehilite"><pre><span></span><code>periplasmic choline
+      │  (capture)
+   CbcX  ── docks on ──▶  CbcWV (inner-membrane permease + ATPase, ATP-driven)
+      │                         │
+      ▼                         ▼
+        cytoplasmic choline
+                │  BetA (choline dehydrogenase) → betaine aldehyde
+                │  BetB (betaine aldehyde dehydrogenase)
+                ▼
+        GLYCINE BETAINE
+          │                 │
+(compatible solute; osmotic       (carbon / nitrogen /
+ stress tolerance)                  energy source)
+</code></pre></div>
+
+<ul>
+<li>In <em>P. putida</em> KT2440, the <strong>betBA</strong> genes convert imported choline into the highly effective compatible solute <strong>glycine betaine</strong>, which is required both for endurance to high salt and for use of choline-derived compounds as a <strong>carbon or nitrogen source</strong> (Galvão et al. 2006, PMID 17116241).</li>
+<li>The Cbc/Cho ABC system is the <strong>high-affinity</strong> route for choline acquisition (Aktas et al. 2011), complementing low-affinity BCCT-family secondary transporters such as BetT (Chen &amp; Beattie 2008, PMID 18156257).</li>
+<li>Because CbcX occupancy by choline blocks CbcWV-mediated uptake of other ligands (Chen et al. 2010), CbcX effectively prioritizes choline import when it is available.</li>
+</ul>
+<p>This pathway is central to how <em>P. putida</em> — a soil and plant-associated bacterium living in environments rich in plant-derived choline — obtains osmoprotectants and nutrients.</p>
+<hr />
+<h2 id="7-hypotheses-supported-and-refuted">7. Hypotheses: Supported and Refuted</h2>
+<p><strong>Supported:</strong><br />
+- <strong>H1 — CbcX is the periplasmic choline-specific SBP of an ABC importer.</strong> Supported by direct biochemistry of the ortholog (K_m choline 2.6 µM; Chen et al. 2010), matching annotation, and genomic adjacency to the CbcW permease.<br />
+- <strong>H2 — CbcX acts in the periplasm.</strong> Supported by the cleavable Sec signal peptide (UniProt) and the "periplasmic SBP" description (Chen et al. 2010).<br />
+- <strong>H3 — Recognition is via a Venus-flytrap aromatic (Trp) cage / cation-π mechanism.</strong> Supported by crystal structures of ChoX and ProX and mutagenesis of essential tryptophans (PMIDs 18779321, 19642870, 21803998, 14612446).<br />
+- <strong>H4 — CbcX feeds osmoprotection and choline catabolism.</strong> Supported by BetAB pathway data in <em>P. putida</em> (Galvão et al. 2006).<br />
+- <strong>H5 — CbcX is one interchangeable module of a shared CbcWV core.</strong> Supported by BetX/CaiX partnership and CaiX–CbcWV acylcarnitine import (Chen et al. 2010; Meadows et al. 2018).</p>
+<p><strong>Refuted / corrected:</strong><br />
+- <strong>CbcX is itself an ATPase/enzyme (as the EC 3.6.3.32 tag might suggest).</strong> Refuted — the EC number describes the whole-complex transport reaction; CbcX is the non-catalytic receptor subunit, and the ATPase activity belongs to CbcV.<br />
+- <strong>CbcX is a membrane-integral or lipid-anchored lipoprotein (as in Gram-positive OpuAC).</strong> Refuted for <em>P. putida</em> — the Sec signal peptide is cleaved (no lipobox), indicating a soluble periplasmic protein.</p>
+<hr />
+<h2 id="8-evidence-quality-and-limitations">8. Evidence Quality and Limitations</h2>
+<ul>
+<li><strong>Strongest (experimental, precise):</strong> ligand-binding affinities and transporter reconstitution for the <em>Pseudomonas</em> Cbc system (Chen et al. 2010); crystal structures/mutagenesis of orthologs ChoX and ProX (Oswald 2008/2009; Schiefner 2004; Aktas 2011).</li>
+<li><strong>Bioinformatic/inference:</strong> signal peptide, domain, fold, ortholog group, and gene neighborhood for the exact <em>P. putida</em> PP_0296 protein (UniProt, KEGG, InterPro).</li>
+<li><strong>Limitation:</strong> Direct biochemical characterization of the <em>P. putida</em> KT2440 CbcX protein itself (e.g., its own K_d for choline) has not, to my knowledge, been published; the functional assignment rests on very close orthology (identical operon architecture, domain, and KEGG ortholog) to the experimentally validated <em>P. syringae</em>/<em>P. aeruginosa</em> CbcX and <em>S. meliloti</em>/<em>A. tumefaciens</em> ChoX. Given the &gt;high sequence/architecture conservation, this inference is robust.</li>
+<li><strong>Future directions:</strong> (i) purify <em>P. putida</em> CbcX and measure choline/betaine affinities directly; (ii) solve/predict its structure (AlphaFold model available) to confirm the tryptophan aromatic cage; (iii) test cbcX deletion phenotypes for choline uptake and osmoprotection in KT2440; (iv) clarify the exact fate/regulation (the adjacent PP_0298 AraC-family, glycine-betaine-responsive activator suggests substrate-inducible expression).</li>
+</ul>
+<hr />
+<h2 id="9-references-pmid">9. References (PMID)</h2>
+<ol>
+<li>Chen C, Malek AA, Wargo MJ, Hogan DA, Beattie GA. <em>The ATP-binding cassette transporter Cbc (choline/betaine/carnitine) recruits multiple substrate-binding proteins with strong specificity for distinct quaternary ammonium compounds.</em> Mol Microbiol. 2010. <strong>PMID 19919675.</strong></li>
+<li>Meadows JA, Willsey GG, Wargo MJ. <em>Differential requirements for processing and transport of short-chain versus long-chain O-acylcarnitines in Pseudomonas aeruginosa.</em> 2018. <strong>PMID 29517479.</strong></li>
+<li>Galvão TC, de Lorenzo V, Cánovas D. <em>Uncoupling of choline-O-sulphate utilization from osmoprotection in Pseudomonas putida.</em> Mol Microbiol. 2006. <strong>PMID 17116241.</strong></li>
+<li>Aktas M, Jost KA, Fritz C, Narberhaus F. <em>Choline uptake in Agrobacterium tumefaciens by the high-affinity ChoXWV transporter.</em> J Bacteriol. 2011. <strong>PMID 21803998.</strong></li>
+<li>Oswald C, Smits SHJ, Höing M, Sohn-Bösser L, Dupont L, Le Rudulier D, Schmitt L, Bremer E. <em>Crystal structures of the choline/acetylcholine substrate-binding protein ChoX from Sinorhizobium meliloti.</em> J Biol Chem. 2008. <strong>PMID 18779321.</strong></li>
+<li>Oswald C, Smits SHJ, Höing M, Bremer E, Schmitt L. <em>Structural analysis of the choline-binding protein ChoX in a semi-closed and ligand-free conformation.</em> 2009. <strong>PMID 19642870.</strong></li>
+<li>Schiefner A, Breed J, Bösser L, et al. <em>Cation-pi interactions as determinants for binding of the compatible solutes glycine betaine and proline betaine by ProX from E. coli.</em> J Biol Chem. 2004. <strong>PMID 14612446.</strong></li>
+<li>Kempf B, Gade J, Bremer E. <em>Lipoprotein from the osmoregulated ABC transport system OpuA of Bacillus subtilis.</em> J Bacteriol. 1997. <strong>PMID 9335265.</strong></li>
+<li>Chen C, Beattie GA. <em>Pseudomonas syringae BetT is a low-affinity choline transporter responsible for superior osmoprotection by choline over glycine betaine.</em> J Bacteriol. 2008. <strong>PMID 18156257.</strong></li>
+</ol>
+<p><em>Database sources: UniProt (Q88R38), KEGG (ppu:PP_0296), InterPro/Pfam, eggNOG.</em></p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="cbcX-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="cbcX-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88R38
+gene_symbol: cbcX
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  CbcX is the periplasmic choline-binding component of the modular Cbc ABC
+  importer. It captures choline and presents it to the CbcWV membrane and ATPase
+  core; carnitine recognition is instead supplied by CaiX.
+existing_annotations:
+  - term: {id: &#39;GO:0015871&#39;, label: choline transport}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review:
+      summary: CbcX supplies choline specificity to the Cbc importer.
+      action: ACCEPT
+      reason: Experimental work on orthologous Pseudomonas Cbc systems establishes CbcX-dependent choline uptake.
+      supported_by:
+        - reference_id: PMID:19919675
+          supporting_text: CbcXWV is sufficient to transport choline and betaine but not carnitine
+  - term: {id: &#39;GO:0022857&#39;, label: transmembrane transporter activity}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: CbcX contributes substrate recognition but does not itself span the membrane.
+      action: REMOVE
+      reason: The permease CbcW forms the membrane path; the periplasmic CbcX binding protein contributes to transporter activity.
+      supported_by:
+        - reference_id: PMID:19919675
+          supporting_text: &gt;-
+            The core transporter CbcWV also interacts with the carnitine-specific
+            SBP CaiX (K(m), 24 microM) and the betaine-specific SBP BetX (K(m), 0.6 microM).
+  - term: {id: &#39;GO:0015220&#39;, label: choline transmembrane transporter activity}
+    evidence_type: ISS
+    original_reference_id: PMID:19919675
+    qualifier: contributes_to
+    review:
+      summary: CbcX contributes substrate recognition to choline transport by the Cbc complex.
+      action: NEW
+      reason: The binding protein is one component of the multi-subunit transporter and does not enable transport alone.
+      supported_by:
+        - reference_id: PMID:19919675
+          supporting_text: &gt;-
+            The core transporter CbcWV also interacts with the carnitine-specific
+            SBP CaiX (K(m), 24 microM) and the betaine-specific SBP BetX (K(m), 0.6 microM).
+  - term: {id: &#39;GO:0033265&#39;, label: choline binding}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: Choline binding is the direct molecular function of CbcX.
+      action: ACCEPT
+      reason: Orthologous CbcX proteins bind choline preferentially and deliver it to CbcWV.
+      supported_by:
+        - reference_id: PMID:19919675
+          supporting_text: &gt;-
+            The SBP encoded by the cbcXWV operon, CbcX, binds choline with a
+            high affinity (K(m), 2.6 microM)
+  - term: {id: &#39;GO:0042597&#39;, label: periplasmic space}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: located_in
+    review:
+      summary: The signal-peptide-bearing substrate receptor acts in the periplasm.
+      action: ACCEPT
+      reason: CbcX is a soluble substrate-binding component of a Gram-negative ABC importer.
+      supported_by:
+        - reference_id: file:PSEPK/cbcX/cbcX-uniprot.txt
+          supporting_text: &#34;SIGNAL          1..21&#34;
+  - term: {id: &#39;GO:0043190&#39;, label: ATP-binding cassette (ABC) transporter complex}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: part_of
+    review:
+      summary: CbcX is the interchangeable choline-binding component of the Cbc ABC importer.
+      action: ACCEPT
+      reason: It docks with the CbcWV core to support substrate uptake.
+      supported_by:
+        - reference_id: PMID:19919675
+          supporting_text: a core transporter preferentially interacting with ligand-bound versus ligand-free SBPs
+        - reference_id: file:PSEPK/cbcX/cbcX-deep-research-openscientist.md
+          supporting_text: CbcX is the periplasmic **substrate-binding protein (SBP)**
+  - term: {id: &#39;GO:0055085&#39;, label: transmembrane transport}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review:
+      summary: This broad process is valid but less informative than choline transport.
+      action: KEEP_AS_NON_CORE
+      reason: CbcX participates in transmembrane uptake through the Cbc complex, but choline transport is the useful process term.
+      supported_by:
+        - reference_id: PMID:19919675
+          supporting_text: The Cbc transporter of Pseudomonas spp. is required for the uptake of QACs
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+    findings: []
+  - id: PMID:19919675
+    title: The ATP-binding cassette transporter Cbc (choline/betaine/carnitine) recruits multiple substrate-binding proteins with strong specificity for distinct quaternary ammonium compounds.
+    findings:
+      - statement: Establishes CbcX as the choline-selective binding component of a shared CbcWV transporter core.
+  - id: file:PSEPK/cbcX/cbcX-uniprot.txt
+    title: UniProtKB record for cbcX
+    findings:
+      - statement: Provides the PP_0296 identity, signal peptide, and OpuAC-family domains.
+  - id: file:PSEPK/cbcX/cbcX-goa.tsv
+    title: QuickGO annotations for cbcX
+    findings:
+      - statement: Contains the six annotations reviewed here.
+  - id: file:PSEPK/cbcX/cbcX-deep-research-openscientist.md
+    title: OpenScientist deep research report for cbcX
+    findings:
+      - statement: Distinguishes choline-selective CbcX from carnitine-selective CaiX and the CbcWV core.
+core_functions:
+  - description: Periplasmic choline recognition for the CbcWV ABC importer.
+    molecular_function: {id: &#39;GO:0033265&#39;, label: choline binding}
+    contributes_to_molecular_function: {id: &#39;GO:0015220&#39;, label: choline transmembrane transporter activity}
+    directly_involved_in:
+      - {id: &#39;GO:0015871&#39;, label: choline transport}
+    locations:
+      - {id: &#39;GO:0042597&#39;, label: periplasmic space}
+    supported_by:
+      - reference_id: PMID:19919675
+        supporting_text: &gt;-
+          The SBP encoded by the cbcXWV operon, CbcX, binds choline with a
+          high affinity (K(m), 2.6 microM)
+proposed_new_terms: []
+suggested_questions:
+  - question: What are the quantitative choline and betaine affinities of KT2440 CbcX itself?
+suggested_experiments:
+  - description: Measure binding of purified Q88R38 to choline, glycine betaine, and carnitine and test uptake complementation with CbcWV.
+    experiment_type: ligand-binding and transport assay
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
