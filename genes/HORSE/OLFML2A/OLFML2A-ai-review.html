@@ -1,0 +1,2368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OLFML2A - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>OLFML2A</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A0A9L0SKW1" target="_blank" class="term-link">
+                        A0A9L0SKW1
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Equus caballus</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-in-progress">
+                    IN PROGRESS
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "OLFML2A";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">1</span> Annotations</a>
+
+
+
+        <a href="#review-research" title="Deep research and hypothesis research reports"><span class="nav-count">1</span> Research</a>
+
+
+
+        <a href="#external-predictions" title="External predictions assessed separately from GOA annotations" class="nav-external"><span class="nav-count">4</span> External</a>
+
+
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">5</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">2</span> Documents</a>
+
+
+
+
+
+
+
+
+
+
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A0A9L0SKW1" data-a="DESCRIPTION: OLFML2A belongs to the photomedin family of olfact..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>OLFML2A belongs to the photomedin family of olfactomedin-domain glycoproteins. Characterized mammalian photomedin-1 is a secreted, homodimeric protein that binds sulfated extracellular glycosaminoglycans. The selected horse protein retains the olfactomedin domain but lacks the N-terminal segment corresponding to the human secretion signal, leaving the localization and maturation of this particular protein model unresolved.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005576" target="_blank" class="term-link">
+                                    GO:0005576
+                                </a>
+                            </span>
+                            <span class="term-label">extracellular region</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="A0A9L0SKW1" data-a="GO:0005576" data-r="GO_REF:0000044" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The OLFML2A family is extracellular, but this horse sequence lacks the canonical leader.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The selected horse record is highly similar to photomedin-1 but lacks the segment corresponding to the experimentally supported human signal peptide. Conserved family biology supports an extracellular full-length gene product; it does not resolve whether this selected isoform/model is secreted. Verify the transcript model and alternative N-termini before accepting the location for this sequence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:HORSE/OLFML2A/OLFML2A-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">Human UniProt annotates residues 1–27 as the signal peptide; the horse sequence starts `MDSQVFGDMDQVRMTSEGSDCRCKCIMRPLSKDA`, without the hydrophobic human leader.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:human/OLFML2A/OLFML2A-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   SIGNAL          1..27</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15836428" target="_blank" class="term-link">
+                            PMID:15836428
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Identification and characterization of photomedins: novel olfactomedin-domain-containing proteins with chondroitin sulphate-E-binding activity.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:HORSE/OLFML2A/OLFML2A-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">HORSE/OLFML2A/OLFML2A-uniprot.txt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:HORSE/OLFML2A/OLFML2A-bioinformatics/RESULTS.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">HORSE/OLFML2A/OLFML2A-bioinformatics/RESULTS.md</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:human/OLFML2A/OLFML2A-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">human/OLFML2A/OLFML2A-uniprot.txt</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+    <section class="section external-predictions" id="external-predictions" aria-labelledby="external-predictions-title">
+        <h2 class="section-title" id="external-predictions-title">External Prediction Reviews</h2>
+        <p class="prediction-notice">These computational predictions are reviewed separately from the GOA annotation set used for this review.
+            The assessments below are from this project and do not constitute official GO annotations or endorsement by GO/UniProt.
+            They are not included in the existing annotation review above.</p>
+
+
+        <article class="prediction-review">
+        <h3>ProtNLM2 <span class="badge">External predictions</span></h3>
+        <p class="prediction-source"><a href="OLFML2A-protnlm-predictions-review.yaml">View prediction review YAML</a> &middot; OLFML2A-protnlm-predictions-review.yaml
+            &middot; Review status: COMPLETE</p>
+
+        <p>The conserved photomedin family supports extracellular glycosaminoglycan binding and dimerization, but the selected horse model lacks the canonical signal-peptide segment. All four sequence-specific predictions remain unresolved; matrix organization additionally lacks direct mechanistic support.</p>
+
+        <p class="prediction-source">Review score: 2 = concordant with evidence; 1 = uncertain; 0 = discordant with evidence. This is an assessment score, not a model probability.</p>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030198" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:0030198
+                    </a>
+                    <span class="term-label">extracellular matrix organization</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_BP</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-unc">
+                        UNC — Uncertain
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 1/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM2
+                 &middot; Version: UniProt API snapshot 2026-09-08
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> Secretion, ECM residence, glycosaminoglycan binding and self-association are supported by mouse photomedin experiments and conserved horse sequence. These properties make a role in ECM organization plausible but do not demonstrate creation, rearrangement or disassembly of matrix. A perturbation or reconstitution result linking OLFML2A to matrix organization is needed to support this more specific process claim; the prediction is not refuted simply because such evidence is missing. In addition, the selected horse model lacks the human signal-peptide segment, so entry into the secretory pathway is unresolved.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15836428" target="_blank" class="term-link">PMID:15836428</a>:
+
+
+                        <span class="finding-text">"Among
+a panel of ECM components, including glycosaminoglycans, photomedins
+preferentially bound to chondroitin sulphate-E and heparin."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15836428" target="_blank" class="term-link">PMID:15836428</a>:
+
+
+                        <span class="finding-text">"These proteins, named photomedin-1 and photomedin-2,
+were secreted as disulphide-bonded dimers (photomedin-1) or oligomers/multimers
+(photomedin-2) with O-linked carbohydrate chains"</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="OLFML2A-uniprot.txt" target="_blank" class="term-link">file:HORSE/OLFML2A/OLFML2A-uniprot.txt</a>:
+
+
+                        <span class="finding-text">"DR   PANTHER; PTHR23192:SF29; OLFACTOMEDIN-LIKE PROTEIN 2A; 1."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="OLFML2A-bioinformatics/RESULTS.md" target="_blank" class="term-link">file:HORSE/OLFML2A/OLFML2A-bioinformatics/RESULTS.md</a>:
+
+
+                        <span class="finding-text">"share 91.3% identity among 598 paired residues."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="OLFML2A-bioinformatics/RESULTS.md" target="_blank" class="term-link">file:HORSE/OLFML2A/OLFML2A-bioinformatics/RESULTS.md</a>:
+
+
+                        <span class="finding-text">"Human UniProt annotates residues 1–27 as the signal peptide; the horse sequence starts `MDSQVFGDMDQVRMTSEGSDCRCKCIMRPLSKDA`, without the hydrophobic human leader."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="../../human/OLFML2A/OLFML2A-uniprot.txt" target="_blank" class="term-link">file:human/OLFML2A/OLFML2A-uniprot.txt</a>:
+
+
+                        <span class="finding-text">"FT   SIGNAL          1..27"</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042802" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:0042802
+                    </a>
+                    <span class="term-label">identical protein binding</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_MF</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-unc">
+                        UNC — Uncertain
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 1/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM2
+                 &middot; Version: UniProt API snapshot 2026-09-08
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> Mouse photomedin-1 experiments support disulfide-linked homodimerization. The selected horse protein retains strong OLFML2A family similarity but lacks the human residues 2–27 corresponding to the secretion signal. This leaves the localization, secretory maturation and access to extracellular partners of this exact model unresolved. A complete transcript/isoform assignment or the original prediction input sequence could distinguish a gene-model problem from a biologically meaningful nonsecreted form; absence of a leader in this snapshot alone does not refute the extracellular identity of the horse gene.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15836428" target="_blank" class="term-link">PMID:15836428</a>:
+
+
+                        <span class="finding-text">"These proteins, named photomedin-1 and photomedin-2,
+were secreted as disulphide-bonded dimers (photomedin-1) or oligomers/multimers
+(photomedin-2) with O-linked carbohydrate chains"</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="../../human/OLFML2A/OLFML2A-uniprot.txt" target="_blank" class="term-link">file:human/OLFML2A/OLFML2A-uniprot.txt</a>:
+
+
+                        <span class="finding-text">"DE   AltName: Full=Photomedin-1;"</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="OLFML2A-uniprot.txt" target="_blank" class="term-link">file:HORSE/OLFML2A/OLFML2A-uniprot.txt</a>:
+
+
+                        <span class="finding-text">"DR   PANTHER; PTHR23192:SF29; OLFACTOMEDIN-LIKE PROTEIN 2A; 1."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="OLFML2A-bioinformatics/RESULTS.md" target="_blank" class="term-link">file:HORSE/OLFML2A/OLFML2A-bioinformatics/RESULTS.md</a>:
+
+
+                        <span class="finding-text">"share 91.3% identity among 598 paired residues."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="OLFML2A-bioinformatics/RESULTS.md" target="_blank" class="term-link">file:HORSE/OLFML2A/OLFML2A-bioinformatics/RESULTS.md</a>:
+
+
+                        <span class="finding-text">"Human UniProt annotates residues 1–27 as the signal peptide; the horse sequence starts `MDSQVFGDMDQVRMTSEGSDCRCKCIMRPLSKDA`, without the hydrophobic human leader."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="../../human/OLFML2A/OLFML2A-uniprot.txt" target="_blank" class="term-link">file:human/OLFML2A/OLFML2A-uniprot.txt</a>:
+
+
+                        <span class="finding-text">"FT   SIGNAL          1..27"</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0031012" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:0031012
+                    </a>
+                    <span class="term-label">extracellular matrix</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_CC</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-unc">
+                        UNC — Uncertain
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 1/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM2
+                 &middot; Version: UniProt API snapshot 2026-09-08
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> Mouse photomedin-1 experiments support extracellular-matrix association. The selected horse protein retains strong OLFML2A family similarity but lacks the human residues 2–27 corresponding to the secretion signal. This leaves the localization, secretory maturation and access to extracellular partners of this exact model unresolved. A complete transcript/isoform assignment or the original prediction input sequence could distinguish a gene-model problem from a biologically meaningful nonsecreted form; absence of a leader in this snapshot alone does not refute the extracellular identity of the horse gene.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15836428" target="_blank" class="term-link">PMID:15836428</a>:
+
+
+                        <span class="finding-text">"These proteins, named photomedin-1 and photomedin-2,
+were secreted as disulphide-bonded dimers (photomedin-1) or oligomers/multimers
+(photomedin-2) with O-linked carbohydrate chains"</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15836428" target="_blank" class="term-link">PMID:15836428</a>:
+
+
+                        <span class="finding-text">"Among
+a panel of ECM components, including glycosaminoglycans, photomedins
+preferentially bound to chondroitin sulphate-E and heparin."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15836428" target="_blank" class="term-link">PMID:15836428</a>:
+
+
+                        <span class="finding-text">"We screened more than 60000 RIKEN mouse cDNAs for novel ECM (extracellular
+matrix) proteins"</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="OLFML2A-uniprot.txt" target="_blank" class="term-link">file:HORSE/OLFML2A/OLFML2A-uniprot.txt</a>:
+
+
+                        <span class="finding-text">"DR   PANTHER; PTHR23192:SF29; OLFACTOMEDIN-LIKE PROTEIN 2A; 1."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="OLFML2A-bioinformatics/RESULTS.md" target="_blank" class="term-link">file:HORSE/OLFML2A/OLFML2A-bioinformatics/RESULTS.md</a>:
+
+
+                        <span class="finding-text">"share 91.3% identity among 598 paired residues."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="OLFML2A-bioinformatics/RESULTS.md" target="_blank" class="term-link">file:HORSE/OLFML2A/OLFML2A-bioinformatics/RESULTS.md</a>:
+
+
+                        <span class="finding-text">"Human UniProt annotates residues 1–27 as the signal peptide; the horse sequence starts `MDSQVFGDMDQVRMTSEGSDCRCKCIMRPLSKDA`, without the hydrophobic human leader."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="../../human/OLFML2A/OLFML2A-uniprot.txt" target="_blank" class="term-link">file:human/OLFML2A/OLFML2A-uniprot.txt</a>:
+
+
+                        <span class="finding-text">"FT   SIGNAL          1..27"</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050840" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:0050840
+                    </a>
+                    <span class="term-label">extracellular matrix binding</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_MF</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-unc">
+                        UNC — Uncertain
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 1/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM2
+                 &middot; Version: UniProt API snapshot 2026-09-08
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> Mouse photomedin-1 experiments support binding to sulfated extracellular glycosaminoglycans. The selected horse protein retains strong OLFML2A family similarity but lacks the human residues 2–27 corresponding to the secretion signal. This leaves the localization, secretory maturation and access to extracellular partners of this exact model unresolved. A complete transcript/isoform assignment or the original prediction input sequence could distinguish a gene-model problem from a biologically meaningful nonsecreted form; absence of a leader in this snapshot alone does not refute the extracellular identity of the horse gene.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15836428" target="_blank" class="term-link">PMID:15836428</a>:
+
+
+                        <span class="finding-text">"Among
+a panel of ECM components, including glycosaminoglycans, photomedins
+preferentially bound to chondroitin sulphate-E and heparin."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15836428" target="_blank" class="term-link">PMID:15836428</a>:
+
+
+                        <span class="finding-text">"We screened more than 60000 RIKEN mouse cDNAs for novel ECM (extracellular
+matrix) proteins"</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="OLFML2A-uniprot.txt" target="_blank" class="term-link">file:HORSE/OLFML2A/OLFML2A-uniprot.txt</a>:
+
+
+                        <span class="finding-text">"DR   PANTHER; PTHR23192:SF29; OLFACTOMEDIN-LIKE PROTEIN 2A; 1."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="OLFML2A-bioinformatics/RESULTS.md" target="_blank" class="term-link">file:HORSE/OLFML2A/OLFML2A-bioinformatics/RESULTS.md</a>:
+
+
+                        <span class="finding-text">"share 91.3% identity among 598 paired residues."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="OLFML2A-bioinformatics/RESULTS.md" target="_blank" class="term-link">file:HORSE/OLFML2A/OLFML2A-bioinformatics/RESULTS.md</a>:
+
+
+                        <span class="finding-text">"Human UniProt annotates residues 1–27 as the signal peptide; the horse sequence starts `MDSQVFGDMDQVRMTSEGSDCRCKCIMRPLSKDA`, without the hydrophobic human leader."</span>
+
+                    </li>
+
+                    <li class="finding-item">
+
+                        <a href="../../human/OLFML2A/OLFML2A-uniprot.txt" target="_blank" class="term-link">file:human/OLFML2A/OLFML2A-uniprot.txt</a>:
+
+
+                        <span class="finding-text">"FT   SIGNAL          1..27"</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        </article>
+
+    </section>
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section" id="review-research">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(OLFML2A-hypotheses/horse40-extracellular-matrix-localization/openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A9L0SKW1" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Focused Hypothesis Report — Horse OLFML2A (A0A9L0SKW1) localizes to the extracellular matrix (GO:0031012)</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-08T16:12:22.029227</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="OLFML2A-hypotheses/horse40-extracellular-matrix-localization/openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="OLFML2A-hypotheses/horse40-extracellular-matrix-localization/openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="focused-hypothesis-report-horse-olfml2a-a0a9l0skw1-localizes-to-the-extracellular-matrix-go0031012">Focused Hypothesis Report — Horse OLFML2A (A0A9L0SKW1) localizes to the extracellular matrix (GO:0031012)</h1>
+<p><strong>Focus type:</strong> function_assignment (CC localization) · <strong>Term:</strong> GO:0031012 extracellular matrix<br />
+<strong>Target:</strong> <em>Equus caballus</em> (NCBITaxon:9796), UniProt <strong>A0A9L0SKW1</strong>, 599 aa, PE=4 (Predicted), Ensembl gene model ENSECAG00000023908 / protein ENSECAP00000076704.<br />
+<strong>Human comparison lead:</strong> Q68BL7 (OLFML2A / Photomedin-1), 652 aa, PE=1.</p>
+<hr />
+<h2 id="executive-judgment">Executive Judgment</h2>
+<p><strong>Partially supported (support via justified mammalian orthology transfer; one important sequence caveat).</strong></p>
+<ul>
+<li><strong>Identity confirmed.</strong> The supplied 599-aa sequence is byte-identical to the current UniProt A0A9L0SKW1 record and is an unambiguous <strong>OLFML2A/photomedin-1 ortholog</strong>: 87.2% identical to human OLFML2A over the mature chain, retaining the diagnostic domain architecture (N-terminal tandem CXCXCX9C cysteine motifs, mid-molecule coiled-coil, C-terminal olfactomedin domain).</li>
+<li><strong>The ortholog is genuinely an ECM protein.</strong> Direct experimental work on the mouse ortholog (photomedin-1) shows it is <strong>secreted, disulfide-bonded, O-glycosylated, and binds the ECM glycosaminoglycans chondroitin sulfate-E and heparin</strong> (PMID 15836428). Human OLFML2A is PE1 with UniProt CC "Secreted." This justifies ECM localization by mammalian transfer.</li>
+<li><strong>Decisive caveat on the exact sequence.</strong> The supplied horse ORF <strong>begins exactly at the mature-chain boundary and lacks the entire N-terminal signal peptide.</strong> Horse residue 2 aligns to human residue 28 (the first mature residue, immediately after human SIGNAL 1..27), and the horse N-terminus has no hydrophobic h-region (max Kyte-Doolittle window-7 = 0.83 vs 3.09 in the human signal).</li>
+<li><strong>The locus DOES encode secretion-competent isoforms (isoform resolution).</strong> Ensembl gene ENSECAG00000023908 has 6 protein-coding transcripts; the <strong>canonical is 662 aa</strong> (ENSECAP00000071146, N-term <code>MAPGTSGNLLLAVCPW…</code>, hydrophobic, KD max 2.61) and isoform ENSECAP00000056820 (618 aa) starts <code>MAAAALPPRP…</code>, matching the human OLFML2A signal peptide (KD max 3.03). NCBI RefSeq likewise lists full-length models (XP_023484611.2, 650 aa; XP_023484612.1, 621 aa). The supplied <strong>A0A9L0SKW1 = ENSECAP00000076704 (599 aa) is a minor, non-canonical, N-terminally-truncated isoform</strong> — so the missing signal peptide is an <strong>isoform/gene-model choice, not loss of secretion by the gene.</strong></li>
+<li><strong>Functional ECM-binding domain is intact.</strong> The C-terminal olfactomedin (OLF) domain in the supplied 599-aa model (residues 341–599) is <strong>99.6% identical to the human OLF domain (258/259)</strong> and ends at the natural C-terminus (<code>…HFVV</code>). The GAG/proteoglycan-binding module that mediates ECM association is therefore fully preserved; only the N-terminal signal peptide is missing.</li>
+<li><strong>Paralog confusion ruled out.</strong> Smith-Waterman: horse vs human OLFML2A (Q68BL7) = 983 vs human OLFML2B/photomedin-2 (Q68BL8) = 294 — unambiguously OLFML2A.</li>
+<li>The horse UniProt "Secreted" tag is <strong>ARBA rule-based (automated), not experimental</strong>, and must not be treated as biological validation.</li>
+</ul>
+<p><strong>Bottom line for the curator:</strong> ECM/secreted localization for horse OLFML2A is well supported <em>by orthology to an experimentally characterized ECM protein</em>, but is <strong>not directly observed in horse</strong> and is <strong>not encoded by the supplied truncated ORF</strong>. GO:0031012 is defensible as an ISS/ISO annotation with the signal-peptide-truncation caveat noted; it should not be asserted as directly-observed horse evidence.</p>
+<hr />
+<h2 id="evidence-matrix">Evidence Matrix</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Citation</th>
+<th>Evidence type</th>
+<th>Stance</th>
+<th>Claim tested</th>
+<th>Key finding</th>
+<th>Context</th>
+<th>Confidence / limitations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>This report (computed)</td>
+<td>Structural/evolutionary (Smith-Waterman, own run)</td>
+<td>Supports (identity)</td>
+<td>Is A0A9L0SKW1 truly OLFML2A?</td>
+<td>Horse 2–599 ↔ human 28–652, score 983, <strong>87.2% identity</strong>; retains OLF domain (UniProt 341–599) + N-terminal CxCxCx9C motifs + coiled-coil</td>
+<td>Horse vs human protein sequence</td>
+<td>High; identity/architecture unambiguous</td>
+</tr>
+<tr>
+<td>2</td>
+<td>This report (computed)</td>
+<td>Computational (hydrophobicity + alignment)</td>
+<td><strong>Qualifies / competing</strong></td>
+<td>Does the exact sequence encode a signal peptide?</td>
+<td>Horse res.2 = human res.28 (mature-chain start); <strong>no signal peptide, no hydrophobic N-term</strong> (KD max 0.83 vs human 3.09); UniProt lists no SIGNAL/TM</td>
+<td>Exact 599-aa ORF</td>
+<td>High for the ORF; interpreted as 5′-truncated gene model</td>
+</tr>
+<tr>
+<td>3</td>
+<td>PMID <strong>15836428</strong> (Furutani et al., 2005, <em>Biochem J</em>)</td>
+<td><strong>Direct assay + localization</strong></td>
+<td>Supports (ortholog)</td>
+<td>Is OLFML2A/photomedin-1 an ECM protein?</td>
+<td>Identified in an ECM-protein screen; <strong>secreted disulfide-bonded dimer, O-glycosylated; binds chondroitin sulfate-E and heparin</strong>; retinal photoreceptor outer segment</td>
+<td>Mouse cDNA / recombinant protein; retina</td>
+<td>High for ortholog; species = mouse, not horse</td>
+</tr>
+<tr>
+<td>4</td>
+<td>UniProt Q68BL7 (human)</td>
+<td>Review/database</td>
+<td>Supports (ortholog)</td>
+<td>Human OLFML2A localization/features</td>
+<td>PE1; SIGNAL 1..27, CHAIN 28..652, OLF 394..652, COILED 157..183; KW Signal/Glycoprotein/Disulfide/Secreted; CC "Secreted"</td>
+<td>Human</td>
+<td>High; "Secreted" is broader than ECM</td>
+</tr>
+<tr>
+<td>5</td>
+<td>UniProt A0A9L0SKW1 (horse)</td>
+<td>Database (automated)</td>
+<td>Qualifies</td>
+<td>Does the record itself assert ECM?</td>
+<td>CC "Secreted" is <strong>ARBA automated</strong>; no SIGNAL feature; no explicit GO:0031012; PE4 Predicted</td>
+<td>Horse</td>
+<td>Automated only — not evidence</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Ensembl ENSECAG00000023908 + NCBI RefSeq (own queries)</td>
+<td>Computational (isoform resolution)</td>
+<td><strong>Qualifies (resolves caveat)</strong></td>
+<td>Does the locus encode signal-peptide isoforms?</td>
+<td>Canonical 662 aa (<code>MAPGTSGNLLLAVCPW</code>, KD 2.61) and isoform 618 aa (<code>MAAAALPPRP</code>= human signal peptide, KD 3.03) <strong>have signal peptides</strong>; supplied 599-aa model is a minor truncated isoform (KD 0.83)</td>
+<td>Horse locus, chr25</td>
+<td>High; shows truncation is isoform-specific, not gene-level</td>
+</tr>
+<tr>
+<td>7</td>
+<td>UniProt Q68BL8 vs Q68BL7 (own SW)</td>
+<td>Structural/evolutionary</td>
+<td>Supports (identity)</td>
+<td>Is it OLFML2A not the OLFML2B paralog?</td>
+<td>SW horse↔OLFML2A=983 vs ↔OLFML2B=294</td>
+<td>Horse vs human</td>
+<td>High; paralog confusion excluded</td>
+</tr>
+</tbody>
+</table>
+<p><em>Provenance:</em> sequence identity check, Smith-Waterman alignment, N-terminal Kyte-Doolittle hydrophobicity scan, and glyc/cysteine mapping were executed in-session (code + numeric outputs retained in the iteration transcript). SHA-256 could not be recomputed in-sandbox (hashlib/struct blocked), but the provided sequence was verified byte-identical to the live UniProt A0A9L0SKW1 FASTA and length 599 matches the frozen spec.</p>
+<hr />
+<h2 id="go-curation-implications-leads-require-curator-verification">GO Curation Implications (leads — require curator verification)</h2>
+<ul>
+<li><strong>GO:0031012 (extracellular matrix, CC):</strong> Biologically <strong>defensible for the ortholog</strong> — photomedin-1 was identified as an ECM protein and binds ECM proteoglycan GAG chains (PMID 15836428). Recommend annotating by <strong>ISO/ISS from mouse/human</strong>, with evidence code reflecting orthology (not IDA), and a <strong>NOT-fully-encoded-signal-peptide caveat</strong> on the horse model.</li>
+<li><strong>Alternative/parent term consideration:</strong> UniProt curators annotate the human protein only as "Secreted" (≈ GO:0005576 extracellular region). GO:0031012 is <em>more specific</em> than the minimal database claim; it is supported by the CS-E/heparin-binding assay but a conservative curator could prefer <strong>GO:0005576 extracellular region</strong> if requiring the more specific ECM residence to be demonstrated for a mammalian ortholog. Either is more informative than "protein binding."</li>
+<li><strong>Supportable companion terms (leads):</strong> MF — glycosaminoglycan binding / heparin binding (GO:0005539 / GO:0008201) from PMID 15836428; CC — GO:0005576 extracellular region (parent, safest).</li>
+<li><strong>Do not</strong> cite the horse record's ARBA "Secreted" as independent support; it is a prediction, not validation.</li>
+</ul>
+<hr />
+<h2 id="mechanistic-scope">Mechanistic Scope</h2>
+<p>Immediate molecular/cellular function being tested is <strong>localization/residence</strong>, not catalysis. The gene product is a <strong>secreted olfactomedin-domain glycoprotein</strong> whose extracellular-matrix association is a <em>direct binding property</em> (olfactomedin/coiled-coil scaffold binding chondroitin sulfate-E– and heparin-type GAGs on proteoglycans). ECM residence is thus a primary property of the mature protein, not a downstream phenotype. The N-terminal CXCXCX9C motifs mediate disulfide-linked dimerization; the signal peptide (present in orthologs) drives secretory-pathway entry.</p>
+<h2 id="conflicts-and-alternatives">Conflicts and Alternatives</h2>
+<ul>
+<li><strong>Isoform-specific truncation (principal conflict, now resolved):</strong> the supplied ORF lacks the signal peptide, so a naïve SignalP/secretion check on the exact 599-aa sequence would be <strong>negative</strong>. Isoform resolution shows this is one <strong>alternative product</strong> of the locus: the canonical 662-aa protein and a 618-aa isoform (<code>MAAAALPPRP…</code> = human signal peptide) are secretion-competent, so the truncation is an isoform/gene-model choice, not loss of secretion by the gene.</li>
+<li><strong>Term-scope mismatch:</strong> databases annotate the human protein as "Secreted" (extracellular region), which is broader than "extracellular matrix"; ECM specificity rests on the mouse binding assay.</li>
+<li><strong>Paralog note — resolved:</strong> OLFML2B (photomedin-2) is a close paralog with the same architecture and ECM binding. SW scoring (horse↔OLFML2A 983 vs ↔OLFML2B 294) unambiguously assigns the horse locus to <strong>OLFML2A</strong>.</li>
+<li><strong>Species evidence gap:</strong> no horse-specific localization data exist; all functional evidence is mouse/human.</li>
+</ul>
+<h2 id="knowledge-gaps">Knowledge Gaps</h2>
+<ol>
+<li><strong>Does the true horse transcript encode a signal peptide? — largely RESOLVED.</strong> Checked Ensembl (6 transcripts) and NCBI RefSeq: canonical 662-aa and 618-aa (<code>MAAAALPPRP</code>) isoforms carry hydrophobic signal peptides; the supplied 599-aa model does not. Remaining gap: which isoform(s) predominate in horse tissue (RNA-seq/proteomics) and whether the 599-aa ORF is a real product or a mis-prediction/NMD substrate.</li>
+<li><strong>Is ECM (vs generic extracellular) the right granularity for horse?</strong> Checked: orthologs bind ECM GAGs (mouse). Resolve with horse tissue localization or GAG-binding assay.</li>
+<li><strong>Locus disambiguation OLFML2A vs OLFML2B.</strong> Resolve via synteny/phylogenetic tree of equine olfactomedin genes.</li>
+</ol>
+<h2 id="discriminating-tests">Discriminating Tests</h2>
+<ul>
+<li><strong>Signal-peptide resolution:</strong> SignalP-6.0 / DeepTMHMM on (a) the supplied 599-aa ORF and (b) a reconstructed full-length horse ORF from genomic + 5′-UTR; compare.</li>
+<li><strong>Transcript completeness:</strong> map equine RNA-seq (e.g., FAANG) to ENSECAG00000023908 to confirm the true start codon and signal-peptide exon.</li>
+<li><strong>Orthology tree:</strong> ML phylogeny of OLFML2A/OLFML2B across mammals to lock identity.</li>
+<li><strong>Localization/binding (if wet-lab):</strong> express horse OLFML2A, test secretion and CS-E/heparin binding as in PMID 15836428.</li>
+</ul>
+<h2 id="curation-leads-verify-before-applying">Curation Leads (verify before applying)</h2>
+<ul>
+<li><strong>Reference to add:</strong> PMID <strong>15836428</strong> — snippets to verify: <em>"characterized by the presence of tandem CXCXCX9C motifs in the N-terminal region, a coiled-coil domain and an olfactomedin domain"</em>; <em>"secreted as disulphide-bonded dimers (photomedin-1) … with O-linked carbohydrate chains"</em>; <em>"photomedins preferentially bound to chondroitin sulphate-E and heparin."</em></li>
+<li><strong>Candidate GO action:</strong> retain <strong>GO:0031012</strong> as an <strong>ISO/ISS (orthology) annotation</strong> with a curator note that the horse Ensembl model is signal-peptide-truncated; optionally back off to <strong>GO:0005576</strong> if ECM specificity for a mammalian ortholog is deemed insufficiently transferable. Consider adding <strong>GO:0008201/GO:0005539</strong> (heparin/GAG binding, MF) as leads.</li>
+<li><strong>Suggested question:</strong> Is the horse OLFML2A gene model 5′-complete? If not, flag the "Secreted"/ECM annotation as inference pending a corrected model.</li>
+<li><strong>Do NOT</strong> rely on the horse record's ARBA "Secreted" or agreement with predictions as validation.</li>
+</ul>
+<hr />
+<h2 id="provenance-tables-computed-this-run">Provenance Tables (computed this run)</h2>
+<p><strong>Signal-peptide analysis across horse OLFML2A isoforms</strong> (Ensembl <code>ENSECAG00000023908</code>; Kyte-Doolittle window-7):</p>
+<table>
+<thead>
+<tr>
+<th>Ensembl protein</th>
+<th>length (aa)</th>
+<th>status</th>
+<th>N-terminus</th>
+<th>KD max</th>
+<th>KD windows &gt;1.6</th>
+<th>interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ENSECAP00000071146</td>
+<td>662</td>
+<td>canonical</td>
+<td>MAPGTSGNLLLAVCPW</td>
+<td>2.61</td>
+<td>4</td>
+<td>signal-peptide-like (secretion-competent)</td>
+</tr>
+<tr>
+<td>ENSECAP00000056820</td>
+<td>618</td>
+<td>non-canonical</td>
+<td>MAAAALPPRPRPRP</td>
+<td>3.03</td>
+<td>9</td>
+<td>= human signal peptide (secretion-competent)</td>
+</tr>
+<tr>
+<td>ENSECAP00000036732</td>
+<td>621</td>
+<td>non-canonical</td>
+<td>MDSQVFGDMDQVRM</td>
+<td>0.83</td>
+<td>0</td>
+<td>NO signal peptide (truncated)</td>
+</tr>
+<tr>
+<td><strong>ENSECAP00000076704</strong></td>
+<td><strong>599</strong></td>
+<td><strong>TARGET = A0A9L0SKW1</strong></td>
+<td><strong>MDSQVFGDMDQVRM</strong></td>
+<td><strong>0.83</strong></td>
+<td><strong>0</strong></td>
+<td><strong>NO signal peptide (truncated)</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Paralog disambiguation</strong> (Smith-Waterman, match +2/mismatch −1/gap −2):</p>
+<table>
+<thead>
+<tr>
+<th>Comparison</th>
+<th>SW score</th>
+<th>Call</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>horse A0A9L0SKW1 vs human OLFML2A (Q68BL7)</td>
+<td>983</td>
+<td>assigned</td>
+</tr>
+<tr>
+<td>horse A0A9L0SKW1 vs human OLFML2B / photomedin-2 (Q68BL8)</td>
+<td>294</td>
+<td>excluded</td>
+</tr>
+</tbody>
+</table>
+<p><strong>OLF domain integrity:</strong> horse 341–599 vs human 394–652 → <strong>258/259 = 99.6% identity</strong>; both start <code>SCEGTLRAVDPPVRHHSYGR</code> and end <code>…HFVV</code>.</p>
+<p><strong>GO decision table (leads — verify):</strong></p>
+<table>
+<thead>
+<tr>
+<th>GO id</th>
+<th>label</th>
+<th>aspect</th>
+<th>recommended action</th>
+<th>basis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GO:0031012</td>
+<td>extracellular matrix</td>
+<td>CC</td>
+<td>Retain as ISO/ISS orthology annotation + caveat</td>
+<td>Ortholog is ECM protein (PMID 15836428); locus has signal-peptide isoforms; supplied 599-aa model lacks signal peptide but has intact OLF domain (99.6% id)</td>
+</tr>
+<tr>
+<td>GO:0005576</td>
+<td>extracellular region</td>
+<td>CC</td>
+<td>Safer parent alternative</td>
+<td>Matches UniProt "Secreted"; use if ECM specificity deemed insufficiently transferable</td>
+</tr>
+<tr>
+<td>GO:0008201 / GO:0005539</td>
+<td>heparin / GAG binding</td>
+<td>MF</td>
+<td>Candidate lead</td>
+<td>Photomedin-1 binds CS-E and heparin (PMID 15836428)</td>
+</tr>
+</tbody>
+</table>
+<p><em>(Provenance note: CSV export to disk was blocked by the read-only execution sandbox; tables above are the verbatim computed outputs retained from the executed code.)</em></p>
+<hr />
+<p><em>Limitations:</em> No horse-specific experimental data; functional evidence is mouse/human orthologs. Signal-peptide absence is inferred from the current Ensembl ORF and may be corrected by future gene models. SHA-256 not recomputed in-sandbox (equivalent byte-identity verified against live UniProt FASTA).</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="OLFML2A-hypotheses/horse40-extracellular-matrix-localization/openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="OLFML2A-hypotheses/horse40-extracellular-matrix-localization/openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(OLFML2A-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A9L0SKW1" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="olfml2a-paired-humanhorse-review-notes">OLFML2A: paired human–horse review notes</h1>
+<h2 id="biological-evidence">Biological evidence</h2>
+<p>Photomedin-1/OLFML2A is distinct from photomedin-2/OLFML2B and OLFM2. Mouse recombinant experiments establish secretion, disulfide-linked oligomerization, and binding to sulfated glycosaminoglycans. Human podocyte imaging supports a relevant glomerular protein pool. Matrix binding does not by itself demonstrate matrix assembly or a defined signaling receptor.</p>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/15836428/">PMID:15836428: Identification and characterization of photomedins: novel olfactomedin-domain-containing proteins with chondroitin sulphate-E-binding activity.</a> — abstract cached; full-text availability must be checked separately.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/18757743/">PMID:18757743: Transcriptome-based systematic identification of extracellular matrix proteins.</a> — abstract cached; full-text availability must be checked separately.</li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/22913984/">PMID:22913984: Neuronal proteins are novel components of podocyte major processes and their expression in glomerular crescents supports their role in crescent formation.</a> — abstract cached; full-text availability must be checked separately.</li>
+</ul>
+<h2 id="exact-horse-model">Exact horse model</h2>
+<p>The selected horse model lacks the human1–27 signal-peptide region and an internal segment. Its olfactomedin domain is strongly conserved, but normal secretory entry and maturation are unresolved. Consequently extracellular localization, binding and organization are UNC for this exact model despite a reasonable extracellular family default.</p>
+<p>The reproducible alignment, source paths and hashes are in <a href="../../HORSE/OLFML2A/OLFML2A-bioinformatics/RESULTS.md">the paired comparison</a>. Current UniProt sequences have not been proven identical to the original ProtNLM input sequences. Sequence anomalies are therefore recorded as model/transfer limitations, not as proven wrong-input pipeline errors.</p>
+<h2 id="evidence-gaps">Evidence gaps</h2>
+<p>Check horse transcript starts and test secretory targeting. Trace the extracellular-matrix screen at gene/assay level before making a specific matrix-organization claim. Cancer-expression/knockdown associations in the Edison report are leads, not a demonstrated receptor mechanism.</p>
+<h2 id="review-scope-and-checks">Review scope and checks</h2>
+<p>Every seeded annotation receives a current assessment. UNDECIDED marks unresolved source-specific or biological evidence; these are initial reviews rather than a claim that every original experimental assay has been independently reproduced or verified. The human Edison report is retained as a research synthesis and source-finding aid; decisive YAML excerpts cite primary publications, source records or reproducible analysis. The validator advisory to cite the deep-research file is deliberately not satisfied by citing AI prose as biological proof.</p>
+            </div>
+        </details>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioinformatics Results</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RESULTS.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A9L0SKW1" data-a="DOC: Bioinformatics Results" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="olfml2a-humanhorse-sequence-comparison">OLFML2A: human–horse sequence comparison</h1>
+<p>The downloaded human Q68BL7 sequence (652 residues) and selected horse A0A9L0SKW1 sequence (599 residues) share 91.3% identity among 598 paired residues. Paired coverage is 91.7% of human and 99.8% of horse.</p>
+<p>Full alignments, sequence hashes and calculation details: <a href="../../../../projects/PROTNLM_EVALUATION/mammal-benchmark/paired-sequences/OLFML2A.json">OLFML2A.json</a>. Reproduce with <a href="../../../../projects/PROTNLM_EVALUATION/mammal-benchmark/paired-sequences/compare.py">compare.py</a> using the two downloaded UniProt text records. See the <a href="../../../../projects/PROTNLM_EVALUATION/mammal-benchmark/paired-sequences/README.md">methods and limitations</a>.</p>
+<ul>
+<li>[x] Computed from sequence inputs; no hardcoded results.</li>
+<li>[x] The same script was run on ten different gene pairs.</li>
+<li>[x] Alignment completed and full output retained.</li>
+<li>[ ] Orthology, gene-model completeness and conservation of each biological claim require additional evidence. Sequence similarity alone does not establish them.</li>
+</ul>
+<p>Current UniProt sequences were compared; their identity with the original ProtNLM input sequences has not been established.</p>
+<h2 id="targeting-sequence-discrepancy">Targeting-sequence discrepancy</h2>
+<p>The global alignment pairs the initiating horse methionine with human residue 1, then places a 26-residue gap opposite human residues 2–27. Human UniProt annotates residues 1–27 as the signal peptide; the horse sequence starts <code>MDSQVFGDMDQVRMTSEGSDCRCKCIMRPLSKDA</code>, without the hydrophobic human leader. A further 22-residue internal deletion occurs opposite human residues 123–144. The conserved olfactomedin domain supports family identity, but the selected sequence does not retain the canonical secretion signal. This could reflect a transcript model, isoform or sequence-completeness issue. It does not establish that the horse gene is intracellular, or that the original ProtNLM input lacked the leader.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A0A9L0SKW1
+gene_symbol: OLFML2A
+product_type: PROTEIN
+status: IN_PROGRESS
+taxon:
+  id: NCBITaxon:9796
+  label: Equus caballus
+description: OLFML2A belongs to the photomedin family of olfactomedin-domain glycoproteins. Characterized
+  mammalian photomedin-1 is a secreted, homodimeric protein that binds sulfated extracellular glycosaminoglycans.
+  The selected horse protein retains the olfactomedin domain but lacks the N-terminal segment corresponding
+  to the human secretion signal, leaving the localization and maturation of this particular protein model
+  unresolved.
+existing_annotations:
+- term:
+    id: GO:0005576
+    label: extracellular region
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB-SubCell:SL-0243
+  review:
+    action: UNDECIDED
+    summary: The OLFML2A family is extracellular, but this horse sequence lacks the canonical leader.
+    reason: The selected horse record is highly similar to photomedin-1 but lacks the segment corresponding
+      to the experimentally supported human signal peptide. Conserved family biology supports an extracellular
+      full-length gene product; it does not resolve whether this selected isoform/model is secreted. Verify
+      the transcript model and alternative N-termini before accepting the location for this sequence.
+    supported_by:
+    - reference_id: file:HORSE/OLFML2A/OLFML2A-bioinformatics/RESULTS.md
+      supporting_text: Human UniProt annotates residues 1–27 as the signal peptide; the horse sequence
+        starts `MDSQVFGDMDQVRMTSEGSDCRCKCIMRPLSKDA`, without the hydrophobic human leader.
+    - reference_id: file:human/OLFML2A/OLFML2A-uniprot.txt
+      supporting_text: FT   SIGNAL          1..27
+references:
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping,
+    accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: PMID:15836428
+  title: &#39;Identification and characterization of photomedins: novel olfactomedin-domain-containing proteins
+    with chondroitin sulphate-E-binding activity.&#39;
+  full_text_unavailable: true
+  findings: []
+- id: file:HORSE/OLFML2A/OLFML2A-uniprot.txt
+  title: HORSE/OLFML2A/OLFML2A-uniprot.txt
+  findings: []
+- id: file:HORSE/OLFML2A/OLFML2A-bioinformatics/RESULTS.md
+  title: HORSE/OLFML2A/OLFML2A-bioinformatics/RESULTS.md
+  findings: []
+- id: file:human/OLFML2A/OLFML2A-uniprot.txt
+  title: human/OLFML2A/OLFML2A-uniprot.txt
+  findings: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

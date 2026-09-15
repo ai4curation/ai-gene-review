@@ -25,16 +25,16 @@ The score propagates predicted and reference GO terms over `is_a` and
 
 ## GOA agreement does not imply correctness
 
-In the HF catalogue subset, 48/148 NPI/PLI/REP terms are exact matches to current GOA, and 120/148 have propagated overlap with current GOA. A retrospective GOA-agreement metric would therefore reward some terms that the evidence-grounded review classifies as wrong or frequency-biased.
+In the HF catalogue subset, 47/147 NPI/PLI/REP terms are exact matches to current GOA, and 119/147 have propagated overlap with current GOA. A retrospective GOA-agreement metric would therefore reward some terms that the evidence-grounded review classifies as wrong or frequency-biased.
 
 ## HF catalogue exact GOA overlap by AI-AUGR assessment
 
 | assessment   |   not_exact_in_goa |   exact_in_goa |
 |:-------------|-------------------:|---------------:|
-| CNN          |                 52 |            629 |
+| CNN          |                 52 |            630 |
 | COR          |                 23 |              0 |
 | LSP          |                 31 |             12 |
-| NPI          |                 84 |             30 |
+| NPI          |                 84 |             29 |
 | PLI          |                  4 |              1 |
 | REP          |                 12 |             17 |
 | UNC          |                 58 |              2 |
