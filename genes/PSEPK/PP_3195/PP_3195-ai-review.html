@@ -1,0 +1,2655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_3195 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_3195</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88I07" target="_blank" class="term-link">
+                        Q88I07
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_3195";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88I07" data-a="DESCRIPTION: PP_3195 encodes an alpha/beta-hydrolase-fold serin..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PP_3195 encodes an alpha/beta-hydrolase-fold serine hydrolase in the KT2440 flavonoid-degradation locus. KEGG assigns it to FdeB orthology group K26184 and reaction R13077, predicting hydrolysis of a flavonoid-derived delta- lactone after A-ring cleavage. The target has not been characterized directly, so the lactone substrate remains a pathway-level prediction.</p>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>flavonoid-derived delta-lactone hydrolase activity</h3>
+                <span class="vote-buttons" data-g="Q88I07" data-a="flavonoid-derived delta-lactone hydrolase activity" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+
+            <p><strong>Definition:</strong> Catalysis of hydrolytic ring opening of 5-(4-hydroxyphenyl)-3-oxovalero-delta-lactone to 5-hydroxy-5-(4-hydroxyphenyl)-3-oxopentanoate in bacterial flavonoid degradation.</p>
+
+
+
+            <p><strong>Justification:</strong> KEGG R13077 specifies the predicted FdeB substrate and product, whereas GO:0052689 captures only the general carboxylic-ester bond class.</p>
+
+
+
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052689" target="_blank" class="term-link">
+                    carboxylic ester hydrolase activity
+                </a>
+            </p>
+
+
+
+
+
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+
+                <li>
+
+                    file:PSEPK/PP_3195/PP_3195-deep-research-openscientist.md
+
+
+                    : KEGG links FdeB (K26184) to **reaction R13077**, classified as a **hydrolase**
+
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006508" target="_blank" class="term-link">
+                                    GO:0006508
+                                </a>
+                            </span>
+                            <span class="term-label">proteolysis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88I07" data-a="GO:0006508" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> No evidence links PP_3195 to peptide-bond hydrolysis or proteolysis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This annotation is propagated from a Peptidase S9 fold signature. The independent K26184/R13077 assignment instead predicts hydrolysis of a cyclic ester in flavonoid catabolism.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008236" target="_blank" class="term-link">
+                                    GO:0008236
+                                </a>
+                            </span>
+                            <span class="term-label">serine-type peptidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88I07" data-a="GO:0008236" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The alpha/beta-hydrolase catalytic fold does not establish a peptide substrate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> IPR001375 identifies a Peptidase S9 catalytic-domain fold, but neither it nor the broader alpha/beta-hydrolase architecture establishes a peptide substrate. IPR050261 instead places PP_3195 in the FrsA/esterase family, and the locus-specific K26184/R13077 assignment predicts hydrolysis of a lactone rather than a peptide bond.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_3195/PP_3195-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">KEGG independently classifies the FdeB reaction (R13077) as a hydrolase acting on a **lactone**, not a peptide bond.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052689" target="_blank" class="term-link">
+                                    GO:0052689
+                                </a>
+                            </span>
+                            <span class="term-label">carboxylic ester hydrolase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88I07" data-a="GO:0052689" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PP_3195 is predicted to hydrolyze a cyclic carboxylic ester in R13077.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The alpha/beta-hydrolase architecture, conserved GVSLG nucleophile-motif candidate, and K26184/R13077 pathway assignment independently support a carboxylic ester hydrolase without overcommitting to the untested substrate.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_3195/PP_3195-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">KEGG links FdeB (K26184) to **reaction R13077**, classified as a **hydrolase**</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_3195/PP_3195-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">Target nucleophile-motif candidate `GVSLG`: present at Q88I07 residues 266-270 and D8J0W6 residues 231-235</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009812" target="_blank" class="term-link">
+                                    GO:0009812
+                                </a>
+                            </span>
+                            <span class="term-label">flavonoid metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/PP_3195/PP_3195-deep-research-openscientist.md
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88I07" data-a="GO:0009812" data-r="file:PSEPK/PP_3195/PP_3195-deep-research-openscientist.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PP_3195 is predicted to perform the FdeB lactone-hydrolysis step in flavonoid degradation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target shares 81.6% global identity with Hsero_1004, the corresponding protein in the Herbaspirillum fde locus, and KEGG maps PP_3195 to K26184/R13077. GO:0009812 is used because the local ontology has no flavonoid-catabolic child term.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_3195/PP_3195-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">KEGG assigns PP_3195 to ortholog **K26184** (SYMBOL *fdeB*, &#34;naringenin degradation protein FdeB&#34;), places it in pathway **ppu00946 &#34;Degradation of flavonoids,&#34;** and classifies it in **COG1506**.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_3195/PP_3195-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">Pairwise identity over aligned residue pairs: 81.6%</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Predicted FdeB-like carboxylic ester hydrolase acting on a flavonoid-derived lactone in the lower naringenin-degradation pathway.</h3>
+                <span class="vote-buttons" data-g="Q88I07" data-a="FUNCTION: Predicted FdeB-like carboxylic ester hydrolase act..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0052689" target="_blank" class="term-link">
+                            carboxylic ester hydrolase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009812" target="_blank" class="term-link">
+                                flavonoid metabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_3195/PP_3195-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">KEGG links FdeB (K26184) to **reaction R13077**, classified as a **hydrolase**</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_3195/PP_3195-bioinformatics/RESULTS.md
+
+                        </span>
+
+                        <div class="finding-text">Pairwise identity over aligned residue pairs: 81.6%</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_3195/PP_3195-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88I07 for Pseudomonas putida KT2440 PP_3195</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The unreviewed record identifies a Peptidase S9 catalytic-domain protein but supplies no substrate-specific biochemical evidence.</div>
+
+                        <div class="finding-text">"RecName: Full=Peptidase S9 prolyl oligopeptidase catalytic domain-containing protein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27059806" target="_blank" class="term-link">
+                            PMID:27059806
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Genetic and functional characterization of a novel meta-pathway for degradation of naringenin in Herbaspirillum seropedicae SmR1.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The Herbaspirillum fde pathway performs naringenin A-ring cleavage, but FdeB itself was not among the directly tested enzymes.</div>
+
+                        <div class="finding-text">"naringenin is first mono-oxygenated by the FdeE protein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_3195/PP_3195-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research report on PP_3195 (Q88I07)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report identifies the K26184/R13077 prediction and explicitly notes that PP_3195 has no direct biochemical or genetic characterization.</div>
+
+                        <div class="finding-text">"No direct biochemical or genetic characterization of PP_3195/FdeB itself has been published."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_3195/PP_3195-bioinformatics/RESULTS.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Reproducible PP_3195 and Hsero_1004 sequence comparison</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Q88I07 and D8J0W6 share 81.6% identity over 385 aligned residue pairs and both contain the same GVSLG nucleophile-motif candidate.</div>
+
+                        <div class="finding-text">"Pairwise identity over aligned residue pairs: 81.6%"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does PP_3195 hydrolyze the R13077 delta-lactone in KT2440, and are the predicted serine-hydrolase residues required for turnover?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88I07" data-a="Q: Does PP_3195 hydrolyze the R13077 delta-lactone in..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify PP_3195 and assay the proposed R13077 lactone, identifying the ring-opened product and testing a catalytic-serine substitution.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: biochemical reconstitution and site-directed mutagenesis</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88I07" data-a="EXPERIMENT: Purify PP_3195 and assay the proposed R13077 lacto..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Compare wild type, a PP_3195 deletion, and a complemented strain during naringenin utilization using targeted metabolomics for the R13077 substrate and product.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: genetics and targeted metabolomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88I07" data-a="EXPERIMENT: Compare wild type, a PP_3195 deletion, and a compl..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> No FdeB-family protein has been assayed directly with the R13077 lactone, and PP_3195 has not been tested genetically in KT2440.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">CURATION</span>
+
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Orthology, fold, motif, and pathway context support an ester hydrolase, but the physiological substrate and product remain predictions.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Direct evidence is needed before assigning a substrate-specific lactonase term experimentally or treating R13077 as established chemistry.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Purify PP_3195, generate the proposed delta-lactone substrate enzymatically, and identify the ring-opened product; test a native deletion for substrate accumulation during naringenin utilization.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"No direct biochemical or genetic characterization of PP_3195/FdeB itself has been published."</em> — file:PSEPK/PP_3195/PP_3195-deep-research-openscientist.md</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_3195-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88I07" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of PP_3195 (Q88I07): FdeB, a Serine δ-Lactone Hydrolase of the Naringenin Degradation Pathway in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">4 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-31T21:56:30.943404</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_3195-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_3195-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-pp_3195-q88i07-fdeb-a-serine-lactone-hydrolase-of-the-naringenin-degradation-pathway-in-pseudomonas-putida-kt2440">Functional Annotation of PP_3195 (Q88I07): FdeB, a Serine δ-Lactone Hydrolase of the Naringenin Degradation Pathway in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>PP_3195 (UniProt Q88I07) is FdeB, a cytoplasmic α/β-hydrolase-fold serine hydrolase that catalyzes a δ-lactone-hydrolysis (lactonase) step in the lower naringenin meta-cleavage pathway of <em>Pseudomonas putida</em> KT2440.</strong> Its primary function is to hydrolyze the ring-opened flavonoid intermediate 5-(4-hydroxyphenyl)-3-oxovalero-δ-lactone into 5-hydroxy-5-(4-hydroxyphenyl)-3-oxopentanoate (KEGG reaction R13077), thereby channeling carbon from the plant flavonoid naringenin toward central metabolism. Although the UniProt record labels the protein a "Peptidase S9 prolyl oligopeptidase catalytic domain-containing protein," this name is a fold-based electronic inference — the protein is an ester/lactone hydrolase, not a true peptidase.</p>
+<p>The identification rests on convergent lines of evidence. Genomically, PP_3195 sits within a co-localized flavonoid-catabolic (<em>fde</em>) gene cluster alongside a dioxygenase, monooxygenase, and cyclase; KEGG assigns it to ortholog K26184 (symbol <em>fdeB</em>) in pathway ppu00946 ("Degradation of flavonoids"). Structurally, an AlphaFold model of Q88I07 (mean pLDDT 91.6) reveals a fully assembled, canonical serine-hydrolase catalytic triad — Ser268–Asp359–His394 — with hydrogen-bond distances of ~2.7 Å, and Ser268 lying in a GxSxG nucleophile-elbow motif ("GVSLG"). Evolutionarily, PP_3195 shares only ~28% identity with the enteric fermentation/respiration-switch protein FrsA and, unlike FrsA, retains the nucleophilic serine, marking it as a bona fide serine hydrolase rather than a cofactor-independent decarboxylase.</p>
+<p><strong>Important caveat:</strong> No direct biochemical or genetic characterization of PP_3195/FdeB itself has been published. The functional assignment is an inference-based conclusion — strongly supported by orthology, genomic context, KEGG pathway reconstruction, and a structurally validated catalytic triad, but not yet confirmed by enzyme assays, knockout phenotypes, or crystallography on the <em>P. putida</em> protein. This report presents the assignment as a well-supported hypothesis and flags where experimental confirmation is still needed.</p>
+<hr />
+<h2 id="geneprotein-identity-verification">Gene/Protein Identity Verification</h2>
+<p>Before presenting the functional analysis, the mandatory identity checks were completed:</p>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>UniProt</td>
+<td>Q88I07 (unreviewed / TrEMBL)</td>
+</tr>
+<tr>
+<td>Locus</td>
+<td>PP_3195; EMBL AAN68803.1</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> KT2440 (PSEPK), a <strong>strict aerobe</strong>, γ-proteobacterium</td>
+</tr>
+<tr>
+<td>Length</td>
+<td>420 aa (~46 kDa); genome position complement(3,624,225–3,625,487)</td>
+</tr>
+<tr>
+<td>UniProt name</td>
+<td>"Peptidase S9 prolyl oligopeptidase catalytic domain-containing protein" (from Pfam PF00326, ECO:0000259)</td>
+</tr>
+<tr>
+<td>KEGG ortholog</td>
+<td><strong>K26184 — <em>fdeB</em>, naringenin degradation protein FdeB</strong></td>
+</tr>
+<tr>
+<td>COG</td>
+<td>COG1506</td>
+</tr>
+<tr>
+<td>Pathway</td>
+<td>ppu00946 — Degradation of flavonoids</td>
+</tr>
+<tr>
+<td>InterPro</td>
+<td>IPR050261 (FrsA/Cutinase/Hydrolase-like family), IPR001375 (Peptidase S9 catalytic domain, MEROPS clan SC), IPR029058 (α/β-hydrolase fold superfamily)</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene symbol match</td>
+<td>UniProt uses OrderedLocusName <strong>PP_3195</strong>; KEGG independently assigns the symbol <strong>fdeB</strong> to this locus (K26184). Consistent.</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> strain KT2440. Confirmed.</td>
+</tr>
+<tr>
+<td>Domains/family align</td>
+<td>All UniProt/InterPro signatures are α/β-hydrolase-superfamily signatures consistent with a serine hydrolase.</td>
+</tr>
+<tr>
+<td>Literature ambiguity</td>
+<td>No literature exists for the <em>P. putida</em> PP_3195 protein directly. The <em>fde</em> nomenclature and pathway derive from a homologous system in <em>Herbaspirillum seropedicae</em> (PMID 27059806). This is a genuine ortholog, not a same-symbol collision, so research proceeds — but the conclusion is inference-based.</td>
+</tr>
+</tbody>
+</table>
+<p>The gene symbol is <strong>not</strong> ambiguous in the problematic sense (no competing gene with the same symbol in a different organism was found). Rather, PP_3195 is simply an <strong>uncharacterized</strong> protein whose function must be inferred from orthology, domain architecture, structure, and pathway context. The "peptidase S9 / prolyl oligopeptidase" wording is a <strong>fold/clan-based</strong> annotation (MEROPS clan SC groups many esterases and lipases, not only peptidases) and is refined and superseded by the more specific KEGG <em>fdeB</em> assignment.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-pp_3195-is-fdeb-an-hydrolase-fold-enzyme-in-the-naringeninflavonoid-degradation-fde-gene-cluster">Finding 1 — PP_3195 is <em>fdeB</em>, an α/β-hydrolase-fold enzyme in the naringenin/flavonoid degradation (<em>fde</em>) gene cluster</h3>
+<p>PP_3195 is not an isolated hydrolase; it is embedded in a dedicated flavonoid-catabolic operon. KEGG assigns PP_3195 to ortholog <strong>K26184</strong> (SYMBOL <em>fdeB</em>, "naringenin degradation protein FdeB"), places it in pathway <strong>ppu00946 "Degradation of flavonoids,"</strong> and classifies it in <strong>COG1506</strong>. The locus lies within a co-localized cluster of <em>fde</em> genes, each mapped to a distinct catabolic ortholog:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th><em>fde</em> gene</th>
+<th>KEGG KO</th>
+<th>Predicted role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_3195</td>
+<td><em>fdeB</em></td>
+<td>K26184</td>
+<td>α/β-hydrolase (lactonase) — <strong>this protein</strong></td>
+</tr>
+<tr>
+<td>PP_3197</td>
+<td><em>fdeC</em></td>
+<td>K26181</td>
+<td>Ring-cleaving dioxygenase</td>
+</tr>
+<tr>
+<td>PP_3198</td>
+<td><em>fdeD</em></td>
+<td>K26179</td>
+<td>Accessory / oxygenase component</td>
+</tr>
+<tr>
+<td>PP_3204</td>
+<td><em>fdeH</em></td>
+<td>K26182</td>
+<td>Dioxygenase-associated</td>
+</tr>
+<tr>
+<td>PP_3205</td>
+<td><em>fdeI</em></td>
+<td>K26185</td>
+<td>Downstream converting enzyme</td>
+</tr>
+<tr>
+<td>PP_3206</td>
+<td><em>fdeJ</em></td>
+<td>K26183</td>
+<td>Cyclase</td>
+</tr>
+</tbody>
+</table>
+<p>InterPro classifies Q88I07 into IPR050261 (FrsA/Cutinase/Hydrolase-like family), IPR001375 (Peptidase S9 prolyl oligopeptidase catalytic domain, MEROPS clan SC), and IPR029058 (the α/β-hydrolase-fold superfamily). All three signatures converge on a serine-hydrolase fold.</p>
+<p>The <em>fde</em> nomenclature and pathway logic come from <em>Herbaspirillum seropedicae</em> SmR1, where the naringenin meta-cleavage pathway was genetically dissected. As reported in <a href="https://pubmed.ncbi.nlm.nih.gov/27059806/">PMID: 27059806</a>: <em>"The Tn5 transposon was found to be inserted in the fdeE gene (Hsero_1007), which encodes a monooxygenase,"</em> establishing the <em>fde</em> gene names, and <em>"naringenin is first mono-oxygenated by the FdeE protein, to produce 5,7,8-trihydroxy-2-(4-hydroxyphenyl)-2,3-dihydro-4H-chromen-4-one, that is subsequently dioxygenated and cleaved at the A-ring by the FdeC dioxygenase."</em> These describe the upstream steps that generate the intermediates on which downstream hydrolases such as FdeB act.</p>
+<p><strong>Interpretation:</strong> Genomic clustering with a monooxygenase, dioxygenase, and cyclase is powerful contextual evidence that PP_3195/FdeB is a catabolic enzyme processing a flavonoid-derived intermediate — not a housekeeping peptidase.</p>
+<h3 id="finding-2-fdeb-is-a-serine-hydrolase-predicted-to-open-a-lactone-intermediate-kegg-reaction-r13077">Finding 2 — FdeB is a serine hydrolase predicted to open a δ-lactone intermediate (KEGG reaction R13077)</h3>
+<p>KEGG links FdeB (K26184) to <strong>reaction R13077</strong>, classified as a <strong>hydrolase</strong>:</p>
+<blockquote>
+<p>5-(4-hydroxyphenyl)-3-oxovalero-δ-lactone (C22570) + H₂O ⇌ 5-hydroxy-5-(4-hydroxyphenyl)-3-oxopentanoate (C22571)</p>
+</blockquote>
+<p>This is a <strong>lactone hydrolysis (lactonase/esterase) step</strong> in the lower meta-cleavage branch, converting a cyclic ester into a linear 3-oxo-acid that is degraded onward toward TCA intermediates. KEGG flags R13077 as an "unclear reaction," reflecting that the pathway was reconstructed rather than experimentally validated at each step; the exact substrate/product should therefore be treated as a well-reasoned prediction.</p>
+<p>Sequence analysis of Q88I07 (420 aa) locates the canonical α/β-hydrolase <strong>GxSxG nucleophile-elbow motif "GVSLG"</strong> with catalytic <strong>Ser268</strong>, together with the acidic and histidine residues that complete the Ser-Asp-His triad characteristic of clan SC / α/β-hydrolase serine hydrolases.</p>
+<p>Supporting the hydrolase assignment for the broader family, <a href="https://pubmed.ncbi.nlm.nih.gov/30951551/">PMID: 30951551</a> reports that a FrsA/esterase-family protein <em>"was able to catalyze the hydrolysis of esters, especially p-nitrophenyl acetate,"</em> confirming these proteins act as ester-hydrolyzing serine hydrolases and reinforcing an ester/lactone-hydrolase assignment for FdeB.</p>
+<p><strong>Interpretation:</strong> A lactone is simply a cyclic ester; a serine hydrolase with an intact catalytic triad is exactly the enzyme class expected to hydrolyze (open) such a ring. The predicted substrate is a flavonoid-derived δ-lactone, and the reaction is ring-opening hydrolysis to the corresponding hydroxy-keto-acid.</p>
+<h3 id="finding-3-pp_3195-acts-intracellularly-cytoplasm-its-peptidase-s9-label-is-fold-based-not-evidence-of-true-peptidase-activity">Finding 3 — PP_3195 acts intracellularly (cytoplasm); its "peptidase S9" label is fold-based, not evidence of true peptidase activity</h3>
+<p>Q88I07 has <strong>no recognizable N-terminal Sec signal peptide and no lipoprotein lipobox</strong> (N-terminus: <code>MAPPCPACVPCLQTAPCLPV…</code>), consistent with a cytoplasmic localization. Bacterial flavonoid-catabolic enzymes and FrsA-family α/β-hydrolases are characteristically cytoplasmic.</p>
+<p>The UniProt name "Peptidase S9 prolyl oligopeptidase catalytic domain-containing protein," together with GO terms GO:0008236 (serine-type peptidase activity) and GO:0006508 (proteolysis), are all <strong>electronic (IEA) inferences</strong> derived solely from Pfam PF00326. <strong>MEROPS clan SC groups enzymes by their shared α/β-hydrolase Ser-Asp-His fold</strong>, and this clan includes many esterases and lipases that are <strong>not</strong> peptidases. KEGG independently classifies the FdeB reaction (R13077) as a hydrolase acting on a <strong>lactone</strong>, not a peptide bond.</p>
+<p><strong>Interpretation:</strong> The "peptidase" designation is a well-known artifact of fold-based automated annotation. The catalytic machinery (Ser-His-Asp on an α/β-hydrolase scaffold) is shared across peptidases, esterases, and lactonases within clan SC. Substrate identity — supplied here by pathway context and KEGG reaction mapping — is what distinguishes them, and all pathway evidence points to a lactone/ester substrate, not a peptide.</p>
+<h3 id="finding-4-alphafold-model-confirms-an-assembled-ser268asp359his394-catalytic-triad-high-confidence">Finding 4 — AlphaFold model confirms an assembled Ser268–Asp359–His394 catalytic triad (high confidence)</h3>
+<p>The AlphaFold model <strong>AF-Q88I07-F1</strong> has a mean pLDDT of <strong>91.6</strong> (very high confidence), with the catalytic residues themselves modeled at even higher confidence (per-residue pLDDT: Ser268 = 96.7, His394 = 94.8). The model shows a canonical, spatially assembled serine-hydrolase catalytic triad with textbook hydrogen-bond geometry:</p>
+<table>
+<thead>
+<tr>
+<th>Interaction</th>
+<th>Distance</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Ser268 Oγ — His394 Nε2</td>
+<td>2.74 Å</td>
+</tr>
+<tr>
+<td>His394 Nδ1 — Asp359 Oδ2</td>
+<td>2.72 Å</td>
+</tr>
+<tr>
+<td>Asp359 Oδ1 — His394 Nδ1</td>
+<td>3.19 Å</td>
+</tr>
+</tbody>
+</table>
+<p>Ser268 lies in the GxSxG nucleophile-elbow motif "GVSLG." The residue order — nucleophile Ser268 … acid Asp359 … His394 near the C-terminus (in a "VQHSS" motif) — is the canonical clan-SC / α/β-hydrolase arrangement.</p>
+<p>This structural analysis <strong>corrected an earlier sequence-only provisional guess</strong> (which had proposed His405/Asp341–345). The true catalytic histidine is His394 and the acid is Asp359, as revealed by the 3D geometry — a clear example of structure providing information that primary sequence alone could not.</p>
+<p><strong>Interpretation:</strong> An intact, high-confidence catalytic triad is direct structural evidence that PP_3195 is a catalytically competent serine hydrolase. Combined with the pathway assignment, this strongly supports lactonase/esterase activity.</p>
+<h3 id="finding-5-fdeb-occupies-a-unique-non-redundant-lactone-hydrolase-step-in-the-ordered-naringenin-meta-cleavage-pathway">Finding 5 — FdeB occupies a unique, non-redundant lactone-hydrolase step in the ordered naringenin meta-cleavage pathway</h3>
+<p>Mapping every <em>fde</em> KO onto the full KEGG naringenin-degradation reaction sequence (rn00946) shows that FdeB fills a specific and non-redundant slot:</p>
+<div class="codehilite"><pre><span></span><code>naringenin
+   │  R13074  (FdeE / K26180 monooxygenase + FdeD / K26179)
+   ▼
+5,7,8-trihydroxy-2-(4-hydroxyphenyl)-2,3-dihydro-4H-chromen-4-one
+   │  R13075  (FdeC / K26181 dioxygenase + FdeH / K26182)   ← ring dioxygenation / meta-cleavage
+   ▼
+(ring-cleaved intermediate)
+   │  R13076  (FdeJ / K26183 cyclase)
+   ▼
+5-(4-hydroxyphenyl)-3-oxovalero-δ-lactone
+   │  ►►► R13077  (FdeB / K26184)  ◄◄◄  + H2O   ← THIS PROTEIN: δ-lactone hydrolysis
+   ▼
+5-hydroxy-5-(4-hydroxyphenyl)-3-oxopentanoate
+   │  R13078 / R13079  (FdeI / K26185)
+   ▼
+downstream products → central metabolism
+</code></pre></div>
+
+<p><strong>FdeB (K26184) is the ONLY KEGG ortholog assigned to R13077</strong>, making the lactone-hydrolase step assignment specific and non-redundant. The enzyme acts after ring cleavage (FdeC) and cyclization (FdeJ), and before FdeI. Its physiological <strong>substrate is a pathway-derived six-membered δ-lactone (a cyclic ester)</strong> and the product is a linear 5-hydroxy-3-oxo-pentanoate.</p>
+<p><strong>Interpretation:</strong> In an ordered catabolic pathway, each enzyme performs one committed transformation. FdeB's unique assignment to the δ-lactone-opening reaction gives it a defined mechanistic role: it hydrolyzes the cyclic ester to a linear hydroxy-keto-acid, priming the molecule for downstream β-oxidation-like processing that ultimately feeds flavonoid carbon into central metabolism.</p>
+<h3 id="finding-6-fdeb-is-a-distinct-enzyme-from-authentic-frsa-important-disambiguation">Finding 6 — FdeB is a <em>distinct</em> enzyme from authentic FrsA (important disambiguation)</h3>
+<p>Although InterPro places PP_3195 in the "FrsA/Cutinase/Hydrolase-like" family (IPR050261), it is <strong>not</strong> the enteric fermentation/respiration-switch protein FrsA:</p>
+<ul>
+<li>PP_3195 shares only <strong>~28% identity</strong> with <em>E. coli</em> FrsA (P04335) and <em>Vibrio vulnificus</em> FrsA (Needleman-Wunsch global alignment).</li>
+<li>Authentic <em>E. coli</em> FrsA <strong>lacks any GxSxG motif</strong> (consistent with its reported cofactor-independent, non-classical decarboxylase mechanism — <a href="https://pubmed.ncbi.nlm.nih.gov/21623357/">PMID: 21623357</a>: <em>"FrsA converts pyruvate to acetaldehyde and carbon dioxide in a cofactor-independent manner"</em>), whereas PP_3195 <strong>retains</strong> the nucleophilic serine — i.e., it is a bona fide serine hydrolase.</li>
+<li>FrsA's physiological switch role is restricted to facultative anaerobes (<a href="https://pubmed.ncbi.nlm.nih.gov/15169777/">PMID: 15169777</a>: <em>"Orthologs of FrsA have been found to exist only in facultative anaerobes belonging to the gamma-proteobacterial group"</em>); <em>P. putida</em> is a <strong>strict aerobe</strong>, so PP_3195 is a <strong>catabolic hydrolase, not a metabolic-switch regulator</strong>.</li>
+</ul>
+<p><strong>Interpretation:</strong> Family membership alone would be misleading. The combination of low sequence identity, the presence of a GxSxG nucleophile FrsA lacks, and the aerobic host physiology all argue that PP_3195 is a catabolic serine lactonase/esterase rather than a metabolic-flux-switch decarboxylase.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>Putting the findings together yields a coherent mechanistic picture:</p>
+<p><strong>PP_3195/FdeB is the δ-lactone hydrolase of the lower naringenin meta-cleavage pathway in <em>P. putida</em> KT2440.</strong> <em>P. putida</em> is a soil bacterium that establishes positive interactions with the plant rhizosphere (PMID 29607620), an environment rich in plant secondary metabolites including the flavanone <strong>naringenin</strong>. The <em>fde</em> gene cluster equips the organism to catabolize this flavonoid as a carbon source.</p>
+<p>The pathway proceeds by:<br />
+1. <strong>Oxygenation and ring modification</strong> of naringenin (FdeE monooxygenase, FdeD);<br />
+2. <strong>A-ring dioxygenation and meta-cleavage</strong> (FdeC dioxygenase, FdeH);<br />
+3. <strong>Cyclization</strong> to a δ-lactone (FdeJ);<br />
+4. <strong>Lactone ring-opening hydrolysis</strong> — the step catalyzed by <strong>FdeB/PP_3195</strong>;<br />
+5. <strong>Downstream conversion</strong> of the resulting 3-oxo-pentanoate (FdeI) toward central metabolism.</p>
+<p>Mechanistically, FdeB is a <strong>serine hydrolase</strong> operating through the classic charge-relay system: His394, polarized by Asp359, deprotonates the Ser268 hydroxyl, which then nucleophilically attacks the carbonyl carbon of the δ-lactone. A tetrahedral intermediate collapses, cleaving the C–O ester bond and opening the ring; a water molecule (activated by the same His) hydrolyzes the resulting acyl-enzyme, releasing the linear 5-hydroxy-5-(4-hydroxyphenyl)-3-oxopentanoate product and regenerating the free enzyme.</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Assignment</th>
+<th>Confidence</th>
+<th>Basis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Primary function</td>
+<td>δ-Lactone hydrolase (lactonase / serine ester hydrolase)</td>
+<td>Moderate–High</td>
+<td>KEGG R13077 + intact catalytic triad + pathway logic</td>
+</tr>
+<tr>
+<td>Reaction</td>
+<td>5-(4-hydroxyphenyl)-3-oxovalero-δ-lactone + H₂O → 5-hydroxy-5-(4-hydroxyphenyl)-3-oxopentanoate</td>
+<td>Moderate</td>
+<td>KEGG orthology, unvalidated at protein level</td>
+</tr>
+<tr>
+<td>Substrate specificity</td>
+<td>Flavonoid-derived δ-lactone (naringenin catabolite)</td>
+<td>Moderate</td>
+<td>Pathway context; no direct assay</td>
+</tr>
+<tr>
+<td>Catalytic mechanism</td>
+<td>Ser268–His394–Asp359 charge-relay serine hydrolase</td>
+<td>High</td>
+<td>AlphaFold triad geometry (pLDDT &gt;94, H-bonds ~2.7 Å)</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Cytoplasm</td>
+<td>High</td>
+<td>No signal peptide/lipobox; intracellular pathway</td>
+</tr>
+<tr>
+<td>Pathway</td>
+<td>Naringenin/flavonoid degradation (KEGG ppu00946)</td>
+<td>High</td>
+<td>KEGG ortholog K26184, <em>fde</em> cluster</td>
+</tr>
+<tr>
+<td>NOT a true peptidase</td>
+<td>Correct</td>
+<td>High</td>
+<td>"Peptidase S9" is fold-based IEA; KEGG reaction acts on lactone</td>
+</tr>
+<tr>
+<td>NOT FrsA-type switch protein</td>
+<td>Correct</td>
+<td>High</td>
+<td>~28% identity, retains GxSxG (FrsA lacks it), aerobe</td>
+</tr>
+</tbody>
+</table>
+<p>The single most important corrective insight from this investigation is that the <strong>UniProt "Peptidase S9" name is misleading</strong>. It arises because MEROPS clan SC groups proteins by their shared α/β-hydrolase Ser-His-Asp fold — a fold used by peptidases, esterases, lipases, and lactonases alike. Genomic context and KEGG reaction mapping resolve the ambiguity decisively in favor of a <strong>lactone/ester hydrolase acting in flavonoid catabolism</strong>.</p>
+<hr />
+<h2 id="supported-and-refuted-hypotheses">Supported and Refuted Hypotheses</h2>
+<table>
+<thead>
+<tr>
+<th>Hypothesis</th>
+<th>Verdict</th>
+<th>Basis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_3195 is a serine α/β-hydrolase with a Ser-Asp-His triad</td>
+<td><strong>Supported (structurally confirmed)</strong></td>
+<td>AlphaFold triad Ser268–Asp359–His394 (2.7 Å H-bonds, pLDDT &gt;94); GxSxG motif</td>
+</tr>
+<tr>
+<td>PP_3195 is a catabolic enzyme of the naringenin/flavonoid degradation (<em>fde</em>) pathway</td>
+<td><strong>Supported</strong></td>
+<td>KEGG K26184/<em>fdeB</em>, genomic cluster, ppu00946</td>
+</tr>
+<tr>
+<td>Its reaction is hydrolysis of a δ-lactone (ester/lactonase), not proteolysis</td>
+<td><strong>Supported (predicted)</strong></td>
+<td>KEGG R13077, family = esterases; "peptidase" is fold-based only</td>
+</tr>
+<tr>
+<td>PP_3195 is the fermentation/respiration-switch protein FrsA</td>
+<td><strong>Refuted</strong></td>
+<td>~28% identity, has Ser nucleophile FrsA lacks, host is an obligate aerobe</td>
+</tr>
+<tr>
+<td>PP_3195 is a genuine prolyl oligopeptidase / active peptidase</td>
+<td><strong>Not supported</strong></td>
+<td>Only IEA fold-based GO; no peptidase evidence; KEGG reaction is a hydrolase on a lactone</td>
+</tr>
+<tr>
+<td>PP_3195 functions in the cytoplasm</td>
+<td><strong>Supported</strong></td>
+<td>No signal/lipobox; pathway analogy</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports / relates to the findings</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/27059806/">27059806</a></td>
+<td><em>Genetic and functional characterization of a novel meta-pathway for degradation of naringenin in</em> Herbaspirillum seropedicae <em>SmR1</em></td>
+<td>Establishes the <em>fde</em> gene nomenclature and the naringenin meta-cleavage pathway; documents FdeE monooxygenation and FdeC A-ring dioxygenation/cleavage — the upstream steps producing intermediates on which FdeB acts. Primary source of the pathway model.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30951551/">30951551</a></td>
+<td><em>Purification and biochemical characterization of FrsA protein from</em> Vibrio vulnificus <em>as an esterase</em></td>
+<td>Demonstrates that FrsA/esterase-family proteins (InterPro IPR050261, which contains PP_3195) hydrolyze esters (notably p-nitrophenyl acetate), supporting the ester/lactone-hydrolase assignment for FdeB.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15169777/">15169777</a></td>
+<td><em>A novel fermentation/respiration switch protein regulated by enzyme IIAGlc in</em> E. coli</td>
+<td>Shows authentic FrsA's metabolic-switch role is restricted to facultative anaerobes; since <em>P. putida</em> is a strict aerobe and PP_3195 is only ~28% identical to FrsA, PP_3195 is a catabolic hydrolase, not a switch regulator.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21623357/">21623357</a></td>
+<td><em>FrsA functions as a cofactor-independent decarboxylase to control metabolic flux</em></td>
+<td>Defines the distinct decarboxylase activity of authentic FrsA; contrast reinforces that PP_3195 (which retains the GxSxG serine FrsA lacks) belongs to a different functional class.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29607620/">29607620</a></td>
+<td><em>Regulation of carbohydrate degradation pathways in</em> Pseudomonas</td>
+<td>Context for <em>P. putida</em> as a rhizosphere-associated soil bacterium with robust catabolism of aromatic compounds — the ecological rationale for flavonoid degradation.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/35294082/">35294082</a></td>
+<td><em>Bacterial mandelic acid degradation pathway...</em></td>
+<td>Illustrates the broader theme of <em>P. putida</em> aromatic-compound catabolic pathways to which the <em>fde</em> cluster belongs.</td>
+</tr>
+</tbody>
+</table>
+<p>The AlphaFold structural model (AF-Q88I07-F1) and KEGG pathway/ortholog assignments (K26184, ppu00946, reactions R13074–R13079) constitute the primary database-derived evidence, complemented by the peer-reviewed literature above that validates the enzymology of the FrsA/esterase family and the naringenin pathway.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct experimental data on PP_3195/Q88I07 itself.</strong> All functional calls are by orthology (KEGG K26184, COG1506), genomic context, and domain/residue/structure analysis. The <em>Herbaspirillum</em> study directly characterized FdeE and FdeC by mutagenesis + LC-MS/MS but <strong>not FdeB</strong>, so FdeB's exact catalytic step is inferred. Targeted PubMed searches returned <strong>no primary study of PP_3195 or of <em>P. putida</em> KT2440 growth on naringenin</strong>; the KEGG <em>fde</em> KO assignments (K26179–K26185) appear to derive largely from the single <em>Herbaspirillum</em> characterization propagated by orthology.</p>
+</li>
+<li>
+<p><strong>The pathway model derives from a different organism.</strong> Orthology in <em>P. putida</em> is strongly supported but formally unproven at the biochemical level.</p>
+</li>
+<li>
+<p><strong>KEGG flags R13077 as an "unclear reaction."</strong> The specific δ-lactone substrate/product pair is a computational reconstruction; the exact chemical structure and regiochemistry of the physiological substrate have not been experimentally confirmed for FdeB.</p>
+</li>
+<li>
+<p><strong>Catalytic triad is a model, not an experimental structure.</strong> The Ser268–Asp359–His394 triad comes from a high-confidence AlphaFold model (pLDDT &gt;90), not from an experimental X-ray/cryo-EM structure or site-directed mutagenesis. Confidence is high but not equivalent to experimental proof.</p>
+</li>
+<li>
+<p><strong>Substrate specificity breadth is unknown.</strong> Whether FdeB acts narrowly on the naringenin-derived δ-lactone or has broader esterase/lactonase promiscuity (as many α/β-hydrolases do) is untested.</p>
+</li>
+<li>
+<p><strong>Regulation and expression are uncharacterized.</strong> Whether the <em>fde</em> cluster is induced by naringenin, its transcriptional regulators, and growth conditions supporting flavonoid catabolism in <em>P. putida</em> KT2440 are not addressed by available data.</p>
+</li>
+</ol>
+<p><strong>Overall confidence:</strong> High for "cytoplasmic serine α/β-hydrolase with a Ser268-Asp359-His394 triad" (structurally confirmed); moderate-to-high for the specific δ-lactone-hydrolase step and substrate (consistent orthology + unique KO→reaction mapping, but not enzymatically demonstrated).</p>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Heterologous expression and enzyme assay.</strong> Clone PP_3195, express and purify the recombinant protein, and test hydrolysis of the predicted δ-lactone substrate (or surrogates such as p-nitrophenyl esters and model lactones) to confirm lactonase/esterase activity and determine kinetic parameters (kcat, Km).</p>
+</li>
+<li>
+<p><strong>Site-directed mutagenesis of the catalytic triad.</strong> Generate Ser268Ala, His394Ala, and Asp359Ala/Asn mutants and confirm loss of activity, experimentally validating the AlphaFold-predicted triad and the identity of the catalytic nucleophile.</p>
+</li>
+<li>
+<p><strong>Gene knockout / complementation in <em>P. putida</em> KT2440.</strong> Delete PP_3195 and test growth on naringenin as sole carbon source; look for accumulation of the upstream δ-lactone intermediate (by LC-MS) and rescue by complementation.</p>
+</li>
+<li>
+<p><strong>Metabolite identification.</strong> Use LC-MS/MS and NMR to characterize the physiological substrate and product of FdeB in vivo, directly testing the KEGG R13077 assignment and its regiochemistry.</p>
+</li>
+<li>
+<p><strong>Experimental structure determination.</strong> Solve an X-ray or cryo-EM structure, ideally with substrate/product analog bound, to confirm the active-site architecture and define specificity determinants.</p>
+</li>
+<li>
+<p><strong>Transcriptional analysis.</strong> Perform RT-qPCR or RNA-seq of the <em>fde</em> cluster ± naringenin to establish inducibility and identify the regulator controlling flavonoid catabolism.</p>
+</li>
+<li>
+<p><strong>Substrate-range profiling.</strong> Screen a panel of lactones and esters to define the enzyme's specificity and assess biocatalytic potential (e.g., for flavonoid bioconversion or green-chemistry applications).</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>PP_3195 (Q88I07) is <strong>FdeB</strong>, a <strong>cytoplasmic α/β-hydrolase-fold serine hydrolase</strong> of the <strong>naringenin/flavonoid degradation (<em>fde</em>) gene cluster</strong> of <em>Pseudomonas putida</em> KT2440 (KEGG ortholog K26184, pathway ppu00946). Its primary function is a <strong>δ-lactone hydrolase (lactonase)</strong> step in the lower naringenin meta-cleavage pathway (KEGG reaction R13077): it hydrolyzes 5-(4-hydroxyphenyl)-3-oxovalero-δ-lactone + H₂O to 5-hydroxy-5-(4-hydroxyphenyl)-3-oxopentanoate, acting after ring cleavage (FdeC) and cyclization (FdeJ) and before FdeI, thereby channeling flavonoid carbon toward central metabolism. It functions as an <strong>ester/lactone hydrolase rather than a true peptidase</strong> — the "Peptidase S9" UniProt name reflects only MEROPS clan-SC fold homology. The assignment is supported by a <strong>structurally confirmed catalytic triad</strong> (AlphaFold Ser268-Asp359-His394, ~2.7 Å H-bonds, pLDDT &gt;94), <strong>genomic clustering</strong>, and <strong>orthology</strong>, but the protein itself has <strong>not yet been directly characterized experimentally</strong> and is distinct from (~28% identity to) the enteric fermentation/respiration-switch protein FrsA.</p>
+<hr />
+<h3 id="primary-references">Primary References</h3>
+<ul>
+<li>Marin et al. (2016) <em>Environ. Microbiol.</em> Novel meta-pathway for naringenin degradation in <em>Herbaspirillum seropedicae</em> SmR1. <strong>PMID 27059806</strong> (defines <em>fde</em> pathway/genes).</li>
+<li>Koo et al. (2004) A novel fermentation/respiration switch protein (FrsA) regulated by enzyme IIA^Glc in <em>E. coli</em>. <strong>PMID 15169777</strong> (FrsA family context; restricted to facultative anaerobes).</li>
+<li>Lee et al. (2011) FrsA functions as a cofactor-independent decarboxylase. <strong>PMID 21623357</strong> (FrsA structure/mechanism; contrast to PP_3195).</li>
+<li>Wang et al. (2019) FrsA from <em>Vibrio vulnificus</em> is an esterase. <strong>PMID 30951551</strong> (family = ester hydrolases).</li>
+<li>Database records: UniProt Q88I07; InterPro IPR050261/IPR001375/IPR029058; KEGG K26184, ppu00946, R13077, COG1506; AlphaFold AF-Q88I07-F1.</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="PP_3195-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="PP_3195-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:27059806</li>
+<li>PMID:30951551</li>
+<li>PMID:21623357</li>
+<li>PMID:15169777</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_3195-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88I07" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pp_3195-curation-notes">PP_3195 curation notes</h1>
+<ul>
+<li>UniProt Q88I07 names a Peptidase S9 catalytic-domain protein<br />
+  [file:PSEPK/PP_3195/PP_3195-uniprot.txt "RecName: Full=Peptidase S9 prolyl<br />
+  oligopeptidase catalytic domain-containing protein"]. This is a fold-level<br />
+  prediction, not evidence for a peptide substrate.</li>
+<li>OpenScientist identifies KEGG K26184/FdeB and the predicted R13077 lactone<br />
+  hydrolysis [file:PSEPK/PP_3195/PP_3195-deep-research-openscientist.md "KEGG<br />
+  links FdeB (K26184) to <strong>reaction R13077</strong>, classified as a <strong>hydrolase</strong>"] but<br />
+  explicitly reports no direct PP_3195 characterization<br />
+  [file:PSEPK/PP_3195/PP_3195-deep-research-openscientist.md "No direct<br />
+  biochemical or genetic characterization of PP_3195/FdeB itself has been<br />
+  published."].</li>
+<li>A committed global alignment gives 81.6% identity to the corresponding<br />
+  Herbaspirillum locus protein D8J0W6 and finds the same GVSLG motif in both<br />
+  sequences [file:PSEPK/PP_3195/PP_3195-bioinformatics/RESULTS.md "Pairwise<br />
+  identity over aligned residue pairs: 81.6%"]. Neither protein has direct<br />
+  R13077 evidence.</li>
+<li>GO:0052689 is retained as the substrate-neutral core MF. Proteolysis is<br />
+  removed because no biological proteolysis role is supported. Serine-type<br />
+  peptidase activity is marked over-annotated: the Peptidase S9/IPR001375 and<br />
+  COG1506 family signal is real, but it does not identify a peptide substrate<br />
+  for this paralog. GO:0009812 is added at ISS level for the predicted pathway role.</li>
+<li>No cellular-component term is asserted. The report's AlphaFold triad geometry<br />
+  and cytoplasmic localization were not independently reproduced and are not<br />
+  needed to capture the defensible function.</li>
+</ul>
+            </div>
+        </details>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioinformatics Results</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RESULTS.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88I07" data-a="DOC: Bioinformatics Results" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pp_3195-fdeb-ortholog-analysis">PP_3195 FdeB ortholog analysis</h1>
+<h2 id="method">Method</h2>
+<p>UniProt FASTA records for Q88I07 (P. putida KT2440 PP_3195) and D8J0W6<br />
+(Herbaspirillum seropedicae Hsero_1004, the proposed FdeB counterpart) were<br />
+fetched on demand and aligned globally with Biopython PairwiseAligner, BLOSUM62,<br />
+gap-open -10, and gap-extension -0.5. Identity is calculated over columns<br />
+containing a residue from both proteins.</p>
+<h2 id="results">Results</h2>
+<ul>
+<li>Q88I07 length: 420 aa</li>
+<li>D8J0W6 length: 386 aa</li>
+<li>Aligned residue pairs: 385</li>
+<li>Identical aligned residues: 314</li>
+<li>Pairwise identity over aligned residue pairs: 81.6%</li>
+<li>Target nucleophile-motif candidate <code>GVSLG</code>: present at Q88I07 residues 266-270 and D8J0W6 residues 231-235</li>
+</ul>
+<p>The whole-protein similarity and shared alpha/beta-hydrolase architecture<br />
+support an orthology relationship. Neither protein has direct biochemical<br />
+evidence for KEGG reaction R13077, so the alignment does not establish the<br />
+flavonoid-derived lactone substrate.</p>
+<h2 id="reproduction">Reproduction</h2>
+<div class="codehilite"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>genes/PSEPK/PP_3195/PP_3195-bioinformatics/analyze_fdeb_ortholog.py
+</code></pre></div>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88I07
+gene_symbol: PP_3195
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  PP_3195 encodes an alpha/beta-hydrolase-fold serine hydrolase in the KT2440
+  flavonoid-degradation locus. KEGG assigns it to FdeB orthology group K26184
+  and reaction R13077, predicting hydrolysis of a flavonoid-derived delta-
+  lactone after A-ring cleavage. The target has not been characterized directly,
+  so the lactone substrate remains a pathway-level prediction.
+existing_annotations:
+- term:
+    id: GO:0006508
+    label: proteolysis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: No evidence links PP_3195 to peptide-bond hydrolysis or proteolysis.
+    action: REMOVE
+    reason: &gt;-
+      This annotation is propagated from a Peptidase S9 fold signature. The
+      independent K26184/R13077 assignment instead predicts hydrolysis of a
+      cyclic ester in flavonoid catabolism.
+- term:
+    id: GO:0008236
+    label: serine-type peptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: The alpha/beta-hydrolase catalytic fold does not establish a peptide substrate.
+    action: REMOVE
+    reason: &gt;-
+      IPR001375 identifies a Peptidase S9 catalytic-domain fold, but neither it
+      nor the broader alpha/beta-hydrolase architecture establishes a peptide
+      substrate. IPR050261 instead places PP_3195 in the FrsA/esterase family,
+      and the locus-specific K26184/R13077 assignment predicts hydrolysis of a
+      lactone rather than a peptide bond.
+    supported_by:
+    - reference_id: file:PSEPK/PP_3195/PP_3195-deep-research-openscientist.md
+      supporting_text: KEGG independently classifies the FdeB reaction (R13077) as a hydrolase acting on a **lactone**, not a peptide bond.
+- term:
+    id: GO:0052689
+    label: carboxylic ester hydrolase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: PP_3195 is predicted to hydrolyze a cyclic carboxylic ester in R13077.
+    action: ACCEPT
+    reason: &gt;-
+      The alpha/beta-hydrolase architecture, conserved GVSLG nucleophile-motif
+      candidate, and K26184/R13077 pathway assignment independently support a
+      carboxylic ester hydrolase without overcommitting to the untested substrate.
+    supported_by:
+    - reference_id: file:PSEPK/PP_3195/PP_3195-deep-research-openscientist.md
+      supporting_text: KEGG links FdeB (K26184) to **reaction R13077**, classified as a **hydrolase**
+    - reference_id: file:PSEPK/PP_3195/PP_3195-bioinformatics/RESULTS.md
+      supporting_text: &#39;Target nucleophile-motif candidate `GVSLG`: present at Q88I07 residues 266-270 and D8J0W6 residues 231-235&#39;
+- term:
+    id: GO:0009812
+    label: flavonoid metabolic process
+  evidence_type: ISS
+  original_reference_id: file:PSEPK/PP_3195/PP_3195-deep-research-openscientist.md
+  supporting_entities:
+  - UniProtKB:D8J0W6
+  qualifier: involved_in
+  review:
+    summary: PP_3195 is predicted to perform the FdeB lactone-hydrolysis step in flavonoid degradation.
+    action: NEW
+    reason: &gt;-
+      The target shares 81.6% global identity with Hsero_1004, the corresponding
+      protein in the Herbaspirillum fde locus, and KEGG maps PP_3195 to
+      K26184/R13077. GO:0009812 is used because the local ontology has no
+      flavonoid-catabolic child term.
+    supported_by:
+    - reference_id: file:PSEPK/PP_3195/PP_3195-deep-research-openscientist.md
+      supporting_text: KEGG assigns PP_3195 to ortholog **K26184** (SYMBOL *fdeB*, &#34;naringenin degradation protein FdeB&#34;), places it in pathway **ppu00946 &#34;Degradation of flavonoids,&#34;** and classifies it in **COG1506**.
+    - reference_id: file:PSEPK/PP_3195/PP_3195-bioinformatics/RESULTS.md
+      supporting_text: &#39;Pairwise identity over aligned residue pairs: 81.6%&#39;
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: file:PSEPK/PP_3195/PP_3195-uniprot.txt
+  title: UniProtKB entry Q88I07 for Pseudomonas putida KT2440 PP_3195
+  findings:
+  - statement: &gt;-
+      The unreviewed record identifies a Peptidase S9 catalytic-domain protein
+      but supplies no substrate-specific biochemical evidence.
+    supporting_text: &#39;RecName: Full=Peptidase S9 prolyl oligopeptidase catalytic domain-containing protein&#39;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Exact target accession. The name is derived from Pfam and should not be
+      interpreted as evidence for proteolysis.
+- id: PMID:27059806
+  title: Genetic and functional characterization of a novel meta-pathway for degradation of naringenin in Herbaspirillum seropedicae SmR1.
+  full_text_unavailable: true
+  findings:
+  - statement: &gt;-
+      The Herbaspirillum fde pathway performs naringenin A-ring cleavage, but
+      FdeB itself was not among the directly tested enzymes.
+    supporting_text: naringenin is first mono-oxygenated by the FdeE protein
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed abstract verified. This is pathway context from another organism,
+      not direct evidence for Hsero_1004 or PP_3195.
+- id: file:PSEPK/PP_3195/PP_3195-deep-research-openscientist.md
+  title: OpenScientist deep research report on PP_3195 (Q88I07)
+  publication_type: DEEP_RESEARCH
+  findings:
+  - statement: &gt;-
+      The report identifies the K26184/R13077 prediction and explicitly notes
+      that PP_3195 has no direct biochemical or genetic characterization.
+    supporting_text: No direct biochemical or genetic characterization of PP_3195/FdeB itself has been published.
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      The KEGG mapping and absence of target experiments are useful. The
+      AlphaFold catalytic-triad geometry, cytoplasmic localization, and detailed
+      mechanism were not independently reproduced and were not promoted to GO
+      assertions. The IPR050261/FrsA-family discussion is used only to distinguish
+      ester hydrolase evidence from the unsupported peptide-substrate inference.
+- id: file:PSEPK/PP_3195/PP_3195-bioinformatics/RESULTS.md
+  title: Reproducible PP_3195 and Hsero_1004 sequence comparison
+  findings:
+  - statement: &gt;-
+      Q88I07 and D8J0W6 share 81.6% identity over 385 aligned residue pairs and
+      both contain the same GVSLG nucleophile-motif candidate.
+    supporting_text: &#39;Pairwise identity over aligned residue pairs: 81.6%&#39;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      Generated locally from UniProt FASTA records by the committed Biopython
+      alignment script. Neither sequence has direct evidence for R13077.
+core_functions:
+- description: &gt;-
+    Predicted FdeB-like carboxylic ester hydrolase acting on a
+    flavonoid-derived lactone in the lower naringenin-degradation pathway.
+  molecular_function:
+    id: GO:0052689
+    label: carboxylic ester hydrolase activity
+  directly_involved_in:
+  - id: GO:0009812
+    label: flavonoid metabolic process
+  supported_by:
+  - reference_id: file:PSEPK/PP_3195/PP_3195-deep-research-openscientist.md
+    supporting_text: KEGG links FdeB (K26184) to **reaction R13077**, classified as a **hydrolase**
+  - reference_id: file:PSEPK/PP_3195/PP_3195-bioinformatics/RESULTS.md
+    supporting_text: &#39;Pairwise identity over aligned residue pairs: 81.6%&#39;
+proposed_new_terms:
+- proposed_name: flavonoid-derived delta-lactone hydrolase activity
+  proposed_definition: &gt;-
+    Catalysis of hydrolytic ring opening of
+    5-(4-hydroxyphenyl)-3-oxovalero-delta-lactone to
+    5-hydroxy-5-(4-hydroxyphenyl)-3-oxopentanoate in bacterial flavonoid
+    degradation.
+  justification: &gt;-
+    KEGG R13077 specifies the predicted FdeB substrate and product, whereas
+    GO:0052689 captures only the general carboxylic-ester bond class.
+  proposed_parent:
+    id: GO:0052689
+    label: carboxylic ester hydrolase activity
+  supported_by:
+  - reference_id: file:PSEPK/PP_3195/PP_3195-deep-research-openscientist.md
+    supporting_text: KEGG links FdeB (K26184) to **reaction R13077**, classified as a **hydrolase**
+knowledge_gaps:
+- gap_statement: &gt;-
+    No FdeB-family protein has been assayed directly with the R13077 lactone,
+    and PP_3195 has not been tested genetically in KT2440.
+  boundary: &gt;-
+    Orthology, fold, motif, and pathway context support an ester hydrolase, but
+    the physiological substrate and product remain predictions.
+  gap_kind:
+  - BIOLOGY
+  - CURATION
+  status: OPEN
+  significance: &gt;-
+    Direct evidence is needed before assigning a substrate-specific lactonase
+    term experimentally or treating R13077 as established chemistry.
+  resolution: &gt;-
+    Purify PP_3195, generate the proposed delta-lactone substrate enzymatically,
+    and identify the ring-opened product; test a native deletion for substrate
+    accumulation during naringenin utilization.
+  provenance:
+  - reference_id: file:PSEPK/PP_3195/PP_3195-deep-research-openscientist.md
+    supporting_text: No direct biochemical or genetic characterization of PP_3195/FdeB itself has been published.
+suggested_questions:
+- question: &gt;-
+    Does PP_3195 hydrolyze the R13077 delta-lactone in KT2440, and are the
+    predicted serine-hydrolase residues required for turnover?
+suggested_experiments:
+- description: &gt;-
+    Purify PP_3195 and assay the proposed R13077 lactone, identifying the
+    ring-opened product and testing a catalytic-serine substitution.
+  experiment_type: biochemical reconstitution and site-directed mutagenesis
+- description: &gt;-
+    Compare wild type, a PP_3195 deletion, and a complemented strain during
+    naringenin utilization using targeted metabolomics for the R13077 substrate
+    and product.
+  experiment_type: genetics and targeted metabolomics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

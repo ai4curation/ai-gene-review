@@ -1,0 +1,2264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PP_3205 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>PP_3205</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88HZ7" target="_blank" class="term-link">
+                        Q88HZ7
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "PP_3205";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88HZ7" data-a="DESCRIPTION: PP_3205 encodes a fumarylacetoacetate-hydrolase-fa..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>PP_3205 encodes a fumarylacetoacetate-hydrolase-family protein in the KT2440 flavonoid-degradation locus. KEGG assigns it to FdeI orthology group K26185 and predicts two late reactions: decarboxylation of a flavonoid-derived beta-keto acid (R13078) followed by water elimination (R13079). Neither reaction has been demonstrated directly, so only the carboxy-lyase class of the explicitly drawn decarboxylation is proposed.</p>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>flavonoid-derived beta-keto acid decarboxylase activity</h3>
+                <span class="vote-buttons" data-g="Q88HZ7" data-a="flavonoid-derived beta-keto acid decarboxylase activity" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+
+            <p><strong>Definition:</strong> Catalysis of decarboxylation of 5-hydroxy-5-(4-hydroxyphenyl)-3-oxopentanoate to 4-hydroxy-4-(4-hydroxyphenyl)-butan-2-one and carbon dioxide.</p>
+
+
+
+            <p><strong>Justification:</strong> KEGG R13078 specifies the predicted FdeI substrate and product, whereas GO:0016831 captures only the reaction class.</p>
+
+
+
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016831" target="_blank" class="term-link">
+                    carboxy-lyase activity
+                </a>
+            </p>
+
+
+
+
+
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+
+                <li>
+
+                    file:PSEPK/PP_3205/PP_3205-bioinformatics/RESULTS.md
+
+
+                    : R13078 is a predicted decarboxylation
+
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003824" target="_blank" class="term-link">
+                                    GO:0003824
+                                </a>
+                            </span>
+                            <span class="term-label">catalytic activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HZ7" data-a="GO:0003824" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Catalytic activity is correct but uninformative for the predicted FdeI decarboxylation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> K26185/R13078 predicts nonhydrolytic loss of carbon dioxide from a flavonoid-derived beta-keto acid, which is captured by carboxy-lyase activity. The second R13079 chemistry remains unresolved.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016831" target="_blank" class="term-link">
+                                    carboxy-lyase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_3205/PP_3205-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">R13078 is a predicted decarboxylation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016831" target="_blank" class="term-link">
+                                    GO:0016831
+                                </a>
+                            </span>
+                            <span class="term-label">carboxy-lyase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/PP_3205/PP_3205-bioinformatics/RESULTS.md
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HZ7" data-a="GO:0016831" data-r="file:PSEPK/PP_3205/PP_3205-bioinformatics/RESULTS.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The K26185/R13078 assignment predicts carboxy-lyase activity.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> R13078 explicitly removes CO2, and PP_3205 maps to K26185/FdeI and shares 62.3% aligned-pair identity with the corresponding Hsero_1011 protein. This is a reaction-class prediction rather than direct biochemical evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_3205/PP_3205-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">KEGG target mapping: `ppu:PP_3205 -&gt; ko:K26185`</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_3205/PP_3205-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">R13078 is a predicted decarboxylation</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009812" target="_blank" class="term-link">
+                                    GO:0009812
+                                </a>
+                            </span>
+                            <span class="term-label">flavonoid metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/PP_3205/PP_3205-bioinformatics/RESULTS.md
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88HZ7" data-a="GO:0009812" data-r="file:PSEPK/PP_3205/PP_3205-bioinformatics/RESULTS.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PP_3205 is predicted to perform late FdeI reactions in naringenin degradation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> K26185 pathway placement, conserved locus context, and similarity to the Hsero_1011 counterpart support a role in bacterial flavonoid metabolism, although neither target reaction has been assayed.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_3205/PP_3205-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">KEGG target mapping: `ppu:PP_3205 -&gt; ko:K26185`</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_3205/PP_3205-bioinformatics/RESULTS.md
+
+                                </span>
+
+                                <div class="support-text">Pairwise identity over aligned residue pairs: 62.3%</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/PP_3205/PP_3205-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">The exact FdeI substrate/product and kinetics are unknown; the KEGG-listed reactions R13078/R13079 are provisional</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Predicted FdeI carboxy-lyase catalyzing decarboxylation of a flavonoid-derived beta-keto acid during late bacterial naringenin degradation.</h3>
+                <span class="vote-buttons" data-g="Q88HZ7" data-a="FUNCTION: Predicted FdeI carboxy-lyase catalyzing decarboxyl..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016831" target="_blank" class="term-link">
+                            carboxy-lyase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009812" target="_blank" class="term-link">
+                                flavonoid metabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_3205/PP_3205-bioinformatics/RESULTS.md
+
+                        </span>
+
+                        <div class="finding-text">KEGG target mapping: `ppu:PP_3205 -&gt; ko:K26185`</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/PP_3205/PP_3205-bioinformatics/RESULTS.md
+
+                        </span>
+
+                        <div class="finding-text">R13078 is a predicted decarboxylation</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_3205/PP_3205-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry Q88HZ7 for Pseudomonas putida KT2440 PP_3205</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The target is a 330-aa fumarylacetoacetate-hydrolase-family protein.</div>
+
+                        <div class="finding-text">"SubName: Full=Fumarylacetoacetate hydrolase family protein"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27059806" target="_blank" class="term-link">
+                            PMID:27059806
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Genetic and functional characterization of a novel meta-pathway for degradation of naringenin in Herbaspirillum seropedicae SmR1.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The Herbaspirillum pathway channels A-ring-derived carbon toward oxaloacetate, but the abstract does not test Hsero_1011/FdeI.</div>
+
+                        <div class="finding-text">"After meta-cleavage of the A-ring, the subsequent metabolic steps generate oxaloacetic acid"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_3205/PP_3205-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research report on PP_3205 (Q88HZ7)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report recovers K26185/FdeI and explicitly treats R13078 and R13079 as provisional reactions without direct PP_3205 evidence.</div>
+
+                        <div class="finding-text">"No direct experimental characterization of PP_3205 exists."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/PP_3205/PP_3205-bioinformatics/RESULTS.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Reproducible PP_3205 and Hsero_1011 sequence and KEGG comparison</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">PP_3205 maps to K26185 and shares 62.3% identity over aligned residue pairs with D8J0X3.</div>
+
+                        <div class="finding-text">"Pairwise identity over aligned residue pairs: 62.3%"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does PP_3205 catalyze both R13078 and R13079, or is water elimination spontaneous or enzyme-independent?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88HZ7" data-a="Q: Does PP_3205 catalyze both R13078 and R13079, or i..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify PP_3205 and assay the two predicted substrates separately and sequentially, measuring carbon dioxide release and product formation.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: biochemical reconstitution and targeted metabolomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88HZ7" data-a="EXPERIMENT: Purify PP_3205 and assay the two predicted substra..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Neither R13078 nor R13079 has been demonstrated for PP_3205 or Hsero_1011.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span><span class="badge">CURATION</span>
+
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> Orthology supports an FdeI pathway role, and R13078 defines a carboxy-lyase reaction, but R13079 may be a second FdeI activity or a spontaneous step.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Direct assays are needed before treating either substrate-specific reaction as established.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Reconstitute PP_3205 sequentially with the R13078 and R13079 substrates and identify products by LC-MS.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Neither reaction has been demonstrated for either protein."</em> — file:PSEPK/PP_3205/PP_3205-bioinformatics/RESULTS.md</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_3205-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88HZ7" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of PP_3205 (UniProt Q88HZ7) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-31T22:21:43.387782</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_3205-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="PP_3205-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-pp_3205-uniprot-q88hz7-in-pseudomonas-putida-kt2440">Functional Annotation of PP_3205 (UniProt Q88HZ7) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (Answer to the Research Question)</h2>
+<p><strong>PP_3205 (Q88HZ7) encodes FdeI, a soluble cytoplasmic enzyme of the fumarylacetoacetate-hydrolase (FAH) superfamily (hydratase/decarboxylase family; COG0179) that acts in the bacterial catabolic pathway for the plant flavonoid naringenin (and related flavanones/flavones).</strong> By orthology and KEGG pathway assignment, its product participates in the lower, "meta-cleavage" portion of the <em>fde</em> (flavonoid-degradation) pathway — the steps that process the ring-fission products generated after dioxygenolytic cleavage of the flavonoid A-ring — funnelling the carbon skeleton toward oxaloacetate and the TCA cycle. It carries out its reaction in the <strong>cytoplasm</strong>. It is expressed from a <strong>flavonoid-inducible operon</strong> controlled by the LysR/NodD-like regulator FdeR.</p>
+<p>Its precise catalyzed reaction and substrate specificity have <strong>not been determined experimentally for PP_3205 itself</strong>; the functional assignment is an inference from (i) orthology to the experimentally characterized <em>Herbaspirillum seropedicae</em> SmR1 pathway, (ii) conserved genomic clustering, (iii) KEGG orthology (K26185 / FdeI), and (iv) the diagnostic FAH-fold catalytic architecture in its sequence.</p>
+<hr />
+<h2 id="2-geneprotein-identity-verification">2. Gene/Protein Identity Verification</h2>
+<table>
+<thead>
+<tr>
+<th>Attribute</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Locus tag</td>
+<td>PP_3205 (ordered locus name; unambiguous in KT2440)</td>
+</tr>
+<tr>
+<td>UniProt</td>
+<td>Q88HZ7 (330 aa)</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td><em>Pseudomonas putida</em> KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950)</td>
+</tr>
+<tr>
+<td>Genome position</td>
+<td>3,638,005–3,638,997 (+ strand); 993 nt CDS</td>
+</tr>
+<tr>
+<td>Protein family</td>
+<td>Fumarylacetoacetate hydrolase (FAH) superfamily; "hydratase/decarboxylase family" (UniProt SIMILARITY)</td>
+</tr>
+<tr>
+<td>Domains</td>
+<td>FAA_hydro_N (IPR041072 / Pfam PF18288) + FAA_hydrolase C-terminal (IPR011234, fold IPR036663 / Pfam PF01557)</td>
+</tr>
+<tr>
+<td>Orthology</td>
+<td>eggNOG <strong>COG0179</strong>; KEGG ortholog <strong>K26185 (fdeI)</strong></td>
+</tr>
+<tr>
+<td>KEGG pathway</td>
+<td>ppu00946 "Degradation of flavonoids"</td>
+</tr>
+<tr>
+<td>GenBank protein</td>
+<td>AAN68813.1</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Verification outcome:</strong> The locus tag, organism, domain architecture (two-domain FAH fold) and family assignment are mutually consistent. The generic UniProt name ("Fumarylacetoacetate hydrolase family protein") is correct but uninformative; the <em>specific</em> functional identity comes from KEGG orthology (FdeI, naringenin degradation) and the experimentally defined <em>H. seropedicae</em> pathway. No conflicting "same-symbol, different-gene" literature issue arises because PP_3205 is an ordered-locus identifier, not an ambiguous common symbol.</p>
+<hr />
+<h2 id="3-primary-function">3. Primary Function</h2>
+<h3 id="31-what-the-enzyme-is">3.1 What the enzyme is</h3>
+<p>FdeI belongs to the <strong>fumarylacetoacetate-hydrolase (FAH) superfamily</strong>, whose members are divalent-metal-dependent (typically Ca²⁺/Mg²⁺) enzymes that catalyze <strong>C–C bond hydrolysis, hydration, or decarboxylation of oxo-carboxylate intermediates</strong>. Canonical examples include fumarylacetoacetase (tyrosine catabolism), fumarylpyruvate hydrolase (gentisate/naphthalene catabolism, e.g., NagK/SgpK; PMID 11133965, PMID 23266498), and 2-keto-4-pentenoate hydratase (aromatic meta-cleavage pathways). The UniProt "hydratase/decarboxylase family" designation reflects this chemistry.</p>
+<h3 id="32-pathway-context-and-the-specific-step">3.2 Pathway context and the specific step</h3>
+<p>In the experimentally dissected <em>Herbaspirillum seropedicae</em> SmR1 pathway (Marin et al. 2016, PMID 27059806):<br />
+1. <strong>FdeE</strong> (a monooxygenase) performs the initial mono-oxygenation of naringenin to 5,7,8-trihydroxy-2-(4-hydroxyphenyl)-2,3-dihydro-4H-chromen-4-one.<br />
+2. <strong>FdeC</strong> (a ring-cleaving dioxygenase) then <strong>meta-cleaves the A-ring</strong>.<br />
+3. Downstream enzymes (including the FAH-family FdeI) process the ring-opened products; the pathway ultimately <strong>generates oxaloacetate, which enters the tricarboxylic acid cycle</strong>.</p>
+<p>FdeI (PP_3205) is one of these downstream, ring-fission-processing enzymes. KEGG links K26185/FdeI to reactions R13078 (a decarboxylation: 5-hydroxy-5-(4-hydroxyphenyl)-3-oxopentanoate → 4-hydroxy-4-(4-hydroxyphenyl)butan-2-one + CO₂) and R13079 (a hydration/dehydration). <strong>These two reactions are flagged "unclear reaction" in KEGG and should be treated as provisional</strong>: they capture the <em>type</em> of chemistry expected of a FAH-family enzyme (decarboxylation + hydration of an oxo-carboxylate) but the exact substrate/product for FdeI have not been confirmed enzymologically.</p>
+<h3 id="33-substrate-specificity">3.3 Substrate specificity</h3>
+<p>No direct kinetic/substrate data exist for PP_3205. Consistent with the whole operon being induced by <strong>apigenin, chrysin, luteolin and naringenin</strong> (Wassem et al. 2017, PMID 27878922), the pathway — and therefore FdeI — most plausibly acts on ring-fission intermediates derived from <strong>several flavanones/flavones</strong>, not naringenin alone.</p>
+<h3 id="34-genomic-clustering-in-kt2440-evidence-for-pathway-membership">3.4 Genomic clustering in KT2440 (evidence for pathway membership)</h3>
+<p>PP_3205 lies within a contiguous, co-oriented cluster whose members carry catabolic annotations matching a flavonoid meta-cleavage pathway:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Annotation</th>
+<th>KEGG ortholog</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_3201</td>
+<td>BNR-repeat domain protein</td>
+<td>—</td>
+</tr>
+<tr>
+<td>PP_3202 / PP_3203</td>
+<td>transporter / MFS transporter</td>
+<td>K07003 / —</td>
+</tr>
+<tr>
+<td><strong>PP_3204</strong></td>
+<td>conserved protein</td>
+<td><strong>K26182 (FdeH)</strong></td>
+</tr>
+<tr>
+<td><strong>PP_3205</strong></td>
+<td>FAH-family protein</td>
+<td><strong>K26185 (FdeI)</strong></td>
+</tr>
+<tr>
+<td><strong>PP_3206</strong></td>
+<td>conserved protein</td>
+<td><strong>K26183 (FdeJ)</strong></td>
+</tr>
+<tr>
+<td>PP_3207</td>
+<td>putative cyclase</td>
+<td>—</td>
+</tr>
+<tr>
+<td>PP_3208</td>
+<td>Pdr/VanB-family oxidoreductase</td>
+<td>—</td>
+</tr>
+<tr>
+<td>PP_3212</td>
+<td>Rieske 2Fe-2S dioxygenase</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>The presence of a Rieske dioxygenase, an oxidoreductase, a cyclase, transporters and three Fde orthologs in one locus is the hallmark of an aromatic-compound catabolic island, corroborating the KEGG assignment. The K26185 ortholog group is broadly conserved across <em>Pseudomonas</em> (e.g., PVLB_09785, PSEBR_a2142, T1E_5649).</p>
+<hr />
+<h2 id="4-subcellular-localization">4. Subcellular Localization</h2>
+<p>The gene product functions in the <strong>cytoplasm</strong>:<br />
+- No N-terminal signal peptide (sequence begins MKLATFDDGS…) and no transmembrane segment: whole-protein GRAVY = −0.023 (hydrophilic) and the maximum Kyte–Doolittle hydropathy over a 19-residue window is only 1.04, below the ~1.6 threshold indicative of a membrane helix.<br />
+- FAH-superfamily enzymes are characteristically soluble cytoplasmic proteins, and the naringenin ring-fission intermediates they process are generated intracellularly.<br />
+- UniProt provides no subcellular-location annotation, consistent with a default cytoplasmic assignment.</p>
+<hr />
+<h2 id="5-structure-mechanistic-inference">5. Structure / Mechanistic Inference</h2>
+<ul>
+<li><strong>Fold:</strong> Two-domain FAH architecture — an N-terminal FAA_hydro_N cap (PF18288) plus the C-terminal catalytic FAA_hydrolase domain (PF01557, IPR036663 superfamily fold).</li>
+<li><strong>Catalytic center:</strong> The sequence contains the conserved His-rich C-terminal motif <code>HLPLHVHWNGEWFGHPHGG</code> (His217/His221/His223/His231/His233 with adjacent Glu/Asp). In FAH-superfamily structures, an equivalent His/Glu-rich pocket coordinates a divalent metal ion and activates a water nucleophile for C–C bond cleavage/hydration/decarboxylation. The presence of an intact motif argues the protein is a <strong>catalytically competent</strong> family member rather than a degenerate pseudoenzyme.</li>
+<li>An AlphaFold model is available (AlphaFoldDB: Q88HZ7) and would be expected to reproduce the canonical FAH β-sandwich fold.</li>
+</ul>
+<hr />
+<h2 id="6-biological-process-physiological-role">6. Biological Process / Physiological Role</h2>
+<p>FdeI contributes to <strong>flavonoid catabolism</strong>, enabling the bacterium to use plant-derived flavonoids as carbon and energy sources. Because the operon is specifically induced by flavonoids via the NodD-like LysR regulator FdeR (Wassem et al. 2017, PMID 27878922) — a regulator otherwise associated with rhizobial <em>nod</em>-gene control — the pathway is best understood as an adaptation to <strong>plant-associated / rhizosphere niches</strong>, where flavonoids are abundant plant exudates. The end product (oxaloacetate) is assimilated through central metabolism (Marin et al. 2016, PMID 27059806).</p>
+<hr />
+<h2 id="7-supported-vs-refuted-hypotheses">7. Supported vs. Refuted Hypotheses</h2>
+<p><strong>Supported (by convergent evidence):</strong><br />
+- H1 — PP_3205 is a FAH-superfamily hydrolase/decarboxylase. <em>(UniProt/Pfam/InterPro/COG0179 + intact catalytic motif.)</em><br />
+- H2 — PP_3205 = FdeI and functions in the naringenin/flavonoid meta-cleavage pathway. <em>(KEGG K26185/ppu00946 + conserved gene cluster + orthology to characterized H. seropedicae pathway, PMID 27059806.)</em><br />
+- H3 — The enzyme is a soluble cytoplasmic protein. <em>(No signal peptide/TM; hydropathy analysis.)</em><br />
+- H4 — The pathway (and thus fdeI) is flavonoid-inducible. <em>(PMID 27878922.)</em></p>
+<p><strong>Refuted / not supported:</strong><br />
+- The protein is <strong>not</strong> a membrane transporter or secreted protein (no TM/signal). The neighbouring transporters (PP_3202/3203, PP_3210/3211) perform substrate import, not FdeI.<br />
+- No evidence that PP_3205 acts in tyrosine catabolism (classic fumarylacetoacetase role) in KT2440; that reaction is served by the separate homogentisate pathway. The FAH fold here is repurposed for flavonoid ring-fission chemistry.</p>
+<hr />
+<h2 id="8-limitations-and-future-directions">8. Limitations and Future Directions</h2>
+<ul>
+<li><strong>No direct experimental characterization of PP_3205 exists.</strong> Function is inferred from orthology (chiefly to <em>H. seropedicae</em>), KEGG, and sequence. The exact FdeI substrate/product and kinetics are unknown; the KEGG-listed reactions R13078/R13079 are provisional ("unclear reaction").</li>
+<li>The precise ordering of the lower-pathway steps (which of FdeH/FdeI/FdeJ acts first, and the true chemical structures of the intermediates) is not firmly established.</li>
+<li><strong>Recommended experiments:</strong> heterologous expression and in-vitro assay of PP_3205 with candidate ring-fission substrates; ΔPP_3205 growth phenotype on naringenin/apigenin/chrysin/luteolin; metabolite (LC-MS/MS) profiling of the mutant; and an experimental structure or docking of intermediates into the AlphaFold model to identify the metal ligands and active-site residues.</li>
+</ul>
+<hr />
+<h2 id="9-key-references">9. Key References</h2>
+<ul>
+<li>Marin AM, de la Torre J, Oliveira ARM, et al. <em>Genetic and functional characterization of a novel meta-pathway for degradation of naringenin in Herbaspirillum seropedicae SmR1.</em> Environ Microbiol. 2016;18(12):4653–4661. <strong>PMID 27059806</strong>.</li>
+<li>Wassem R, Marin AM, Daddaoua A, et al. <em>A NodD-like protein activates transcription of genes involved with naringenin degradation in a flavonoid-dependent manner in Herbaspirillum seropedicae.</em> Environ Microbiol. 2017;19(3):1030–1040. <strong>PMID 27878922</strong>.</li>
+<li>Zhou N-Y, Fuenmayor SL, Williams PA. <em>nag genes of Ralstonia sp. strain U2 encoding enzymes for gentisate catabolism.</em> J Bacteriol. 2001;183(2):700–708. <strong>PMID 11133965</strong> (fumarylpyruvate hydrolase NagK — FAH-family precedent).</li>
+<li>Izmalkova TY, et al. <em>The organization of naphthalene degradation genes in Pseudomonas putida strain AK5.</em> Res Microbiol. 2013. <strong>PMID 23266498</strong> (fumarylpyruvate hydrolase SgpK — FAH-family precedent).</li>
+<li>Database records: UniProt Q88HZ7; KEGG ppu:PP_3205, K26185, pathway ppu00946; Pfam PF01557/PF18288; InterPro IPR041072/IPR011234/IPR036663; eggNOG COG0179.</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="PP_3205-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="PP_3205-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(PP_3205-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88HZ7" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pp_3205-curation-notes">PP_3205 curation notes</h1>
+<ul>
+<li>UniProt identifies PP_3205 as a fumarylacetoacetate-hydrolase-family protein<br />
+  [file:PSEPK/PP_3205/PP_3205-uniprot.txt "Fumarylacetoacetate hydrolase family protein"].</li>
+<li>KEGG maps PP_3205 to K26185/FdeI and two unclear reactions: R13078 is drawn<br />
+  as decarboxylation, while R13079 eliminates water. Neither has direct assay<br />
+  support for PP_3205 or Hsero_1011.</li>
+<li>PP_3205 shares 62.3% identity over aligned residue pairs with Hsero_1011<br />
+  [file:PSEPK/PP_3205/PP_3205-bioinformatics/RESULTS.md "Pairwise identity over aligned residue pairs: 62.3%"].</li>
+<li>OpenScientist completed after the review was drafted and independently<br />
+  recovered K26185/FdeI while stating that no direct PP_3205 characterization<br />
+  exists [file:PSEPK/PP_3205/PP_3205-deep-research-openscientist.md "No direct<br />
+  experimental characterization of PP_3205 exists."]. Its localization,<br />
+  regulation, metal, and catalytic-motif claims remain unverified and were not<br />
+  converted into annotations.</li>
+</ul>
+            </div>
+        </details>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Bioinformatics Results</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(RESULTS.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88HZ7" data-a="DOC: Bioinformatics Results" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="pp_3205-fdei-ortholog-analysis">PP_3205 FdeI ortholog analysis</h1>
+<h2 id="method">Method</h2>
+<p>Q88HZ7 and D8J0X3 were fetched from UniProt and aligned globally with<br />
+Biopython PairwiseAligner, BLOSUM62, gap-open -10, and gap-extension -0.5.<br />
+KEGG mapping and reaction records were fetched through KEGG REST.</p>
+<h2 id="results">Results</h2>
+<ul>
+<li>Q88HZ7 length: 330 aa</li>
+<li>D8J0X3 length: 327 aa</li>
+<li>Aligned residue pairs: 321</li>
+<li>Identical aligned residues: 200</li>
+<li>Pairwise identity over aligned residue pairs: 62.3%</li>
+<li>KEGG target mapping: <code>ppu:PP_3205 -&gt; ko:K26185</code></li>
+<li>KEGG reaction summaries: <code>R13078: DEFINITION  5-Hydroxy-5-(4-hydroxyphenyl)-3-oxopentanoate &lt;=&gt; 4-Hydroxy-4-(4-hydroxyphenyl)-butan-2-one + CO2
+COMMENT     decarboxylation
+            unclear reaction | R13079: DEFINITION  4-Hydroxy-4-(4-hydroxyphenyl)-butan-2-one &lt;=&gt; 4-Hydroxycinnamoylmethane + H2O
+COMMENT     unclear reaction</code></li>
+</ul>
+<p>The high whole-protein similarity and shared fumarylacetoacetate-hydrolase-like<br />
+architecture support an FdeI orthology relationship. KEGG marks both reactions<br />
+unclear; R13078 is a predicted decarboxylation, whereas R13079 eliminates water.<br />
+Neither reaction has been demonstrated for either protein.</p>
+<h2 id="reproduction">Reproduction</h2>
+<div class="codehilite"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>genes/PSEPK/PP_3205/PP_3205-bioinformatics/analyze_fdei_ortholog.py
+</code></pre></div>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88HZ7
+gene_symbol: PP_3205
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  PP_3205 encodes a fumarylacetoacetate-hydrolase-family protein in the KT2440
+  flavonoid-degradation locus. KEGG assigns it to FdeI orthology group K26185
+  and predicts two late reactions: decarboxylation of a flavonoid-derived
+  beta-keto acid (R13078) followed by water elimination (R13079). Neither
+  reaction has been demonstrated directly, so only the carboxy-lyase class of
+  the explicitly drawn decarboxylation is proposed.
+existing_annotations:
+- term:
+    id: GO:0003824
+    label: catalytic activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: Catalytic activity is correct but uninformative for the predicted FdeI decarboxylation.
+    action: MODIFY
+    reason: &gt;-
+      K26185/R13078 predicts nonhydrolytic loss of carbon dioxide from a
+      flavonoid-derived beta-keto acid, which is captured by carboxy-lyase
+      activity. The second R13079 chemistry remains unresolved.
+    proposed_replacement_terms:
+    - id: GO:0016831
+      label: carboxy-lyase activity
+    supported_by:
+    - reference_id: file:PSEPK/PP_3205/PP_3205-bioinformatics/RESULTS.md
+      supporting_text: &#39;R13078 is a predicted decarboxylation&#39;
+- term:
+    id: GO:0016831
+    label: carboxy-lyase activity
+  evidence_type: ISS
+  original_reference_id: file:PSEPK/PP_3205/PP_3205-bioinformatics/RESULTS.md
+  supporting_entities:
+  - UniProtKB:D8J0X3
+  qualifier: enables
+  review:
+    summary: The K26185/R13078 assignment predicts carboxy-lyase activity.
+    action: NEW
+    reason: &gt;-
+      R13078 explicitly removes CO2, and PP_3205 maps to K26185/FdeI and shares
+      62.3% aligned-pair identity with the corresponding Hsero_1011 protein.
+      This is a reaction-class prediction rather than direct biochemical evidence.
+    supported_by:
+    - reference_id: file:PSEPK/PP_3205/PP_3205-bioinformatics/RESULTS.md
+      supporting_text: &#39;KEGG target mapping: `ppu:PP_3205 -&gt; ko:K26185`&#39;
+    - reference_id: file:PSEPK/PP_3205/PP_3205-bioinformatics/RESULTS.md
+      supporting_text: &#39;R13078 is a predicted decarboxylation&#39;
+- term:
+    id: GO:0009812
+    label: flavonoid metabolic process
+  evidence_type: ISS
+  original_reference_id: file:PSEPK/PP_3205/PP_3205-bioinformatics/RESULTS.md
+  supporting_entities:
+  - UniProtKB:D8J0X3
+  qualifier: involved_in
+  review:
+    summary: PP_3205 is predicted to perform late FdeI reactions in naringenin degradation.
+    action: NEW
+    reason: &gt;-
+      K26185 pathway placement, conserved locus context, and similarity to the
+      Hsero_1011 counterpart support a role in bacterial flavonoid metabolism,
+      although neither target reaction has been assayed.
+    supported_by:
+    - reference_id: file:PSEPK/PP_3205/PP_3205-bioinformatics/RESULTS.md
+      supporting_text: &#39;KEGG target mapping: `ppu:PP_3205 -&gt; ko:K26185`&#39;
+    - reference_id: file:PSEPK/PP_3205/PP_3205-bioinformatics/RESULTS.md
+      supporting_text: &#39;Pairwise identity over aligned residue pairs: 62.3%&#39;
+    - reference_id: file:PSEPK/PP_3205/PP_3205-deep-research-openscientist.md
+      supporting_text: The exact FdeI substrate/product and kinetics are unknown; the KEGG-listed reactions R13078/R13079 are provisional
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: file:PSEPK/PP_3205/PP_3205-uniprot.txt
+  title: UniProtKB entry Q88HZ7 for Pseudomonas putida KT2440 PP_3205
+  findings:
+  - statement: The target is a 330-aa fumarylacetoacetate-hydrolase-family protein.
+    supporting_text: &#39;SubName: Full=Fumarylacetoacetate hydrolase family protein&#39;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Exact target record; family membership does not identify the physiological substrate.
+- id: PMID:27059806
+  title: Genetic and functional characterization of a novel meta-pathway for degradation of naringenin in Herbaspirillum seropedicae SmR1.
+  full_text_unavailable: true
+  findings:
+  - statement: The Herbaspirillum pathway channels A-ring-derived carbon toward oxaloacetate, but the abstract does not test Hsero_1011/FdeI.
+    supporting_text: After meta-cleavage of the A-ring, the subsequent metabolic steps generate oxaloacetic acid
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: Pathway context from another organism; not direct evidence for PP_3205 or Hsero_1011.
+- id: file:PSEPK/PP_3205/PP_3205-deep-research-openscientist.md
+  title: OpenScientist deep research report on PP_3205 (Q88HZ7)
+  publication_type: DEEP_RESEARCH
+  findings:
+  - statement: &gt;-
+      The report recovers K26185/FdeI and explicitly treats R13078 and R13079 as
+      provisional reactions without direct PP_3205 evidence.
+    supporting_text: No direct experimental characterization of PP_3205 exists.
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: &gt;-
+      The KEGG mapping and reaction uncertainty agree with independently fetched
+      records. Cytoplasmic localization, flavonoid-responsive regulation,
+      divalent-metal dependence, and the proposed catalytic motif were not
+      independently verified and were not promoted to GO assertions.
+- id: file:PSEPK/PP_3205/PP_3205-bioinformatics/RESULTS.md
+  title: Reproducible PP_3205 and Hsero_1011 sequence and KEGG comparison
+  findings:
+  - statement: PP_3205 maps to K26185 and shares 62.3% identity over aligned residue pairs with D8J0X3.
+    supporting_text: &#39;Pairwise identity over aligned residue pairs: 62.3%&#39;
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Generated from UniProt FASTA and KEGG REST records by the committed script.
+core_functions:
+- description: &gt;-
+    Predicted FdeI carboxy-lyase catalyzing decarboxylation of a
+    flavonoid-derived beta-keto acid during late bacterial naringenin degradation.
+  molecular_function:
+    id: GO:0016831
+    label: carboxy-lyase activity
+  directly_involved_in:
+  - id: GO:0009812
+    label: flavonoid metabolic process
+  supported_by:
+  - reference_id: file:PSEPK/PP_3205/PP_3205-bioinformatics/RESULTS.md
+    supporting_text: &#39;KEGG target mapping: `ppu:PP_3205 -&gt; ko:K26185`&#39;
+  - reference_id: file:PSEPK/PP_3205/PP_3205-bioinformatics/RESULTS.md
+    supporting_text: &#39;R13078 is a predicted decarboxylation&#39;
+proposed_new_terms:
+- proposed_name: flavonoid-derived beta-keto acid decarboxylase activity
+  proposed_definition: &gt;-
+    Catalysis of decarboxylation of
+    5-hydroxy-5-(4-hydroxyphenyl)-3-oxopentanoate to
+    4-hydroxy-4-(4-hydroxyphenyl)-butan-2-one and carbon dioxide.
+  justification: KEGG R13078 specifies the predicted FdeI substrate and product, whereas GO:0016831 captures only the reaction class.
+  proposed_parent:
+    id: GO:0016831
+    label: carboxy-lyase activity
+  supported_by:
+  - reference_id: file:PSEPK/PP_3205/PP_3205-bioinformatics/RESULTS.md
+    supporting_text: &#39;R13078 is a predicted decarboxylation&#39;
+knowledge_gaps:
+- gap_statement: Neither R13078 nor R13079 has been demonstrated for PP_3205 or Hsero_1011.
+  boundary: &gt;-
+    Orthology supports an FdeI pathway role, and R13078 defines a carboxy-lyase
+    reaction, but R13079 may be a second FdeI activity or a spontaneous step.
+  gap_kind: [BIOLOGY, CURATION]
+  status: OPEN
+  significance: Direct assays are needed before treating either substrate-specific reaction as established.
+  resolution: Reconstitute PP_3205 sequentially with the R13078 and R13079 substrates and identify products by LC-MS.
+  provenance:
+  - reference_id: file:PSEPK/PP_3205/PP_3205-bioinformatics/RESULTS.md
+    supporting_text: Neither reaction has been demonstrated for either protein.
+suggested_questions:
+- question: Does PP_3205 catalyze both R13078 and R13079, or is water elimination spontaneous or enzyme-independent?
+suggested_experiments:
+- description: &gt;-
+    Purify PP_3205 and assay the two predicted substrates separately and
+    sequentially, measuring carbon dioxide release and product formation.
+  experiment_type: biochemical reconstitution and targeted metabolomics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
