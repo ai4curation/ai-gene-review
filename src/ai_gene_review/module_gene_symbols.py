@@ -5,14 +5,20 @@ from __future__ import annotations
 import re
 from typing import Any
 
-_SYMBOL_LABEL = re.compile(r"([A-Za-z0-9][A-Za-z0-9_.:/-]*)(?:\s+\(.*\))?", re.DOTALL)
+_SYMBOL_TOKEN = r"[A-Za-z0-9][A-Za-z0-9_.:/-]*"
+_SYMBOL_LABEL = re.compile(
+    rf"({_SYMBOL_TOKEN})(?:\s+/\s+{_SYMBOL_TOKEN})*(?:\s+\(.*\)(?:,\s+.+)?)?",
+    re.DOTALL,
+)
 
 
 def descriptor_symbol(descriptor: dict) -> str | None:
-    """Read a symbol or symbol-first parenthetical label; never guess from prose.
+    """Read the primary symbol, allowing explicit aliases and parenthetical qualifiers.
 
     >>> descriptor_symbol({"preferred_term": "MetXS (PSEPK)"})
     'MetXS'
+    >>> descriptor_symbol({"preferred_term": "SLC25A4 / ANT1 (human)"})
+    'SLC25A4'
     >>> descriptor_symbol({"preferred_term": "PSEPK MetXS"}) is None
     True
     """
@@ -36,7 +42,7 @@ def symbol_label_warnings(document: Any) -> list[str]:
         if isinstance(descriptor, dict) and descriptor_symbol(descriptor) is None:
             warnings.append(
                 f"SYMBOL_LABEL {path}: {descriptor.get('preferred_term')!r} is not "
-                "symbol-first. Use SYMBOL or SYMBOL (organism/description) after "
+                "symbol-first. Use SYMBOL, SYMBOL / ALIAS, or either with (organism/description), after "
                 "verifying the symbol; no symbol is inferred from this label. "
                 "UniProt accession predicates remain available."
             )

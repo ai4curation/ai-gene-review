@@ -4,6 +4,12 @@ The module compiler and module validator share one symbol-label rule. A
 participant.gene or family representative_members descriptor can supply a
 symbol through either a single-token preferred_term, such as MetXS, or a
 symbol followed by a parenthetical qualifier, such as MetXS (PSEPK).
+An explicit alias run is also accepted: SLC25A4 / ANT1 (human), or
+Acaa / Yip2 / CG4600 (Drosophila). Each alias is a single token separated by
+a spaced slash. The first token remains the primary symbol; aliases are not
+added to the predicate's symbol set. The qualifier is optional. A parenthetical
+may be followed by a comma-separated qualifier, as in
+SepJ / FraG (alr2338), Nostoc sp. PCC 7120; the primary symbol is still SepJ.
 
 Other multiword labels, including PSEPK MetXS, human ALDH2, and
 Mycobacterium tuberculosis MetX, do not supply a symbol. The compiler does not
