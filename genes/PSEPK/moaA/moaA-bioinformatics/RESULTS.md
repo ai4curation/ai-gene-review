@@ -50,12 +50,10 @@ evidence resolves the paralogs.
   orthologies, respectively.
 - These modest identities are not sufficient by themselves to assign nucleotide
   specificity. PTHR43777:SF1 also contains reviewed proteins with non-MocA names,
-  so family membership alone is not decisive. Independently of this sequence
-  analysis, however, KEGG assigns both PP_2483 and PP_4230 to K07141
-  (molybdenum-cofactor cytidylyltransferase), and both occur in
-  molybdoenzyme-associated neighborhoods. The concordant orthology, subfamily,
-  and neighborhood evidence supports a predicted MocA assignment while leaving
-  CTP specificity and client delivery to direct experimental testing.
+  so family membership alone is not decisive. KEGG K07141 and the control
+  comparison favor a MocA-like interpretation for PP_4230, whereas PP_2483 is
+  closer to the MobA control despite its K07141 assignment. The present analysis
+  therefore does not establish MobA or MocA activity for either target.
 
 ## Limits
 

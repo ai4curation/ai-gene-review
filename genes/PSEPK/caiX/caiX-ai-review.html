@@ -1,0 +1,2451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>caiX - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>caiX</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88R30" target="_blank" class="term-link">
+                        Q88R30
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "caiX";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88R30" data-a="DESCRIPTION: CaiX is the periplasmic L-carnitine-binding compon..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CaiX is the periplasmic L-carnitine-binding component that supplies substrate specificity to the shared CbcWV ABC importer during carnitine uptake.</p>
+    </div>
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Proposed New Ontology Terms</h2>
+
+        <div class="proposed-term">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>L-carnitine binding</h3>
+                <span class="vote-buttons" data-g="Q88R30" data-a="L-carnitine binding" data-r="" data-act="NEW">
+                    <button class="vote-btn" data-v="up" title="Agree this term should be created">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with creating this term">👎</button>
+                </span>
+            </div>
+
+
+            <p><strong>Definition:</strong> Binding to L-carnitine.</p>
+
+
+
+            <p><strong>Justification:</strong> CaiX is a substrate-binding protein specific for L-carnitine, but GO has no substrate-specific binding term that captures this direct activity.</p>
+
+
+
+            <p><strong>Parent term:</strong>
+                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033293" target="_blank" class="term-link">
+                    monocarboxylic acid binding
+                </a>
+            </p>
+
+
+
+
+
+            <p><strong>Supporting Evidence:</strong></p>
+            <ul style="margin-left: 1rem;">
+
+                <li>
+
+                    <a href="https://pubmed.ncbi.nlm.nih.gov/19919675" target="_blank" class="term-link">
+                        PMID:19919675
+                    </a>
+
+
+                    : the carnitine-specific SBP CaiX (K(m), 24 microM)
+
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015871" target="_blank" class="term-link">
+                                    GO:0015871
+                                </a>
+                            </span>
+                            <span class="term-label">choline transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R30" data-a="GO:0015871" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CaiX is carnitine-selective rather than the choline-selective CbcX protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Orthologous CaiX is required for carnitine uptake, whereas CbcX supplies choline recognition.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19919675" target="_blank" class="term-link">
+                                        PMID:19919675
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">CaiX, a carnitine-specific binding protein, is required for Cbc-mediated uptake of L-carnitine</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0022857" target="_blank" class="term-link">
+                                    GO:0022857
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R30" data-a="GO:0022857" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CaiX is a soluble binding component and does not span the membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> It contributes substrate recognition to the CbcWV transporter complex.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015226" target="_blank" class="term-link">
+                                    GO:0015226
+                                </a>
+                            </span>
+                            <span class="term-label">carnitine transmembrane transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19919675" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19919675
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The ATP-binding cassette transporter Cbc (choline/betaine/ca...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R30" data-a="GO:0015226" data-r="PMID:19919675" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CaiX contributes carnitine recognition to the CbcWV importer.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Pseudomonas CaiX is experimentally required for Cbc-mediated carnitine uptake.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19919675" target="_blank" class="term-link">
+                                        PMID:19919675
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">CaiX-mediated carnitine uptake</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/caiX/caiX-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">caiX sits in a carnitine-catabolic gene cluster</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033265" target="_blank" class="term-link">
+                                    GO:0033265
+                                </a>
+                            </span>
+                            <span class="term-label">choline binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R30" data-a="GO:0033265" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The family mapping assigns the CbcX substrate to carnitine-selective CaiX.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Experimental ortholog evidence identifies CaiX as carnitine-specific, not choline-specific. Monocarboxylic-acid binding remains a valid broad molecular function until GO provides an L-carnitine-binding term.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033293" target="_blank" class="term-link">
+                                    monocarboxylic acid binding
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19919675" target="_blank" class="term-link">
+                                        PMID:19919675
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">carnitine-specific SBP CaiX</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042597" target="_blank" class="term-link">
+                                    GO:0042597
+                                </a>
+                            </span>
+                            <span class="term-label">periplasmic space</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R30" data-a="GO:0042597" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CaiX acts as a periplasmic substrate-binding protein.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Its signal peptide and role in a Gram-negative ABC importer support this location.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043190" target="_blank" class="term-link">
+                                    GO:0043190
+                                </a>
+                            </span>
+                            <span class="term-label">ATP-binding cassette (ABC) transporter complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R30" data-a="GO:0043190" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> CaiX is an interchangeable substrate-binding component of the Cbc importer.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> It associates with the CbcWV core when carnitine is transported.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19919675" target="_blank" class="term-link">
+                                        PMID:19919675
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The core transporter CbcWV also interacts with the carnitine-specific SBP CaiX</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0055085" target="_blank" class="term-link">
+                                    GO:0055085
+                                </a>
+                            </span>
+                            <span class="term-label">transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R30" data-a="GO:0055085" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct broad process but less informative than carnitine transport.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> CaiX participates in transport as the substrate-recognition component.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902603" target="_blank" class="term-link">
+                                    GO:1902603
+                                </a>
+                            </span>
+                            <span class="term-label">carnitine transmembrane transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19919675" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:19919675
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The ATP-binding cassette transporter Cbc (choline/betaine/ca...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88R30" data-a="GO:1902603" data-r="PMID:19919675" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Carnitine transport is the specific process mediated by CaiX with CbcWV.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct Pseudomonas genetic and uptake evidence supports this role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/19919675" target="_blank" class="term-link">
+                                        PMID:19919675
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">CaiX-mediated carnitine uptake</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Periplasmic L-carnitine recognition for the CbcWV ABC importer.</h3>
+                <span class="vote-buttons" data-g="Q88R30" data-a="FUNCTION: Periplasmic L-carnitine recognition for the CbcWV ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033293" target="_blank" class="term-link">
+                            monocarboxylic acid binding
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:1902603" target="_blank" class="term-link">
+                                carnitine transmembrane transport
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042597" target="_blank" class="term-link">
+                                periplasmic space
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043190" target="_blank" class="term-link">
+                            ATP-binding cassette (ABC) transporter complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/19919675" target="_blank" class="term-link">
+                                PMID:19919675
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The core transporter CbcWV also interacts with the carnitine-specific SBP CaiX</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/19919675" target="_blank" class="term-link">
+                            PMID:19919675
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The ATP-binding cassette transporter Cbc (choline/betaine/carnitine) recruits multiple substrate-binding proteins with strong specificity for distinct quaternary ammonium compounds.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Establishes CaiX as the carnitine-selective binding component used with CbcWV.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/caiX/caiX-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB record for caiX</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Identifies Q88R30 as the carnitine uptake periplasmic component.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/caiX/caiX-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO annotations for caiX</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Contains the six GOA annotations reviewed here.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/caiX/caiX-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research report for caiX</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Supports CaiX orthology, periplasmic localization, CbcWV recruitment, and the absence of direct KT2440 binding assays.</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the binding affinity and substrate range of KT2440 CaiX itself?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88R30" data-a="Q: What is the binding affinity and substrate range o..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure Q88R30 binding to L-carnitine and related quaternary amines and test CbcWV-dependent uptake.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: ligand-binding and transport assay</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88R30" data-a="EXPERIMENT: Measure Q88R30 binding to L-carnitine and related ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(caiX-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88R30" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation of *caiX* (Q88R30 / PP_0304) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">11 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-13T06:34:58.237912</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="caiX-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="caiX-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-of-caix-q88r30-pp_0304-in-pseudomonas-putida-kt2440">Functional Annotation of <em>caiX</em> (Q88R30 / PP_0304) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p><strong>caiX</strong> (gene ID <em>caiX</em>; ordered locus name <strong>PP_0304</strong>; UniProt <strong>Q88R30</strong>) of <em>Pseudomonas putida</em> KT2440 encodes a <strong>periplasmic substrate-binding protein (SBP)</strong> that functions as the high-affinity recognition/capture component of a <strong>Cbc-type (choline/betaine/carnitine) ATP-binding cassette (ABC) importer</strong>. It is <strong>not an enzyme</strong>: it catalyzes no chemical reaction. Its molecular job is to bind its ligand — <strong>L-carnitine</strong> — in the periplasmic space with micromolar affinity and deliver it to a shared membrane-embedded permease/ATPase core (the <strong>CbcWV</strong> transporter), which then uses ATP hydrolysis to translocate the substrate across the inner membrane into the cytoplasm. This is the first, committed step of carnitine uptake feeding a dedicated carnitine-catabolic pathway.</p>
+<p>The identification is robust and reconciles multiple independent lines of evidence. At the sequence/structure level, Q88R30 is a 314-residue protein with a cleaved N-terminal Sec signal peptide and a single <strong>OpuAC domain (Pfam PF04069; InterPro IPR007210/IPR017783)</strong> that folds into the classic <strong>Venus-flytrap, two-lobe "periplasmic binding protein-like II"</strong> architecture (class F SBP) used by compatible-solute/quaternary-ammonium-compound ABC transporters. At the genomic level, PP_0304 sits inside a coherent <strong>carnitine-catabolic gene cluster</strong> (carnitine 3-dehydrogenase PP_0302, dehydrocarnitine cleavage enzyme PP_0303, and the AraC-family regulator CdhR PP_0305), pinpointing carnitine as the physiological cargo. At the orthology level, PP_0304 is <strong>~58–62% identical</strong> to the <em>P. aeruginosa</em> protein <strong>CaiX (PA5388)</strong>, which has been directly characterized biochemically as a <strong>carnitine-specific SBP (K_m ≈ 24 µM)</strong> that recruits the shared <strong>CbcWV</strong> membrane core. The cognate CbcWV core (PP_0294/PP_0295) is present in KT2440 ~10 kb upstream of <em>caiX</em>, exactly reproducing the experimentally established Pseudomonas "orphan SBP + shared core" paradigm.</p>
+<p>Functionally, therefore, CaiX in <em>P. putida</em> is best described as the <strong>carnitine-specific periplasmic gatekeeper</strong> of quaternary-ammonium-compound import. Its localization is the <strong>periplasm</strong>; its role is <strong>substrate recognition and delivery</strong>, not transport energetics or catalysis; and it operates at the head of a pathway that allows <em>P. putida</em> to use L-carnitine (and short-chain O-acylcarnitines) as carbon, nitrogen and energy sources, and as an osmoprotectant. The conclusion rests on strong bioinformatic and comparative-genomic evidence anchored to direct biochemical characterization of the closely related <em>P. aeruginosa</em> ortholog; no <em>P. putida</em>-specific biochemical assay of PP_0304 itself has yet been published, which is the principal residual uncertainty.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-caix-is-a-periplasmic-substrate-binding-protein-of-a-betainecarnitine-abc-importer">Finding 1 — caiX is a periplasmic substrate-binding protein of a betaine/carnitine ABC importer</h3>
+<p>UniProt Q88R30 describes a <strong>314-amino-acid protein</strong> carrying a cleaved <strong>N-terminal Sec-type signal peptide</strong> (residues 1–24), yielding a mature chain (residues 25–314) that is exported to and functions in the <strong>periplasmic space</strong> rather than the cytoplasm. The protein consists of a single annotated domain (residues ~31–284) identified as an <strong>"ABC-type glycine betaine transport system substrate-binding" domain</strong> — <strong>Pfam PF04069 (OpuAC)</strong>, matched by <strong>InterPro IPR007210</strong> (ABC glycine-betaine transport, substrate-binding) and <strong>IPR017783</strong> (ABC choline substrate-binding). Structural classifiers assign it to the <strong>Gene3D 3.40.190.100</strong> "Glycine betaine-binding periplasmic protein" fold and <strong>SUPFAM SSF53850</strong> "Periplasmic binding protein-like II," i.e., the <strong>Venus-flytrap, two-lobe class F SBP</strong> architecture. Orthology databases are consistent: <strong>eggNOG COG2113</strong> (ABC-type proline/glycine-betaine transport, periplasmic component) and <strong>KEGG ortholog K02002</strong> (glycine betaine/proline ABC transporter substrate-binding protein). GO terms confirm the picture: periplasmic space (GO:0042597), ABC transporter complex (GO:0043190), and choline/quaternary-ammonium-compound binding (GO:0033265).</p>
+<p>This constellation of features unambiguously places CaiX in the family of <strong>compatible-solute / quaternary-ammonium-compound ABC-transporter substrate-binding proteins</strong>. The architecture of this transporter class was defined for the <em>Listeria monocytogenes</em> OpuC system, described as "an ATP binding protein (OpuCA), an extracellular substrate binding protein (OpuCC), and two membrane-associated proteins presumed to form the permease (OpuCB and OpuCD)" (<a href="https://pubmed.ncbi.nlm.nih.gov/11055912/">PMID: 11055912</a>). CaiX is the homolog of the <strong>OpuCC/OpuAC-type substrate-binding subunit</strong> — the dedicated recognition component. The mechanistic behaviour of this SBP family is likewise well established: the <em>Bacillus subtilis</em> OpuCC structure shows that "OpuCC is composed of two α/β/α globular sandwich domains linked by two hinge regions, with a substrate-binding pocket located at the interdomain cleft. Upon substrate binding, the two domains shift towards each other to trap the substrate" (<a href="https://pubmed.ncbi.nlm.nih.gov/21366542/">PMID: 21366542</a>). CaiX, sharing the same OpuAC/PF04069 fold, is therefore expected to capture its ligand in the interdomain cleft by this Venus-flytrap closure and present it to the membrane permease.</p>
+<h3 id="finding-2-caix-sits-in-a-carnitine-catabolic-gene-cluster-identifying-l-carnitine-as-its-physiological-import-substrate">Finding 2 — caiX sits in a carnitine-catabolic gene cluster, identifying L-carnitine as its physiological import substrate</h3>
+<p>The genomic neighbourhood of PP_0304 in <em>P. putida</em> KT2440 is not random: it forms a <strong>coherent carnitine-degradation module</strong>, all encoded on the complement strand around <em>caiX</em>:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Gene / product</th>
+<th>KO / EC</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_0301</td>
+<td>betainyl-CoA thioesterase</td>
+<td>K27492 / EC 3.1.2.33</td>
+<td>CoA-thioester processing</td>
+</tr>
+<tr>
+<td>PP_0302</td>
+<td>L-carnitine / carnitine 3-dehydrogenase</td>
+<td>K17735 / EC 1.1.1.108</td>
+<td>Carnitine oxidation</td>
+</tr>
+<tr>
+<td>PP_0303</td>
+<td>3-dehydrocarnitine:acetyl-CoA trimethylamine transferase (dehydrocarnitine cleavage)</td>
+<td>K27837 / EC 2.3.1.317</td>
+<td>C–N bond cleavage</td>
+</tr>
+<tr>
+<td><strong>PP_0304</strong></td>
+<td><strong>caiX (SBP)</strong></td>
+<td><strong>K02002</strong></td>
+<td><strong>Substrate binding / uptake</strong></td>
+</tr>
+<tr>
+<td>PP_0305</td>
+<td>CdhR (AraC-family activator)</td>
+<td>K17736</td>
+<td>Carnitine-catabolism regulator</td>
+</tr>
+</tbody>
+</table>
+<p>Nearby genes reinforce the quaternary-ammonium-compound context: PP_0298 is a glycine-betaine-responsive AraC-family activator (K21826), and PP_0310/PP_0311 are dimethylglycine/sarcosine dehydrogenases (K21833/K21834), consistent with downstream demethylation of the betaine/carnitine-derived carbon and nitrogen. The colocalization of the substrate-binding protein with <strong>carnitine 3-dehydrogenase</strong> and a <strong>dehydrocarnitine cleavage</strong> enzyme is the strongest genomic signature that the imported substrate is <strong>L-carnitine</strong>, since these enzymes act specifically on carnitine and its immediate oxidation product.</p>
+<p>The substrate assignment is directly supported by structural biochemistry of the same SBP family: crystallographers "determined crystal structures of OpuCC in the apo-form and in complex with carnitine, glycine betaine, choline and ectoine respectively" (<a href="https://pubmed.ncbi.nlm.nih.gov/21366542/">PMID: 21366542</a>), demonstrating that this OpuAC/PF04069 fold physically binds L-carnitine. At the whole-transporter level, OpuC-type ABC systems "encode an ABC compatible solute transporter which is capable of transporting L-carnitine" (<a href="https://pubmed.ncbi.nlm.nih.gov/11055912/">PMID: 11055912</a>). The combination of family biochemistry (this SBP fold binds carnitine) and gene context (carnitine-catabolic operon) makes <strong>L-carnitine</strong> the physiological import substrate of CaiX.</p>
+<h3 id="finding-3-p-putida-caix-is-an-ortholog-of-the-biochemically-characterized-carnitine-specific-sbp-caix-of-the-cbc-cbcwv-abc-transporter">Finding 3 — P. putida caiX is an ortholog of the biochemically characterized carnitine-specific SBP CaiX of the Cbc (CbcWV) ABC transporter</h3>
+<p>A pairwise global alignment (Needleman–Wunsch) of <em>P. putida</em> PP_0304 (Q88R30, 314 aa) against <em>P. aeruginosa</em> PAO1 <strong>CaiX / PA5388</strong> (312 aa) gives <strong>192 identical positions (~58–62% amino-acid identity)</strong> — well above the threshold for confident orthology — with the two proteins sharing the same gene symbol (<em>caiX</em>) and the same operon architecture (<em>caiX</em> adjacent to the carnitine-catabolic <em>cdh</em> genes). This is functionally decisive because the <em>P. aeruginosa</em> / <em>P. syringae</em> CaiX has been <strong>directly characterized as a periplasmic, carnitine-specific substrate-binding protein</strong>.</p>
+<p>The defining biochemical study reports that "the core transporter CbcWV also interacts with the carnitine-specific SBP CaiX (K_m, 24 microM) and the betaine-specific SBP BetX (K_m, 0.6 microM)" (<a href="https://pubmed.ncbi.nlm.nih.gov/19919675/">PMID: 19919675</a>). This establishes three things simultaneously: (i) CaiX is <strong>carnitine-specific</strong>; (ii) it binds with <strong>micromolar affinity (K_m ≈ 24 µM)</strong>; and (iii) it functions as an <strong>"orphan" SBP</strong> that recruits a <strong>shared membrane core, CbcWV</strong>, which is also used by other substrate-specific SBPs (CbcX for choline, BetX for betaine). The same work notes that "the orphan SBP genes common to bacterial genomes can encode functional SBPs" (<a href="https://pubmed.ncbi.nlm.nih.gov/19919675/">PMID: 19919675</a>), which explains why <em>caiX</em> in <em>P. putida</em> is genomically separated from its permease/ATPase partners yet fully functional.</p>
+<p>The substrate range of the CaiX–CbcWV system extends slightly beyond free carnitine: "Short-chain acylcarnitines are imported by the ABC transporter CaiX-CbcWV" (<a href="https://pubmed.ncbi.nlm.nih.gov/29517479/">PMID: 29517479</a>), whereas medium- and long-chain O-acylcarnitines are hydrolysed extracytoplasmically to free carnitine before uptake. The genetic definition of the operon in <em>Pseudomonas</em> — "we previously identified the genes required for carnitine catabolism as the first four genes in the carnitine operon (caiX-cdhCAB; PA5388 to PA5385)" (<a href="https://pubmed.ncbi.nlm.nih.gov/23524670/">PMID: 23524670</a>) — is precisely mirrored by the <em>P. putida</em> PP_0304 / PP_0302–PP_0303 cluster, linking CaiX-mediated transport directly to downstream carnitine catabolism.</p>
+<h3 id="finding-4-the-cognate-cbcwv-membrane-core-pp_0294pp_0295-for-orphan-sbp-caix-is-present-in-kt2440">Finding 4 — The cognate CbcWV membrane core (PP_0294/PP_0295) for orphan SBP caiX is present in KT2440</h3>
+<p>Because CaiX is an orphan SBP, a functional model requires that KT2440 also encode the shared <strong>CbcWV</strong> permease/ATPase core. KEGG KO mapping confirms this: <strong>PP_0294 = choline/betaine/carnitine ABC transporter ATP-binding subunit (K02000, CbcV)</strong> and <strong>PP_0295 = choline/betaine/carnitine ABC transporter membrane/permease subunit (K02001, CbcW)</strong>, located ~10 kb upstream of <em>caiX</em> (PP_0304) and carrying an explicit "choline/betaine/carnitine ABC transporter" annotation. The KT2440 genome encodes <strong>multiple K02002 substrate-binding proteins</strong> (PP_0076, PP_0296, PP_0304 = <em>caiX</em>, PP_1741, PP_2775, PP_3558), with <strong>PP_0296</strong> — a CbcX-type choline SBP — sitting immediately adjacent to the PP_0294/PP_0295 core. This layout <strong>exactly reproduces the experimentally established Pseudomonas Cbc paradigm</strong> in which a single CbcWV membrane core is shared by several genomically dispersed, substrate-specific SBPs, one of which is the carnitine-specific CaiX. The interpretation that PP_0304, located away from the core, is an orphan SBP recruiting shared CbcWV is directly supported by the finding that "the orphan SBP genes common to bacterial genomes can encode functional SBPs" (<a href="https://pubmed.ncbi.nlm.nih.gov/19919675/">PMID: 19919675</a>).</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>CaiX is the <strong>substrate-recognition module</strong> of a modular, "mix-and-match" ABC import system. The Pseudomonas Cbc transporter is unusual and elegant: a <strong>single membrane core (CbcWV)</strong> is shared by <strong>several interchangeable periplasmic SBPs</strong>, each conferring specificity for a different quaternary-ammonium compound. CaiX is the carnitine-dedicated member of this SBP set.</p>
+<div class="codehilite"><pre><span></span><code>PERIPLASM                          INNER MEMBRANE                 CYTOPLASM
+   ------------------------------------------------------------------------------------
+
+   L-carnitine (and short-chain
+      O-acylcarnitines)
+    │
+    ▼
+      ┌───────────┐   substrate capture
+      │   CaiX    │   (Venus-flytrap closure,
+      │ (PP_0304) │    Km ≈ 24 µM)
+      └─────┬─────┘
+    │ delivers ligand
+    ▼
+      ╔═══════════════════════╗   CbcW permease (PP_0295, K02001)
+      ║   CbcWV core           ║   + CbcV ATPase (PP_0294, K02000)
+      ║  (shared by CbcX/BetX/ ║──── ATP → ADP + Pi ───────────►  L-carnitine (cytoplasm)
+      ║   CaiX SBPs)           ║
+      ╚═══════════════════════╝                                          │
+                                                         ▼
+                            ┌──────────── carnitine catabolic operon ────────────┐
+                            │ PP_0302  carnitine 3-dehydrogenase (EC 1.1.1.108)   │
+                            │ PP_0303  dehydrocarnitine cleavage (EC 2.3.1.317)   │
+                            │ PP_0301  betainyl-CoA thioesterase (EC 3.1.2.33)    │
+                            │ PP_0305  CdhR (AraC-family activator)               │
+                            └──────► carbon / nitrogen / energy + osmoprotection ─┘
+</code></pre></div>
+
+<p><strong>Step-by-step:</strong></p>
+<ol>
+<li><strong>Recognition (periplasm).</strong> L-carnitine diffuses through the outer membrane into the periplasm, where CaiX (PP_0304) binds it in the interdomain cleft between its two α/β/α lobes, closing around the ligand (Venus-flytrap mechanism, per the OpuCC structural paradigm). CaiX discriminates carnitine from the chemically similar betaine and choline, which are handled by the sibling SBPs BetX and CbcX.</li>
+<li><strong>Delivery and translocation (inner membrane).</strong> The liganded, closed CaiX docks onto the <strong>CbcWV</strong> core (PP_0295 permease + PP_0294 ATPase). ATP binding/hydrolysis at CbcV drives conformational cycling of the CbcW permease, opening a translocation pathway that moves L-carnitine across the inner membrane into the cytoplasm.</li>
+<li><strong>Catabolism (cytoplasm).</strong> Imported carnitine enters the adjacent catabolic operon: <strong>carnitine 3-dehydrogenase (PP_0302)</strong> oxidizes it to 3-dehydrocarnitine, which is cleaved by <strong>PP_0303</strong>, ultimately yielding trimethylamine/glycine-betaine-derived carbon and nitrogen that feed central metabolism. <strong>CdhR (PP_0305)</strong> transcriptionally activates the operon in response to carnitine, coupling transport capacity to substrate availability.</li>
+<li><strong>Physiological outcome.</strong> The pathway lets <em>P. putida</em> exploit L-carnitine (abundant in soil, rhizosphere and animal-associated niches) and short-chain O-acylcarnitines as a <strong>carbon, nitrogen and energy source</strong>, and — because carnitine is also a compatible solute — potentially as an <strong>osmoprotectant</strong>.</li>
+</ol>
+<p>The key conceptual point is that CaiX has <strong>no catalytic activity and no transport-energizing activity of its own</strong>. It is a specificity/affinity determinant. Its "reaction" is a reversible binding equilibrium (carnitine + CaiX ⇌ CaiX·carnitine), and its "product" is a loaded receptor primed to trigger ATP-driven import. Its localization is strictly <strong>periplasmic</strong>, defined by its cleaved Sec signal peptide.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbrev.)</th>
+<th>How it supports the model</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/19919675/">19919675</a></td>
+<td><em>The ABC transporter Cbc recruits multiple SBPs with strong specificity for distinct QACs</em></td>
+<td><strong>Primary, direct.</strong> Defines CaiX as the carnitine-specific SBP (K_m 24 µM) recruiting the shared CbcWV core; establishes the orphan-SBP paradigm. Anchors the functional assignment of the <em>P. putida</em> ortholog.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/21366542/">21366542</a></td>
+<td><em>Structures of the SBP of the B. subtilis OpuC transporter</em></td>
+<td><strong>Structural/mechanistic.</strong> Same OpuAC/PF04069 fold as CaiX; crystal structures with carnitine, betaine, choline, ectoine bound; shows two-lobe Venus-flytrap closure. Explains binding mode and demonstrates carnitine binding by this family.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/11055912/">11055912</a></td>
+<td><em>ABC L-carnitine transporter in L. monocytogenes (OpuC)</em></td>
+<td><strong>Architectural.</strong> Defines the four-component OpuC transporter and confirms this family transports L-carnitine; positions CaiX as the OpuCC/OpuAC-type SBP homolog.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29517479/">29517479</a></td>
+<td><em>Processing/transport of short- vs long-chain O-acylcarnitines in P. aeruginosa</em></td>
+<td><strong>Substrate range.</strong> Shows CaiX–CbcWV imports free carnitine and short-chain acylcarnitines; long-chain species hydrolysed first. Defines cargo scope.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23524670/">23524670</a></td>
+<td><em>P. aeruginosa growth on O-acylcarnitines; short-chain acylcarnitine hydrolase</em></td>
+<td><strong>Genetic/operon.</strong> Defines the <em>caiX-cdhCAB</em> carnitine operon (PA5388–PA5385), mirrored by the <em>P. putida</em> PP_0304/PP_0302–0303 cluster; links transport to catabolism.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Supporting family/context literature (from the reviewed set):</strong> studies of OpuC in <em>B. subtilis</em> and <em>L. monocytogenes</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/12076811/">PMID: 12076811</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/12676677/">PMID: 12676677</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/9925583/">PMID: 9925583</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/33757219/">PMID: 33757219</a>) collectively confirm that OpuC-type ABC systems import carnitine and structurally related betaines with high affinity, and that the SBP determines specificity — consistent with CaiX's assigned role. Pseudomonas-specific betaine/choline-metabolism papers (<a href="https://pubmed.ncbi.nlm.nih.gov/18156257/">PMID: 18156257</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/17116241/">PMID: 17116241</a>) document the broader quaternary-ammonium-compound uptake and catabolism landscape in <em>P. putida</em> into which the Cbc/CaiX system fits.</p>
+<p><strong>Note on the ⚠️ identity check:</strong> The mandatory verification is satisfied. The gene symbol <em>caiX</em>, the OpuAC/PF04069 domain, the periplasmic SBP fold, the carnitine-operon context, and the ~60% identity to the biochemically characterized <em>P. aeruginosa</em> CaiX <strong>all converge</strong>. Importantly, this <em>caiX</em> is <strong>NOT</strong> the <em>Escherichia coli</em> <em>cai</em> system (CaiABCDT, involved in anaerobic carnitine/crotonobetaine metabolism and the CaiT antiporter) — those genes are unrelated in sequence and mechanism. The Pseudomonas <em>caiX</em> is specifically the substrate-binding protein of an ABC importer, which is the correct target here.</p>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct biochemistry on PP_0304 itself.</strong> The functional assignment is inferred from (a) the strongly characterized <em>P. aeruginosa</em> ortholog CaiX and (b) family/structural biochemistry of OpuCC/OpuAC proteins. There is <strong>no published binding assay, K_d/K_m measurement, or transport reconstitution using the <em>P. putida</em> KT2440 protein specifically.</strong> The ~58–62% identity, while comfortably in the orthology range, leaves open the possibility of subtly shifted affinity or specificity.</p>
+</li>
+<li>
+<p><strong>Specificity fine-structure untested locally.</strong> Whether <em>P. putida</em> CaiX excludes betaine/choline as cleanly as <em>P. aeruginosa</em> CaiX, and its exact affinity for short-chain O-acylcarnitines, has not been measured in this organism.</p>
+</li>
+<li>
+<p><strong>Core-partner interaction not experimentally demonstrated in KT2440.</strong> The pairing of PP_0304 with the PP_0294/PP_0295 (CbcWV) core is inferred from KEGG annotation, genomic layout, and the Pseudomonas paradigm — not from co-purification, in vitro reconstitution, or genetics in KT2440.</p>
+</li>
+<li>
+<p><strong>Regulation and induction not directly verified.</strong> The role of CdhR (PP_0305) in inducing <em>caiX</em> in KT2440, and any osmotic/σ-factor control (as seen for OpuC in Gram-positives), remain inferred rather than measured for this locus.</p>
+</li>
+<li>
+<p><strong>Signal peptide handling.</strong> Whether the mature protein is soluble periplasmic or lipoprotein-anchored has not been experimentally confirmed for PP_0304 (UniProt annotates a cleaved Sec signal, consistent with a soluble periplasmic SBP, typical of Gram-negative ABC importers).</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Direct ligand-binding assay of recombinant PP_0304.</strong> Express and purify the mature CaiX (residues 25–314) and measure binding to L-carnitine, glycine betaine, choline, ectoine, crotonobetaine, γ-butyrobetaine, and short-chain O-acylcarnitines by <strong>isothermal titration calorimetry (ITC)</strong> or <strong>intrinsic tryptophan fluorescence</strong>. Expected: high-affinity (low-µM K_d) binding to carnitine, weak/no binding to betaine/choline — confirming carnitine specificity in KT2440.</p>
+</li>
+<li>
+<p><strong>Transport reconstitution / genetics.</strong> Construct a KT2440 <strong>ΔPP_0304 mutant</strong> and test growth on L-carnitine (and short-chain acylcarnitines) as sole C/N source; complement to restore. Combine with <strong>ΔPP_0294/ΔPP_0295 (CbcWV core)</strong> deletions to confirm the shared-core dependency and the orphan-SBP model. Radiolabelled [¹⁴C]carnitine uptake assays would quantify the transport phenotype.</p>
+</li>
+<li>
+<p><strong>In vitro CaiX–CbcWV interaction.</strong> Co-purify or cross-link PP_0304 with the reconstituted PP_0294/PP_0295 core (proteoliposomes) and measure ATPase stimulation upon addition of carnitine-loaded CaiX — the direct test of functional recruitment.</p>
+</li>
+<li>
+<p><strong>Structural determination.</strong> Solve the CaiX crystal or cryo-EM structure in apo and carnitine-bound states to visualize the Venus-flytrap closure and the carnitine-binding pocket residues; compare to the OpuCC and <em>P. aeruginosa</em> CaiX structures.</p>
+</li>
+<li>
+<p><strong>Regulatory analysis.</strong> Use RT-qPCR / reporter fusions to test induction of the PP_0301–PP_0305 operon by carnitine and its dependence on CdhR (PP_0305); assess any osmotic modulation.</p>
+</li>
+<li>
+<p><strong>Substrate-range profiling.</strong> Test whether the KT2440 system, like <em>P. aeruginosa</em>, imports short-chain but not long-chain O-acylcarnitines, and identify any dedicated extracytoplasmic acylcarnitine hydrolase in the KT2440 genome (analogous to the <em>P. aeruginosa</em> enzyme in <a href="https://pubmed.ncbi.nlm.nih.gov/23524670/">PMID: 23524670</a>).</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>CaiX (Q88R30 / PP_0304) is the <strong>periplasmic, carnitine-specific substrate-binding protein</strong> of a Cbc-type quaternary-ammonium-compound ABC importer in <em>Pseudomonas putida</em> KT2440. It binds <strong>L-carnitine</strong> (and short-chain O-acylcarnitines) with micromolar affinity in the periplasm and delivers it to the shared <strong>CbcWV</strong> permease/ATPase core (PP_0294/PP_0295) for ATP-driven import — the committed first step feeding an adjacent carnitine-catabolic operon (PP_0301–PP_0305). The assignment is supported by the OpuAC/PF04069 Venus-flytrap SBP fold, a cleaved Sec signal peptide fixing periplasmic localization, an intact carnitine-catabolic gene cluster, and ~58–62% identity to the biochemically characterized <em>P. aeruginosa</em> CaiX (K_m ≈ 24 µM). The main gap is the absence of direct biochemical characterization of the <em>P. putida</em> protein itself.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="caiX-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="caiX-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:11055912</li>
+<li>PMID:21366542</li>
+<li>PMID:19919675</li>
+<li>PMID:29517479</li>
+<li>PMID:23524670</li>
+<li>PMID:12076811</li>
+<li>PMID:12676677</li>
+<li>PMID:9925583</li>
+<li>PMID:33757219</li>
+<li>PMID:18156257</li>
+<li>PMID:17116241</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88R30
+gene_symbol: caiX
+product_type: PROTEIN
+status: DRAFT
+taxon: {id: &#39;NCBITaxon:160488&#39;, label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)}
+description: &gt;-
+  CaiX is the periplasmic L-carnitine-binding component that supplies substrate
+  specificity to the shared CbcWV ABC importer during carnitine uptake.
+existing_annotations:
+  - term: {id: &#39;GO:0015871&#39;, label: choline transport}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review:
+      summary: CaiX is carnitine-selective rather than the choline-selective CbcX protein.
+      action: REMOVE
+      reason: Orthologous CaiX is required for carnitine uptake, whereas CbcX supplies choline recognition.
+      supported_by:
+        - {reference_id: &#39;PMID:19919675&#39;, supporting_text: &#39;CaiX, a carnitine-specific binding protein, is required for Cbc-mediated uptake of L-carnitine&#39;}
+  - term: {id: &#39;GO:0022857&#39;, label: transmembrane transporter activity}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review: {summary: CaiX is a soluble binding component and does not span the membrane., action: REMOVE, reason: It contributes substrate recognition to the CbcWV transporter complex.}
+  - term: {id: &#39;GO:0015226&#39;, label: carnitine transmembrane transporter activity}
+    evidence_type: ISS
+    original_reference_id: PMID:19919675
+    qualifier: contributes_to
+    review:
+      summary: CaiX contributes carnitine recognition to the CbcWV importer.
+      action: NEW
+      reason: Pseudomonas CaiX is experimentally required for Cbc-mediated carnitine uptake.
+      supported_by:
+        - {reference_id: &#39;PMID:19919675&#39;, supporting_text: &#39;CaiX-mediated carnitine uptake&#39;}
+        - reference_id: file:PSEPK/caiX/caiX-deep-research-openscientist.md
+          supporting_text: caiX sits in a carnitine-catabolic gene cluster
+  - term: {id: &#39;GO:0033265&#39;, label: choline binding}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: The family mapping assigns the CbcX substrate to carnitine-selective CaiX.
+      action: MODIFY
+      reason: &gt;-
+        Experimental ortholog evidence identifies CaiX as carnitine-specific,
+        not choline-specific. Monocarboxylic-acid binding remains a valid broad
+        molecular function until GO provides an L-carnitine-binding term.
+      proposed_replacement_terms:
+        - {id: &#39;GO:0033293&#39;, label: monocarboxylic acid binding}
+      supported_by:
+        - {reference_id: &#39;PMID:19919675&#39;, supporting_text: &#39;carnitine-specific SBP CaiX&#39;}
+  - term: {id: &#39;GO:0042597&#39;, label: periplasmic space}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: located_in
+    review: {summary: CaiX acts as a periplasmic substrate-binding protein., action: ACCEPT, reason: Its signal peptide and role in a Gram-negative ABC importer support this location.}
+  - term: {id: &#39;GO:0043190&#39;, label: &#39;ATP-binding cassette (ABC) transporter complex&#39;}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: part_of
+    review:
+      summary: CaiX is an interchangeable substrate-binding component of the Cbc importer.
+      action: ACCEPT
+      reason: It associates with the CbcWV core when carnitine is transported.
+      supported_by:
+        - {reference_id: &#39;PMID:19919675&#39;, supporting_text: &#39;The core transporter CbcWV also interacts with the carnitine-specific SBP CaiX&#39;}
+  - term: {id: &#39;GO:0055085&#39;, label: transmembrane transport}
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review: {summary: Correct broad process but less informative than carnitine transport., action: KEEP_AS_NON_CORE, reason: CaiX participates in transport as the substrate-recognition component.}
+  - term: {id: &#39;GO:1902603&#39;, label: carnitine transmembrane transport}
+    evidence_type: ISS
+    original_reference_id: PMID:19919675
+    qualifier: involved_in
+    review:
+      summary: Carnitine transport is the specific process mediated by CaiX with CbcWV.
+      action: NEW
+      reason: Direct Pseudomonas genetic and uptake evidence supports this role.
+      supported_by:
+        - {reference_id: &#39;PMID:19919675&#39;, supporting_text: &#39;CaiX-mediated carnitine uptake&#39;}
+references:
+  - {id: &#39;GO_REF:0000002&#39;, title: Gene Ontology annotation through association of InterPro records with GO terms, findings: []}
+  - id: PMID:19919675
+    title: The ATP-binding cassette transporter Cbc (choline/betaine/carnitine) recruits multiple substrate-binding proteins with strong specificity for distinct quaternary ammonium compounds.
+    findings: [{statement: Establishes CaiX as the carnitine-selective binding component used with CbcWV.}]
+  - {id: &#39;file:PSEPK/caiX/caiX-uniprot.txt&#39;, title: UniProtKB record for caiX, findings: [{statement: Identifies Q88R30 as the carnitine uptake periplasmic component.}]}
+  - {id: &#39;file:PSEPK/caiX/caiX-goa.tsv&#39;, title: QuickGO annotations for caiX, findings: [{statement: Contains the six GOA annotations reviewed here.}]}
+  - id: file:PSEPK/caiX/caiX-deep-research-openscientist.md
+    title: OpenScientist deep research report for caiX
+    findings:
+      - statement: &gt;-
+          Supports CaiX orthology, periplasmic localization, CbcWV recruitment,
+          and the absence of direct KT2440 binding assays.
+core_functions:
+  - description: Periplasmic L-carnitine recognition for the CbcWV ABC importer.
+    molecular_function: {id: &#39;GO:0033293&#39;, label: monocarboxylic acid binding}
+    contributes_to_molecular_function: {id: &#39;GO:0015226&#39;, label: carnitine transmembrane transporter activity}
+    directly_involved_in: [{id: &#39;GO:1902603&#39;, label: carnitine transmembrane transport}]
+    locations: [{id: &#39;GO:0042597&#39;, label: periplasmic space}]
+    in_complex: {id: &#39;GO:0043190&#39;, label: &#39;ATP-binding cassette (ABC) transporter complex&#39;}
+    supported_by:
+      - {reference_id: &#39;PMID:19919675&#39;, supporting_text: &#39;The core transporter CbcWV also interacts with the carnitine-specific SBP CaiX&#39;}
+proposed_new_terms:
+  - proposed_name: L-carnitine binding
+    proposed_definition: Binding to L-carnitine.
+    justification: &gt;-
+      CaiX is a substrate-binding protein specific for L-carnitine, but GO has
+      no substrate-specific binding term that captures this direct activity.
+    proposed_parent: {id: &#39;GO:0033293&#39;, label: monocarboxylic acid binding}
+    supported_by:
+      - reference_id: PMID:19919675
+        supporting_text: the carnitine-specific SBP CaiX (K(m), 24 microM)
+suggested_questions:
+  - question: What is the binding affinity and substrate range of KT2440 CaiX itself?
+suggested_experiments:
+  - {description: Measure Q88R30 binding to L-carnitine and related quaternary amines and test CbcWV-dependent uptake., experiment_type: ligand-binding and transport assay}
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
