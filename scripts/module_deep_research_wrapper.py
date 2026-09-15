@@ -22,6 +22,8 @@ from typing import Any
 
 import yaml
 
+from ai_gene_review.utils.research_process import run_research_process
+
 
 PROVIDERS = (
     "openai",
@@ -430,7 +432,7 @@ def run_deep_research(
         return 0
     output_path.parent.mkdir(parents=True, exist_ok=True)
     try:
-        result = subprocess.run(cmd, timeout=timeout)
+        result = run_research_process(cmd, timeout=timeout)
     except subprocess.TimeoutExpired:
         print(f"Error: deep-research-client timed out after {timeout}s", file=sys.stderr)
         return 124
