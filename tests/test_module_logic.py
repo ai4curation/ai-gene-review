@@ -256,9 +256,11 @@ def test_abduction_classification(present, active, classification, gaps):
     # only abduction targets carry gap-filling hypotheses
     assert bool(ab.hypotheses) == (classification in {"ABDUCTION_TARGET", "OVERPREDICTION"})
     if classification == "ABDUCTION_TARGET":
-        # the candidate canonical enzymes that were all absent are reported per gap
-        assert ab.gap_candidates["acylation"] == ["metA", "metX"]
-        assert ab.gap_candidates["sulfur_incorporation"] == ["metB", "metC", "metY", "metZ"]
+        # Canonical enzymes and concrete family representatives are reported per gap.
+        assert ab.gap_candidates["acylation"] == ["MetX", "MetXS", "metA", "metX"]
+        assert ab.gap_candidates["sulfur_incorporation"] == [
+            "MetB", "MetC", "MetY", "MetZ", "metB", "metC", "metY", "metZ"
+        ]
 
 
 KETOLYSIS = Path("modules/ketone_body_oxidation.yaml")
