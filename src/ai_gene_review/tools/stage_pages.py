@@ -15,6 +15,7 @@ import subprocess
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
+from ai_gene_review.tools.pages_assets import share_template_assets
 from ai_gene_review.tools.pages_dependencies import TEXT_ASSETS, DependencyResolver
 
 
@@ -36,6 +37,7 @@ class SiteManifest:
     linked_source_bytes_not_staged: int
     broken_local_link_paths: list[str]
     off_base_path_urls: list[str]
+    shared_asset_bytes_saved: int = 0
     size_budget_bytes: int = PAGES_SIZE_BUDGET_BYTES
 
     @property
@@ -205,8 +207,14 @@ def stage_pages(repo_root: Path, output_dir: Path) -> SiteManifest:
     audit = _stage_linked_files(repo_root, output_dir)
     linked_sources = audit.excluded_sources
     broken_links = audit.missing_paths
+    # Scan/copy dependencies before replacing inline blocks: the new assets
+    # exist only in the artifact and contain no URL-relative dependencies.
+    generated_pages = [output_dir / p.relative_to(repo_root) for p in gene_pages]
+    generated_pages.extend((output_dir / "pages").rglob("*.html"))
+    shared_asset_bytes_saved = share_template_assets(output_dir, generated_pages)
     staged_files = [path for path in output_dir.rglob("*") if path.is_file()]
     manifest = SiteManifest(
+        shared_asset_bytes_saved=shared_asset_bytes_saved,
         off_base_path_urls=sorted(audit.off_base_urls),
         broken_local_link_paths=sorted(p.as_posix() for p in broken_links),
         total_bytes=sum(path.stat().st_size for path in staged_files),
@@ -273,6 +281,9 @@ def main() -> None:
     size_mib = manifest.total_bytes / MIB
     print(f"Staged {manifest.total_files:,} files in {output_dir}")
     print(f"Uncompressed site size: {size_mib:,.1f} MiB")
+    print(
+        f"Shared template assets saved: {manifest.shared_asset_bytes_saved / MIB:,.1f} MiB"
+    )
     print(
         "Rendered pages: "
         f"{manifest.gene_pages:,} genes, "

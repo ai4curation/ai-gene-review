@@ -403,7 +403,14 @@ from `main:/` until the shadow artifact has been verified.
 
 Staging also follows local links from published HTML and CSS, plus literal
 JavaScript fetch()/import() URLs, copying reports, notes, images, and downloads at
-their existing paths. Links and file contents are unchanged. Dynamic JavaScript
+their existing paths. Supporting files keep their original bytes. In staged gene,
+project, and module HTML, exact static CSS/JavaScript blocks from the maintained
+templates are replaced with relative links to content-addressed shared files in
+`_pages-assets/`. This preserves page URLs, script order, and CSS contents while
+avoiding thousands of identical copies. Source HTML remains standalone and
+unchanged. Unknown/dynamic blocks, URL-relative CSS, and documents with a
+`<base>` element remain inline. The manifest reports net savings as
+`shared_asset_bytes_saved`. Dynamic JavaScript
 URLs still require browser checks. Deleted reviews' orphan HTML remains excluded.
 The manifest's `linked_source_files_not_staged` and corresponding byte count
 specifically report these excluded orphan review pages. Independently linked
@@ -414,7 +421,7 @@ The publication boundary is reachable, non-hidden files inside this repository
 at the existing site paths. Navigation and dependencies are followed transitively,
 without extension filters, depth limits, or per-file truncation that would break
 existing links. Oversized artifacts are reported and blocked, not silently pruned.
-Reducing generated HTML duplication is separate work needed before the live switch.
+Further size reduction is still needed before the live switch.
 
 The deployment job is disabled unless `PAGES_ARTIFACT_DEPLOY_ENABLED=true` is set
 in repository Actions variables. It requires a successful upload, at most
@@ -447,6 +454,9 @@ Actions deployment enabled, it appears after the next successful daily deploymen
 Agent cron profiles do not control this publication schedule. Manual runs wait for
 an active build to finish instead of cancelling it. Gene review validation remains
 in PR CI and the weekly full validation workflow.
+
+Module authors: see [the symbol-label rule](docs/module-symbol-labels.md) for
+family representative labels, validation warnings, and accession-based reasoning.
 
 ## Contributing
 
