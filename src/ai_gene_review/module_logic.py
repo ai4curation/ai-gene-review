@@ -53,6 +53,7 @@ from typing import Callable, Iterator, Literal, Optional, Union
 import yaml
 
 from ai_gene_review.render_modules import as_list
+from ai_gene_review.module_gene_symbols import descriptor_symbol
 
 
 @dataclass(frozen=True)
@@ -110,21 +111,16 @@ Predicate = Callable[[Atom], bool]
 
 
 def _symbol_from_gene(gene: dict) -> Optional[str]:
-    """Pull a leading gene symbol out of a GeneDescriptor's ``preferred_term``.
+    """Use the same conservative symbol-label rule as module validation.
 
-    Descriptors used by this engine must be symbol-first, including family
-    representatives: write "MetXS (PSEPK)", not "PSEPK MetXS". Organism names
-    and prose are not parsed as a source of gene identifiers.
+    Ambiguous labels yield no symbol; the descriptor's accession is retained.
 
     >>> _symbol_from_gene({"preferred_term": "MetXS (PSEPK)"})
     'MetXS'
-    >>> _symbol_from_gene({"preferred_term": "PCK1 (cytosolic PEPCK)"})
-    'PCK1'
+    >>> _symbol_from_gene({"preferred_term": "PSEPK MetXS"}) is None
+    True
     """
-    pref = gene.get("preferred_term") if gene else None
-    if not pref:
-        return None
-    return pref.split()[0].strip().rstrip(":")
+    return descriptor_symbol(gene or {})
 
 
 def _uniprot_from_gene(gene: dict) -> Optional[str]:
@@ -142,8 +138,8 @@ def _atom_from_annoton(annoton: dict) -> Atom:
     gene = participant.get("gene") or {}
     representatives = ((participant.get("family") or {}).get("representative_members") or [])
     gene_symbol = _symbol_from_gene(gene)
-    # An explicit gene supplies the canonical symbol. Family member labels can
-    # include organism names, so only use them as the family-only fallback.
+    # An explicit gene supplies the canonical symbol. Family-only fallback
+    # applies the same symbol-label rule; ambiguous prose never becomes a symbol.
     representative_symbols = tuple(
         symbol for member in representatives
         if (symbol := _symbol_from_gene(member))

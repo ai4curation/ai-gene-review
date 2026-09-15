@@ -455,6 +455,9 @@ Agent cron profiles do not control this publication schedule. Manual runs wait f
 an active build to finish instead of cancelling it. Gene review validation remains
 in PR CI and the weekly full validation workflow.
 
+Module authors: see [the symbol-label rule](docs/module-symbol-labels.md) for
+family representative labels, validation warnings, and accession-based reasoning.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed contribution guidelines including:
