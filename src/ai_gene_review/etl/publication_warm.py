@@ -231,11 +231,20 @@ def is_usable_full_text(text: str, body: str) -> bool:
         return True
     if normalized_text in normalized_abstract:
         return False
-    # Compare via a mid-abstract probe rather than full containment: cached
-    # abstracts often carry a PubMed citation header the provider text lacks.
-    probe_start = max(0, (len(normalized_abstract) - 200) // 2)
-    probe = normalized_abstract[probe_start : probe_start + 200]
-    if probe and probe in normalized_text:
+    # Detect an abstract echo via overlapping-shingle matching rather than full
+    # containment: cached abstracts often carry a PubMed citation header the
+    # provider text lacks, so some shingles legitimately miss while the prose
+    # shingles hit. The shingle size adapts so short abstracts still get
+    # header-free windows. Any overlap only rejects together with the
+    # added-length condition, so genuine body text is never rejected here.
+    shingle_size = min(50, max(20, len(normalized_abstract) // 4))
+    stride = max(1, shingle_size // 2)
+    shingles = [
+        normalized_abstract[i : i + shingle_size]
+        for i in range(0, len(normalized_abstract) - shingle_size + 1, stride)
+    ] or [normalized_abstract]
+    hits = sum(1 for shingle in shingles if shingle in normalized_text)
+    if hits >= max(1, len(shingles) // 4):
         added = len(normalized_text) - len(normalized_abstract)
         if added < MIN_FULL_TEXT_CHARS:
             return False
@@ -338,8 +347,20 @@ def warm_publication(
         # routine `ReferenceFetcher.fetch` uses internally; it is not yet public
         # API — public-API request tracked in
         # https://github.com/ai4curation/ai-gene-review/issues/2789 (to be
-        # transferred to linkml-reference-validator).
-        text, fmt, _pdf_bytes, error = fetcher._materialize(location)
+        # transferred to linkml-reference-validator); pyproject bounds LRV <0.3
+        # until it lands.
+        try:  # external system boundary: symmetric with the locate guard above,
+            # so one failed download still lets later providers try this record
+            text, fmt, _pdf_bytes, error = fetcher._materialize(location)
+        except Exception as exc:
+            logger.warning(
+                "Materializing '%s' full text failed for PMID:%s: %s",
+                provider_name,
+                ids.pmid,
+                exc,
+            )
+            had_error = True
+            continue
         if error:
             had_error = True
         if not text or len(text.strip()) < MIN_FULL_TEXT_CHARS:

@@ -11,9 +11,11 @@
 4. **openalex** — open-access location located by DOI
 
 This complements the older `just refresh-publications`, which only retried
-records that already had a PMC id. The warm sweep also covers **DOI-only
-records** (roughly two-thirds of the backlog), which previously were never
-retried at all.
+records that already had a PMC id. The warm sweep also covers **PMID records
+without a PMC id** (roughly two-thirds of the backlog), which previously were
+never retried at all — their DOI lets Unpaywall/OpenAlex locate open text.
+Note the sweep targets `PMID_*.md` records only; the small number of
+`DOI_*.md`-keyed records in the cache are not candidates.
 
 ## Tagging convention (adopted from monarch-initiative/dismech)
 

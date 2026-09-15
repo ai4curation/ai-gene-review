@@ -294,6 +294,19 @@ def test_is_usable_full_text_accepts_genuine_body_text() -> None:
     assert is_usable_full_text(genuine, BODY_WITH_ABSTRACT) is True
 
 
+def test_is_usable_full_text_rejects_echo_of_short_headered_abstract() -> None:
+    # A short abstract whose cached copy starts with a PubMed citation header:
+    # the midpoint probe can land in the header, so the tail probe must catch
+    # the echo.
+    short_abstract = "CLV1 encodes a receptor-like protein kinase in meristems."
+    body = (
+        "\n\n# T\n\n## Abstract\n\n1. Plant Cell. 1999 Mar;11(3):393-406. "
+        "doi: 10.1105/tpc.11.3.393.\n\n" + short_abstract + "\n"
+    )
+    echo = short_abstract + " Keywords: meristem."
+    assert is_usable_full_text(echo, body) is False
+
+
 @pytest.fixture
 def configurable_provider():
     """Register a provider whose located result is set per-test."""
