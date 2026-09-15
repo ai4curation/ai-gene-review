@@ -1,0 +1,2532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rbsK - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>rbsK</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88K34" target="_blank" class="term-link">
+                        Q88K34
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "rbsK";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88K34" data-a="DESCRIPTION: RbsK is a cytosolic ribokinase that uses ATP to ph..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>RbsK is a cytosolic ribokinase that uses ATP to phosphorylate D-ribose at O-5, producing D-ribose 5-phosphate for central carbon and biosynthetic metabolism. Its specific function is supported by convergent HAMAP, InterPro, EC, Rhea, and PANTHER assignments, although KT2440-specific enzymology is unavailable.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004747" target="_blank" class="term-link">
+                                    GO:0004747
+                                </a>
+                            </span>
+                            <span class="term-label">ribokinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K34" data-a="GO:0004747" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Specific core catalytic activity supported by EC 2.7.1.15 and RHEA:13697.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005524" target="_blank" class="term-link">
+                                    GO:0005524
+                                </a>
+                            </span>
+                            <span class="term-label">ATP binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K34" data-a="GO:0005524" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct substrate binding but subordinate to ribokinase activity.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K34" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct broad location but redundant with the more specific cytosol annotation.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K34" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Appropriate specific location for this soluble ribose-catabolic enzyme.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006014" target="_blank" class="term-link">
+                                    GO:0006014
+                                </a>
+                            </span>
+                            <span class="term-label">D-ribose metabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K34" data-a="GO:0006014" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct parent process but less informative than D-ribose catabolism.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016301" target="_blank" class="term-link">
+                                    GO:0016301
+                                </a>
+                            </span>
+                            <span class="term-label">kinase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K34" data-a="GO:0016301" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct broad molecular-function parent of ribokinase activity.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016772" target="_blank" class="term-link">
+                                    GO:0016772
+                                </a>
+                            </span>
+                            <span class="term-label">transferase activity, transferring phosphorus-containing groups</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K34" data-a="GO:0016772" data-r="GO_REF:0000117" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct but highly general catalytic parent.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019303" target="_blank" class="term-link">
+                                    GO:0019303
+                                </a>
+                            </span>
+                            <span class="term-label">D-ribose catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K34" data-a="GO:0019303" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct process context for conversion of D-ribose to D-ribose 5-phosphate.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0046835" target="_blank" class="term-link">
+                                    GO:0046835
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate phosphorylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88K34" data-a="GO:0046835" data-r="GO_REF:0000104" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Correct reaction-class process but less informative than D-ribose catabolism.
+                        </div>
+
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Phosphorylates D-ribose with ATP to form D-ribose 5-phosphate during ribose catabolism.</h3>
+                <span class="vote-buttons" data-g="Q88K34" data-a="FUNCTION: Phosphorylates D-ribose with ATP to form D-ribose ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004747" target="_blank" class="term-link">
+                            ribokinase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019303" target="_blank" class="term-link">
+                                D-ribose catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                cytosol
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/rbsK/rbsK-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">CC       Reaction=D-ribose + ATP = D-ribose 5-phosphate + ADP + H(+);</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/rbsK/rbsK-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">Direct enzymatic assay of the *P. putida* protein has not been published</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/rbsK/rbsK-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for Pseudomonas putida KT2440 rbsK</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UniProt assigns the D-ribose phosphorylation reaction to Q88K34.</div>
+
+                        <div class="finding-text">"CC       Reaction=D-ribose + ATP = D-ribose 5-phosphate + ADP + H(+);"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The PANTHER subfamily is specifically labeled ribokinase.</div>
+
+                        <div class="finding-text">"DR   PANTHER; PTHR10584:SF166; RIBOKINASE; 1."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/rbsK/rbsK-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research report for rbsK in Pseudomonas putida KT2440</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report found no direct enzymatic assay of Q88K34.</div>
+
+                        <div class="finding-text">"Direct enzymatic assay of the *P. putida* protein has not been published"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What is the substrate spectrum and kinetic preference of KT2440 RbsK among related sugars?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88K34" data-a="Q: What is the substrate spectrum and kinetic prefere..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Does KT2440 RbsK require or respond physiologically to monovalent metal ions, and should its UniProt-only GO:0046872 metal ion binding cross-reference be represented in GOA?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88K34" data-a="Q: Does KT2440 RbsK require or respond physiologicall..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Purify RbsK and compare kinase kinetics for D-ribose and structurally related sugars.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: comparative enzymology</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88K34" data-a="EXPERIMENT: Purify RbsK and compare kinase kinetics for D-ribo..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rbsK-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88K34" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *rbsK* (Ribokinase, PP_2458 / UniProt Q88K34) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">13 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-31T11:58:09.775311</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="rbsK-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="rbsK-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-rbsk-ribokinase-pp_2458-uniprot-q88k34-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>rbsK</em> (Ribokinase, PP_2458 / UniProt Q88K34) in <em>Pseudomonas putida</em> KT2440</h1>
+<h2 id="summary">Summary</h2>
+<p>The gene <strong>rbsK</strong> (ordered locus <strong>PP_2458</strong>; UniProt <strong>Q88K34</strong>) of <em>Pseudomonas putida</em> KT2440 encodes <strong>ribokinase (RK; EC 2.7.1.15)</strong>, a cytoplasmic sugar kinase of the <strong>PfkB carbohydrate-kinase superfamily</strong>. Its primary and defining biochemical function is the <strong>ATP-dependent phosphorylation of D-ribose to D-ribose-5-phosphate</strong>, releasing ADP. This is the committed, essentially irreversible first intracellular step of D-ribose catabolism: it traps free ribose entering the cell in a charged, membrane-impermeant phosphorylated form and channels it into central carbon and nucleotide metabolism. The enzyme requires <strong>Mg²⁺</strong> (to coordinate the ATP phosphates, forming the true Mg·ATP donor) and is <strong>activated by a monovalent cation, most effectively K⁺</strong> — a mechanistic hallmark of the ribokinase branch of the PfkB family.</p>
+<p>The product, <strong>D-ribose-5-phosphate (R5P)</strong>, is a hub metabolite. It enters the <strong>non-oxidative pentose phosphate pathway</strong> and, via phosphoribosyl pyrophosphate synthetase (PRPS), becomes <strong>5-phospho-α-D-ribose-1-diphosphate (PRPP)</strong> — the universal precursor for de novo and salvage synthesis of purine and pyrimidine nucleotides, and for the biosynthesis of histidine and tryptophan. RbsK therefore sits at the junction between carbohydrate uptake and the building blocks of nucleic acids.</p>
+<p>In <em>P. putida</em> KT2440 specifically, PP_2458 is embedded in a complete, contiguous <strong>ribose-utilization operon</strong> (PP_2454–PP_2460: <em>rbsB-rbsA-rbsC-rbsR-rbsK-rbsD</em> plus an adjacent ribonucleoside hydrolase). This genomic context places RbsK immediately downstream of the <strong>RbsBAC high-affinity ABC ribose importer</strong> and the <strong>RbsD ribose pyranase/anomerase</strong>, defining a coherent import-and-activate module in the cytoplasm. Direct enzymatic assay of the <em>P. putida</em> protein has not been published (UniProt evidence level PE=3, "inferred from homology"); however, the annotation is strongly supported by (i) ortholog biochemistry and crystallography from <em>E. coli</em>, <em>Vibrio cholerae</em> and <em>Arabidopsis thaliana</em>, and (ii) sequence analysis performed during this investigation showing <strong>41.4% identity to biochemically characterized <em>E. coli</em> ribokinase</strong> with <strong>full conservation of every catalytic and cofactor-binding motif</strong>, including the general-base aspartate (Asp254).</p>
+<h3 id="gene-identity-verification-mandatory-check">Gene-identity verification (mandatory check)</h3>
+<p>All required verification steps pass. (1) The gene symbol <strong>"rbsK"</strong> is the canonical bacterial ribokinase gene name (as in the <em>E. coli rbsDACBK</em> operon) and matches the UniProt ribokinase description. (2) The organism is confirmed as <em>Pseudomonas putida</em> KT2440 (PP_2458); orthologs used for functional inference are clearly labeled as such. (3) The PfkB/ribokinase-family literature aligns with the InterPro domains listed for Q88K34 (IPR011877 Ribokinase; IPR002139 Ribo/fructokinase; IPR011611 PfkB domain; IPR029056 Ribokinase-like fold; IPR002173 PfkB conserved site). (4) No conflicting literature for a different "rbsK" was found. This report describes the correct protein.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-rbsk-is-a-ribokinase-catalyzing-d-ribose-atp-d-ribose-5-phosphate-adp-ec-27115">Finding 1 — RbsK is a ribokinase catalyzing D-ribose + ATP → D-ribose-5-phosphate + ADP (EC 2.7.1.15)</h3>
+<p>The core function of the gene product is unambiguous at the level of enzyme class. UniProt Q88K34 annotates PP_2458 as ribokinase (EC 2.7.1.15) under HAMAP curation rule MF_01987, and this reaction is one of the best-characterized in carbohydrate metabolism across orthologs. The enzyme transfers the γ-phosphate of ATP to the 5-hydroxyl of D-ribose, producing D-ribose-5-phosphate and ADP.</p>
+<p>The reaction stoichiometry is stated directly in the structural literature: <em>"Ribokinase (RK) is one of the principal enzymes in carbohydrate metabolism, catalyzing the reaction of D-ribose and adenosine triphosphate to produce ribose-5-phosphate and adenosine diphosphate (ADP)"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/25084391/">PMID: 25084391</a>). The classic <em>E. coli</em> enzyme study similarly confirms substrate, product, and cofactor requirements: <em>"Ribokinase phosphorylates ribose to form ribose-5-phosphate in the presence of ATP and magnesium"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/9385653/">PMID: 9385653</a>).</p>
+<p>The reaction is catalytically efficient in characterized orthologs — recombinant <em>E. coli</em> ribokinase reached a specific activity of roughly <strong>75 µmol/min/mg</strong> (<a href="https://pubmed.ncbi.nlm.nih.gov/16784868/">PMID: 16784868</a>). Crystallographic ternary complexes captured with ribose plus ATP (or ATP analogs) and with product/ADP have defined the transferred phosphoryl group and the catalytic geometry (<a href="https://pubmed.ncbi.nlm.nih.gov/25084391/">PMID: 25084391</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/30822455/">PMID: 30822455</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/9385653/">PMID: 9385653</a>). This is the <strong>primary and defining activity</strong> of the gene product.</p>
+<h3 id="finding-2-cofactor-requirements-and-substrate-specificity-mg2-k-activation-and-strict-d-stereospecificity">Finding 2 — Cofactor requirements and substrate specificity: Mg²⁺, K⁺ activation, and strict D-stereospecificity</h3>
+<p>Ribokinase catalysis has two well-defined ionic requirements that are diagnostic of the enzyme. First, a <strong>divalent metal (Mg²⁺, or Mn²⁺)</strong> is required to coordinate the ATP phosphates and stabilize the transition state — the true phosphoryl donor is Mg·ATP. Second, and characteristically for this enzyme, a <strong>monovalent cation</strong> is essential for maximal activity, with a strong preference for <strong>potassium</strong>. The definitive substrate-specificity study reports: <em>"Catalytic activity of RK: (i) is strongly dependent on the presence of monovalent cations (potassium &gt;&gt;&gt; ammonium &gt; cesium), and (ii) is cooperatively enhanced by divalent magnesium and manganese ions"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/16784868/">PMID: 16784868</a>). The K⁺ ion binds near the active site and orders a loop that positions the catalytic ("anion hole") machinery — a structural feature shared across the ribokinase subfamily of PfkB kinases.</p>
+<p>Regarding substrate scope, D-ribose is the preferred and physiological substrate, but the enzyme phosphorylates several other D-sugars <em>in vitro</em> (2-deoxy-D-ribose, and less efficiently D-arabinose, D-xylose, and D-fructose) when supplied with ATP, K⁺ and Mg²⁺. Crucially, the enzyme is <strong>strictly D-stereospecific</strong>: <em>"L-ribose and L-arabinose are not substrates for the recombinant enzyme"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/16784868/">PMID: 16784868</a>). This D-specificity reflects the geometry of the sugar-binding pocket and confirms that the physiological role is catabolism of naturally occurring D-pentoses.</p>
+<h3 id="finding-3-pfkb-superfamily-membership-homodimeric-quaternary-structure-and-cytoplasmic-localization">Finding 3 — PfkB superfamily membership, homodimeric quaternary structure, and cytoplasmic localization</h3>
+<p>RbsK belongs to the <strong>PfkB family of carbohydrate kinases</strong>, a group united by a conserved α/β "ribokinase-like" fold and characteristic sequence motifs. InterPro assigns Q88K34 to this family through multiple signatures: IPR002139 (ribokinase/fructokinase), IPR011877 (ribokinase), IPR011611 (PfkB domain), IPR029056 (ribokinase-like fold), and IPR002173 (PfkB conserved site). The family assignment is established in the foundational structural paper: <em>"Ribokinase belongs to the PfkB family of carbohydrate kinases, for which no three-dimensional structure is currently known"</em> — a statement from the 1997 study that first crystallized the <em>E. coli</em> enzyme (<a href="https://pubmed.ncbi.nlm.nih.gov/9385653/">PMID: 9385653</a>).</p>
+<p>The enzyme functions as a <strong>homodimer</strong>. Solution biophysical measurements on <em>E. coli</em> ribokinase directly demonstrate this: the authors <em>"give evidence from light-scattering and gel filtration studies that the protein forms a dimer in solution"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/9385653/">PMID: 9385653</a>). Each protomer carries the canonical ribokinase fold with a small β-sheet "lid" that closes over the sugar-binding site upon substrate binding (induced fit). Structures of orthologs from <em>Arabidopsis thaliana</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/30822455/">PMID: 30822455</a>) and <em>Vibrio cholerae</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/25084391/">PMID: 25084391</a>) have been captured in multiple ligation states (apo, ATP-binary, and ribose+ATP-ternary), confirming the conserved architecture and lid closure.</p>
+<p>As a soluble metabolic enzyme with no signal peptide, transmembrane segment, or lipidation signal, RbsK carries out its function in the <strong>cytoplasm</strong>, consistent with its role acting on ribose that has already been imported across the inner membrane by the RbsBAC ABC transporter. HAMAP rule MF_01987 assigns cytoplasmic subcellular localization.</p>
+<h3 id="finding-4-rbsk-performs-the-committed-step-of-d-ribose-catabolism-feeding-r5p-into-the-pentose-phosphate-pathway-and-prpp-dependent-biosynthesis">Finding 4 — RbsK performs the committed step of D-ribose catabolism, feeding R5P into the pentose phosphate pathway and PRPP-dependent biosynthesis</h3>
+<p>The biological purpose of RbsK is to commit imported D-ribose to metabolism. In the canonical <em>E. coli</em> system, ribose transport and initial metabolism are encoded together: <em>"The genes for the transport and initial-step metabolism of D-ribose form a single rbsDACBK operon. RbsABC forms the ABC-type high-affinity D-ribose transporter, while RbsD and RbsK are involved in the conversion of D-ribose into D-ribose 5-phosphate"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/23651393/">PMID: 23651393</a>). RbsD interconverts the pyranose and furanose anomers of ribose, presenting the correct form to RbsK for phosphorylation.</p>
+<p>The product R5P is a central metabolic node. Its fate is described directly: <em>"The phosphorylated sugar can enter the pentose phosphate pathway or be used for the synthesis of nucleotides, histidine, and tryptophan"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/9385653/">PMID: 9385653</a>). More specifically, R5P is the direct precursor of <strong>5-phosphoribosyl-1-pyrophosphate (PRPP)</strong>, which is used for both de novo and salvage synthesis of nucleotides — a role emphasized across the pentose-phosphate biochemistry literature: R5P <em>"is the direct precursor of 5-phosphoribosyl-1-pyrophosphate, for both de novo and 'salvage' synthesis of nucleotides"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/16519676/">PMID: 16519676</a>; see also <a href="https://pubmed.ncbi.nlm.nih.gov/16893570/">PMID: 16893570</a>). By phosphorylating ribose, RbsK both prevents efflux of the free sugar and supplies this biosynthetic precursor pool. In <em>P. putida</em> — a bacterium that preferentially catabolizes organic acids and aromatics — this route enables the use of ribose (including ribose liberated by nucleoside catabolism) as a carbon/energy source and as a biosynthetic building block.</p>
+<h3 id="finding-5-sequence-level-confirmation-414-identity-to-e-coli-rbsk-with-full-conservation-of-all-catalytic-motifs">Finding 5 — Sequence-level confirmation: 41.4% identity to <em>E. coli</em> RbsK with full conservation of all catalytic motifs</h3>
+<p>Because no direct enzymatic assay of the <em>P. putida</em> protein exists (UniProt PE=3), this investigation performed a rigorous sequence analysis to confirm functional identity. A global Needleman–Wunsch alignment of Q88K34 (302 aa) against the biochemically characterized <em>E. coli</em> ribokinase (P0A9J6/RbsK, 309 aa) gives <strong>41.4% identity over 301 aligned positions</strong> — well within the range that reliably indicates conserved enzymatic function for this family.</p>
+<p>Critically, <strong>every diagnostic ribokinase/PfkB motif is conserved</strong> in Q88K34:</p>
+<table>
+<thead>
+<tr>
+<th>Motif</th>
+<th>Function</th>
+<th>Q88K34 residues</th>
+<th><em>E. coli</em> equivalent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>GGKGANQAV</strong></td>
+<td>Glycine-rich PfkB nucleotide/sugar-binding fingerprint</td>
+<td>39–47</td>
+<td>GGKGANQAV (identical)</td>
+</tr>
+<tr>
+<td><strong>NPAPAT</strong></td>
+<td>Anion-hole / phosphate-binding motif</td>
+<td>164–169</td>
+<td>NPAPA (conserved)</td>
+</tr>
+<tr>
+<td><strong>TPNESEAE</strong></td>
+<td>Catalytic loop</td>
+<td>184–191</td>
+<td>TPNETEAE (conserved)</td>
+</tr>
+<tr>
+<td><strong>AAGDTFIGGF</strong></td>
+<td>GAGDTF signature carrying catalytic base + di-Gly anion hole</td>
+<td>251–260</td>
+<td>catalytic Asp255 (conserved)</td>
+</tr>
+</tbody>
+</table>
+<p>Within the GAGDTF signature, the <strong>general-base aspartate (Asp254)</strong> — which deprotonates the ribose 5-OH for in-line phosphoryl transfer and aligns to <em>E. coli</em> Asp255 — is present, immediately followed by the <strong>di-glycine anion-hole element (Gly258/Gly259)</strong>. The conservation of the catalytic base plus the full complement of substrate- and cofactor-binding motifs makes the ribokinase assignment for Q88K34 essentially certain by sequence, even in the absence of a direct assay. Ortholog structural/mutational work supports the same catalytic-residue mechanism: <em>"ATP-dependent ribokinase (RBSK) phosphorylates ribose to ribose-5'-phosphate"</em> (<a href="https://pubmed.ncbi.nlm.nih.gov/30822455/">PMID: 30822455</a>). This is the strongest protein-specific evidence available for the <em>P. putida</em> enzyme.</p>
+<h3 id="finding-6-in-p-putida-kt2440-pp_2458-lies-within-a-complete-contiguous-ribose-utilization-operon">Finding 6 — In <em>P. putida</em> KT2440, PP_2458 lies within a complete, contiguous ribose-utilization operon</h3>
+<p>Genomic context in the target organism reinforces the pathway role — directly in <em>P. putida</em> KT2440, not merely by orthology. KEGG places PP_2458 (rbsK, ortholog <strong>K00852</strong>, EC 2.7.1.15; genome coordinates ~2,805,226–2,806,134) in the pentose phosphate pathway map (ppu00030). Its immediate neighbors, all on the same strand, form a coherent ribose regulon:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Gene</th>
+<th>Product</th>
+<th>Approx. coordinates</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_2454</td>
+<td><em>rbsB</em></td>
+<td>Periplasmic ribose-binding protein</td>
+<td>2,800,658–2,801,617</td>
+</tr>
+<tr>
+<td>PP_2455</td>
+<td><em>rbsA</em></td>
+<td>ABC transporter ATP-binding subunit</td>
+<td>2,801,617–2,803,191</td>
+</tr>
+<tr>
+<td>PP_2456</td>
+<td><em>rbsC</em></td>
+<td>ABC transporter permease</td>
+<td>2,803,188–2,804,183</td>
+</tr>
+<tr>
+<td>PP_2457</td>
+<td><em>rbsR</em></td>
+<td>LacI-type transcriptional repressor</td>
+<td>2,804,188–2,805,210</td>
+</tr>
+<tr>
+<td><strong>PP_2458</strong></td>
+<td><strong><em>rbsK</em></strong></td>
+<td><strong>Ribokinase (EC 2.7.1.15) — this protein</strong></td>
+<td><strong>2,805,226–2,806,134</strong></td>
+</tr>
+<tr>
+<td>PP_2459</td>
+<td><em>rbsD</em></td>
+<td>Ribose pyranase / anomerase</td>
+<td>2,806,131–2,806,529 (overlaps <em>rbsK</em>)</td>
+</tr>
+<tr>
+<td>PP_2460</td>
+<td><em>nuh</em></td>
+<td>Ribonucleoside hydrolase</td>
+<td>2,806,627–2,807,595</td>
+</tr>
+</tbody>
+</table>
+<p>The overlap between the <em>rbsK</em> stop and <em>rbsD</em> start codons and the contiguous arrangement are consistent with operonic co-transcription. This mirrors the canonical <em>E. coli rbsDACBK</em> organization (<a href="https://pubmed.ncbi.nlm.nih.gov/23651393/">PMID: 23651393</a>) and assembles a self-contained ribose-scavenging module: <strong>RbsBAC</strong> imports extracellular D-ribose, <strong>RbsD</strong> interconverts the ribopyranose/ribofuranose anomers, <strong>RbsK</strong> phosphorylates D-ribose to R5P (the committed step), the adjacent <strong>ribonucleoside hydrolase (Nuh)</strong> supplies intracellular ribose from nucleoside breakdown (<a href="https://pubmed.ncbi.nlm.nih.gov/16519676/">PMID: 16519676</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/16893570/">PMID: 16893570</a>), and <strong>RbsR</strong> (LacI-type) provides ribose-inducible transcriptional control. This places rbsK's activity firmly in the cytoplasm, immediately downstream of the RbsBAC importer.</p>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>The findings converge on a clear, coherent model of RbsK as the metabolic gatekeeper for ribose in <em>P. putida</em> KT2440.</p>
+<div class="codehilite"><pre><span></span><code>   EXTRACELLULAR / PERIPLASM              INNER MEMBRANE                 CYTOPLASM
+   ─────────────────────────    ───────────────────────────   ───────────────────────────────
+
+     D-ribose (free sugar)
+  │
+  │ captured by
+  ▼
+     RbsB (PP_2454)  ────────►  RbsC permease (PP_2456)
+   periplasmic binding prot.    RbsA ATPase  (PP_2455)  ──►   D-ribose (cytoplasmic pool)
+                 [ABC importer, ATP-driven]            │
+                                                       │  RbsD (PP_2459)
+                                                       │  pyranase/anomerase
+                                                       ▼  (pyranose → furanose)
+                                              ┌───────────────────────────┐
+   Nucleosides ──► free ribose ────────────────────────────► │  RbsK  (PP_2458)          │
+   (via Nuh, PP_2460, ribonucleoside hydrolase)              │  RIBOKINASE, EC 2.7.1.15  │
+                                              │  D-ribose + ATP           │
+                                              │     │ Mg²⁺, K⁺            │
+                                              │     ▼                     │
+                                              │  D-ribose-5-P + ADP       │
+                                              └───────────┬───────────────┘
+                                                          │
+        ┌─────────────────────────────────────────────────┼───────────────────────┐
+        ▼                                                   ▼                       ▼
+     Non-oxidative Pentose                              PRPP (via PRPS)          Central carbon
+     Phosphate Pathway  ──► F6P, GAP                    │                        (energy/biomass)
+     (glycolytic entry)                     ┌───────────┼──────────────┐
+                                     ▼           ▼              ▼
+                              Purine/pyrimidine  Histidine   Tryptophan
+                              nucleotides        biosynthesis biosynthesis
+                              (de novo + salvage)
+</code></pre></div>
+
+<p><strong>Catalytic chemistry.</strong> Asp254 acts as a general base, deprotonating the ribose 5′-hydroxyl, which then performs an in-line nucleophilic attack on the γ-phosphate of Mg·ATP held in the anion hole. The monovalent cation (K⁺) orders the catalytic loop; the di-glycine element and NPAPA motif stabilize the developing negative charge in the transition state. This mechanism is conserved across the ribokinase family and inferred for Q88K34 from full active-site conservation.</p>
+<p><strong>Why phosphorylation is the committed step.</strong> Free ribose is membrane-permeant and can be lost from the cell; ribose-5-phosphate, being charged, is trapped intracellularly. By consuming ATP, RbsK makes the reaction thermodynamically favorable and effectively irreversible, committing the carbon skeleton to metabolism — the classic "kinase trap" logic shared with hexokinase and other sugar kinases.</p>
+<p><strong>Regulatory layer.</strong> The LacI-family repressor <strong>RbsR (PP_2457)</strong> encoded within the same cluster couples expression of the whole module to ribose availability, ensuring the transporter and kinase are made only when ribose is present — an economical arrangement typical of inducible sugar catabolic operons.</p>
+<p><strong>Metabolic significance.</strong> R5P is not merely a catabolic intermediate — it is the entry point to PRPP and hence to all nucleotide biosynthesis. RbsK therefore serves a dual purpose: it allows ribose (and ribose liberated from nucleosides by Nuh) to be used as a carbon and energy source, and it replenishes the R5P/PRPP pool required for growth. The centrality of R5P/PRPP for nucleotide supply is echoed even in eukaryotic systems, where R5P availability governs PRPP synthesis and proliferation (<a href="https://pubmed.ncbi.nlm.nih.gov/31253668/">PMID: 31253668</a>; <a href="https://pubmed.ncbi.nlm.nih.gov/2432883/">PMID: 2432883</a>).</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Paper (abbrev.)</th>
+<th>Organism / system</th>
+<th>How it supports the annotation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9385653/">9385653</a></td>
+<td><em>Purification, characterization, and crystallization of E. coli ribokinase</em> (Sigrell et al., 1997)</td>
+<td><em>E. coli</em></td>
+<td>Defines reaction (ribose + ATP + Mg → R5P), PfkB family membership, homodimer, and downstream fate of R5P (PPP, nucleotides, His, Trp). Foundational reference.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16784868/">16784868</a></td>
+<td><em>Ribokinase from E. coli: expression, purification, and substrate specificity</em> (Chuvikovsky et al., 2006)</td>
+<td><em>E. coli</em></td>
+<td>Establishes K⁺ monovalent-cation dependence, Mg²⁺/Mn²⁺ enhancement, high specific activity, D-sugar substrate scope, and strict D-stereospecificity (L-sugars not substrates).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/25084391/">25084391</a></td>
+<td><em>Crystallization and preliminary X-ray analysis of ribokinase from V. cholerae</em> (Paul et al., 2014)</td>
+<td><em>V. cholerae</em></td>
+<td>States exact reaction stoichiometry; ternary-complex crystallography confirming catalytic geometry.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/30822455/">30822455</a></td>
+<td><em>Crystal structure and mutational analyses of ribokinase from A. thaliana</em> (Kang et al., 2019)</td>
+<td><em>A. thaliana</em></td>
+<td>Structural + mutational validation of the conserved catalytic mechanism inferred for Q88K34; confirms ribose → R5P activity.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23651393/">23651393</a></td>
+<td><em>Involvement of RbsR in regulation of purine nucleotide synthesis</em> (Shimada et al., 2013)</td>
+<td><em>E. coli</em></td>
+<td>Defines <em>rbsDACBK</em> operon organization (transporter + RbsD + RbsK) mirrored by PP_2454–2460; ties RbsK to R5P production and RbsR regulation.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16519676/">16519676</a></td>
+<td><em>Pentose phosphates in nucleoside interconversion and catabolism</em> (Tozzi et al., 2006)</td>
+<td>Review</td>
+<td>Establishes R5P as the direct precursor of PRPP for de novo and salvage nucleotide synthesis; context for the Nuh–RbsK link.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16893570/">16893570</a></td>
+<td><em>Methods for determination of intracellular ribose phosphates</em> (Camici et al., 2006)</td>
+<td>Review</td>
+<td>Reinforces R5P → PRPP biosynthetic role and nucleoside phosphorolysis as an alternative ribose-phosphate source.</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/31253668/">31253668</a></td>
+<td><em>Cell-cycle phosphorylation of PRPS1</em> (2019)</td>
+<td>Human</td>
+<td>Illustrates broad importance of R5P → PRPP for nucleotide supply (analogy, not direct evidence for RbsK).</td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/2432883/">2432883</a></td>
+<td><em>PRPP and PRPP synthetase in rat mammary gland</em> (1986)</td>
+<td>Rat</td>
+<td>Shows R5P availability controls PRPP synthesis (analogy for downstream significance).</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note on non-relevant hits.</strong> Several PubMed results retrieved during the investigation concern <em>P. putida</em> KT2440 in the context of xenobiotic/aromatic degradation, bioremediation, or high-throughput fitness/annotation studies (e.g., <a href="https://pubmed.ncbi.nlm.nih.gov/32443190/">PMID: 32443190</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/36528203/">PMID: 36528203</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/31924622/">PMID: 31924622</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/38323821/">PMID: 38323821</a>). These mention KT2440 but do not address rbsK/ribokinase directly and were not used to support functional claims.</p>
+<hr />
+<h2 id="supported-and-refuted-hypotheses">Supported and Refuted Hypotheses</h2>
+<table>
+<thead>
+<tr>
+<th>Hypothesis</th>
+<th>Status</th>
+<th>Basis</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>rbsK is an ATP-dependent ribokinase (EC 2.7.1.15) producing R5P</td>
+<td><strong>Supported</strong></td>
+<td>UniProt/HAMAP + ortholog biochemistry (<a href="https://pubmed.ncbi.nlm.nih.gov/25084391/">PMID: 25084391</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/9385653/">9385653</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/16784868/">16784868</a>)</td>
+</tr>
+<tr>
+<td>Enzyme requires monovalent (K⁺) and divalent (Mg²⁺) cations</td>
+<td><strong>Supported</strong></td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16784868/">PMID: 16784868</a></td>
+</tr>
+<tr>
+<td>Strict D-sugar stereospecificity; L-sugars not substrates</td>
+<td><strong>Supported</strong></td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/16784868/">PMID: 16784868</a></td>
+</tr>
+<tr>
+<td>Member of pfkB superfamily; homodimer</td>
+<td><strong>Supported</strong></td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/9385653/">PMID: 9385653</a>; InterPro domains</td>
+</tr>
+<tr>
+<td>Q88K34 conserves ribokinase active-site residues (Asp254 base, GG anion hole, GGKGANQAV, NPAPA)</td>
+<td><strong>Supported</strong></td>
+<td>41.4% identity to <em>E. coli</em> RbsK; motif analysis (this work)</td>
+</tr>
+<tr>
+<td>Acts in cytoplasm downstream of ribose ABC import; feeds PPP/nucleotide synthesis</td>
+<td><strong>Supported</strong></td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/23651393/">PMID: 23651393</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/9385653/">9385653</a></td>
+</tr>
+<tr>
+<td>rbsK is in a genuine ribose operon in <em>P. putida</em> KT2440 (rbsB-A-C-R-K-D + nuh)</td>
+<td><strong>Supported</strong></td>
+<td>KEGG ppu genome context, PP_2454–2460 (this work); <a href="https://pubmed.ncbi.nlm.nih.gov/23651393/">PMID: 23651393</a></td>
+</tr>
+<tr>
+<td>rbsK has a non-metabolic / signaling role</td>
+<td><strong>Refuted / no evidence</strong></td>
+<td>No literature support; all evidence points to a housekeeping metabolic kinase</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No direct assay of the <em>P. putida</em> protein.</strong> UniProt lists Q88K34 as evidence level PE=3 ("inferred from homology"). No purified-enzyme kinetics (kcat, Km for ribose and ATP), pH/temperature optima, or oligomeric-state measurement have been published for the KT2440 protein itself. All quantitative kinetic and cofactor data come from orthologs, chiefly <em>E. coli</em>.</p>
+</li>
+<li>
+<p><strong>Operon structure is inferred, not experimentally mapped.</strong> The operonic organization of PP_2454–2460 is deduced from gene contiguity, shared strand, and overlapping stop/start codons plus homology to the <em>E. coli rbs</em> operon. Transcript mapping (RNA-seq operon boundaries, promoter/terminator identification) and confirmation of RbsR-dependent, ribose-inducible regulation in <em>P. putida</em> have not been directly demonstrated here.</p>
+</li>
+<li>
+<p><strong>Substrate specificity of the <em>P. putida</em> enzyme is assumed.</strong> The broad D-sugar promiscuity and strict D-stereospecificity are established for the <em>E. coli</em> enzyme; whether the KT2440 ortholog shares the identical specificity profile (e.g., relative activity on 2-deoxyribose, arabinose, xylose, fructose) is untested.</p>
+</li>
+<li>
+<p><strong>Physiological ribose metabolism in <em>P. putida</em> is not directly characterized here.</strong> <em>P. putida</em> KT2440 preferentially uses organic acids and aromatics; the extent to which ribose serves as a growth substrate, and the flux through RbsK under different conditions, has not been measured in this study.</p>
+</li>
+<li>
+<p><strong>No experimental structure of Q88K34.</strong> Structural inference rests on orthologs. An AlphaFold model or experimental structure would allow direct confirmation of active-site residue positioning.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant enzymology.</strong> Clone PP_2458, express and purify the protein, and measure steady-state kinetics: kcat and Km for D-ribose and ATP, K⁺/Mg²⁺ dependence, pH/temperature optima, and the substrate-specificity panel (D-ribose, 2-deoxy-D-ribose, D-arabinose, D-xylose, D-fructose; L-sugar controls). This would upgrade the annotation from PE=3 to direct experimental evidence.</p>
+</li>
+<li>
+<p><strong>Active-site mutagenesis.</strong> Mutate the predicted general base <strong>Asp254</strong> (and the di-glycine anion hole) to confirm catalytic essentiality, paralleling the <em>Arabidopsis</em> mutational study (<a href="https://pubmed.ncbi.nlm.nih.gov/30822455/">PMID: 30822455</a>).</p>
+</li>
+<li>
+<p><strong>Transcriptional/operon mapping.</strong> Use RNA-seq or RT-PCR across the PP_2454–2460 region to confirm co-transcription, and test RbsR (PP_2457) as a ribose-responsive repressor via reporter assays and EMSA.</p>
+</li>
+<li>
+<p><strong>Genetic phenotyping.</strong> Construct a ΔrbsK (PP_2458) deletion and test growth on D-ribose (and on nucleosides, given the adjacent Nuh) as sole carbon source; complement to confirm causality. Cross-reference existing RB-TnSeq fitness datasets for KT2440 (<a href="https://pubmed.ncbi.nlm.nih.gov/38323821/">PMID: 38323821</a>) for ribose-condition fitness signatures.</p>
+</li>
+<li>
+<p><strong>Structure determination.</strong> Solve the crystal structure (or refine an AlphaFold model against experimental data) in apo, ATP-bound, and ribose+ATP ternary states to confirm the ribokinase fold, lid closure, and K⁺ site.</p>
+</li>
+<li>
+<p><strong>Metabolic-flux confirmation.</strong> Use ¹³C-labeled ribose tracing to verify that carbon flows through RbsK into R5P, the pentose phosphate pathway, and the PRPP/nucleotide pool in <em>P. putida</em>.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><em>rbsK</em> (PP_2458, UniProt Q88K34) of <em>Pseudomonas putida</em> KT2440 encodes a <strong>cytoplasmic PfkB-family ribokinase (EC 2.7.1.15)</strong> that catalyzes the <strong>Mg-ATP-dependent, K⁺-activated phosphorylation of D-ribose to D-ribose-5-phosphate</strong>, the committed first step of ribose catabolism. The product feeds the pentose phosphate pathway and PRPP-dependent nucleotide, histidine and tryptophan biosynthesis. The enzyme is a homodimer, is strictly D-stereospecific, and in <em>P. putida</em> is encoded within a contiguous ribose-utilization operon (<em>rbsB-A-C-R-K-D</em> + nucleoside hydrolase) immediately downstream of the RbsBAC ABC importer and the RbsD anomerase. While direct assay of the <em>P. putida</em> protein is lacking (PE=3), the assignment is robustly supported by ortholog biochemistry and structure and by 41.4% sequence identity to <em>E. coli</em> ribokinase with complete conservation of all catalytic and cofactor-binding motifs, including the general-base aspartate (Asp254).</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="rbsK-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="rbsK-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:25084391</li>
+<li>PMID:9385653</li>
+<li>PMID:16784868</li>
+<li>PMID:30822455</li>
+<li>PMID:23651393</li>
+<li>PMID:16519676</li>
+<li>PMID:16893570</li>
+<li>PMID:31253668</li>
+<li>PMID:2432883</li>
+<li>PMID:32443190</li>
+<li>PMID:36528203</li>
+<li>PMID:31924622</li>
+<li>PMID:38323821</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rbsK-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88K34" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="rbsk-curation-notes">rbsK curation notes</h1>
+<p>Q88K34 has convergent HAMAP, EC, Rhea, InterPro, and PANTHER support for<br />
+ribokinase activity. The assigned reaction is D-ribose plus ATP to D-ribose<br />
+5-phosphate, ADP, and a proton<br />
+[file:PSEPK/rbsK/rbsK-uniprot.txt, "CC       Reaction=D-ribose + ATP = D-ribose<br />
+5-phosphate + ADP + H(+);"].</p>
+<p>The broad kinase and phosphorus-group-transfer terms are retained only as<br />
+non-core parents. Cytosol is used in the synthesized core; the redundant<br />
+cytoplasm parent is not repeated there. No KT2440-specific substrate-spectrum<br />
+experiment was present in the fetched inputs.</p>
+<p>OpenScientist found extensive ortholog enzymology but states, "Direct<br />
+enzymatic assay of the <em>P. putida</em> protein has not been published"<br />
+[file:PSEPK/rbsK/rbsK-deep-research-openscientist.md]. The report therefore<br />
+reinforces the specific HAMAP/Rhea-supported reaction without upgrading it to<br />
+direct KT2440 evidence or importing ortholog kinetic values.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88K34
+gene_symbol: rbsK
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  RbsK is a cytosolic ribokinase that uses ATP to phosphorylate D-ribose at O-5,
+  producing D-ribose 5-phosphate for central carbon and biosynthetic metabolism.
+  Its specific function is supported by convergent HAMAP, InterPro, EC, Rhea,
+  and PANTHER assignments, although KT2440-specific enzymology is unavailable.
+existing_annotations:
+  - term:
+      id: GO:0004747
+      label: ribokinase activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: enables
+    review:
+      summary: Specific core catalytic activity supported by EC 2.7.1.15 and RHEA:13697.
+      action: ACCEPT
+  - term:
+      id: GO:0005524
+      label: ATP binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000104
+    qualifier: enables
+    review:
+      summary: Correct substrate binding but subordinate to ribokinase activity.
+      action: KEEP_AS_NON_CORE
+  - term:
+      id: GO:0005737
+      label: cytoplasm
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: located_in
+    review:
+      summary: Correct broad location but redundant with the more specific cytosol annotation.
+      action: KEEP_AS_NON_CORE
+  - term:
+      id: GO:0005829
+      label: cytosol
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000118
+    qualifier: located_in
+    review:
+      summary: Appropriate specific location for this soluble ribose-catabolic enzyme.
+      action: ACCEPT
+  - term:
+      id: GO:0006014
+      label: D-ribose metabolic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: involved_in
+    review:
+      summary: Correct parent process but less informative than D-ribose catabolism.
+      action: KEEP_AS_NON_CORE
+  - term:
+      id: GO:0016301
+      label: kinase activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: enables
+    review:
+      summary: Correct broad molecular-function parent of ribokinase activity.
+      action: KEEP_AS_NON_CORE
+  - term:
+      id: GO:0016772
+      label: transferase activity, transferring phosphorus-containing groups
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000117
+    qualifier: enables
+    review:
+      summary: Correct but highly general catalytic parent.
+      action: KEEP_AS_NON_CORE
+  - term:
+      id: GO:0019303
+      label: D-ribose catabolic process
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: involved_in
+    review:
+      summary: Direct process context for conversion of D-ribose to D-ribose 5-phosphate.
+      action: ACCEPT
+  - term:
+      id: GO:0046835
+      label: carbohydrate phosphorylation
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000104
+    qualifier: involved_in
+    review:
+      summary: Correct reaction-class process but less informative than D-ribose catabolism.
+      action: KEEP_AS_NON_CORE
+references:
+  - id: file:PSEPK/rbsK/rbsK-uniprot.txt
+    title: UniProtKB entry for Pseudomonas putida KT2440 rbsK
+    findings:
+      - statement: UniProt assigns the D-ribose phosphorylation reaction to Q88K34.
+        supporting_text: &#34;CC       Reaction=D-ribose + ATP = D-ribose 5-phosphate + ADP + H(+);&#34;
+      - statement: The PANTHER subfamily is specifically labeled ribokinase.
+        supporting_text: &#34;DR   PANTHER; PTHR10584:SF166; RIBOKINASE; 1.&#34;
+  - id: file:PSEPK/rbsK/rbsK-deep-research-openscientist.md
+    title: OpenScientist deep research report for rbsK in Pseudomonas putida KT2440
+    findings:
+      - statement: The report found no direct enzymatic assay of Q88K34.
+        supporting_text: &#34;Direct enzymatic assay of the *P. putida* protein has not been published&#34;
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+    findings: []
+  - id: GO_REF:0000104
+    title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features
+    findings: []
+  - id: GO_REF:0000117
+    title: Electronic Gene Ontology annotations created by ARBA machine learning models
+    findings: []
+  - id: GO_REF:0000118
+    title: TreeGrafter-generated GO annotations
+    findings: []
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+    findings: []
+core_functions:
+  - description: Phosphorylates D-ribose with ATP to form D-ribose 5-phosphate during ribose catabolism.
+    molecular_function:
+      id: GO:0004747
+      label: ribokinase activity
+    directly_involved_in:
+      - id: GO:0019303
+        label: D-ribose catabolic process
+    locations:
+      - id: GO:0005829
+        label: cytosol
+    supported_by:
+      - reference_id: file:PSEPK/rbsK/rbsK-uniprot.txt
+        supporting_text: &#34;CC       Reaction=D-ribose + ATP = D-ribose 5-phosphate + ADP + H(+);&#34;
+      - reference_id: file:PSEPK/rbsK/rbsK-deep-research-openscientist.md
+        supporting_text: &#34;Direct enzymatic assay of the *P. putida* protein has not been published&#34;
+suggested_questions:
+  - question: What is the substrate spectrum and kinetic preference of KT2440 RbsK among related sugars?
+  - question: &gt;-
+      Does KT2440 RbsK require or respond physiologically to monovalent metal
+      ions, and should its UniProt-only GO:0046872 metal ion binding cross-reference
+      be represented in GOA?
+suggested_experiments:
+  - description: Purify RbsK and compare kinase kinetics for D-ribose and structurally related sugars.
+    experiment_type: comparative enzymology
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
