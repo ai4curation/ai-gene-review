@@ -135,15 +135,17 @@ def _atom_from_annoton(annoton: dict) -> Atom:
     participant = annoton.get("participant") or {}
     gene = participant.get("gene") or {}
     representatives = ((participant.get("family") or {}).get("representative_members") or [])
+    gene_symbol = _symbol_from_gene(gene)
+    # An explicit gene supplies the canonical symbol. Family member labels can
+    # include organism names, so only use them as the family-only fallback.
     representative_symbols = tuple(
         symbol for member in representatives
         if (symbol := _symbol_from_gene(member))
-    )
+    ) if not gene_symbol else ()
     representative_uniprots = tuple(
         accession for member in representatives
         if (accession := _uniprot_from_gene(member))
     )
-    gene_symbol = _symbol_from_gene(gene)
     uniprot = _uniprot_from_gene(gene)
     return Atom(
         node_id=annoton.get("id", "?"),

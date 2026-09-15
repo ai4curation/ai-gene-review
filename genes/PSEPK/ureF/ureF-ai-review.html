@@ -1,0 +1,2150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ureF - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ureF</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88J01" target="_blank" class="term-link">
+                        Q88J01
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida KT2440</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ureF";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88J01" data-a="DESCRIPTION: UreF is a cytoplasmic urease-maturation factor tha..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>UreF is a cytoplasmic urease-maturation factor that joins UreD-bound apo-urease, recruits UreG, and gates UreG nucleotide turnover so nickel is installed productively in the UreC active site rather than as a noncognate metal.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88J01" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UreF acts in the cytoplasmic urease activation complex.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The localization agrees with reviewed UniProt and conserved UreDFG biochemistry.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016151" target="_blank" class="term-link">
+                                    GO:0016151
+                                </a>
+                            </span>
+                            <span class="term-label">nickel cation binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88J01" data-a="GO:0016151" data-r="GO_REF:0000120" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nickel binding is not the supported direct function of UreF.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target GOA row is a UniRule inference. Conserved-system evidence assigns nickel delivery to UreE and nickel handling to UreG, whereas UreF binds and gates UreG in the activation complex (PMID:22369361). Neither target-level nor family-level evidence supports direct nickel binding by UreF.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22369361" target="_blank" class="term-link">
+                                        PMID:22369361
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">UreE functions as a metallochaperone that delivers Ni to a UreD-UreF-UreG complex bound to urease apoprotein, with UreG serving as a GTPase during enzyme activation.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/ureF/ureF-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">UreF is a nickel metallochaperone that itself binds/delivers nickel as the primary carrier — not supported;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043419" target="_blank" class="term-link">
+                                    GO:0043419
+                                </a>
+                            </span>
+                            <span class="term-label">urea catabolic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22369361" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22369361
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Klebsiella aerogenes UreF: identification of the UreG bindin...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88J01" data-a="GO:0043419" data-r="PMID:22369361" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UreF gates productive maturation of the urease responsible for urea catabolism.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Conserved-complex mutagenesis links orthologous UreF function to mature urease activity; this is an orthology-based inference for Q88J01, not a direct KT2440 assay.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22369361" target="_blank" class="term-link">
+                                        PMID:22369361
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Further experiments with these complexes provided evidence that UreF gates the GTPase activity of UreG to enhance the fidelity of urease metallocenter assembly, especially in the presence of the noncognate metal Zn.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030695" target="_blank" class="term-link">
+                                    GO:0030695
+                                </a>
+                            </span>
+                            <span class="term-label">GTPase regulator activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22369361" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:22369361
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Klebsiella aerogenes UreF: identification of the UreG bindin...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88J01" data-a="GO:0030695" data-r="PMID:22369361" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> UreF binds UreG and modulates its GTPase activity during urease activation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Conserved-complex evidence supports regulation of UreG nucleotide turnover without implying that UreF is itself a GTPase-activating protein.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/22369361" target="_blank" class="term-link">
+                                        PMID:22369361
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Further experiments with these complexes provided evidence that UreF gates the GTPase activity of UreG to enhance the fidelity of urease metallocenter assembly, especially in the presence of the noncognate metal Zn.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>UreG-recruitment and activation checkpoint in urease maturation.</h3>
+                <span class="vote-buttons" data-g="Q88J01" data-a="FUNCTION: UreG-recruitment and activation checkpoint in urea..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030695" target="_blank" class="term-link">
+                            GTPase regulator activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043419" target="_blank" class="term-link">
+                                urea catabolic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/22369361" target="_blank" class="term-link">
+                                PMID:22369361
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Further experiments with these complexes provided evidence that UreF gates the GTPase activity of UreG to enhance the fidelity of urease metallocenter assembly, especially in the presence of the noncognate metal Zn.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22369361" target="_blank" class="term-link">
+                            PMID:22369361
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Klebsiella aerogenes UreF: identification of the UreG binding site and role in enhancing the fidelity of urease activation.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">UreF gates UreG activity to improve fidelity of metallocenter assembly.</div>
+
+                        <div class="finding-text">"Further experiments with these complexes provided evidence that UreF gates the GTPase activity of UreG to enhance the fidelity of urease metallocenter assembly, especially in the presence of the noncognate metal Zn."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ureF/ureF-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB entry for PSEPK ureF (Q88J01)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ureF/ureF-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO annotations for PSEPK ureF (Q88J01)</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ureF/ureF-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist research report for PSEPK UreF</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report found no support for UreF as the primary nickel-binding carrier.</div>
+
+                        <div class="finding-text">"UreF is a nickel metallochaperone that itself binds/delivers nickel as the primary carrier — not supported;"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">No direct experimental study of KT2440 UreF was identified.</div>
+
+                        <div class="finding-text">"No study focuses on the *P. putida* KT2440 UreF protein specifically;"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is nickel binding by Q88J01 required directly, or does UreF mainly gate UreG and open the UreC access route?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88J01" data-a="Q: Is nickel binding by Q88J01 required directly, or ..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Separate nickel binding, UreG interaction, GTPase gating, and urease activation with purified UreF variants.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Q88J01 controls UreG coupling and metal-delivery fidelity independently of any stable nickel-binding role.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: Mutagenesis, metal binding, protein interaction, GTPase, and urease activation assays</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88J01" data-a="EXPERIMENT: Separate nickel binding, UreG interaction, GTPase ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ureF-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88J01" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: UreF (Urease accessory protein UreF)</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">11 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-11T06:52:22.897236</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="ureF-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="ureF-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-uref-urease-accessory-protein-uref">Functional Annotation Report: UreF (Urease accessory protein UreF)</h1>
+<p><strong>Gene:</strong> <em>ureF</em> — <strong>UniProt:</strong> Q88J01 — <strong>Ordered locus:</strong> PP_2848<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> KT2440 (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950)<br />
+<strong>Protein family:</strong> UreF family (Pfam PF01730; InterPro IPR002639 / IPR038277 "UreF_sf"); HAMAP rule MF_01385<br />
+<strong>Length:</strong> 224 aa</p>
+<hr />
+<h2 id="0-identity-verification-mandatory">0. Identity verification (mandatory)</h2>
+<p>The target is unambiguous. The gene symbol <em>ureF</em>, the UniProt description ("Urease accessory protein UreF"), the UreF protein family/domains (PF01730, IPR002639), and the organism (<em>P. putida</em> KT2440) are mutually consistent. Genome mapping places <em>ureF</em> (PP_2848) inside a complete, contiguous chromosomal urease (<em>ure</em>) gene cluster (PP_2842–PP_2849) that contains all three urease structural subunits and all four canonical accessory proteins (see §4). Extensive mechanistic literature exists for UreF orthologs in <em>Klebsiella aerogenes</em> and <em>Helicobacter pylori</em>; those studies concern the <strong>same</strong> protein family and are directly transferable. <strong>No conflicting "same-symbol, different-gene" literature was encountered.</strong> The <em>P. putida</em> protein itself is characterized largely by curated database inference and cross-organism homology rather than by dedicated primary studies on the KT2440 protein.</p>
+<hr />
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (answer to the research question)</h2>
+<p>UreF is <strong>not an enzyme, transporter, or signaling molecule</strong>; it is a <strong>cytoplasmic molecular chaperone / assembly scaffold</strong> dedicated to the post-translational maturation of the nickel metalloenzyme <strong>urease</strong> (urea amidohydrolase, EC 3.5.1.5). UreF's primary molecular function is to bind the accessory protein UreD (UreH) on the urease apoprotein and to <strong>recruit and activate the GTPase UreG</strong>, assembling the (UreD–UreF–UreG)–apourease "pre-activation complex" through which nickel is inserted into the urease active site in a GTP‑hydrolysis‑dependent manner. UreF does not catalyze urea hydrolysis itself; its output is a correctly matured, Ni-loaded urease that in turn hydrolyzes urea to ammonia and carbamate/CO₂, enabling the cell to use urea as a nitrogen source. UreF functions entirely in the <strong>cytoplasm</strong>.</p>
+<hr />
+<h2 id="2-primary-function-what-uref-does-at-the-molecular-level">2. Primary function: what UreF does at the molecular level</h2>
+<h3 id="21-role-class-accessorymaturation-chaperone-not-catalytic">2.1 Role class: accessory/maturation chaperone (not catalytic)</h3>
+<p>Urease is a dinuclear-nickel enzyme that hydrolyzes urea to ammonia and carbamate, the latter decomposing to a second ammonia plus carbonic acid (urease = urea amidohydrolase, EC 3.5.1.5) <a href="https://pubmed.ncbi.nlm.nih.gov/7565414">PMID:7565414</a>. The catalytic active site resides in the large structural subunit (UreC/α in <em>P. putida</em>, PP_2845), which carries the dinuclear Ni center coordinated by a carbamylated lysine. Assembling that active site requires the incorporation of <strong>both CO₂ (as a carbamylated Lys ligand) and two Ni²⁺ ions</strong>, a process that most ureases cannot accomplish spontaneously and instead achieve with the help of accessory proteins UreD (UreH), UreE, UreF, and UreG [PMID:7565414; PMID:20046957].</p>
+<p>Within this system UreF is a soluble accessory protein with <strong>no urea-hydrolysis activity of its own</strong>. The curated record for the <em>P. putida</em> protein states its function directly: "Required for maturation of urease via the functional incorporation of the urease nickel metallocenter," and describes UreD, UreF, and UreG as forming "a complex that acts as a GTP-hydrolysis-dependent molecular chaperone, activating the urease apoprotein by helping to assemble the nickel containing metallocenter of UreC" (UniProt Q88J01; HAMAP MF_01385). Reviews of urease metallocenter biosynthesis reach the same conclusion: nickel is inserted "in a GTP-dependent process with the assistance of UreD/UreH, UreE, UreF, and UreG… orchestrat[ing] apoprotein activation by delivering the appropriate metal, facilitating protein conformational changes, and possibly providing a requisite post-translational modification" <a href="https://pubmed.ncbi.nlm.nih.gov/23539618">PMID:23539618</a>.</p>
+<h3 id="22-scaffold-that-recruits-the-ureg-gtpase">2.2 Scaffold that recruits the UreG GTPase</h3>
+<p>The defining molecular action of UreF is to bridge UreD/UreH (which is bound to the urease apoprotein) and the GTPase UreG, thereby nucleating the activation complex. Structural work on the <em>H. pylori</em> orthologs makes this concrete:</p>
+<ul>
+<li>The <strong>UreF–UreH crystal structure</strong> (a dimer of heterodimers, ~116 kDa) shows that complex formation orders UreF's flexible C-terminus into an extra helix (α10) stabilized by Arg-250 and uncoils the first turn of helix α2 to expose the conserved residue <strong>Tyr-48</strong>. The single-residue substitutions <strong>R250A</strong> or <strong>Y48A</strong> abolish formation of the UreG–UreF–UreH complex and abolish urease maturation, demonstrating that UreF's C-terminal region and α2 are essential for <strong>recruiting UreG</strong> to build the pre-activation complex <a href="https://pubmed.ncbi.nlm.nih.gov/22013070">PMID:22013070</a>.</li>
+<li>Mapping of conserved UreF surface residues in <em>K. aerogenes</em> (16 Ala substitutions) defines a discrete <strong>UreG-binding surface</strong>: variants that weaken UreF–UreG interaction are precisely the ones that lose urease activity <a href="https://pubmed.ncbi.nlm.nih.gov/22369361">PMID:22369361</a>.</li>
+<li>UreF adopts an <strong>all‑α‑helical fold</strong> and forms a homodimer, with evolutionary-conservation analysis highlighting a probable protein–protein interaction surface <a href="https://pubmed.ncbi.nlm.nih.gov/20635345">PMID:20635345</a>.</li>
+</ul>
+<h3 id="23-structurally-resolved-mechanism-ureg-dimerization-and-interfacial-ni-site-assembly">2.3 Structurally-resolved mechanism: UreG dimerization and interfacial Ni-site assembly</h3>
+<p>The crystal structure of the ternary <strong>UreG/UreF/UreH complex</strong> provides the step-resolved mechanism <a href="https://pubmed.ncbi.nlm.nih.gov/24115911">PMID:24115911</a>:</p>
+<ol>
+<li>UreF and UreH form a complex that <strong>recruits UreG</strong> (a SIMIBI-class GTPase) to the pre-activation complex.</li>
+<li>UreF/UreH <strong>facilitate dimerization of UreG</strong> and, in doing so, <strong>juxtapose two invariant Cys66-Pro67-His68 metal-binding motifs</strong> at the UreG dimer interface, assembling a nickel-binding site within a (UreG/UreF/UreH)₂ assembly.</li>
+<li>Adding <strong>Ni²⁺ and GTP releases a nickel-charged UreG dimer</strong> that binds one Ni ion at the dimer interface; C66A/H68A substitutions abolish formation of this nickel-charged dimer.</li>
+<li>Upon <strong>GTP hydrolysis</strong>, the UreG dimer reverts to a monomer and <strong>releases nickel to urease</strong>.</li>
+</ol>
+<p>Thus UreF's precise contribution is to template the productive quaternary arrangement of UreG so that UreG becomes a competent, GTP-gated nickel donor. A review of the pathway integrates this with the upstream steps: UreE delivers nickel to UreG (GTP promotes a UreE₂G₂ complex in which UreG receives Ni from UreE); Ni/GTP-bound UreG then joins UreF/UreH/apo-urease, and GTP hydrolysis releases Ni into the urease active site <a href="https://pubmed.ncbi.nlm.nih.gov/35556134">PMID:35556134</a>.</p>
+<h3 id="24-nickel-transfer-tunnel-and-fidelity-quality-control">2.4 Nickel-transfer tunnel and fidelity ("quality control")</h3>
+<p>Two additional lines of evidence sharpen UreF's role:</p>
+<ul>
+<li><strong>Directional, protected metal delivery.</strong> In silico analysis of the <em>H. pylori</em> UreH/UreF/UreG complex identified a water tunnel originating at a nickel-binding motif in UreG, <strong>passing through UreF</strong>, and exiting UreD/UreH toward the urease apoprotein. In <em>K. aerogenes</em>, engineered variants that disrupt a ~34.6 Å internal tunnel greatly reduced urease specific activity and lowered nickel content while <strong>increasing Zn/Fe misincorporation</strong>, without disrupting protein–protein interactions; molecular dynamics confirmed tunnel narrowing in these variants <a href="https://pubmed.ncbi.nlm.nih.gov/26401965">PMID:26401965</a>. UreF therefore forms part of a physical conduit for sequestered "hand-to-hand" nickel transfer, which enforces <strong>metal selectivity (Ni over Zn/Fe)</strong> and avoids releasing toxic free Ni²⁺.</li>
+<li><strong>Timing/fidelity control.</strong> UreD–UreF–urease apoprotein complexes are resistant to inactivation by NiCl₂ and require less bicarbonate for activation than urease or UreD–urease complexes; UreF masks UreD in the complex. This led to the proposal that UreF binding <strong>excludes nickel from the active site until after the carbamylated-lysine ligand has formed</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/8808930">PMID:8808930</a>. UreF was further proposed to act like a <strong>GTPase-activating protein (GAP)</strong> coupling UreG GTP hydrolysis to productive activation: a K165A UreF variant <strong>uncouples</strong> elevated GTPase activity from urease activation, indicating that wild-type UreF enhances the <strong>fidelity</strong> with which GTP hydrolysis is converted into a correctly metalated enzyme <a href="https://pubmed.ncbi.nlm.nih.gov/22369361">PMID:22369361</a>.</li>
+</ul>
+<p><strong>Substrate/ligand specificity note.</strong> UreF has no small-molecule substrate. Its functional "specificity" is for its protein partners (UreD/UreH and UreG) and, through the complex it builds, for delivering <strong>Ni²⁺</strong> (not Zn²⁺/Fe²⁺) to urease.</p>
+<hr />
+<h2 id="3-subcellular-localization">3. Subcellular localization</h2>
+<p>UreF acts in the <strong>cytoplasm</strong>. The curated record for Q88J01 assigns "Subcellular location: Cytoplasm" and the keywords "Chaperone, Cytoplasm, Nickel insertion." This is consistent with the whole urease system being soluble/cytoplasmic <a href="https://pubmed.ncbi.nlm.nih.gov/7565414">PMID:7565414</a> and with all mechanistic complexes (UreD–UreF, UreF–UreH, UreG/UreF/UreH, and the pre-activation complex with apo-urease) being characterized as soluble assemblies. In the <em>P. putida</em> KT2440 cluster, every Ure protein is annotated cytoplasmic except the integral-membrane accessory protein UreJ (see §4).</p>
+<hr />
+<h2 id="4-genomic-and-pathway-context-in-p-putida-kt2440">4. Genomic and pathway context in <em>P. putida</em> KT2440</h2>
+<p><em>ureF</em> (PP_2848) lies within a complete, contiguous chromosomal <em>ure</em> cluster (ordered loci PP_2842–PP_2849). Mapping the annotated members:</p>
+<table>
+<thead>
+<tr>
+<th>Locus</th>
+<th>Gene</th>
+<th>Product</th>
+<th>Length</th>
+<th>Localization</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PP_2842</td>
+<td><em>ureD</em></td>
+<td>Urease accessory protein UreD</td>
+<td>277</td>
+<td>Cytoplasm</td>
+</tr>
+<tr>
+<td>PP_2843</td>
+<td><em>ureA</em></td>
+<td>Urease subunit gamma (γ)</td>
+<td>100</td>
+<td>Cytoplasm</td>
+</tr>
+<tr>
+<td>PP_2844</td>
+<td><em>ureB</em></td>
+<td>Urease subunit beta (β)</td>
+<td>105</td>
+<td>Cytoplasm</td>
+</tr>
+<tr>
+<td>PP_2845</td>
+<td><em>ureC</em></td>
+<td>Urease subunit alpha (α); EC 3.5.1.5; dinuclear-Ni active site</td>
+<td>567</td>
+<td>Cytoplasm</td>
+</tr>
+<tr>
+<td>PP_2846</td>
+<td><em>ureE</em></td>
+<td>Urease accessory protein UreE (Ni metallochaperone)</td>
+<td>167</td>
+<td>Cytoplasm</td>
+</tr>
+<tr>
+<td>PP_2847</td>
+<td><em>ureJ</em></td>
+<td>Urease accessory protein UreJ (integral membrane, ~5 TM helices)</td>
+<td>181</td>
+<td>Membrane</td>
+</tr>
+<tr>
+<td><strong>PP_2848</strong></td>
+<td><strong><em>ureF</em></strong></td>
+<td><strong>Urease accessory protein UreF</strong></td>
+<td><strong>224</strong></td>
+<td><strong>Cytoplasm</strong></td>
+</tr>
+<tr>
+<td>PP_2849</td>
+<td><em>ureG</em></td>
+<td>Urease accessory protein UreG (SIMIBI GTPase)</td>
+<td>207</td>
+<td>Cytoplasm</td>
+</tr>
+</tbody>
+</table>
+<p>This confirms that <em>P. putida</em> encodes all three structural subunits (UreABC) and all four canonical maturation accessory proteins (UreD/UreE/UreF/UreG), with <em>ureF</em> co-transcribed adjacent to its direct partners <em>ureE</em>/<em>ureJ</em> and <em>ureG</em>. The additional membrane protein <strong>UreJ</strong> is characteristic of <em>Pseudomonas</em>-type <em>ure</em> clusters and is distinct from UreF's soluble role.</p>
+<p><strong>Biochemical pathway.</strong> UreF operates in <strong>urease metallocenter biosynthesis</strong>, the maturation branch of urea catabolism. The physiological output of the pathway is an active urease that hydrolyzes urea → 2 NH₃ + CO₂, allowing the cell to assimilate urea-derived nitrogen (and, secondarily, to buffer against acid/produce ammonia); bacterial urease expression is typically nitrogen-regulated, urea-inducible, or constitutive <a href="https://pubmed.ncbi.nlm.nih.gov/7565414">PMID:7565414</a>. UreF is <strong>not</strong> part of urea transport or of downstream ammonia assimilation; its role is strictly upstream, in producing the catalytically competent enzyme.</p>
+<hr />
+<h2 id="5-evidence-summary">5. Evidence summary</h2>
+<ul>
+<li><strong>Experimental (orthologs, high-confidence, directly transferable by strong homology):</strong> crystal structures of UreF, UreF–UreH, and UreG/UreF/UreH [PMID:20635345; 22013070; 24115911]; site-directed mutagenesis defining UreF's UreG-binding surface and essential residues Tyr48/Arg250/Lys165 [PMID:22013070; 22369361]; in vitro reconstitution of GTP-dependent, Ni-charged UreG dimer formation and nickel release <a href="https://pubmed.ncbi.nlm.nih.gov/24115911">PMID:24115911</a>; UreF control of nickel-exclusion/activation fidelity <a href="https://pubmed.ncbi.nlm.nih.gov/8808930">PMID:8808930</a>; nickel-tunnel disruption reducing Ni incorporation <a href="https://pubmed.ncbi.nlm.nih.gov/26401965">PMID:26401965</a>; foundational reconstitution of the UreD–UreF–UreG–apourease activation complex [PMID:10500143; 8808930; 9209019].</li>
+<li><strong>Evolutionary (target-specific homology):</strong> Global (Needleman–Wunsch) alignment of the <em>P. putida</em> UreF (Q88J01, 224 aa) shows <strong>55.4% amino-acid identity</strong> to the biochemically characterized <em>K. aerogenes</em> UreF (P18318, also 224 aa) and 25.9% identity to <em>H. pylori</em> UreF (Q9S0Q2). The high identity and identical length to the Gammaproteobacterial <em>K. aerogenes</em> ortholog strongly justify transferring its structural/mechanistic conclusions to the <em>P. putida</em> protein. At the residue level, the fidelity-linked <em>K. aerogenes</em> <strong>Lys165</strong> (K165A uncouples UreG GTP hydrolysis from urease activation; <a href="https://pubmed.ncbi.nlm.nih.gov/22369361">PMID:22369361</a>) is <strong>conserved as Lys165</strong> in the <em>P. putida</em> protein, and the C-terminal UreG-recruitment region (<a href="https://pubmed.ncbi.nlm.nih.gov/22013070">PMID:22013070</a>) is highly conserved (~63% identity over the last ~70 aligned residues) — indicating the target retains the same functional surfaces.</li>
+<li><strong>Database/inference (target-specific):</strong> UniProt Q88J01 functional, subunit, and localization annotations (HAMAP MF_01385); genomic cluster mapping (PP_2842–PP_2849); UreF-family domain assignment (PF01730 / IPR002639 / IPR038277).</li>
+<li><strong>Caveat:</strong> No study focuses on the <em>P. putida</em> KT2440 UreF protein specifically; its assignment rests on strong sequence/family homology to the biochemically and structurally characterized enterobacterial and <em>H. pylori</em> orthologs plus curated computational annotation.</li>
+</ul>
+<hr />
+<h2 id="6-supported-and-refuted-hypotheses">6. Supported and refuted hypotheses</h2>
+<p><strong>Supported</strong><br />
+- UreF is a cytoplasmic urease-maturation chaperone, not a catalytic enzyme. (UniProt Q88J01; [PMID:23539618; 7565414])<br />
+- UreF scaffolds UreD/UreH and recruits/activates the UreG GTPase to form the pre-activation complex. ([PMID:22013070; 22369361; 24115911])<br />
+- UreF participates in gated, selective nickel delivery (tunnel + fidelity control), preventing premature/mismetalated active sites. ([PMID:26401965; 8808930])<br />
+- In <em>P. putida</em> KT2440, <em>ureF</em> is embedded in a complete <em>ure</em> cluster and matures the co-encoded UreC apoenzyme. (genome mapping)</p>
+<p><strong>Refuted / excluded</strong><br />
+- UreF catalyzes urea hydrolysis — refuted (catalysis is by UreABC/UreC; UreF has no EC number and no substrate).<br />
+- UreF is a nickel metallochaperone that itself binds/delivers nickel as the primary carrier — not supported; nickel binding/delivery is attributed to UreE→UreG, while UreF's role is to build/activate the UreG donor and form part of the transfer conduit ([PMID:24115911; 26401965]).<br />
+- UreF is membrane-associated — refuted for UreF (cytoplasmic); the membrane component of the <em>P. putida</em> cluster is UreJ (PP_2847), a different protein.</p>
+<hr />
+<h2 id="7-limitations-and-future-directions">7. Limitations and future directions</h2>
+<ul>
+<li>Direct biochemistry on the <em>P. putida</em> UreF is lacking; conclusions rely on homology to <em>K. aerogenes</em> and <em>H. pylori</em>. A dedicated <em>P. putida</em> knockout/complementation and in vitro activation study would confirm transferability.</li>
+<li>The exact function of the <em>Pseudomonas</em>-specific accessory protein <strong>UreJ</strong> (membrane) and whether it modulates UreF/UreG activity or urea/nickel access is unresolved and worth investigating.</li>
+<li>The precise coupling between UreG GTP hydrolysis and UreF-mediated conformational gating (the "GAP-like" step) remains mechanistically debated <a href="https://pubmed.ncbi.nlm.nih.gov/22369361">PMID:22369361</a> and could be probed by pre-steady-state kinetics on the <em>Pseudomonas</em> complex.</li>
+</ul>
+<hr />
+<h3 id="key-references">Key references</h3>
+<ul>
+<li>PMID:24115911 — UreG/UreF/UreH complex structure and maturation mechanism (definitive).</li>
+<li>PMID:22013070 — UreF–UreH structure; UreG recruitment (Tyr48/Arg250).</li>
+<li>PMID:20635345 — First UreF structure (all-α fold, dimer).</li>
+<li>PMID:22369361 — UreF UreG-binding site; activation fidelity/GAP hypothesis.</li>
+<li>PMID:8808930 — UreD–UreF–urease complexes; nickel-exclusion/fidelity.</li>
+<li>PMID:26401965 — Nickel-transfer tunnel through UreD/UreF.</li>
+<li>PMID:35556134 — Review: nickel trafficking along the urease maturation pathway.</li>
+<li>PMID:23539618 / 20046957 / 7565414 — Reviews of urease metallocenter biosynthesis and molecular biology.</li>
+<li>UniProt Q88J01 — target-specific curated annotation.</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="ureF-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="ureF-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:7565414</li>
+<li>PMID:20046957</li>
+<li>PMID:23539618</li>
+<li>PMID:22013070</li>
+<li>PMID:22369361</li>
+<li>PMID:20635345</li>
+<li>PMID:24115911</li>
+<li>PMID:35556134</li>
+<li>PMID:26401965</li>
+<li>PMID:8808930</li>
+<li>PMID:10500143</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ureF-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88J01" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="uref-curation-notes">ureF curation notes</h1>
+<h2 id="2026-08-11">2026-08-11</h2>
+<ul>
+<li>Q88J01 is reviewed UniProt UreF/PP_2848 and belongs to <code>PTHR33620:SF1</code>.</li>
+<li>UreF joins the UreD-bound apoprotein and recruits UreG. Mutational analysis<br />
+  supports a checkpoint role rather than a simple generic chaperone function<br />
+  [PMID:22369361, "UreF gates the GTPase activity of UreG to enhance the<br />
+  fidelity of urease metallocenter assembly"].</li>
+<li>Nickel binding remains <code>UNDECIDED</code>. Current UniRule transfer is not backed by<br />
+  a direct Q88J01 assay, whereas PMID:22369361 directly supports UreG recruitment<br />
+  and GTPase gating in the orthologous system.</li>
+<li>The first OpenScientist submission was rejected before execution with HTTP<br />
+  429 and is being retried with the full provider timeout.</li>
+</ul>
+<h2 id="2026-08-12">2026-08-12</h2>
+<ul>
+<li>Final review removes the unsupported nickel-binding transfer and records<br />
+  UreG GTPase regulation as the defining orthology-supported function.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88J01
+gene_symbol: ureF
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida KT2440
+description: &gt;-
+  UreF is a cytoplasmic urease-maturation factor that joins UreD-bound
+  apo-urease, recruits UreG, and gates UreG nucleotide turnover so nickel is
+  installed productively in the UreC active site rather than as a noncognate metal.
+existing_annotations:
+  - term:
+      id: GO:0005737
+      label: cytoplasm
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: located_in
+    review:
+      summary: UreF acts in the cytoplasmic urease activation complex.
+      action: ACCEPT
+      reason: The localization agrees with reviewed UniProt and conserved UreDFG biochemistry.
+  - term:
+      id: GO:0016151
+      label: nickel cation binding
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: enables
+    review:
+      summary: Nickel binding is not the supported direct function of UreF.
+      action: REMOVE
+      reason: &gt;-
+        The target GOA row is a UniRule inference. Conserved-system evidence
+        assigns nickel delivery to UreE and nickel handling to UreG, whereas
+        UreF binds and gates UreG in the activation complex (PMID:22369361).
+        Neither target-level nor family-level evidence supports direct nickel
+        binding by UreF.
+      supported_by:
+        - reference_id: PMID:22369361
+          supporting_text: UreE functions as a metallochaperone that delivers Ni to a UreD-UreF-UreG complex bound to urease apoprotein, with UreG serving as a GTPase during enzyme activation.
+        - reference_id: file:PSEPK/ureF/ureF-deep-research-openscientist.md
+          supporting_text: UreF is a nickel metallochaperone that itself binds/delivers nickel as the primary carrier — not supported;
+  - term:
+      id: GO:0043419
+      label: urea catabolic process
+    evidence_type: ISS
+    original_reference_id: PMID:22369361
+    qualifier: involved_in
+    review:
+      summary: UreF gates productive maturation of the urease responsible for urea catabolism.
+      action: NEW
+      reason: Conserved-complex mutagenesis links orthologous UreF function to mature urease activity; this is an orthology-based inference for Q88J01, not a direct KT2440 assay.
+      supported_by:
+        - reference_id: PMID:22369361
+          supporting_text: &gt;-
+            Further experiments with these complexes provided evidence that UreF
+            gates the GTPase activity of UreG to enhance the fidelity of urease
+            metallocenter assembly, especially in the presence of the noncognate metal Zn.
+  - term:
+      id: GO:0030695
+      label: GTPase regulator activity
+    evidence_type: ISS
+    original_reference_id: PMID:22369361
+    qualifier: enables
+    review:
+      summary: UreF binds UreG and modulates its GTPase activity during urease activation.
+      action: NEW
+      reason: &gt;-
+        Conserved-complex evidence supports regulation of UreG nucleotide
+        turnover without implying that UreF is itself a GTPase-activating protein.
+      supported_by:
+        - reference_id: PMID:22369361
+          supporting_text: &gt;-
+            Further experiments with these complexes provided evidence that UreF
+            gates the GTPase activity of UreG to enhance the fidelity of urease
+            metallocenter assembly, especially in the presence of the noncognate metal Zn.
+references:
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+  - id: PMID:22369361
+    title: &#39;Klebsiella aerogenes UreF: identification of the UreG binding site and role in enhancing the fidelity of urease activation.&#39;
+    findings:
+      - statement: UreF gates UreG activity to improve fidelity of metallocenter assembly.
+        supporting_text: &gt;-
+          Further experiments with these complexes provided evidence that UreF
+          gates the GTPase activity of UreG to enhance the fidelity of urease
+          metallocenter assembly, especially in the presence of the noncognate metal Zn.
+  - id: file:PSEPK/ureF/ureF-uniprot.txt
+    title: UniProtKB entry for PSEPK ureF (Q88J01)
+  - id: file:PSEPK/ureF/ureF-goa.tsv
+    title: QuickGO annotations for PSEPK ureF (Q88J01)
+  - id: file:PSEPK/ureF/ureF-deep-research-openscientist.md
+    title: OpenScientist research report for PSEPK UreF
+    findings:
+      - statement: The report found no support for UreF as the primary nickel-binding carrier.
+        supporting_text: UreF is a nickel metallochaperone that itself binds/delivers nickel as the primary carrier — not supported;
+        reference_section_type: DISCUSSION
+      - statement: No direct experimental study of KT2440 UreF was identified.
+        supporting_text: No study focuses on the *P. putida* KT2440 UreF protein specifically;
+        reference_section_type: DISCUSSION
+    reference_review:
+      relevance: MEDIUM
+      correctness: VERIFIED
+      review_notes: &gt;-
+        Used as a retrieval and orthology synthesis aid. Mechanistic claims
+        remain grounded in the cached primary UreF/UreG study.
+core_functions:
+  - description: UreG-recruitment and activation checkpoint in urease maturation.
+    molecular_function:
+      id: GO:0030695
+      label: GTPase regulator activity
+    directly_involved_in:
+      - id: GO:0043419
+        label: urea catabolic process
+    locations:
+      - id: GO:0005737
+        label: cytoplasm
+    supported_by:
+      - reference_id: PMID:22369361
+        supporting_text: &gt;-
+          Further experiments with these complexes provided evidence that UreF
+          gates the GTPase activity of UreG to enhance the fidelity of urease
+          metallocenter assembly, especially in the presence of the noncognate metal Zn.
+proposed_new_terms: []
+suggested_questions:
+  - question: Is nickel binding by Q88J01 required directly, or does UreF mainly gate UreG and open the UreC access route?
+suggested_experiments:
+  - hypothesis: Q88J01 controls UreG coupling and metal-delivery fidelity independently of any stable nickel-binding role.
+    description: Separate nickel binding, UreG interaction, GTPase gating, and urease activation with purified UreF variants.
+    experiment_type: Mutagenesis, metal binding, protein interaction, GTPase, and urease activation assays
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
