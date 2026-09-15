@@ -98,6 +98,39 @@ def test_benchmark_and_refresh_commands_share_frozen_go_release() -> None:
     assert FROZEN_GO_ADAPTER == "frozen-go-2026-03-25"
 
 
+def test_argo95_exact_goa_reads_the_declared_baseline_commit(monkeypatch) -> None:
+    module = _load_sidecar_module()
+    policy = yaml.safe_load((PROJECT_DIR / "benchmark-policy.yaml").read_text())
+    baseline = policy["baseline_commit"]
+
+    frozen = module.frozen_goa_ids("genes/ECOLI/SlyD/SlyD-goa.tsv", baseline)
+    assert {"GO:0016853", "GO:0046872", "GO:0051082"} <= frozen
+
+    def reject_working_tree_goa(_path: Path) -> set[str]:
+        raise AssertionError("frozen metric consulted a working-tree GOA snapshot")
+
+    for helper in ("goa_ids", "latest_goa_date", "sha256"):
+        monkeypatch.setattr(module, helper, reject_working_tree_goa)
+    summary = module.argo95_exact_goa_summary(
+        set(module.read_rl_gene_list()), policy
+    )
+    assert summary == {
+        "cnn_exact_frozen_goa": 635,  # Includes restored SIR2 GO:0006303 CNN.
+        "cnn_other_established_basis": 47,
+        "cor_exact_frozen_goa": 0,
+    }
+
+    overrides = policy["cohorts"]["argo139_rl_narrative"]["frozen_inputs"][
+        "goa_path_overrides"
+    ]
+    assert overrides == {
+        "DROME/Git": "genes/DROME/git/git-goa.tsv",
+        "SCHPO/tim10": "genes/SCHPO/Tim10/Tim10-goa.tsv",
+    }
+    for relative_path in overrides.values():
+        assert module.frozen_goa_ids(relative_path, baseline)
+
+
 def test_frozen_go_checksum_and_release_sentinels() -> None:
     path = ensure_frozen_go()
     assert frozen_go_sha256(path) == GO_RELEASE_SHA256
@@ -195,7 +228,15 @@ def test_generated_quality_sidecar_has_expected_denominators() -> None:
     assert sum(row["input_quality"] != "FULL_LENGTH_MATCH" for row in rows) == 8
     assert sum(row["interpro_input_present"] == "true" for row in rows) == 136
     assert sum(row["gogpt_input_present"] == "true" for row in rows) == 139
-    assert all(row["goa_latest_annotation_date"] for row in rows)
+    assert all(row["current_goa_latest_annotation_date"] for row in rows)
+    assert all(row["frozen_goa_latest_annotation_date"] for row in rows)
+    assert all(row["frozen_goa_path"] for row in rows)
+    assert all(row["current_goa_sha256"] for row in rows)
+    assert all(row["frozen_goa_sha256"] for row in rows)
+
+    slyd = next(row for row in rows if row["organism"] == "ECOLI" and row["gene"] == "SlyD")
+    assert slyd["frozen_goa_path"] == "genes/ECOLI/SlyD/SlyD-goa.tsv"
+    assert slyd["frozen_goa_sha256"] != slyd["current_goa_sha256"]
 
 
 def test_all_narrative_reviews_have_two_in_range_scores() -> None:
@@ -300,7 +341,7 @@ def test_publication_headlines_match_generated_metrics() -> None:
             gogpt["assessment_distribution"]["UNC"],
         )
     )
-    assert sft["cnn_exact_frozen_goa"] == 631
+    assert sft["cnn_exact_frozen_goa"] == 635
     assert sft["cnn_other_established_basis"] == 47
     assert sft["cor_exact_frozen_goa"] == 0
     assert sft["ontology_pair_adjudication"] == {
@@ -354,9 +395,11 @@ def test_publication_headlines_match_generated_metrics() -> None:
         f"{overlap['core']['n_reference_terms']:,} | "
         f"{overlap['core']['n_overlap']:,} | {core_percent:.1f} |"
     ) in supplement
-    assert "**71.0% CNN**" in slides
-    assert "**15.9% NPI/PLI/REP**" in slides
-    assert "**2.5% COR**" in slides
+    assert "**71.4% CNN**" in slides
+    assert "**15.4% NPI/PLI/REP**" in slides
+    assert "**2.4% COR**" in slides
+    for slide_text in (slides, slides_html):
+        assert f"{sft['cnn_exact_frozen_goa']} exact GOA" in slide_text
 
     with (PROJECT_DIR / "cafa-style" / "argo139_prediction_goa_overlap.csv").open() as handle:
         incorrect_hf = [
@@ -370,9 +413,29 @@ def test_publication_headlines_match_generated_metrics() -> None:
     n_propagated = sum(
         row["closure_intersects_goa_all"] == "True" for row in incorrect_hf
     )
-    assert (n_incorrect, n_exact, n_propagated) == (152, 53, 124)
+    assert (n_incorrect, n_exact, n_propagated) == (147, 47, 119)
     assert f"{n_exact}/{n_incorrect} HF terms labelled NPI, PLI, or REP" in manuscript_flat
     assert (
         f"{n_propagated}/{n_incorrect} had propagated overlap with current GOA"
         in manuscript_flat
     )
+
+
+def test_cafa_overlap_assessments_match_current_prediction_sources() -> None:
+    """A stale CSV and matching stale manuscript must not validate each other."""
+    from collections import Counter
+
+    module = _load_cafa_module()
+    predictions = module.read_predictions(set(module.read_argo139()))
+    expected = Counter(
+        (module.source_group(p), p.organism, p.gene, p.aspect, p.term_id, p.assessment)
+        for p in predictions
+    )
+    with (PROJECT_DIR / "cafa-style" / "argo139_prediction_goa_overlap.csv").open() as handle:
+        observed = Counter(
+            tuple(row[key] for key in (
+                "source_group", "organism", "gene", "aspect", "term_id", "assessment"
+            ))
+            for row in csv.DictReader(handle)
+        )
+    assert observed == expected

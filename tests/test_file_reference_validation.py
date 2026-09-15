@@ -252,3 +252,32 @@ def test_real_file_reference():
         # Clean up test file
         if results_file.exists():
             results_file.unlink()
+
+
+@pytest.mark.parametrize("location", ["missing", "shared", "gene", "directory"])
+def test_additional_file_reference_existence(tmp_path, monkeypatch, location):
+    """Additional review citations use the same existence checks as main references."""
+    from ai_gene_review.validation.validator import check_best_practices_rules
+    from ai_gene_review.validation.validation_report import ValidationReport
+
+    monkeypatch.chdir(tmp_path)
+    ref = "interpro/panther/PTHR1/PTHR1-review.md"
+    if location == "gene":
+        ref = "human/TEST/analysis.md"
+        target = tmp_path / "genes" / ref
+    else:
+        target = tmp_path / ref
+    if location in {"shared", "gene"}:
+        target.parent.mkdir(parents=True)
+        target.write_text("Evidence")
+    elif location == "directory":
+        target.mkdir(parents=True)
+    data = {"existing_annotations": [{"review": {"action": "ACCEPT", "additional_reference_ids": [f"file:{ref}"]}}]}
+    report = ValidationReport(is_valid=True)
+    check_best_practices_rules(data, report, check_supporting_text=False)
+    issues = [i for i in report.issues if i.check_type in {"file_not_found", "file_is_directory"}]
+    if location in {"missing", "directory"}:
+        assert len(issues) == 1
+        assert issues[0].path == "existing_annotations[0].review.additional_reference_ids[0]"
+    else:
+        assert not issues
