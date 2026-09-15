@@ -15,10 +15,16 @@ Two layers:
 
   * a keyword heuristic over the GO aspect and the reviewer's ``review.reason``
     / ``review.summary`` text (``mode_source = heuristic``), and
-  * a curated override table, ``failure_mode_curated.tsv`` (gene, term_id,
-    mode, note), which always wins (``mode_source = curated``). Rows the
-    heuristic cannot place are written with mode 0 (UNCLASSIFIED) so they are
-    visible rather than silently binned.
+  * a curated override table, ``failure_mode_curated.tsv`` (file, gene,
+    term_id, mode, note), which always wins (``mode_source = curated``). Rows
+    the heuristic cannot place are written with mode 0 (UNCLASSIFIED) so they
+    are visible rather than silently binned.
+
+All joins are keyed on ``(file, term_id)``, never ``(gene, term_id)``: gene
+symbols are not unique across the corpus (``mdh`` in METEA and PSEPK, ``ALB``
+in CANLF and FELCA, the two PSEPK ``dapF`` paralogs Q88CF3/Q88GD4), so a
+symbol-keyed join silently pulls ``aspect``/``reason`` from another organism's
+gene and lets one curated override apply to several unrelated rows.
 
 Reads treegrafter_placement.tsv (from analyze_placement.py) and the gene
 review YAMLs; writes treegrafter_failure_modes.tsv and prints mode x action
@@ -53,12 +59,25 @@ RE_PSEUDO = re.compile(
     r"triad|motif)|catalytically (inactive|dead)|non-?catalytic|inactive (enzyme|"
     r"homolog|paralog)|structural (protein|role)|crystallin", re.I)
 RE_MISPLACE = re.compile(
-    r"mis-?plac|wrong (enzyme|subfamily|paralog|family member)|different enzyme|"
+    r"mis-?(plac|annotat|assign|graft)|wrong[- ](enzyme|subfamily|paralog|"
+    r"family member|substrate)|different enzyme|"
     r"is (actually |in fact )?an? [\w\-]+ (synthetase|reductase|dehydrogenase|"
     r"transferase|ligase|deaminase|oxidase|kinase|hydrolase|isomerase|lyase)|"
-    r"paralog|distinct (enzyme|activity|substrate)|not (a|an) [\w\-]+ (synthase|"
+    r"paralog (transfer|swap|over-?annotation|mis-?assignment)|"
+    r"crosses [\w\s.]*paralogs|substrate[- ]class error|"
+    r"distinct (enzyme|activity|substrate|subfamil)|not (a |an )?[\w\-]+ (synthase|"
     r"dehydrogenase|reductase|ligase|transferase|lipase|deaminase)|"
-    r"(substrate|specificity) (differs|is different)|acts on|instead of|rather than", re.I)
+    # "acts on X ... not Y" is a substrate contrast; a bare "acts on" is not
+    # (e.g. "MutS acts on duplex DNA, but this generic binding term ...").
+    r"(substrate|specificity) (differs|is different)|acts on [^.]{0,150}?\bnot\b|"
+    r"instead of", re.I)
+# Explicit statements that the term came down from the family/pathway level.
+# This IS mode 1's operational definition, so it is tested before RE_MISPLACE:
+# otherwise a reason such as "family-level pathway propagation rather than
+# paralog-specific evidence" lands in mode 4 on the words "rather than".
+RE_FAMILY_LEVEL = re.compile(
+    r"(pathway[- ])?(super)?family[- ]level|at the (pathway[- ])?family level|"
+    r"broad family [\w\s-]*label", re.I)
 RE_CONTEXT = re.compile(
     r"not (present|found|encoded|a (process|pathway)) in|absent (from|in) (this|the) "
     r"(organism|species|bacterium|genome)|(organism|bacterium|species|genome) (does not|"
@@ -70,7 +89,17 @@ RE_GENERIC = re.compile(
     r"uninformative|low[- ]information|generic|non-?specific|parent term|"
     r"more specific (term|child)|(better|more precise|specific) term|granular|"
     r"family[- ]level|sibling", re.I)
-RE_BINDING = re.compile(r"\b(identical protein binding|protein binding|binding)$", re.I)
+# Binding terms that carry no functional information whatever the reviewer's
+# reason says. This is an explicit allowlist, NOT /binding$/: terms such as
+# "ubiquinone binding", "double-stranded DNA binding" or "metal ion binding"
+# name a real ligand, so being down-graded on them is a granularity or
+# placement story and has to be decided from the reviewer's reason instead.
+LOW_INFO_BINDING = {
+    "binding",
+    "protein binding",
+    "identical protein binding",
+    "small molecule binding",
+}
 
 
 def load_reasons() -> dict:
@@ -103,10 +132,12 @@ def heuristic(aspect: str, label: str, text: str):
         return 2, "pseudo-enzyme keywords"
     if aspect == "cellular_component":
         return 3, "CC term"
-    if RE_BINDING.search(label):
+    if label.strip().lower() in LOW_INFO_BINDING:
         return 3, "uninformative binding term"
     if RE_CONTEXT.search(text):
         return 3, "host lacks pathway/process"
+    if RE_FAMILY_LEVEL.search(text):
+        return 1, "family-level propagation stated"
     if RE_MISPLACE.search(text):
         return 4, "mis-placement keywords"
     if RE_GENERIC.search(text):
@@ -119,21 +150,23 @@ def main() -> None:
     if os.path.exists(CURATED):
         with open(CURATED) as fh:
             for r in csv.DictReader(fh, delimiter="\t"):
-                curated[(r["gene"], r["term_id"])] = (int(r["mode"]), r.get("note", ""))
+                curated[(r["file"], r["term_id"])] = (int(r["mode"]), r.get("note", ""))
     reasons = load_reasons()
-    file_for = {}
+    aspect_for = {}
     with open(REVIEW_TSV) as fh:
         for r in csv.DictReader(fh, delimiter="\t"):
-            file_for[(r["gene"], r["term_id"])] = (r["file"], r.get("aspect", ""))
+            aspect_for[(r["file"], r["term_id"])] = r.get("aspect", "")
 
     rows = []
+    seen_curated = set()
     with open(PLACEMENT) as fh:
         for r in csv.DictReader(fh, delimiter="\t"):
-            key = (r["gene"], r["propagated_term_id"])
-            rel, aspect = file_for.get(key, ("", ""))
-            reason, summary = reasons.get((rel, r["propagated_term_id"]), ("", ""))
+            key = (r["file"], r["propagated_term_id"])
+            aspect = aspect_for.get(key, "")
+            reason, summary = reasons.get(key, ("", ""))
             text = f"{reason} {summary}"
             if key in curated:
+                seen_curated.add(key)
                 mode, note = curated[key]
                 source = "curated"
             else:
@@ -144,6 +177,13 @@ def main() -> None:
                 "mode_source": source, "mode_note": note,
                 "reviewer_reason": (reason or summary)[:300].replace("\n", " "),
             })
+
+    orphans = sorted(set(curated) - seen_curated)
+    if orphans:
+        print(f"WARNING: {len(orphans)} curated override(s) match no placement row "
+              f"(stale after a re-run?):")
+        for f, t in orphans:
+            print(f"  {t}  {f}")
 
     fields = list(rows[0].keys()) if rows else []
     with open(OUT, "w", newline="") as fh:
