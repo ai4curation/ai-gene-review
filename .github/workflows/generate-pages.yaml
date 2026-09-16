@@ -311,24 +311,17 @@ jobs:
               >/dev/null
             echo "Updated existing regeneration PR #$PR_NUMBER."
           else
-            gh pr create \
+            PR_URL="$(gh pr create \
               --repo "$GITHUB_REPOSITORY" \
               --base main \
               --head "$BRANCH_NAME" \
               --title "Regenerate pages and browser app" \
-              --body-file "$PR_BODY"
+              --body-file "$PR_BODY")"
+            echo "$PR_URL"
+            # The create response is authoritative; search indexing can lag.
+            PR_NUMBER="${PR_URL##*/}"
 
-            PR_NUMBER="$(gh pr list \
-              --repo "$GITHUB_REPOSITORY" \
-              --head "$BRANCH_NAME" \
-              --base main \
-              --state open \
-              --author app/ai4c-agent \
-              --json number \
-              --limit 1 \
-              --jq '.[0].number // empty')"
-
-            if [ -z "$PR_NUMBER" ]; then
+            if ! [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
               echo "Failed to resolve regeneration PR number for $BRANCH_NAME."
               echo "Compare URL: https://github.com/${GITHUB_REPOSITORY}/compare/main...${BRANCH_NAME}?expand=1"
               exit 1
@@ -451,9 +444,11 @@ jobs:
     concurrency:
       group: pages
       cancel-in-progress: false
+    # A legacy regeneration-PR failure must not suppress a validated upload.
     needs: generate-pages
     if: >-
-      ${{ vars.PAGES_ARTIFACT_DEPLOY_ENABLED == 'true' &&
+      ${{ always() && !cancelled() &&
+          vars.PAGES_ARTIFACT_DEPLOY_ENABLED == 'true' &&
           needs.generate-pages.outputs.deployable == 'true' }}
     runs-on: ubuntu-latest
     permissions:

@@ -393,13 +393,13 @@ just build-pages               # Render and assemble the complete publication tr
 python -m ai_gene_review.render --all genes/    # Alternative rendering command
 ```
 
-`stage-pages` is the shadow build for the GitHub Pages artifact migration. It
+`stage-pages` assembles the GitHub Pages publication artifact. It
 preserves current public URL paths, writes an ignored `_site/` directory, and
 reports the uncompressed publication size. Cleanup is restricted to the repository's
 `_site/` directory, and the root is verified with Git before cleanup. The CLI always
 uses `<repo-root>/_site`. Shadow build failures warn
-without blocking regeneration PRs. The live site continues to publish
-from `main:/` until the shadow artifact has been verified.
+without blocking regeneration PRs. With Actions deployment enabled, the live site uses the validated artifact built
+from `main`. Regeneration PRs separately maintain the committed HTML.
 
 Staging also follows local links from published HTML and CSS, plus literal
 JavaScript fetch()/import() URLs, copying reports, notes, images, and downloads at
@@ -485,6 +485,20 @@ Keep the current Pages source until the artifact meets those checks and passes
 browser smoke checks. Then change the repository's Pages source to **GitHub
 Actions** (for example, `gh api --method PUT repos/ai4curation/ai-gene-review/pages -f build_type=workflow`), set `PAGES_ARTIFACT_DEPLOY_ENABLED=true` in repository
 Actions variables, and dispatch Generate Pages. Both settings are required.
+
+If the legacy regeneration-PR step fails after a validated upload, artifact
+deployment can still proceed. To recover an already completed build without
+rendering everything again, run:
+
+```bash
+gh workflow run recover-pages.yaml --ref main -f source_run_id=RUN_ID
+```
+
+Recovery is manual, requires Actions deployment to be enabled, and only accepts
+a completed Generate Pages run from this repository's default branch. It checks
+that rendering, validation, staging, and both uploads succeeded, downloads the
+specific validated artifact IDs, rechecks the manifest and tar size, and deploys
+the unchanged archive. Expired artifacts require a new full build.
 
 Once enabled, the artifact built from the checked-out source on `main` is
 authoritative for the live site. It deploys without waiting for the legacy
