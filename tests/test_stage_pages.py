@@ -121,11 +121,14 @@ def test_linked_project_directories_get_browsable_indexes(tmp_path: Path) -> Non
     _write(tmp_path / 'projects/FOO/data/result.tsv', 'gene\tvalue\nABC1\t1\n')
     _write(tmp_path / 'projects/FOO/data/nested/notes.txt', 'Supporting notes')
     _write(tmp_path / 'projects/FOO/data/.private', 'not public')
+    _write(tmp_path / 'projects/FOO/data/__pycache__/analysis.pyc', 'local bytecode')
     manifest = stage_pages(tmp_path, tmp_path / '_site')
     index = tmp_path / '_site/pages/projects/FOO/data/index.html'
     assert index.is_file()
     assert 'result.tsv' in index.read_text()
     assert '.private' not in index.read_text()
+    assert '__pycache__' not in index.read_text()
+    assert not list((tmp_path / '_site').rglob('*.pyc'))
     assert (tmp_path / '_site/pages/projects/FOO/data/nested/index.html').is_file()
     assert (tmp_path / '_site/projects/FOO/data/result.tsv').read_text().startswith('gene\t')
     assert manifest.broken_local_links == 0

@@ -126,7 +126,8 @@ def _stage_directory_index(repo_root: Path, output_dir: Path, target: Path) -> b
         return False
     links = []
     for child in sorted(source.iterdir()):
-        if child.name.startswith('.') or child.is_symlink() or not child.resolve().is_relative_to(repo_root):
+        if (child.name.startswith('.') or child.name in {'__pycache__', 'node_modules'}
+                or child.is_symlink() or not child.resolve().is_relative_to(repo_root)):
             continue
         original = child.relative_to(repo_root)
         destination = original
