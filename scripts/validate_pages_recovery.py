@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 BUDGET = 1_000_000_000
+ARCHIVE_BUDGET = 1_000_000_000
 REQUIRED_STEPS = {
     'Render all gene review HTML pages', 'Render project pages',
     'Validate module YAML files', 'Render module pages',
@@ -53,8 +54,13 @@ def validate_manifest(manifest, archive):
             or manifest.get('broken_local_link_paths') != []
             or manifest.get('off_base_path_urls') != []):
         raise ValueError('Source manifest does not pass the publication policy')
-    if archive.is_symlink() or not archive.is_file() or not 0 < archive.stat().st_size <= BUDGET:
+    # Older verified builds have no archive-size field; check their actual tar.
+    if manifest.get('archive_size_budget_bytes', ARCHIVE_BUDGET) != ARCHIVE_BUDGET:
+        raise ValueError('Unexpected archive budget')
+    if archive.is_symlink() or not archive.is_file() or not 0 < archive.stat().st_size <= ARCHIVE_BUDGET:
         raise ValueError('Pages tar archive is missing, empty, or over budget')
+    if manifest.get('archive_bytes', archive.stat().st_size) != archive.stat().st_size:
+        raise ValueError('Archive size differs from source manifest')
 
 
 def main():

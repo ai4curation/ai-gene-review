@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from scripts.validate_pages_recovery import BUDGET, REQUIRED_STEPS, validate_manifest, validate_source
+from scripts.validate_pages_recovery import ARCHIVE_BUDGET, BUDGET, REQUIRED_STEPS, validate_manifest, validate_source
 
 
 def source_inputs():
@@ -87,7 +87,7 @@ def test_checks_actual_archive_size(tmp_path):
     archive.write_bytes(b'archive')
     validate_manifest(good_manifest(), archive)
     with archive.open('wb') as stream:
-        stream.truncate(BUDGET + 1)
+        stream.truncate(ARCHIVE_BUDGET + 1)
     with pytest.raises(ValueError, match='archive'):
         validate_manifest(good_manifest(), archive)
 
@@ -118,3 +118,31 @@ def test_recovery_is_manual_default_branch_only_and_verifies_before_upload():
     assert names.index('Verify source run and successful publication steps') < names.index('Download source Pages archive')
     assert names.index('Verify manifest and archive size') < names.index('Upload validated archive for deployment')
     assert names.index('Upload validated archive for deployment') < names.index('Deploy validated Pages artifact')
+
+
+def test_recovery_upload_name_matches_pages_deployment():
+    workflow = yaml.safe_load(Path('.github/workflows/recover-pages.yaml').read_text())
+    steps = workflow['jobs']['recover-pages']['steps']
+    upload = next(step for step in steps if step.get('name') == 'Upload validated archive for deployment')
+    deploy = next(step for step in steps if step.get('name') == 'Deploy validated Pages artifact')
+    assert upload['with']['name'] == deploy['with']['artifact_name'] == 'github-pages'
+    assert set(upload['with']) == {'name', 'path', 'if-no-files-found', 'retention-days'}
+    assert upload['with']['path'] == 'payload/artifact.tar'
+
+
+def test_recovery_and_normal_build_have_identical_separate_budgets():
+    from ai_gene_review.tools.stage_pages import PAGES_ARCHIVE_BUDGET_BYTES, PAGES_SIZE_BUDGET_BYTES
+    assert BUDGET == PAGES_SIZE_BUDGET_BYTES
+    assert ARCHIVE_BUDGET == PAGES_ARCHIVE_BUDGET_BYTES
+
+
+def test_new_manifest_archive_size_must_match_download(tmp_path):
+    archive = tmp_path / 'artifact.tar'
+    archive.write_bytes(b'archive')
+    manifest = good_manifest()
+    manifest['archive_bytes'] = archive.stat().st_size
+    manifest['archive_size_budget_bytes'] = ARCHIVE_BUDGET
+    validate_manifest(manifest, archive)
+    manifest['archive_bytes'] += 1
+    with pytest.raises(ValueError, match='differs from source manifest'):
+        validate_manifest(manifest, archive)

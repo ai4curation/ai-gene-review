@@ -440,3 +440,27 @@ def test_compacted_panel_reference_is_audited(tmp_path: Path) -> None:
     _write(tmp_path / target, 'stored content')
     links = DependencyResolver(tmp_path).scan(Path('index.html'), f'<div data-pages-content="{target}"></div>')
     assert target in links.existing and not links.missing
+
+
+def test_archive_size_accounts_for_headers_padding_and_hidden_exclusions(tmp_path: Path):
+    import tarfile
+    from ai_gene_review.tools.stage_pages import pages_archive_bytes
+
+    site = tmp_path / 'site'
+    _write(site / 'index.html', 'page')
+    _write(site / ('long-' * 35) / ('λ' * 60 + '.txt'), 'payload' * 100)
+    _write(site / '.hidden/omit.txt', 'private')
+    _write(site / '.nojekyll', '')
+    archive_path = tmp_path / 'actual.tar'
+    def visible(info):
+        return None if any(part.startswith('.') and part != '.' for part in Path(info.name).parts) else info
+    with tarfile.open(archive_path, 'w', format=tarfile.GNU_FORMAT, dereference=True) as archive:
+        archive.add(site, arcname='.', filter=visible)
+    assert pages_archive_bytes(site) == archive_path.stat().st_size
+
+
+def test_archive_budget_blocks_build_even_when_site_bytes_fit(tmp_path: Path):
+    _site_fixture(tmp_path)
+    manifest = stage_pages(tmp_path, tmp_path / '_site')
+    assert replace(manifest, archive_bytes=1_000_000_000).deployable
+    assert not replace(manifest, archive_bytes=1_000_000_001).deployable

@@ -10,6 +10,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import io
+import tarfile
 from html import escape
 import os
 import shutil
@@ -25,6 +27,7 @@ from ai_gene_review.publication_links import rewrite_publication_links, restore_
 
 
 PAGES_SIZE_BUDGET_BYTES = 1_000_000_000
+PAGES_ARCHIVE_BUDGET_BYTES = 1_000_000_000
 MIB = 1024 * 1024
 BROWSER_FILES = ("index.html", "data.js", "schema.js")
 
@@ -35,6 +38,7 @@ class SiteManifest:
 
     total_bytes: int
     total_files: int
+    archive_bytes: int
     gene_pages: int
     project_pages: int
     module_pages: int
@@ -46,6 +50,7 @@ class SiteManifest:
     content_compaction_bytes_saved: int = 0
     unavailable_source_artifact_paths: list[str] = field(default_factory=list)
     size_budget_bytes: int = PAGES_SIZE_BUDGET_BYTES
+    archive_size_budget_bytes: int = PAGES_ARCHIVE_BUDGET_BYTES
 
     @property
     def broken_local_links(self) -> int:
@@ -62,10 +67,35 @@ class SiteManifest:
         """Readiness policy shared by CLI reporting and deployment."""
         return (
             self.total_bytes <= self.size_budget_bytes
+            and self.archive_bytes <= self.archive_size_budget_bytes
             and self.linked_source_files_not_staged == 0
             and self.broken_local_links == 0
             and self.off_base_path_links == 0
         )
+
+
+def pages_archive_bytes(output_dir: Path) -> int:
+    """Size of upload-pages-artifact's GNU tar, using metadata without reading bodies.
+
+    Match its dot-file exclusions, dereferencing and 20-block record padding.
+    Staging produces regular files/directories; reject unexpected symlinks.
+    """
+    size = 0
+    with tarfile.open(fileobj=io.BytesIO(), mode='w', format=tarfile.GNU_FORMAT,
+                      dereference=True, encoding='utf-8') as archive:
+        for path in [output_dir, *output_dir.rglob('*')]:
+            relative = path.relative_to(output_dir)
+            if any(part.startswith('.') for part in relative.parts):
+                continue
+            if path.is_symlink():
+                raise ValueError(f'Unexpected symlink in Pages artifact: {relative}')
+            name = '.' if path == output_dir else './' + relative.as_posix()
+            info = archive.gettarinfo(str(path), arcname=name)
+            size += len(info.tobuf(format=tarfile.GNU_FORMAT, encoding='utf-8'))
+            if info.isfile():
+                size += ((info.size + 511) // 512) * 512
+    size += 1024  # Two end-of-archive blocks.
+    return ((size + tarfile.RECORDSIZE - 1) // tarfile.RECORDSIZE) * tarfile.RECORDSIZE
 
 
 def _copy_file(source: Path, destination: Path) -> None:
@@ -302,6 +332,7 @@ def stage_pages(repo_root: Path, output_dir: Path) -> SiteManifest:
         broken_local_link_paths=sorted(p.as_posix() for p in broken_links),
         total_bytes=sum(path.stat().st_size for path in staged_files),
         total_files=len(staged_files),
+        archive_bytes=pages_archive_bytes(output_dir),
         gene_pages=len(gene_pages),
         project_pages=len(list((output_dir / "pages" / "projects").rglob("*.html"))),
         module_pages=len(list((output_dir / "pages" / "modules").rglob("*.html"))),
@@ -364,6 +395,7 @@ def main() -> None:
     size_mib = manifest.total_bytes / MIB
     print(f"Staged {manifest.total_files:,} files in {output_dir}")
     print(f"Uncompressed site size: {size_mib:,.1f} MiB")
+    print(f"Tar archive size: {manifest.archive_bytes / MIB:,.1f} MiB")
     print(
         f"Shared template assets saved: {manifest.shared_asset_bytes_saved / MIB:,.1f} MiB"
     )
@@ -378,6 +410,12 @@ def main() -> None:
             f"::warning title=Pages size budget exceeded::"
             f"Staged site is {size_mib:,.1f} MiB; warning threshold is "
             f"{manifest.size_budget_bytes:,} bytes. Reduce it before switching Pages to Actions."
+        )
+    if manifest.archive_bytes > manifest.archive_size_budget_bytes:
+        print(
+            "::warning title=Pages archive budget exceeded::"
+            f"Tar requires {manifest.archive_bytes:,} bytes including headers/padding; "
+            f"budget is {manifest.archive_size_budget_bytes:,}. Deployment is blocked."
         )
     if manifest.off_base_path_links:
         print(
