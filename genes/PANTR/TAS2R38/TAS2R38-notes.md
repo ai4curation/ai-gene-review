@@ -151,3 +151,34 @@ three issues, all fixed:
      (citing Hayakawa 2012 as its source) is the place this reviewer could
      verbatim-confirm the specific 76% figure. Flagged in that reference's
      `review_notes` for transparency.
+
+## Re-review round 2: Hayakawa Table 1 row alignment resolved
+
+The `ai4c-reviewer` bot's re-review of commit `b1db1320b` (2026-09-16) confirmed all
+five IMPORTANT fixes from round 1, then raised one new issue (#9, the sole blocker)
+and two optional suggestions:
+
+- **#9 (fixed)**: the round-1 caution about Hayakawa 2012's Table 1 being unparseable
+  was overly conservative. The bot worked out the correct row-to-gene-label mapping:
+  the markdown extraction flattens each row's LEADING gene label onto the tail of the
+  PRECEDING row's data cells, so the literal substring `LICNon-functional70/92
+  (76%)000cTAS2R40` is actually cTAS2R38's own row (LIC = loss-of-initiation-codon,
+  matching the paper's own prose calling cTAS2R38's variant "the loss-of-start SNV";
+  the `cTAS2R40` at the end is really the NEXT row's label). Verified this
+  independently by re-deriving the full label-then-data token sequence from the raw
+  table text (matches the paper's own Methods sample sizes: 92/20/4/2 = 2x
+  46W/10E/2C/1NC chimps) before editing. Added this as a verbatim finding to the
+  PMID:22916235 reference entry, rewrote its `review_notes` to explain the resolved
+  offset, and demoted PMID:26201026 (Suzuki-Hashido 2015) from primary source of the
+  76% figure to corroboration only — its own prose says "76% of individuals" where
+  Hayakawa 2012's table is an allele frequency (70/92 sampled chromosomes); this
+  review uses "alleles" throughout per the primary source.
+- **#10 (fixed, optional)**: stale "MODIFY/NEW" wording in
+  `genes/9AVES/TAS1R1/TAS1R1-ai-review.yaml` (no `MODIFY` remains in that file after
+  round 1) corrected to "KEEP_AS_NON_CORE/NEW".
+- **#11 (fixed, optional)**: `PANTHER:PTN000149628`'s `source_status` was
+  `UNRESOLVED` in `genes/human/TAS2R38` but `SUPPORTS_TRANSFER` in this file (and
+  also in `genes/human/TAS2R16`, not flagged by the bot but the same node in the
+  same PR). Standardized all three to `UNRESOLVED` ("PANTHER internal tree node, not
+  a protein"), matching the human TAS2R38 file's convention, which the bot judged
+  more defensible.
