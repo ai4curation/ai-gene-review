@@ -388,8 +388,142 @@ uv run ai-gene-review batch-fetch <input-file>  # Process multiple genes
 ```bash
 just render human BRCA1        # Render single gene to HTML
 just render-all                # Render all gene reviews to HTML
+just stage-pages               # Assemble existing generated output in _site/
+just build-pages               # Render and assemble the complete publication tree
 python -m ai_gene_review.render --all genes/    # Alternative rendering command
 ```
+
+`stage-pages` assembles the GitHub Pages publication artifact. It
+preserves current public URL paths, writes an ignored `_site/` directory, and
+reports the uncompressed publication size. Cleanup is restricted to the repository's
+`_site/` directory, and the root is verified with Git before cleanup. The CLI always
+uses `<repo-root>/_site`. Shadow build failures warn
+without blocking regeneration PRs. With Actions deployment enabled, the live site uses the validated artifact built
+from `main`. Regeneration PRs separately maintain the committed HTML.
+
+Staging also follows local links from published HTML and CSS, plus literal
+JavaScript fetch()/import() URLs, copying reports, notes, images, and downloads at
+their existing paths. Downloaded scientific data and images keep their original bytes.
+Known source-relative HTML links and missing site prefixes are repaired against
+existing files; linked source directories get browsable indexes. In staged gene,
+project, and module HTML, exact static CSS/JavaScript blocks from the maintained
+templates are replaced with relative links to content-addressed shared files in
+`_pages-assets/`. This preserves page URLs, script order, and CSS contents while
+avoiding thousands of identical copies. Source HTML remains standalone and
+unchanged. Unknown/dynamic blocks, URL-relative CSS, and documents with a
+`<base>` element remain inline. The manifest reports net savings as
+`shared_asset_bytes_saved`. Dynamic JavaScript
+URLs still require browser checks. Deleted reviews' orphan HTML remains excluded.
+The manifest's `linked_source_files_not_staged` and corresponding byte count
+specifically report these excluded orphan review pages. Independently linked
+notes, reports, and images remain publishable even without a review YAML; removing
+a review alone is not a request to unpublish its supporting research.
+
+Staged gene HTML is compacted while retaining preformatted text and inline
+spacing. The main review stays ordinary HTML. Supporting research, reference,
+documentation, and raw-YAML panels are stored losslessly in `_pages-content/`
+and restored on page load. Each panel also offers a compressed HTML download
+if JavaScript is unavailable or loading fails. The annotation browser retains
+its `data.js` URL and ready event, with its complete columnar data loaded from
+`data.json.gz`. These features use the browser's native gzip decompressor;
+there is no truncation of research text or annotation rows. Net savings are
+reported as `content_compaction_bytes_saved`. Loaders accept both raw gzip and
+responses already decoded by the HTTP layer. Restoration requires JavaScript
+and `DecompressionStream`; without them, the primary gene review and section
+downloads remain available, but the annotation browser cannot initialize.
+Supporting panels become searchable in-page after loading; crawlers that do not
+execute JavaScript see only the primary HTML and links to the source material.
+Staging audits the emitted asset URLs again after compaction.
+
+Run the real-browser transport regression (with Chromium installed) using:
+`uv run pytest -m integration tests/test_pages_loaders_browser.py`.
+It covers servers both with and without `Content-Encoding: gzip`.
+
+Preview the artifact through HTTP so compressed supporting files can load.
+For example, mount it at its real URL prefix:
+
+```bash
+preview_dir=$(mktemp -d)
+ln -s "$PWD/_site" "$preview_dir/ai-gene-review"
+python3 -m http.server 8000 --directory "$preview_dir"
+# Open http://localhost:8000/ai-gene-review/
+```
+
+Research-provider metadata can reference files that were never archived. These
+are explicitly labelled **not archived**, retaining their descriptions instead
+of presenting broken download/image links. The full list remains visible in
+`unavailable_source_artifact_paths` in the manifest. This is distinct from an
+existing source file omitted from the artifact, which still blocks deployment.
+
+The publication boundary is reachable, non-hidden files inside this repository
+at the existing site paths. Navigation and dependencies are followed transitively,
+without extension filters, depth limits, or per-file truncation that would break
+existing links. Linking a directory publishes its reachable children too; local
+runtime caches are excluded. Oversized artifacts are reported and blocked, not
+silently pruned. If a referenced rendered document is absent but its Markdown
+source exists, the link serves that source rather than a nonexistent HTML page.
+The separate MkDocs build on `gh-pages` is not part of this publication artifact;
+linked docs such as the subtraction report use their repository Markdown source.
+The complete rebuilt artifact must meet the budget before the live switch.
+
+The deployment job is disabled unless `PAGES_ARTIFACT_DEPLOY_ENABLED=true` is set
+in repository Actions variables. It requires a successful upload, at most
+1,000,000,000 site-content bytes and a separately measured GNU tar no larger than
+1,073,741,824 bytes (1 GiB, including headers and padding), no excluded orphan review pages, and no missing
+static local targets, and no likely missing site-prefix links. The CLI and CI use the same manifest `deployable` decision
+and `size_budget_bytes`. `broken_local_links` counts distinct missing paths;
+`broken_local_link_paths` lists them for diagnosis. `off_base_path_links` counts same-host URLs outside
+`/ai-gene-review/` that match a safe repository file (including an existing
+Markdown source for an HTML target); `off_base_path_urls` lists those suspected
+prefix errors. Links to the umbrella homepage (including `/index.html`) are
+allowed. Unmatched URLs outside the site prefix may belong to other
+projects and are not checked. Diagnostic lists are retained in full for machine
+processing rather than truncated; the workflow summary shows only counts.
+This static audit does not guarantee dynamically constructed JavaScript URLs or
+fragment anchors work.
+
+Keep the current Pages source until the artifact meets those checks and passes
+browser smoke checks. Then change the repository's Pages source to **GitHub
+Actions** (for example, `gh api --method PUT repos/ai4curation/ai-gene-review/pages -f build_type=workflow`), set `PAGES_ARTIFACT_DEPLOY_ENABLED=true` in repository
+Actions variables, and dispatch Generate Pages. Both settings are required.
+
+If the legacy regeneration-PR step fails after a validated upload, artifact
+deployment can still proceed. To recover an already completed build without
+rendering everything again, run:
+
+```bash
+gh workflow run recover-pages.yaml --ref main -f source_run_id=RUN_ID
+```
+
+Recovery is manual, requires Actions deployment to be enabled, and only accepts
+a completed Generate Pages run from this repository's default branch. It checks
+that rendering, validation, staging, and both uploads succeeded, downloads the
+specific validated artifact IDs, rechecks the manifest, actual tar size, and recorded SHA-256, and deploys
+the unchanged archive. The original Pages archive is retained for **3 days**
+(the diagnostic manifest for 7); expired archives require a new full build.
+Both ordinary builds and recovery enforce a 1,000,000,000-byte site-content
+budget and a separate 1 GiB archive budget, allowing tar headers/padding without
+raising the published-site limit. The manifest reports estimated `archive_bytes`
+and `archive_size_budget_bytes`. After upload, diagnostics record the actual
+`archive_actual_bytes` and `archive_sha256`; deployment requires that check to
+succeed. Recovery verifies that checksum, not exact equality with the estimate.
+Older validated builds without a checksum declaration remain recoverable using
+the trusted run/artifact provenance and the actual archive size.
+
+Once enabled, the artifact built from the checked-out source on `main` is
+authoritative for the live site. It deploys without waiting for the legacy
+regeneration PR to merge; that PR only commits derived output back to `main`.
+
+The Generate Pages workflow runs daily at 08:23 UTC and can also be started with
+GitHub Actions' **Run workflow** button. Each run rebuilds the full site, so merged
+content currently appears after the next daily regeneration PR is merged. With
+Actions deployment enabled, it appears after the next successful daily deployment.
+Agent cron profiles do not control this publication schedule. Manual runs wait for
+an active build to finish instead of cancelling it. Gene review validation remains
+in PR CI and the weekly full validation workflow.
+
+Module authors: see [the symbol-label rule](docs/module-symbol-labels.md) for
+family representative labels, validation warnings, and accession-based reasoning.
 
 ## Contributing
 

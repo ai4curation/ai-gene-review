@@ -1,0 +1,92 @@
+name: Recover validated Pages deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: Completed Generate Pages run with a validated, uploaded artifact
+        required: true
+        type: string
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  recover-pages:
+    if: >-
+      ${{ vars.PAGES_ARTIFACT_DEPLOY_ENABLED == 'true' &&
+          github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          sparse-checkout: scripts
+
+      - name: Verify source run and successful publication steps
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          [[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID" > run.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID/jobs?filter=latest&per_page=100" > jobs.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID/artifacts?per_page=100" > artifacts.json
+          WORKFLOW_ID=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/generate-pages.yaml" --jq .id)
+          python3 scripts/validate_pages_recovery.py source \
+            --run run.json --jobs jobs.json --artifacts artifacts.json \
+            --repository "$GITHUB_REPOSITORY" --branch "$DEFAULT_BRANCH" --workflow-id "$WORKFLOW_ID" \
+            --github-output "$GITHUB_OUTPUT"
+          echo "Reusing validated build from run $SOURCE_RUN_ID ($(jq -r .head_sha run.json))." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Download source publication manifest
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.source.outputs.manifest_artifact_id }}
+          merge-multiple: true
+          path: diagnostics
+          run-id: ${{ inputs.source_run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Download source Pages archive
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.source.outputs.pages_artifact_id }}
+          merge-multiple: true
+          path: payload
+          run-id: ${{ inputs.source_run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Verify manifest and archive size
+        run: |
+          python3 scripts/validate_pages_recovery.py manifest \
+            --manifest diagnostics/_site-manifest.json --archive payload/artifact.tar
+
+      # Re-upload the unchanged tar into this run so deploy-pages obtains its
+      # artifact and OIDC deployment identity from the same trusted workflow run.
+      - name: Upload validated archive for deployment
+        uses: actions/upload-artifact@v4
+        with:
+          name: github-pages
+          path: payload/artifact.tar
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Deploy validated Pages artifact
+        id: deployment
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages
