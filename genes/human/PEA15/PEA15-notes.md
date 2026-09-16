@@ -1,0 +1,11 @@
+# PEA15 evidence notes
+
+[PMID:23575685](https://pubmed.ncbi.nlm.nih.gov/23575685/), DOI [10.1038/ncomms2687](https://doi.org/10.1038/ncomms2687), solves PEA15 bound to ERK2: “occupying two key docking sites of ERK2”. This supports a direct kinase-regulatory role, not intrinsic kinase activity. [PMID:10442631](https://pubmed.ncbi.nlm.nih.gov/10442631/) reports “PED/PEA-15 co-precipitated with both FADD and FLICE.” and inhibition of death-receptor apoptotic signaling.
+
+[PMID:9670003](https://pubmed.ncbi.nlm.nih.gov/9670003/), DOI [10.1093/emboj/17.14.3858](https://doi.org/10.1093/emboj/17.14.3858), is cached as abstract-only after publisher XML/HTML/PDF retrieval failed. It describes cloned human PEA15 transfection into L6 cells, with increased surface GLUT1 but inhibited insulin-stimulated glucose transport and GLUT4 surface recruitment. This establishes regulation of transport; it does not automatically establish the more general directed-movement process GO:0008643 or an intrinsic transporter activity. QuickGO definitions checked 2026-09-08 distinguish this from GO:0046325 negative regulation of glucose import.
+
+Horse A0A9L0RWM8 contains all 130 human residues at 100% identity plus an N-terminal extension of 46 aa. The conserved core strongly supports mechanistic transfer, but the extension could affect localization or regulation and is not experimentally characterized. It is not evidence of a different enzyme or transporter fold. Horse UniProt is unreviewed; no horse-specific functional source was identified in the initial literature search, so human research is prioritized.
+
+## Research synthesis
+
+The human Falcon synthesis integrates direct ERK binding, phosphorylation-dependent signaling and the PLD1/PKC pathway underlying glucose-transport regulation. The primary PMID:9670003 establishes effects on glucose uptake, but the supported regulatory role should not be equated with an intrinsic glucose carrier. The 46-residue horse N-terminal extension preserves the complete human core while leaving possible effects on N-terminal trafficking regulation unresolved.

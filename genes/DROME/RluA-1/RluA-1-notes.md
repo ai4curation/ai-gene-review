@@ -1,0 +1,11 @@
+# RluA-1 evidence notes
+
+Q9VKV0 is the 739-residue PA/PB/PC protein of FBgn0051719. FlyBase reports all three sequences as identical; PD is a distinct 378-residue protein (M9PCT9) and is not the benchmark target. [FlyBase](https://flybase.org/reports/FBgn0051719).
+
+[PMID:33028630](https://pmc.ncbi.nlm.nih.gov/articles/PMC7718762/) is cached with full text. Crucially, its sequence-analysis methods explicitly identify “RluA-1-PABC_Dm: Q9VKV0”, so the conservation analysis applies to this exact native protein. The reported conserved catalytic residues support pseudouridine-synthase function even without a purified-target assay. The same article explicitly leaves target RNAs unresolved. Thus general activity/process annotations are retained, whereas rRNA and tRNA-position-specific assignments remain uncertain; a conserved catalytic core is not a substrate-recognition map.
+
+The protein GFP exon trap localized to nuclei; this is distinguished from membrane-tethered GFP driven by a regulatory reporter. The paper also reports null, neuron-specific RNAi and cDNA rescue experiments establishing hypersensitive thermal/mechanical nociception following RluA-1 loss. These justify proposed nucleus and negative-regulation-of-nociception annotations. GO:1904057 was verified through QuickGO as “negative regulation of sensory perception of pain”; its definition describes reducing the frequency, rate or extent of sensory perception of pain. The phenotype does not prove the RNA substrate mediating that role.
+
+The original ProtNLM pseudouridine-synthesis prediction is CNN, not UNC from the absence of a target assay and not LSP based on unverified substrate-specific terms. The decisive source is the published target-resolved sequence comparison, not an automated activity label.
+
+The Falcon report completed but missed the central 2020 Drosophila study (PMID:33028630). Its statements that no fly localization, phenotype or target-specific conservation study were found are therefore incomplete. The directly inspected full text supplies the nuclear, genetic-rescue and catalytic-conservation evidence used here. The report's caution about exact RNA substrates remains appropriate. The original provider artifact is preserved unchanged.
