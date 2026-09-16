@@ -137,16 +137,21 @@ jobs:
 
       - name: Record uploaded archive checksum
         id: archive-check
-        if: steps.shadow-upload.outcome == 'success'
+        if: steps.shadow-upload.outcome == 'success' && steps.shadow-summary.outputs.deployable == 'true'
         continue-on-error: true
         env:
           PAGES_ARCHIVE_PATH: ${{ runner.temp }}/artifact.tar
         run: |
           set -euo pipefail
+          if [ ! -f "$PAGES_ARCHIVE_PATH" ]; then
+            echo "::error title=Pages archive missing::upload-pages-artifact@v4 did not leave $PAGES_ARCHIVE_PATH; archive checksum verification cannot run."
+            exit 1
+          fi
           python3 scripts/validate_pages_recovery.py record \
             --manifest _site-manifest.json --archive "$PAGES_ARCHIVE_PATH"
-          echo "Actual tar bytes: $(jq -r .archive_actual_bytes _site-manifest.json)" >> "$GITHUB_STEP_SUMMARY"
-          echo "Archive SHA-256: $(jq -r .archive_sha256 _site-manifest.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo >> "$GITHUB_STEP_SUMMARY"
+          echo "- Actual tar bytes: $(jq -r .archive_actual_bytes _site-manifest.json)" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Archive SHA-256: $(jq -r .archive_sha256 _site-manifest.json)" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload Pages diagnostics
         if: steps.shadow-stage.outcome == 'success'
@@ -164,7 +169,7 @@ jobs:
                steps.shadow-summary.outcome == 'failure' ||
                steps.shadow-upload.outcome == 'failure' ||
                steps.archive-check.outcome == 'failure') }}
-        run: echo "::warning title=Shadow Pages build failed::Inspect the shadow staging, summary, and upload steps. Legacy regeneration will continue; the live Pages source is unchanged."
+        run: echo "::warning title=Shadow Pages build failed::Inspect the shadow staging, summary, upload, and archive checksum steps. Legacy regeneration will continue; the live Pages source is unchanged."
 
       - name: Check for changes
         id: check-changes

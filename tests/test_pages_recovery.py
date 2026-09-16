@@ -187,3 +187,7 @@ def test_source_records_checksum_before_uploading_diagnostics_and_deploying():
     assert names.index('Upload shadow GitHub Pages artifact') < names.index('Record uploaded archive checksum')
     assert names.index('Record uploaded archive checksum') < names.index('Upload Pages diagnostics')
     assert "steps.archive-check.outcome == 'success'" in job['outputs']['deployable']
+    record = next(step for step in job['steps'] if step.get('id') == 'archive-check')
+    assert "steps.shadow-summary.outputs.deployable == 'true'" in record['if']
+    assert 'if [ ! -f "$PAGES_ARCHIVE_PATH" ]' in record['run']
+    assert '::error title=Pages archive missing::' in record['run']
