@@ -10,13 +10,18 @@ from __future__ import annotations
 
 import argparse
 import json
+from html import escape
+import os
 import shutil
 import subprocess
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
+from urllib.parse import quote
 
 from ai_gene_review.tools.pages_assets import share_template_assets
+from ai_gene_review.tools.pages_compaction import compact_browser_data, compact_gene_page
 from ai_gene_review.tools.pages_dependencies import TEXT_ASSETS, DependencyResolver
+from ai_gene_review.publication_links import rewrite_publication_links, restore_scientific_html_notation
 
 
 PAGES_SIZE_BUDGET_BYTES = 1_000_000_000
@@ -38,6 +43,8 @@ class SiteManifest:
     broken_local_link_paths: list[str]
     off_base_path_urls: list[str]
     shared_asset_bytes_saved: int = 0
+    content_compaction_bytes_saved: int = 0
+    unavailable_source_artifact_paths: list[str] = field(default_factory=list)
     size_budget_bytes: int = PAGES_SIZE_BUDGET_BYTES
 
     @property
@@ -101,6 +108,50 @@ class StagingLinkAudit:
     excluded_sources: set[Path]
     missing_paths: set[Path]
     off_base_urls: set[str]
+    unavailable_paths: set[Path]
+
+
+def _stage_directory_index(repo_root: Path, output_dir: Path, target: Path) -> bool:
+    """Give explicitly linked public source directories a browsable index."""
+    if target.name != 'index.html':
+        return False
+    relative = target.parent
+    source_relative = relative
+    if relative.is_relative_to('pages/projects'):
+        source_relative = Path('projects') / relative.relative_to('pages/projects')
+    source = repo_root / source_relative
+    if not source.is_dir() or source.is_symlink() or not source.resolve().is_relative_to(repo_root):
+        return False
+    if any(part.startswith('.') for part in source.resolve().relative_to(repo_root).parts):
+        return False
+    links = []
+    for child in sorted(source.iterdir()):
+        if (child.name.startswith('.') or child.name in {'__pycache__', 'node_modules'}
+                or child.is_symlink() or not child.resolve().is_relative_to(repo_root)):
+            continue
+        original = child.relative_to(repo_root)
+        destination = original
+        if original.is_relative_to('projects'):
+            mirrored = Path('pages') / original
+            if child.is_dir():
+                destination = mirrored / 'index.html'
+            elif child.suffix in {'.md', '.markdown'} and (
+                (output_dir / mirrored.with_suffix('.html')).is_file()
+                or (repo_root / mirrored.with_suffix('.html')).is_file()
+            ):
+                destination = mirrored.with_suffix('.html')
+            elif (output_dir / mirrored).is_file() or (repo_root / mirrored).is_file():
+                destination = mirrored
+        elif child.is_dir():
+            destination /= 'index.html'
+        href = quote(Path(os.path.relpath(destination, relative)).as_posix(), safe='/')
+        links.append(f'<li><a href="{href}">{escape(child.name)}{ "/" if child.is_dir() else ""}</a></li>')
+    title = escape(source_relative.as_posix())
+    document = f'<!doctype html><html lang="en"><meta charset="utf-8"><title>{title}</title><h1>{title}</h1><ul>{"".join(links)}</ul></html>'
+    path = output_dir / target
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(document, encoding='utf-8')
+    return True
 
 
 def _stage_linked_files(repo_root: Path, output_dir: Path) -> StagingLinkAudit:
@@ -118,6 +169,7 @@ def _stage_linked_files(repo_root: Path, output_dir: Path) -> StagingLinkAudit:
     omitted: set[Path] = set()
     broken: set[Path] = set()
     off_base: set[str] = set()
+    unavailable: set[Path] = set()
     resolver = DependencyResolver(repo_root)
     while pending:
         relative = pending.pop()
@@ -125,9 +177,26 @@ def _stage_linked_files(repo_root: Path, output_dir: Path) -> StagingLinkAudit:
             continue
         scanned.add(relative)
         content = (output_dir / relative).read_text(errors="ignore")
+        if relative.suffix.lower() in {'.html', '.htm'}:
+            source = repo_root / relative
+            if relative.is_relative_to('pages/projects'):
+                candidate = repo_root / relative.relative_to('pages')
+                if candidate.is_file():
+                    source = candidate
+                elif candidate.with_suffix('.md').is_file():
+                    source = candidate.with_suffix('.md')
+            repaired = rewrite_publication_links(content, source, repo_root / relative, repo_root)
+            repaired = restore_scientific_html_notation(repaired, repo_root / relative)
+            if repaired != content:
+                (output_dir / relative).write_text(repaired, encoding='utf-8')
+                content = repaired
         links = resolver.scan(relative, content)
         broken.update(links.missing)
+        for missing in links.missing:
+            if not (output_dir / missing).is_file() and _stage_directory_index(repo_root, output_dir, missing):
+                pending.append(missing)
         off_base.update(links.off_base)
+        unavailable.update(links.unavailable)
         for target in links.existing:
             source = repo_root / target
             destination = output_dir / target
@@ -147,6 +216,7 @@ def _stage_linked_files(repo_root: Path, output_dir: Path) -> StagingLinkAudit:
         omitted,
         {path for path in broken if not (output_dir / path).is_file()},
         off_base,
+        unavailable,
     )
 
 
@@ -212,9 +282,22 @@ def stage_pages(repo_root: Path, output_dir: Path) -> SiteManifest:
     generated_pages = [output_dir / p.relative_to(repo_root) for p in gene_pages]
     generated_pages.extend((output_dir / "pages").rglob("*.html"))
     shared_asset_bytes_saved = share_template_assets(output_dir, generated_pages)
+    content_compaction_bytes_saved = sum(
+        compact_gene_page(output_dir, output_dir / page.relative_to(repo_root))
+        for page in gene_pages
+    ) + compact_browser_data(output_dir)
+    # Check the URLs actually emitted by sharing/minification/compaction too.
+    # The first audit above checks links inside panels before they are compressed.
+    published_resolver = DependencyResolver(output_dir)
+    for page in generated_pages:
+        links = published_resolver.scan(page.relative_to(output_dir), page.read_text())
+        broken_links.update(links.missing)
+        audit.off_base_urls.update(links.off_base)
     staged_files = [path for path in output_dir.rglob("*") if path.is_file()]
     manifest = SiteManifest(
         shared_asset_bytes_saved=shared_asset_bytes_saved,
+        content_compaction_bytes_saved=content_compaction_bytes_saved,
+        unavailable_source_artifact_paths=sorted(p.as_posix() for p in audit.unavailable_paths),
         off_base_path_urls=sorted(audit.off_base_urls),
         broken_local_link_paths=sorted(p.as_posix() for p in broken_links),
         total_bytes=sum(path.stat().st_size for path in staged_files),

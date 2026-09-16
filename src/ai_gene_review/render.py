@@ -2,15 +2,20 @@
 """Custom HTML renderer for gene review YAML files using Jinja2."""
 
 import argparse
+from html import escape, unescape
 import os
+import posixpath
 import re
 import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
+from urllib.parse import unquote, urlsplit
 
 import markdown
 import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+
+from ai_gene_review.publication_links import protect_scientific_notation, rewrite_publication_links
 
 
 _RELATIVE_URL_ATTR_PATTERN = re.compile(
@@ -234,7 +239,11 @@ def rebase_relative_url(url: str, base_prefix: str) -> str:
     """Prefix relative URLs so report assets resolve from the rendered page."""
     if not url or base_prefix in {"", "."} or not _is_relative_url(url):
         return url
-    return f"{base_prefix.rstrip('/')}/{url.lstrip('./')}"
+    parsed = urlsplit(url)
+    path = posixpath.normpath(posixpath.join(base_prefix, parsed.path))
+    if parsed.path.endswith('/'):
+        path += '/'
+    return parsed._replace(path=path).geturl()
 
 
 def rebase_relative_html_urls(html: str, base_prefix: str) -> str:
@@ -283,6 +292,57 @@ def normalize_artifact_metadata(
             }
         )
     return normalized
+
+
+def resolve_research_artifacts(
+    artifacts: List[Dict[str, Any]], content: str, report: Path, output_dir: Path,
+) -> str:
+    """Link archived artifacts; retain explicit notices for absent provider files."""
+    for artifact in artifacts:
+        href = artifact.get('href')
+        raw_path = artifact.get('path')
+        if not href or not raw_path or not _is_relative_url(str(raw_path)):
+            continue
+        path = report.parent / unquote(urlsplit(str(raw_path)).path)
+        if not path.is_file() and path.parent.name.endswith('_artifacts'):
+            # A renamed report may retain the previous basename in frontmatter.
+            renamed = report.with_name(report.stem + '_artifacts') / path.name
+            if renamed.is_file():
+                path = renamed
+        if path.is_file():
+            resolved = Path(os.path.relpath(path, output_dir)).as_posix()
+            def replace_artifact_url(match: re.Match[str]) -> str:
+                if unescape(match['url']) != href:
+                    return match[0]
+                return f'{match["attr"]}={match["quote"]}{escape(resolved, quote=True)}{match["quote"]}'
+
+            content = re.sub(
+                r'<(?:a|img)\b[^>]*>',
+                lambda tag: _RELATIVE_URL_ATTR_PATTERN.sub(replace_artifact_url, tag[0]),
+                content,
+            )
+            artifact['href'] = resolved
+            continue
+        artifact['href'] = None
+        artifact['unavailable'] = True
+        artifact['unavailable_href'] = href
+        escaped_href = escape(href, quote=True)
+        notice = f'class="unavailable-artifact" data-unavailable-artifact="{escaped_href}"'
+        content = re.sub(
+            r'<a\b(?=[^>]*\bhref="' + re.escape(escaped_href) + r'")[^>]*>(.*?)</a>',
+            lambda m: f'<span {notice}>{m[1]} (not archived)</span>', content, flags=re.DOTALL,
+        )
+
+        def missing_image(match: re.Match[str]) -> str:
+            image = match[0]
+            if f'src="{escaped_href}"' not in image:
+                return image
+            alt = re.search(r'\balt="([^"]*)"', image)
+            label = escape(unescape(alt[1])) if alt else escape(path.name)
+            return f'<span {notice}>Image not archived: {label}</span>'
+
+        content = re.sub(r'<img\b[^>]*>', missing_image, content)
+    return content
 
 
 def enrich_gene_data(data: Dict[str, Any]) -> Dict[str, Any]:
@@ -461,6 +521,7 @@ def process_markdown_content(content: str, base_prefix: str = "") -> str:
         Processed HTML content
     """
 
+    content = protect_scientific_notation(content)
     # Convert PMID citations to links if they're in [PMID:12345 "text"] format
     def replace_pmid(match):
         pmid = match.group(1)
@@ -554,6 +615,7 @@ def collect_deep_research_sections(
                 citations_href = citations_file.name
 
         artifacts = normalize_artifact_metadata(metadata, base_prefix=base_prefix)
+        html_content = resolve_research_artifacts(artifacts, html_content, md_path, output_dir or md_path.parent)
         sections.append(
             {
                 "title": title,
@@ -758,7 +820,9 @@ def render_gene_review(
             with open(md_path, "r", encoding="utf-8") as f:
                 content = f.read()
             if content.strip():  # Only include non-empty files
-                html_content = process_markdown_content(content)
+                html_content = process_markdown_content(
+                    content, base_prefix=os.path.relpath(md_path.parent.resolve(), output_path.parent.resolve())
+                )
                 markdown_sections.append(
                     {
                         "title": display_name,
@@ -797,6 +861,8 @@ def render_gene_review(
 
     # Render HTML
     html = render_html(data, template_path, yaml_content)
+    if gene_dir.parent.parent.name == 'genes':
+        html = rewrite_publication_links(html, yaml_path, output_path, gene_dir.parent.parent.parent)
 
     # Write output
     with open(output_path, "w", encoding="utf-8") as f:

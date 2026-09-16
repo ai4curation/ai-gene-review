@@ -403,7 +403,9 @@ from `main:/` until the shadow artifact has been verified.
 
 Staging also follows local links from published HTML and CSS, plus literal
 JavaScript fetch()/import() URLs, copying reports, notes, images, and downloads at
-their existing paths. Supporting files keep their original bytes. In staged gene,
+their existing paths. Downloaded scientific data and images keep their original bytes.
+Known source-relative HTML links and missing site prefixes are repaired against
+existing files; linked source directories get browsable indexes. In staged gene,
 project, and module HTML, exact static CSS/JavaScript blocks from the maintained
 templates are replaced with relative links to content-addressed shared files in
 `_pages-assets/`. This preserves page URLs, script order, and CSS contents while
@@ -417,11 +419,52 @@ specifically report these excluded orphan review pages. Independently linked
 notes, reports, and images remain publishable even without a review YAML; removing
 a review alone is not a request to unpublish its supporting research.
 
+Staged gene HTML is compacted while retaining preformatted text and inline
+spacing. The main review stays ordinary HTML. Supporting research, reference,
+documentation, and raw-YAML panels are stored losslessly in `_pages-content/`
+and restored on page load. Each panel also offers a compressed HTML download
+if JavaScript is unavailable or loading fails. The annotation browser retains
+its `data.js` URL and ready event, with its complete columnar data loaded from
+`data.json.gz`. These features use the browser's native gzip decompressor;
+there is no truncation of research text or annotation rows. Net savings are
+reported as `content_compaction_bytes_saved`. Loaders accept both raw gzip and
+responses already decoded by the HTTP layer. Restoration requires JavaScript
+and `DecompressionStream`; without them, the primary gene review and section
+downloads remain available, but the annotation browser cannot initialize.
+Supporting panels become searchable in-page after loading; crawlers that do not
+execute JavaScript see only the primary HTML and links to the source material.
+Staging audits the emitted asset URLs again after compaction.
+
+Run the real-browser transport regression (with Chromium installed) using:
+`uv run pytest -m integration tests/test_pages_loaders_browser.py`.
+It covers servers both with and without `Content-Encoding: gzip`.
+
+Preview the artifact through HTTP so compressed supporting files can load.
+For example, mount it at its real URL prefix:
+
+```bash
+preview_dir=$(mktemp -d)
+ln -s "$PWD/_site" "$preview_dir/ai-gene-review"
+python3 -m http.server 8000 --directory "$preview_dir"
+# Open http://localhost:8000/ai-gene-review/
+```
+
+Research-provider metadata can reference files that were never archived. These
+are explicitly labelled **not archived**, retaining their descriptions instead
+of presenting broken download/image links. The full list remains visible in
+`unavailable_source_artifact_paths` in the manifest. This is distinct from an
+existing source file omitted from the artifact, which still blocks deployment.
+
 The publication boundary is reachable, non-hidden files inside this repository
 at the existing site paths. Navigation and dependencies are followed transitively,
 without extension filters, depth limits, or per-file truncation that would break
-existing links. Oversized artifacts are reported and blocked, not silently pruned.
-Further size reduction is still needed before the live switch.
+existing links. Linking a directory publishes its reachable children too; local
+runtime caches are excluded. Oversized artifacts are reported and blocked, not
+silently pruned. If a referenced rendered document is absent but its Markdown
+source exists, the link serves that source rather than a nonexistent HTML page.
+The separate MkDocs build on `gh-pages` is not part of this publication artifact;
+linked docs such as the subtraction report use their repository Markdown source.
+The complete rebuilt artifact must meet the budget before the live switch.
 
 The deployment job is disabled unless `PAGES_ARTIFACT_DEPLOY_ENABLED=true` is set
 in repository Actions variables. It requires a successful upload, at most
