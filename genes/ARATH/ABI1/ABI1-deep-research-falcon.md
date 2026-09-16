@@ -2,9 +2,9 @@
 provider: falcon
 model: Edison Scientific Literature
 cached: false
-start_time: '2026-05-05T07:29:45.947876'
-end_time: '2026-05-05T07:37:18.097361'
-duration_seconds: 452.15
+start_time: '2026-09-11T20:48:53.204918'
+end_time: '2026-09-11T20:55:41.492544'
+duration_seconds: 408.29
 template_file: templates/gene_research_go_focused.md
 template_variables:
   organism: ARATH
@@ -23,12 +23,23 @@ template_variables:
   protein_domains: PP2C. (IPR015655); PP2C_BS. (IPR000222); PPM-type-like_dom_sf.
     (IPR036457); PPM-type_phosphatase-like_dom. (IPR001932); PP2C (PF00481)
 provider_config:
-  timeout: 600
+  timeout: null
   max_retries: 3
   parameters:
     allowed_domains: []
     temperature: 0.1
-citation_count: 25
+    max_embedded_images: 8
+citation_count: 44
+artifact_count: 1
+artifact_sources:
+  edison_answer_artifacts: 1
+artifacts:
+- filename: artifact-00.md
+  path: ABI1-deep-research-falcon_artifacts/artifact-00.md
+  media_type: text/markdown
+  source: edison_answer_artifacts
+  data_storage_id: null
+  description: Edison artifact artifact-00
 ---
 
 ## Question
@@ -139,172 +150,220 @@ We are also interested in the signaling or biochemical pathways in which the gen
 
 Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.
 
-## Research report: Arabidopsis thaliana ABI1 (UniProt P49597; At4g26080)
+# ABI1 (At4g26080; UniProt P49597) in *Arabidopsis thaliana*
 
-### 0) Target verification (mandatory disambiguation)
-All evidence summarized here pertains to **Arabidopsis thaliana ABSCISIC ACID-INSENSITIVE 1 (ABI1)**, encoded by **At4g26080**, a **clade A PP2C (PPM-type) serine/threonine protein phosphatase** that functions in the canonical ABA receptor–PP2C–SnRK2 signaling module. Primary experimental papers explicitly studying **Arabidopsis ABI1** in this context include **Xie et al., 2012 (J Biol Chem; published Jan 2012)** and **Krzywińska et al., 2016 (BMC Plant Biology; published Jun 2016)**. (xie2012molecularmechanismfor pages 3-4, krzywinska2016phosphataseabi1and pages 4-7)
+## Executive summary
 
-### 1) Key concepts and definitions (current understanding)
+ABI1 is **ABSCISIC ACID-INSENSITIVE 1**, locus **At4g26080**, in *Arabidopsis thaliana*. The literature explicitly identifies At4g26080 as a **clade-A type-2C protein phosphatase (PP2C)**, matching UniProt P49597 and the supplied PP2C/PPM-family domain annotation. This report is restricted to this plant protein; same-symbol proteins from other organisms are not included. (krzywinska2016phosphataseabi1and pages 2-4)
 
-#### 1.1 ABI1 is a clade A PP2C negative regulator in the ABA core module
-The modern “core” ABA signaling module is typically defined as: **ABA + PYR/PYL/RCAR receptors → inhibition of clade A PP2Cs (including ABI1/ABI2/HAB1/HAB2/PP2CA, etc.) → release/activation of SnRK2 kinases → phosphorylation of downstream targets**. ABI1 functions in this module as a **negative regulator** by dephosphorylating and inactivating SnRK2 kinases when ABA is absent, and it is **inhibited by ABA-bound receptors** that block substrate access/entry to the PP2C active site. (xie2012molecularmechanismfor pages 1-2, krzywinska2016phosphataseabi1and pages 1-2)
+ABI1 is principally a **metal-dependent Ser/Thr phosphoprotein phosphatase and negative regulator of abscisic-acid (ABA) signaling**. Its best-established physiological substrates are SnRK2 protein kinases. In unstressed or low-ABA conditions, ABI1 binds SnRK2s, removes activating phosphates from their activation loops, and holds ABA outputs off. ABA-bound PYR/PYL/RCAR receptors inhibit ABI1, permitting SnRK2 activation and downstream control of transcription, ion transport, stomatal closure, germination, and growth. (umezawa2009type2cprotein pages 4-4, xie2012molecularmechanismfor pages 1-2)
 
-A 2023 synthesis/meta-analysis focused on the seed “ABA signalosome” explicitly places ABI1 among the **clade A PP2Cs** in the core module and summarizes the scale of the gene families as **14 RCARs, 9 clade A PP2Cs, and 10 SnRK2s** in Arabidopsis. (Née & Krüger, 2023; Frontiers in Plant Science; published Jul 2023; URL: https://doi.org/10.3389/fpls.2023.1192652) (nee2023drysideof pages 2-3)
+## Identity verification
 
-#### 1.2 Enzymatic activity and substrate specificity: activation-loop dephosphorylation of SnRK2s
-ABI1 is a protein phosphatase whose best-defined physiological substrates are **SnRK2 family kinases**, particularly their **activation loop phosphosites** that are required for kinase activity.
+- **Correct organism:** *Arabidopsis thaliana* (mouse-ear cress).
+- **Correct gene/locus:** **ABI1 / At4g26080**.
+- **Correct protein:** protein phosphatase 2C ABI1, UniProt **P49597**.
+- **Family/domain consistency:** the experimental literature calls At4g26080 a **clade-A PP2C**, consistent with the UniProt InterPro/Pfam assignments PP2C, PP2C_BS, PPM-type phosphatase-like domain, and PF00481. (krzywinska2016phosphataseabi1and pages 2-4)
+- **Ambiguity control:** “ABI1” is not globally unique as a biological symbol. No findings for non-*Arabidopsis* ABI1 proteins were used here.
 
-* **SnRK2.6/OST1 (ABA-activated SnRK2):** In a mechanistic study, ABI1 directly dephosphorylated SnRK2.6, and mass spectrometry identified **phospho-Ser175** as the dominant site removed by ABI1 early in the reaction (first 5 minutes), consistent with dephosphorylation of the kinase activation loop. (Xie et al., 2012; Journal of Biological Chemistry; published Jan 2012; URL: https://doi.org/10.1074/jbc.M111.313106) (xie2012molecularmechanismfor pages 3-4)
-
-* **SnRK2.4 (ABA-non-activated / osmotic-stress-associated SnRK2):** ABI1 also dephosphorylates and inhibits SnRK2.4, specifically reducing phosphorylation at **Ser158** (activation loop), supporting a role for ABI1 beyond “ABA-only” signaling and into stress pathway crosstalk. (Krzywińska et al., 2016; BMC Plant Biology; published Jun 2016; URL: https://doi.org/10.1186/s12870-016-0817-1) (krzywinska2016phosphataseabi1and pages 1-2)
-
-#### 1.3 Structural logic: how ABI1 recognizes SnRK2s and how receptors inhibit ABI1
-Structural/biochemical work indicates ABI1 and SnRK2s form a complex in which the **SnRK2 activation loop is positioned into the ABI1 catalytic site**, rationalizing direct dephosphorylation of activation-loop residues. (xie2012molecularmechanismfor pages 1-2)
-
-A key structural determinant is **ABI1 Trp300**, which is important for SnRK2.6 recognition and also for receptor (PYL) recognition; ABA receptors can inhibit ABI1 in part by **competing for/occluding interaction surfaces** and by **blocking substrate entrance**. Disrupting a hydrophobic interface involving ABI1 Trp300 produced an approximately **~60-fold increase in Km** for SnRK2.6 dephosphorylation by ABI1 in that study’s system, emphasizing the importance of that interface to substrate recognition. (Xie et al., 2012; J Biol Chem; URL: https://doi.org/10.1074/jbc.M111.313106) (xie2012molecularmechanismfor pages 7-8)
-
-### 2) Experimental evidence for primary function (reaction and substrates)
-
-#### 2.1 Reaction catalyzed
-ABI1 catalyzes dephosphorylation of phosphoserine/phosphothreonine residues on protein substrates (PP2C/PPM-type activity), with **SnRK2 kinases** being experimentally validated substrates relevant to ABA/stress signaling. Direct enzymology was performed using phospho-SnRK2.6 as substrate, confirming ABI1 as an active phosphatase on this physiological target. (xie2012molecularmechanismfor pages 3-4)
-
-#### 2.2 Quantitative enzymology (ABI1 → SnRK2.6)
-Xie et al. (2012) reported kinetic parameters for ABI1 acting on phosphorylated SnRK2.6 in a continuous phosphatase assay, including:
-* **Km = 0.097 ± 0.013 M**
-* **kcat = 0.924 ± 0.020 s−1**
-These values quantify ABI1’s catalytic action on a physiologically central target (OST1/SnRK2.6). (Xie et al., 2012; J Biol Chem; published Jan 2012; URL: https://doi.org/10.1074/jbc.M111.313106) (xie2012molecularmechanismfor pages 3-4)
-
-### 3) Biological processes, pathway role, and cellular context
-
-#### 3.1 ABA signaling outputs governed via SnRK2 control
-In canonical ABA signaling, SnRK2s phosphorylate downstream effectors including transcription factors (e.g., ABFs/AREBs) and ion channels involved in stomatal regulation. ABI1 acts upstream by suppressing SnRK2 activation via dephosphorylation, and ABA receptor engagement disables ABI1 to allow kinase-driven outputs. (xie2012molecularmechanismfor pages 1-2)
-
-#### 3.2 Subcellular localization and compartmentalization
-**Nucleus and cytoplasm:** Protein–protein interaction imaging (BiFC) detected ABI1–SnRK2 interactions **in both nucleus and cytoplasm**, consistent with ABI1’s role in regulating SnRK2 functions spanning gene expression (nuclear) and other cytosolic processes. (Krzywińska et al., 2016; BMC Plant Biology; URL: https://doi.org/10.1186/s12870-016-0817-1) (krzywinska2016phosphataseabi1and pages 2-4)
-
-**Plasma membrane tethering and lipid control (context-dependent):** A 2024 study and synthesis of prior work reiterates that **phosphatidic acid (PA)** produced rapidly at the plasma membrane can bind ABI1, **inhibit ABI1 phosphatase activity**, and **tether ABI1 to the plasma membrane**, thereby impacting ABA-dependent stomatal closure signaling. This highlights that ABI1 regulation can be spatially organized and may differentially affect “stomatal closure” versus “gene expression” branches. (Ndathe & Kato, 2024; Frontiers in Plant Science; published Apr 2024; URL: https://doi.org/10.3389/fpls.2024.1356699) (ndathe2024phosphatidicacidproduced pages 1-2)
-
-### 4) Recent developments (prioritizing 2023–2024)
-
-#### 4.1 Light input into the ABA core module via ABI1/ABI2 (PNAS 2023)
-A major 2023 mechanistic advance is that **photoactivated phytochromes (phyA/phyB)** can directly interact with ABI1/ABI2 and attenuate ABA signaling. In a yeast-reconstituted ABA pathway and multiple interaction assays, phyA in its active Pfr state bound ABI1/ABI2 and **antagonized PYR1–ABI1/ABI2 interactions**, suggesting light can dampen ABA signaling at the receptor–PP2C layer. (Li et al., 2023; PNAS; published Aug 2023; URL: https://doi.org/10.1073/pnas.2302901120) (li2023reconstitutionofphytochrome pages 1-2, li2023reconstitutionofphytochrome pages 5-6)
-
-The same work demonstrates a **real-world implementation tool**: full **ABA signaling reconstitution in yeast** (PYR1–ABI1–OST1–ABF4; RD29B reporter), enabling rapid perturbation testing of regulators (including photoreceptors) in a simplified chassis. (Li et al., 2023; URL: https://doi.org/10.1073/pnas.2302901120) (li2023reconstitutionofphytochrome pages 1-2)
-
-#### 4.2 ABI1-informed engineering of quantitative ABA biosensors (Nature Plants 2023)
-Rowe et al. (2023) developed next-generation **ABACUS2 FRET biosensors** for ABA and explicitly leveraged ABI1 interface knowledge to reduce unintended perturbation of endogenous signaling. The paper notes ABI1 residues (e.g., **E142 and G180**, referenced via a PYL1 interaction interface) and describes an **ABI1aid truncation** strategy to avoid strong endogenous PP2C interactions in sensor constructs. (Rowe et al., 2023; Nature Plants; published Jun 2023; URL: https://doi.org/10.1038/s41477-023-01447-4) (rowe2023nextgenerationabacusbiosensors pages 1-2)
-
-Quantitative sensor statistics reported include affinities such as **Kd ~1.1–1.8 µM** (ABACUS1–2µ class) and a higher affinity design with **Kd(ABA) = 98 nM** and **+67% emission ratio change**, providing concrete performance numbers for in vivo ABA quantification workflows. (Rowe et al., 2023; URL: https://doi.org/10.1038/s41477-023-01447-4) (rowe2023nextgenerationabacusbiosensors pages 1-2)
-
-#### 4.3 Compartmentalized lipid signaling and selective PP2C inhibition (Frontiers 2024)
-Ndathe & Kato (2024) experimentally tested whether PA is involved in ABA-inducible gene expression (RD29A) and concluded that blocking PLD-produced PA did not affect RD29A promoter activity/mRNA accumulation, while PA could still induce stomatal closure; they propose this may occur because PA inhibits **selected PP2Cs** rather than uniformly inhibiting all PP2Cs. This is relevant to ABI1 functional annotation because ABI1 is a PA-binding PP2C in the established model, and the paper emphasizes the need for experimental verification when extending network models. (Ndathe & Kato, 2024; published Apr 2024; URL: https://doi.org/10.3389/fpls.2024.1356699) (ndathe2024phosphatidicacidproduced pages 1-2)
-
-### 5) Current applications and real-world implementations
-
-#### 5.1 Mechanistic platforms and tools
-* **Yeast ABA pathway reconstitution (2023):** Provides a modular platform to test ABI1 regulation, discover modulators that affect receptor–PP2C binding, and potentially support screening for small molecules that alter ABI1 function indirectly via receptors or partner proteins. (Li et al., 2023; published Aug 2023; https://doi.org/10.1073/pnas.2302901120) (li2023reconstitutionofphytochrome pages 1-2)
-
-* **ABACUS2 ABA biosensors (2023):** Enable high-resolution mapping of ABA dynamics in living tissues, which is essential for connecting ABI1-regulated biochemical signaling to physiological outputs (root growth, stomatal behavior) in space and time; the biosensor design explicitly incorporates ABI1 interaction constraints. (Rowe et al., 2023; published Jun 2023; https://doi.org/10.1038/s41477-023-01447-4) (rowe2023nextgenerationabacusbiosensors pages 1-2)
-
-#### 5.2 Translational relevance (stress tolerance engineering logic)
-ABI1 is a leverage point for engineering drought/salt responses because it sits at the PP2C “brake” on SnRK2 kinases; interventions that reduce ABI1 activity (genetically or via receptor/lipid-mediated inhibition) can increase ABA signaling outputs like stomatal closure and stress-responsive transcription. The practical importance of tuning ABI1/SnRK2 is supported by in planta phenotypic consequences of ABI1 loss-of-function under salt stress (below). (krzywinska2016phosphataseabi1and pages 4-7, ndathe2024phosphatidicacidproduced pages 1-2)
-
-### 6) Quantitative phenotypes and statistics from experimental studies
-
-#### 6.1 Root growth under salinity shows ABI1 is a negative regulator in vivo
-Krzywińska et al. (2016) quantified primary root growth under salt stress and found opposite phenotypes for ABI1 loss-of-function versus SnRK2.4 loss-of-function:
-* On **115 mM NaCl**, **snrk2.4** primary roots were approximately **65% shorter** than wild type.
-* Under the same conditions, the **abi1td** knockout mutant had roots approximately **40% longer** than wild type.
-The study reports **n = 7** and used a **t-test** for statistical analysis for this phenotype assay. (Krzywińska et al., 2016; published Jun 2016; https://doi.org/10.1186/s12870-016-0817-1) (krzywinska2016phosphataseabi1and pages 4-7)
-
-#### 6.2 Quantitative evidence for modulation of ABI1 interactions by light signaling (2023)
-Li et al. (2023) report quantitative assay frameworks for ABI1 interaction modulation in yeast and plant heterologous systems, including β-galactosidase (ONPG) and split-luciferase complementation, with error reporting and significance testing (SD; ANOVA + Duncan’s test, P < 0.05) when concluding that phyA-Pfr inhibits PYR1–ABI1/ABI2 interactions. (Li et al., 2023; published Aug 2023; https://doi.org/10.1073/pnas.2302901120) (li2023reconstitutionofphytochrome pages 5-6)
-
-### 7) Expert opinions and synthesis from authoritative sources (2023–2024)
-
-* **Signalosome composition and quantitative framing in seeds:** Née & Krüger (2023) provide an expert synthesis integrating proteomics, interaction databases, and quantitative inhibition datasets to refine understanding of the ABA core module’s operation in seed imbibition, explicitly including ABI1 among core clade A PP2Cs and emphasizing flexible, context-specific wiring. (Frontiers in Plant Science; published Jul 2023; https://doi.org/10.3389/fpls.2023.1192652) (nee2023drysideof pages 2-3)
-
-* **Selective PP2C inhibition and caution in network modeling:** Ndathe & Kato (2024) underscore that regulatory molecules like PA may affect only **selected PP2Cs**, motivating careful experimental validation before generalizing ABI1-centric mechanisms to all PP2Cs or all ABA outputs. (Frontiers in Plant Science; published Apr 2024; https://doi.org/10.3389/fpls.2024.1356699) (ndathe2024phosphatidicacidproduced pages 1-2)
-
-### 8) Evidence map (structured functional annotation)
-The table below provides a compact mapping from ABI1 functional claims to evidence types, quantitative details, and the exact sources/URLs.
-
-| Claim/Annotation | Evidence type | Key quantitative/statistical details | Source (author year journal) | URL/DOI | Citation id(s) from this session |
-|---|---|---|---|---|---|
-| **Enzymatic activity:** ABI1 is a clade A PP2C/PPM-family **serine-threonine protein phosphatase** in Arabidopsis ABA signaling; UniProt annotates **EC 3.1.3.16** | Biochemical assays; structural enzymology; canonical pathway reviews | Continuous phosphatase assay on pSnRK2.6 reported **Km 0.097 ± 0.013 M** and **kcat 0.924 ± 0.020 s−1** for ABI1 catalytic domain in one assay system | Xie et al. 2012 *J Biol Chem*; Mo et al. 2024 *Front Plant Sci* | https://doi.org/10.1074/jbc.M111.313106 ; https://doi.org/10.3389/fpls.2024.1437184 | (xie2012molecularmechanismfor pages 3-4, xie2012molecularmechanismfor pages 2-3) |
-| **Key substrate/site:** ABI1 directly dephosphorylates **SnRK2.6/OST1** activation-loop **Ser175**, inhibiting kinase activity | Mass spectrometry; phosphatase assay; crystal-structure-guided mechanism | pSer175 identified as the dominant ABI1 substrate within the first **5 min** of reaction; SnRK2.6 **S175A abolished** activity and **S175E impaired** activity | Xie et al. 2012 *J Biol Chem* | https://doi.org/10.1074/jbc.M111.313106 | (xie2012molecularmechanismfor pages 3-4, xie2012molecularmechanismfor pages 1-2) |
-| **Additional substrate/site:** ABI1 dephosphorylates **SnRK2.4 Ser158** and inhibits salt-stress activated SnRK2.4 | In vitro dephosphorylation; in planta kinase assays; BiFC/pull-down/Y2H | Salt activation assays used **300 mM NaCl for 20 min** in protoplasts; ABI1 expression made SnRK2.4/2.10 activity **nearly undetectable** in T87 cells | Krzywińska et al. 2016 *BMC Plant Biol* | https://doi.org/10.1186/s12870-016-0817-1 | (krzywinska2016phosphataseabi1and pages 2-4, krzywinska2016phosphataseabi1and pages 4-7, krzywinska2016phosphataseabi1and pages 1-2) |
-| **Core ABA module role:** ABI1 is a **negative regulator** of ABA signaling that binds/dephosphorylates SnRK2s in the absence of ABA; **ABA-bound PYR/PYL/RCAR receptors inhibit ABI1** | Genetics, biochemistry, structural studies, recent reviews | Arabidopsis core module sizes summarized in 2023 review: **14 RCARs, 9 clade A PP2Cs, 10 SnRK2s**; triple subclass III snrk2 mutants are ABA-insensitive in canonical model summaries | Xie et al. 2012 *J Biol Chem*; Née & Krüger 2023 *Front Plant Sci*; Lynch et al. 2024 *bioRxiv* | https://doi.org/10.1074/jbc.M111.313106 ; https://doi.org/10.3389/fpls.2023.1192652 ; https://doi.org/10.1101/2024.10.11.617944 | (xie2012molecularmechanismfor pages 1-2, nee2023drysideof pages 2-3, lynch2024abi5bindingproteins pages 1-4, krzywinska2016phosphataseabi1and pages 1-2) |
-| **Interaction/structural determinants:** ABI1 recognizes SnRK2.6 through two interfaces that orient the kinase activation loop into the ABI1 catalytic site | Crystal structure; computational modeling; mutational analysis | SnRK2.6 kinase-domain structure reported at **2.6 Å** resolution; modeling workflow generated **11,000** models and selected the highest-scoring complex | Xie et al. 2012 *J Biol Chem* | https://doi.org/10.1074/jbc.M111.313106 | (xie2012molecularmechanismfor pages 1-2, xie2012molecularmechanismfor pages 7-8) |
-| **Critical determinant:** **ABI1 Trp300** is essential for SnRK2.6 recognition and also important for PYL recognition | Structure-function mutagenesis | Disruption of the hydrophobic interface centered on ABI1 Trp300 caused an approximately **60-fold increase in Km** for SnRK2.6 dephosphorylation | Xie et al. 2012 *J Biol Chem* | https://doi.org/10.1074/jbc.M111.313106 | (xie2012molecularmechanismfor pages 7-8) |
-| **ABI1 residues relevant to receptor/sensor interfaces:** **E142 and G180** in ABI1 contribute to PYL1 interaction and informed biosensor engineering | Protein-interface mapping; biosensor design | ABACUS redesign used an **ABI1aid truncation** to remove residues driving endogenous PP2C interaction and reduce signaling perturbation | Rowe et al. 2023 *Nature Plants* | https://doi.org/10.1038/s41477-023-01447-4 | (rowe2023nextgenerationabacusbiosensors pages 1-2) |
-| **Subcellular localization:** ABI1–SnRK2.4 interactions were detected in **both nucleus and cytoplasm** | BiFC in protoplasts | Interaction signal observed in two compartments; no single numeric localization ratio reported | Krzywińska et al. 2016 *BMC Plant Biol* | https://doi.org/10.1186/s12870-016-0817-1 | (krzywinska2016phosphataseabi1and pages 2-4) |
-| **Compartmentalization via lipids:** **Phosphatidic acid (PA)** binds ABI1, inhibits phosphatase activity, and can **tether ABI1 to the plasma membrane**, promoting stomatal ABA responses | Mechanistic synthesis with genetic/chemical tests; confocal microscopy context | PA production is reported to rise within about **10 min** after ABA; PLD mutants (**pldα1**, **pldδ**) are impaired in ABA-mediated stomatal closure in cited background | Ndathe & Kato 2024 *Front Plant Sci* | https://doi.org/10.3389/fpls.2024.1356699 | (ndathe2024phosphatidicacidproduced pages 1-2) |
-| **Recent regulatory input (2023):** photoactivated **phyA-Pfr** binds ABI1/ABI2 and antagonizes **PYR1–ABI1** interaction, dampening ABA signaling | Yeast reconstitution; Y2H; yeast three-hybrid; split luciferase; co-IP | Statistics reported as **SD** with **4 yeast clones** for Y2H and **3 biological replicates** for LCI; significance by **one-way ANOVA with Duncan’s test, P < 0.05** | Li et al. 2023 *PNAS* | https://doi.org/10.1073/pnas.2302901120 | (li2023reconstitutionofphytochrome pages 1-2, li2023reconstitutionofphytochrome pages 5-6) |
-| **Recent regulatory input (2024):** E3 ubiquitin ligases are reviewed as important post-translational regulators of ABA signaling components, including PP2C layer members such as ABI1 | Expert review | Review is qualitative in the excerpt; no ABI1-specific effect size reported there | Chung et al. 2024 *BMB Reports* | https://doi.org/10.5483/BMBRep.2024-0146 | (lynch2024abi5bindingproteins pages 1-4) |
-| **Tool/assay:** complete ABA pathway **reconstituted in yeast** with **PYR1–ABI1–OST1–ABF4** and RD29B reporter, enabling dissection of ABI1 regulation | Synthetic pathway reconstruction | Reporter used **RD29Bp:LacZ**; constructs expressed from pGADT7-JL / pBridge-JL vectors; anti-ABI1 immunoblot used in validation | Li et al. 2023 *PNAS* | https://doi.org/10.1073/pnas.2302901120 | (li2023reconstitutionofphytochrome pages 1-2) |
-| **Tool/assay:** **ABACUS2** ABA biosensors were engineered using ABI1-related interaction knowledge to minimize perturbation of endogenous signaling | Biosensor engineering; quantitative ligand-binding characterization | Sensor affinities included **Kd ~1.1–1.8 µM** for ABACUS1–2µ class and **98 nM** for a high-affinity variant with **+67%** emission-ratio change | Rowe et al. 2023 *Nature Plants* | https://doi.org/10.1038/s41477-023-01447-4 | (rowe2023nextgenerationabacusbiosensors pages 1-2) |
-| **Phenotypic quantitative evidence:** ABI1 negatively regulates stress root-growth responses through SnRK2.4 | Mutant phenotyping under salt stress | On **115 mM NaCl**, **snrk2.4** roots were about **65% shorter** than WT, whereas **abi1td** roots were about **40% longer** than WT; statistics used **n = 7** and **t-test** | Krzywińska et al. 2016 *BMC Plant Biol* | https://doi.org/10.1186/s12870-016-0817-1 | (krzywinska2016phosphataseabi1and pages 4-7) |
+| Annotation dimension | Best-supported conclusion | Experimental evidence | Representative source/date/DOI |
+|---|---|---|---|
+| Identity and family | ABI1 is the *Arabidopsis thaliana* gene At4g26080 encoding a clade-A type 2C protein phosphatase, consistent with UniProt P49597 and its PP2C-family domains. This annotation does not refer to same-symbol proteins in other organisms. | The locus-to-protein mapping and clade-A PP2C classification are stated explicitly in an Arabidopsis biochemical study. | Krzywińska et al.; June 2016; [10.1186/s12870-016-0817-1](https://doi.org/10.1186/s12870-016-0817-1) (krzywinska2016phosphataseabi1and pages 2-4) |
+| Catalytic reaction and metal dependence | ABI1 is a metal-dependent Ser/Thr phosphoprotein phosphatase: phosphoprotein + H₂O → dephosphorylated protein + orthophosphate. Mg²⁺ supports PP2C catalysis; wild-type ABI1 and abi1-1 show comparable activity at optimal Mg²⁺, whereas abi1-1 has impaired Mg²⁺ binding under limiting conditions. | Loss of substrate radiolabel and activation-loop phosphorylation demonstrated dephosphorylation. Mg²⁺-dependent behavior was assessed biochemically for wild-type and G180D proteins. | Umezawa et al.; October 2009; [10.1073/pnas.0907095106](https://doi.org/10.1073/pnas.0907095106); Moes et al.; June 2008; [10.1111/j.1365-313X.2008.03454.x](https://doi.org/10.1111/j.1365-313x.2008.03454.x) (umezawa2009type2cprotein pages 4-4, umezawa2009type2cprotein pages 3-4, moes2008nuclearlocalizationof pages 10-11) |
+| Direct substrates | Best-established physiological substrates are SnRK2 kinases. ABI1 directly dephosphorylates and inactivates ABA-responsive SnRK2.2/SRK2D, SnRK2.3/SRK2I, and SnRK2.6/OST1/SRK2E; it also dephosphorylates SnRK2.4 at activation-loop Ser158 and inhibits SnRK2.8. Artificial-substrate activity does not reliably predict SnRK2 inactivation, indicating recognition beyond generic phosphoserine/threonine hydrolysis. | Purified-protein dephosphorylation, loss of kinase activity, yeast two-hybrid/BiFC interaction, protoplast assays, and salt-treated cell assays; a clade-B PP2C control did not inhibit SnRK2.4. | Umezawa et al.; October 2009; [10.1073/pnas.0907095106](https://doi.org/10.1073/pnas.0907095106); Krzywińska et al.; June 2016; [10.1186/s12870-016-0817-1](https://doi.org/10.1186/s12870-016-0817-1) (umezawa2009type2cprotein pages 4-4, krzywinska2016phosphataseabi1and pages 2-4, umezawa2009type2cprotein pages 3-4) |
+| ABA-receptor regulation | In the absence of ABA, ABI1 restrains signaling by dephosphorylating SnRK2s. ABA-bound PYR/PYL/RCAR receptors bind and inhibit ABI1, releasing SnRK2 activity; receptor-overexpression evidence supports broader depletion/inactivation of clade-A PP2Cs. | PYR1 inhibited ABI1-mediated SnRK2 inactivation only in the presence of ABA; in planta ABI1 complexes recovered 9 of 14 soluble receptor-family members. A 2024 multi-omics study analyzed RCAR6/RCAR10 overexpression with replicated phosphoproteomic, proteomic, and metabolomic measurements. | Umezawa et al.; October 2009; [10.1073/pnas.0907095106](https://doi.org/10.1073/pnas.0907095106); Joshi-Saha et al.; July 2011; [10.1093/mp/ssr055](https://doi.org/10.1093/mp/ssr055); Yoshida et al.; April 2024; [10.1111/tpj.16765](https://doi.org/10.1111/tpj.16765) (umezawa2009type2cprotein pages 4-4, joshisaha2011abscisicacidsignal pages 6-7, yoshida2024integratingmultiomicsdata pages 2-3) |
+| Structural mechanism | ABI1 engages SnRK2.6 through complementary interfaces that position the kinase activation loop at the ABI1 catalytic center. Conversely, an ABA-bound PYL receptor occupies/occludes the PP2C substrate-binding and active-site region, explaining mutually exclusive receptor-versus-kinase recognition. | A 2.6 Å SnRK2.6 kinase-domain structure, biochemical mapping, and computational modeling identified two ABI1–SnRK2.6 interfaces and their catalytic orientation. | Xie et al.; 2 January 2012; [10.1074/jbc.M111.313106](https://doi.org/10.1074/jbc.m111.313106) (xie2012molecularmechanismfor pages 1-2) |
+| Subcellular localization | ABI1 is nucleocytoplasmic, with experimentally important nuclear action; interactions with SnRK2s occur in both nucleus and cytoplasm, and signaling can also involve plasma-membrane-associated contexts. ABA itself did not detectably relocalize ABI1 in the reported assay. | GFP imaging, BiFC, deletion/mutation of ABI1’s C-terminal NLS, and rescue with a heterologous SV40 NLS showed that nuclear targeting is required for suppression of ABA-responsive transcription. SnRK2.6 and ABI1 are coexpressed in guard cells. | Moes et al.; June 2008; [10.1111/j.1365-313X.2008.03454.x](https://doi.org/10.1111/j.1365-313x.2008.03454.x); Umezawa et al.; October 2009; [10.1073/pnas.0907095106](https://doi.org/10.1073/pnas.0907095106) (moes2008nuclearlocalizationof pages 1-2, moes2008nuclearlocalizationof pages 6-7, moes2008nuclearlocalizationof pages 2-3, umezawa2009type2cprotein pages 2-3) |
+| Dominant abi1-1 allele | abi1-1 encodes ABI1 G180D in the catalytic domain. The substitution disrupts PYL–PP2C regulation, leaving the phosphatase refractory to ABA-receptor inhibition and able to continue suppressing SnRK2s; preferential nuclear accumulation also contributes to its dominant ABA-insensitive behavior. | The mutant retained SnRK2-inactivating activity despite ABA plus PYR1. Localization/NLS experiments showed that nuclear targeting was necessary for strong mutant effects; wild-type and mutant proteins were not simply distinguished by higher maximal catalytic activity. | Moes et al.; June 2008; [10.1111/j.1365-313X.2008.03454.x](https://doi.org/10.1111/j.1365-313x.2008.03454.x); Umezawa et al.; October 2009; [10.1073/pnas.0907095106](https://doi.org/10.1073/pnas.0907095106) (umezawa2009type2cprotein pages 4-4, umezawa2009type2cprotein pages 2-3, moes2008nuclearlocalizationof pages 9-10, moes2008nuclearlocalizationof pages 10-11) |
+| Physiological outputs | By restraining SnRK2 signaling, ABI1 controls ABA-responsive transcription, germination, root growth, guard-cell/stomatal behavior, water loss, and salt-responsive root growth. These are pathway outputs rather than evidence that ABI1 directly dephosphorylates every downstream effector. | abi1-expressing lines germinated at >90% in 10 µM ABA, whereas controls were fully inhibited by 1 µM ABA; at 100 µM ABA, root elongation was reduced by ~35% in abi1 lines versus >80% in NLS-deficient lines, and abi1 leaves lost about twice as much water. ABI1 also inhibited salt-activated SnRK2.4 in vitro and in vivo. | Moes et al.; June 2008; [10.1111/j.1365-313X.2008.03454.x](https://doi.org/10.1111/j.1365-313x.2008.03454.x); Krzywińska et al.; June 2016; [10.1186/s12870-016-0817-1](https://doi.org/10.1186/s12870-016-0817-1) (moes2008nuclearlocalizationof pages 5-6, krzywinska2016phosphataseabi1and pages 2-4) |
+| 2024 development | BIK1 supplies an osmotic-stress route for releasing SnRK2.6 from ABI1/clade-A PP2C inhibition. BIK1 phosphorylates SnRK2.6 at Tyr163 and Tyr182; Tyr182 lies near the PP2C tryptophan lock and may weaken docking. This complements, rather than replaces, canonical ABA–PYL inhibition of ABI1. | BIK1 reduced SnRK2.6–ABI1 interaction in yeast three-hybrid and split-luciferase assays, especially under 1 M mannitol, without detectable stable BIK1–ABI1 binding. Osmotic activation assays used 0.6 M mannitol and three biological replicates; BIK1 could overcome abi1-1-mediated inhibition. | Li et al.; published online 21 October 2024; [10.1038/s44318-024-00277-0](https://doi.org/10.1038/s44318-024-00277-0) (li2024osmoticsignalingreleases pages 1-2, li2024osmoticsignalingreleases pages 2-3, li2024osmoticsignalingreleases pages 10-12, li2024osmoticsignalingreleases pages 3-4) |
 
 
-*Table: This table summarizes experimentally supported functional annotation for Arabidopsis thaliana ABI1/At4g26080, including catalytic activity, substrates, pathway role, localization, recent regulation, and quantitative findings. It is useful as a traceable evidence map linking each annotation to specific literature and session citation IDs.*
+*Table: Evidence-based annotation of Arabidopsis ABI1, spanning identity, enzymology, substrates, pathway regulation, localization, mutant biology, physiological outputs, and a 2024 osmotic-signaling mechanism.*
 
-### 9) Summary: functional annotation statement (most defensible)
-ABI1 (At4g26080; UniProt P49597) is a **clade A PP2C serine/threonine protein phosphatase** that acts primarily as a **negative regulator of ABA signaling** by **directly dephosphorylating activation-loop residues of SnRK2 kinases** (e.g., **SnRK2.6/OST1 Ser175**; **SnRK2.4 Ser158**), thereby suppressing kinase activity; ABA-bound **PYR/PYL/RCAR receptors inhibit ABI1** to permit SnRK2 activation. ABI1 acts in multiple cellular compartments (nucleus and cytoplasm) and can be regulated in a compartmentalized manner (e.g., via phosphatidic acid at membranes). Recent (2023–2024) advances show ABI1 is an integration point for additional inputs (e.g., **phytochrome-mediated light signaling**) and is incorporated into modern experimental implementations such as **yeast pathway reconstitution** and **ABACUS2 biosensors**, enabling quantitative and systems-level investigation of ABA dynamics and stress physiology. (xie2012molecularmechanismfor pages 3-4, krzywinska2016phosphataseabi1and pages 1-2, krzywinska2016phosphataseabi1and pages 2-4, ndathe2024phosphatidicacidproduced pages 1-2, li2023reconstitutionofphytochrome pages 5-6, rowe2023nextgenerationabacusbiosensors pages 1-2)
+## Molecular function and catalyzed reaction
 
+ABI1 catalyzes hydrolytic removal of phosphate from phosphoserine/phosphothreonine residues:
+
+**phosphoprotein + H₂O → dephosphorylated protein + orthophosphate.**
+
+As a PP2C/PPM-family enzyme, catalysis is divalent-metal dependent, with Mg²⁺ supporting activity. Wild-type ABI1 and the dominant abi1-1/G180D protein reportedly have comparable phosphatase activity at optimal Mg²⁺; the mutant instead exhibits altered behavior under limiting Mg²⁺ and, more importantly, impaired regulation by ABA receptors. Thus abi1-1 should not simply be annotated as a constitutively more active catalytic enzyme. (moes2008nuclearlocalizationof pages 10-11)
+
+### Substrate specificity
+
+The strongest direct-substrate evidence concerns **SnRK2 kinases**:
+
+1. **ABA-responsive subclass-III SnRK2s:** ABI1 physically associates with and dephosphorylates SnRK2.2/SRK2D, SnRK2.3/SRK2I, and SnRK2.6/OST1/SRK2E, thereby suppressing kinase activity and autophosphorylation. At least five ABA-responsive sites in SnRK2 activation loops were found to be PP2C-sensitive. (umezawa2009type2cprotein pages 4-4, xie2012molecularmechanismfor pages 1-2)
+2. **SnRK2.4:** purified ABI1 removed phosphorylation from activation-loop **Ser158**, which is required for kinase activity. ABI1 inhibited SnRK2.4 in vitro, in salt-treated protoplasts, and in Arabidopsis T87 cells; a clade-B PP2C control did not reproduce the effect. (krzywinska2016phosphataseabi1and pages 2-4)
+3. **SnRK2.8:** ABI1 also dephosphorylated and inhibited this group-2 kinase, indicating that its substrate range extends beyond the canonical ABA-activated subclass III. (krzywinska2016phosphataseabi1and pages 2-4)
+
+Activity against generic artificial phosphatase substrates did not predict the ability to inactivate SnRK2s. ABI1 specificity therefore depends on productive protein–protein docking and presentation of the kinase activation loop, not merely recognition of any phosphoserine/phosphothreonine. (umezawa2009type2cprotein pages 4-4)
+
+Evidence also connects clade-A PP2Cs to SnRK1 and other kinases, but these broader findings should not automatically be treated as equally well-established ABI1-specific substrates. The direct physiological annotation should remain centered on SnRK2 dephosphorylation. (yoshida2024integratingmultiomicsdata pages 2-3)
+
+## Position in the core ABA-signaling pathway
+
+### Signal-off state
+
+At low ABA, ABI1 binds activated or activatable SnRK2s and removes activation-loop phosphate. This both reverses kinase activation and stabilizes an inhibitory PP2C–SnRK2 complex. Consequently, phosphorylation of downstream ABA-response factors remains low. (umezawa2009type2cprotein pages 4-4, xie2012molecularmechanismfor pages 1-2)
+
+### Signal-on state
+
+ABA binds a PYR/PYL/RCAR receptor, causing the receptor to engage ABI1 and occlude its substrate-binding/catalytic region. PYR1 experimentally inhibited ABI1-mediated SnRK2 inactivation in an ABA-dependent manner. In planta affinity purification of ABI1 recovered predominantly nine of the fourteen soluble PYR/PYL/RCAR family members, supporting extensive receptor connectivity. (umezawa2009type2cprotein pages 4-4, joshisaha2011abscisicacidsignal pages 6-7)
+
+Released SnRK2.2/2.3/2.6 kinases can then phosphorylate ABA-responsive transcription factors and transport proteins. For SnRK2.6/OST1, relevant downstream outputs include ion channels such as SLAC1 and KAT1; these channels are downstream kinase substrates, not demonstrated direct ABI1 substrates in the evidence reviewed. (xie2012molecularmechanismfor pages 1-2)
+
+### Structural basis
+
+Structural and biochemical analysis resolved the SnRK2.6 kinase domain at **2.6 Å** and identified two ABI1–SnRK2.6 interfaces. These contacts orient the SnRK2.6 activation loop toward the ABI1 catalytic center, providing a physical explanation for efficient dephosphorylation. ABA-bound PYL receptors engage an overlapping PP2C surface and obstruct substrate entry, explaining why receptor and kinase binding are functionally antagonistic. (xie2012molecularmechanismfor pages 1-2)
+
+## Cellular localization
+
+ABI1 is best described as **nucleocytoplasmic**, with functionally important nuclear activity. GFP and BiFC experiments detected ABI1 or ABI1–SnRK2 interactions in both nucleus and cytoplasm; ABI1 and SnRK2.6 are coexpressed in guard cells. Some evidence also places ABI1 in plasma-membrane-associated signaling contexts, but it is not an integral membrane protein. (umezawa2009type2cprotein pages 2-3, moes2008nuclearlocalizationof pages 1-2, moes2008nuclearlocalizationof pages 6-7)
+
+A predicted C-terminal nuclear-localization signal is functionally important. Deleting or mutating it redistributed ABI1/abi1-1 toward the cytosol and abolished much of their capacity to suppress ABA-responsive transcription. Addition of a heterologous SV40 NLS restored nuclear localization and signaling inhibition, strongly supporting a causal requirement for nuclear targeting. ABA treatment itself did not detectably relocalize ABI1 in these experiments. (moes2008nuclearlocalizationof pages 7-9, moes2008nuclearlocalizationof pages 6-7, moes2008nuclearlocalizationof pages 2-3)
+
+The dominant abi1-1 protein accumulates preferentially in nuclei relative to wild-type ABI1, which is distributed more evenly between nucleus and cytosol. Treatment with 50 µM MG132 enhanced wild-type ABI1 nuclear compartmentation without detectably increasing total ABI1 abundance, suggesting regulated trafficking or retention rather than simple stabilization. (moes2008nuclearlocalizationof pages 9-10)
+
+## Biological processes and physiological implementation
+
+ABI1’s principal biological role is setting the activation threshold and termination rate of ABA/SnRK2 signaling. Its documented pathway outputs include:
+
+- **Guard-cell signaling and water conservation:** suppression of SnRK2.6/OST1 restrains ABA-induced stomatal closure and associated ion-channel regulation. (xie2012molecularmechanismfor pages 1-2, umezawa2009type2cprotein pages 2-3)
+- **ABA-responsive transcription:** nuclear ABI1 suppresses induction of genes including RAB18 and RD29B by preventing sustained kinase-dependent transcriptional activation. (moes2008nuclearlocalizationof pages 6-7)
+- **Seed germination and early growth:** dominant receptor-refractory abi1-1 suppresses normal ABA inhibition of germination and root elongation. (moes2008nuclearlocalizationof pages 5-6)
+- **Salt/osmotic signaling:** ABI1 inhibits salt-activated SnRK2.4 and influences primary-root responses, connecting canonical ABA machinery to ABA-independent or weakly ABA-dependent stress pathways. (krzywinska2016phosphataseabi1and pages 2-4)
+
+Quantitatively, abi1-expressing lines germinated at **>90% in 10 µM ABA**, whereas control germination was fully inhibited by **1 µM ABA**. At **100 µM ABA**, root elongation was reduced by approximately **35%** in abi1 lines but by **>80%** in NLS-deficient abi1 lines. Leaves expressing nuclear-localized abi1 lost approximately **twice as much water** as controls or NLS-deficient lines. These data demonstrate that nuclear phosphatase action has whole-plant consequences for ABA sensitivity and water balance. (moes2008nuclearlocalizationof pages 5-6)
+
+## The abi1-1 allele: mechanistic importance
+
+The classic dominant allele **abi1-1** encodes **G180D** in the PP2C catalytic-domain region. The substitution disrupts productive PYR/PYL–PP2C interaction, so ABA-bound receptors cannot efficiently inhibit the mutant phosphatase. abi1-1 therefore continues binding and suppressing SnRK2s in the presence of ABA, producing dominant ABA insensitivity. Preferential nuclear accumulation further strengthens suppression of transcriptional ABA outputs. (umezawa2009type2cprotein pages 4-4, umezawa2009type2cprotein pages 2-3, moes2008nuclearlocalizationof pages 9-10)
+
+This distinction is important for annotation: loss-of-function ABI1 alleles support the conclusion that normal ABI1 is a negative ABA regulator, whereas abi1-1 is a receptor-refractory, hypermorphic signaling allele—not a conventional null and not necessarily an intrinsically faster enzyme. (alandes2013molecularandgenetic pages 29-32, moes2008nuclearlocalizationof pages 10-11)
+
+## Recent developments, 2023–2024
+
+### BIK1 provides an osmotic route around PP2C inhibition
+
+A 2024 *EMBO Journal* study reported that the receptor-like cytoplasmic kinase **BIK1** helps release SnRK2.6 from ABI1/clade-A PP2C inhibition during osmotic stress. BIK1 phosphorylates SnRK2.6 at **Tyr163 and Tyr182**; Tyr182 lies near the PP2C tryptophan “lock,” and phosphorylation is proposed to weaken PP2C docking. BIK1 reduced the SnRK2.6–ABI1 interaction, particularly under **1 M mannitol**, but did not detectably form a stable complex with ABI1, indicating that it acts by modifying the kinase. (li2024osmoticsignalingreleases pages 10-12, li2024osmoticsignalingreleases pages 3-4)
+
+Osmotic SnRK2 activation was tested with **0.6 M mannitol** and phospho-S175 antibodies using three biological replicates. BIK1 could overcome inhibition by abi1-1, while bik1 mutants showed impaired SnRK2 activation, stress-gene expression, ABA accumulation, growth maintenance, and water-loss control. This updates the canonical model: PYL–ABA inhibition of ABI1 remains central, but osmotic signaling can additionally destabilize the PP2C–SnRK2 complex from the kinase side. Publication: **21 October 2024**, DOI/URL: https://doi.org/10.1038/s44318-024-00277-0. (li2024osmoticsignalingreleases pages 1-2, li2024osmoticsignalingreleases pages 2-3)
+
+### Multi-omics places PP2C suppression within energy–stress integration
+
+A 2024 phosphoproteomic/proteomic/metabolomic study of RCAR6/PYL12-overexpressing Arabidopsis found that receptor activation decreased levels of clade-A PP2C coreceptors and activated both SnRK2 and SnRK1-associated programs. The design included three biological replicates for Col-0 and RCAR6 under control conditions and three per line under drought; the RCAR10 control arm had only two replicates and was not emphasized statistically. The study broadens the interpretation of receptor–PP2C signaling toward coordinated water- and energy-saving metabolism, although it does not establish every observed phosphosite or metabolic change as an ABI1-specific effect. Publication: **April 2024**, DOI/URL: https://doi.org/10.1111/tpj.16765. (yoshida2024integratingmultiomicsdata pages 2-3)
+
+## Applications and translational relevance
+
+ABI1 is chiefly implemented as a **research and engineering control point** rather than as a commercial standalone product. Current applications include:
+
+1. **Chemical screening:** the ABA–PYL–PP2C interface provides a structurally defined target for ABA agonists or antagonists intended to manipulate drought responses and stomatal behavior. The receptor’s occupation of ABI1’s active-site region supplies a direct assayable mechanism. (umezawa2009type2cprotein pages 4-4, xie2012molecularmechanismfor pages 1-2)
+2. **Synthetic and crop signaling design:** altering receptor abundance or PP2C sensitivity can shift the threshold of ABA responses. However, because ABI1 affects germination, roots, transcription, stomata, and growth, constitutive inhibition is likely to impose growth–stress trade-offs; tissue-specific or inducible modulation is more defensible than blanket suppression. (yoshida2024integratingmultiomicsdata pages 2-3, moes2008nuclearlocalizationof pages 5-6)
+3. **Stress-pathway dissection:** abi1-1 is a powerful genetic reagent for separating PYL-dependent ABA release from alternative mechanisms such as BIK1-mediated osmotic release of SnRK2s. (li2024osmoticsignalingreleases pages 1-2, li2024osmoticsignalingreleases pages 2-3)
+
+## Expert interpretation and annotation confidence
+
+The convergent genetic, biochemical, localization, and structural evidence makes the core annotation high confidence: **ABI1 is a nucleocytoplasmic clade-A PP2C that directly dephosphorylates SnRK2 activation loops and functions as an ABA-pathway brake**. The most defensible primary substrates are SnRK2 kinases, especially SnRK2.2/2.3/2.6 and SnRK2.4. Broad physiological traits should be annotated as downstream consequences rather than evidence of direct substrate recognition. (umezawa2009type2cprotein pages 4-4, krzywinska2016phosphataseabi1and pages 2-4, xie2012molecularmechanismfor pages 1-2)
+
+The latest research does not overturn this model. Instead, it shows that the ABI1–SnRK2 switch is embedded in a larger, spatially and environmentally regulated network: receptors inhibit ABI1 from the phosphatase side, whereas osmotic signaling can weaken the same complex by modifying SnRK2.6. (li2024osmoticsignalingreleases pages 1-2, li2024osmoticsignalingreleases pages 10-12)
+
+## Key references
+
+- Umezawa et al. **October 2009**. “Type 2C protein phosphatases directly regulate abscisic acid-activated protein kinases in Arabidopsis.” *PNAS* 106:17588–17593. https://doi.org/10.1073/pnas.0907095106. (umezawa2009type2cprotein pages 4-4)
+- Xie et al. **2 January 2012**. “Molecular Mechanism for Inhibition…SnRK2.6, by Protein Phosphatase ABI1.” *Journal of Biological Chemistry* 287:794–802. https://doi.org/10.1074/jbc.M111.313106. (xie2012molecularmechanismfor pages 1-2)
+- Moes et al. **June 2008**. “Nuclear localization of the mutant protein phosphatase abi1 is required for insensitivity towards ABA responses in Arabidopsis.” *The Plant Journal* 54:806–819. https://doi.org/10.1111/j.1365-313X.2008.03454.x. (moes2008nuclearlocalizationof pages 7-9)
+- Krzywińska et al. **June 2016**. “Phosphatase ABI1…inhibit[s] salt stress-activated SnRK2.4 kinase.” *BMC Plant Biology* 16:136. https://doi.org/10.1186/s12870-016-0817-1. (krzywinska2016phosphataseabi1and pages 2-4)
+- Yoshida et al. **April 2024**. “Integrating multi-omics data reveals energy and stress signaling activated by abscisic acid in Arabidopsis.” *The Plant Journal* 119:1112–1133. https://doi.org/10.1111/tpj.16765. (yoshida2024integratingmultiomicsdata pages 2-3)
+- Li et al. **21 October 2024**. “Osmotic signaling releases PP2C-mediated inhibition of Arabidopsis SnRK2s via…BIK1.” *The EMBO Journal* 43:6076–6103. https://doi.org/10.1038/s44318-024-00277-0. (li2024osmoticsignalingreleases pages 1-2)
 
 References
 
-1. (xie2012molecularmechanismfor pages 3-4): Tian Xie, Ruobing Ren, Yuan-yuan Zhang, Yuxuan Pang, Chuangye Yan, Xinqi Gong, Yuan He, Wenqi Li, Di Miao, Qi Hao, Haiteng Deng, Zhixin Wang, Jia-Wei Wu, and Nieng Yan. Molecular mechanism for inhibition of a critical component in the arabidopsis thaliana abscisic acid signal transduction pathways, snrk2.6, by protein phosphatase abi1. Journal of Biological Chemistry, 287:794-802, Jan 2012. URL: https://doi.org/10.1074/jbc.m111.313106, doi:10.1074/jbc.m111.313106. This article has 86 citations and is from a domain leading peer-reviewed journal.
+1. (krzywinska2016phosphataseabi1and pages 2-4): Ewa Krzywińska, Maria Bucholc, Anna Kulik, Arkadiusz Ciesielski, Małgorzata Lichocka, Janusz Dębski, Agnieszka Ludwików, Michał Dadlez, Pedro L. Rodriguez, and Grażyna Dobrowolska. Phosphatase abi1 and okadaic acid-sensitive phosphoprotein phosphatases inhibit salt stress-activated snrk2.4 kinase. BMC Plant Biology, Jun 2016. URL: https://doi.org/10.1186/s12870-016-0817-1, doi:10.1186/s12870-016-0817-1. This article has 64 citations and is from a peer-reviewed journal.
 
-2. (krzywinska2016phosphataseabi1and pages 4-7): Ewa Krzywińska, Maria Bucholc, Anna Kulik, Arkadiusz Ciesielski, Małgorzata Lichocka, Janusz Dębski, Agnieszka Ludwików, Michał Dadlez, Pedro L. Rodriguez, and Grażyna Dobrowolska. Phosphatase abi1 and okadaic acid-sensitive phosphoprotein phosphatases inhibit salt stress-activated snrk2.4 kinase. BMC Plant Biology, Jun 2016. URL: https://doi.org/10.1186/s12870-016-0817-1, doi:10.1186/s12870-016-0817-1. This article has 61 citations and is from a peer-reviewed journal.
+2. (umezawa2009type2cprotein pages 4-4): Taishi Umezawa, Naoyuki Sugiyama, Masahide Mizoguchi, Shimpei Hayashi, Fumiyoshi Myouga, Kazuko Yamaguchi-Shinozaki, Yasushi Ishihama, Takashi Hirayama, and Kazuo Shinozaki. Type 2c protein phosphatases directly regulate abscisic acid-activated protein kinases in arabidopsis. Proceedings of the National Academy of Sciences, 106:17588-17593, Oct 2009. URL: https://doi.org/10.1073/pnas.0907095106, doi:10.1073/pnas.0907095106. This article has 1336 citations and is from a highest quality peer-reviewed journal.
 
-3. (xie2012molecularmechanismfor pages 1-2): Tian Xie, Ruobing Ren, Yuan-yuan Zhang, Yuxuan Pang, Chuangye Yan, Xinqi Gong, Yuan He, Wenqi Li, Di Miao, Qi Hao, Haiteng Deng, Zhixin Wang, Jia-Wei Wu, and Nieng Yan. Molecular mechanism for inhibition of a critical component in the arabidopsis thaliana abscisic acid signal transduction pathways, snrk2.6, by protein phosphatase abi1. Journal of Biological Chemistry, 287:794-802, Jan 2012. URL: https://doi.org/10.1074/jbc.m111.313106, doi:10.1074/jbc.m111.313106. This article has 86 citations and is from a domain leading peer-reviewed journal.
+3. (xie2012molecularmechanismfor pages 1-2): Tian Xie, Ruobing Ren, Yuan-yuan Zhang, Yuxuan Pang, Chuangye Yan, Xinqi Gong, Yuan He, Wenqi Li, Di Miao, Qi Hao, Haiteng Deng, Zhixin Wang, Jia-Wei Wu, and Nieng Yan. Molecular mechanism for inhibition of a critical component in the arabidopsis thaliana abscisic acid signal transduction pathways, snrk2.6, by protein phosphatase abi1. Journal of Biological Chemistry, 287(1):794-802, Jan 2012. URL: https://doi.org/10.1074/jbc.m111.313106, doi:10.1074/jbc.m111.313106. This article has 87 citations and is from a domain leading peer-reviewed journal.
 
-4. (krzywinska2016phosphataseabi1and pages 1-2): Ewa Krzywińska, Maria Bucholc, Anna Kulik, Arkadiusz Ciesielski, Małgorzata Lichocka, Janusz Dębski, Agnieszka Ludwików, Michał Dadlez, Pedro L. Rodriguez, and Grażyna Dobrowolska. Phosphatase abi1 and okadaic acid-sensitive phosphoprotein phosphatases inhibit salt stress-activated snrk2.4 kinase. BMC Plant Biology, Jun 2016. URL: https://doi.org/10.1186/s12870-016-0817-1, doi:10.1186/s12870-016-0817-1. This article has 61 citations and is from a peer-reviewed journal.
+4. (umezawa2009type2cprotein pages 3-4): Taishi Umezawa, Naoyuki Sugiyama, Masahide Mizoguchi, Shimpei Hayashi, Fumiyoshi Myouga, Kazuko Yamaguchi-Shinozaki, Yasushi Ishihama, Takashi Hirayama, and Kazuo Shinozaki. Type 2c protein phosphatases directly regulate abscisic acid-activated protein kinases in arabidopsis. Proceedings of the National Academy of Sciences, 106:17588-17593, Oct 2009. URL: https://doi.org/10.1073/pnas.0907095106, doi:10.1073/pnas.0907095106. This article has 1336 citations and is from a highest quality peer-reviewed journal.
 
-5. (nee2023drysideof pages 2-3): Guillaume Née and Thorben Krüger. Dry side of the core: a meta-analysis addressing the original nature of the aba signalosome at the onset of seed imbibition. Frontiers in Plant Science, Jul 2023. URL: https://doi.org/10.3389/fpls.2023.1192652, doi:10.3389/fpls.2023.1192652. This article has 8 citations.
+5. (moes2008nuclearlocalizationof pages 10-11): Danièle Moes, Axel Himmelbach, Arthur Korte, Georg Haberer, and Erwin Grill. Nuclear localization of the mutant protein phosphatase abi1 is required for insensitivity towards aba responses in arabidopsis. The Plant journal : for cell and molecular biology, 54 5:806-19, Jun 2008. URL: https://doi.org/10.1111/j.1365-313x.2008.03454.x, doi:10.1111/j.1365-313x.2008.03454.x. This article has 126 citations.
 
-6. (xie2012molecularmechanismfor pages 7-8): Tian Xie, Ruobing Ren, Yuan-yuan Zhang, Yuxuan Pang, Chuangye Yan, Xinqi Gong, Yuan He, Wenqi Li, Di Miao, Qi Hao, Haiteng Deng, Zhixin Wang, Jia-Wei Wu, and Nieng Yan. Molecular mechanism for inhibition of a critical component in the arabidopsis thaliana abscisic acid signal transduction pathways, snrk2.6, by protein phosphatase abi1. Journal of Biological Chemistry, 287:794-802, Jan 2012. URL: https://doi.org/10.1074/jbc.m111.313106, doi:10.1074/jbc.m111.313106. This article has 86 citations and is from a domain leading peer-reviewed journal.
+6. (joshisaha2011abscisicacidsignal pages 6-7): Archana Joshi-Saha, Christiane Valon, and Jeffrey Leung. Abscisic acid signal off the starting block. Molecular plant, 4 4:562-80, Jul 2011. URL: https://doi.org/10.1093/mp/ssr055, doi:10.1093/mp/ssr055. This article has 144 citations and is from a highest quality peer-reviewed journal.
 
-7. (krzywinska2016phosphataseabi1and pages 2-4): Ewa Krzywińska, Maria Bucholc, Anna Kulik, Arkadiusz Ciesielski, Małgorzata Lichocka, Janusz Dębski, Agnieszka Ludwików, Michał Dadlez, Pedro L. Rodriguez, and Grażyna Dobrowolska. Phosphatase abi1 and okadaic acid-sensitive phosphoprotein phosphatases inhibit salt stress-activated snrk2.4 kinase. BMC Plant Biology, Jun 2016. URL: https://doi.org/10.1186/s12870-016-0817-1, doi:10.1186/s12870-016-0817-1. This article has 61 citations and is from a peer-reviewed journal.
+7. (yoshida2024integratingmultiomicsdata pages 2-3): Takuya Yoshida, Julia Mergner, Zhenyu Yang, Jinghui Liu, Bernhard Kuster, Alisdair R. Fernie, and Erwin Grill. Integrating multi-omics data reveals energy and stress signaling activated by abscisic acid in arabidopsis. The Plant journal : for cell and molecular biology, 119:1112-1133, Apr 2024. URL: https://doi.org/10.1111/tpj.16765, doi:10.1111/tpj.16765. This article has 13 citations.
 
-8. (ndathe2024phosphatidicacidproduced pages 1-2): Ruth Ndathe and Naohiro Kato. Phosphatidic acid produced by phospholipase dα1 and dδ is incorporated into the internal membranes but not involved in the gene expression of rd29a in the abscisic acid signaling network in arabidopsis thaliana. Frontiers in Plant Science, Apr 2024. URL: https://doi.org/10.3389/fpls.2024.1356699, doi:10.3389/fpls.2024.1356699. This article has 3 citations.
+8. (moes2008nuclearlocalizationof pages 1-2): Danièle Moes, Axel Himmelbach, Arthur Korte, Georg Haberer, and Erwin Grill. Nuclear localization of the mutant protein phosphatase abi1 is required for insensitivity towards aba responses in arabidopsis. The Plant journal : for cell and molecular biology, 54 5:806-19, Jun 2008. URL: https://doi.org/10.1111/j.1365-313x.2008.03454.x, doi:10.1111/j.1365-313x.2008.03454.x. This article has 126 citations.
 
-9. (li2023reconstitutionofphytochrome pages 1-2): Hong Li, Yangyang Zhou, Xinyan Qin, Jing Peng, Run Han, Yang Lv, Cong Li, Lijuan Qi, Gao-Ping Qu, Li Yang, Yanjie Li, William Terzaghi, Zhen Li, Feng Qin, Zhizhong Gong, Xing Wang Deng, and Jigang Li. Reconstitution of phytochrome a-mediated light modulation of the aba signaling pathways in yeast. Proceedings of the National Academy of Sciences of the United States of America, Aug 2023. URL: https://doi.org/10.1073/pnas.2302901120, doi:10.1073/pnas.2302901120. This article has 20 citations and is from a highest quality peer-reviewed journal.
+9. (moes2008nuclearlocalizationof pages 6-7): Danièle Moes, Axel Himmelbach, Arthur Korte, Georg Haberer, and Erwin Grill. Nuclear localization of the mutant protein phosphatase abi1 is required for insensitivity towards aba responses in arabidopsis. The Plant journal : for cell and molecular biology, 54 5:806-19, Jun 2008. URL: https://doi.org/10.1111/j.1365-313x.2008.03454.x, doi:10.1111/j.1365-313x.2008.03454.x. This article has 126 citations.
 
-10. (li2023reconstitutionofphytochrome pages 5-6): Hong Li, Yangyang Zhou, Xinyan Qin, Jing Peng, Run Han, Yang Lv, Cong Li, Lijuan Qi, Gao-Ping Qu, Li Yang, Yanjie Li, William Terzaghi, Zhen Li, Feng Qin, Zhizhong Gong, Xing Wang Deng, and Jigang Li. Reconstitution of phytochrome a-mediated light modulation of the aba signaling pathways in yeast. Proceedings of the National Academy of Sciences of the United States of America, Aug 2023. URL: https://doi.org/10.1073/pnas.2302901120, doi:10.1073/pnas.2302901120. This article has 20 citations and is from a highest quality peer-reviewed journal.
+10. (moes2008nuclearlocalizationof pages 2-3): Danièle Moes, Axel Himmelbach, Arthur Korte, Georg Haberer, and Erwin Grill. Nuclear localization of the mutant protein phosphatase abi1 is required for insensitivity towards aba responses in arabidopsis. The Plant journal : for cell and molecular biology, 54 5:806-19, Jun 2008. URL: https://doi.org/10.1111/j.1365-313x.2008.03454.x, doi:10.1111/j.1365-313x.2008.03454.x. This article has 126 citations.
 
-11. (rowe2023nextgenerationabacusbiosensors pages 1-2): James Rowe, Mathieu Grangé-Guermente, Marino Exposito-Rodriguez, Rinukshi Wimalasekera, Martin O. Lenz, Kartika N. Shetty, Sean R. Cutler, and Alexander M. Jones. Next-generation abacus biosensors reveal cellular aba dynamics driving root growth at low aerial humidity. Nature Plants, 9:1103-1115, Jun 2023. URL: https://doi.org/10.1038/s41477-023-01447-4, doi:10.1038/s41477-023-01447-4. This article has 82 citations and is from a highest quality peer-reviewed journal.
+11. (umezawa2009type2cprotein pages 2-3): Taishi Umezawa, Naoyuki Sugiyama, Masahide Mizoguchi, Shimpei Hayashi, Fumiyoshi Myouga, Kazuko Yamaguchi-Shinozaki, Yasushi Ishihama, Takashi Hirayama, and Kazuo Shinozaki. Type 2c protein phosphatases directly regulate abscisic acid-activated protein kinases in arabidopsis. Proceedings of the National Academy of Sciences, 106:17588-17593, Oct 2009. URL: https://doi.org/10.1073/pnas.0907095106, doi:10.1073/pnas.0907095106. This article has 1336 citations and is from a highest quality peer-reviewed journal.
 
-12. (xie2012molecularmechanismfor pages 2-3): Tian Xie, Ruobing Ren, Yuan-yuan Zhang, Yuxuan Pang, Chuangye Yan, Xinqi Gong, Yuan He, Wenqi Li, Di Miao, Qi Hao, Haiteng Deng, Zhixin Wang, Jia-Wei Wu, and Nieng Yan. Molecular mechanism for inhibition of a critical component in the arabidopsis thaliana abscisic acid signal transduction pathways, snrk2.6, by protein phosphatase abi1. Journal of Biological Chemistry, 287:794-802, Jan 2012. URL: https://doi.org/10.1074/jbc.m111.313106, doi:10.1074/jbc.m111.313106. This article has 86 citations and is from a domain leading peer-reviewed journal.
+12. (moes2008nuclearlocalizationof pages 9-10): Danièle Moes, Axel Himmelbach, Arthur Korte, Georg Haberer, and Erwin Grill. Nuclear localization of the mutant protein phosphatase abi1 is required for insensitivity towards aba responses in arabidopsis. The Plant journal : for cell and molecular biology, 54 5:806-19, Jun 2008. URL: https://doi.org/10.1111/j.1365-313x.2008.03454.x, doi:10.1111/j.1365-313x.2008.03454.x. This article has 126 citations.
 
-13. (lynch2024abi5bindingproteins pages 1-4): Tim J Lynch, B. Joy Erickson McNally, Teodora Losic, Jonas Lindquist, and Ruth Finkelstein. Abi5 binding proteins are substrates of key components in the aba core signaling pathway. bioRxiv, Oct 2024. URL: https://doi.org/10.1101/2024.10.11.617944, doi:10.1101/2024.10.11.617944. This article has 1 citations.
+13. (moes2008nuclearlocalizationof pages 5-6): Danièle Moes, Axel Himmelbach, Arthur Korte, Georg Haberer, and Erwin Grill. Nuclear localization of the mutant protein phosphatase abi1 is required for insensitivity towards aba responses in arabidopsis. The Plant journal : for cell and molecular biology, 54 5:806-19, Jun 2008. URL: https://doi.org/10.1111/j.1365-313x.2008.03454.x, doi:10.1111/j.1365-313x.2008.03454.x. This article has 126 citations.
+
+14. (li2024osmoticsignalingreleases pages 1-2): Guo-Jun Li, Kong Chen, Shujing Sun, and Yang Zhao. Osmotic signaling releases pp2c-mediated inhibition of arabidopsis snrk2s via the receptor-like cytoplasmic kinase bik1. The EMBO Journal, 43:6076-6103, Oct 2024. URL: https://doi.org/10.1038/s44318-024-00277-0, doi:10.1038/s44318-024-00277-0. This article has 44 citations.
+
+15. (li2024osmoticsignalingreleases pages 2-3): Guo-Jun Li, Kong Chen, Shujing Sun, and Yang Zhao. Osmotic signaling releases pp2c-mediated inhibition of arabidopsis snrk2s via the receptor-like cytoplasmic kinase bik1. The EMBO Journal, 43:6076-6103, Oct 2024. URL: https://doi.org/10.1038/s44318-024-00277-0, doi:10.1038/s44318-024-00277-0. This article has 44 citations.
+
+16. (li2024osmoticsignalingreleases pages 10-12): Guo-Jun Li, Kong Chen, Shujing Sun, and Yang Zhao. Osmotic signaling releases pp2c-mediated inhibition of arabidopsis snrk2s via the receptor-like cytoplasmic kinase bik1. The EMBO Journal, 43:6076-6103, Oct 2024. URL: https://doi.org/10.1038/s44318-024-00277-0, doi:10.1038/s44318-024-00277-0. This article has 44 citations.
+
+17. (li2024osmoticsignalingreleases pages 3-4): Guo-Jun Li, Kong Chen, Shujing Sun, and Yang Zhao. Osmotic signaling releases pp2c-mediated inhibition of arabidopsis snrk2s via the receptor-like cytoplasmic kinase bik1. The EMBO Journal, 43:6076-6103, Oct 2024. URL: https://doi.org/10.1038/s44318-024-00277-0, doi:10.1038/s44318-024-00277-0. This article has 44 citations.
+
+18. (moes2008nuclearlocalizationof pages 7-9): Danièle Moes, Axel Himmelbach, Arthur Korte, Georg Haberer, and Erwin Grill. Nuclear localization of the mutant protein phosphatase abi1 is required for insensitivity towards aba responses in arabidopsis. The Plant journal : for cell and molecular biology, 54 5:806-19, Jun 2008. URL: https://doi.org/10.1111/j.1365-313x.2008.03454.x, doi:10.1111/j.1365-313x.2008.03454.x. This article has 126 citations.
+
+19. (alandes2013molecularandgenetic pages 29-32): Regina Antoni Alandes. Molecular and genetic analyses of the pp2c-aba receptor interaction in the abscisic acid signaling pathway. ArXiv, Jun 2013. URL: https://doi.org/10.4995/thesis/10251/29756, doi:10.4995/thesis/10251/29756. This article has 0 citations.
+
+## Artifacts
+
+- [Edison artifact artifact-00](ABI1-deep-research-falcon_artifacts/artifact-00.md)
 
 ## Citations
 
-1. nee2023drysideof pages 2-3
-2. xie2012molecularmechanismfor pages 3-4
-3. xie2012molecularmechanismfor pages 1-2
-4. xie2012molecularmechanismfor pages 7-8
-5. ndathe2024phosphatidicacidproduced pages 1-2
-6. li2023reconstitutionofphytochrome pages 1-2
-7. rowe2023nextgenerationabacusbiosensors pages 1-2
-8. li2023reconstitutionofphytochrome pages 5-6
-9. xie2012molecularmechanismfor pages 2-3
-10. https://doi.org/10.3389/fpls.2023.1192652
-11. https://doi.org/10.1074/jbc.M111.313106
-12. https://doi.org/10.1186/s12870-016-0817-1
-13. https://doi.org/10.3389/fpls.2024.1356699
-14. https://doi.org/10.1073/pnas.2302901120
-15. https://doi.org/10.1038/s41477-023-01447-4
-16. https://doi.org/10.3389/fpls.2024.1437184
-17. https://doi.org/10.1101/2024.10.11.617944
-18. https://doi.org/10.5483/BMBRep.2024-0146
-19. https://doi.org/10.1074/jbc.m111.313106,
-20. https://doi.org/10.1186/s12870-016-0817-1,
-21. https://doi.org/10.3389/fpls.2023.1192652,
-22. https://doi.org/10.3389/fpls.2024.1356699,
-23. https://doi.org/10.1073/pnas.2302901120,
-24. https://doi.org/10.1038/s41477-023-01447-4,
-25. https://doi.org/10.1101/2024.10.11.617944,
+1. xie2012molecularmechanismfor pages 1-2
+2. moes2008nuclearlocalizationof pages 10-11
+3. yoshida2024integratingmultiomicsdata pages 2-3
+4. moes2008nuclearlocalizationof pages 9-10
+5. moes2008nuclearlocalizationof pages 6-7
+6. moes2008nuclearlocalizationof pages 5-6
+7. moes2008nuclearlocalizationof pages 7-9
+8. li2024osmoticsignalingreleases pages 1-2
+9. joshisaha2011abscisicacidsignal pages 6-7
+10. moes2008nuclearlocalizationof pages 1-2
+11. moes2008nuclearlocalizationof pages 2-3
+12. li2024osmoticsignalingreleases pages 2-3
+13. li2024osmoticsignalingreleases pages 10-12
+14. li2024osmoticsignalingreleases pages 3-4
+15. alandes2013molecularandgenetic pages 29-32
+16. 10.1186/s12870-016-0817-1
+17. 10.1073/pnas.0907095106
+18. 10.1111/j.1365-313X.2008.03454.x
+19. 10.1093/mp/ssr055
+20. 10.1111/tpj.16765
+21. 10.1074/jbc.M111.313106
+22. 10.1038/s44318-024-00277-0
+23. s
+24. https://doi.org/10.1186/s12870-016-0817-1
+25. https://doi.org/10.1073/pnas.0907095106
+26. https://doi.org/10.1111/j.1365-313x.2008.03454.x
+27. https://doi.org/10.1093/mp/ssr055
+28. https://doi.org/10.1111/tpj.16765
+29. https://doi.org/10.1074/jbc.m111.313106
+30. https://doi.org/10.1038/s44318-024-00277-0
+31. https://doi.org/10.1038/s44318-024-00277-0.
+32. https://doi.org/10.1111/tpj.16765.
+33. https://doi.org/10.1073/pnas.0907095106.
+34. https://doi.org/10.1074/jbc.M111.313106.
+35. https://doi.org/10.1111/j.1365-313X.2008.03454.x.
+36. https://doi.org/10.1186/s12870-016-0817-1.
+37. https://doi.org/10.1186/s12870-016-0817-1,
+38. https://doi.org/10.1073/pnas.0907095106,
+39. https://doi.org/10.1074/jbc.m111.313106,
+40. https://doi.org/10.1111/j.1365-313x.2008.03454.x,
+41. https://doi.org/10.1093/mp/ssr055,
+42. https://doi.org/10.1111/tpj.16765,
+43. https://doi.org/10.1038/s44318-024-00277-0,
+44. https://doi.org/10.4995/thesis/10251/29756,

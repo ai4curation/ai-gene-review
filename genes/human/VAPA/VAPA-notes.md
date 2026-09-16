@@ -1,0 +1,7 @@
+# Human VAPA evidence notes
+
+The completed Falcon report identifies VAPA as an ER receptor/tether rather than a lipid carrier. Independent primary inspection confirms this: [PMID:33124732](https://pubmed.ncbi.nlm.nih.gov/33124732/) supplies structures, FFAT peptide-binding experiments and contact-site reconstitution; [PMID:24209621](https://pubmed.ncbi.nlm.nih.gov/24209621/) distinguishes the VAPA anchor from the lipid-transfer domain in OSBP. Lipid-transport BP annotations can therefore be mechanistically appropriate without claiming intrinsic lipid-transporter MF.
+
+[PMID:18713837](https://pubmed.ncbi.nlm.nih.gov/18713837/) tests VAPA overexpression, ER cargo transport and microtubule association, including rescue by FFAT peptide. [PMID:10523508](https://pubmed.ncbi.nlm.nih.gov/10523508/) supports peripheral VAP-33/occludin localization. These sources support the core and several ancillary annotations. Protein-folding, early membrane-fusion, NF-kappaB-screen and opposing viral-direction annotations require more detailed source-specific resolution and remain UNDECIDED. IPI interaction rows are retained as non-core observations rather than being converted automatically into core FFAT interactions.
+
+The human/horse alignment preserves the MSP domain and membrane anchor and identifies a horse linker insertion corresponding to the human alternative-splicing region. This explains why the shared MSP-domain name cannot transfer the nematode sperm-filament mechanism. See the horse prediction review for the exact original text and assessment.
