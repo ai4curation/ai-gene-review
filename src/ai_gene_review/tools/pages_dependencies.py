@@ -35,9 +35,12 @@ class _HTMLLinks(HTMLParser):
         self.base: str | None = None
         self.raw_element: str | None = None
         self.scripts: list[str] = []
+        self.unavailable: list[str] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        values = dict(attrs)
+        values = {name: value for name, value in attrs if value is not None}
+        if values.get('data-unavailable-artifact'):
+            self.unavailable.append(values['data-unavailable-artifact'])
         if tag == "base":
             if self.base is None:
                 self.base = values.get("href")
@@ -142,6 +145,7 @@ class DependencyLinks:
     existing: set[Path] = field(default_factory=set)
     missing: set[Path] = field(default_factory=set)
     off_base: set[str] = field(default_factory=set)
+    unavailable: set[Path] = field(default_factory=set)
 
 
 @dataclass
@@ -159,6 +163,7 @@ class DependencyResolver:
         """Collect safe existing paths and report missing local files."""
         document_url = SITE_ORIGIN + BASE_PATH + relative.as_posix()
         scripts: list[str] = []
+        unavailable: list[str] = []
         if relative.suffix.lower() in {".html", ".htm"}:
             parser = _HTMLLinks()
             parser.feed(content)
@@ -167,6 +172,7 @@ class DependencyResolver:
             # this does not simulate parser-time loads before a late base tag.
             document_url = urljoin(document_url, parser.base or "")
             scripts = [urljoin(document_url, src) for src in parser.scripts]
+            unavailable = parser.unavailable
         elif relative.suffix.lower() == ".css":
             links = _css_links(content)
         elif relative.suffix.lower() == ".js":
@@ -177,6 +183,10 @@ class DependencyResolver:
             return DependencyLinks()
 
         result = DependencyLinks()
+        for path in unavailable:
+            target = _public_path(self.repo_root, urljoin(document_url, path))
+            if target is not None:
+                result.unavailable.add(target)
 
         def collect(url: str) -> Path | None:
             target = _public_path(self.repo_root, url)

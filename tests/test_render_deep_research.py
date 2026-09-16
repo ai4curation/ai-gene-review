@@ -49,6 +49,9 @@ def test_collect_deep_research_sections_rebases_artifact_links(tmp_path):
     output_dir = tmp_path / "pages"
     gene_dir.mkdir(parents=True)
     output_dir.mkdir()
+    artifact = gene_dir / 'TEST1-deep-research-falcon_artifacts/plot.png'
+    artifact.parent.mkdir()
+    artifact.write_bytes(b'archived image fixture')
 
     report_path = gene_dir / "TEST1-deep-research-falcon.md"
     report_path.write_text(

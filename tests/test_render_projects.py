@@ -1,6 +1,8 @@
 """Tests for the render_projects module."""
 
 import pytest
+from pathlib import Path
+
 
 from ai_gene_review.render_projects import (
     build_symbol_to_species_index,
@@ -17,6 +19,12 @@ from ai_gene_review.render_projects import (
     resolve_frontmatter_gene_links,
     should_autolink_gene_symbols,
 )
+
+
+def _review_directory(path: Path) -> None:
+    """Create a real review target for positive auto-linking fixtures."""
+    path.mkdir(parents=True)
+    (path / f"{path.name}-ai-review.yaml").write_text(f"gene_symbol: {path.name}\n")
 
 
 class TestSlidesExclusion:
@@ -70,6 +78,13 @@ class TestSlidesExclusion:
 class TestBuildSymbolToSpeciesIndex:
     """Tests for build_symbol_to_species_index function."""
 
+    def test_directories_without_reviews_are_not_gene_links(self, tmp_path):
+        genes = tmp_path / 'genes'
+        (genes / 'human/publications').mkdir(parents=True)
+        (genes / 'human/LIPT1').mkdir()
+        (genes / 'human/LIPT1/LIPT1-notes.md').write_text('Research in progress')
+        assert build_symbol_to_species_index(genes) == {}
+
     def test_empty_directory(self, tmp_path):
         """Empty genes directory returns empty index."""
         genes_dir = tmp_path / "genes"
@@ -86,7 +101,7 @@ class TestBuildSymbolToSpeciesIndex:
     def test_single_species_single_gene(self, tmp_path):
         """Single species with single gene."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "human" / "TP53").mkdir(parents=True)
+        _review_directory(genes_dir / "human" / "TP53")
 
         index = build_symbol_to_species_index(genes_dir)
         assert index == {"TP53": ["human"]}
@@ -94,10 +109,10 @@ class TestBuildSymbolToSpeciesIndex:
     def test_multiple_species_multiple_genes(self, tmp_path):
         """Multiple species with multiple genes."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "human" / "TP53").mkdir(parents=True)
-        (genes_dir / "human" / "GPX4").mkdir(parents=True)
-        (genes_dir / "mouse" / "Trp53").mkdir(parents=True)
-        (genes_dir / "mouse" / "Gpx4").mkdir(parents=True)
+        _review_directory(genes_dir / "human" / "TP53")
+        _review_directory(genes_dir / "human" / "GPX4")
+        _review_directory(genes_dir / "mouse" / "Trp53")
+        _review_directory(genes_dir / "mouse" / "Gpx4")
 
         index = build_symbol_to_species_index(genes_dir)
         assert "TP53" in index
@@ -110,8 +125,8 @@ class TestBuildSymbolToSpeciesIndex:
     def test_same_symbol_multiple_species(self, tmp_path):
         """Same symbol appears in multiple species."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "human" / "ATG7").mkdir(parents=True)
-        (genes_dir / "yeast" / "ATG7").mkdir(parents=True)
+        _review_directory(genes_dir / "human" / "ATG7")
+        _review_directory(genes_dir / "yeast" / "ATG7")
 
         index = build_symbol_to_species_index(genes_dir)
         assert "ATG7" in index
@@ -120,8 +135,8 @@ class TestBuildSymbolToSpeciesIndex:
     def test_case_sensitivity(self, tmp_path):
         """Symbols are case-sensitive."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "human" / "GPX4").mkdir(parents=True)
-        (genes_dir / "mouse" / "Gpx4").mkdir(parents=True)
+        _review_directory(genes_dir / "human" / "GPX4")
+        _review_directory(genes_dir / "mouse" / "Gpx4")
 
         index = build_symbol_to_species_index(genes_dir)
         assert "GPX4" in index
@@ -426,8 +441,8 @@ class TestFrontmatterGeneLinks:
 
     def test_priority_ordered_species_hints(self, tmp_path):
         genes_dir = tmp_path / "genes"
-        (genes_dir / "human" / "CRYAA").mkdir(parents=True)
-        (genes_dir / "BOVIN" / "CRYAA").mkdir(parents=True)
+        _review_directory(genes_dir / "human" / "CRYAA")
+        _review_directory(genes_dir / "BOVIN" / "CRYAA")
 
         index = build_symbol_to_species_index(genes_dir)
         links, warnings = resolve_frontmatter_gene_links(
@@ -450,8 +465,8 @@ class TestFrontmatterGeneLinks:
 
     def test_species_qualified_entry(self, tmp_path):
         genes_dir = tmp_path / "genes"
-        (genes_dir / "MYCTU" / "cds1").mkdir(parents=True)
-        (genes_dir / "VIBCH" / "cds1").mkdir(parents=True)
+        _review_directory(genes_dir / "MYCTU" / "cds1")
+        _review_directory(genes_dir / "VIBCH" / "cds1")
 
         index = build_symbol_to_species_index(genes_dir)
         links, warnings = resolve_frontmatter_gene_links(
@@ -473,7 +488,7 @@ class TestReplaceGeneTags:
     def test_gene_tag_links_full_visible_label(self, tmp_path):
         """Explicit gene tags link slash-delimited display text."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "BPT4" / "E").mkdir(parents=True)
+        _review_directory(genes_dir / "BPT4" / "E")
 
         content = '<gene species="BPT4" symbol="E">E/P00720</gene>'
         result, warnings = replace_gene_tags(content, genes_dir)
@@ -484,7 +499,7 @@ class TestReplaceGeneTags:
     def test_gene_tag_defaults_empty_label_to_symbol(self, tmp_path):
         """Empty tags can still link by using the symbol as display text."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "9INFA" / "M2").mkdir(parents=True)
+        _review_directory(genes_dir / "9INFA" / "M2")
 
         content = '<gene species="9INFA" symbol="M2"></gene>'
         result, warnings = replace_gene_tags(content, genes_dir)
@@ -523,8 +538,8 @@ class TestReplaceSpeciesQualifiedSymbols:
     def test_links_uppercase_mnemonic(self, tmp_path):
         """A 5-char uppercase species code links to that species' review."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "POPTR" / "CASPL4C1").mkdir(parents=True)
-        (genes_dir / "ARATH" / "CASPL4C1").mkdir(parents=True)
+        _review_directory(genes_dir / "POPTR" / "CASPL4C1")
+        _review_directory(genes_dir / "ARATH" / "CASPL4C1")
 
         content = "Compare POPTR/CASPL4C1 and ARATH/CASPL4C1."
         result, warnings = replace_species_qualified_symbols(content, genes_dir)
@@ -542,7 +557,7 @@ class TestReplaceSpeciesQualifiedSymbols:
     def test_links_lowercase_exception_code(self, tmp_path):
         """Allowlisted lowercase model-organism codes also link."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "human" / "TP53").mkdir(parents=True)
+        _review_directory(genes_dir / "human" / "TP53")
 
         result, warnings = replace_species_qualified_symbols(
             "See human/TP53.", genes_dir
@@ -554,7 +569,7 @@ class TestReplaceSpeciesQualifiedSymbols:
     def test_unknown_lowercase_token_is_not_a_code(self, tmp_path):
         """Arbitrary lowercase words are not treated as species codes."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "and" / "or").mkdir(parents=True)  # contrived; must not link
+        _review_directory(genes_dir / "and" / "or")  # contrived; must not link
 
         result, warnings = replace_species_qualified_symbols(
             "read and/or skim", genes_dir
@@ -592,7 +607,7 @@ class TestReplaceSpeciesQualifiedSymbols:
     def test_path_like_text_is_not_linked(self, tmp_path):
         """A code preceded by '/' (a path) does not match."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "POPTR" / "CASPL4C1").mkdir(parents=True)
+        _review_directory(genes_dir / "POPTR" / "CASPL4C1")
 
         content = "see `genes/POPTR/CASPL4C1`"
         result, warnings = replace_species_qualified_symbols(content, genes_dir)
@@ -604,7 +619,7 @@ class TestReplaceSpeciesQualifiedSymbols:
     def test_existing_link_is_preserved(self, tmp_path):
         """References already inside a markdown link are not re-linked."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "POPTR" / "CASPL4C1").mkdir(parents=True)
+        _review_directory(genes_dir / "POPTR" / "CASPL4C1")
 
         content = "[POPTR/CASPL4C1](http://example.com)"
         result, warnings = replace_species_qualified_symbols(content, genes_dir)
@@ -665,7 +680,7 @@ class TestRenderProject:
         """Render a simple markdown project file."""
         # Create genes directory
         genes_dir = tmp_path / "genes"
-        (genes_dir / "human" / "GPX4").mkdir(parents=True)
+        _review_directory(genes_dir / "human" / "GPX4")
 
         # Create project markdown
         projects_dir = tmp_path / "projects"
@@ -706,7 +721,7 @@ class TestRenderProject:
     def test_render_subfolder_project_mirrors_structure(self, tmp_path):
         """A FOO/bar.md supporting page renders to FOO/bar.html with deeper genes path."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "human" / "GPX4").mkdir(parents=True)
+        _review_directory(genes_dir / "human" / "GPX4")
 
         projects_dir = tmp_path / "projects"
         (projects_dir / "FOO").mkdir(parents=True)
@@ -741,8 +756,8 @@ class TestRenderProject:
     def test_render_can_disable_gene_symbol_autolinks(self, tmp_path):
         """Frontmatter can suppress automatic gene-symbol links for prose pages."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "human" / "GPX4").mkdir(parents=True)
-        (genes_dir / "human" / "TP53").mkdir(parents=True)
+        _review_directory(genes_dir / "human" / "GPX4")
+        _review_directory(genes_dir / "human" / "TP53")
 
         projects_dir = tmp_path / "projects"
         projects_dir.mkdir()
@@ -782,7 +797,7 @@ is an explicit link."""
     def test_render_project_bundle_includes_support_pages_and_assets(self, tmp_path):
         """Rendering FOO.md also renders FOO/**/*.md and copies referenced assets."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "human" / "GPX4").mkdir(parents=True)
+        _review_directory(genes_dir / "human" / "GPX4")
 
         projects_dir = tmp_path / "projects"
         (projects_dir / "FOO" / "figures").mkdir(parents=True)
@@ -868,8 +883,8 @@ is an explicit link."""
         """Render project with frontmatter species hints."""
         # Create genes directory with ambiguous symbol
         genes_dir = tmp_path / "genes"
-        (genes_dir / "human" / "ATG7").mkdir(parents=True)
-        (genes_dir / "yeast" / "ATG7").mkdir(parents=True)
+        _review_directory(genes_dir / "human" / "ATG7")
+        _review_directory(genes_dir / "yeast" / "ATG7")
 
         # Create project markdown with frontmatter
         projects_dir = tmp_path / "projects"
@@ -922,7 +937,7 @@ ATG7 is involved in autophagy."""
     def test_render_project_with_gene_tag(self, tmp_path):
         """Render project with explicit gene tag labels."""
         genes_dir = tmp_path / "genes"
-        (genes_dir / "BPT4" / "E").mkdir(parents=True)
+        _review_directory(genes_dir / "BPT4" / "E")
 
         projects_dir = tmp_path / "projects"
         projects_dir.mkdir()
@@ -1085,9 +1100,9 @@ class TestIntegration:
         """Test a project file similar to FERROPTOSIS.md."""
         # Create genes directory
         genes_dir = tmp_path / "genes"
-        (genes_dir / "human" / "GPX4").mkdir(parents=True)
-        (genes_dir / "human" / "SLC7A11").mkdir(parents=True)
-        (genes_dir / "human" / "ACSL4").mkdir(parents=True)
+        _review_directory(genes_dir / "human" / "GPX4")
+        _review_directory(genes_dir / "human" / "SLC7A11")
+        _review_directory(genes_dir / "human" / "ACSL4")
 
         # Create project markdown (simplified FERROPTOSIS.md style)
         projects_dir = tmp_path / "projects"

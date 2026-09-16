@@ -115,6 +115,22 @@ def test_stage_pages_includes_transitive_publication_dependencies(
     assert manifest.linked_source_files_not_staged == 0
 
 
+def test_linked_project_directories_get_browsable_indexes(tmp_path: Path) -> None:
+    _site_fixture(tmp_path)
+    _write(tmp_path / 'pages/projects/FOO.html', '<a href="FOO/data/">Data</a>')
+    _write(tmp_path / 'projects/FOO/data/result.tsv', 'gene\tvalue\nABC1\t1\n')
+    _write(tmp_path / 'projects/FOO/data/nested/notes.txt', 'Supporting notes')
+    _write(tmp_path / 'projects/FOO/data/.private', 'not public')
+    manifest = stage_pages(tmp_path, tmp_path / '_site')
+    index = tmp_path / '_site/pages/projects/FOO/data/index.html'
+    assert index.is_file()
+    assert 'result.tsv' in index.read_text()
+    assert '.private' not in index.read_text()
+    assert (tmp_path / '_site/pages/projects/FOO/data/nested/index.html').is_file()
+    assert (tmp_path / '_site/projects/FOO/data/result.tsv').read_text().startswith('gene\t')
+    assert manifest.broken_local_links == 0
+
+
 def test_stage_pages_does_not_follow_private_or_external_dependencies(
     tmp_path: Path,
 ) -> None:
@@ -358,7 +374,7 @@ def test_cli_serializes_readiness_and_reports_broken_links(tmp_path: Path) -> No
 
 def test_off_base_link_blocks_deployment(tmp_path: Path) -> None:
     _site_fixture(tmp_path)
-    _write(tmp_path / "index.html", '<a href="/research/report.html">Report</a>')
+    _write(tmp_path / "index.html", '<script>fetch("/research/report.html")</script>')
     _write(tmp_path / "research/report.md")
     manifest = stage_pages(tmp_path, tmp_path / "_site")
     assert not (tmp_path / "_site/research/report.md").exists()
@@ -369,6 +385,17 @@ def test_off_base_link_blocks_deployment(tmp_path: Path) -> None:
     ]
     assert manifest.broken_local_links == 0
     assert not manifest.deployable
+
+
+def test_known_off_base_html_link_is_repaired_and_copied(tmp_path: Path) -> None:
+    _site_fixture(tmp_path)
+    _write(tmp_path / "index.html", '<a href="/research/report.html">Report</a>')
+    _write(tmp_path / "research/report.md", 'The existing report')
+    manifest = stage_pages(tmp_path, tmp_path / '_site')
+    assert (tmp_path / '_site/research/report.md').read_text() == 'The existing report'
+    assert 'href="/ai-gene-review/research/report.md"' in (tmp_path / '_site/index.html').read_text()
+    assert manifest.off_base_path_links == 0
+    assert manifest.deployable
 
 
 def test_stage_shares_real_renderer_assets_and_counts_final_bytes(
@@ -392,8 +419,10 @@ def test_stage_shares_real_renderer_assets_and_counts_final_bytes(
         p.stat().st_size for p in output.rglob("*") if p.is_file()
     )
     assert source.read_text() == html
-    assert (
-        '<link rel="stylesheet" href="../../../_pages-assets/'
-        in (output / "genes/human/ABC1/ABC1-ai-review.html").read_text()
-    )
+    from lxml import html as html_parser  # type: ignore[import-untyped]
+
+    document = html_parser.fromstring((output / "genes/human/ABC1/ABC1-ai-review.html").read_text())
+    stylesheets = document.xpath('//link[@rel="stylesheet"]/@href')
+    assert any(url.startswith('../../../_pages-assets/') for url in stylesheets)
+    assert all((output / 'genes/human/ABC1' / url).is_file() for url in stylesheets)
     assert len(list((output / "_pages-assets").iterdir())) == 3

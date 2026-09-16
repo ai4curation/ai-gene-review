@@ -15,6 +15,8 @@ import markdown
 import yaml
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
+from ai_gene_review.publication_links import protect_scientific_notation, rewrite_publication_links
+
 MARKDOWN_SUFFIXES = {".md", ".markdown"}
 NOTEBOOK_SUFFIXES = {".ipynb"}
 
@@ -40,6 +42,8 @@ def build_symbol_to_species_index(genes_dir: Path) -> Dict[str, List[str]]:
     ...     (genes / "human" / "GPX4").mkdir(parents=True)
     ...     (genes / "human" / "TP53").mkdir(parents=True)
     ...     (genes / "mouse" / "Gpx4").mkdir(parents=True)
+    ...     for gene in genes.glob('*/*'):
+    ...         _ = (gene / f'{gene.name}-ai-review.yaml').write_text('gene_symbol: ' + gene.name)
     ...     index = build_symbol_to_species_index(genes)
     ...     sorted(index.keys())
     ['GPX4', 'Gpx4', 'TP53']
@@ -58,7 +62,7 @@ def build_symbol_to_species_index(genes_dir: Path) -> Dict[str, List[str]]:
         species = species_dir.name
 
         for gene_dir in species_dir.iterdir():
-            if not gene_dir.is_dir():
+            if not (gene_dir / f'{gene_dir.name}-ai-review.yaml').is_file():
                 continue
 
             symbol = gene_dir.name
@@ -732,6 +736,7 @@ def process_markdown_content(content: str) -> str:
     True
     """
 
+    content = protect_scientific_notation(content)
     # Process mermaid blocks for HTML
     def replace_mermaid(match: re.Match) -> str:
         mermaid_code = match.group(1)
@@ -1283,6 +1288,11 @@ def render_project(
 
     # Create output directory and write file, mirroring subfolder structure
     output_path = output_dir / rel_path.with_suffix(".html")
+    repo_root = projects_dir.resolve().parent if projects_dir is not None else genes_dir.resolve().parent
+    # Bundle assets are copied after rendering; retain their mirrored URLs even
+    # on a clean build where those output files do not exist yet.
+    mirrored_assets = set(referenced_local_assets(md_path, projects_dir)) if projects_dir is not None else set()
+    html = rewrite_publication_links(html, md_path, output_path, repo_root, mirrored_assets)
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(html)
 
