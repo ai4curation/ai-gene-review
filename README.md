@@ -469,7 +469,7 @@ The complete rebuilt artifact must meet the budget before the live switch.
 The deployment job is disabled unless `PAGES_ARTIFACT_DEPLOY_ENABLED=true` is set
 in repository Actions variables. It requires a successful upload, at most
 1,000,000,000 site-content bytes and a separately measured GNU tar no larger than
-1,000,000,000 bytes (including headers and padding), no excluded orphan review pages, and no missing
+1,073,741,824 bytes (1 GiB, including headers and padding), no excluded orphan review pages, and no missing
 static local targets, and no likely missing site-prefix links. The CLI and CI use the same manifest `deployable` decision
 and `size_budget_bytes`. `broken_local_links` counts distinct missing paths;
 `broken_local_link_paths` lists them for diagnosis. `off_base_path_links` counts same-host URLs outside
@@ -498,13 +498,17 @@ gh workflow run recover-pages.yaml --ref main -f source_run_id=RUN_ID
 Recovery is manual, requires Actions deployment to be enabled, and only accepts
 a completed Generate Pages run from this repository's default branch. It checks
 that rendering, validation, staging, and both uploads succeeded, downloads the
-specific validated artifact IDs, rechecks the manifest and tar size, and deploys
+specific validated artifact IDs, rechecks the manifest, actual tar size, and recorded SHA-256, and deploys
 the unchanged archive. The original Pages archive is retained for **3 days**
 (the diagnostic manifest for 7); expired archives require a new full build.
-Both ordinary builds and recovery enforce separate 1 GB site-content and 1 GB
-archive budgets, retaining the [officially supported tar size](https://github.com/actions/upload-pages-artifact#artifact-validation).
-The manifest reports `archive_bytes` and `archive_size_budget_bytes` in addition
-to the site-content size, so header/padding overhead is visible before upload.
+Both ordinary builds and recovery enforce a 1,000,000,000-byte site-content
+budget and a separate 1 GiB archive budget, allowing tar headers/padding without
+raising the published-site limit. The manifest reports estimated `archive_bytes`
+and `archive_size_budget_bytes`. After upload, diagnostics record the actual
+`archive_actual_bytes` and `archive_sha256`; deployment requires that check to
+succeed. Recovery verifies that checksum, not exact equality with the estimate.
+Older validated builds without a checksum declaration remain recoverable using
+the trusted run/artifact provenance and the actual archive size.
 
 Once enabled, the artifact built from the checked-out source on `main` is
 authoritative for the live site. It deploys without waiting for the legacy

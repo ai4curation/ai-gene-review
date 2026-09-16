@@ -443,24 +443,26 @@ def test_compacted_panel_reference_is_audited(tmp_path: Path) -> None:
 
 
 def test_archive_size_accounts_for_headers_padding_and_hidden_exclusions(tmp_path: Path):
-    import tarfile
+    import shutil
     from ai_gene_review.tools.stage_pages import pages_archive_bytes
 
+    tar = shutil.which('gtar') or shutil.which('tar')
+    if not tar or 'GNU tar' not in subprocess.run([tar, '--version'], capture_output=True, text=True, check=True).stdout:
+        pytest.skip('GNU tar oracle runs on Linux CI; this host only has BSD tar')
     site = tmp_path / 'site'
     _write(site / 'index.html', 'page')
     _write(site / ('long-' * 35) / ('λ' * 60 + '.txt'), 'payload' * 100)
     _write(site / '.hidden/omit.txt', 'private')
     _write(site / '.nojekyll', '')
     archive_path = tmp_path / 'actual.tar'
-    def visible(info):
-        return None if any(part.startswith('.') and part != '.' for part in Path(info.name).parts) else info
-    with tarfile.open(archive_path, 'w', format=tarfile.GNU_FORMAT, dereference=True) as archive:
-        archive.add(site, arcname='.', filter=visible)
+    subprocess.run([tar, '--dereference', '--hard-dereference', '--directory', str(site),
+                    '-cf', str(archive_path), '--exclude=.git', '--exclude=.github',
+                    '--exclude=.[^/]*', '.'], check=True)
     assert pages_archive_bytes(site) == archive_path.stat().st_size
 
 
 def test_archive_budget_blocks_build_even_when_site_bytes_fit(tmp_path: Path):
     _site_fixture(tmp_path)
     manifest = stage_pages(tmp_path, tmp_path / '_site')
-    assert replace(manifest, archive_bytes=1_000_000_000).deployable
-    assert not replace(manifest, archive_bytes=1_000_000_001).deployable
+    assert replace(manifest, archive_bytes=1_073_741_824).deployable
+    assert not replace(manifest, archive_bytes=1_073_741_825).deployable

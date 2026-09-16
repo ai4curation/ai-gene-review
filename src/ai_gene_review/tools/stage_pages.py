@@ -27,7 +27,7 @@ from ai_gene_review.publication_links import rewrite_publication_links, restore_
 
 
 PAGES_SIZE_BUDGET_BYTES = 1_000_000_000
-PAGES_ARCHIVE_BUDGET_BYTES = 1_000_000_000
+PAGES_ARCHIVE_BUDGET_BYTES = 1_073_741_824
 MIB = 1024 * 1024
 BROWSER_FILES = ("index.html", "data.js", "schema.js")
 
@@ -51,6 +51,7 @@ class SiteManifest:
     unavailable_source_artifact_paths: list[str] = field(default_factory=list)
     size_budget_bytes: int = PAGES_SIZE_BUDGET_BYTES
     archive_size_budget_bytes: int = PAGES_ARCHIVE_BUDGET_BYTES
+    archive_checksum_required: bool = True
 
     @property
     def broken_local_links(self) -> int:

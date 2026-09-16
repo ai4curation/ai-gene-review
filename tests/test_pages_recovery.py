@@ -1,6 +1,8 @@
 """Recovery accepts only validated artifacts from trusted default-branch builds."""
 
 import copy
+import hashlib
+import json
 from pathlib import Path
 
 import pytest
@@ -136,13 +138,52 @@ def test_recovery_and_normal_build_have_identical_separate_budgets():
     assert ARCHIVE_BUDGET == PAGES_ARCHIVE_BUDGET_BYTES
 
 
-def test_new_manifest_archive_size_must_match_download(tmp_path):
+def test_checksum_detects_corruption_without_requiring_exact_size_estimate(tmp_path):
     archive = tmp_path / 'artifact.tar'
     archive.write_bytes(b'archive')
     manifest = good_manifest()
-    manifest['archive_bytes'] = archive.stat().st_size
+    manifest['archive_bytes'] = 1234  # An estimate is not an integrity claim.
     manifest['archive_size_budget_bytes'] = ARCHIVE_BUDGET
-    validate_manifest(manifest, archive)
-    manifest['archive_bytes'] += 1
-    with pytest.raises(ValueError, match='differs from source manifest'):
+    manifest['archive_checksum_required'] = True
+    with pytest.raises(ValueError, match='checksum is required'):
         validate_manifest(manifest, archive)
+    manifest['archive_sha256'] = hashlib.sha256(b'archive').hexdigest()
+    validate_manifest(manifest, archive)
+    archive.write_bytes(b'Archive')  # Same byte count, different contents.
+    with pytest.raises(ValueError, match='checksum does not match'):
+        validate_manifest(manifest, archive)
+
+
+def test_record_binds_manifest_to_the_actual_archive(tmp_path):
+    from scripts.validate_pages_recovery import record_archive
+
+    archive = tmp_path / 'artifact.tar'
+    archive.write_bytes(b'actual tar bytes')
+    manifest_path = tmp_path / 'manifest.json'
+    manifest = good_manifest()
+    manifest['archive_checksum_required'] = True
+    manifest_path.write_text(json.dumps(manifest))
+    record_archive(manifest_path, archive)
+    recorded = json.loads(manifest_path.read_text())
+    assert recorded['archive_actual_bytes'] == len(b'actual tar bytes')
+    assert recorded['archive_sha256'] == hashlib.sha256(b'actual tar bytes').hexdigest()
+    validate_manifest(recorded, archive)
+
+
+def test_archive_cap_allows_tar_overhead_without_raising_site_limit(tmp_path):
+    archive = tmp_path / 'artifact.tar'
+    with archive.open('wb') as stream:
+        stream.truncate(BUDGET + 1)
+    validate_manifest(good_manifest(), archive)
+    manifest = good_manifest()
+    manifest['total_bytes'] = BUDGET + 1
+    with pytest.raises(ValueError, match='publication policy'):
+        validate_manifest(manifest, archive)
+
+
+def test_source_records_checksum_before_uploading_diagnostics_and_deploying():
+    job = yaml.safe_load(Path('.github/workflows/generate-pages.yaml').read_text())['jobs']['generate-pages']
+    names = [step.get('name') for step in job['steps']]
+    assert names.index('Upload shadow GitHub Pages artifact') < names.index('Record uploaded archive checksum')
+    assert names.index('Record uploaded archive checksum') < names.index('Upload Pages diagnostics')
+    assert "steps.archive-check.outcome == 'success'" in job['outputs']['deployable']

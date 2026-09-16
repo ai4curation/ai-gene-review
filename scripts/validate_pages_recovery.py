@@ -3,10 +3,12 @@
 
 import argparse
 import json
+import hashlib
 from pathlib import Path
+from typing import Any
 
 BUDGET = 1_000_000_000
-ARCHIVE_BUDGET = 1_000_000_000
+ARCHIVE_BUDGET = 1_073_741_824
 REQUIRED_STEPS = {
     'Render all gene review HTML pages', 'Render project pages',
     'Validate module YAML files', 'Render module pages',
@@ -16,7 +18,8 @@ REQUIRED_STEPS = {
 }
 
 
-def validate_source(run, jobs, artifacts, repository, branch, workflow_id):
+def validate_source(run: dict[str, Any], jobs: dict[str, Any], artifacts: dict[str, Any],
+                    repository: str, branch: str, workflow_id: int) -> dict[str, int]:
     """A legacy PR failure is allowed; failed or untrusted builds are not."""
     if (run.get('status') != 'completed'
             or run.get('conclusion') not in {'success', 'failure'}
@@ -44,7 +47,7 @@ def validate_source(run, jobs, artifacts, repository, branch, workflow_id):
     return selected
 
 
-def validate_manifest(manifest, archive):
+def validate_manifest(manifest: dict[str, Any], archive: Path) -> None:
     """Recheck the manifest policy and the actual tar size without extracting it."""
     if (manifest.get('deployable') is not True
             or manifest.get('size_budget_bytes') != BUDGET
@@ -59,11 +62,32 @@ def validate_manifest(manifest, archive):
         raise ValueError('Unexpected archive budget')
     if archive.is_symlink() or not archive.is_file() or not 0 < archive.stat().st_size <= ARCHIVE_BUDGET:
         raise ValueError('Pages tar archive is missing, empty, or over budget')
-    if manifest.get('archive_bytes', archive.stat().st_size) != archive.stat().st_size:
-        raise ValueError('Archive size differs from source manifest')
+    expected_hash = manifest.get('archive_sha256')
+    if manifest.get('archive_checksum_required') and not expected_hash:
+        raise ValueError('Archive checksum is required by this manifest')
+    if expected_hash is not None and expected_hash != archive_sha256(archive):
+        raise ValueError('Archive checksum does not match source diagnostics')
 
 
-def main():
+def archive_sha256(archive: Path) -> str:
+    digest = hashlib.sha256()
+    with archive.open('rb') as source:
+        for chunk in iter(lambda: source.read(1024 * 1024), b''):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def record_archive(manifest_path: Path, archive: Path) -> dict[str, Any]:
+    """Bind source diagnostics to the actual uploaded tar, not its estimate."""
+    data = json.loads(manifest_path.read_text())
+    data['archive_actual_bytes'] = archive.stat().st_size
+    data['archive_sha256'] = archive_sha256(archive)
+    validate_manifest(data, archive)
+    manifest_path.write_text(json.dumps(data, indent=2) + '\n')
+    return data
+
+
+def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command', required=True)
     source = commands.add_parser('source')
@@ -74,6 +98,9 @@ def main():
     manifest = commands.add_parser('manifest')
     manifest.add_argument('--manifest', required=True)
     manifest.add_argument('--archive', required=True, type=Path)
+    record = commands.add_parser('record')
+    record.add_argument('--manifest', required=True, type=Path)
+    record.add_argument('--archive', required=True, type=Path)
     args = parser.parse_args()
     if args.command == 'source':
         run = json.loads(Path(args.run).read_text())
@@ -85,6 +112,9 @@ def main():
                 output.write(f"manifest_artifact_id={selected['pages-diagnostics']}\n")
                 output.write(f"pages_artifact_id={selected['github-pages']}\n")
         print(f"Validated source run {run['id']} at {run['head_sha']}: {selected}")
+    elif args.command == 'record':
+        data = record_archive(args.manifest, args.archive)
+        print(f"Recorded actual archive: {data['archive_actual_bytes']} bytes; sha256:{data['archive_sha256']}")
     else:
         data = json.loads(Path(args.manifest).read_text())
         validate_manifest(data, args.archive)
