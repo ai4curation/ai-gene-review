@@ -14,7 +14,7 @@ REQUIRED_STEPS = {
     'Validate module YAML files', 'Render module pages',
     'Deploy browser app (data.js + index.html)', 'Stage GitHub Pages artifact',
     'Summarize staged Pages site', 'Upload Pages diagnostics',
-    'Upload shadow GitHub Pages artifact',
+    'Upload GitHub Pages artifact',
 }
 
 
@@ -28,11 +28,14 @@ def validate_source(run: dict[str, Any], jobs: dict[str, Any], artifacts: dict[s
             or run.get('path') != '.github/workflows/generate-pages.yaml'
             or run.get('head_branch') != branch
             or run.get('head_repository', {}).get('full_name') != repository):
-        raise ValueError('Source must be a completed Generate Pages run from this repository default branch')
+        raise ValueError('Source must be a completed Build and deploy site run from this repository default branch')
     builds = [j for j in jobs['jobs'] if j['name'] == 'generate-pages']
     if len(builds) != 1:
         raise ValueError('Expected exactly one generation job in the latest run attempt')
     successful = {s['name'] for s in builds[0]['steps'] if s.get('conclusion') == 'success'}
+    # Previously uploaded artifacts retain the step label from before the rename.
+    if 'Upload shadow GitHub Pages artifact' in successful:
+        successful.add('Upload GitHub Pages artifact')
     if not REQUIRED_STEPS <= successful:
         raise ValueError(f'Build/publication steps did not succeed: {sorted(REQUIRED_STEPS - successful)}')
     selected = {}
