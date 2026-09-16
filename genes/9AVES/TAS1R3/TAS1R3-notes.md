@@ -99,18 +99,36 @@ reviewed against PMID:25146290 and GO term definitions verified via QuickGO
   fully lost in *O. melanogaster*), not co-equal ACCEPT (would overstate the
   minor residual capacity against the well-established, dominant sweet-taste
   function).
-- GO:0050909 "sensory perception of taste" (broad ARBA parent),
-  GO:0004930 "G protein-coupled receptor activity", GO:0005886 "plasma
-  membrane", GO:0007186 "GPCR signaling pathway", GO:0016020 "membrane"
-  (generic, redundant with plasma membrane but not incorrect) - all
-  **ACCEPT** as broad-but-accurate domain/family-based calls, consistent with
-  project precedent (cf. `genes/human/LRP10` accepting GO:0016020 alongside a
-  more specific plasma-membrane term).
+- GO:0004930 "G protein-coupled receptor activity", GO:0005886 "plasma
+  membrane", GO:0007186 "GPCR signaling pathway" - **ACCEPT** as
+  broad-but-accurate domain/family-based calls.
+- GO:0050909 "sensory perception of taste" (broad ARBA parent) -
+  **KEEP_AS_NON_CORE**: correct but redundant given the specific GO:0050916
+  sweet-taste-perception annotation held below. GO:0016020 "membrane" -
+  **MARK_AS_OVER_ANNOTATED**: correct but redundant given the more specific
+  plasma-membrane annotation above. Both standardized to match the equivalent
+  generic-term calls across all five taste-receptor genes in this PR (revised
+  from an earlier ACCEPT for both, per the PR review below).
+
+## Revisions after PR review
+
+The `ai4c-reviewer` bot's CHANGES_REQUESTED review on PR #3050 (2026-09-16)
+flagged two issues, both fixed:
+
+1. Generic-term policy (GO:0016020, GO:0050909, GO:0004930, GO:0007186) was
+   applied inconsistently across the five taste-receptor genes in this PR.
+   Standardized to: GO:0016020 → MARK_AS_OVER_ANNOTATED, GO:0050909 →
+   KEEP_AS_NON_CORE (wherever a more specific sibling term is independently
+   held), GO:0004930/GO:0007186 → ACCEPT.
+2. `core_functions[0].molecular_function` used GO:0033041 directly, despite
+   the same entry's own description stating "Neither subunit alone is
+   functional." Changed to `contributes_to_molecular_function`, matching how
+   the partner subunit TAS1R1 already modeled the identical situation.
 
 ## Validation
 
-Ran `just validate 9AVES TAS1R3` after completing the review - passed cleanly
-(see terminal output in the session transcript).
+Ran `just validate 9AVES TAS1R3` after completing the review, and again after
+the above revisions - both passed cleanly.
 
 ## Related record
 

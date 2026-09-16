@@ -48,10 +48,22 @@ gap in the review YAML.
   "title/abstract foregrounds one gene, full text also assays others" pattern documented in
   this project's curation guide. Per that guide, an experimental annotation is not REMOVEd on
   this basis alone; flagged UNVERIFIED in `reference_review` instead.
-- GO:0016020 (membrane) rows (IBA, IC, IEA) and the GO:0050909 (sensory perception of taste) IEA
-  row: MODIFY -> propose the more specific, independently-supported terms already held for this
-  gene (GO:0005886 plasma membrane; GO:0001580 bitter-taste detection, respectively). These are
-  granularity corrections, not disputes with the underlying phylogenetic/family-level inference.
+- GO:0016020 (membrane) rows (IBA, IC, IEA): MARK_AS_OVER_ANNOTATED (revised from an earlier
+  MODIFY, per PR review, see below) - redundant given the independently-supported GO:0005886
+  plasma membrane already held for this gene. GO:0050909 (sensory perception of taste) IEA row:
+  KEEP_AS_NON_CORE (revised from MODIFY) - redundant given the independently-supported GO:0001580
+  bitter-taste-detection annotation. These are granularity/redundancy calls, not disputes with
+  the underlying phylogenetic/family-level inference.
+
+## Revisions after PR review
+
+The `ai4c-reviewer` bot's CHANGES_REQUESTED review on PR #3050 (2026-09-16) flagged that the
+generic-term policy (GO:0016020, GO:0050909, GO:0004930, GO:0007186) was applied inconsistently
+across the five taste-receptor genes added in this PR. Standardized to: GO:0016020 -> 
+MARK_AS_OVER_ANNOTATED, GO:0050909 -> KEEP_AS_NON_CORE (wherever a more specific sibling term is
+independently held), GO:0004930/GO:0007186 -> ACCEPT. This file's GO:0004930 and GO:0007186 rows
+were already ACCEPT and needed no change; the GO:0016020 and GO:0050909 rows (originally MODIFY,
+proposing already-separately-held replacement terms) were changed as described above.
 
 ## Open questions
 1. Full text of PMID:12379855 not accessible to this reviewer - would confirm whether it

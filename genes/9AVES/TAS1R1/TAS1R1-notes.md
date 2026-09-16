@@ -77,22 +77,27 @@ GOA seeded 6 rows, all IEA (InterPro/ARBA/TreeGrafter pipelines; no
 gene-specific PMIDs were found by `fetch-gene-pmids`):
 
 - GO:0004930 (GPCR activity), GO:0005886 (plasma membrane), GO:0007186
-  (GPCR signaling pathway), GO:0016020 (membrane), GO:0050909 (sensory
-  perception of taste) — all **ACCEPT**. These are architecture/identity
-  level calls that hold regardless of whether the receptor's actual ligand
-  is an amino acid or a sugar, so they don't depend on resolving the
-  umami-vs-sweet question.
+  (GPCR signaling pathway) — **ACCEPT**. GO:0016020 (membrane) —
+  **MARK_AS_OVER_ANNOTATED** (redundant given the specific plasma-membrane
+  annotation). GO:0050909 (sensory perception of taste) —
+  **KEEP_AS_NON_CORE** (redundant given the specific taste-modality terms
+  below). These generic-term calls are standardized across all five
+  taste-receptor genes in this PR (human TAS2R38/TAS2R16, chimp TAS2R38,
+  9AVES TAS1R1/TAS1R3): GO:0016020 → MARK_AS_OVER_ANNOTATED, GO:0050909 →
+  KEEP_AS_NON_CORE, GO:0004930/GO:0007186 → ACCEPT, wherever a more specific
+  sibling term is independently held. They hold regardless of whether the
+  receptor's actual ligand is an amino acid or a sugar, so they don't depend
+  on resolving the umami-vs-sweet question.
 - GO:0050917 (sensory perception of umami taste), from TreeGrafter/PANTHER
-  node PANTHER:PTN009077744 — **MODIFY** → propose GO:0050916 (sensory
-  perception of sweet taste) instead. GO:0050917 is defined specifically as
-  perception of glutamate-rich/savory taste; that's the *ancestral* TAS1R1
-  function, retained in chicken/swift, but the Baldwin 2014 data show it
-  was transformed in the hummingbird lineage that *O. melanogaster* belongs
-  to. This is a `PROPAGATION_BAD` / `FUNCTIONAL_DIVERGENCE` +
-  `LINEAGE_OR_TAXON_MISMATCH` case: the PANTHER node's umami call is sound
-  tree-wide but does not capture the hummingbird-specific derived state.
-  Kept as MODIFY (not REMOVE) since some amino-acid responsiveness likely
-  persists and the underlying GPCR/heterodimer biology is correct.
+  node PANTHER:PTN009077744 — **KEEP_AS_NON_CORE** (revised from an earlier
+  MODIFY, per PR review — see "Revisions after PR review" below).
+  GO:0050917 is defined specifically as perception of glutamate-rich/savory
+  taste; that's the *ancestral* TAS1R1 function, retained in chicken/swift,
+  and the Baldwin 2014 data show low-affinity amino-acid responses persist
+  even in the hummingbird lineage. Since TAS1R1 and TAS1R3 form an obligate
+  heterodimer with one shared ligand spectrum, this row is kept identical to
+  the equivalent GO:0050917 call on TAS1R3 (`genes/9AVES/TAS1R3`), which
+  already used KEEP_AS_NON_CORE rather than MODIFY.
 - Also added a **NEW** proposed annotation for GO:0050916 (sensory
   perception of sweet taste), mirroring the annotation TreeGrafter *did*
   already assign to the partner subunit TAS1R3 in this same genome
@@ -100,8 +105,31 @@ gene-specific PMIDs were found by `fetch-gene-pmids`):
   and GO:0033041 "sweet taste receptor activity" from PANTHER node
   PTN009078551 — TAS1R1 and TAS1R3 were evidently placed in different
   PANTHER/TreeGrafter nodes with different levels of annotation
-  granularity/currency). Not touching the TAS1R3 file itself — out of scope
-  for this review, but noted for consistency.
+  granularity/currency). Encoded as `ISS` with no `GO_REF`, since this is a
+  curator-proposed cross-species inference, not a genuine TreeGrafter row for
+  this record (see "Revisions after PR review" below).
+
+## Revisions after PR review
+
+The `ai4c-reviewer` bot's CHANGES_REQUESTED review on PR #3050 (2026-09-16)
+flagged three issues in the original version of this file, all fixed:
+
+1. The GO:0050916 `NEW` row carried `evidence_type: IEA` and
+   `original_reference_id: GO_REF:0000118`, provenance it does not actually
+   have (it is absent from `TAS1R1-goa.tsv`). Fixed to `evidence_type: ISS`
+   with no `original_reference_id`, matching the repo's `NEW`-row pattern
+   (e.g. `genes/human/NADK2`).
+2. GO:0050916 was proposed twice — once via `proposed_replacement_terms` on
+   the GO:0050917 `MODIFY`, once as the standalone `NEW` row. Resolved by
+   dropping the `MODIFY`/`proposed_replacement_terms` mechanism (see #3) and
+   keeping only the standalone `NEW` row.
+3. TAS1R1 and TAS1R3 — obligate partners in the same heterodimer — had
+   opposite calls on the identical TreeGrafter GO:0050917 row (TAS1R1
+   MODIFY vs TAS1R3 KEEP_AS_NON_CORE). Since the two subunits share one
+   ligand spectrum, they cannot carry different retained-function
+   judgments; TAS1R1 was changed to KEEP_AS_NON_CORE to match TAS1R3, whose
+   reasoning (residual low-affinity amino-acid responses per PMID:25146290)
+   is the better-supported reading.
 
 core_functions models TAS1R1 as contributing (not independently enabling)
 sweet taste receptor activity (GO:0033041), since T1R1 is an obligate

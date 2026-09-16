@@ -81,3 +81,21 @@ verify against the cached literature, don't overstate."
 2. adding `propagation_review` to the IBA `MARK_AS_OVER_ANNOTATED` membrane row,
 3. citing the deep-research file once in `supported_by` (validator otherwise
    warns that no annotation references the available deep-research file).
+
+## Revisions after PR review
+
+The `ai4c-reviewer` bot's CHANGES_REQUESTED review on PR #3050 (2026-09-16) raised two points
+about this file:
+1. **Generic-term policy consistency** across the five taste-receptor genes in this PR: this
+   file's GO:0016020 (MARK_AS_OVER_ANNOTATED), GO:0050909 (KEEP_AS_NON_CORE), GO:0004930/
+   GO:0007186 (ACCEPT) calls already matched the standardized policy adopted PR-wide, so no
+   change was needed here.
+2. **GO:0051087 fit for the RTP3/RTP4 rows** (suggestion, not a required change): raised whether
+   "protein-folding chaperone binding" is the ideal term for the TAS2R16-RTP3/RTP4 escort-factor
+   relationship, since RTP3/RTP4 are documented GPCR surface-trafficking chaperones rather than
+   classical protein-folding chaperones. Checked via QuickGO: GO:0051087's definition explicitly
+   covers chaperones that "ensure correct folding or transport" (not folding alone), and no more
+   specific GO term or child of GO:0051087 exists for this relationship, and GOA's own annotation
+   of RTP4 itself uses only plain "protein binding" (GO:0005515) — so GO:0051087 remains the best
+   available real term; kept as MODIFY rather than reverted, but added a `suggested_questions`
+   entry flagging this as a candidate for a future, more specific GO term request.

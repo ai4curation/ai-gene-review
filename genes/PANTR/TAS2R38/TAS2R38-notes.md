@@ -111,3 +111,43 @@ ATG->AGG start-codon-loss non-taster allele, independently evolved from the huma
 PAV/AVI polymorphism — is not itself a GOA annotation target (it's an allelic/
 population-variation fact, not a distinct molecular function) and so is captured in
 `description` and `knowledge_gaps` rather than as a new proposed GO term.
+
+## Revisions after PR review
+
+The `ai4c-reviewer` bot's CHANGES_REQUESTED review on PR #3050 (2026-09-16) flagged
+three issues, all fixed:
+
+1. **Generic-term policy consistency**: this file's GO:0004930/GO:0007186 were
+   originally KEEP_AS_NON_CORE and GO:0016020 was KEEP_AS_NON_CORE, inconsistent
+   with the other four taste-receptor genes in this PR (where a broad-but-true term
+   coexisting with a more specific one is ACCEPT, and only a truly redundant CC term
+   like generic "membrane" alongside "plasma membrane" is downgraded). Standardized:
+   GO:0004930 and GO:0007186 changed to ACCEPT; the two GO:0016020 rows changed to
+   MARK_AS_OVER_ANNOTATED (with `propagation_review` added to the IBA-sourced row,
+   which the validator requires once its action moves off ACCEPT). GO:0050909 was
+   already KEEP_AS_NON_CORE and needed no change.
+2. **"class-T GPCR" is not a standard designation** — fixed to "class-A-like" (the
+   correct rhodopsin-like GPCR class for TAS2Rs), matching how the human TAS2R38
+   file already described it.
+3. **No primary literature was cited** — every substantive chimpanzee-specific claim
+   (start-codon-loss mechanism, 76% western-chimpanzee frequency, FST=0.614,
+   independent human/chimp origin, in vitro PTC non-response) was sourced only to
+   the falcon deep-research file, marked `correctness: VERIFIED`, which overstates
+   what was actually checked per CLAUDE.md ("an LLM-generated deep-research summary
+   asserting a citation is not sufficient"). Fetched and cached the three primary/
+   secondary papers named with DOIs in the falcon file: Hayakawa et al. 2012 PLoS
+   ONE (PMID:22916235, full text), Wooding et al. 2006 Nature (PMID:16612383,
+   abstract only), and Suzuki-Hashido et al. 2015 PLoS ONE (PMID:26201026, full
+   text — about Japanese macaques, but its Introduction restates the chimpanzee
+   76%/ATG>AGG finding in prose, citing Hayakawa 2012). Re-pointed the load-bearing
+   `supported_by` citations (GO:0033038 IBA row, core_functions) to these PMIDs
+   with verbatim quotes, and added `reference_review` entries for each.
+   - Note: Hayakawa 2012's own Table 1 (population allele-frequency table) could
+     not be reliably used for the specific 76%/9-of-92 figures because its
+     machine-extracted markdown scrambles which frequency row maps to which gene
+     (cTAS2R38 vs. the adjacent cTAS2R40 row) — its own prose text, repeated three
+     times, does unambiguously confirm cTAS2R38 as the "loss-of-start SNV...unique
+     to western chimpanzees" with FST=0.614, and Suzuki-Hashido 2015's Introduction
+     (citing Hayakawa 2012 as its source) is the place this reviewer could
+     verbatim-confirm the specific 76% figure. Flagged in that reference's
+     `review_notes` for transparency.
