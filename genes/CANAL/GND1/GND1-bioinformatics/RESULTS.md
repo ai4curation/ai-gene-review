@@ -50,6 +50,8 @@ that would require an alignment step this script does not perform.
 
 ## Interpretation
 
+Two limits of the script itself: it searches only residues 1-60 (a motif straddling residue 60 would be missed) and reports only the first match of each pattern (a second Asn-Arg-Thr in the window would not be listed). Neither affects this record, where both hits sit at 13-18 and 36-38.
+
 The sequence supports the NADP+-specific term GO:0004616 (EC 1.1.1.44) as the
 correct cofactor-specific molecular function for GND1, and the accompanying
 NADP binding (GO:0050661) annotations. This is a sequence-level inference and
