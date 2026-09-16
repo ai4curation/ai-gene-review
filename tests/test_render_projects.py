@@ -27,6 +27,18 @@ def _review_directory(path: Path) -> None:
     (path / f"{path.name}-ai-review.yaml").write_text(f"gene_symbol: {path.name}\n")
 
 
+def test_explicit_gene_links_require_a_review(tmp_path):
+    genes = tmp_path / 'genes'
+    (genes / 'human/NOTES_ONLY').mkdir(parents=True)
+    assert build_symbol_to_species_index(genes) == {}
+    tagged, warnings = replace_gene_tags('<gene species="human" symbol="NOTES_ONLY">Notes</gene>', genes)
+    assert tagged == 'Notes' and warnings
+    qualified, warnings = replace_species_qualified_symbols('human/NOTES_ONLY', genes)
+    assert qualified == 'human/NOTES_ONLY' and warnings
+    links, warnings = resolve_frontmatter_gene_links(['human/NOTES_ONLY'], {}, genes_dir=genes)
+    assert all(not link.get('url') for link in links) and warnings
+
+
 class TestSlidesExclusion:
     """Marp slide decks must not be rendered as plain pages.
 

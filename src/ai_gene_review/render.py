@@ -240,7 +240,10 @@ def rebase_relative_url(url: str, base_prefix: str) -> str:
     if not url or base_prefix in {"", "."} or not _is_relative_url(url):
         return url
     parsed = urlsplit(url)
-    return parsed._replace(path=posixpath.normpath(posixpath.join(base_prefix, parsed.path))).geturl()
+    path = posixpath.normpath(posixpath.join(base_prefix, parsed.path))
+    if parsed.path.endswith('/'):
+        path += '/'
+    return parsed._replace(path=path).geturl()
 
 
 def rebase_relative_html_urls(html: str, base_prefix: str) -> str:
@@ -308,7 +311,16 @@ def resolve_research_artifacts(
                 path = renamed
         if path.is_file():
             resolved = Path(os.path.relpath(path, output_dir)).as_posix()
-            content = content.replace(f'"{escape(href, quote=True)}"', f'"{escape(resolved, quote=True)}"')
+            def replace_artifact_url(match: re.Match[str]) -> str:
+                if unescape(match['url']) != href:
+                    return match[0]
+                return f'{match["attr"]}={match["quote"]}{escape(resolved, quote=True)}{match["quote"]}'
+
+            content = re.sub(
+                r'<(?:a|img)\b[^>]*>',
+                lambda tag: _RELATIVE_URL_ATTR_PATTERN.sub(replace_artifact_url, tag[0]),
+                content,
+            )
             artifact['href'] = resolved
             continue
         artifact['href'] = None

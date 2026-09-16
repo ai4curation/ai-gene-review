@@ -123,7 +123,8 @@ def compact_gene_page(output_dir: Path, page: Path) -> int:
         path = output_dir / "_pages-assets" / (sha256(loader).hexdigest() + ".js")
         asset_bytes += _write_asset(path, loader)
         url = Path(os.path.relpath(path, page.parent)).as_posix()
-        updated = updated.replace("</body>", f'<script defer src="{url}"></script></body>')
+        before, after = updated.rsplit('</body>', 1)
+        updated = before + f'<script defer src="{url}"></script></body>' + after
     # Limit minification to generated gene markup with its known template CSS.
     # pre/code retain whitespace; supporting content above retains exact bytes.
     updated = _minify_gene_html(updated)

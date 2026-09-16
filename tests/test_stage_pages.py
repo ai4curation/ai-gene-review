@@ -429,3 +429,14 @@ def test_stage_shares_real_renderer_assets_and_counts_final_bytes(
     assert any(url.startswith('../../../_pages-assets/') for url in stylesheets)
     assert all((output / 'genes/human/ABC1' / url).is_file() for url in stylesheets)
     assert len(list((output / "_pages-assets").iterdir())) == 3
+
+
+def test_compacted_panel_reference_is_audited(tmp_path: Path) -> None:
+    from ai_gene_review.tools.pages_dependencies import DependencyResolver
+
+    target = Path('_pages-content/section.html.gz')
+    links = DependencyResolver(tmp_path).scan(Path('index.html'), f'<div data-pages-content="{target}"></div>')
+    assert target in links.missing
+    _write(tmp_path / target, 'stored content')
+    links = DependencyResolver(tmp_path).scan(Path('index.html'), f'<div data-pages-content="{target}"></div>')
+    assert target in links.existing and not links.missing

@@ -74,3 +74,13 @@ def test_inline_heading_whitespace_and_raw_text_survive_minification(tmp_path: P
     tree = html.fromstring(page.read_text())
     assert tree.xpath('//h3')[0].tail == ' '
     assert tree.xpath('//pre/text()') == ['  literal\n    indentation']
+
+
+def test_loader_is_only_inserted_at_the_document_body_end(tmp_path: Path):
+    page = tmp_path / 'page.html'
+    original_script = '<script>const example="</body>";</script>'
+    page.write_text('<html><body>' + original_script + '<div class="yaml-content">' + 'Review. ' * 200 + '</div></body></html>')
+    compact_gene_page(tmp_path, page)
+    tree = html.fromstring(page.read_text())
+    assert tree.xpath('//script[not(@src)]/text()') == ['const example="</body>";']
+    assert len(tree.xpath('//script[@src]')) == 1

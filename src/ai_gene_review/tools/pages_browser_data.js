@@ -5,7 +5,11 @@
   (async () => {
     const response = await fetch(url);
     if (!response.ok) throw new Error(`HTTP ${response.status}: ${url}`);
-    const stream = response.body.pipeThrough(new DecompressionStream('gzip'));
+    // fetch() may already have decoded Content-Encoding: gzip.
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    const raw = new Blob([bytes]).stream();
+    const stream = bytes[0] === 0x1f && bytes[1] === 0x8b
+      ? raw.pipeThrough(new DecompressionStream('gzip')) : raw;
     const {columns, rows} = await new Response(stream).json();
     window.searchData = rows.map(values => {
       const row = {};

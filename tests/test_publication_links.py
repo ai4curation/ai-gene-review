@@ -54,6 +54,10 @@ def test_bioinformatics_parent_segments_are_preserved():
     assert rebase_relative_url('../ABC-notes.md#x', 'ABC-bioinformatics') == 'ABC-notes.md#x'
 
 
+def test_rebased_directory_urls_keep_the_trailing_slash():
+    assert rebase_relative_url('../data/?q=1#x', 'analysis') == 'data/?q=1#x'
+
+
 def test_scientific_notation_does_not_become_a_file_link():
     import markdown
 

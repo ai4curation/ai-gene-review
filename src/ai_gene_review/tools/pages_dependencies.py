@@ -45,7 +45,7 @@ class _HTMLLinks(HTMLParser):
             if self.base is None:
                 self.base = values.get("href")
             return
-        for name in ("href", "src", "poster", "data"):
+        for name in ("href", "src", "poster", "data", "data-pages-content"):
             if values.get(name):
                 self.links.append(values[name])
         if values.get("srcset"):
