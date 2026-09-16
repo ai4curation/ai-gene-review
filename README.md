@@ -393,13 +393,13 @@ just build-pages               # Render and assemble the complete publication tr
 python -m ai_gene_review.render --all genes/    # Alternative rendering command
 ```
 
-`stage-pages` is the shadow build for the GitHub Pages artifact migration. It
+`stage-pages` assembles the GitHub Pages publication artifact. It
 preserves current public URL paths, writes an ignored `_site/` directory, and
 reports the uncompressed publication size. Cleanup is restricted to the repository's
 `_site/` directory, and the root is verified with Git before cleanup. The CLI always
 uses `<repo-root>/_site`. Shadow build failures warn
-without blocking regeneration PRs. The live site continues to publish
-from `main:/` until the shadow artifact has been verified.
+without blocking regeneration PRs. With Actions deployment enabled, the live site uses the validated artifact built
+from `main`. Regeneration PRs separately maintain the committed HTML.
 
 Staging also follows local links from published HTML and CSS, plus literal
 JavaScript fetch()/import() URLs, copying reports, notes, images, and downloads at
@@ -468,7 +468,8 @@ The complete rebuilt artifact must meet the budget before the live switch.
 
 The deployment job is disabled unless `PAGES_ARTIFACT_DEPLOY_ENABLED=true` is set
 in repository Actions variables. It requires a successful upload, at most
-1,000,000,000 uncompressed bytes, no excluded orphan review pages, and no missing
+1,000,000,000 site-content bytes and a separately measured GNU tar no larger than
+1,073,741,824 bytes (1 GiB, including headers and padding), no excluded orphan review pages, and no missing
 static local targets, and no likely missing site-prefix links. The CLI and CI use the same manifest `deployable` decision
 and `size_budget_bytes`. `broken_local_links` counts distinct missing paths;
 `broken_local_link_paths` lists them for diagnosis. `off_base_path_links` counts same-host URLs outside
@@ -485,6 +486,29 @@ Keep the current Pages source until the artifact meets those checks and passes
 browser smoke checks. Then change the repository's Pages source to **GitHub
 Actions** (for example, `gh api --method PUT repos/ai4curation/ai-gene-review/pages -f build_type=workflow`), set `PAGES_ARTIFACT_DEPLOY_ENABLED=true` in repository
 Actions variables, and dispatch Generate Pages. Both settings are required.
+
+If the legacy regeneration-PR step fails after a validated upload, artifact
+deployment can still proceed. To recover an already completed build without
+rendering everything again, run:
+
+```bash
+gh workflow run recover-pages.yaml --ref main -f source_run_id=RUN_ID
+```
+
+Recovery is manual, requires Actions deployment to be enabled, and only accepts
+a completed Generate Pages run from this repository's default branch. It checks
+that rendering, validation, staging, and both uploads succeeded, downloads the
+specific validated artifact IDs, rechecks the manifest, actual tar size, and recorded SHA-256, and deploys
+the unchanged archive. The original Pages archive is retained for **3 days**
+(the diagnostic manifest for 7); expired archives require a new full build.
+Both ordinary builds and recovery enforce a 1,000,000,000-byte site-content
+budget and a separate 1 GiB archive budget, allowing tar headers/padding without
+raising the published-site limit. The manifest reports estimated `archive_bytes`
+and `archive_size_budget_bytes`. After upload, diagnostics record the actual
+`archive_actual_bytes` and `archive_sha256`; deployment requires that check to
+succeed. Recovery verifies that checksum, not exact equality with the estimate.
+Older validated builds without a checksum declaration remain recoverable using
+the trusted run/artifact provenance and the actual archive size.
 
 Once enabled, the artifact built from the checked-out source on `main` is
 authoritative for the live site. It deploys without waiting for the legacy
