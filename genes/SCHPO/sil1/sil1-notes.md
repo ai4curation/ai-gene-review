@@ -67,3 +67,52 @@ NOT KNOWN / genuine gaps (pombe-specific):
 - PMID:28410370 — pombe mating morphology screen (source of FYPO:0004806). LOW/MEDIUM (HTP phenotype only).
 - PMID:37787768 — pombe phenomics/ML broad profiling (source of stress phenotypes; flags sil1 as poorly characterized). LOW/MEDIUM.
 - GO_REF:0000033 (IBA), GO_REF:0000024 (ISO), GO_REF:0000044 (SubCell IEA) — evidence pipelines.
+
+## 2026-09-05 evidence re-review (supersedes earlier topology reasoning)
+
+The supported refresh retained four GOA/review assertions and backfilled all four
+source-entity lists. The independent annotation reviewer supports the inferred ER
+and NEF assignments but identified an error in the membrane rationale: an uncleaved
+ER signal anchor is membrane membership, so it cannot be used as evidence against
+the membrane annotation. UniProt's predicted TRANSMEM 20..40 does not discriminate
+cleavage from retention experimentally. The membrane decision is now UNDECIDED;
+ER localization remains ACCEPT. The absence of a canonical terminal HDEL/KDEL and
+the basic N-terminal flank do not resolve topology. Earlier claims that a signal
+anchor was more likely than a genuine membrane topology should not be used.
+
+The Sil1 branch's ER/BiP specificity must be distinguished from the cytosolic Hsp70
+partners of Fes1/HspBP1 relatives. PomBase lists human and budding-yeast orthologs;
+that list alone does not establish a one-to-one phylogeny. The description and core
+summary now bound experimental-absence statements to the sources reviewed. The MF
+confirmation and ER-topology gaps are RESIDUAL_SUBGAP: a functional assignment and
+compartment are inferred even though target-specific measurements remain missing.
+The official PANTHER PTHR19316 label is PROTEIN FOLDING REGULATOR, verified in
+`interpro/panther/panther.obo`; the earlier descriptive label is not the official name.
+
+The donor for the GO:0006616 ISO is SGD:S000005391 (S. cerevisiae SIL1; Q08199).
+QuickGO donor evidence is IMP / PMID:10958688. `just fetch-pmid 10958688` retrieved
+the abstract; the wrapper could not cache the full text. The abstract explicitly
+includes S. cerevisiae experiments despite the Sls1/Yarrowia context:
+[PMID:10958688 "Synthetic lethality was observed between DeltaScsls1 and translocation-deficient kar2 or sec63-1 mutants, providing in vivo evidence for a role of ScSls1p in protein translocation."]
+Retain the process as non-core with curator deference for precise SRP-dependent
+specificity; the term is not simply broader than the available evidence.
+
+Gene-specific phenotype provenance was checked against the live PomBase API on
+2026-09-05: https://www.pombase.org/api/v1/dataset/latest/data/gene/SPAC1071.03c.
+
+| Annotation | Phenotype | Reference / assay context |
+|---|---|---|
+| 313604 | FYPO:0004806, incomplete cell-wall disassembly at the cell-fusion site | PMID:28410370; high-throughput microscopy of sil1 deletion |
+| 397383 | FYPO:0002693, resistance to diamide | PMID:37787768; 3 mM diamide, 32 C, high-throughput growth assay |
+| 353035 | FYPO:0001501, sensitivity to brefeldin A | PMID:37787768; 80 micromolar BFA, 32 C, high-throughput growth assay |
+
+The record labels the biological role inferred and the deletion viable. These
+screen phenotypes identify residual mechanistic questions; generic paper-introduction
+quotes do not establish these specific gene phenotypes. Reference assessments now
+record the actual PomBase annotation linkage rather than relying on those quotes.
+
+A focused OpenScientist hypothesis job was launched through the supported wrapper
+for retained ER anchor versus signal-peptide cleavage. It requests actual sequence,
+alignment and prediction outputs with executable provenance. Predictions can
+prioritize topology experiments but cannot establish experimental topology; no
+result is assumed while the job runs.
