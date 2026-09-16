@@ -236,6 +236,7 @@ def _report_seed_updates(
     added_count: int,
     refs_added: int,
     qualifiers_backfilled: int,
+    supporting_entities_backfilled: int,
     yaml_existed: bool,
 ) -> None:
     """Report every mutation performed while seeding a gene review."""
@@ -249,10 +250,17 @@ def _report_seed_updates(
             f"  ✓ Backfilled qualifiers on {qualifiers_backfilled} annotations "
             f"in {file_prefix}-ai-review.yaml"
         )
+    if supporting_entities_backfilled > 0:
+        print(
+            "  ✓ Backfilled supporting entities on "
+            f"{supporting_entities_backfilled} annotations in "
+            f"{file_prefix}-ai-review.yaml"
+        )
     if (
         added_count == 0
         and refs_added == 0
         and qualifiers_backfilled == 0
+        and supporting_entities_backfilled == 0
         and yaml_existed
     ):
         print(
@@ -291,6 +299,8 @@ def fetch_gene_data(
             - annotations_added: int - Number of annotations added
             - references_added: int - Number of references added
             - qualifiers_backfilled: int - Number of existing annotations enriched
+            - supporting_entities_backfilled: int - Number of existing annotations
+              enriched with WITH/FROM entities
             - uniprot_updated: bool - True if UniProt file was updated
             - goa_updated: bool - True if GOA file was updated
             - uniprot_differences: bool - True if UniProt content differs from existing
@@ -391,6 +401,7 @@ def fetch_gene_data(
         "annotations_added": 0,
         "references_added": 0,
         "qualifiers_backfilled": 0,
+        "supporting_entities_backfilled": 0,
         "uniprot_updated": False,
         "goa_updated": False,
         "uniprot_differences": uniprot_differs,
@@ -496,7 +507,13 @@ def fetch_gene_data(
 
         # Now seed missing GOA annotations
         validator = GOAValidator()
-        added_count, _, refs_added, qualifiers_backfilled = (
+        (
+            added_count,
+            _,
+            refs_added,
+            qualifiers_backfilled,
+            supporting_entities_backfilled,
+        ) = (
             validator.seed_missing_annotations(
                 yaml_file, goa_file, fetch_titles=fetch_titles
             )
@@ -504,12 +521,14 @@ def fetch_gene_data(
         result["annotations_added"] = added_count
         result["references_added"] = refs_added
         result["qualifiers_backfilled"] = qualifiers_backfilled
+        result["supporting_entities_backfilled"] = supporting_entities_backfilled
 
         _report_seed_updates(
             file_prefix,
             added_count,
             refs_added,
             qualifiers_backfilled,
+            supporting_entities_backfilled,
             yaml_existed,
         )
 
@@ -1525,6 +1544,7 @@ def fetch_gene_data_ncRNA(
         "annotations_added": 0,
         "references_added": 0,
         "qualifiers_backfilled": 0,
+        "supporting_entities_backfilled": 0,
         "rnacentral_updated": False,
         "goa_updated": False,
         "rnacentral_differences": rnacentral_differs,
@@ -1621,7 +1641,13 @@ def fetch_gene_data_ncRNA(
         # Now seed missing GOA annotations (same as for protein-coding genes)
         from ai_gene_review.validation.goa_validator import GOAValidator
         validator = GOAValidator()
-        added_count, _, refs_added, qualifiers_backfilled = (
+        (
+            added_count,
+            _,
+            refs_added,
+            qualifiers_backfilled,
+            supporting_entities_backfilled,
+        ) = (
             validator.seed_missing_annotations(
                 yaml_file, goa_file, fetch_titles=True
             )
@@ -1629,12 +1655,14 @@ def fetch_gene_data_ncRNA(
         result["annotations_added"] = added_count
         result["references_added"] = refs_added
         result["qualifiers_backfilled"] = qualifiers_backfilled
+        result["supporting_entities_backfilled"] = supporting_entities_backfilled
 
         _report_seed_updates(
             file_prefix,
             added_count,
             refs_added,
             qualifiers_backfilled,
+            supporting_entities_backfilled,
             yaml_existed,
         )
 

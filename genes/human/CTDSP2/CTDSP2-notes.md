@@ -1,0 +1,11 @@
+# CTDSP2: exact-sequence caution
+
+The selected horse F7A4N8 is 174 aa and maps to VGNC:16932 / ENSECAG00000018788. Human CTDSP2 O14595 is 271 aa with an FCP1-homology domain and catalytic Asp107/Asp109. The alignment matches the horse N-terminus through about residue 84; the remainder diverges and does not retain the human catalytic domain. No InterPro phosphatase or kinase domain is listed in the selected horse record. Absence of an annotation alone is not proof of absent function, but the actual sequence discontinuity makes ordinary whole-protein functional transfer unsafe.
+
+[PMID:12721286](https://pubmed.ncbi.nlm.nih.gov/12721286/), DOI [10.1074/jbc.M301791200](https://doi.org/10.1074/jbc.M301791200), describes the small CTD phosphatase family: “preferentially catalyze the dephosphorylation of Ser5 within the consensus repeat.” The abstract foregrounds SCP1; it cannot alone establish which CTDSP2 assays were performed. The existing human CTDSP2 experimental annotation is retained with this access limitation rather than rejected for paralog misattribution. [PMID:15681389](https://pubmed.ncbi.nlm.nih.gov/15681389/) is the REST/neuronal silencing source in the curated record.
+
+The abnormal horse model does not establish evolutionary loss or a pseudoenzyme: transcript/exon validation and an alternative full-length horse product are needed before distinguishing a genuine isoform from a gene-model problem. The input used at prediction time is not separately recovered. Do not label this WRONG_INPUT_SEQUENCE without such evidence. A completed human Falcon report has been inspected; horse-specific Edison is not indicated by the genome-only identification sources.
+
+## Research synthesis
+
+The human Falcon report identifies CTDSP2-specific Smad1 C-terminal dephosphorylation and nuclear localization in PMID:16882717, distinguishing these observations from CTDSP1 membrane palmitoylation and from the different CTDSPL2 paralog. Some SCP1/SCP2 depletion experiments are combined, so they support participation without proving uniqueness. This reinforces the phosphatase identity of human CTDSP2 but cannot restore the absent catalytic region in the selected horse model.
