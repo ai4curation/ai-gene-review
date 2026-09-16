@@ -464,7 +464,7 @@ silently pruned. If a referenced rendered document is absent but its Markdown
 source exists, the link serves that source rather than a nonexistent HTML page.
 The separate MkDocs build on `gh-pages` is not part of this publication artifact;
 linked docs such as the subtraction report use their repository Markdown source.
-The complete rebuilt artifact must meet the budget before the live switch.
+Every rebuilt artifact must meet the budget before publication.
 
 The deployment job is disabled unless `PAGES_ARTIFACT_DEPLOY_ENABLED=true` is set
 in repository Actions variables. It requires a successful upload, at most
@@ -482,25 +482,29 @@ processing rather than truncated; the workflow summary shows only counts.
 This static audit does not guarantee dynamically constructed JavaScript URLs or
 fragment anchors work.
 
-Keep the current Pages source until the artifact meets those checks and passes
-browser smoke checks. Then change the repository's Pages source to **GitHub
-Actions** (for example, `gh api --method PUT repos/ai4curation/ai-gene-review/pages -f build_type=workflow`), set `PAGES_ARTIFACT_DEPLOY_ENABLED=true` in repository
-Actions variables, and dispatch Generate Pages. Both settings are required.
+The live site uses **GitHub Actions** as its Pages source and
+`PAGES_ARTIFACT_DEPLOY_ENABLED=true`. **Build and deploy site**
+([generate-pages.yaml](.github/workflows/generate-pages.yaml)) builds and publishes
+from `main`; these settings are required for deployment.
 
-If the legacy regeneration-PR step fails after a validated upload, artifact
-deployment can still proceed. To recover an already completed build without
-rendering everything again, run:
+**Deploy existing Pages artifact**
+([deploy-existing-pages.yaml](.github/workflows/deploy-existing-pages.yaml)) is a
+manual shortcut when rendering, validation, and uploads succeeded but deployment
+failed or was skipped, or when intentionally redeploying a known-good build.
+It is not part of normal daily publishing and does not restore lost data.
+Select a completed build run ID and dispatch it on `main`:
 
 ```bash
-gh workflow run recover-pages.yaml --ref main -f source_run_id=RUN_ID
+gh workflow run deploy-existing-pages.yaml --ref main -f source_run_id=RUN_ID
 ```
 
-Recovery is manual, requires Actions deployment to be enabled, and only accepts
-a completed Generate Pages run from this repository's default branch. It checks
-that rendering, validation, staging, and both uploads succeeded, downloads the
-specific validated artifact IDs, rechecks the manifest, actual tar size, and recorded SHA-256, and deploys
-the unchanged archive. The original Pages archive is retained for **3 days**
-(the diagnostic manifest for 7); expired archives require a new full build.
+It verifies the original build and artifact, then publishes that exact snapshot,
+not current `main`. Choosing an older run publishes older content. For new
+content, failed validation, or an expired artifact, run **Build and deploy site**
+instead. The Pages archive is retained for **3 days** (diagnostics for 7).
+Only validated default-branch builds are accepted; checks include successful
+rendering and uploads, artifact provenance, publication policy, actual archive
+size, and its recorded SHA-256.
 Both ordinary builds and recovery enforce a 1,000,000,000-byte site-content
 budget and a separate 1 GiB archive budget, allowing tar headers/padding without
 raising the published-site limit. The manifest reports estimated `archive_bytes`
@@ -514,10 +518,10 @@ Once enabled, the artifact built from the checked-out source on `main` is
 authoritative for the live site. It deploys without waiting for the legacy
 regeneration PR to merge; that PR only commits derived output back to `main`.
 
-The Generate Pages workflow runs daily at 08:23 UTC and can also be started with
-GitHub Actions' **Run workflow** button. Each run rebuilds the full site, so merged
-content currently appears after the next daily regeneration PR is merged. With
-Actions deployment enabled, it appears after the next successful daily deployment.
+The Build and deploy site workflow runs daily at 08:23 UTC and can also be started with
+GitHub Actions' **Run workflow** button. Each run rebuilds the full site; merged
+content appears after the next successful deployment. The generated-files PR
+updates tracked output separately and does not hold up publication.
 Agent cron profiles do not control this publication schedule. Manual runs wait for
 an active build to finish instead of cancelling it. Gene review validation remains
 in PR CI and the weekly full validation workflow.

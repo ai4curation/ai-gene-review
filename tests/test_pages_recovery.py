@@ -30,6 +30,21 @@ def test_legacy_pr_failure_does_not_disqualify_validated_artifact():
     }
 
 
+@pytest.mark.parametrize('upload_name', [
+    'Upload GitHub Pages artifact', 'Upload shadow GitHub Pages artifact',
+])
+@pytest.mark.parametrize('conclusion', ['success', 'failure'])
+def test_upload_step_rename_preserves_validation_of_existing_builds(upload_name, conclusion):
+    run, jobs, artifacts = source_inputs()
+    step = next(s for s in jobs['jobs'][0]['steps'] if 'GitHub Pages artifact' in s['name'] and s['name'].startswith('Upload'))
+    step.update(name=upload_name, conclusion=conclusion)
+    if conclusion == 'success':
+        assert validate_source(run, jobs, artifacts, 'owner/repo', 'main', 123)['github-pages'] == 2
+    else:
+        with pytest.raises(ValueError, match='did not succeed'):
+            validate_source(run, jobs, artifacts, 'owner/repo', 'main', 123)
+
+
 @pytest.mark.parametrize('field,value', [
     ('status', 'in_progress'), ('conclusion', 'cancelled'), ('event', 'pull_request'), ('workflow_id', 999),
     ('path', '.github/workflows/other.yaml'), ('head_branch', 'untrusted'),
@@ -109,10 +124,10 @@ def test_deployment_still_requires_opt_in_and_manifest_after_legacy_failure():
 
 
 def test_recovery_is_manual_default_branch_only_and_verifies_before_upload():
-    workflow = yaml.safe_load(Path('.github/workflows/recover-pages.yaml').read_text())
+    workflow = yaml.safe_load(Path('.github/workflows/deploy-existing-pages.yaml').read_text())
     triggers = workflow.get('on', workflow.get(True))
     assert set(triggers) == {'workflow_dispatch'}
-    job = workflow['jobs']['recover-pages']
+    job = workflow['jobs']['deploy-existing-pages']
     assert "vars.PAGES_ARTIFACT_DEPLOY_ENABLED == 'true'" in job['if']
     assert 'github.event.repository.default_branch' in job['if']
     assert job['environment']['name'] == 'github-pages'
@@ -123,8 +138,8 @@ def test_recovery_is_manual_default_branch_only_and_verifies_before_upload():
 
 
 def test_recovery_upload_name_matches_pages_deployment():
-    workflow = yaml.safe_load(Path('.github/workflows/recover-pages.yaml').read_text())
-    steps = workflow['jobs']['recover-pages']['steps']
+    workflow = yaml.safe_load(Path('.github/workflows/deploy-existing-pages.yaml').read_text())
+    steps = workflow['jobs']['deploy-existing-pages']['steps']
     upload = next(step for step in steps if step.get('name') == 'Upload validated archive for deployment')
     deploy = next(step for step in steps if step.get('name') == 'Deploy validated Pages artifact')
     assert upload['with']['name'] == deploy['with']['artifact_name'] == 'github-pages'
@@ -184,10 +199,10 @@ def test_archive_cap_allows_tar_overhead_without_raising_site_limit(tmp_path):
 def test_source_records_checksum_before_uploading_diagnostics_and_deploying():
     job = yaml.safe_load(Path('.github/workflows/generate-pages.yaml').read_text())['jobs']['generate-pages']
     names = [step.get('name') for step in job['steps']]
-    assert names.index('Upload shadow GitHub Pages artifact') < names.index('Record uploaded archive checksum')
+    assert names.index('Upload GitHub Pages artifact') < names.index('Record uploaded archive checksum')
     assert names.index('Record uploaded archive checksum') < names.index('Upload Pages diagnostics')
     assert "steps.archive-check.outcome == 'success'" in job['outputs']['deployable']
     record = next(step for step in job['steps'] if step.get('id') == 'archive-check')
-    assert "steps.shadow-summary.outputs.deployable == 'true'" in record['if']
+    assert "steps.pages-summary.outputs.deployable == 'true'" in record['if']
     assert 'if [ ! -f "$PAGES_ARCHIVE_PATH" ]' in record['run']
     assert '::error title=Pages archive missing::' in record['run']

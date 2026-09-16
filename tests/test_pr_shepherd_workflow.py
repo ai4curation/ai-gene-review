@@ -261,18 +261,18 @@ def test_daily_generation_relies_on_main_validation_workflow():
     assert "just validate-all" in validation["run"]
 
 
-def test_shadow_pages_failures_do_not_block_regeneration():
-    """Shadow failures remain observable without failing the legacy PR lane."""
+def test_pages_artifact_failures_do_not_block_regeneration():
+    """Artifact failures remain observable without failing the legacy PR lane."""
     job = _workflow(GENERATE_PAGES)["jobs"]["generate-pages"]
     stage = _step(job, "Stage GitHub Pages artifact")
     summary = _step(job, "Summarize staged Pages site")
-    upload = _step(job, "Upload shadow GitHub Pages artifact")
+    upload = _step(job, "Upload GitHub Pages artifact")
     for step in (stage, summary, upload):
         assert step["continue-on-error"] is True
     for step in (summary, upload):
-        assert step["if"] == "steps.shadow-stage.outcome == 'success'"
-    assert stage["id"] == "shadow-stage"
-    warning = _step(job, "Warn when shadow Pages build fails")
+        assert step["if"] == "steps.pages-stage.outcome == 'success'"
+    assert stage["id"] == "pages-stage"
+    warning = _step(job, "Warn when Pages artifact build fails")
     for step in (stage, summary, upload):
         assert f"steps.{step['id']}.outcome == 'failure'" in warning["if"]
     assert "::warning" in warning["run"]
@@ -286,9 +286,9 @@ def test_pages_deployment_requires_opt_in_and_publishable_artifact():
     assert deploy["needs"] == "generate-pages"
     assert "vars.PAGES_ARTIFACT_DEPLOY_ENABLED == 'true'" in deploy["if"]
     assert "needs.generate-pages.outputs.deployable == 'true'" in deploy["if"]
-    assert "steps.shadow-upload.outcome == 'success'" in build["outputs"]["deployable"]
+    assert "steps.pages-upload.outcome == 'success'" in build["outputs"]["deployable"]
     assert (
-        "steps.shadow-summary.outputs.deployable == 'true'"
+        "steps.pages-summary.outputs.deployable == 'true'"
         in build["outputs"]["deployable"]
     )
     summary = _step(build, "Summarize staged Pages site")["run"]

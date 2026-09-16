@@ -1,5 +1,9 @@
 ---
-name: Generate Pages
+# Normal publication workflow: rebuild main and deploy the validated site daily
+# or on manual dispatch. The generated-files PR also updates tracked HTML, but
+# its merge is not required for publication. To publish a completed build again
+# without rendering, use deploy-existing-pages.yaml.
+name: Build and deploy site
 
 on:
   # Batch the full build once per day; manual dispatch remains available.
@@ -16,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     outputs:
-      deployable: ${{ steps.shadow-upload.outcome == 'success' && steps.archive-check.outcome == 'success' && steps.shadow-summary.outputs.deployable == 'true' }}
+      deployable: ${{ steps.pages-upload.outcome == 'success' && steps.archive-check.outcome == 'success' && steps.pages-summary.outputs.deployable == 'true' }}
     permissions:
       # Scopes the default GITHUB_TOKEN only; the branch push and the PR are made
       # with the ai4c-agent App token below.
@@ -77,16 +81,16 @@ jobs:
 
       # Build the candidate artifact for inspection. Publication remains opt-in
       # and separately gated on completeness and the supported size budget.
-      # Keep every shadow step non-blocking so failures cannot skip the legacy
+      # Keep every artifact step non-blocking so failures cannot skip the legacy
       # regeneration lane. Only summarize/upload a successfully staged tree.
       - name: Stage GitHub Pages artifact
-        id: shadow-stage
+        id: pages-stage
         continue-on-error: true
         run: just stage-pages
 
       - name: Summarize staged Pages site
-        id: shadow-summary
-        if: steps.shadow-stage.outcome == 'success'
+        id: pages-summary
+        if: steps.pages-stage.outcome == 'success'
         continue-on-error: true
         shell: bash
         env:
@@ -98,7 +102,7 @@ jobs:
             if [ "$PAGES_ARTIFACT_DEPLOY_ENABLED" = "true" ]; then
               echo "Actions deployment is enabled for artifacts that pass the publication checks."
             else
-              echo "This is a shadow artifact; Actions deployment is disabled."
+              echo "Artifact built without publishing; Actions deployment is disabled."
             fi
             echo
             echo "| Metric | Value |"
@@ -126,9 +130,9 @@ jobs:
             echo "::warning title=Pages deployment blocked::The artifact exceeds the supported size budget or has excluded or missing static local targets or likely missing site-prefix links. The existing site will remain deployed."
           fi
 
-      - name: Upload shadow GitHub Pages artifact
-        id: shadow-upload
-        if: steps.shadow-stage.outcome == 'success'
+      - name: Upload GitHub Pages artifact
+        id: pages-upload
+        if: steps.pages-stage.outcome == 'success'
         continue-on-error: true
         uses: actions/upload-pages-artifact@v4
         with:
@@ -137,7 +141,7 @@ jobs:
 
       - name: Record uploaded archive checksum
         id: archive-check
-        if: steps.shadow-upload.outcome == 'success' && steps.shadow-summary.outputs.deployable == 'true'
+        if: steps.pages-upload.outcome == 'success' && steps.pages-summary.outputs.deployable == 'true'
         continue-on-error: true
         env:
           PAGES_ARCHIVE_PATH: ${{ runner.temp }}/artifact.tar
@@ -154,7 +158,7 @@ jobs:
           echo "- Archive SHA-256: $(jq -r .archive_sha256 _site-manifest.json)" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload Pages diagnostics
-        if: steps.shadow-stage.outcome == 'success'
+        if: steps.pages-stage.outcome == 'success'
         continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
@@ -162,14 +166,14 @@ jobs:
           path: _site-manifest.json
           retention-days: 7
 
-      - name: Warn when shadow Pages build fails
+      - name: Warn when Pages artifact build fails
         if: >-
           ${{ !cancelled() &&
-              (steps.shadow-stage.outcome == 'failure' ||
-               steps.shadow-summary.outcome == 'failure' ||
-               steps.shadow-upload.outcome == 'failure' ||
+              (steps.pages-stage.outcome == 'failure' ||
+               steps.pages-summary.outcome == 'failure' ||
+               steps.pages-upload.outcome == 'failure' ||
                steps.archive-check.outcome == 'failure') }}
-        run: echo "::warning title=Shadow Pages build failed::Inspect the shadow staging, summary, upload, and archive checksum steps. Legacy regeneration will continue; the live Pages source is unchanged."
+        run: echo "::warning title=Pages artifact build failed::Inspect the staging, summary, upload, and archive checksum steps. Legacy regeneration will continue; the live Pages source is unchanged."
 
       - name: Check for changes
         id: check-changes
