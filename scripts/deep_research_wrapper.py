@@ -319,7 +319,7 @@ def run_deep_research(
         )
 
         label = f"[fallback {i}/{len(providers_to_try)-1}] " if is_fallback else ""
-        print(f"{label}Running: {' '.join(cmd)}")
+        print(f"{label}Running: {shlex.join(cmd)}")
         print(f"{label}Timeout: {timeout}s")
 
         try:
