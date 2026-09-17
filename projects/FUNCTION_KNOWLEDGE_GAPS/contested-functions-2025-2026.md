@@ -513,6 +513,20 @@ present in the RNA-sensing RIG-I-like receptors, so **IFIH1 (MDA5), a cytosolic 
 activation by DNA viruses is accepted to be indirect via RNA. The signature matches **73,506
 proteins**. Verified against the InterPro API.
 
+### A permeation property written into a gating term, twice more
+
+Two further cases, same mistake, found independently in different families — a property of what a
+channel *conducts* recorded as a statement about what *opens* it:
+
+- **TMEM63B** carries `GO:0005227` calcium-**activated** cation channel activity, but TMEM63
+  channels are stretch- and osmolarity-gated and merely Ca²⁺-permeable. This is the InterPro
+  IPR045122 mapping above, and the seeding mouse IDA is itself titled for an
+  "Osmosensitive Ca(2+)-**Permeable** Channel".
+- **TMC1** carries `GO:0005245` **voltage**-gated calcium channel activity (IBA + IEA). Traced to
+  mouse Tmc1 via PMID:23871232 — "TMC1 and TMC2 are components of the mechanotransduction channel
+  in hair cells", *Neuron* 2013, verified — which measured calcium permeability and single-channel
+  conductance of a **mechanically** gated channel and makes no voltage-gating claim.
+
 ### The shape these three share
 
 All three are the same failure, and it is worth naming because a per-gene fix will not stop it:
