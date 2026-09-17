@@ -64,3 +64,12 @@ Notable curation finding worth flagging upstream: PEX2 receives no IBA for its a
 functions (peroxisomal membrane / peroxisome organization IBAs exist, but nothing for the E3
 ligase activity or receptor recycling), while its only *complex* IBA (Cdc73/Paf1) is a
 propagation of its own homonym-confused IDA. See interpro/panther/PTHR48178/PTHR48178-review.yaml.
+
+## 2026-09-17 — PR #2956 review response
+
+- Narrowed the proposed `NEW` lipolysis-regulation term from GO:0050995 (negative
+  regulation of lipid catabolic process) to its descendant GO:0010897 (negative
+  regulation of triglyceride catabolic process), in both the annotation entry and
+  `core_functions.directly_involved_in`: ATGL/PNPLA2 is the rate-limiting
+  triacylglycerol lipase and PMID:34903883 concerns lipid-droplet TAG lipolysis
+  specifically, so the more specific term matches the evidence exactly.

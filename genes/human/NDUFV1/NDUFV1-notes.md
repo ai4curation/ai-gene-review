@@ -105,3 +105,19 @@ subunit at all**, which is exactly why it is reduced by ferredoxin rather than b
 The fetched entries slice bears this out — 0 chloroplastic members in PTHR11780 against
 134 of 638 in PTHR11993, all of the latter binned into the same subfamily as human NDUFS2.
 The two family reviews were written as a pair for this reason.
+
+## 2026-09-17 — PR #2956 review response
+
+- Removed the proposed `NEW GO:0003954` (NADH dehydrogenase activity) annotation:
+  it is a strict ancestor of GO:0008137, which NDUFV1 already carries as `enables`
+  by IDA [PMID:28844695], so asserting both violates the true-path/NEW-redundancy
+  rule. The subunit-vs-complex distinction it tried to express is already carried
+  by `core_functions.contributes_to_molecular_function: GO:0008137`. The
+  `NEW GO:0009055` (electron transfer activity) entry is unaffected — it sits on a
+  separate MF branch.
+- Merged the two `core_functions` entries into one anchored on `molecular_function:
+  GO:0009055` (electron transfer activity — the schema's own model of a
+  subunit-specific MF for a complex subunit) with `contributes_to_molecular_function:
+  GO:0008137`; the two entries had become slot-identical apart from the MF, and the
+  GO:0003954 anchor was orphaned by the removal above. Also dropped the
+  curation-framing sentence from the description.

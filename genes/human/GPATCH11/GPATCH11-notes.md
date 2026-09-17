@@ -129,7 +129,7 @@ Changes made:
   is now the core-function MF (replacing the over-broad GO:0003676).
 - **Added structured `propagation_review` to the IBA kinetochore entry** (root_cause
   SOURCE_STALE_OR_MISSING, failure_mode SOURCE_EVIDENCE_WEAK). Key new finding: the current
-  PAINT curation of PTHR21032 (snapshot 2026-02-25, interpro/panther/PTHR21032-paint.tsv)
+  PAINT curation of PTHR21032 (snapshot 2026-02-25, interpro/panther/PTHR21032/PTHR21032-paint.tsv)
   **no longer asserts kinetochore at PTN000471210** — it now carries IBDs for nucleoplasm
   (GO:0005654, seed Q8N954), centrosome (GO:0005813, seed Q8N954) and RNA splicing
   (GO:0008380, seed mouse Gpatch11 MGI:1858435), plus visual perception (GO:0007601) at the
