@@ -25,6 +25,10 @@ reviews** from the ones that are defects in the **source databases** we import f
 The [register](MISCITATIONS/miscitation-register.md) is generated from the YAML, not
 hand-maintained.
 
+A citation can also go bad *after* it was written: see
+[Retracted Literature Behind Annotations](RETRACTIONS.md), which checks every cited PMID
+against PubMed's retraction metadata and feeds `correctness: DISPUTED` cases back here.
+
 ## Why the existing checks cannot see this
 
 The repo already validates citations, hard. Two checks in particular:
