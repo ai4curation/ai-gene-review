@@ -246,6 +246,70 @@ intra-Golgi, endosomal and exocytic. `GO:0016192` is the genuine LCA of a
 heterogeneous donor set. `GRANULARITY_MISMATCH` requires the donors to agree; they
 do not, so no specificity upgrade is proposed on that row and it is ACCEPTed.
 
+## A second, systematic defect: SL-0244 maps into the wrong GO branch
+
+Found while checking the two `GO_REF:0000044` vesicle rows rather than accepting
+them. `subcell_mapping_check.py` resolves each SubCell id in the WITH/FROM column
+and asks how the mapped GO term relates to the term the literature supports —
+querying QuickGO's `is_a`/`part_of` closure, not reading it off the labels.
+
+| SubCell | UniProt's name | maps to | literature supports | relation |
+|---|---|---|---|---|
+| `SL-0086` | Cytoplasm | `GO:0005737` | — | EXACT |
+| `SL-0244` | **Secretory vesicle** | `GO:0030133` transport vesicle | `GO:0030141` secretory granule | **DISJOINT** |
+| `SL-0245` | **Secretory vesicle membrane** | `GO:0030658` | `GO:0030667` | **DISJOINT** |
+
+`GO:0030141` and `GO:0030133` are sibling branches under `GO:0031410`; neither is
+an ancestor of the other. GO defines `GO:0030133` as the **constitutive** secretory
+pathway, while insulin and glucagon granules are **regulated** secretory granules.
+And the mismatch starts inside UniProt: SL-0244's own definition is
+regulated-pathway language ("cargo - e.g. hormones or neurotransmitters ... docks
+and fuses to release its content").
+
+So the two rows needed MODIFY (a replacement) rather than a specificity
+refinement. `SL-0244` is applied to **130,685** UniProtKB entries and `SL-0245` to
+**90,419** (read from the `x-total-results` header). That is the number the rule is
+*applied to*, **not** a claim that all of them are mis-annotated — SL-0244 is broad
+and some members may genuinely be constitutive.
+
+## Two gates I had to fix before they were worth anything
+
+Recording these because both initially reported success while being blind.
+
+1. **My quote checker was structurally blind to 27 of 65 quotes.** It collected
+   only dicts carrying *both* `reference_id` and `supporting_text`, so every
+   `references[].findings[]` quote — where the reference is implicit in the
+   position — was skipped, and it reported "0 problems" over the 38 it could see.
+   The raw-vs-parsed reconciliation (65 raw keys vs 38 parsed) is what exposed it.
+   I derived the expected number independently (27 findings + 32 annotation
+   `supported_by` + 6 `core_functions` = 65) rather than finding a story that made
+   the gap acceptable, which confirmed the *document* was intact and the *checker*
+   was at fault. Fixed, then mutation-tested on a findings-level quote specifically.
+
+2. **The `file:` quote checker's mutation test passed by crashing.** Exit 1 came
+   from a `RuntimeError` in root derivation, not from detection. A check that kills
+   the harness is worse than none, because it still prints as though it ran. Fixed
+   with a CWD fallback and re-tested: the mutant now produces a `PROBLEM` line and
+   the clean file exits 0.
+
+All five `file:` quotes were then verified as literal substrings of `RESULTS.md`.
+CI does **not** check these (`file` is in `skip_prefixes`), so they are the one
+fabrication surface here, and each is a computed table row chosen so an exact match
+is meaningful.
+
+## The pre-write hook's failures were mostly collateral — verify before "fixing"
+
+The first write attempt was blocked with a long error list including six
+"Text part not found as substring" failures and several missing-`file:`-reference
+errors. **Those were not real.** The genuine errors were four type errors
+(`experts` must be strings, `substrates` must be `Term` objects,
+`reference_section_type` is not a `Reference`-level slot, `gap_kind` is
+multivalued); because the generated JSON Schema matches the root with `anyOf`,
+one type failure makes the validator report errors from a mismatched alternative.
+Fixing only the four type errors turned the file `✓ Valid` with every quote
+untouched. Had I "corrected" the six quotes, I would have corrupted correct work —
+the shared-tool lesson in a new guise.
+
 ## Paralogue cross-check
 
 `paint/ARFGEF1` and `paint/ARFGEF2` branches exist but are still at the branch point
@@ -289,6 +353,20 @@ negative so the next reviewer knows the check ran.
 GOA TSV: 8 data rows. `fetch-gene` stub: 8 `existing_annotations` entries. **They
 match** — no collapsed `GO:0005515` partner rows and no collapsed same-term rows on
 this gene, so the under-seeding defect seen elsewhere in this campaign is absent
-here. Checked explicitly rather than assumed. The final review has 8 reviewed GOA
-rows + `NEW` proposals, and the count difference is exactly the number of `NEW`
-entries.
+here. Checked explicitly rather than assumed.
+
+Final review: **14 entries = 8 GOA rows + 6 `NEW` proposals.** Verified
+programmatically, not by eye, by `arfgef3_check_entities.py`, which also asserts
+that every row's `supporting_entities` reproduces the GOA WITH/FROM field exactly
+and that every `propagation_review` names only sources drawn from it. Hand-built
+source lists have drifted on every gene in this campaign that tried it.
+
+## One validation warning left standing, deliberately
+
+`just validate` reports `✓ Valid (with 1 warnings)`: *"No annotations reference
+available deep research files"*. Satisfying it would mean putting
+`file:...ARFGEF3-deep-research-affinage.md` into a `supported_by` — i.e. quoting a
+provider sentence as evidence, which is the practice this campaign specifically
+forbids, and on a record that turned out to cite two papers about a different gene.
+The provider's contribution is assessed at length above instead. Left standing
+rather than silenced.
