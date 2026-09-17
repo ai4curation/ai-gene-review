@@ -35,7 +35,9 @@ transfer reaction.
 - [x] Curate the GalE review and remove the unsupported full-Leloir process propagation.
 - [x] Retain PP_1165 as an aldose-epimerase candidate without asserting galactose specificity.
 - [x] Revise the reusable four-reaction module to remove disease-specific framing and module-level cytosol.
-- [ ] Complete module + `ppu00052` + PSEPK OpenScientist research.
+- [x] Complete module + `ppu00052` + PSEPK OpenScientist research; the later
+  UDP-glucose/UDP-galactose supply batch provides the completed positive-route
+  analysis while this page retains the absent-Leloir result.
 - [x] Complete GalE OpenScientist research.
 - [x] Validate the module and focused gene reviews.
 - [x] Render the focused gene review and batch page.
