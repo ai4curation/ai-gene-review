@@ -113,6 +113,9 @@ yet.
   [PMID:9806765 "The fourth cDNA coded for an IgE autoantigen containing a typical calcium binding motif that occurred in histogenetically different cells and tissues (keratinocytes, muscle, brain)."].
   Being recognised by autoreactive IgE is a property of the patients' immune systems, not a function
   of MICU1. Nothing in that paper assays a defense response performed by the protein. REMOVE.
+  UniProt already records this correctly, and in the right slot: `CC -!- ALLERGEN: Causes an allergic
+  reaction in human. Binds to IgE from atopic dermatitis (AD) patients.` (MICU1-uniprot.txt line 690).
+  An allergen/autoantigen statement is the right representation; "defense response" is not.
 - **GO:1900069 regulation of cellular hyperosmotic salinity response, IMP, PMID:26975899.** MICU1 was
   one of five hits in a targeted siRNA screen whose readout was mitoflash frequency
   [PMID:26975899 "In silico analysis and targeted siRNA screening identified four mitoflash activators (MICU1, EFHD1, SLC25A23, SLC25A25) and one mitoflash inhibitor (LETM1) in terms of their ability to modulate mitoflash response to hyperosmotic stress."].
@@ -132,6 +135,11 @@ yet.
   are better captured by the complex and heterodimerisation terms that the gene already has.
 
 ## 5. Decisions
+
+Disease context (not itself annotated, but it constrains how essential the gene is): biallelic
+loss-of-function causes myopathy with extrapyramidal signs, MPXPS, MIM:615673 — early-onset proximal
+muscle weakness, raised creatine kinase, learning difficulties and progressive involuntary movement
+(UniProt DISEASE block, MICU1-uniprot.txt lines 671–685).
 
 ACCEPT: GO:0005509, GO:0005739, GO:0005743, GO:0005758, GO:0006851, GO:0019855, GO:0036444,
 GO:0044284, GO:0046982, GO:0051560, GO:0051561, GO:0061891, GO:1903852, GO:1990246
