@@ -188,6 +188,20 @@ This is the cleanest three-way conflict found, and GOA encodes it directly.
   the Na⁺ sites are missing but concludes broader selectivity (Na⁺/K⁺/Li⁺/H⁺) rather than
   H⁺-specificity (PMID:42431881, *Nat Commun* 2026,
   [DOI](https://doi.org/10.1038/s41467-026-75483-x)).
+- **Correction after review (provenance).** The three-way split above is less independent than it
+  looks. **PMID:40691517 (Position A) and PMID:40931067 (Position C) share senior authors**
+  (Feng L., Tsai M.-F.) — verified against PubMed author lists. They are one internally coherent
+  model, not two separate challenges to Position B. Symmetrically, the *Cell Metab* commentary
+  questioning Position A (PMID:41061666) is written by the authors of Position B, so it is not a
+  neutral referee either. Neither fact decides the science, but reading these as three
+  independent lines of evidence — as the first version of this page implicitly did — overstates
+  the case against Position B.
+- **Correction after review (the two structure papers disagree with each other).** They are not a
+  united front for "not sodium": PMID:40931067 reports imposing Na+ or K+ gradients did not
+  affect transport (H+-selective), whereas PMID:42431881 finds Na+, K+ and Li+ all serve as
+  counterions (non-selective). The second demotes Na+ rather than refuting it. Against both,
+  PMID:28130126 mapped distinct Na+- and Li+-selective residues in the NCLX transport site by
+  mutagenesis — positive functional evidence the structural "no Na+ sites" argument has to answer.
 - **The field has noticed:** *"Mitochondrial sodium-calcium exchange — Can TMEM65 do it alone?"*
   (PMID:41061666, *Cell Metab* 2025, [DOI](https://doi.org/10.1016/j.cmet.2025.09.005)).
 - **What GO says now:** the contradiction is recorded verbatim. On **TMEM65**, `GO:0005432`
@@ -231,6 +245,14 @@ a mapping artifact**, while a large disease literature continues to build on it.
   [DOI](https://doi.org/10.1038/s44319-026-00840-2)), against a stream of TRMT6/TRMT61A mRNA-m1A
   cancer papers (PMID:42003777, PMID:41103012). GOA carries `GO:0061953` mRNA
   (adenine-N1-)-methyltransferase activity with **IDA**.
+  **Correction after review:** this entry originally implied a cleaner refutation than exists.
+  SCARPET *narrows* rather than abolishes — it targets the newly mapped sites from the evolved-RT
+  map, cites the 2017 base-resolution studies approvingly, and **positively confirms** mRNA m1A at
+  PRUNE1 A58 and MALAT1 A7945. It also never mentions TRMT6 or TRMT61A, so attributing the
+  surviving sites to this complex is an inference. And the two IDA papers GOA cites
+  (PMID:29072297, PMID:29107537) are themselves the sceptical studies that cut the antibody maps
+  down to a handful of sites — so the GOA annotation was never the maximalist claim this page
+  first implied it was.
 - **ALKBH1** — its `GO:0141131` DNA N6-methyladenine demethylase activity has an **EXP** code,
   but a 2025 *Nat Genet* survey concludes robust 6mA occurs only in AMT1-encoding unicellular
   lineages and attributes mammalian reports to "methodological artifacts" (PMID:41254163,
