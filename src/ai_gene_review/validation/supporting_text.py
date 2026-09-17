@@ -12,9 +12,20 @@ LITERATURE_PREFIXES = frozenset({"PMID", "DOI"})
 
 @lru_cache(maxsize=None)
 def build_supporting_text_validator(publications_dir: Optional[Path] = None):
-    """Build the shared deterministic supporting-text validator."""
+    """Build the shared deterministic supporting-text validator.
+
+    The validator is configured from ``conf/reference_validator_config.yaml`` —
+    the same file the CLI passes to the external reference validator via
+    ``--config`` — so the repo-local ``findings`` path and the CLI/``supported_by``
+    path agree. In particular this loads ``literal_bracket_patterns``, which keep
+    bracketed chemical notation such as ``[4Fe-4S]`` or ``[Na(+)]`` from being
+    stripped as citation markers, and ``skip_prefixes`` / ``unknown_prefix_severity``.
+    ``cache_dir`` is taken from ``publications_dir`` and ``fetch_full_text`` is
+    forced off regardless of what the config declares.
+    """
+    project_root = Path(__file__).resolve().parents[3]
     if publications_dir is None:
-        publications_dir = Path(__file__).resolve().parents[3] / "publications"
+        publications_dir = project_root / "publications"
     try:
         from linkml_reference_validator.models import ReferenceValidationConfig
         from linkml_reference_validator.validation.supporting_text_validator import (
@@ -22,10 +33,25 @@ def build_supporting_text_validator(publications_dir: Optional[Path] = None):
         )
     except ImportError:
         return None, publications_dir
-    config = ReferenceValidationConfig(
-        cache_dir=publications_dir,
-        fetch_full_text=False,
-    )
+
+    config_data: dict = {}
+    config_path = project_root / "conf" / "reference_validator_config.yaml"
+    if config_path.exists():
+        loaded = yaml.safe_load(config_path.read_text())
+        if isinstance(loaded, dict):
+            config_data = dict(loaded)
+
+    # The caller owns the cache directory; never let the config's relative
+    # cache_dir override the resolved absolute path. Resolve reference_base_dir
+    # against the project root so file: references still resolve, and force
+    # full-text fetching off (the findings path only checks cached text).
+    config_data["cache_dir"] = publications_dir
+    config_data["fetch_full_text"] = False
+    reference_base_dir = config_data.get("reference_base_dir")
+    if reference_base_dir is not None and not Path(reference_base_dir).is_absolute():
+        config_data["reference_base_dir"] = project_root / reference_base_dir
+
+    config = ReferenceValidationConfig(**config_data)
     return SupportingTextValidator(config), publications_dir
 
 
