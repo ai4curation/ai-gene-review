@@ -12,8 +12,6 @@ from typing import List, Optional
 import typer
 from typing_extensions import Annotated
 
-from linkml_data_qc.analyzer import ComplianceAnalyzer
-
 from ai_gene_review.etl.gene import fetch_gene_data, fetch_gene_data_ncRNA, expand_organism_name
 from ai_gene_review.etl.publication import (
     cache_publications,
@@ -986,8 +984,46 @@ def compliance(
             help="Output compliance results to TSV file (default: stdout)",
         ),
     ] = None,
+    config: Annotated[
+        Optional[Path],
+        typer.Option(
+            "--config", "-c", help="QC policy YAML (defaults to packaged gene policy)"
+        ),
+    ] = None,
+    schema_only: Annotated[
+        bool,
+        typer.Option(help="Use raw schema recommendations without contextual rules"),
+    ] = False,
+    summary_output: Annotated[
+        Optional[Path],
+        typer.Option(help="Write per-file weighted scores and threshold counts as TSV"),
+    ] = None,
+    json_output: Annotated[
+        Optional[Path],
+        typer.Option(
+            help="Write complete reports, including applicable denominators, as JSON"
+        ),
+    ] = None,
+    dashboard_dir: Annotated[
+        Optional[Path],
+        typer.Option(
+            help="Generate an HTML dashboard from the same contextual reports"
+        ),
+    ] = None,
+    fail_on_threshold: Annotated[
+        bool, typer.Option(help="Exit nonzero when configured thresholds are missed")
+    ] = False,
 ):
-    """Analyze recommended-field compliance using linkml-data-qc."""
+    """Analyze configurable evidence-aware compliance (advisory by default)."""
+    import json
+    from ai_gene_review.compliance import (
+        GeneComplianceAnalyzer,
+        GeneQCConfig,
+        default_config_path,
+    )
+
+    if config is not None and schema_only:
+        raise typer.BadParameter("--config and --schema-only are mutually exclusive")
     all_files: list[Path] = []
     for pattern in yaml_files:
         if "*" in str(pattern):
@@ -1005,11 +1041,16 @@ def compliance(
         raise typer.Exit(code=1)
 
     schema_path = schema or get_schema_path()
-    analyzer = ComplianceAnalyzer(str(schema_path))
+    policy_path = config or default_config_path()
+    policy = GeneQCConfig() if schema_only else GeneQCConfig.from_yaml(policy_path)
+    analyzer = GeneComplianceAnalyzer(schema_path, policy)
 
     rows: list[tuple[str, str, str, str]] = []
+    reports = []
     for yaml_file in all_files:
-        report = analyzer.analyze_file(str(yaml_file), "GeneReview")
+        report = analyzer.analyze_file(yaml_file)
+        report.config_path = None if schema_only else str(policy_path)
+        reports.append(report)
         for path_score in report.path_scores:
             for slot_score in path_score.slot_scores:
                 if slot_score.populated == 0:
@@ -1034,6 +1075,28 @@ def compliance(
         tsv_output.write_text("\n".join(output_lines) + "\n")
     else:
         typer.echo("\n".join(output_lines))
+
+    if summary_output:
+        summary_output.parent.mkdir(parents=True, exist_ok=True)
+        lines = [
+            "file_path\tglobal_compliance\tweighted_compliance\ttotal_checks\ttotal_populated\tthreshold_violations"
+        ]
+        lines.extend(
+            f"{r.file_path}\t{r.global_compliance:.2f}\t{r.weighted_compliance:.2f}\t{r.total_checks}\t{r.total_populated}\t{len(r.threshold_violations)}"
+            for r in reports
+        )
+        summary_output.write_text("\n".join(lines) + "\n")
+    if json_output:
+        json_output.parent.mkdir(parents=True, exist_ok=True)
+        json_output.write_text(
+            json.dumps([r.model_dump(mode="json") for r in reports], indent=2) + "\n"
+        )
+    if dashboard_dir:
+        from linkml_data_qc.html_dashboard import generate_html_dashboard_multi
+
+        generate_html_dashboard_multi(reports, dashboard_dir)
+    if fail_on_threshold and any(r.threshold_violations for r in reports):
+        raise typer.Exit(code=1)
 
 
 def _print_issue(issue, indent="  "):
@@ -1748,6 +1811,89 @@ def refresh_publications(
         typer.echo(f"Success rate: {success_rate:.1f}%")
 
     typer.echo("\nRefresh complete!")
+
+
+@app.command()
+def warm_publications(
+    limit: Annotated[
+        Optional[int],
+        typer.Option("--limit", "-l", help="Maximum records to attempt this run"),
+    ] = None,
+    delay: Annotated[
+        float, typer.Option("--delay", "-d", help="Delay between records in seconds")
+    ] = 0.3,
+    publications_dir: Annotated[
+        Path, typer.Option("--dir", help="Publications directory")
+    ] = Path("publications"),
+    dry_run: Annotated[
+        bool,
+        typer.Option("--dry-run", help="List candidates without network or file changes"),
+    ] = False,
+    providers: Annotated[
+        Optional[str],
+        typer.Option(
+            "--providers",
+            help="Comma-separated full-text provider chain override "
+            "(default: pmc,epmc_preprint,unpaywall,openalex)",
+        ),
+    ] = None,
+    retry_attempted: Annotated[
+        bool,
+        typer.Option(
+            "--retry-attempted",
+            help="Also re-attempt records already tagged full_text_attempted "
+            "(use after the provider chain or acceptance guards improve)",
+        ),
+    ] = False,
+):
+    """Warm the publications cache via the linkml-reference-validator full-text chain.
+
+    Attempts full text for cached publications that lack it, using LRV's
+    provider chain (PMC, Europe PMC preprints, Unpaywall, OpenAlex). Unlike
+    refresh-publications, this also covers DOI-only records without a PMC ID,
+    and follows the monarch-initiative/dismech warm-reference-cache tagging
+    convention: every cleanly concluded attempt is durably recorded as
+    ``full_text_attempted: true``, so bounded --limit sweeps drain the backlog
+    incrementally and never re-query the same record.
+
+    Only open-access full text is merged into the shared cache; non-public
+    locations are ignored.
+
+    Examples:
+        ai-gene-review warm-publications --dry-run --limit 20
+        ai-gene-review warm-publications --limit 200
+        ai-gene-review warm-publications --limit 50 --providers unpaywall,openalex
+    """
+    from ai_gene_review.etl.publication_warm import warm_publications as run_warm
+
+    provider_list = (
+        [p.strip() for p in providers.split(",") if p.strip()] if providers else None
+    )
+    stats = run_warm(
+        publications_dir=publications_dir,
+        limit=limit,
+        delay=delay,
+        providers=provider_list,
+        dry_run=dry_run,
+        retry_attempted=retry_attempted,
+    )
+    if dry_run:
+        would_attempt = (
+            stats["candidates"] if limit is None else min(limit, stats["candidates"])
+        )
+        typer.echo(
+            f"Dry run: would attempt {would_attempt} of {stats['candidates']} "
+            "candidates in the backlog"
+        )
+        return
+    typer.echo("=" * 60)
+    typer.echo("WARM SWEEP SUMMARY")
+    typer.echo("=" * 60)
+    typer.echo(f"Candidates in backlog: {stats['candidates']}")
+    typer.echo(f"Processed this run: {stats['processed']}")
+    typer.echo(f"Full text retrieved: {stats['full_text']}")
+    typer.echo(f"Durably attempted (no text found): {stats['attempted']}")
+    typer.echo(f"Transient errors (will retry next run): {stats['transient_error']}")
 
 
 @app.command()
@@ -2938,6 +3084,14 @@ def render_projects(
         Path,
         typer.Option("--genes-dir", "-g", help="Genes directory for symbol index"),
     ] = Path("genes"),
+    source_ref: Annotated[
+        str,
+        typer.Option(
+            "--source-ref",
+            help="Git branch or commit for family catalog source links",
+            envvar="AI_GENE_REVIEW_SOURCE_REF",
+        ),
+    ] = "main",
     all_projects: Annotated[
         bool,
         typer.Option("--all", "-a", help="Render all project files in projects/"),
@@ -2987,6 +3141,7 @@ def render_projects(
             projects_dir=Path("projects"),
             output_dir=output_dir,
             genes_dir=genes_dir,
+            source_ref=source_ref,
         )
 
         if verbose and warnings:
@@ -3008,6 +3163,7 @@ def render_projects(
                     md_file,
                     output_dir=output_dir,
                     genes_dir=genes_dir,
+                    source_ref=source_ref,
                     projects_dir=Path("projects"),
                 )
                 total_warnings.extend(warnings)

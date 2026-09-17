@@ -168,7 +168,11 @@ def test_committed_three_level_report_matches_current_reviews() -> None:
         # is a predicted overlap (+4 core total, +1 core overlap). The same
         # re-review stops retaining GO:0009535 post-review, dropping one
         # predicted post-review overlap without changing the post-review total.
-        "post_review": {"overlap": 848, "total": 2760, "pred": 8871},
+        # The CANAL/GND1 enzyme-specificity review moves the keyword-derived
+        # GO:0019521 (D-gluconate metabolic process) from KEEP_AS_NON_CORE to
+        # MARK_AS_OVER_ANNOTATED, dropping one post-review term (8 -> 7); it was
+        # not a predicted overlap, so no overlap count and no core count changes.
+        "post_review": {"overlap": 848, "total": 2759, "pred": 8871},
         "core": {"overlap": 351, "total": 1233, "pred": 8871},
     }
 
