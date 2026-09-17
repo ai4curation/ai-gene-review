@@ -4,6 +4,18 @@ Three scripts, all reproducible from files already in this repo. No network acce
 and no API keys are required; each derives the repo root itself rather than
 hardcoding a worktree path.
 
+**Run everything with `uv run python`, not bare `python3`.** The only third-party
+dependency is `pyyaml`, which the repository's own `pyproject.toml` already provides, so
+these scripts deliberately do *not* carry a nested `uv init` project — a second project
+here would duplicate that dependency and pin it separately from the repo. `uv run` from
+anywhere in the tree resolves the repo environment, which is all these need.
+
+This matters concretely: the system `python3` on macOS is 3.9 and dies with
+`TypeError: unsupported operand type(s) for |` on the `X | Y` annotations here. That
+traceback is a *tooling* failure, not an analysis result — do not read it as the audit
+finding a problem, and do not report quotes or counts as checked from a run that ended
+that way.
+
 ## `akap12_motifs.py`
 
 Tests whether the PKC-binding motifs reported for rodent SSeCKS
@@ -15,7 +27,7 @@ transfer the coordinates. It searches the human sequence with the published
 consensus expressed as a regex and reports where it genuinely matches.
 
 ```bash
-python3 akap12_motifs.py ../AKAP12-uniprot.txt
+uv run python akap12_motifs.py ../AKAP12-uniprot.txt
 ```
 
 Output is committed as `motifs.out`.
@@ -37,9 +49,17 @@ least 4 times") that could not fire, because the term also appears in prose.
 
 ## `akap12_audit_selftest.py`
 
-Mutation test for the audit. It perturbs the review document one defect at a time
-and asserts the audit **fails** on each, then restores the file and checks it is
-byte-identical.
+Mutation test for the audit. It perturbs the review document one defect at a time and
+asserts the audit **fails** on each, with the expected message.
+
+Each mutant is written to a **tempfile** and `akap12_audit.py` is pointed at it via its
+optional path argument; the curated review file is never written, and the script asserts
+that at the end. An earlier version mutated the real file in place and restored it in a
+`finally`, which meant an interrupted run could leave deliberately corrupted YAML in the
+working tree — a test must not be able to damage the artifact it is testing.
+
+Two entries are **controls** that must *not* trip the audit, so a guard that fires on
+everything is caught too.
 
 ```bash
 python3 akap12_audit_selftest.py

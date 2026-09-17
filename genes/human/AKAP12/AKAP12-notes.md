@@ -109,7 +109,7 @@ Those coordinates are rodent, so they cannot simply be read onto human AKAP12.
 
 Rather than transfer the numbers, the consensus was run as a regex against the human Q02952
 sequence parsed from `AKAP12-uniprot.txt` (script:
-`scratchpad/akap12_motifs.py`; length asserted == 1782 before use). Exactly two matches:
+`AKAP12-bioinformatics/akap12_motifs.py`; length asserted == 1782 before use). Exactly two matches:
 
 ```
 605-633  EGVTPWASFKKMVTPKKRVRRPSESDKED
@@ -381,8 +381,8 @@ Recording the negatives, since an omission with a reason is more useful than a s
 
 ## Own-audit findings (process)
 
-`scratchpad/akap12_audit.py` asserts: strict duplicate-key YAML load; raw-vs-parsed
-`reference_id` counts (50 = 50, anchored to `^\s*- reference_id:` so
+`AKAP12-bioinformatics/akap12_audit.py` asserts: strict duplicate-key YAML load; raw-vs-parsed
+`reference_id` counts (53 = 53, anchored to `^\s*- reference_id:` so
 `original_reference_id:` cannot match); GOA row coverage by `(term, evidence, reference,
 with/from)`; `source_entities` derived from the GOA WITH/FROM field with a count assertion;
 `root_cause`/`failure_modes`/`action` agreement; no undeclared references; and species
@@ -399,10 +399,16 @@ mention is corroboration. A blacklist cannot tell those apart. Replaced with the
 invariant — an experimental code must state the species the experiment was done in — which
 is the claim actually being made.
 
-`scratchpad/akap12_audit_selftest.py` breaks the document nine ways (seven mutations that
-must trip a guard, two controls that must not), asserting each anchor string is present
-before replacing it so a drifted mutation cannot "pass" by changing nothing, and confirming
-the file is restored byte-identically afterwards.
+`AKAP12-bioinformatics/akap12_audit_selftest.py` breaks the document ten ways (eight
+mutations that must trip a named guard, two controls that must not), asserting each anchor
+string is present before replacing it so a drifted mutation cannot "pass" by changing
+nothing. Mutants are written to a tempfile and the audit is pointed at them via its
+optional path argument, so the curated file is never written at all — the script asserts
+that at the end rather than relying on a restore step.
+
+The anchor assertion earned its keep immediately: when the eighth mutation was added, its
+anchor was copied by hand and dropped the word `regeneration`, and the run reported `ANCHOR
+NOT FOUND - mutation would have been a silent no-op` instead of quietly claiming a pass.
 
 Two further defects came out of that, both worth recording because neither was found by
 reading:
@@ -434,7 +440,7 @@ reading:
   An uncommitted check is not a check.
 
 `checkquotes.py` from the shared scratchpad was run after confirming it resolved the correct
-repo root (it prints it; it derived this worktree, not another agent's). 77 quotes, 0
+repo root (it prints it; it derived this worktree, not another agent's). 83 quotes, 0
 problems, and 0 `file:` quotes — none were used, because CI does not validate them.
 
 ## Why the `validate` warning about the deep-research file is left standing

@@ -3,8 +3,12 @@
 A self-test proves only the guards you thought of fire; it cannot tell you which guard you
 failed to write. So each mutation here ASSERTS its target string is present before
 replacing it - a mutation whose anchor has drifted otherwise "passes" by changing nothing.
+
+Mutants are written to a TEMPFILE and the audit is pointed at it. An earlier version wrote
+each mutant over the curated review file and restored it afterwards, which meant an
+interrupted run (Ctrl-C, crash, killed shell) could leave deliberately corrupted YAML in the
+working tree. A test must not be able to damage the artifact it is testing.
 """
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -41,10 +45,18 @@ MUTATIONS = [
         "source_entities != GOA WITH/FROM",
     ),
     (
-        "root_cause contradicts action",
+        "harmless prose edit",
         "    action: MARK_AS_OVER_ANNOTATED\n    reason: >-\n      The donor annotation is IEP from PMID:23925424, whose entire content is expression",
         "    action: MARK_AS_OVER_ANNOTATED\n    reason: >-\n      MUTATED. The donor annotation is IEP from PMID:23925424, whose entire content is expression",
         None,  # control: a harmless prose edit must NOT trip anything
+    ),
+    (
+        # exercises the root_cause-vs-action coherence guard: an over-annotation row whose
+        # propagation_review simultaneously claims nothing went wrong.
+        "root_cause contradicts action",
+        "        regeneration or formation of liver fibrosis after various injuries.\n    propagation_review:\n      root_cause: SOURCE_WEAK_OR_INFERRED\n",
+        "        regeneration or formation of liver fibrosis after various injuries.\n    propagation_review:\n      root_cause: NO_FAILURE_CORE\n",
+        "asserts no failure",
     ),
     (
         "undeclared reference",
@@ -79,38 +91,35 @@ MUTATIONS = [
 ]
 
 
-def run_audit(root):
-    return subprocess.run(
-        ["uv", "run", "--quiet", "python", str(AUDIT)],
-        cwd=root,
-        capture_output=True,
-        text=True,
-    )
+def run_audit(target=None):
+    """Run the audit, optionally against a mutated copy rather than the curated file."""
+    cmd = ["uv", "run", "--quiet", "python", str(AUDIT)]
+    if target is not None:
+        cmd.append(str(target))
+    return subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
 
 
 failures = []
 
-# baseline
-with tempfile.TemporaryDirectory() as td:
-    work = Path(td) / "repo"
-    work.symlink_to(ROOT)
-    base = run_audit(ROOT)
+base = run_audit()
 if base.returncode != 0:
-    raise SystemExit(f"BASELINE ALREADY FAILING - fix the document first:\n{base.stdout}")
+    raise SystemExit(
+        f"BASELINE ALREADY FAILING - fix the document first:\n{base.stdout}{base.stderr}"
+    )
 print("baseline: audit passes\n")
 
 original = (ROOT / REL).read_text()
-backup = original
 
-for name, old, new, expect in MUTATIONS:
-    if old not in original:
-        failures.append(f"{name}: ANCHOR NOT FOUND - mutation would have been a silent no-op")
-        continue
-    mutated = original.replace(old, new, 1)
-    assert mutated != original, f"{name}: mutation produced no change"
-    (ROOT / REL).write_text(mutated)
-    try:
-        res = run_audit(ROOT)
+with tempfile.TemporaryDirectory() as td:
+    mutant_path = Path(td) / "AKAP12-ai-review.yaml"
+    for name, old, new, expect in MUTATIONS:
+        if old not in original:
+            failures.append(f"{name}: ANCHOR NOT FOUND - mutation would have been a silent no-op")
+            continue
+        mutated = original.replace(old, new, 1)
+        assert mutated != original, f"{name}: mutation produced no change"
+        mutant_path.write_text(mutated)
+        res = run_audit(mutant_path)
         out = res.stdout + res.stderr
         if expect is None:
             if res.returncode != 0:
@@ -127,12 +136,10 @@ for name, old, new, expect in MUTATIONS:
                 )
             else:
                 print(f"  guard fires  : {name}")
-    finally:
-        (ROOT / REL).write_text(backup)
 
-# confirm restoration
-assert (ROOT / REL).read_text() == original, "FAILED TO RESTORE the review file"
-print("\nfile restored byte-identically")
+# The curated file is never written by this script; assert that rather than assume it.
+assert (ROOT / REL).read_text() == original, "the self-test modified the curated review file"
+print("\ncurated file untouched (never written)")
 
 if failures:
     print()

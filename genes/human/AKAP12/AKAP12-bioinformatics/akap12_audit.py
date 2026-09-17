@@ -30,7 +30,9 @@ if ROOT is None:
     raise SystemExit("could not derive repo root")
 print(f"root = {ROOT}")
 
-YAML_PATH = ROOT / "genes/human/AKAP12/AKAP12-ai-review.yaml"
+# The review document may be overridden on the command line so that the self-test can audit
+# a mutated COPY in a tempfile. Nothing that writes to the curated file belongs in a test.
+YAML_PATH = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "genes/human/AKAP12/AKAP12-ai-review.yaml"
 GOA_PATH = ROOT / "genes/human/AKAP12/AKAP12-goa.tsv"
 
 EXPERIMENTAL = {"EXP", "IDA", "IPI", "IMP", "IGI", "IEP", "HTP", "HDA", "HMP", "HGI", "HEP"}

@@ -46,5 +46,7 @@ NEW 4; 53 `reference_id` occurrences parse to 53; 13 `propagation_review` blocks
 checked; the retracted `PMID:27683220` retains `is_invalid: true` and is cited by
 no `supported_by`.
 
-`akap12_audit_selftest.py` passes, confirming each audit guard actually fires on a
-correspondingly broken document rather than passing vacuously.
+`akap12_audit_selftest.py` passes: eight mutations each trip their named guard with the
+expected message, and two controls leave the audit silent, so a guard that fires on
+everything would be caught too. Mutants are audited in a tempfile — the curated review file
+is never written, which the script asserts at the end.
