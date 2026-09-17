@@ -65,6 +65,16 @@ actually worked were:
   journals. Highest yield of all; this is how the SULT1B1 Matters Arising exchange was found.
 - **Direct probes of proteins suspected of live disputes**, then reading what 2025-2026 added.
 
+**Retraction status was not checked during the survey, and should have been.** That gap surfaced
+when reviewing TNFRSF21: the founding claim behind its entry had been retracted in 2024 and the
+survey had no step that would have caught it. Checking afterwards, all 104 PMIDs cited on this
+page were re-queried for `Retracted Publication` / `Expression of Concern` publication types and
+for `RetractionIn` / `ExpressionOfConcernIn` / `ErratumIn` links. **None is retracted.** Three
+carry errata, all already handled in the relevant reviews: PMID:35679869 (ErratumIn 35931039),
+PMID:41679312 (ErratumIn 42001851), and PMID:36805701 — which has **two**, PMID:37626192 from 2023
+and PMID:40890508 from 2025; only the second was known to this survey. A retraction/erratum sweep
+belongs in the method from the start, not as an afterthought.
+
 Every PMID below was verified against PubMed by re-fetching title, journal, year and DOI; the
 DOIs were extracted from the article's own `ELocationID`/`ArticleIdList`, **not** from the
 reference list, which is an easy way to attach a real-looking but wrong DOI to an entry. Current
@@ -437,6 +447,16 @@ Not a literature controversy so much as an internal inconsistency the controvers
   injury responses during Wallerian degeneration"* (PMID:41891813, *eLife* 2026,
   [DOI](https://doi.org/10.7554/eLife.108389)). GOA carries only `protein binding` as MF, so the
   exposure is in BP rather than MF.
+  **Correction after review: this is less of a live controversy than the entry implied, because
+  the founding claim was already withdrawn.** The 2009 *Nature* paper that proposed APP as the DR6
+  ligand triggering axon pruning and neuron death (PMID:19225519) is flagged in PubMed as a
+  **Retracted Publication**, retracted in January 2024 (notice PMID:38110576) — verified directly.
+  The 2026 paper is therefore clearing residue rather than opening a dispute. Reviewing the gene
+  found the practical exposure to be near zero anyway: **no GO annotation on human TNFRSF21 or on
+  mouse Tnfrsf21 cites the retracted paper**, and GO has no axon-degeneration or axon-pruning term
+  for the gene to carry. Note also that the refutation's scope is narrow — injury-induced
+  Wallerian degeneration in peripheral nerve — and does not test developmental CNS pruning,
+  trophic-deprivation degeneration, or the immune and oligodendrocyte roles.
 - **MICU1/2/3** — claimed to form Ca²⁺-dependent metabolons with FADH₂-linked dehydrogenases
   *independently of MCU*, displacing the textbook matrix-Ca²⁺ model (PMID:42129466, *Nat Metab*
   2026, [DOI](https://doi.org/10.1038/s42255-026-01513-z)). No published rebuttal yet.
