@@ -287,7 +287,7 @@ gitignored but regenerable. Rerun after fetching new genes.
 | Step | Command | Outputs |
 |------|---------|---------|
 | Local extraction | [`extract_caution_notes.py`](UNIPROT_CAUTION_NOTE/extract_caution_notes.py) | [`caution_notes.tsv`](UNIPROT_CAUTION_NOTE/caution_notes.tsv), [`caution_notes.md`](UNIPROT_CAUTION_NOTE/caution_notes.md) |
-| DB-wide survey (REST API `cc_caution`) | [`uniprot_api_survey.py`](UNIPROT_CAUTION_NOTE/uniprot_api_survey.py) (`--organism 9606` for human) | [`caution_uniprot_reviewed.tsv`](UNIPROT_CAUTION_NOTE/caution_uniprot_reviewed.tsv), [`api_survey.md`](UNIPROT_CAUTION_NOTE/api_survey.md) |
+| DB-wide survey (REST API `cc_caution`) | [`uniprot_api_survey.py`](UNIPROT_CAUTION_NOTE/uniprot_api_survey.py) (`--organism 9606` for human) | `caution_uniprot_reviewed.tsv` (generated locally; not archived), [`api_survey.md`](UNIPROT_CAUTION_NOTE/api_survey.md) |
 | Prioritized worklist | [`shortlist_candidates.py`](UNIPROT_CAUTION_NOTE/shortlist_candidates.py) | [`candidates_high_value.tsv`](UNIPROT_CAUTION_NOTE/candidates_high_value.tsv), [`candidates.md`](UNIPROT_CAUTION_NOTE/candidates.md) |
 | Local over-annotation queries (A/B) | [`caution_conjunction_queries.py`](UNIPROT_CAUTION_NOTE/caution_conjunction_queries.py) | [`caution_conjunction.md`](UNIPROT_CAUTION_NOTE/caution_conjunction.md), `conjunction_hits.tsv`, `caution_pmid_unnegated.tsv` |
 | Validate queries vs reviews | [`audit_queries_vs_reviews.py`](UNIPROT_CAUTION_NOTE/audit_queries_vs_reviews.py) | [`audit_queries_vs_reviews.md`](UNIPROT_CAUTION_NOTE/audit_queries_vs_reviews.md) |
