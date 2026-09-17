@@ -158,7 +158,24 @@ def audit_term(go_id: str, label: str) -> dict:
         "withFrom": NODE,
     })
     entities = sorted({r["geneProductId"] for r in iba})
-    taxa = sorted({r["taxonName"] for r in iba if r.get("taxonName")})
+    # QuickGO populates taxonId but leaves taxonName null on these rows. Counting
+    # distinct taxonName would report 0, which reads as a finding rather than as a
+    # missing field -- so key on taxonId and assert it is actually present.
+    taxon_ids = sorted({r["taxonId"] for r in iba if r.get("taxonId")})
+    if iba and not taxon_ids:
+        raise RuntimeError(
+            f"{go_id}: {len(iba)} IBA rows but no taxonId on any of them; "
+            "the QuickGO response shape changed -- do not report a zero taxon count."
+        )
+
+    # Which extant donors does each propagated row itself name? For a node-level
+    # propagation these should be identical across the family; if one lineage-specific
+    # protein appears on every row, the whole propagation rests on that one protein.
+    donor_tokens: Counter = Counter()
+    for r in iba:
+        for wf in (r.get("withFrom") or []):
+            for x in wf.get("connectedXrefs", []):
+                donor_tokens[f"{x['db']}:{x['id']}"] += 1
 
     # 2. donor pool: which of those entities hold the term (or a descendant) by
     #    their own experimental evidence?
@@ -196,7 +213,8 @@ def audit_term(go_id: str, label: str) -> dict:
         "go_label": label,
         "iba_annotations_from_node": len(iba),
         "distinct_entities": len(entities),
-        "distinct_taxa": len(taxa),
+        "distinct_taxon_ids": len(taxon_ids),
+        "withfrom_donor_token_counts": dict(donor_tokens),
         "subject_receives_it": SUBJECT in entities,
         "iba_evidence_codes_citing_node": dict(by_code),
         "experimental_holders": exp_holders,
@@ -230,8 +248,12 @@ def main() -> int:
         print(f"\n=== {go_id} {res['go_label']} ===")
         print(f"  IBA rows citing {NODE}: {res['iba_annotations_from_node']}")
         print(f"  distinct gene products receiving it: {res['distinct_entities']}")
-        print(f"  distinct taxa: {res['distinct_taxa']}")
+        print(f"  distinct NCBI taxon ids: {res['distinct_taxon_ids']}")
         print(f"  human ARGLU1 among them: {res['subject_receives_it']}")
+        print("  WITH/FROM donor tokens named on those rows:")
+        for tok, n in sorted(res["withfrom_donor_token_counts"].items(),
+                             key=lambda kv: -kv[1]):
+            print(f"    {tok}: on {n}/{res['iba_annotations_from_node']} rows")
         print(f"  gene products with their OWN experimental evidence "
               f"for this term: {res['n_experimental_holders']}")
         for h in res["experimental_holders"]:
