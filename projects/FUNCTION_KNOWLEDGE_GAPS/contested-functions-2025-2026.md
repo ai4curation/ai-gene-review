@@ -457,6 +457,51 @@ Not a literature controversy so much as an internal inconsistency the controvers
   sulfotransferase terms, no histone sulfotransferase activity. Useful as a worked example of
   the system behaving correctly.
 
+## Systematic defects found while reviewing
+
+Three findings from this batch are not about one gene. They are mechanical faults that
+mis-annotate whole sets of proteins, and they are worth fixing upstream rather than gene by gene.
+
+### InterPro2GO maps "calcium permeable" to "calcium activated"
+
+**InterPro IPR045122** is named *"Calcium **permeable** stress-gated cation channel 1-like"*.
+InterPro2GO maps it to **`GO:0005227` calcium-**activated** cation channel activity**, whose
+definition requires a channel "that opens when a calcium cation has been bound by the channel
+complex or one of its constituent parts".
+
+Permeable-to-calcium and gated-by-calcium are opposite directions of causation. TMEM63/OSCA
+channels are stretch- and osmolarity-gated and merely Ca²⁺-permeable, so the term is wrong for
+every one of them. The signature matches **23,725 proteins** across species; in human it lands on
+**TMEM63A, TMEM63B and TMEM63C**. (The other human proteins carrying this term by InterPro IEA —
+KCNN1-4 — are genuine SK channels, so the term itself is fine; only this mapping is wrong.)
+Verified live against the InterPro and QuickGO APIs.
+
+### InterPro2GO gives ZBP1 a deaminase activity it has no domain for
+
+**InterPro IPR042371** is the generic **"Z-binding domain"** entry, and it carries both
+`GO:0003723` RNA binding *and* `GO:0003726` **double-stranded RNA adenosine deaminase activity**.
+The deaminase activity belongs to ADAR1, which shares the Zα domain. ZBP1 has a Zα domain and no
+deaminase domain, so it inherits an enzymatic activity it cannot perform. A domain-level signature
+should not carry an activity that belongs to only one of the proteins bearing that domain.
+
+### A frameshifted ORF's activity annotated onto the parent protein
+
+**ALKBH1** carries `GO:0042056` chemoattractant activity and `GO:0050918` positive chemotaxis —
+incoherent for a matrix-targeted mitochondrial 2-oxoglutarate dioxygenase with no signal peptide.
+The IEA derives from mouse ALKBH1 via PMID:16860792, whose own abstract explains the problem:
+*"The Nrp gene is encoded as a forward frameshift to the hypothetical alkylated DNA repair protein
+AlkB."* NRP is a secreted, SDF-1-like factor translated from a **different reading frame of the
+same locus**. Its chemoattractant activity was annotated onto the dioxygenase. The mouse
+annotation likely warrants MGI's attention as well.
+
+### Two suspected data errors, flagged not acted on
+
+- **ZBP1** `GO:0005515` IPI from PMID:19590578 lists **Q13601** in `WITH/FROM`. Q13601 is **KRR1**,
+  a small-subunit processome component; RIPK1 is Q13546. Looks like a transposed accession in the
+  source interaction data.
+- **GRID1** `GO:0005515` has exactly two IPI rows and **both** name **P68871, haemoglobin subunit
+  beta** — a standard affinity-purification contaminant, not a postsynaptic partner.
+
 ## Checked and set aside
 
 Recorded so the same ground is not re-covered.
