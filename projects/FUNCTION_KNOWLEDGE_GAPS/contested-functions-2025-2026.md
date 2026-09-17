@@ -522,6 +522,35 @@ deorphanization and is not primary evidence for anything about PEX39's function.
 the UniProt REST API and PubMed. Minor, but it is the kind of citation that later propagates as
 though it were independent support.
 
+### Paraphrase presented as quotation, repo-wide, in an unvalidated field
+
+Found while updating MTCH2: five of its `supporting_text` entries attributed to a deep-research
+file began "Falcon synthesis supports..." and appear **nowhere in that file**. They are the
+reviewer's own summary narration sitting in a field that, by schema, means a verbatim quote.
+
+They survived because **the reference validator checks `supporting_text` only for `PMID:`
+references.** Quotes attributed to `file:` references — deep-research reports, UniProt records,
+GOA tables — have never been checked at all.
+
+A repo-wide scan (`scripts/check_file_supporting_text.py`, output in
+`reports/file_supporting_text_mismatches.json`) checked **55,433** `file:` supporting_text entries.
+Raw mismatch counts overstate the problem and should not be quoted as a fabrication count: UniProt
+`.txt` records carry two-letter line-prefix codes that break substring matching (stripped in the
+script), and genuine benign cases remain — smart quotes, ellipses, quotes stitched across
+non-contiguous lines.
+
+The unambiguous subset is the one worth acting on: **1,042 entries whose "quote" begins with a
+narration word** such as *"Falcon report summarizes..."* or *"Falcon deep research supports..."*.
+These cannot be verbatim source text by construction. Spot-checked: the ABI1 deep-research file
+contains **zero** occurrences of the string "Falcon", yet ABI1's review carries several
+`supporting_text` entries opening with "Falcon report summarizes".
+
+Two things follow. First, extending the reference validator to cover `file:` references would stop
+this recurring — it is the same check that already works for PMIDs. Second, the existing entries
+need either requoting or demotion to a non-quote field; they are not necessarily *wrong* as
+summaries, but they are not quotations and should not be readable as evidence that a source said
+something in those words.
+
 ### Two suspected data errors, flagged not acted on
 
 - **ZBP1** `GO:0005515` IPI from PMID:19590578 lists **Q13601** in `WITH/FROM`. Q13601 is **KRR1**,
