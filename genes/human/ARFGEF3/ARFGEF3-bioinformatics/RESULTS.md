@@ -150,6 +150,44 @@ agree; they do not. No specificity upgrade is warranted on this row.
 
 ---
 
+## 3. Two CC rows sit in a disjoint GO branch, because of a SubCell mapping
+
+ARFGEF3's `GO:0030133` and `GO:0030658` rows come from `GO_REF:0000044`, the
+UniProtKB-SubCell mapping, via `SL-0244` and `SL-0245`. `subcell_mapping_check.py`
+resolves each one and asks how the mapped GO term relates to the term the primary
+literature supports — querying QuickGO's `is_a`/`part_of` closure rather than
+reading it off the labels, because "secretory vesicle" and "transport vesicle"
+sound related and are not.
+
+| SubCell | UniProt's name for it | maps to | literature supports | relation |
+|---|---|---|---|---|
+| `SL-0086` | Cytoplasm | `GO:0005737` cytoplasm | — | EXACT |
+| `SL-0244` | **Secretory vesicle** | `GO:0030133` transport vesicle | `GO:0030141` secretory granule | **DISJOINT** |
+| `SL-0245` | **Secretory vesicle membrane** | `GO:0030658` transport vesicle membrane | `GO:0030667` secretory granule membrane | **DISJOINT** |
+
+`GO:0030141` and `GO:0030133` are sibling branches under `GO:0031410 cytoplasmic
+vesicle`; neither is an ancestor of the other. So this is not a coarse-but-correct
+parent — it is the wrong branch, and the two membrane terms inherit the same split.
+GO's definitions make the reason plain: `GO:0030133` is "Any of the vesicles of the
+**constitutive** secretory pathway", while insulin and glucagon granules are
+**regulated** secretory granules.
+
+**The mismatch starts inside UniProt.** `SL-0244`'s own definition is
+regulated-pathway language — a vesicle that "mediates the vesicular transport of
+cargo - e.g. hormones or neurotransmitters - from an organelle to specific sites at
+the cell membrane, where it docks and fuses to release its content". That is
+`GO:0030141`, not `GO:0030133`.
+
+**Scale, stated precisely.** `SL-0244` is carried by **130,685** UniProtKB entries
+and `SL-0245` by **90,419** (read from the `x-total-results` header, not from a page
+length). That is the number of entries the mapping is *applied to*, and it is **not**
+a claim that all of them are mis-annotated: `SL-0244` is a broad term and some
+proteins in it may genuinely sit in the constitutive pathway. The claim is that the
+mapping is wrong *for this protein*, and that because it is a single vocabulary-level
+rule, it would be wrong at that scale wherever the regulated reading applies.
+
+---
+
 ## Files
 
 | file | contents |
@@ -162,3 +200,5 @@ agree; they do not. No specificity upgrade is warranted on this row.
 | `sec7_catalytic_check.py` | glutamic-finger analysis, controls and self-test |
 | `sec7_glutamic_finger.tsv` | per-sequence scoring table |
 | `sec7_glutamic_finger.json` | machine-readable summary |
+| `subcell_mapping_check.py` | SubCell→GO branch check for the `GO_REF:0000044` rows |
+| `subcell_mapping.tsv` / `.json` | per-SubCell-id resolution and branch relation |

@@ -1,0 +1,294 @@
+# ARFGEF3 (BIG3) — review notes
+
+UniProt `Q5TH69`, 2177 aa, HGNC:21213. Synonyms BIG3, C6orf92, KIAA1244.
+Pharos class **Tdark**; `PE 1: Evidence at protein level` (detected by MS in
+several proteomes, and by western/IHC in breast cancer tissue).
+
+## Headline: the name asserts an activity the protein cannot perform
+
+The gene symbol, the UniProt recommended name ("Brefeldin A-inhibited guanine
+nucleotide-exchange protein 3", itself `ECO:0000305` — a curator inference from
+similarity, not a measurement) and both `GO:0005085` rows all assert ARF-GEF
+activity. Nothing has ever measured it on this protein, and the residue that
+performs the chemistry is absent.
+
+Sec7-domain ARF-GEFs act through one invariant glutamate, the "glutamic finger",
+which inserts into the ARF nucleotide pocket to destabilise bound GDP. Chen *et
+al.* showed BIG3 lacks it:
+
+> [PMID:24997568 "they showed that BIG3 lacked the conserved motif and critically, the essential glutamate residue"]
+
+> [PMID:24997568 "This region is conserved among the BIG3 orthologues, all of which lack the functional motif."]
+
+and the divergence is not marginal:
+
+> [PMID:24997568 "BIG3 showed only 21% identities to BIG1 and BIG2, with ~30% identity in DUF1981 and no significant similarity (i.e., a BLAST e-value of > 10) found in the Sec7 domain."]
+
+The group that named the protein says the same thing in their own papers:
+
+> [PMID:24711543 "It is worth noting that the single known functional domain in BIG3 by sequence analysis, the Sec7 domain, has a non-functional catalytic motif"]
+
+> [PMID:27696409 "we recently identified BIG3 as a novel ARF GEF protein with a non-functional catalytic motif in the SEC7 domain"]
+
+### Verified independently — `ARFGEF3-bioinformatics/`
+
+I did not take this on the papers' word. Re-derived from live UniProt + MAFFT,
+with the comparison panel built **from the GOA WITH/FROM field** rather than by
+hand (`sec7_catalytic_check.py`, full write-up in
+`ARFGEF3-bioinformatics/RESULTS.md`):
+
+| class | n | residue at the derived glutamic-finger column |
+|---|---|---|
+| catalytically-verified WITH/FROM donors | 17 | **E in 17/17** |
+| known-dead comparator (`ARFGEF1 E793A`) | 1 | A — scored absent |
+| human ARFGEF3 | 1 | **N692** (`LLSLSNVEEVD`, zero motif matches) |
+| mouse Arfgef3 | 1 | **S688** (`LLALSSVEEVD`) |
+
+The column is *derived* from the known-active donors, not hardcoded, and
+cross-checked against the alignment-free `[FY]-x-[LIVM]-P-G-E` motif. Controls run
+in both directions and the `--self-test` exits 0: leave-one-out over all 17 donors,
+a verified-active positive control, and a Glu→Ala mutant of that control which must
+score negative (a detector that cannot report a negative proves nothing). The
+mutation target is asserted present before it is mutated, so the control cannot
+silently no-op.
+
+**The asymmetry matters and I have kept to it.** Losing the catalytic residue is
+strong evidence *against* the activity; retaining it would *not* have been evidence
+*for* it. Only the negative direction is claimed.
+
+**Reproduction defect found.** Chen *et al.*'s Methods give GEP100 as
+`Swiss-Prot:Q6ND90`, which is a *Rhodopseudomonas palustris* succinate dehydrogenase
+cytochrome b556 subunit (TrEMBL, no Sec7 domain). Human GEP100/BRAG2/IQSEC1 is
+**Q6DN90** — two transposed characters. The script reports what each published
+accession really resolves to and applies the correction explicitly.
+
+### A caveat I could not close
+
+Chen *et al.* write that their prediction is
+
+> [PMID:24997568 "consistent with a previous demonstration by the GST-GAT pull-down assay"]
+
+and the `<xref rid>` in the PMC XML resolves that citation to **PMID:24711543**
+(Li *et al.* 2014). I could not locate a GST-GAT pull-down in the accessible text
+of that paper — it is neither in the cached full text nor in any of its five named
+supplementary figures, and PMC restricts its XML. So the *direct experimental*
+demonstration that BIG3 fails to load ARF with GTP is asserted in the literature
+but I could not verify it. **The review therefore rests on the residue analysis and
+the authors' repeated sequence-level statements, not on that pull-down.** Recorded
+as a question for the authors rather than quoted as evidence.
+
+## What BIG3 actually does
+
+Two well-supported activities, neither of them catalytic, and **neither in GOA**.
+
+### 1. Sequestering PHB2 in the cytoplasm
+
+The founding human paper:
+
+> [PMID:19496786 "BIG3 trapped PHB2/REA in the cytoplasm and inhibited its nuclear translocation, and caused enhancement of ERα transcriptional activity"]
+
+The mechanism is occlusion of PHB2's import receptors, not a generic tether:
+
+> [PMID:26052702 "These data indicated that BIG3 may block the KPNAs (KPNA1, KPNA5, and KPNA6) binding region(s) of PHB2, thereby leading to inhibition of KPNAs-mediated PHB2 nuclear translocation in the presence of E2 in breast cancer cells."]
+
+This is `GO:0140313 molecular sequestering activity` almost verbatim — GO defines it
+as "Binding to a specific molecule to prevent it from interacting with other partners
+or to inhibit its localization to the area of the cell or complex where it is active."
+The downstream process is `GO:0042308 negative regulation of protein import into
+nucleus`.
+
+Interface mapped to a single predicted helix and confirmed by mutagenesis:
+Q165/D169/Q173, within the experimentally-delimited PHB2-binding region 86–434
+(PMID:24997568; the peptide built from it is ERAP, PMID:24051437). Note that
+`BIG3` acting *on* ERα directly was tested and failed:
+
+> [PMID:19496786 "we investigated the possibility of a direct interaction between BIG3 and ERα, but failed to indicate their interaction (data not shown)"]
+
+so ERα-pathway terms would be a `ROLE_CONFLATION`: BIG3's substrate is PHB2, and ERα
+activity is two steps downstream.
+
+### 2. Scaffolding PKA and PP1Cα (AKAP function)
+
+> [PMID:28555617 "We detected an endogenous interaction between BIG3 and PP1Cα in the ERα-positive breast cancer cell lines MCF-7 and KPL-3C, which highly express both proteins"]
+
+> [PMID:28555617 "This showed that the introduction of WT-BIG3 inhibited endogenous PP1Cα activity in a dose-dependent manner, while ΔPP1Cα-BIG3 did not"]
+
+Binding is via a canonical PP1C docking motif (RVxF, `1,228-KAVSF-1,232`) and the
+`ΔPP1Cα` deletion abolishes it. E2-driven PKA phosphorylation of BIG3-S305/S1208
+then relieves the inhibition, so PP1Cα dephosphorylates PHB2-S39. So BIG3 is a
+genuine `GO:0008157 protein phosphatase 1 binding` + `GO:0004864 protein phosphatase
+inhibitor activity` + `GO:0051018 protein kinase A binding` protein. **All three are
+human, endogenous-protein experiments, and none is in GOA.**
+
+This is also where the family connection survives: BIG1 and BIG2 carry AKAP
+sequences too (PMID:28555617 intro). So what BIG3 inherited from the family is the
+*scaffolding*, not the catalysis.
+
+## Secretory-granule biology — real, but mouse
+
+The strongest functional data are from mouse and must be encoded as ISS/ISO, not
+IMP/IDA (the experiments were not done in human).
+
+> [PMID:24711543 "BIG3 is predominantly localized to insulin- and clathrin-positive trans-Golgi network (TGN) compartments."]
+
+> [PMID:24711543 "Furthermore, BIG3 predominantly localized to insulin granules of islet β-cells, as revealed by immuno-EM"]
+
+> [PMID:24711543 "these results demonstrate that BIG3 negatively modulates insulin granule biogenesis and insulin secretion and participates in the regulation of systemic glucose homeostasis"]
+
+Same sign in alpha cells:
+
+> [PMID:25737957 "BIG3 is highly expressed in pancreatic alpha-cells in addition to beta-cells, but is absent in delta-cells."]
+
+> [PMID:25737957 "Depletion of BIG3 in alpha-cells leads to elevated glucagon production and secretion."]
+
+The authors' own model is explicitly that the *dead* Sec7 domain is the point:
+
+> [PMID:24711543 "one of our hypotheses is that BIG3 acts as a competitive non-functional Arf-GEF, thereby negatively modulating granule production"]
+
+That is a hypothesis, not a result, and I have not annotated it. But it does mean
+the right reading of ARFGEF3 is not "a GEF that GO over-called" — it is "a
+catalytically dead family member that regulates the pathway its active relatives
+catalyse".
+
+UniProt already carries the granule localisation as `ECO:0000250|UniProtKB:Q3UGY8`
+(from mouse), which is where the `GO:0030133` / `GO:0030658` IEA rows come from.
+Those SubCell terms say *transport vesicle*; the mouse data say *secretory granule*
+and *trans-Golgi network*, which are different things — a genuine, fixable
+mismatch (see the review's `GO:0030133` and `GO:0030658` rows).
+
+## Localisation is context-dependent — three compartments, three cell types
+
+| compartment | cell type | evidence |
+|---|---|---|
+| cytoplasm (diffuse) | human breast cancer | IHC/ICC, endogenous, PMID:19496786 |
+| TGN / immature secretory granules | mouse islet β- and α-cells | PMID:24711543, PMID:25737957 |
+| lysosome | mouse hippocampal neurons | PMID:27696409 |
+| mitochondrion | human osteosarcoma lines | PMID:34363714 |
+
+> [PMID:27696409 "In hippocampal neurons, BIG3 is mainly localized in lysosomes, and its depletion selectively impairs inhibitory synaptic transmission."]
+
+> [PMID:34363714 "BIG3-PHB2 complexes were localized mainly in mitochondria in OS cells, unlike in estrogen-dependent breast cancer cells."]
+
+The osteosarcoma paper explicitly contrasts its own result with the breast-cancer
+localisation, so this is not a contradiction being papered over — it is a
+cell-type-dependent distribution. `GO:0005737 cytoplasm` (the one EXP row) is the
+only one of these four that is human *and* in GOA; the other three are coverage gaps
+and are all non-human or non-canonical enough that I have kept them out of
+`core_functions` and raised them as questions instead.
+
+## affinage record: gates passed, and two citations are a different gene
+
+`ARFGEF3-deep-research-affinage.md`, `faith_pct: 100.0`, 14 citations, trust gates
+clear. The gates are a **precision** gate; there is no recall gate, and both
+failure directions showed up here.
+
+**Precision failure the gates do not cover.** Two of its 14 citations —
+PMID:14657013 and PMID:15707593 — are not about this gene at all. They concern
+"BIG-3 = **BMP-2-induced gene 3 kb**", a **34-kDa, seven-WD-40-repeat** protein
+(PMID:11551928), i.e. a pure name collision with ARFGEF3/BIG3 (2177 aa, 240 kDa,
+Sec7 + ARM, no WD40). The affinage narrative presents their chondrocyte- and
+osteoblast-differentiation results as ARFGEF3 findings. Both are marked
+`relevance: NONE`, `correctness: MISCITED` in the review, and nothing rests on them.
+Note the gates still passed: the PMIDs are real and the quotes faithful — the join
+to *this gene* is what is wrong, which is precisely the class of error no mechanical
+gate sees.
+
+**Recall failures.** An independent PubMed sweep over `ARFGEF3 OR BIG3 OR BIG-3 OR
+KIAA1244` (129 hits, mostly "Brain Injury Guidelines" noise) found four real
+ARFGEF3 papers the provider never returned:
+
+- **PMID:27696409** — lysosomal localisation and GABAergic transmission in
+  hippocampal neurons. An entire tissue context and a fourth compartment, missing.
+- PMID:28500289 — stapled ERAP peptide.
+- PMID:25483453 — xanthohumol as a BIG3–PHB2 interaction inhibitor.
+- PMID:42478137 — BIG3 overexpression in extramammary Paget's disease.
+
+So: 2/14 provider citations were the wrong gene, and the single most
+compartment-informative paper was absent. Consistent with the campaign measurement
+that the gates certify only what was returned.
+
+## Propagation analysis (`ARFGEF3-bioinformatics/`)
+
+All 32 distinct WITH/FROM tokens across the 7 rows that carry one resolve; zero
+unresolved. `WB:WBGene00007703` resolved only by free-text fallback (WormBase *gene*
+ids are absent from UniProt's `xref:wormbase` index, which holds protein ids) and is
+reported as such. Four MOD ids map to >1 UniProt entry and are reported with their
+hit counts rather than collapsed.
+
+**ARFGEF3 does not appear in either of its own WITH/FROM lists**, so there is no
+self-referential donor and no experimental grounding on the target anywhere in
+either chain.
+
+### `GO:0005085` — the node is sound, the target is the exception
+
+18 protein donors. **18/18 carry their own experimental evidence** for the term, and
+**15/18 carry their own IDA** (direct exchange assay). The tempting dismissal
+("these donors only carry the same family-level inference") is factually false here,
+in every single case. So `SOURCE_WEAK_OR_INFERRED` would be contradicted by my own
+analysis; the correct classification is `PROPAGATION_BAD` +
+`PSEUDO_OR_SUBACTIVITY_LOSS`: PAINT placed the activity correctly at an ancestral
+node, and ARFGEF3 is the descendant that lost it.
+
+Reciprocal observation worth sending to PAINT: **MON2** (`SGD:S000005241`) is the
+only donor with **no annotated SEC7 domain** and no `IPR000904`, and is also one of
+the three without an IDA (IGI/IPI/ISS only). MON2 and ARFGEF3 share `IPR015403`
+(Mon2/Sec7/BIG1-like HDS). So the same node may be donating GEF activity to a
+*second* member that does not perform it — the mis-placed-member pattern, with the
+donor and the victim being the same kind of protein.
+
+### `GO:0016192` — the broad term is the correct LCA
+
+17/18 donors carry their own experimental evidence, but they do **not** agree on a
+process: between them they hold `GO:0006887`, `GO:0006888`, `GO:0006890`,
+`GO:0006891`, `GO:0006892`, `GO:0006893`, `GO:0006895`, `GO:0016197`, `GO:0032509`,
+`GO:0042147`, `GO:0043001`, `GO:0048193` and `GO:0048205` — anterograde, retrograde,
+intra-Golgi, endosomal and exocytic. `GO:0016192` is the genuine LCA of a
+heterogeneous donor set. `GRANULARITY_MISMATCH` requires the donors to agree; they
+do not, so no specificity upgrade is proposed on that row and it is ACCEPTed.
+
+## Paralogue cross-check
+
+`paint/ARFGEF1` and `paint/ARFGEF2` branches exist but are still at the branch point
+with nothing pushed, so I could not compare resolutions. Flagging the divergence in
+advance, because all three genes carry the **same** `GO:0005085` IBA from the same
+node and it should be resolved **differently**:
+
+| gene | glutamic finger | expected verdict |
+|---|---|---|
+| ARFGEF1 (BIG1, Q9Y6D6) | **E793** present | ACCEPT — also has its own IDA |
+| ARFGEF2 (BIG2, Q9Y6D5) | **E738** present | ACCEPT — also has its own IDA |
+| ARFGEF3 (BIG3, Q5TH69) | **N692** — absent | MARK_AS_OVER_ANNOTATED |
+
+Both paralogue positions were verified against the live UniProt sequences, so this
+is a checkable claim rather than an assumption about how those reviews will land.
+
+## Retraction / erratum check
+
+Checked each PMID relied on against its PubMed record. No retraction, erratum,
+expression of concern or publisher correction found on any of them. Recording the
+negative so the next reviewer knows the check ran.
+
+## Things I deliberately did not do
+
+- **No `GO:0005794 Golgi apparatus` row.** UniProt's `DR GO` block lists it
+  (`IEA:UniProtKB-ARBA`) but it is **not in the GOA TSV**, so it is not an existing
+  annotation to review. Noted, not annotated.
+- **No ERα-signalling BP term.** BIG3 acts on PHB2; the ERα effect is downstream and
+  BIG3–ERα binding was tested and not detected (PMID:19496786).
+- **No `GO:0005739 mitochondrion` / `GO:0005764 lysosome` in `core_functions`.** Each
+  rests on a single paper in one cell type (osteosarcoma lines; mouse neurons). They
+  are raised as questions.
+- **No proposed new GO term.** Every function I needed already exists:
+  `GO:0140313`, `GO:0042308`, `GO:0008157`, `GO:0004864`, `GO:0051018`,
+  `GO:1903306`. All eight candidate ids were checked against QuickGO
+  `/complete` for `isObsolete` and `secondaryIds` before use; none is obsolete or
+  merged.
+
+## Row/stub reconciliation
+
+GOA TSV: 8 data rows. `fetch-gene` stub: 8 `existing_annotations` entries. **They
+match** — no collapsed `GO:0005515` partner rows and no collapsed same-term rows on
+this gene, so the under-seeding defect seen elsewhere in this campaign is absent
+here. Checked explicitly rather than assumed. The final review has 8 reviewed GOA
+rows + `NEW` proposals, and the count difference is exactly the number of `NEW`
+entries.

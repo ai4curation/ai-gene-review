@@ -22,6 +22,10 @@ uv run --no-project --with requests --with biopython python sec7_catalytic_check
 
 # 3. Controls. Exits non-zero if any guard fails.
 uv run --no-project --with requests --with biopython python sec7_catalytic_check.py --self-test
+
+# 4. Are the UniProt-SubCell-derived CC rows in the right GO branch?
+#    Independent of steps 1-3; can be run on its own.
+uv run --no-project --with requests python subcell_mapping_check.py
 ```
 
 ## Design notes
