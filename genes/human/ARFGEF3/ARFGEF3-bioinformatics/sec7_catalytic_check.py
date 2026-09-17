@@ -79,6 +79,11 @@ CHEN2014_ACCESSION_CORRECTIONS = {"Q6ND90": "Q6DN90"}
 # tuned to one family branch; used ONLY to cross-check the derived column.
 MOTIF_CLASSES = ["FY", "*", "LIVMF", "P", "G", "E"]
 
+# Preference order for the sequence used to build the known-dead comparator:
+# the subject's closest catalytically-verified paralogues first (BIG1, BIG2),
+# then GBF1. Any of these is a Sec7 GEF with its own IDA for GO:0005085.
+DEAD_CONTROL_PREFERENCE = ["Q9Y6D6", "Q9Y6D5", "Q92538"]
+
 
 def matches_motif(seq: str) -> list[int]:
     """0-based offsets of the catalytic Glu for every motif match in `seq`."""
@@ -394,7 +399,46 @@ def main() -> None:
         sys.exit(1 if problems else 0)
 
     chen = reproduce_chen2014()
+
+    # A known-dead comparator goes in the PUBLISHED table, not only in the
+    # self-test. Without one, a residue-level check cannot distinguish "the
+    # pipeline finds Glu wherever it looks" from "this protein has lost it".
+    #
+    # The comparator is the closest catalytically-verified paralogue with its
+    # glutamic finger substituted to Ala. Glu->Ala/Lys at this position is the
+    # literature-standard inactivating mutation for Sec7 domains, so this is a
+    # sequence whose GEF activity is known to be abolished. The mutation target
+    # is asserted present before it is made, so a drifted target cannot no-op.
+    #
+    # Note the asymmetry this panel can and cannot support: losing the catalytic
+    # residue is strong evidence AGAINST activity, while retaining it would NOT
+    # have been evidence FOR activity. Only the negative direction is claimed.
+    probe = analyse(panel, active)
+    dead_acc = next(a for a in DEAD_CONTROL_PREFERENCE if a in active)
+    dead_idx = ungapped_index(probe["alignment"][dead_acc], probe["column"])
+    dead_seq = panel[dead_acc]["seq"]
+    if dead_idx is None or dead_seq[dead_idx] != "E":
+        raise RuntimeError(
+            f"cannot build the known-dead comparator: {dead_acc} has "
+            f"{dead_seq[dead_idx] if dead_idx is not None else 'a gap'!r} at the "
+            "glutamic-finger column, not 'E'"
+        )
+    dead_id = f"{dead_acc}_E{panel[dead_acc]['start'] + dead_idx}A"
+    panel[dead_id] = dict(panel[dead_acc])
+    panel[dead_id]["label"] = f"{panel[dead_acc]['label']} E{panel[dead_acc]['start'] + dead_idx}A"
+    panel[dead_id]["organism"] = "synthetic catalytic-dead control"
+    panel[dead_id]["reviewed"] = "control"
+    panel[dead_id]["seq"] = dead_seq[:dead_idx] + "A" + dead_seq[dead_idx + 1:]
+
+    # The column is derived from the unmutated active donors only, so injecting
+    # the comparator cannot move the column it is scored against.
     res = analyse(panel, active)
+    dead_row = next(r for r in res["rows"] if r["accession"] == dead_id)
+    if dead_row["glutamic_finger"] != "no":
+        raise RuntimeError(
+            "the known-dead comparator scored as retaining the glutamic finger; "
+            "the check cannot report a negative and its result is meaningless."
+        )
 
     with (HERE / "sec7_glutamic_finger.tsv").open("w", newline="") as fh:
         w = csv.DictWriter(fh, delimiter="\t", fieldnames=list(res["rows"][0].keys()))
@@ -407,6 +451,16 @@ def main() -> None:
     donor_rows = [r for r in res["rows"] if r["known_active_donor"] == "yes"]
     summary = {
         "chen2014_reproduction": chen,
+        "known_dead_comparator": {
+            "id": dead_id,
+            "built_from": dead_acc,
+            "label": panel[dead_id]["label"],
+            "aligned_residue": dead_row["aligned_residue"],
+            "glutamic_finger": dead_row["glutamic_finger"],
+            "rationale": "Glu->Ala at the glutamic finger is the standard "
+                         "inactivating substitution for Sec7 domains; a check "
+                         "that cannot score this sequence negative proves nothing.",
+        },
         "alignment_column": res["column"],
         "active_donors_with_glutamic_finger": sum(
             1 for r in donor_rows if r["glutamic_finger"] == "yes"),
