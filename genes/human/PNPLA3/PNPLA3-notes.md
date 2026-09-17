@@ -132,19 +132,22 @@ the disease signal.
    not only 148M — binds ABHD5 preferentially over ATGL and competes with ATGL for it; 148M
    differs by escaping degradation and accumulating ~40x on LDs, so the same molecular
    activity is simply present in much greater amount. The molecular function is therefore
-   sequestration of a lipase co-activator, i.e. inhibition of ATGL. The nearest existing MF
-   terms are `GO:0055102 lipase inhibitor activity` and `GO:0140311 protein sequestering
-   activity`; neither captures "sequesters the co-activator of a lipase", so a new term is
-   proposed. Downstream BP: `GO:0010897 negative regulation of triglyceride catabolic
-   process`.
+   sequestration of a lipase co-activator, i.e. inhibition of ATGL. `GO:0140311 protein
+   sequestering activity` is the closest existing MF term and is used, together with the
+   downstream BP `GO:0010897 negative regulation of triglyceride catabolic process`; both are
+   added as `action: NEW` annotations and as a second core function. Neither GO:0140311 nor
+   `GO:0055102 lipase inhibitor activity` captures "sequesters the co-activator of a lipase",
+   so a child term `lipase activator sequestering activity` is proposed.
 
 3. **The acyltransferase branch is demoted, not deleted.** `GO:0003841`,
    `GO:0042171` and `GO:0016411` rest on Kumari 2012 (plus Reactome TAS) and are directly
    contradicted by Huang 2011 with an appropriate positive control. Marked
    `MARK_AS_OVER_ANNOTATED` throughout, with the PMID:21878620 provenance error called out.
-   The transacylation terms `GO:0051264`/`GO:0051265` are different: those are the CoA-*in*dependent
-   mono-olein/diolein transacylase reactions that Jenkins 2004 did measure directly, so they
-   are kept as non-core rather than flagged.
+   The transacylation terms `GO:0051264`/`GO:0051265` are different and are ACCEPTed: those are
+   the CoA-*in*dependent mono-olein/diolein transacylase reactions that Jenkins 2004 measured
+   directly, and CoA-independent transacylation is chemically compatible with the same Ser47
+   nucleophile that performs hydrolysis, so it does not contradict the lipase activity the way
+   the acyl-CoA-dependent LPAAT claim does.
 
 4. **A2-type glycerophospholipase (GO:0004623) is marked over-annotated.** It is a
    family-name inference; Huang 2011 tested phospholipids and found little or no activity.
@@ -152,7 +155,9 @@ the disease signal.
 5. **Rodent-orthology BP transfers** (`GO:0009744` response to sucrose, `GO:0032869` cellular
    response to insulin stimulus, `GO:0050872` white fat cell differentiation, `GO:1905243`
    response to T3) describe transcriptional regulation *of* PNPLA3 by nutritional state, not
-   processes PNPLA3 carries out. UniProt records the same:
+   processes PNPLA3 carries out; they are kept as non-core, except `GO:0050872 white fat cell
+   differentiation`, which is marked over-annotated (PNPLA3 is induced during adipogenesis, but
+   there is no evidence it drives it). UniProt records the same:
    "By changes in energy balance: down-regulated following very low-calorie diet, whereas
    refeeding elevates the mRNA level" (Q9NST1 INDUCTION). Demoted to non-core.
 

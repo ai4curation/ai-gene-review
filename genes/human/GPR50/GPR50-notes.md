@@ -15,7 +15,7 @@ dorsomedial hypothalamus.
 This is the one contested-ligand question for GPR50 that CAN be resolved.
 
 - The founding paper reports the negative result directly:
-  [PMID:8647286 "H9 transiently expressed in COS-1 cells did not bind [125I]melatonin or\n[3H]melatonin."]
+  [PMID:8647286 "H9 transiently expressed in COS-1 cells did not bind [125I]melatonin or [3H]melatonin."]
 - Clement et al. 2017 dissected why: swapping the second extracellular loop (E2)
   residues between MT1 and GPR50 produced reciprocal loss- and gain-of-melatonin
   responses, i.e. GPR50's E2 loop is the reason it is melatonin-blind

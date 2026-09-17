@@ -73,7 +73,7 @@ with it, but it was not measured as an independent binding event.
 
 This is `MODIFY`, not `REMOVE`: the annotation's essence (PEX39 acts in PTS2 receptor
 function) is right, the term is simply the receptor term rather than the co-receptor one.
-The replacement chosen is `GO:0140597 protein carrier activity` ("Directly binding to a
+The replacement chosen is `GO:0140597 protein carrier chaperone` (renamed "protein carrier activity" in current GO; "Directly binding to a
 protein and delivering it either to an acceptor molecule or to a specific location"), which
 is exactly what the handover model describes, and which is the term the budding-yeast PTS2
 co-receptor Pex21 (P50091) already carries with IDA evidence in GOA — so this keeps PEX39
@@ -103,7 +103,7 @@ carrier term was preferred because it captures both the clamp and the delivery t
   (`GO:0016558`) and that PEX39's own contribution is cytosolic cargo loading plus the
   PEX7 handover that immediately precedes/enables docking.
 - `GO:0000268 peroxisome signal sequence receptor activity` (IDA) -> **MODIFY** to
-  `GO:0140597 protein carrier activity` (see above).
+  `GO:0140597 protein carrier chaperone` (see above).
 - `GO:0005515 protein binding` x5 (IPI) -> **MARK_AS_OVER_ANNOTATED** per project guidance.
   Note that these are not all equivalent: four come from binary-interactome screens
   (PMID:25416956, PMID:29892012, PMID:31515488, PMID:32296183) with partners that have no
