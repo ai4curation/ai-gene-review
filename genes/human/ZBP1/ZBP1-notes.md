@@ -158,8 +158,16 @@ relay DAI-induced NF-kappaB signals through the recruitment of the RHIM-containi
 RIP1 and RIP3"] — and is the entire subject of the 2026 human-vs-mouse paper. GOA represents
 it only as bare `GO:0005515` protein binding, which carries no functional information. A
 `NEW` annotation of `GO:0035591` signaling adaptor activity is proposed, and the review
-places **two** core functions: the Zα-domain Z-nucleic-acid receptor arm and the RHIM adaptor
-arm, with the adaptor arm the better-evidenced of the two in human cells.
+places **three** core functions: the Z-RNA receptor arm, the RHIM adaptor arm, and Z-DNA
+binding, with the adaptor arm the best-evidenced of the three in human cells.
+
+Note on the Z-RNA core function's term id: `GO:7770073` is used on the annotation row, but
+`core_functions` ids are *hard*-validated against the repo's ontology snapshot, and the term was
+only created on 2026-05-07 (GO issue #32046), so it is not yet in that snapshot. The core
+function therefore declares the parent `GO:0038187` pattern recognition receptor activity and
+names the specific child in its description. This produces one validator warning (the parent is
+not itself in `existing_annotations`), which is preferred here over either failing validation or
+adding a redundant parent-term annotation to the GOA-derived block.
 
 ## Incidental flags
 
