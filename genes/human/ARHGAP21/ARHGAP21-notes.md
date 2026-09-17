@@ -255,6 +255,16 @@ plus the α-catenin paper that drives the largest gap here. Consistent with the 
 finding that the gates certify precision and say nothing about recall; the α-catenin paper
 is titled for the *partner* and for *Listeria*, which is exactly the shape that gets missed.
 
+### 6f. Sibling cross-check on `GO:0005096` — no divergence
+
+The campaign has seen three independently-reviewed paralogs give three different
+answers to a byte-identical row, so sibling reviews are checked before finalising.
+The repository has no other ARHGAP review, but it does hold three reviewed GAPs of
+a different family (ACAP1, ACAP2, ACAP3) carrying seven `GO:0005096` rows between
+them. **All seven are `ACCEPT`**, which is what this review does with its three.
+No inconsistency to flag — recorded because a negative cross-check is still a
+result.
+
 ## 8. Things I could not resolve
 
 - **Rank order of GAP preference.** No study has assayed Cdc42, RhoA and RhoC side by side
@@ -264,6 +274,14 @@ is titled for the *partner* and for *Listeria*, which is exactly the shape that 
   is suggestive but is a single paper with a cell-line comparison, not a mechanism.
 - **The PDZ ligand in cells.** The holdup survey gives affinities for isolated fragments;
   which PBM ARHGAP21's PDZ engages *in vivo*, and in which compartment, is untested.
+- **The cell system of the α-catenin knockdowns.** `PMID:16184169` and `PMID:23235160` are
+  both abstract-only in the cache, neither abstract names a cell line, and `PMID:16184169`
+  is absent from PMC and Europe PMC full text with no text-mined annotations. An
+  experimental evidence code asserts the experiment was done in the annotated organism, so
+  this matters: the two `IMP` NEW rows keep that code because the two-hybrid partner is
+  human α-catenin and the target is human ARHGAP21, but both rows now carry an explicit
+  caveat asking a curator with full-text access to confirm the cell line. An earlier draft
+  asserted "in human cells" in the summary; that claim could not be verified and was removed.
 - `GO:0051645 Golgi localization` appears in UniProt's GO cross-references as
   `IBA:GO_Central` but is absent from the GOA TSV, which instead carries `GO:0051683` and
   `GO:0051684`. Not acted on — it is a cross-reference snapshot difference, not an
