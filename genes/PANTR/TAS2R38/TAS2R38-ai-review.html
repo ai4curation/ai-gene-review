@@ -1,0 +1,3551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TAS2R38 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>TAS2R38</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q697L5" target="_blank" class="term-link">
+                        Q697L5
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pan troglodytes</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "TAS2R38";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">10</span> Annotations</a>
+
+
+
+        <a href="#review-research" title="Deep research and hypothesis research reports"><span class="nav-count">1</span> Research</a>
+
+
+
+
+
+        <a href="#review-core-functions" title="Core biological functions"><span class="nav-count">1</span> Core Function</a>
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">8</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">1</span> Documents</a>
+
+
+
+
+
+
+
+        <a href="#review-knowledge-gaps" title="Open biological questions"><span class="nav-count">2</span> Knowledge Gaps</a>
+
+
+
+        <a href="#review-questions" title="Suggested questions for experts"><span class="nav-count">2</span> Questions</a>
+
+
+
+        <a href="#review-experiments" title="Suggested experiments"><span class="nav-count">2</span> Experiments</a>
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q697L5" data-a="DESCRIPTION: TAS2R38 (T2R38) encodes a class-A-like, seven-tran..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>TAS2R38 (T2R38) encodes a class-A-like, seven-transmembrane G protein-coupled bitter taste receptor of the Pan troglodytes TAS2R (taste receptor type 2) family. It is a single-exon gene whose product is expected to reside in the plasma membrane of bitter-responsive taste receptor cells of the tongue, where it detects phenylthiocarbamide (PTC) and structurally related thiourea/thiocarbamide (N-C=S-bearing) bitter compounds, initiating gustducin-linked signaling: coupling to a heterotrimeric G protein, activation of phospholipase C-beta-2, IP3-mediated Ca2+ release from the endoplasmic reticulum, and TRPM5-dependent depolarization, culminating in neurotransmitter release onto gustatory afferents. As in humans, chimpanzee populations show genetically determined variation in PTC-type bitter sensitivity. A start-codon-loss allele (ATG to AGG) that would force downstream translation initiation at Met97 and delete the first 96 residues is common in western chimpanzee populations but essentially absent from central, eastern, and Nigeria-Cameroon populations, and this reduction in PTC sensitivity arose through mutations distinct from those underlying the analogous human PAV/AVI polymorphism, indicating independent evolutionary origins in the two lineages.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001580" target="_blank" class="term-link">
+                                    GO:0001580
+                                </a>
+                            </span>
+                            <span class="term-label">detection of chemical stimulus involved in sensory perception of bitter taste</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q697L5" data-a="GO:0001580" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> IBA/PAINT propagation of the core TAS2R biological-process annotation from the PTHR11394 family node (PTN000149628), seeded by numerous experimentally characterized human and rat TAS2R paralogs (e.g. UniProtKB:P59533/P59534/..., RGD:1359393). Bitter-compound detection via TAS2R-family receptors, coupled to gustducin/PLCbeta2/TRPM5 signaling, is a deeply conserved ancestral function of this whole clade, and chimpanzee TAS2R38 is a 1:1 ortholog of human TAS2R38 within that clade. This is the core biological process for the gene.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Per the &#34;What an IBA asserts&#34; curation guidance, this reflects a considered PAINT phylogenetic judgment that bitter-taste detection arose at a node ancestral to the whole TAS2R38/TAS2R-paralog clade; chimpanzee TAS2R38 falls squarely within that clade and there is no evidence of target-specific loss of this general biological process (only population-specific loss-of-function alleles at the individual level, discussed below). Chimpanzee-specific population genetics directly and independently support a role for TAS2R38 in PTC-class bitter-compound detection.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PANTR/TAS2R38/TAS2R38-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">The strongest chimpanzee-specific assignment is detection of **PTC-class bitterness**. Chimpanzees display genetically determined bimodal sensitivity to compounds containing an N–C=S group, and mutations in chimpanzee TAS2R38 account for this variation.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001580" target="_blank" class="term-link">
+                                    GO:0001580
+                                </a>
+                            </span>
+                            <span class="term-label">detection of chemical stimulus involved in sensory perception of bitter taste</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q697L5" data-a="GO:0001580" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO mapping from IPR030050, the TAS2R38-specific (not merely family-level) InterPro signature that chimpanzee Q697L5 itself carries (confirmed in the UniProt DR line). This is a precise, ortholog-specific electronic annotation, fully consistent with the IBA row and with the chimpanzee-specific population-genetic evidence for PTC-type bitter detection.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Domain-based inference from the TAS2R38-specific signature is accurate and redundant-but-consistent with the phylogenetically inferred and literature-supported core process.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004930" target="_blank" class="term-link">
+                                    GO:0004930
+                                </a>
+                            </span>
+                            <span class="term-label">G protein-coupled receptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q697L5" data-a="GO:0004930" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO mapping from IPR007960 (the pan-TAS2R-family &#34;TAS2R&#34; domain). Correct at the level of the whole GPCR superfamily (TAS2Rs are seven- transmembrane class-A-like GPCRs), but far less informative than the specific bitter taste receptor activity annotation (GO:0033038) already present for this gene, which better captures the receptor&#39;s known role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> T2Rs are indeed GPCRs, and this broad-but-true parent molecular function coexists with, rather than being formally subsumed by, the more specific GO:0033038 &#34;bitter taste receptor activity&#34; annotation, which remains the gene&#39;s core informative molecular function. Consistent with the equivalent call for the human ortholog in this same PR.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q697L5" data-a="GO:0005886" data-r="GO_REF:0000117" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> ARBA electronic subcellular-location annotation. Correct: as a seven- transmembrane chemoreceptor, functional TAS2R38 is expected to reside at the plasma membrane of bitter-responsive taste receptor cells, with its ligand-binding surface facing the oral cavity. UniProt independently lists &#34;Membrane; Multi-pass membrane protein&#34; for this record.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Consistent with the seven-transmembrane topology annotated in the UniProt feature table (TOPO_DOM/TRANSMEM lines) and with canonical T2R biology; this is the core, functionally required cellular location for the receptor, even though direct chimpanzee-tissue immunolocalization has not been reported.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PANTR/TAS2R38/TAS2R38-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">As a seven-transmembrane chemoreceptor, functional TAS2R38 is expected to reside in the **plasma membrane of bitter-responsive taste-receptor cells**, with its ligand-facing surface exposed to the oral environment.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0007186" target="_blank" class="term-link">
+                                    GO:0007186
+                                </a>
+                            </span>
+                            <span class="term-label">G protein-coupled receptor signaling pathway</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q697L5" data-a="GO:0007186" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO mapping from the family-wide TAS2R domain (IPR007960). This is a true, non-redundant biological-process annotation (it lies on the signal-transduction branch of the GO biological_process DAG, distinct from the sensory-perception branch that GO:0001580 belongs to): TAS2R38 both detects a bitter chemical stimulus (GO:0001580) and, mechanistically, transduces that detection through canonical heterotrimeric-G-protein signaling (gustducin -&gt; PLCbeta2 -&gt; IP3/Ca2+ -&gt; TRPM5), which is exactly what GO:0007186 captures. No taste-receptor-specific child term (e.g. a &#34;bitter taste receptor signaling pathway&#34;) currently exists in GO, so this generic GPCR-signaling-pathway term is the most specific applicable process term for the downstream transduction step.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Biologically accurate; no taste-receptor-specific child term exists in GO for the downstream G-protein transduction step, making this the most specific applicable process term for that mechanistic step, alongside the taste-specific detection/perception process (GO:0001580). Treated as core, consistent with the equivalent call for the human ortholog in this same PR.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PANTR/TAS2R38/TAS2R38-deep-research-falcon.md
+
+                                </span>
+
+                                <div class="support-text">bitter agonist → TAS2R38 activation → heterotrimeric G-protein signaling, commonly gustducin-associated → PLCβ2 activation → IP3 production → Ca²⁺ release from endoplasmic-reticulum stores through IP3 receptors → TRPM5 activation and membrane depolarization → transmitter output to gustatory afferents.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q697L5" data-a="GO:0016020" data-r="GO_REF:0000033" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PAINT-propagated generic membrane localization from the TAS2R family node. Correct but strictly less informative than the plasma-membrane annotation (GO:0005886, of which &#34;membrane&#34; is a formal ancestor) already present for this gene.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> True but subsumed by the more specific, equally well-supported plasma membrane annotation already held for this gene; uninformative given that redundancy, not core. Consistent with the equivalent generic-membrane calls for the human orthologs in this same PR.
+                        </div>
+
+
+
+                        <div class="propagation-review">
+                            <div class="propagation-title">Propagation Review</div>
+                            <div class="propagation-row">
+                                <strong>Root cause:</strong>
+                                <span class="badge">NO FAILURE NON CORE</span>
+                            </div>
+
+                            <div class="propagation-row">
+                                <strong>Failure modes:</strong>
+
+                                <span class="badge">GRANULARITY MISMATCH</span>
+
+                            </div>
+
+
+                            <div class="propagation-source">
+                                <strong>Sources checked:</strong>
+
+                                <div class="propagation-row">
+                                    <span class="propagation-source-id">PANTHER:PTN000149628</span>
+
+
+                                    <span class="badge">UNRESOLVED</span>
+
+
+                                    <div class="propagation-comment">PANTHER internal tree node, not a protein. Correctly asserts generic &#34;membrane&#34; localization for the multi-pass-membrane TAS2R clade; true but subsumed by the target&#39;s own specific plasma-membrane annotation.</div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q697L5" data-a="GO:0016020" data-r="GO_REF:0000120" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Combined automated (UniProt subcellular-location keyword + InterPro transmembrane domain signatures) annotation to the generic &#34;membrane&#34; term. Correct but generic for a seven-transmembrane receptor whose specific location (plasma membrane) is already annotated.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Redundant with, and less specific than, the plasma membrane annotation (GO:0005886); not incorrect, just uninformative given that redundancy. Not core.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033038" target="_blank" class="term-link">
+                                    GO:0033038
+                                </a>
+                            </span>
+                            <span class="term-label">bitter taste receptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q697L5" data-a="GO:0033038" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> PAINT-propagated core molecular function from the PTHR11394 (TAS2R) family node, seeded by many experimentally characterized human bitter taste receptors of the same family (e.g. TAS2R16/UniProtKB:Q9NYV7, and paralogs P59533/P59534/P59537/... among the donors). This is the defining molecular function of the TAS2R38 receptor and is directly corroborated by chimpanzee-specific genetic and functional evidence for PTC-class bitter detection.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Per the IBA-review guidance, this is a sound phylogenetic transfer: bitter taste receptor activity is the ancestral, defining function of the whole TAS2R clade that chimpanzee TAS2R38 belongs to, and is independently corroborated by population-genetic and heterologous functional-assay data on the chimpanzee gene itself (a start-codon-loss variant abolishes activity in a calcium-imaging assay, implying the wild-type ATG-initiated protein is functional). This is a core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/16612383" target="_blank" class="term-link">
+                                        PMID:16612383
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">a mutation of the initiation codon results in the use of an alternative downstream start codon and production of a truncated receptor variant that fails to respond to PTC in vitro</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033038" target="_blank" class="term-link">
+                                    GO:0033038
+                                </a>
+                            </span>
+                            <span class="term-label">bitter taste receptor activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q697L5" data-a="GO:0033038" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO mapping from both the pan-family TAS2R signature (IPR007960) and the TAS2R38-specific signature (IPR030050) that this record itself carries. Consistent with, and fully redundant with, the IBA and family-wide annotations above.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Accurate, ortholog-specific electronic annotation for the gene&#39;s core molecular function, consistent with all other evidence.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0050909" target="_blank" class="term-link">
+                                    GO:0050909
+                                </a>
+                            </span>
+                            <span class="term-label">sensory perception of taste</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q697L5" data-a="GO:0050909" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> InterPro2GO mapping to the broad parent process &#34;sensory perception of taste&#34;. GO:0050909 is a formal ancestor of the more specific GO:0001580 (&#34;detection of chemical stimulus involved in sensory perception of bitter taste&#34;) already annotated for this gene (confirmed via the GO DAG: GO:0001580 -&gt; GO:0050912 -&gt; GO:0050913 -&gt; GO:0050909 lineage), so this term adds no information beyond the specific bitter-taste annotation.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Correct but strictly more general than, and subsumed by, the specific bitter-taste detection annotation (GO:0001580) that better captures the gene&#39;s defining biological process.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section" id="review-core-functions">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Chimpanzee TAS2R38 functions as a class-A-like, seven-transmembrane G protein-coupled bitter taste receptor at the plasma membrane of oral taste receptor cells, where it detects phenylthiocarbamide (PTC) and related thiourea/thiocarbamide (N-C=S-bearing) bitter compounds and initiates gustducin-linked GPCR signal transduction leading to sensory perception of bitterness.</h3>
+                <span class="vote-buttons" data-g="Q697L5" data-a="FUNCTION: Chimpanzee TAS2R38 functions as a class-A-like, se..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0033038" target="_blank" class="term-link">
+                            bitter taste receptor activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001580" target="_blank" class="term-link">
+                                detection of chemical stimulus involved in sensory perception of bitter taste
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16612383" target="_blank" class="term-link">
+                                PMID:16612383
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">a mutation of the initiation codon results in the use of an alternative downstream start codon and production of a truncated receptor variant that fails to respond to PTC in vitro</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PANTR/TAS2R38/TAS2R38-deep-research-falcon.md
+
+                        </span>
+
+                        <div class="finding-text">As a seven-transmembrane chemoreceptor, functional TAS2R38 is expected to reside in the **plasma membrane of bitter-responsive taste-receptor cells**, with its ligand-facing surface exposed to the oral environment.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22916235" target="_blank" class="term-link">
+                            PMID:22916235
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Eco-geographical diversification of bitter taste receptor genes (TAS2Rs) among subspecies of chimpanzees (Pan troglodytes).</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A loss-of-start-codon SNV in cTAS2R38 is unique to western chimpanzees, with strong west-east population differentiation (FST = 0.614).</div>
+
+                        <div class="finding-text">"Derived alleles of the non-synonymous SNVs in cTAS2R41 and cTAS2R60 were present only in eastern chimpanzees (Figure 3B, 3D), whereas derived alleles of the loss-of-start SNV in cTAS2R38 were present only in western chimpanzees (Figure 3A"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The cTAS2R38 loss-of-start allele is the same variant functionally characterized by Wooding et al. as conferring PTC-tasting deficits.</div>
+
+                        <div class="finding-text">"Wooding et al. [32] found that the loss-of-start variant of cTAS2R38 confers recessively inherited inability to detect the bitterness of an artificial compound, phenylthiocarbamide (PTC), in vitro and in vivo."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Table 1&#39;s cTAS2R38 row: a loss-of-initiation-codon (LIC) variant, non-functional, present in 70 of 92 sampled western-chimpanzee alleles (76%) and absent from the sampled eastern, central, and Nigerian-Cameroonian alleles (0/20, 0/4, 0/2 respectively, the latter three read from the immediately following table cells).</div>
+
+                        <div class="finding-text">"LICNon-functional70/92 (76%)000cTAS2R40"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16612383" target="_blank" class="term-link">
+                            PMID:16612383
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Independent evolution of bitter-taste sensitivity in humans and chimpanzees.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Chimpanzee PTC-tasting variation is caused by a chimpanzee-specific mutation of the TAS2R38 initiation codon, producing a truncated, non-functional receptor via an alternative downstream start codon; this is molecularly independent of the human PAV/AVI polymorphism.</div>
+
+                        <div class="finding-text">"a mutation of the initiation codon results in the use of an alternative downstream start codon and production of a truncated receptor variant that fails to respond to PTC in vitro"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Chimpanzee TAS2R38 genotype (of the initiation-codon variant) predicts taster status in living animals, not only in the heterologous assay.</div>
+
+                        <div class="finding-text">"Association testing of PTC sensitivity in a cohort of captive chimpanzees confirmed that chimpanzee TAS2R38 genotype accurately predicts taster status in vivo."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The molecular basis of PTC-taste variation arose independently in humans and chimpanzees.</div>
+
+                        <div class="finding-text">"the molecular basis of this variation has arisen twice, independently, in the two species"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26201026" target="_blank" class="term-link">
+                            PMID:26201026
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Rapid expansion of phenylthiocarbamide non-tasters among Japanese macaques.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Restates, citing Hayakawa et al. 2012 as its source, that the chimpanzee TAS2R38 non-taster (start-codon-mutant, ATG&gt;AGG) allele was found at 76% frequency in western chimpanzees and was absent from eastern chimpanzees; this paper&#39;s own prose loosely calls the 76% figure a frequency &#34;of individuals&#34; where Hayakawa 2012&#39;s own table reports it as an allele frequency (70/92 sampled chromosomes).</div>
+
+                        <div class="finding-text">"Most phenotypic variation among humans is caused by three amino acid substitutions in TAS2R38, whereas for chimpanzees the observed variation results from a start codon mutation (ATG&gt;AGG) in TAS2R38 [20,21]. ... in chimpanzees, the non-taster allele was found in only western chimpanzees (P. troglodytes verus) where it was present in 76% of individuals, while it was not found in eastern chimpanzees (P. troglodytes schweinfurthii) [19]"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PANTR/TAS2R38/TAS2R38-deep-research-falcon.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Falcon (Edison Scientific) deep research report on chimpanzee TAS2R38 (UniProt Q697L5)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Chimpanzee studies designate this locus cTAS2R38, and the description &#34;taste receptor type 2 member 38&#34; and T2R GPCR family membership match the supplied gene symbol, species, accession, and InterPro domains -- there is no evidence of gene/paralog mis-identification.</div>
+
+                        <div class="finding-text">"Chimpanzee studies explicitly designate this locus **cTAS2R38**, one of the TAS2R genes in *Pan troglodytes*. The description “taste receptor type 2 member 38” and membership in the T2R GPCR family therefore agree with the supplied gene symbol, species, accession, and domains"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Chimpanzees show genetically determined bimodal sensitivity to PTC-class (N-C=S-bearing) bitter compounds, and TAS2R38 variation accounts for this.</div>
+
+                        <div class="finding-text">"The strongest chimpanzee-specific assignment is detection of **PTC-class bitterness**. Chimpanzees display genetically determined bimodal sensitivity to compounds containing an N–C=S group, and mutations in chimpanzee TAS2R38 account for this variation."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A start-codon-loss ATG-&gt;AGG allele, which would force downstream translation initiation at Met97 and delete the first 96 residues, was found at 76% allele frequency in western chimpanzees but was essentially absent from central, eastern, and Nigeria-Cameroon chimpanzee populations sampled.</div>
+
+                        <div class="finding-text">"In the 2012 subspecies survey, the start-loss allele occurred in **70 of 92 western-chimpanzee alleles (76%)**. It was absent from the sampled eastern (0/20), central (0/4), and Nigerian–Cameroonian (0/2) alleles. West–east differentiation was high, with **FST = 0.614**, and the derived allele was restricted to western chimpanzees in that dataset"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Reduced PTC sensitivity evolved independently in humans and chimpanzees through different underlying mutations after the lineages split, so human TAS2R38 PAV/AVI haplotype information should not be transferred to the chimpanzee gene.</div>
+
+                        <div class="finding-text">"Reduced PTC sensitivity evolved independently in humans and chimpanzees through different mutations after their lineages separated, so human TAS2R38 haplotypes must not be transferred to Q697L5"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The canonical bitter-taste signal-transduction pathway for a functional T2R such as TAS2R38 is agonist binding -&gt; gustducin/G-protein activation -&gt; PLCbeta2 -&gt; IP3-mediated ER Ca2+ release -&gt; TRPM5 activation -&gt; afferent transmitter release, though this full chain has not been directly demonstrated in native chimpanzee taste cells.</div>
+
+                        <div class="finding-text">"bitter agonist → TAS2R38 activation → heterotrimeric G-protein signaling, commonly gustducin-associated → PLCβ2 activation → IP3 production → Ca²⁺ release from endoplasmic-reticulum stores through IP3 receptors → TRPM5 activation and membrane depolarization → transmitter output to gustatory afferents."</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">A functional heterologous calcium-imaging assay (HEK293T cells, chimeric G-alpha16gust44, Fluo-4 imaging) was used to test chimpanzee TAS2R38 constructs, including the start-codon-loss variant, supporting the interpretation that start-codon loss disrupts normal receptor function.</div>
+
+                        <div class="finding-text">"Functional assays relevant to chimpanzee constructs used heterologous HEK293T cells, the chimeric G protein Gα16gust44, Fluo-4 calcium imaging at two-second intervals, and concentration–response modeling."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section" id="review-questions">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Do western chimpanzees homozygous for the ATG-&gt;AGG start-loss TAS2R38 allele show measurably reduced behavioral aversion to PTC/PROP-class compounds compared with eastern or central chimpanzees, paralleling the human taster/non-taster dichotomy?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Takashi Hayakawa, Hiroo Imai</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q697L5" data-a="Q: Do western chimpanzees homozygous for the ATG-&gt;AGG..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> What natural dietary compounds in the chimpanzee habitat, if any, are potent agonists of wild-type chimpanzee TAS2R38, and does the geographic distribution of the loss-of-function allele correlate with reduced exposure to or reduced need to detect such compounds?</p>
+
+                    <p style="margin-top: 0.5rem;"><em>Suggested experts: Takashi Hayakawa, Hiroo Imai</em></p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q697L5" data-a="Q: What natural dietary compounds in the chimpanzee h..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section" id="review-experiments">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Isolate circumvallate/foliate taste papilla cells from genotyped western (AGG/AGG), heterozygous, and eastern/central (ATG/ATG) chimpanzees (or from primary taste-cell culture / organoid models where available) and measure PTC/PROP-evoked Ca2+ responses by single-cell calcium imaging, comparing response rate and magnitude across genotypes.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: The western-chimpanzee ATG-&gt;AGG start-codon-loss TAS2R38 allele abolishes receptor function in native taste receptor cells, not only in the heterologous HEK293T/Gα16gust44 reconstitution system previously used.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: Single-cell calcium imaging of primary taste receptor cells</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q697L5" data-a="EXPERIMENT: Isolate circumvallate/foliate taste papilla cells ..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Express wild-type chimpanzee TAS2R38 heterologously (e.g. HEK293T cells with a chimeric Gα16gust44 protein, as used for the start-codon-loss variant) and perform Fluo-4 calcium-imaging dose-response assays against a panel including PTC, PROP, sinigrin, allyl isothiocyanate, goitrin, and other candidate thiocarbamide-class plant secondary metabolites to establish a validated chimpanzee-specific ligand spectrum.</p>
+
+
+                    <p style="margin-top: 0.5rem;"><em>Hypothesis: Wild-type chimpanzee TAS2R38 responds to plant-derived glucosinolate breakdown products present in the chimpanzee diet, not only to the synthetic probe compound PTC.</em></p>
+
+
+                    <p style="margin-top: 0.5rem;">Type: Heterologous calcium-imaging pharmacology</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q697L5" data-a="EXPERIMENT: Express wild-type chimpanzee TAS2R38 heterologousl..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section" id="review-knowledge-gaps">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The complete, native-cell functional consequence of the western-chimpanzee start-codon-loss (ATG-&gt;AGG) TAS2R38 allele -- surface trafficking, ligand binding, and downstream Ca2+ signaling in actual taste receptor cells rather than a heterologous HEK293T reconstitution -- has not been directly established.</p>
+            <p style="margin-top: 0.4rem;">
+
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">MF_DARK</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> The allele&#39;s high frequency in western chimpanzees (76% of sampled alleles), its near-absence in other subspecies, and its predicted truncation of the first 96 residues (removing much of the receptor&#39;s N-terminal/extracellular architecture) are well established by population genetics and by a heterologous calcium-imaging assay.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Determines whether western chimpanzee populations carrying this allele are genuinely PTC/thiocarbamide-insensitive in vivo, which bears on hypotheses about diet, plant-toxin avoidance, and the selective forces shaping bitter taste receptor evolution in this lineage.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Native taste-cell physiology (e.g. single-cell calcium imaging or electrophysiology of circumvallate/foliate papilla taste cells from genotyped western versus eastern/central chimpanzees) or genotype-linked behavioral PTC-sensitivity testing.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"Native localization, complete signaling, natural ligand spectrum, and extraoral roles have not been directly established for chimpanzee Q697L5. These are orthology- or family-based annotations rather than chimpanzee-specific experimental findings."</em> — file:PANTR/TAS2R38/TAS2R38-deep-research-falcon.md</li>
+
+            </ul>
+
+
+        </div>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The ecologically relevant natural agonist spectrum of chimpanzee TAS2R38 is unresolved; PTC itself is an experimental probe rather than a demonstrated dietary ligand.</p>
+            <p style="margin-top: 0.4rem;">
+
+                <span class="badge">BIOLOGY</span>
+                <span class="badge">RESIDUAL_SUBGAP</span>
+            </p>
+
+            <p style="margin-top: 0.5rem;"><strong>What is known:</strong> PTC-class (N-C=S-bearing) sensitivity and its genetic basis are established; candidate natural ligands (thioamides, plant-derived isothiocyanates and glucosinolate breakdown products such as sinigrin, allyl isothiocyanate, and goitrin) are proposed by analogy to other primate TAS2R38 orthologs but have not been tested against the chimpanzee receptor.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Without a validated natural-ligand panel, links between TAS2R38 genotype and real dietary choice/plant-toxin avoidance in wild chimpanzees remain inferential.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>What would resolve it:</strong> Heterologous dose-response pharmacology of chimpanzee TAS2R38 against a panel of candidate glucosinolate/isothiocyanate plant secondary metabolites known to occur in the chimpanzee diet.</p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Provenance (the field's own admissions):</strong></p>
+            <ul style="margin-top: 0.2rem;">
+
+                <li><em>"PTC is an experimental probe rather than a demonstrated ecological ligand. Across primate TAS2R38 orthologs, recognized or candidate ligands include PTC, 6-n-propylthiouracil (PROP), sinigrin, allyl isothiocyanate, and goitrin."</em> — file:PANTR/TAS2R38/TAS2R38-deep-research-falcon.md</li>
+
+            </ul>
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section" id="review-research">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(TAS2R38-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q697L5" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional annotation report: chimpanzee TAS2R38 (UniProt Q697L5)</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">21 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-06T16:41:00.829953</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="TAS2R38-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="functional-annotation-report-chimpanzee-tas2r38-uniprot-q697l5">Functional annotation report: chimpanzee TAS2R38 (UniProt Q697L5)</h1>
+<h2 id="executive-summary">Executive summary</h2>
+<p>The requested identity is internally consistent: <strong>TAS2R38 in <em>Pan troglodytes</em></strong> encodes taste receptor type 2 member 38, a membrane bitter-taste receptor of the T2R/TAS2R family. The supplied InterPro/Pfam assignments—TAS2R (IPR007960), TAS2R38 (IPR030050), and PF05296—agree with current classification of T2Rs as a distinct class-T family of seven-transmembrane G-protein-coupled receptors (GPCRs). No conflicting gene with the same symbol was identified. The accession-to-protein mapping itself is accepted from the supplied UniProt record because the available search tools did not independently query UniProt.</p>
+<p>The best-supported primary function is <strong>recognition of phenylthiocarbamide (PTC) and related thiourea/N–C=S bitter chemicals</strong>, initiating an aversive gustatory signal. Direct chimpanzee evidence links TAS2R38 variation to a bimodal PTC-tasting phenotype. Particularly strong population-genetic evidence identifies a start-codon-loss allele, <strong>ATG→AGG</strong>, enriched in western chimpanzees and predicted or experimentally supported to abolish normal receptor function. Reduced PTC sensitivity evolved independently in humans and chimpanzees through different mutations after their lineages separated, so human TAS2R38 haplotypes must not be transferred to Q697L5 (meyerhof2011molecularbiologyof pages 8-8, campbell2012evolutionoffunctionally pages 10-11).</p>
+<p>The receptor is expected to act at the plasma membrane of bitter-responsive taste cells and couple to the canonical T2R calcium-signaling pathway. However, native localization, complete signaling, natural ligand spectrum, and extraoral roles have not been directly established for chimpanzee Q697L5. These are orthology- or family-based annotations rather than chimpanzee-specific experimental findings.</p>
+<table>
+<thead>
+<tr>
+<th>Annotation claim</th>
+<th>Evidence type/species</th>
+<th>Key result or statistic</th>
+<th>Confidence / limitation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Identity and molecular class:</strong> Q697L5 is chimpanzee TAS2R38, a class-T, seven-transmembrane bitter-taste GPCR</td>
+<td>UniProt identity supplied by user; vertebrate T2R family structure</td>
+<td>TAS2R/T2R38 domains and heptahelical topology agree with the reported protein description and family</td>
+<td><strong>High</strong> for family assignment; accession mapping relies on the supplied UniProt record rather than an independent database query</td>
+</tr>
+<tr>
+<td><strong>Primary function:</strong> detection of PTC and related N–C=S bitter compounds</td>
+<td>Chimpanzee behavioral/genetic evidence supported by comparative receptor biology</td>
+<td>TAS2R38 variation accounts for genetically determined differences in chimpanzee perception of PTC-class bitterness</td>
+<td><strong>High</strong> for PTC-related bitter detection; quantitative chimpanzee ligand-response parameters are limited</td>
+</tr>
+<tr>
+<td><strong>Western-chimpanzee loss-of-function allele</strong></td>
+<td>Direct <em>Pan troglodytes</em> population genetics; heterologous functional context</td>
+<td>Start-codon mutation <strong>ATG→AGG</strong>; detected in <strong>70/92 western alleles (76%)</strong>, but <strong>0/20 eastern, 0/4 central, and 0/2 Nigerian–Cameroonian alleles</strong>; west–east <strong>FST = 0.614</strong></td>
+<td><strong>High</strong> for sampled frequency and differentiation; geographic sampling was uneven, and start-codon loss is primarily interpreted as functional loss</td>
+</tr>
+<tr>
+<td><strong>Mechanistic consequence of start-codon loss</strong></td>
+<td>Chimpanzee receptor construct tested in HEK293T-cell calcium-assay framework</td>
+<td>Downstream initiation at <strong>Met97</strong> would remove the first <strong>96 residues</strong>, strongly disrupting normal receptor function</td>
+<td><strong>Moderate–high</strong>; heterologous assay conditions and engineered constructs do not fully reproduce native chimpanzee taste cells</td>
+</tr>
+<tr>
+<td><strong>Independent evolution from human TAS2R38</strong></td>
+<td>Comparative human–chimpanzee genetics and evolutionary analysis</td>
+<td>Reduced PTC sensitivity arose through different mutations after lineage separation, rather than inheritance of the same derived human haplotype</td>
+<td><strong>High</strong> for independent genetic origins; the exact selective agent remains unresolved</td>
+</tr>
+<tr>
+<td><strong>Canonical gustatory signaling:</strong> G protein/gustducin → PLCβ2 → IP3/Ca²⁺ release → TRPM5 activation → transmitter output</td>
+<td>Mammalian/vertebrate T2R family evidence</td>
+<td>Expected signaling route for a functional chimpanzee TAS2R38 receptor</td>
+<td><strong>Inference only</strong> for Q697L5; the complete pathway has not been directly demonstrated in native chimpanzee TAS2R38-expressing cells</td>
+</tr>
+<tr>
+<td><strong>Cellular localization:</strong> plasma membrane of bitter-responsive taste-receptor cells</td>
+<td>T2R-family topology and mammalian gustatory localization</td>
+<td>Seven-transmembrane receptor is expected to operate at the apical plasma membrane where oral bitter chemicals are sampled</td>
+<td><strong>Inference only</strong>; direct chimpanzee tissue localization or subcellular imaging was not found</td>
+</tr>
+<tr>
+<td><strong>Natural/ecological ligand spectrum</strong></td>
+<td>Comparative TAS2R38 pharmacology</td>
+<td>PTC is an experimental probe; related thioamides and plant-derived isothiocyanate/glucosinolate products are candidate ligand classes</td>
+<td><strong>Unresolved for chimpanzee Q697L5</strong>; ecologically relevant natural agonists and their potencies have not been established directly</td>
+</tr>
+<tr>
+<td><strong>Extraoral expression and function</strong></td>
+<td>Human, macaque, and broader mammalian T2R literature</td>
+<td>TAS2R38 can occur in gastrointestinal or airway tissues in other primates/mammals</td>
+<td><strong>Not demonstrated for this chimpanzee protein</strong>; extraoral localization, signaling, and physiological roles should not be transferred from human or macaque studies without direct evidence</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Evidence-tier summary for functional annotation of Pan troglodytes TAS2R38/Q697L5. It separates direct chimpanzee findings from family-level inference and highlights unresolved localization and ligand questions.</em></p>
+<h2 id="1-identity-verification-and-molecular-classification">1. Identity verification and molecular classification</h2>
+<p><strong>Gene/protein match.</strong> Chimpanzee studies explicitly designate this locus <strong>cTAS2R38</strong>, one of the TAS2R genes in <em>Pan troglodytes</em>. The description “taste receptor type 2 member 38” and membership in the T2R GPCR family therefore agree with the supplied gene symbol, species, accession, and domains (hayakawa2012ecogeographicaldiversificationof pages 2-3).</p>
+<p><strong>Protein architecture.</strong> Current T2R-family understanding describes these receptors as class-T, seven-transmembrane GPCRs with an extracellular N-terminus and intracellular C-terminus. T2Rs generally have very short N-terminal regions, lack the class-A-like disulfide bond between transmembrane helix III and extracellular loop 2, and contain activation-associated motifs including F3.49Y3.50xxK3.53 and H7.49S/P7.50xxL7.53. The relatively unconstrained extracellular region may support a flexible ligand-binding pocket. These are family-level structural features, not a solved experimental structure of chimpanzee TAS2R38 (itoigawa2024theremarkablediversity pages 11-12).</p>
+<p>Accordingly, Q697L5 is <strong>not an enzyme or transporter</strong>. It is a chemosensory signaling receptor: extracellular bitter-ligand recognition is transduced across the membrane into intracellular G-protein signaling.</p>
+<h2 id="2-primary-molecular-function-and-ligand-specificity">2. Primary molecular function and ligand specificity</h2>
+<p>The strongest chimpanzee-specific assignment is detection of <strong>PTC-class bitterness</strong>. Chimpanzees display genetically determined bimodal sensitivity to compounds containing an N–C=S group, and mutations in chimpanzee TAS2R38 account for this variation. The mutations differ from those underlying human TAS2R38 variation, demonstrating independent origins of reduced sensitivity (meyerhof2011molecularbiologyof pages 8-8).</p>
+<p>PTC is principally an experimental probe rather than a demonstrated ecological ligand. Across primate TAS2R38 orthologs, recognized or candidate ligands include PTC, 6-n-propylthiouracil (PROP), sinigrin, allyl isothiocyanate, and goitrin. Nevertheless, the available comparative study used chimpanzee mainly as a sequence reference and did not report potency values for Q697L5. These broader compounds should therefore be treated as <strong>candidate chimpanzee ligands</strong>, not a fully validated Q697L5 pharmacological profile (purba2020evolutionofthe pages 1-2).</p>
+<p>No reliable chimpanzee-specific EC50, binding affinity, Hill coefficient, or complete agonist panel was recovered. Functional assays relevant to chimpanzee constructs used heterologous HEK293T cells, the chimeric G protein Gα16gust44, Fluo-4 calcium imaging at two-second intervals, and concentration–response modeling. Such assays establish receptor-dependent signaling capability but do not reproduce native taste-cell physiology (suzukihashido2015rapidexpansionof pages 16-18).</p>
+<h2 id="3-cellular-localization-and-biological-process">3. Cellular localization and biological process</h2>
+<h3 id="probable-native-site-of-action">Probable native site of action</h3>
+<p>As a seven-transmembrane chemoreceptor, functional TAS2R38 is expected to reside in the <strong>plasma membrane of bitter-responsive taste-receptor cells</strong>, with its ligand-facing surface exposed to the oral environment. Its biological role is to convert contact with selected bitter chemicals into a cellular signal that contributes to bitter perception and potentially avoidance of unsuitable foods. General mammalian T2R evidence supports membrane receptor function and taste-cell chemical-to-neural transduction, but direct immunolocalization, in situ hybridization, or single-cell expression data for chimpanzee TAS2R38 were not found (meyerhof2011molecularbiologyof pages 2-4).</p>
+<p>Thus, “taste-bud cell plasma membrane” is a strong orthology-based localization, but it should not be represented as experimentally demonstrated for Q697L5. Evidence that macaque TAS2R38 occurs in intestinal cells, or that human TAS2R38 occurs in airway and other extraoral tissues, does not prove corresponding expression in chimpanzees.</p>
+<h3 id="canonical-signaling-pathway">Canonical signaling pathway</h3>
+<p>The expected pathway is:</p>
+<p><strong>bitter agonist → TAS2R38 activation → heterotrimeric G-protein signaling, commonly gustducin-associated → PLCβ2 activation → IP3 production → Ca²⁺ release from endoplasmic-reticulum stores through IP3 receptors → TRPM5 activation and membrane depolarization → transmitter output to gustatory afferents.</strong></p>
+<p>The recovered mammalian review directly supports ER calcium release through IP3 receptor type 3 and subsequent TRPM5 activation, while classifying T2Rs as heptahelical GPCRs (meyerhof2011molecularbiologyof pages 2-4). The full chain, including gustducin, PLCβ2, and ATP-mediated afferent signaling, is accepted canonical mammalian bitter-taste biology but was not directly demonstrated in native chimpanzee TAS2R38-expressing cells. The most defensible annotation is therefore that Q697L5 <strong>probably uses the conserved T2R gustatory pathway</strong>, with species-specific verification outstanding.</p>
+<h2 id="4-allelic-variation-functional-loss-and-evolutionary-evidence">4. Allelic variation, functional loss, and evolutionary evidence</h2>
+<p>The most informative chimpanzee variant changes the normal initiation codon from <strong>ATG to AGG</strong>. Translation beginning at a downstream Met97 would produce a protein missing the first 96 residues, a major truncation expected to impair membrane topology, trafficking, or signaling. Heterologous calcium-assay work examined this downstream-initiation construct and an engineered rescued control, supporting the interpretation that the start-codon mutation is functionally consequential (suzukihashido2015rapidexpansionof pages 16-18).</p>
+<p>In the 2012 subspecies survey, the start-loss allele occurred in <strong>70 of 92 western-chimpanzee alleles (76%)</strong>. It was absent from the sampled eastern (0/20), central (0/4), and Nigerian–Cameroonian (0/2) alleles. West–east differentiation was high, with <strong>FST = 0.614</strong>, and the derived allele was restricted to western chimpanzees in that dataset (hayakawa2012ecogeographicaldiversificationof pages 2-3). These figures are compelling but should be interpreted in light of uneven and very small samples for several subspecies.</p>
+<p>The nonfunctional allele was inferred to have arisen approximately <strong>0.5 million years ago</strong>. Authors have discussed drift, balancing selection, and environmental selection associated with dietary or floral change, but the precise selective agent remains unresolved; the age and adaptive narrative are evolutionary inferences rather than direct functional demonstrations (hayakawa2012ecogeographicaldiversificationof pages 6-7).</p>
+<p>Comparative work indicates that PTC tasting was ancestral in humans and chimpanzees, while reduced sensitivity evolved independently after the lineages separated about <strong>5–6 million years ago</strong>. Human PAV/AVI-associated residues and human allele-age estimates therefore do not describe chimpanzee Q697L5 (campbell2012evolutionoffunctionally pages 10-11).</p>
+<h2 id="5-current-understanding-and-recent-developments">5. Current understanding and recent developments</h2>
+<p>The most relevant recent synthesis is Itoigawa, Nakagita, and Toda, published <strong>November 2024</strong>, <em>International Journal of Molecular Sciences</em> 25:12654, DOI/URL: https://doi.org/10.3390/ijms252312654. It reinforces three conclusions important for annotation: T2Rs are structurally distinctive class-T GPCRs; receptor repertoires and ligand sensitivities change rapidly among vertebrates; and species-specific functional assays are essential because human results cannot automatically be assigned to nonhuman orthologs (itoigawa2024theremarkablediversity pages 17-19, itoigawa2024theremarkablediversity pages 11-12).</p>
+<p>The 2024 review did not add a direct chimpanzee TAS2R38 localization study, native-tissue signaling experiment, solved structure, or quantitative ligand-response dataset. Consequently, the foundational chimpanzee studies remain more informative for Q697L5 than recent human-centered TAS2R38 literature. This is an important negative result: the annotation is secure at the level of receptor class and PTC-related taste function, but considerably less complete at the levels of native cell biology and pharmacology.</p>
+<p>A related 2024 primate study showed that intact TAS2R repertoires vary substantially even among relatively close taxa and cautioned against simple diet-to-gene-number explanations. In sampled cercopithecids, targeted capture recovered 25–28 intact TAS2Rs in colobines and 27–36 in cercopithecines. Although these are not chimpanzee statistics, they reinforce expert concern that genome assemblies and cross-species extrapolation can mischaracterize this rapidly evolving gene family.</p>
+<h2 id="6-applications-and-real-world-relevance">6. Applications and real-world relevance</h2>
+<p>For this chimpanzee protein, current applications are primarily <strong>research applications</strong>, not clinical implementations:</p>
+<ol>
+<li><strong>Sensory ecology:</strong> TAS2R38 genotyping provides a molecular marker for studying how bitter perception may shape food choice among chimpanzee populations.</li>
+<li><strong>Evolutionary genetics:</strong> Independent human and chimpanzee loss-of-sensitivity variants provide a strong natural example of convergent phenotypic evolution through different molecular changes.</li>
+<li><strong>Comparative receptor pharmacology:</strong> Wild-type and start-loss constructs can be compared in heterologous calcium assays to test receptor trafficking, activation, and ligand specificity.</li>
+<li><strong>Conservation genomics:</strong> The strong geographic differentiation in western chimpanzees illustrates why subspecies identity and population structure matter when interpreting functional genetic variation.</li>
+</ol>
+<p>Human TAS2R38 is being explored in nutrition and mucosal innate immunity, but such medical applications cannot presently be assigned to chimpanzee Q697L5. There is no direct evidence that Q697L5 has a clinically implemented diagnostic or therapeutic use.</p>
+<h2 id="7-recommended-functional-annotation">7. Recommended functional annotation</h2>
+<p><strong>Molecular function:</strong> Bitter-compound-activated, class-T GPCR; experimentally and genetically associated with PTC/N–C=S compound perception in chimpanzees.</p>
+<p><strong>Biological process:</strong> Bitter taste detection and gustatory signal transduction, likely contributing to behavioral discrimination or avoidance of selected bitter compounds.</p>
+<p><strong>Cellular component:</strong> Integral component of the plasma membrane; probably the apical membrane of bitter-responsive taste cells. This localization is inferred from conserved T2R biology rather than directly demonstrated in <em>Pan troglodytes</em>.</p>
+<p><strong>Pathway:</strong> Probable gustducin/G-protein–PLCβ2–IP3–Ca²⁺–TRPM5 gustatory pathway. Direct chimpanzee-native-cell confirmation is lacking.</p>
+<p><strong>Functional variants:</strong> A start-codon-loss ATG→AGG allele can force downstream initiation at Met97, deleting 96 N-terminal residues and strongly reducing or abolishing normal receptor function. It was observed at 76% in sampled western-chimpanzee alleles and was absent from the other sampled subspecies (suzukihashido2015rapidexpansionof pages 16-18, hayakawa2012ecogeographicaldiversificationof pages 2-3).</p>
+<p><strong>Confidence:</strong> High for identity, family, membrane-receptor class, and PTC-related bitter detection; moderate for the complete chimpanzee ligand spectrum and canonical signaling pathway; low or presently unsupported for native extraoral expression, immune roles, detailed subcellular trafficking, and ecological natural agonists.</p>
+<h2 id="8-principal-evidence-gaps">8. Principal evidence gaps</h2>
+<p>The highest-priority missing experiments are: native chimpanzee tongue single-cell expression or spatial localization; surface-trafficking measurements for wild-type and start-loss proteins; standardized dose–response testing against PTC, PROP, glucosinolate products, and ecologically relevant plant metabolites; direct coupling measurements with chimpanzee gustducin/PLCβ2 machinery; and genotype-linked behavioral testing across adequately sampled subspecies. Until such data exist, human and macaque extraoral functions should remain explicitly labeled as comparative hypotheses rather than annotations of Q697L5.</p>
+<h2 id="key-sources">Key sources</h2>
+<ul>
+<li>Hayakawa T. et al. <strong>Eco-Geographical Diversification of Bitter Taste Receptor Genes (TAS2Rs) among Subspecies of Chimpanzees (<em>Pan troglodytes</em>)</strong>. <em>PLoS ONE</em>. August 2012;7:e43277. https://doi.org/10.1371/journal.pone.0043277 (hayakawa2012ecogeographicaldiversificationof pages 2-3)</li>
+<li>Wooding S. et al. <strong>Independent evolution of bitter-taste sensitivity in humans and chimpanzees</strong>. <em>Nature</em>. April 2006;440:930–934. https://doi.org/10.1038/nature04655. Its central findings are represented in the retrieved secondary evidence (meyerhof2011molecularbiologyof pages 8-8, campbell2012evolutionoffunctionally pages 10-11).</li>
+<li>Itoigawa A., Nakagita T., Toda Y. <strong>The Remarkable Diversity of Vertebrate Bitter Taste Receptors: Recent Advances in Genomic and Functional Studies</strong>. <em>International Journal of Molecular Sciences</em>. November 2024;25:12654. https://doi.org/10.3390/ijms252312654 (itoigawa2024theremarkablediversity pages 17-19, itoigawa2024theremarkablediversity pages 11-12)</li>
+<li>Meyerhof W. et al. <strong>Molecular biology of mammalian bitter taste receptors: a review</strong>. <em>Flavour and Fragrance Journal</em>. July 2011;26:260–268. https://doi.org/10.1002/ffj.2041 (meyerhof2011molecularbiologyof pages 2-4, meyerhof2011molecularbiologyof pages 8-8)</li>
+<li>Purba L.H.P.S. et al. <strong>Evolution of the bitter taste receptor TAS2R38 in colobines</strong>. <em>Primates</em>. February 2020;61:485–494. https://doi.org/10.1007/s10329-020-00799-1 (purba2020evolutionofthe pages 1-2)</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(meyerhof2011molecularbiologyof pages 8-8): Wolfgang Meyerhof, Stephan Born, Anne Brockhoff, and Maik Behrens. Molecular biology of mammalian bitter taste receptors. a review. Flavour and Fragrance Journal, 26:260-268, Jul 2011. URL: https://doi.org/10.1002/ffj.2041, doi:10.1002/ffj.2041. This article has 84 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(campbell2012evolutionoffunctionally pages 10-11): M. C. Campbell, A. Ranciaro, A. Froment, J. Hirbo, S. Omar, J.-M. Bodo, T. Nyambo, G. Lema, D. Zinshteyn, D. Drayna, P. A. S. Breslin, and S. A. Tishkoff. Evolution of functionally diverse alleles associated with ptc bitter taste sensitivity in africa. Molecular biology and evolution, 29 4:1141-53, Apr 2012. URL: https://doi.org/10.1093/molbev/msr293, doi:10.1093/molbev/msr293. This article has 121 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hayakawa2012ecogeographicaldiversificationof pages 2-3): Takashi Hayakawa, Tohru Sugawara, Yasuhiro Go, Toshifumi Udono, Hirohisa Hirai, and Hiroo Imai. Eco-geographical diversification of bitter taste receptor genes (tas2rs) among subspecies of chimpanzees (pan troglodytes). PLoS ONE, 7:e43277, Aug 2012. URL: https://doi.org/10.1371/journal.pone.0043277, doi:10.1371/journal.pone.0043277. This article has 40 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(itoigawa2024theremarkablediversity pages 11-12): Akihiro Itoigawa, Tomoya Nakagita, and Yasuka Toda. The remarkable diversity of vertebrate bitter taste receptors: recent advances in genomic and functional studies. International Journal of Molecular Sciences, 25:12654, Nov 2024. URL: https://doi.org/10.3390/ijms252312654, doi:10.3390/ijms252312654. This article has 15 citations.</p>
+</li>
+<li>
+<p>(purba2020evolutionofthe pages 1-2): Laurentia Henrieta Permita Sari Purba, Kanthi Arum Widayati, Nami Suzuki-Hashido, Akihiro Itoigawa, Takashi Hayakawa, Sarah Nila, Berry Juliandi, Bambang Suryobroto, and Hiroo Imai. Evolution of the bitter taste receptor tas2r38 in colobines. Primates, 61:485-494, Feb 2020. URL: https://doi.org/10.1007/s10329-020-00799-1, doi:10.1007/s10329-020-00799-1. This article has 9 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(suzukihashido2015rapidexpansionof pages 16-18): Nami Suzuki-Hashido, Takashi Hayakawa, Atsushi Matsui, Yasuhiro Go, Yoshiro Ishimaru, Takumi Misaka, Keiko Abe, Hirohisa Hirai, Yoko Satta, and Hiroo Imai. Rapid expansion of phenylthiocarbamide non-tasters among japanese macaques. PLoS ONE, 10:e0132016, Jul 2015. URL: https://doi.org/10.1371/journal.pone.0132016, doi:10.1371/journal.pone.0132016. This article has 21 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(meyerhof2011molecularbiologyof pages 2-4): Wolfgang Meyerhof, Stephan Born, Anne Brockhoff, and Maik Behrens. Molecular biology of mammalian bitter taste receptors. a review. Flavour and Fragrance Journal, 26:260-268, Jul 2011. URL: https://doi.org/10.1002/ffj.2041, doi:10.1002/ffj.2041. This article has 84 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(hayakawa2012ecogeographicaldiversificationof pages 6-7): Takashi Hayakawa, Tohru Sugawara, Yasuhiro Go, Toshifumi Udono, Hirohisa Hirai, and Hiroo Imai. Eco-geographical diversification of bitter taste receptor genes (tas2rs) among subspecies of chimpanzees (pan troglodytes). PLoS ONE, 7:e43277, Aug 2012. URL: https://doi.org/10.1371/journal.pone.0043277, doi:10.1371/journal.pone.0043277. This article has 40 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(itoigawa2024theremarkablediversity pages 17-19): Akihiro Itoigawa, Tomoya Nakagita, and Yasuka Toda. The remarkable diversity of vertebrate bitter taste receptors: recent advances in genomic and functional studies. International Journal of Molecular Sciences, 25:12654, Nov 2024. URL: https://doi.org/10.3390/ijms252312654, doi:10.3390/ijms252312654. This article has 15 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="TAS2R38-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>hayakawa2012ecogeographicaldiversificationof pages 2-3</li>
+<li>itoigawa2024theremarkablediversity pages 11-12</li>
+<li>meyerhof2011molecularbiologyof pages 8-8</li>
+<li>purba2020evolutionofthe pages 1-2</li>
+<li>suzukihashido2015rapidexpansionof pages 16-18</li>
+<li>meyerhof2011molecularbiologyof pages 2-4</li>
+<li>hayakawa2012ecogeographicaldiversificationof pages 6-7</li>
+<li>campbell2012evolutionoffunctionally pages 10-11</li>
+<li>itoigawa2024theremarkablediversity pages 17-19</li>
+<li>https://doi.org/10.3390/ijms252312654.</li>
+<li>https://doi.org/10.1371/journal.pone.0043277</li>
+<li>https://doi.org/10.1038/nature04655.</li>
+<li>https://doi.org/10.3390/ijms252312654</li>
+<li>https://doi.org/10.1002/ffj.2041</li>
+<li>https://doi.org/10.1007/s10329-020-00799-1</li>
+<li>https://doi.org/10.1002/ffj.2041,</li>
+<li>https://doi.org/10.1093/molbev/msr293,</li>
+<li>https://doi.org/10.1371/journal.pone.0043277,</li>
+<li>https://doi.org/10.3390/ijms252312654,</li>
+<li>https://doi.org/10.1007/s10329-020-00799-1,</li>
+<li>https://doi.org/10.1371/journal.pone.0132016,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(TAS2R38-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q697L5" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="curation-notes-tas2r38-pan-troglodytes-uniprot-q697l5">Curation notes: TAS2R38 (Pan troglodytes, UniProt Q697L5)</h1>
+<h2 id="session-2026-09-06">Session: 2026-09-06</h2>
+<p>Cross-species companion review to <code>genes/human/TAS2R38/</code> (reviewed in parallel by a<br />
+separate agent). This gene has <strong>no chimpanzee-specific PMIDs seeded from GOA</strong> — all<br />
+10 GOA rows are IBA (PAINT phylogenetic inference from the PTHR11394/TAS2R family<br />
+node) or IEA (InterPro2GO / ARBA / combined electronic methods). No experimental<br />
+(IDA/IPI/etc.) rows exist for chimp TAS2R38 in <code>TAS2R38-goa.tsv</code>.</p>
+<p>Source used for all literature-derived claims: <code>TAS2R38-deep-research-falcon.md</code><br />
+(Falcon/Edison Scientific deep-research report, generated 2026-09-06). Its cited<br />
+primary literature is real, correctly attributed, and directly relevant<br />
+(chimpanzee-specific population genetics and functional assays), but none of the<br />
+underlying PMIDs are cached locally in <code>publications/</code>, so this review cites the<br />
+deep-research file directly (<code>file:PANTR/TAS2R38/TAS2R38-deep-research-falcon.md</code>)<br />
+rather than fabricating unverifiable PMID citations. Key primary sources it<br />
+synthesizes (not independently fetched/cached here):</p>
+<ul>
+<li>Hayakawa T et al. 2012. "Eco-Geographical Diversification of Bitter Taste Receptor<br />
+  Genes (TAS2Rs) among Subspecies of Chimpanzees (Pan troglodytes)." PLoS ONE<br />
+  7:e43277. doi:10.1371/journal.pone.0043277 — direct chimpanzee population genetics:<br />
+  ATG-&gt;AGG start-codon-loss allele at 76% (70/92) in western chimpanzee alleles, 0%<br />
+  in eastern/central/Nigeria-Cameroon samples; FST=0.614 west-east differentiation.</li>
+<li>Suzuki-Hashido N et al. 2015. "Rapid expansion of phenylthiocarbamide non-tasters<br />
+  among Japanese macaques." PLoS ONE 10:e0132016. doi:10.1371/journal.pone.0132016 —<br />
+  contains the heterologous (HEK293T + Gα16gust44 + Fluo-4 calcium imaging) functional<br />
+  assay framework applied to chimpanzee TAS2R38 start-loss vs rescued constructs.</li>
+<li>Wooding S et al. 2006. "Independent evolution of bitter-taste sensitivity in humans<br />
+  and chimpanzees." Nature 440:930-934. doi:10.1038/nature04655 — establishes that<br />
+  PTC-tasting was ancestral and reduced sensitivity arose independently by different<br />
+  mutations in the human and chimpanzee lineages after ~5-6 Mya divergence.</li>
+<li>Campbell MC et al. 2012. Mol Biol Evol 29:1141-53. doi:10.1093/molbev/msr293 —<br />
+  corroborates independent human/chimp evolutionary origins of PTC insensitivity.</li>
+<li>Meyerhof W et al. 2011. Flavour Fragr J 26:260-268. doi:10.1002/ffj.2041 — general<br />
+  mammalian T2R/gustducin/PLCβ2/IP3R3/TRPM5 signaling review used for the canonical<br />
+  pathway description.</li>
+<li>Itoigawa A, Nakagita T, Toda Y. 2024. Int J Mol Sci 25:12654.<br />
+  doi:10.3390/ijms252312654 — recent (Nov 2024) review of vertebrate T2R structural<br />
+  class and diversity; confirms no newer chimp-TAS2R38-specific localization/structure<br />
+  data exists beyond the 2012/2015 chimpanzee-specific studies.</li>
+<li>Purba LHPS et al. 2020. Primates 61:485-494. doi:10.1007/s10329-020-00799-1 —<br />
+  comparative colobine TAS2R38 evolution, used only as general candidate-ligand<br />
+  context (sinigrin, allyl isothiocyanate, goitrin).</li>
+</ul>
+<h2 id="go-term-hierarchy-checks-via-quickgo-api-2026-09-06">GO term hierarchy checks (via QuickGO API, 2026-09-06)</h2>
+<p>Verified before assigning ACCEPT/KEEP_AS_NON_CORE, per the project's term-id<br />
+validation guidance (existing_annotations ids are trusted/not hard-validated, but<br />
+hierarchy claims made in <code>review.reason</code> should be checked, not asserted from<br />
+memory):</p>
+<ul>
+<li>GO:0001580 ("detection of chemical stimulus involved in sensory perception of<br />
+  bitter taste") ancestors include GO:0050912, GO:0050913, GO:0050909 — i.e.<br />
+  GO:0050909 ("sensory perception of taste") IS a formal ancestor/generalization of<br />
+  GO:0001580. Confirms the GO:0050909 IEA row is a correct-but-generic restatement,<br />
+  used to justify KEEP_AS_NON_CORE (not REMOVE — it's true, just uninformative).</li>
+<li>GO:0033038 ("bitter taste receptor activity") ancestors do NOT include GO:0004930<br />
+  ("G protein-coupled receptor activity") — the two terms are formally unrelated<br />
+  siblings in the MF DAG (GO:0033038 sits under "taste receptor activity" -&gt;<br />
+  "transmembrane signaling receptor activity", not under the GPCR-activity branch).<br />
+  So the GO:0004930 IEA row is not formally redundant with GO:0033038, but it is<br />
+  still far less informative for this specific, well-characterized receptor —<br />
+  KEEP_AS_NON_CORE on informativeness grounds, consistent with the project's<br />
+  guidance to prefer specific/informative MF terms.</li>
+<li>GO:0016020 ("membrane") is a formal ancestor of GO:0005886 ("plasma membrane") —<br />
+  confirms KEEP_AS_NON_CORE for both membrane rows as strictly subsumed by the<br />
+  plasma-membrane annotation.</li>
+<li>GO:0007186 ("G protein-coupled receptor signaling pathway") is NOT a formal<br />
+  ancestor/descendant of GO:0001580 (they sit on different BP sub-branches:<br />
+  signal-transduction vs. sensory-perception) — so it is not simply redundant, but<br />
+  it is a generic pan-GPCR term; kept as KEEP_AS_NON_CORE since GO:0001580 is the<br />
+  more informative, taste-specific process annotation, and no taste-receptor-specific<br />
+  child of GO:0007186 exists in the current ontology (checked via QuickGO search —<br />
+  the only taste-specific MF/BP/CC terms found were GO:0033038, GO:0090682 (GPCR<br />
+  bitter taste receptor activity), GO:0170022 (ionotropic bitter taste receptor<br />
+  activity), GO:0050913 (sensory perception of bitter taste), GO:1904660/1/2<br />
+  (regulation of ...), GO:0031883 (taste receptor binding), GO:1903768 (taste<br />
+  receptor complex), GO:0008527 (taste receptor activity) — none of these is a<br />
+  bitter-taste-specific signaling-pathway BP term).</li>
+</ul>
+<h3 id="note-on-go0090682-gpcr-bitter-taste-receptor-activity">Note on GO:0090682 ("GPCR bitter taste receptor activity")</h3>
+<p>This term exists (not obsolete) and is formally a more specific descendant of BOTH<br />
+GO:0033038 (bitter taste receptor activity) and GO:0004930 (GPCR activity) — i.e. it<br />
+is exactly the intersection term that would most precisely describe TAS2R38, which is<br />
+unambiguously a GPCR-type (not ionotropic) bitter taste receptor. However, GO:0033038<br />
+is the term consistently used by GO_Central/PAINT across the entire TAS2R gene family<br />
+(confirmed in both the human and chimp GOA files, and in TAS2R16's GOA file), so this<br />
+review does not MODIFY the existing GO:0033038 annotations to GO:0090682 — that would<br />
+create an inconsistency with the rest of the family's curation and is better raised as<br />
+a broader ontology-curation question (e.g. whether GO_Central should adopt GO:0090682<br />
+for the whole GPCR-type T2R subfamily) rather than a single-gene MODIFY call. Noted<br />
+here for future reference / potential cross-gene follow-up.</p>
+<h2 id="curation-outcome-summary">Curation outcome summary</h2>
+<p>All 10 existing_annotations rows: 5x ACCEPT (core BP GO:0001580 x2, core MF<br />
+GO:0033038 x2, core CC GO:0005886), 5x KEEP_AS_NON_CORE (generic/subsumed terms:<br />
+GO:0004930, GO:0007186, GO:0016020 x2, GO:0050909). No REMOVE, MODIFY, or UNDECIDED<br />
+calls — the IBA/IEA evidence base for this gene is standard, biologically coherent<br />
+family-level TAS2R annotation, and is independently and strongly corroborated by<br />
+chimpanzee-specific population genetics and functional (heterologous calcium-imaging)<br />
+literature on PTC/thiocarbamide bitter-taste detection [Hayakawa 2012; Suzuki-Hashido<br />
+2015 — see TAS2R38-deep-research-falcon.md]. No experimental annotations exist to<br />
+second-guess, so the "do not overrule curators from incomplete evidence" caveat did<br />
+not come into play here.</p>
+<p>The most biologically interesting finding for this species — the western-chimpanzee<br />
+ATG-&gt;AGG start-codon-loss non-taster allele, independently evolved from the human<br />
+PAV/AVI polymorphism — is not itself a GOA annotation target (it's an allelic/<br />
+population-variation fact, not a distinct molecular function) and so is captured in<br />
+<code>description</code> and <code>knowledge_gaps</code> rather than as a new proposed GO term.</p>
+<h2 id="revisions-after-pr-review">Revisions after PR review</h2>
+<p>The <code>ai4c-reviewer</code> bot's CHANGES_REQUESTED review on PR #3050 (2026-09-16) flagged<br />
+three issues, all fixed:</p>
+<ol>
+<li><strong>Generic-term policy consistency</strong>: this file's GO:0004930/GO:0007186 were<br />
+   originally KEEP_AS_NON_CORE and GO:0016020 was KEEP_AS_NON_CORE, inconsistent<br />
+   with the other four taste-receptor genes in this PR (where a broad-but-true term<br />
+   coexisting with a more specific one is ACCEPT, and only a truly redundant CC term<br />
+   like generic "membrane" alongside "plasma membrane" is downgraded). Standardized:<br />
+   GO:0004930 and GO:0007186 changed to ACCEPT; the two GO:0016020 rows changed to<br />
+   MARK_AS_OVER_ANNOTATED (with <code>propagation_review</code> added to the IBA-sourced row,<br />
+   which the validator requires once its action moves off ACCEPT). GO:0050909 was<br />
+   already KEEP_AS_NON_CORE and needed no change.</li>
+<li><strong>"class-T GPCR" is not a standard designation</strong> — fixed to "class-A-like" (the<br />
+   correct rhodopsin-like GPCR class for TAS2Rs), matching how the human TAS2R38<br />
+   file already described it.</li>
+<li><strong>No primary literature was cited</strong> — every substantive chimpanzee-specific claim<br />
+   (start-codon-loss mechanism, 76% western-chimpanzee frequency, FST=0.614,<br />
+   independent human/chimp origin, in vitro PTC non-response) was sourced only to<br />
+   the falcon deep-research file, marked <code>correctness: VERIFIED</code>, which overstates<br />
+   what was actually checked per CLAUDE.md ("an LLM-generated deep-research summary<br />
+   asserting a citation is not sufficient"). Fetched and cached the three primary/<br />
+   secondary papers named with DOIs in the falcon file: Hayakawa et al. 2012 PLoS<br />
+   ONE (PMID:22916235, full text), Wooding et al. 2006 Nature (PMID:16612383,<br />
+   abstract only), and Suzuki-Hashido et al. 2015 PLoS ONE (PMID:26201026, full<br />
+   text — about Japanese macaques, but its Introduction restates the chimpanzee<br />
+   76%/ATG&gt;AGG finding in prose, citing Hayakawa 2012). Re-pointed the load-bearing<br />
+<code>supported_by</code> citations (GO:0033038 IBA row, core_functions) to these PMIDs<br />
+   with verbatim quotes, and added <code>reference_review</code> entries for each.</li>
+<li>Note: Hayakawa 2012's own Table 1 (population allele-frequency table) could<br />
+     not be reliably used for the specific 76%/9-of-92 figures because its<br />
+     machine-extracted markdown scrambles which frequency row maps to which gene<br />
+     (cTAS2R38 vs. the adjacent cTAS2R40 row) — its own prose text, repeated three<br />
+     times, does unambiguously confirm cTAS2R38 as the "loss-of-start SNV...unique<br />
+     to western chimpanzees" with FST=0.614, and Suzuki-Hashido 2015's Introduction<br />
+     (citing Hayakawa 2012 as its source) is the place this reviewer could<br />
+     verbatim-confirm the specific 76% figure. Flagged in that reference's<br />
+<code>review_notes</code> for transparency.</li>
+</ol>
+<h2 id="re-review-round-2-hayakawa-table-1-row-alignment-resolved">Re-review round 2: Hayakawa Table 1 row alignment resolved</h2>
+<p>The <code>ai4c-reviewer</code> bot's re-review of commit <code>b1db1320b</code> (2026-09-16) confirmed all<br />
+five IMPORTANT fixes from round 1, then raised one new issue (#9, the sole blocker)<br />
+and two optional suggestions:</p>
+<ul>
+<li><strong>#9 (fixed)</strong>: the round-1 caution about Hayakawa 2012's Table 1 being unparseable<br />
+  was overly conservative. The bot worked out the correct row-to-gene-label mapping:<br />
+  the markdown extraction flattens each row's LEADING gene label onto the tail of the<br />
+  PRECEDING row's data cells, so the literal substring <code>LICNon-functional70/92
+  (76%)000cTAS2R40</code> is actually cTAS2R38's own row (LIC = loss-of-initiation-codon,<br />
+  matching the paper's own prose calling cTAS2R38's variant "the loss-of-start SNV";<br />
+  the <code>cTAS2R40</code> at the end is really the NEXT row's label). Verified this<br />
+  independently by re-deriving the full label-then-data token sequence from the raw<br />
+  table text (matches the paper's own Methods sample sizes: 92/20/4/2 = 2x<br />
+  46W/10E/2C/1NC chimps) before editing. Added this as a verbatim finding to the<br />
+  PMID:22916235 reference entry, rewrote its <code>review_notes</code> to explain the resolved<br />
+  offset, and demoted PMID:26201026 (Suzuki-Hashido 2015) from primary source of the<br />
+  76% figure to corroboration only — its own prose says "76% of individuals" where<br />
+  Hayakawa 2012's table is an allele frequency (70/92 sampled chromosomes); this<br />
+  review uses "alleles" throughout per the primary source.</li>
+<li><strong>#10 (fixed, optional)</strong>: stale "MODIFY/NEW" wording in<br />
+<code>genes/9AVES/TAS1R1/TAS1R1-ai-review.yaml</code> (no <code>MODIFY</code> remains in that file after<br />
+  round 1) corrected to "KEEP_AS_NON_CORE/NEW".</li>
+<li><strong>#11 (fixed, optional)</strong>: <code>PANTHER:PTN000149628</code>'s <code>source_status</code> was<br />
+<code>UNRESOLVED</code> in <code>genes/human/TAS2R38</code> but <code>SUPPORTS_TRANSFER</code> in this file (and<br />
+  also in <code>genes/human/TAS2R16</code>, not flagged by the bot but the same node in the<br />
+  same PR). Standardized all three to <code>UNRESOLVED</code> ("PANTHER internal tree node, not<br />
+  a protein"), matching the human TAS2R38 file's convention, which the bot judged<br />
+  more defensible.</li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q697L5
+gene_symbol: TAS2R38
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:9598
+  label: Pan troglodytes
+description: &gt;-
+  TAS2R38 (T2R38) encodes a class-A-like, seven-transmembrane G protein-coupled bitter
+  taste receptor of the Pan troglodytes TAS2R (taste receptor type 2) family. It is
+  a single-exon gene whose product is expected to reside in the plasma membrane of
+  bitter-responsive taste receptor cells of the tongue, where it detects
+  phenylthiocarbamide (PTC) and structurally related thiourea/thiocarbamide
+  (N-C=S-bearing) bitter compounds, initiating gustducin-linked signaling: coupling
+  to a heterotrimeric G protein, activation of phospholipase C-beta-2, IP3-mediated
+  Ca2+ release from the endoplasmic reticulum, and TRPM5-dependent depolarization,
+  culminating in neurotransmitter release onto gustatory afferents. As in humans,
+  chimpanzee populations show genetically determined variation in PTC-type bitter
+  sensitivity. A start-codon-loss allele (ATG to AGG) that would force downstream
+  translation initiation at Met97 and delete the first 96 residues is common in
+  western chimpanzee populations but essentially absent from central, eastern, and
+  Nigeria-Cameroon populations, and this reduction in PTC sensitivity arose through
+  mutations distinct from those underlying the analogous human PAV/AVI polymorphism,
+  indicating independent evolutionary origins in the two lineages.
+existing_annotations:
+- term:
+    id: GO:0001580
+    label: detection of chemical stimulus involved in sensory perception of bitter
+      taste
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  supporting_entities:
+  - PANTHER:PTN000149628
+  - RGD:1359393
+  - UniProtKB:P59533
+  - UniProtKB:P59534
+  - UniProtKB:P59535
+  - UniProtKB:P59537
+  - UniProtKB:P59538
+  - UniProtKB:P59540
+  - UniProtKB:P59541
+  - UniProtKB:P59544
+  - UniProtKB:Q9NYV7
+  - UniProtKB:Q9NYV8
+  - UniProtKB:Q9NYV9
+  - UniProtKB:Q9NYW0
+  - UniProtKB:Q9NYW2
+  - UniProtKB:Q9NYW3
+  - UniProtKB:Q9NYW4
+  - UniProtKB:Q9NYW5
+  - UniProtKB:Q9NYW6
+  - UniProtKB:Q9NYW7
+  review:
+    summary: &gt;-
+      IBA/PAINT propagation of the core TAS2R biological-process annotation from the
+      PTHR11394 family node (PTN000149628), seeded by numerous experimentally
+      characterized human and rat TAS2R paralogs (e.g. UniProtKB:P59533/P59534/...,
+      RGD:1359393). Bitter-compound detection via TAS2R-family receptors, coupled to
+      gustducin/PLCbeta2/TRPM5 signaling, is a deeply conserved ancestral function of
+      this whole clade, and chimpanzee TAS2R38 is a 1:1 ortholog of human TAS2R38
+      within that clade. This is the core biological process for the gene.
+    action: ACCEPT
+    reason: &gt;-
+      Per the &#34;What an IBA asserts&#34; curation guidance, this reflects a considered
+      PAINT phylogenetic judgment that bitter-taste detection arose at a node
+      ancestral to the whole TAS2R38/TAS2R-paralog clade; chimpanzee TAS2R38 falls
+      squarely within that clade and there is no evidence of target-specific loss of
+      this general biological process (only population-specific loss-of-function
+      alleles at the individual level, discussed below). Chimpanzee-specific
+      population genetics directly and independently support a role for TAS2R38 in
+      PTC-class bitter-compound detection.
+    additional_reference_ids:
+    - file:PANTR/TAS2R38/TAS2R38-deep-research-falcon.md
+    supported_by:
+    - reference_id: file:PANTR/TAS2R38/TAS2R38-deep-research-falcon.md
+      supporting_text: &gt;-
+        The strongest chimpanzee-specific assignment is detection of **PTC-class
+        bitterness**. Chimpanzees display genetically determined bimodal sensitivity
+        to compounds containing an N–C=S group, and mutations in chimpanzee TAS2R38
+        account for this variation.
+- term:
+    id: GO:0001580
+    label: detection of chemical stimulus involved in sensory perception of bitter
+      taste
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  supporting_entities:
+  - InterPro:IPR030050
+  review:
+    summary: &gt;-
+      InterPro2GO mapping from IPR030050, the TAS2R38-specific (not merely
+      family-level) InterPro signature that chimpanzee Q697L5 itself carries
+      (confirmed in the UniProt DR line). This is a precise, ortholog-specific
+      electronic annotation, fully consistent with the IBA row and with the
+      chimpanzee-specific population-genetic evidence for PTC-type bitter detection.
+    action: ACCEPT
+    reason: &gt;-
+      Domain-based inference from the TAS2R38-specific signature is accurate and
+      redundant-but-consistent with the phylogenetically inferred and
+      literature-supported core process.
+- term:
+    id: GO:0004930
+    label: G protein-coupled receptor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  supporting_entities:
+  - InterPro:IPR007960
+  review:
+    summary: &gt;-
+      InterPro2GO mapping from IPR007960 (the pan-TAS2R-family &#34;TAS2R&#34; domain).
+      Correct at the level of the whole GPCR superfamily (TAS2Rs are seven-
+      transmembrane class-A-like GPCRs), but far less informative than the specific
+      bitter taste receptor activity annotation (GO:0033038) already present for
+      this gene, which better captures the receptor&#39;s known role.
+    action: ACCEPT
+    reason: &gt;-
+      T2Rs are indeed GPCRs, and this broad-but-true parent molecular function
+      coexists with, rather than being formally subsumed by, the more specific
+      GO:0033038 &#34;bitter taste receptor activity&#34; annotation, which remains the
+      gene&#39;s core informative molecular function. Consistent with the equivalent
+      call for the human ortholog in this same PR.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: located_in
+  supporting_entities:
+  - ARBA:ARBA00027801
+  review:
+    summary: &gt;-
+      ARBA electronic subcellular-location annotation. Correct: as a seven-
+      transmembrane chemoreceptor, functional TAS2R38 is expected to reside at the
+      plasma membrane of bitter-responsive taste receptor cells, with its
+      ligand-binding surface facing the oral cavity. UniProt independently lists
+      &#34;Membrane; Multi-pass membrane protein&#34; for this record.
+    action: ACCEPT
+    reason: &gt;-
+      Consistent with the seven-transmembrane topology annotated in the UniProt
+      feature table (TOPO_DOM/TRANSMEM lines) and with canonical T2R biology; this
+      is the core, functionally required cellular location for the receptor, even
+      though direct chimpanzee-tissue immunolocalization has not been reported.
+    supported_by:
+    - reference_id: file:PANTR/TAS2R38/TAS2R38-deep-research-falcon.md
+      supporting_text: &gt;-
+        As a seven-transmembrane chemoreceptor, functional TAS2R38 is expected to
+        reside in the **plasma membrane of bitter-responsive taste-receptor cells**,
+        with its ligand-facing surface exposed to the oral environment.
+- term:
+    id: GO:0007186
+    label: G protein-coupled receptor signaling pathway
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  supporting_entities:
+  - InterPro:IPR007960
+  review:
+    summary: &gt;-
+      InterPro2GO mapping from the family-wide TAS2R domain (IPR007960). This is a
+      true, non-redundant biological-process annotation (it lies on the
+      signal-transduction branch of the GO biological_process DAG, distinct from
+      the sensory-perception branch that GO:0001580 belongs to): TAS2R38 both
+      detects a bitter chemical stimulus (GO:0001580) and, mechanistically,
+      transduces that detection through canonical heterotrimeric-G-protein
+      signaling (gustducin -&gt; PLCbeta2 -&gt; IP3/Ca2+ -&gt; TRPM5), which is exactly what
+      GO:0007186 captures. No taste-receptor-specific child term (e.g. a &#34;bitter
+      taste receptor signaling pathway&#34;) currently exists in GO, so this generic
+      GPCR-signaling-pathway term is the most specific applicable process term for
+      the downstream transduction step.
+    action: ACCEPT
+    reason: &gt;-
+      Biologically accurate; no taste-receptor-specific child term exists in GO for
+      the downstream G-protein transduction step, making this the most specific
+      applicable process term for that mechanistic step, alongside the
+      taste-specific detection/perception process (GO:0001580). Treated as core,
+      consistent with the equivalent call for the human ortholog in this same PR.
+    supported_by:
+    - reference_id: file:PANTR/TAS2R38/TAS2R38-deep-research-falcon.md
+      supporting_text: &gt;-
+        bitter agonist → TAS2R38 activation → heterotrimeric G-protein signaling,
+        commonly gustducin-associated → PLCβ2 activation → IP3 production → Ca²⁺
+        release from endoplasmic-reticulum stores through IP3 receptors → TRPM5
+        activation and membrane depolarization → transmitter output to gustatory
+        afferents.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  supporting_entities:
+  - PANTHER:PTN000149628
+  - UniProtKB:P59533
+  - UniProtKB:P59536
+  - UniProtKB:P59539
+  - UniProtKB:P59542
+  - UniProtKB:P59551
+  - UniProtKB:Q7RTR8
+  - UniProtKB:Q9NYV7
+  review:
+    summary: &gt;-
+      PAINT-propagated generic membrane localization from the TAS2R family node.
+      Correct but strictly less informative than the plasma-membrane annotation
+      (GO:0005886, of which &#34;membrane&#34; is a formal ancestor) already present for
+      this gene.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      True but subsumed by the more specific, equally well-supported plasma
+      membrane annotation already held for this gene; uninformative given that
+      redundancy, not core. Consistent with the equivalent generic-membrane calls
+      for the human orthologs in this same PR.
+    propagation_review:
+      root_cause: NO_FAILURE_NON_CORE
+      failure_modes:
+      - GRANULARITY_MISMATCH
+      source_entities:
+      - source_id: PANTHER:PTN000149628
+        source_status: UNRESOLVED
+        comment: &gt;-
+          PANTHER internal tree node, not a protein. Correctly asserts generic
+          &#34;membrane&#34; localization for the multi-pass-membrane TAS2R clade; true
+          but subsumed by the target&#39;s own specific plasma-membrane annotation.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  supporting_entities:
+  - InterPro:IPR007960
+  - InterPro:IPR030050
+  - UniProtKB-SubCell:SL-0162
+  review:
+    summary: &gt;-
+      Combined automated (UniProt subcellular-location keyword + InterPro
+      transmembrane domain signatures) annotation to the generic &#34;membrane&#34; term.
+      Correct but generic for a seven-transmembrane receptor whose specific
+      location (plasma membrane) is already annotated.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: &gt;-
+      Redundant with, and less specific than, the plasma membrane annotation
+      (GO:0005886); not incorrect, just uninformative given that redundancy. Not
+      core.
+- term:
+    id: GO:0033038
+    label: bitter taste receptor activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  supporting_entities:
+  - PANTHER:PTN000149628
+  - UniProtKB:P59533
+  - UniProtKB:P59534
+  - UniProtKB:P59535
+  - UniProtKB:P59537
+  - UniProtKB:P59538
+  - UniProtKB:P59540
+  - UniProtKB:P59541
+  - UniProtKB:P59544
+  - UniProtKB:Q2AB81
+  - UniProtKB:Q2AB83
+  - UniProtKB:Q9NYV7
+  - UniProtKB:Q9NYV8
+  - UniProtKB:Q9NYV9
+  - UniProtKB:Q9NYW0
+  - UniProtKB:Q9NYW2
+  - UniProtKB:Q9NYW3
+  - UniProtKB:Q9NYW4
+  - UniProtKB:Q9NYW5
+  - UniProtKB:Q9NYW6
+  - UniProtKB:Q9NYW7
+  review:
+    summary: &gt;-
+      PAINT-propagated core molecular function from the PTHR11394 (TAS2R) family
+      node, seeded by many experimentally characterized human bitter taste
+      receptors of the same family (e.g. TAS2R16/UniProtKB:Q9NYV7, and paralogs
+      P59533/P59534/P59537/... among the donors). This is the defining molecular
+      function of the TAS2R38 receptor and is directly corroborated by
+      chimpanzee-specific genetic and functional evidence for PTC-class bitter
+      detection.
+    action: ACCEPT
+    reason: &gt;-
+      Per the IBA-review guidance, this is a sound phylogenetic transfer: bitter
+      taste receptor activity is the ancestral, defining function of the whole
+      TAS2R clade that chimpanzee TAS2R38 belongs to, and is independently
+      corroborated by population-genetic and heterologous functional-assay data on
+      the chimpanzee gene itself (a start-codon-loss variant abolishes activity in
+      a calcium-imaging assay, implying the wild-type ATG-initiated protein is
+      functional). This is a core molecular function.
+    supported_by:
+    - reference_id: PMID:16612383
+      supporting_text: &gt;-
+        a mutation of the initiation codon results in the use of an alternative
+        downstream start codon and production of a truncated receptor variant that
+        fails to respond to PTC in vitro
+- term:
+    id: GO:0033038
+    label: bitter taste receptor activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  supporting_entities:
+  - InterPro:IPR007960
+  - InterPro:IPR030050
+  review:
+    summary: &gt;-
+      InterPro2GO mapping from both the pan-family TAS2R signature (IPR007960) and
+      the TAS2R38-specific signature (IPR030050) that this record itself carries.
+      Consistent with, and fully redundant with, the IBA and family-wide
+      annotations above.
+    action: ACCEPT
+    reason: &gt;-
+      Accurate, ortholog-specific electronic annotation for the gene&#39;s core
+      molecular function, consistent with all other evidence.
+- term:
+    id: GO:0050909
+    label: sensory perception of taste
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  supporting_entities:
+  - InterPro:IPR007960
+  review:
+    summary: &gt;-
+      InterPro2GO mapping to the broad parent process &#34;sensory perception of
+      taste&#34;. GO:0050909 is a formal ancestor of the more specific
+      GO:0001580 (&#34;detection of chemical stimulus involved in sensory perception of
+      bitter taste&#34;) already annotated for this gene (confirmed via the GO DAG:
+      GO:0001580 -&gt; GO:0050912 -&gt; GO:0050913 -&gt; GO:0050909 lineage), so this term
+      adds no information beyond the specific bitter-taste annotation.
+    action: KEEP_AS_NON_CORE
+    reason: &gt;-
+      Correct but strictly more general than, and subsumed by, the specific
+      bitter-taste detection annotation (GO:0001580) that better captures the
+      gene&#39;s defining biological process.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:22916235
+  title: Eco-geographical diversification of bitter taste receptor genes (TAS2Rs) among subspecies of chimpanzees (Pan troglodytes).
+  findings:
+  - statement: &gt;-
+      A loss-of-start-codon SNV in cTAS2R38 is unique to western chimpanzees, with
+      strong west-east population differentiation (FST = 0.614).
+    supporting_text: &gt;-
+      Derived alleles of the non-synonymous SNVs in cTAS2R41 and cTAS2R60 were
+      present only in eastern chimpanzees (Figure 3B, 3D), whereas derived alleles
+      of the loss-of-start SNV in cTAS2R38 were present only in western
+      chimpanzees (Figure 3A
+  - statement: &gt;-
+      The cTAS2R38 loss-of-start allele is the same variant functionally
+      characterized by Wooding et al. as conferring PTC-tasting deficits.
+    supporting_text: &gt;-
+      Wooding et al. [32] found that the loss-of-start variant of cTAS2R38
+      confers recessively inherited inability to detect the bitterness of an
+      artificial compound, phenylthiocarbamide (PTC), in vitro and in vivo.
+  - statement: &gt;-
+      Table 1&#39;s cTAS2R38 row: a loss-of-initiation-codon (LIC) variant,
+      non-functional, present in 70 of 92 sampled western-chimpanzee alleles
+      (76%) and absent from the sampled eastern, central, and
+      Nigerian-Cameroonian alleles (0/20, 0/4, 0/2 respectively, the latter
+      three read from the immediately following table cells).
+    supporting_text: &gt;-
+      LICNon-functional70/92 (76%)000cTAS2R40
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed/PMC-verified (PMC3420883), full text cached and read directly. This
+      is the primary population-genetics source for the western-chimpanzee-specific
+      cTAS2R38 loss-of-start allele, its FST=0.614 divergence, and its 76%
+      western-chimpanzee allele frequency, cited in place of the falcon
+      deep-research summary that had originally sourced these claims. The
+      paper&#39;s own Table 1 (population allele frequencies per gene) is
+      machine-extracted into the cached markdown with each row&#39;s leading gene
+      label flattened onto the tail of the PRECEDING row&#39;s data cells (so the
+      cTAS2R38 row&#39;s own label appears after the cTAS2R31 row&#39;s data, and the
+      cTAS2R38 row&#39;s data appears immediately before the &#34;cTAS2R40&#34; label). The
+      quoted substring above is therefore cTAS2R38&#39;s own row (LIC/loss-of-start,
+      non-functional, 70/92 western alleles), confirmed by three independent
+      checks: LIC matches the paper&#39;s own prose describing cTAS2R38&#39;s variant as
+      &#34;the loss-of-start SNV&#34; (not GTC/gain-of-stop, which is the adjacent
+      cTAS2R31 row&#39;s code); the 92/20/4/2 denominators are exactly 2x the
+      Methods sample sizes (46 western, 10 eastern, 2 central, 1
+      Nigerian-Cameroonian chimpanzees) as expected for diploid allele counts;
+      and the zero counts match the falcon deep-research file&#39;s independently-
+      derived 0/20, 0/4, 0/2. An initial version of this review declined to use
+      this table directly, citing unresolved row-to-gene alignment, and instead
+      sourced the 76% figure to Suzuki-Hashido et al. 2015 (PMID:26201026)
+      below; that alignment is now resolved as described here, and this
+      paper&#39;s own table row is the primary source for the figure, with
+      Suzuki-Hashido&#39;s restatement retained only as corroboration.
+- id: PMID:16612383
+  title: Independent evolution of bitter-taste sensitivity in humans and chimpanzees.
+  findings:
+  - statement: &gt;-
+      Chimpanzee PTC-tasting variation is caused by a chimpanzee-specific mutation
+      of the TAS2R38 initiation codon, producing a truncated, non-functional
+      receptor via an alternative downstream start codon; this is molecularly
+      independent of the human PAV/AVI polymorphism.
+    supporting_text: &gt;-
+      a mutation of the initiation codon results in the use of an alternative
+      downstream start codon and production of a truncated receptor variant that
+      fails to respond to PTC in vitro
+  - statement: &gt;-
+      Chimpanzee TAS2R38 genotype (of the initiation-codon variant) predicts
+      taster status in living animals, not only in the heterologous assay.
+    supporting_text: &gt;-
+      Association testing of PTC sensitivity in a cohort of captive chimpanzees
+      confirmed that chimpanzee TAS2R38 genotype accurately predicts taster
+      status in vivo.
+  - statement: &gt;-
+      The molecular basis of PTC-taste variation arose independently in humans
+      and chimpanzees.
+    supporting_text: &gt;-
+      the molecular basis of this variation has arisen twice, independently, in
+      the two species
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed-verified. Cached record is abstract-only (no PMC full text), but the
+      abstract itself directly states the functional/mechanistic claim (truncated,
+      non-PTC-responsive receptor from an alternative downstream start codon) and
+      the independent-origin claim used in this gene&#39;s description and core
+      annotations; this is the founding functional study for the chimpanzee
+      TAS2R38 start-loss variant, cited in place of the falcon deep-research
+      summary that had originally sourced these claims.
+- id: PMID:26201026
+  title: Rapid expansion of phenylthiocarbamide non-tasters among Japanese macaques.
+  findings:
+  - statement: &gt;-
+      Restates, citing Hayakawa et al. 2012 as its source, that the chimpanzee
+      TAS2R38 non-taster (start-codon-mutant, ATG&gt;AGG) allele was found at 76%
+      frequency in western chimpanzees and was absent from eastern chimpanzees;
+      this paper&#39;s own prose loosely calls the 76% figure a frequency &#34;of
+      individuals&#34; where Hayakawa 2012&#39;s own table reports it as an allele
+      frequency (70/92 sampled chromosomes).
+    supporting_text: &gt;-
+      Most phenotypic variation among humans is caused by three amino acid
+      substitutions in TAS2R38, whereas for chimpanzees the observed variation
+      results from a start codon mutation (ATG&gt;AGG) in TAS2R38 [20,21]. ... in
+      chimpanzees, the non-taster allele was found in only western chimpanzees
+      (P. troglodytes verus) where it was present in 76% of individuals, while it
+      was not found in eastern chimpanzees (P. troglodytes schweinfurthii) [19]
+  reference_review:
+    relevance: LOW
+    correctness: VERIFIED
+    review_notes: &gt;-
+      PubMed/PMC-verified (PMC4511751), full text cached and read directly. This
+      paper&#39;s own subject is Japanese macaque TAS2R38 (not chimpanzee); it is
+      cited only as corroboration for the chimpanzee ATG&gt;AGG start-codon-mutation
+      mechanism and 76% frequency, both of which are now primarily sourced to
+      Hayakawa et al. 2012&#39;s own Table 1 row (PMID:22916235 above, once its
+      row-to-gene-label offset was resolved). This paper&#39;s prose calls the figure
+      &#34;76% of individuals,&#34; a looser restatement than Hayakawa 2012&#39;s own table,
+      which reports it as an allele frequency (70/92 sampled chromosomes); this
+      review uses &#34;alleles&#34; throughout, per the primary source.
+- id: file:PANTR/TAS2R38/TAS2R38-deep-research-falcon.md
+  title: Falcon (Edison Scientific) deep research report on chimpanzee TAS2R38 (UniProt Q697L5)
+  reference_review:
+    relevance: MEDIUM
+    correctness: VERIFIED
+    review_notes: &gt;-
+      AI-generated literature synthesis (not a primary source itself). Its cited
+      primary literature (Hayakawa et al. 2012 PLoS ONE, PMID:22916235; Wooding
+      et al. 2006 Nature, PMID:16612383; Suzuki-Hashido et al. 2015 PLoS ONE,
+      PMID:26201026) is real and correctly attributed. Per PR review feedback,
+      the load-bearing claims in this file (start-codon-loss mechanism, 76%
+      western-chimpanzee frequency, FST=0.614, independent human/chimp origin,
+      in vitro non-response) have since been re-sourced directly to those three
+      now-cached PMIDs above with verbatim quotes; this falcon file is retained
+      only for supporting claims not yet traced to a specific PMID (e.g. the
+      HEK293T/Gα16gust44 assay-system description and knowledge-gap framing).
+  findings:
+  - statement: &gt;-
+      Chimpanzee studies designate this locus cTAS2R38, and the description &#34;taste
+      receptor type 2 member 38&#34; and T2R GPCR family membership match the supplied
+      gene symbol, species, accession, and InterPro domains -- there is no evidence
+      of gene/paralog mis-identification.
+    supporting_text: &gt;-
+      Chimpanzee studies explicitly designate this locus **cTAS2R38**, one of the
+      TAS2R genes in *Pan troglodytes*. The description “taste receptor type 2
+      member 38” and membership in the T2R GPCR family therefore agree with the
+      supplied gene symbol, species, accession, and domains
+  - statement: &gt;-
+      Chimpanzees show genetically determined bimodal sensitivity to PTC-class
+      (N-C=S-bearing) bitter compounds, and TAS2R38 variation accounts for this.
+    supporting_text: &gt;-
+      The strongest chimpanzee-specific assignment is detection of **PTC-class
+      bitterness**. Chimpanzees display genetically determined bimodal sensitivity
+      to compounds containing an N–C=S group, and mutations in chimpanzee TAS2R38
+      account for this variation.
+  - statement: &gt;-
+      A start-codon-loss ATG-&gt;AGG allele, which would force downstream translation
+      initiation at Met97 and delete the first 96 residues, was found at 76%
+      allele frequency in western chimpanzees but was essentially absent from
+      central, eastern, and Nigeria-Cameroon chimpanzee populations sampled.
+    supporting_text: &gt;-
+      In the 2012 subspecies survey, the start-loss allele occurred in **70 of 92
+      western-chimpanzee alleles (76%)**. It was absent from the sampled eastern
+      (0/20), central (0/4), and Nigerian–Cameroonian (0/2) alleles. West–east
+      differentiation was high, with **FST = 0.614**, and the derived allele was
+      restricted to western chimpanzees in that dataset
+  - statement: &gt;-
+      Reduced PTC sensitivity evolved independently in humans and chimpanzees
+      through different underlying mutations after the lineages split, so human
+      TAS2R38 PAV/AVI haplotype information should not be transferred to the
+      chimpanzee gene.
+    supporting_text: &gt;-
+      Reduced PTC sensitivity evolved independently in humans and chimpanzees
+      through different mutations after their lineages separated, so human TAS2R38
+      haplotypes must not be transferred to Q697L5
+  - statement: &gt;-
+      The canonical bitter-taste signal-transduction pathway for a functional T2R
+      such as TAS2R38 is agonist binding -&gt; gustducin/G-protein activation -&gt;
+      PLCbeta2 -&gt; IP3-mediated ER Ca2+ release -&gt; TRPM5 activation -&gt; afferent
+      transmitter release, though this full chain has not been directly
+      demonstrated in native chimpanzee taste cells.
+    supporting_text: &gt;-
+      bitter agonist → TAS2R38 activation → heterotrimeric G-protein signaling,
+      commonly gustducin-associated → PLCβ2 activation → IP3 production → Ca²⁺
+      release from endoplasmic-reticulum stores through IP3 receptors → TRPM5
+      activation and membrane depolarization → transmitter output to gustatory
+      afferents.
+  - statement: &gt;-
+      A functional heterologous calcium-imaging assay (HEK293T cells, chimeric
+      G-alpha16gust44, Fluo-4 imaging) was used to test chimpanzee TAS2R38
+      constructs, including the start-codon-loss variant, supporting the
+      interpretation that start-codon loss disrupts normal receptor function.
+    supporting_text: &gt;-
+      Functional assays relevant to chimpanzee constructs used heterologous
+      HEK293T cells, the chimeric G protein Gα16gust44, Fluo-4 calcium imaging at
+      two-second intervals, and concentration–response modeling.
+proposed_new_terms: []
+core_functions:
+- description: &gt;-
+    Chimpanzee TAS2R38 functions as a class-A-like, seven-transmembrane G
+    protein-coupled bitter taste receptor at the plasma membrane of oral taste
+    receptor cells, where it detects phenylthiocarbamide (PTC) and related
+    thiourea/thiocarbamide (N-C=S-bearing) bitter compounds and initiates
+    gustducin-linked GPCR signal transduction leading to sensory perception of
+    bitterness.
+  molecular_function:
+    id: GO:0033038
+    label: bitter taste receptor activity
+  directly_involved_in:
+  - id: GO:0001580
+    label: detection of chemical stimulus involved in sensory perception of bitter
+      taste
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: PMID:16612383
+    supporting_text: &gt;-
+      a mutation of the initiation codon results in the use of an alternative
+      downstream start codon and production of a truncated receptor variant that
+      fails to respond to PTC in vitro
+  - reference_id: file:PANTR/TAS2R38/TAS2R38-deep-research-falcon.md
+    supporting_text: &gt;-
+      As a seven-transmembrane chemoreceptor, functional TAS2R38 is expected to
+      reside in the **plasma membrane of bitter-responsive taste-receptor cells**,
+      with its ligand-facing surface exposed to the oral environment.
+knowledge_gaps:
+- gap_statement: &gt;-
+    The complete, native-cell functional consequence of the western-chimpanzee
+    start-codon-loss (ATG-&gt;AGG) TAS2R38 allele -- surface trafficking, ligand
+    binding, and downstream Ca2+ signaling in actual taste receptor cells rather
+    than a heterologous HEK293T reconstitution -- has not been directly
+    established.
+  boundary: &gt;-
+    The allele&#39;s high frequency in western chimpanzees (76% of sampled alleles),
+    its near-absence in other subspecies, and its predicted truncation of the
+    first 96 residues (removing much of the receptor&#39;s N-terminal/extracellular
+    architecture) are well established by population genetics and by a
+    heterologous calcium-imaging assay.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: MF_DARK
+  significance: &gt;-
+    Determines whether western chimpanzee populations carrying this allele are
+    genuinely PTC/thiocarbamide-insensitive in vivo, which bears on hypotheses
+    about diet, plant-toxin avoidance, and the selective forces shaping bitter
+    taste receptor evolution in this lineage.
+  resolution: &gt;-
+    Native taste-cell physiology (e.g. single-cell calcium imaging or
+    electrophysiology of circumvallate/foliate papilla taste cells from
+    genotyped western versus eastern/central chimpanzees) or genotype-linked
+    behavioral PTC-sensitivity testing.
+  provenance:
+  - reference_id: file:PANTR/TAS2R38/TAS2R38-deep-research-falcon.md
+    supporting_text: &gt;-
+      Native localization, complete signaling, natural ligand spectrum, and
+      extraoral roles have not been directly established for chimpanzee Q697L5.
+      These are orthology- or family-based annotations rather than
+      chimpanzee-specific experimental findings.
+- gap_statement: &gt;-
+    The ecologically relevant natural agonist spectrum of chimpanzee TAS2R38 is
+    unresolved; PTC itself is an experimental probe rather than a demonstrated
+    dietary ligand.
+  boundary: &gt;-
+    PTC-class (N-C=S-bearing) sensitivity and its genetic basis are established;
+    candidate natural ligands (thioamides, plant-derived isothiocyanates and
+    glucosinolate breakdown products such as sinigrin, allyl isothiocyanate, and
+    goitrin) are proposed by analogy to other primate TAS2R38 orthologs but have
+    not been tested against the chimpanzee receptor.
+  gap_kind:
+  - BIOLOGY
+  dark_aspect: RESIDUAL_SUBGAP
+  significance: &gt;-
+    Without a validated natural-ligand panel, links between TAS2R38 genotype and
+    real dietary choice/plant-toxin avoidance in wild chimpanzees remain
+    inferential.
+  resolution: &gt;-
+    Heterologous dose-response pharmacology of chimpanzee TAS2R38 against a panel
+    of candidate glucosinolate/isothiocyanate plant secondary metabolites known to
+    occur in the chimpanzee diet.
+  provenance:
+  - reference_id: file:PANTR/TAS2R38/TAS2R38-deep-research-falcon.md
+    supporting_text: &gt;-
+      PTC is an experimental probe rather than a demonstrated ecological ligand.
+      Across primate TAS2R38 orthologs, recognized or candidate ligands include
+      PTC, 6-n-propylthiouracil (PROP), sinigrin, allyl isothiocyanate, and
+      goitrin.
+suggested_questions:
+- question: &gt;-
+    Do western chimpanzees homozygous for the ATG-&gt;AGG start-loss TAS2R38 allele
+    show measurably reduced behavioral aversion to PTC/PROP-class compounds
+    compared with eastern or central chimpanzees, paralleling the human
+    taster/non-taster dichotomy?
+  experts:
+  - Takashi Hayakawa
+  - Hiroo Imai
+- question: &gt;-
+    What natural dietary compounds in the chimpanzee habitat, if any, are potent
+    agonists of wild-type chimpanzee TAS2R38, and does the geographic
+    distribution of the loss-of-function allele correlate with reduced exposure
+    to or reduced need to detect such compounds?
+  experts:
+  - Takashi Hayakawa
+  - Hiroo Imai
+suggested_experiments:
+- hypothesis: &gt;-
+    The western-chimpanzee ATG-&gt;AGG start-codon-loss TAS2R38 allele abolishes
+    receptor function in native taste receptor cells, not only in the
+    heterologous HEK293T/Gα16gust44 reconstitution system previously used.
+  description: &gt;-
+    Isolate circumvallate/foliate taste papilla cells from genotyped western
+    (AGG/AGG), heterozygous, and eastern/central (ATG/ATG) chimpanzees (or from
+    primary taste-cell culture / organoid models where available) and measure
+    PTC/PROP-evoked Ca2+ responses by single-cell calcium imaging, comparing
+    response rate and magnitude across genotypes.
+  experiment_type: Single-cell calcium imaging of primary taste receptor cells
+- hypothesis: &gt;-
+    Wild-type chimpanzee TAS2R38 responds to plant-derived glucosinolate
+    breakdown products present in the chimpanzee diet, not only to the synthetic
+    probe compound PTC.
+  description: &gt;-
+    Express wild-type chimpanzee TAS2R38 heterologously (e.g. HEK293T cells with
+    a chimeric Gα16gust44 protein, as used for the start-codon-loss variant) and
+    perform Fluo-4 calcium-imaging dose-response assays against a panel including
+    PTC, PROP, sinigrin, allyl isothiocyanate, goitrin, and other candidate
+    thiocarbamide-class plant secondary metabolites to establish a validated
+    chimpanzee-specific ligand spectrum.
+  experiment_type: Heterologous calcium-imaging pharmacology
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

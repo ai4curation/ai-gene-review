@@ -78,7 +78,7 @@ Not all SPKW-unique annotations are over-annotations:
 - **Started**: 2025-12-23
 - **Last updated**: 2026-05-30
 - **Total genes reviewed**: 133 across 11 subprojects
-- **Compiled data**: [spkw_reviewed_genes.csv](spkw_reviewed_genes.csv)
+- **Compiled data**: `spkw_reviewed_genes.csv` was not archived in this repository; the reviewed-gene summary is retained below.
 
 ### Phase 1 (Original)
 - [x] MAP3K5 - COMPLETE
@@ -237,7 +237,7 @@ For reviewed high-confidence organism batches, this confirms the problem is usua
 ### 2026-02-04
 
 - Researched UniProt keyword assignment process (confirmed: Swiss-Prot = manual)
-- Created [spkw_reviewed_genes.csv](spkw_reviewed_genes.csv) compiling 95 reviewed genes
+- Created `spkw_reviewed_genes.csv` compiling 95 reviewed genes
 - Added Swiss-Prot vs TrEMBL stratification to methodology
 - Cross-species analysis: issue rates 10-40%, all Swiss-Prot dominated
 
