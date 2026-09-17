@@ -1,0 +1,11 @@
+# MYL10 evidence notes
+
+Human UniProt Q9BUA6 has a three-experiment ZNF76 interaction linked to [PMID:32296183](https://pubmed.ncbi.nlm.nih.gov/32296183/), “A reference map of the human binary protein interactome.” This is a binary interaction observation, not a demonstrated core light-chain mechanism. Calcium binding is supported by conserved EF-hand coordinating positions and the curated PAINT assertion.
+
+The human mitochondrial GOA annotation is IDA under GO_REF:0000054 (expressed fusion proteins in living cells). Its propagation through an IBA containing the human target among the supporting entities is normal phylogenetic grounding. Neither the fusion-protein experiment nor the IBA proves a mitochondrial targeting peptide or an endogenous mitochondrial motor role. Retain the location as non-core rather than second-guessing the experiment.
+
+The selected horse protein is 212 aa; human Q9BUA6 is 226 aa. Global alignment gives 166/192 identities (86.5%), with 85.0% human and 90.6% horse paired coverage. Differences and gaps concentrate in the variable N-terminal region; inspect the full alignment rather than treating percent identity as proof of completeness. The conserved EF-hand core supports family placement. No horse-specific physiological experiment was identified in the initial search, and the horse UniProt record is unreviewed; a completed human Falcon report has been inspected without a separate horse-specific Edison job.
+
+## Human deep research
+
+The completed Falcon report emphasizes the distinction between MYL10 and MYH10/MYLK, and between conserved RLC-family inference and direct human biochemistry. It retrieves murine precursor-B-cell PLRLC expression (Oltz et al., DOI10.1002/j.1460-2075.1992.tb05341.x) and a mouse optic-nerve-regeneration screen (Lindborg et al., DOI10.1016/j.celrep.2021.108777). These are leads for organism-specific functions, not grounds to assign human B-cell signaling or horse neural repair. Direct calcium affinity and endogenous myosin partners remain unresolved. The report's assertion that no organellar localization evidence exists misses the human fusion-protein IDA/PAINT record; retain that curator-supplied localization and its limits instead of treating an incomplete search as refutation.

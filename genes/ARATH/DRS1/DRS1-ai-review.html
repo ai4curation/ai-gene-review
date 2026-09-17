@@ -1,0 +1,2856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DRS1 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>DRS1</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q9SAI7" target="_blank" class="term-link">
+                        Q9SAI7
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Arabidopsis thaliana</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "DRS1";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">8</span> Annotations</a>
+
+
+
+        <a href="#review-research" title="Deep research and hypothesis research reports"><span class="nav-count">1</span> Research</a>
+
+
+
+
+
+        <a href="#review-core-functions" title="Core biological functions"><span class="nav-count">1</span> Core Function</a>
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">8</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">2</span> Documents</a>
+
+
+
+
+
+
+
+
+
+        <a href="#review-questions" title="Suggested questions for experts"><span class="nav-count">1</span> Questions</a>
+
+
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q9SAI7" data-a="DESCRIPTION: DRS1 is an Arabidopsis WDR76/CMR1-related WD40 pro..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DRS1 is an Arabidopsis WDR76/CMR1-related WD40 protein required for normal water retention during drought and for the ABA-dependent reduction of leaf water loss. Two independent drs1 insertion alleles support this role. Its DWD-containing repeat architecture suggests protein-complex interactions, while the biochemical partners linking it to drought physiology and the specificity of any chromatin or DNA binding remain unresolved.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000792" target="_blank" class="term-link">
+                                    GO:0000792
+                                </a>
+                            </span>
+                            <span class="term-label">heterochromatin</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SAI7" data-a="GO:0000792" data-r="GO_REF:0000033" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Human WDR76 associates with heterochromatin-related proteins, but this precise chromatin compartment is not directly resolved for DRS1. The Arabidopsis drought experiments establish a phenotype without chromatin localization. The IBA is a considered family inference, not contradicted by the plant phenotype, yet the specific compartment remains uncertain.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27248496" target="_blank" class="term-link">
+                                        PMID:27248496
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">WDR76 co-localizes to puncta with the heterochromatin
+proteins CBX1 and CBX5</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20118918" target="_blank" class="term-link">
+                                        PMID:20118918
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">An independent T-DNA allele (Salk_149366C) that we designate as drs1-2 exhibited the same phenotypes in relative water content following drought and ABA-insensitive water transpiration</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SAI7" data-a="GO:0003677" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The WDR76/CMR1 phylogenetic assignment supports broad DNA binding and is compatible with the conserved DNA-associated repeat family. No target-specific evidence demonstrates loss of broad DNA interaction. Retaining this IBA does not imply recognition of damaged DNA or a particular modified base.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27248496" target="_blank" class="term-link">
+                                        PMID:27248496
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">WDR76 co-localizes to puncta with the heterochromatin
+proteins CBX1 and CBX5</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20118918" target="_blank" class="term-link">
+                                        PMID:20118918
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Drs1 is a WD-40 repeat family protein containing a DWD (DDB1 binding WD40) motif</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SAI7" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nuclear localization is a reasonable conserved inference for the WDR76/CMR1 branch, consistent with the independently studied nuclear/chromatin-associated human homolog. The plant drought phenotype neither proves localization nor refutes this broad compartment.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27248496" target="_blank" class="term-link">
+                                        PMID:27248496
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">WDR76 co-localizes to puncta with the heterochromatin
+proteins CBX1 and CBX5</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20118918" target="_blank" class="term-link">
+                                        PMID:20118918
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Drs1 is a WD-40 repeat family protein containing a DWD (DDB1 binding WD40) motif</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISM</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000122
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SAI7" data-a="GO:0005634" data-r="GO_REF:0000122" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The nuclear localization inference agrees with the WDR76-family context. It is retained without claiming target-specific microscopy or a precise heterochromatin compartment.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27248496" target="_blank" class="term-link">
+                                        PMID:27248496
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">WDR76 co-localizes to puncta with the heterochromatin
+proteins CBX1 and CBX5</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20118918" target="_blank" class="term-link">
+                                        PMID:20118918
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Drs1 is a WD-40 repeat family protein containing a DWD (DDB1 binding WD40) motif</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009414" target="_blank" class="term-link">
+                                    GO:0009414
+                                </a>
+                            </span>
+                            <span class="term-label">response to water deprivation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20118918" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20118918
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Rational association of genes with traits using a genome-sca...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SAI7" data-a="GO:0009414" data-r="PMID:20118918" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This IMP is directly supported by reduced water retention in two independent DRS1 insertion alleles. The primary paper explicitly names AT1G80710, so the evidence is target-specific and not merely a network-prediction assertion.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20118918" target="_blank" class="term-link">
+                                        PMID:20118918
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">An independent T-DNA allele (Salk_149366C) that we designate as drs1-2 exhibited the same phenotypes in relative water content following drought and ABA-insensitive water transpiration</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009737" target="_blank" class="term-link">
+                                    GO:0009737
+                                </a>
+                            </span>
+                            <span class="term-label">response to abscisic acid</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20118918" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:20118918
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Rational association of genes with traits using a genome-sca...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SAI7" data-a="GO:0009737" data-r="PMID:20118918" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The primary experiment directly shows ABA-insensitive water transpiration in drs1 leaves, with confirmation by a second allele. Retain the ABA response while avoiding an unsupported receptor or general germination mechanism.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20118918" target="_blank" class="term-link">
+                                        PMID:20118918
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The mutant was insensitive to ABA on water loss whereas the wild type lost significantly less water in the presence of 10 μM ABA</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20118918" target="_blank" class="term-link">
+                                        PMID:20118918
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">An independent T-DNA allele (Salk_149366C) that we designate as drs1-2 exhibited the same phenotypes in relative water content following drought and ABA-insensitive water transpiration</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0080008" target="_blank" class="term-link">
+                                    GO:0080008
+                                </a>
+                            </span>
+                            <span class="term-label">Cul4-RING E3 ubiquitin ligase complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18223036" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18223036
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Characterization of Arabidopsis and rice DWD proteins and th...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SAI7" data-a="GO:0080008" data-r="PMID:18223036" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The DWD motif supports a plausible DDB1-CUL4 substrate-receptor relationship, but the target paper does not demonstrate DRS1 association with a CUL4 complex or identify its substrate. PMID:18223036 tests selected DWD proteins and PRL1; its existence does not establish that DRS1 itself was one of the experimentally confirmed binders. The ISS hypothesis remains plausible but unresolved.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20118918" target="_blank" class="term-link">
+                                        PMID:20118918
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Drs1 is a WD-40 repeat family protein containing a DWD (DDB1 binding WD40) motif</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000001" target="_blank" class="term-link">
+                                    GO:2000001
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of DNA damage checkpoint</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="Q9SAI7" data-a="GO:2000001" data-r="GO_REF:0000033" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Recruitment of a WDR76 homolog to DNA damage does not by itself establish regulation of the DNA damage checkpoint in Arabidopsis. The DRS1 study does not assay checkpoint signaling, and no target-specific loss of the ancestral role is demonstrated. The precise IBA process remains uncertain.
+                        </div>
+
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27248496" target="_blank" class="term-link">
+                                        PMID:27248496
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">WDR76 co-localizes to puncta with the heterochromatin
+proteins CBX1 and CBX5</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20118918" target="_blank" class="term-link">
+                                        PMID:20118918
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">An independent T-DNA allele (Salk_149366C) that we designate as drs1-2 exhibited the same phenotypes in relative water content following drought and ABA-insensitive water transpiration</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section" id="review-core-functions">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Supports water retention during drought and the ABA-dependent reduction of leaf water loss; the biochemical mechanism connecting the WD40 protein to these responses remains unresolved.</h3>
+                <span class="vote-buttons" data-g="Q9SAI7" data-a="FUNCTION: Supports water retention during drought and the AB..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009414" target="_blank" class="term-link">
+                                response to water deprivation
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009737" target="_blank" class="term-link">
+                                response to abscisic acid
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20118918" target="_blank" class="term-link">
+                                PMID:20118918
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">An independent T-DNA allele (Salk_149366C) that we designate as drs1-2 exhibited the same phenotypes in relative water content following drought and ABA-insensitive water transpiration</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/20118918" target="_blank" class="term-link">
+                                PMID:20118918
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">The mutant was insensitive to ABA on water loss whereas the wild type lost significantly less water in the presence of 10 μM ABA</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000122.md" target="_blank" class="term-link">
+                            GO_REF:0000122
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">AtSubP analysis</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18223036" target="_blank" class="term-link">
+                            PMID:18223036
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Characterization of Arabidopsis and rice DWD proteins and their roles as substrate receptors for CUL4-RING E3 ubiquitin ligases.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20118918" target="_blank" class="term-link">
+                            PMID:20118918
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Rational association of genes with traits using a genome-scale gene network for Arabidopsis thaliana.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Two independent Arabidopsis drs1 alleles have deficient water retention and ABA-insensitive transpiration, establishing the target-specific phenotype.</div>
+
+                        <div class="finding-text">"An independent T-DNA allele (Salk_149366C) that we designate as drs1-2 exhibited the same phenotypes in relative water content following drought and ABA-insensitive water transpiration"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The target mutation affects ABA-dependent leaf water loss; this does not establish an ABA receptor or a universal effect on all ABA responses.</div>
+
+                        <div class="finding-text">"The mutant was insensitive to ABA on water loss whereas the wild type lost significantly less water in the presence of 10 μM ABA"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The primary DRS1 study identifies a DWD motif but presents DDB1-CUL4 substrate-receptor function as a family-based hypothesis rather than a demonstrated DRS1 complex.</div>
+
+                        <div class="finding-text">"Drs1 is a WD-40 repeat family protein containing a DWD (DDB1 binding WD40) motif"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27248496" target="_blank" class="term-link">
+                            PMID:27248496
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">WDR76 Co-Localizes with Heterochromatin Related Proteins and Rapidly Responds to DNA Damage.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Human WDR76 has chromatin-associated localization and a rapid DNA-damage response; these observations define homolog evidence, not an Arabidopsis assay.</div>
+
+                        <div class="finding-text">"WDR76 co-localizes to puncta with the heterochromatin
+proteins CBX1 and CBX5"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25380728" target="_blank" class="term-link">
+                            PMID:25380728
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">5-hydroxymethylcytosine is not present in appreciable quantities in Arabidopsis DNA.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">Sensitive assays constrain the amount of genomic 5hmC in the Arabidopsis tissues and genotypes tested, arguing against an assumed abundant canonical 5hmC signaling system.</div>
+
+                        <div class="finding-text">"Enzymatic radiolabeling and mass spectrometry, the most
+sensitive methods for detection that we used, failed to detect
+5-hydroxymethylcytosine in A. thaliana genomic DNA"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:ARATH/DRS1/DRS1-5hmc-prediction-donor.json
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Frozen Wdr76 prediction donor with inferred functional evidence</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:ARATH/DRS1/DRS1-protnlm-source.json
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Frozen exact-input ProtNLM output and UniProt sequence for Q9SAI7</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section" id="review-questions">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Which biochemical partners link DRS1 to ABA-dependent water retention, and is the DWD motif required for that function?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q9SAI7" data-a="Q: Which biochemical partners link DRS1 to ABA-depend..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section" id="review-research">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(DRS1-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9SAI7" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional-annotation report: *Arabidopsis thaliana* DRS1 (At1g80710; UniProt Q9SAI7)</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">13 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-10T14:55:36.958040</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="DRS1-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="functional-annotation-report-arabidopsis-thaliana-drs1-at1g80710-uniprot-q9sai7">Functional-annotation report: <em>Arabidopsis thaliana</em> DRS1 (At1g80710; UniProt Q9SAI7)</h1>
+<h2 id="executive-conclusion">Executive conclusion</h2>
+<p>The gene symbol <strong>DRS1 is ambiguous across biology</strong>, and the literature retrieved does <strong>not</strong> provide a target-specific mechanistic study for the protein defined here. For this report, the verified target is strictly <strong>Q9SAI7 = At1g80710 = DRS1/DROUGHT SENSITIVE 1 = F23A5.6/F23A5_6</strong> from <strong><em>Arabidopsis thaliana</em></strong>, based on the supplied UniProt record. It is annotated as <strong>WD repeat-containing protein 76</strong>, belonging to the <strong>WD-repeat DDB2/WDR76 family</strong>, with multiple WD40-related InterPro signatures.</p>
+<p>Accordingly, the strongest defensible functional annotation is: <strong>DRS1 is a predicted nonenzymatic WD40-repeat interaction protein, probably forming a β-propeller scaffold for assembly or regulation of a protein complex.</strong> No catalytic reaction, transported substrate, specific ligand, protein partner, pathway, cellular compartment, or quantitative mutant phenotype could be established for At1g80710 from the retrieved primary literature. Its exact molecular function therefore remains <strong>uncharacterized</strong>.</p>
+<h2 id="1-mandatory-identity-verification">1. Mandatory identity verification</h2>
+<h3 id="correct-identifiers">Correct identifiers</h3>
+<ul>
+<li><strong>Organism:</strong> <em>Arabidopsis thaliana</em> (mouse-ear cress)</li>
+<li><strong>Locus:</strong> At1g80710</li>
+<li><strong>Gene symbol:</strong> DRS1</li>
+<li><strong>Synonym:</strong> DROUGHT SENSITIVE 1</li>
+<li><strong>UniProt accession:</strong> Q9SAI7</li>
+<li><strong>ORF names:</strong> F23A5.6 and F23A5_6</li>
+<li><strong>Protein annotation:</strong> WD repeat-containing protein 76</li>
+<li><strong>Annotated family:</strong> WD-repeat DDB2/WDR76 family</li>
+</ul>
+<p>Searches using the accession, locus, symbol, full synonym, ORF names, family, localization/function terms, and a 2023–2024 date restriction found no publication explicitly characterizing Q9SAI7/At1g80710. Thus, the gene symbol is usable only when coupled to the accession, locus, and organism.</p>
+<h3 id="exclusion-of-deceptively-similar-arabidopsis-proteins">Exclusion of deceptively similar Arabidopsis proteins</h3>
+<p>The best-retrieved mechanistic paper concerned <strong>ABD1</strong>, an Arabidopsis WD40/DCAF protein involved in ABA signaling. ABD1 is explicitly <strong>At4g38480</strong>, not At1g80710. Its demonstrated interaction with DDB1 and ABI5, nuclear activity, control of ABI5 proteasomal degradation, ABA/NaCl hypersensitivity, reduced water loss, and enhanced drought tolerance must not be assigned to DRS1 (Seo et al., published February 2014; https://doi.org/10.1105/tpc.113.119974). (seo2014abd1isanarabidopsisdcaf pages 2-4, seo2014abd1isanarabidopsisdcaf pages 10-11, seo2014abd1isanarabidopsisdcaf pages 14-15, seo2014abd1isanarabidopsisdcaf pages 1-2)</p>
+<p>Similarly, <strong>XIW1</strong> is a separately characterized Arabidopsis WD40 protein whose nucleocytoplasmic trafficking and interactions with XPO1 and ABI5 regulate ABA responses. These results illustrate possible WD40-protein mechanisms but provide no evidence about At1g80710 (Xu et al., published December 2019; https://doi.org/10.1016/j.molp.2019.07.001). (xu2019nucleocytoplasmictraffickingof pages 2-4, xu2019nucleocytoplasmictraffickingof pages 1-2)</p>
+<h2 id="2-key-concepts-and-current-functional-interpretation">2. Key concepts and current functional interpretation</h2>
+<h3 id="wd40-repeat-architecture">WD40-repeat architecture</h3>
+<p>WD40 repeats are typically approximately 40 residues long and assemble into propeller-like structures. Their exposed surfaces and grooves support interactions with proteins or other ligands, allowing many WD40 proteins to organize multiprotein complexes. Approximately <strong>237 WD40-family proteins</strong> have been identified in Arabidopsis, emphasizing that this is a large and functionally diverse family rather than a group with one conserved pathway (Sharma and Pandey, published January 2016; https://doi.org/10.3389/fpls.2015.01218). (sharma2016expansionandfunction pages 1-2, sharma2016expansionandfunction pages 2-3)</p>
+<p>This architecture supports classifying Q9SAI7 provisionally as an <strong>adapter or scaffold</strong>, not as an enzyme or transporter. However, a WD40 domain predicts an interaction-oriented structural framework—not the identity of the interacting partners, the regulated pathway, or the cellular location. Full-length sequence context, accessory motifs, localization, genetics, and biochemical interaction data are needed for a specific assignment. (sharma2016expansionandfunction pages 1-2, sharma2016expansionandfunction pages 2-3, sharma2016expansionandfunction pages 13-14)</p>
+<h3 id="meaning-of-the-ddb2wdr76-family-annotation">Meaning of the DDB2/WDR76-family annotation</h3>
+<p>The supplied UniProt annotation places Q9SAI7 in the <strong>DDB2/WDR76 family</strong> and reports WD40 and DNA-damage-binding-type WD-repeat signatures. This alignment is internally coherent: DDB2/WDR76-family proteins are WD-repeat proteins, and the listed InterPro signatures all support a WD40-repeat/β-propeller-type architecture.</p>
+<p>Nevertheless, family naming must not be converted directly into a pathway annotation. In particular, the available target-specific evidence does <strong>not</strong> establish that Arabidopsis DRS1 binds damaged DNA, participates in nucleotide-excision repair, serves as a DDB1–CUL4 substrate receptor, or controls ubiquitination. Those are experimentally testable hypotheses, not currently supported conclusions for At1g80710.</p>
+<table>
+<thead>
+<tr>
+<th>Annotation question</th>
+<th>Conclusion</th>
+<th>Evidence type/strength</th>
+<th>Caveat</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity</td>
+<td><strong>DRS1 = At1g80710 = UniProt Q9SAI7</strong>; synonyms include <strong>DROUGHT SENSITIVE 1</strong> and ORF names <strong>F23A5.6/F23A5_6</strong>.</td>
+<td>User-supplied UniProt record; direct database identity.</td>
+<td>Exact-identifier searches found no target-specific paper, including from 2023–2024.</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td>The target is <strong>Arabidopsis thaliana</strong> (mouse-ear cress).</td>
+<td>User-supplied UniProt record; direct database identity.</td>
+<td>Findings for similarly named genes in other organisms must not be transferred.</td>
+</tr>
+<tr>
+<td>Family and domains</td>
+<td>Annotated as <strong>WD repeat-containing protein 76</strong> in the <strong>DDB2/WDR76 family</strong>, with WD40-repeat and DNA-damage-binding-type WD-repeat signatures.</td>
+<td>User-supplied UniProt/InterPro annotations; computational family/domain evidence.</td>
+<td>Family membership does not establish the target’s pathway, partners, substrates, or phenotype.</td>
+</tr>
+<tr>
+<td>Structural role</td>
+<td>Q9SAI7 plausibly forms a <strong>β-propeller interaction scaffold</strong> that helps assemble protein complexes. WD40 repeats are approximately 40 residues long and commonly form propeller-like interaction surfaces; about <strong>237</strong> WD40 proteins have been identified in Arabidopsis. (sharma2016expansionandfunction pages 1-2, sharma2016expansionandfunction pages 2-3)</td>
+<td>Moderate family-level structural inference; no target-specific experimental evidence.</td>
+<td>The full-length Q9SAI7 structure and scaffold function have not been experimentally demonstrated in the retrieved literature.</td>
+</tr>
+<tr>
+<td>Catalytic or transport activity</td>
+<td><strong>No enzyme reaction, catalytic substrate specificity, transported substrate, or transport mechanism is established.</strong> Its repeat architecture favors a nonenzymatic adapter/scaffold interpretation. (sharma2016expansionandfunction pages 1-2, sharma2016expansionandfunction pages 2-3)</td>
+<td>Absence of target-specific biochemical evidence plus cautious domain-based inference.</td>
+<td>A WD40 domain alone cannot exclude an unrecognized biochemical activity elsewhere in the protein.</td>
+</tr>
+<tr>
+<td>Binding partners</td>
+<td><strong>No experimentally validated Q9SAI7/At1g80710 binding partner was found.</strong></td>
+<td>No target-specific interaction evidence retrieved.</td>
+<td>Interactions of other WD40 proteins cannot be assigned to DRS1.</td>
+</tr>
+<tr>
+<td>Subcellular localization</td>
+<td><strong>Unknown.</strong> No target-specific microscopy, fractionation, or localization study was found.</td>
+<td>No direct target-specific evidence.</td>
+<td>Localization of other WD40 proteins does not predict Q9SAI7’s location reliably.</td>
+</tr>
+<tr>
+<td>Signaling or biochemical pathway</td>
+<td><strong>No pathway assignment is established.</strong> A role in a multiprotein regulatory complex is plausible but unspecified.</td>
+<td>Weak family-level inference only.</td>
+<td>The DDB2/WDR76-family annotation alone cannot establish involvement in DNA repair, ubiquitination, ABA signaling, or another pathway.</td>
+</tr>
+<tr>
+<td>Drought/ABA phenotype</td>
+<td>The synonym <strong>DROUGHT SENSITIVE 1</strong> suggests a phenotype-based designation, but the retrieved literature did not establish a drought mechanism, ABA role, or quantitative phenotype for At1g80710.</td>
+<td>Nomenclature from the user-supplied UniProt record; no retrieved target-specific primary evidence.</td>
+<td>The name must not be treated as proof of pathway membership or molecular mechanism.</td>
+</tr>
+<tr>
+<td>Exclusion of ABD1</td>
+<td><strong>ABD1 is At4g38480, not At1g80710.</strong> ABD1’s CUL4–DDB1/ABI5 mechanism, nuclear interaction, ABA phenotypes, and drought tolerance therefore do not annotate DRS1. (seo2014abd1isanarabidopsisdcaf pages 2-4, seo2014abd1isanarabidopsisdcaf pages 14-15, seo2014abd1isanarabidopsisdcaf pages 1-2)</td>
+<td>Strong direct locus-level exclusion from primary literature.</td>
+<td>Shared WD40/DCAF-like features do not demonstrate an equivalent function.</td>
+</tr>
+<tr>
+<td>Exclusion of XIW1</td>
+<td><strong>XIW1 is a separately studied Arabidopsis WD40 protein.</strong> Its XPO1/ABI5 interactions, nucleocytoplasmic trafficking, and ABA-response functions must not be transferred to At1g80710. (xu2019nucleocytoplasmictraffickingof pages 2-4, xu2019nucleocytoplasmictraffickingof pages 1-2)</td>
+<td>Strong protein-specific distinction; XIW1 findings are direct only for XIW1.</td>
+<td>Functional analogy is hypothesis-generating rather than annotation evidence.</td>
+</tr>
+<tr>
+<td>Current research status</td>
+<td><strong>Literature is limited for this specific protein:</strong> no target-specific 2023–2024 publication was found in the searches performed.</td>
+<td>Repeated searches by accession, locus, symbol, synonym, ORF, family, and publication date.</td>
+<td>“No paper found” describes the retrieved search corpus and does not exclude unpublished or unindexed evidence.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: This table separates direct identity and domain annotations for Arabidopsis DRS1 from general WD40-family inference and findings about different proteins. It highlights the unresolved functional questions and lack of target-specific 2023–2024 literature in the searches performed.</em></p>
+<h2 id="3-primary-molecular-function">3. Primary molecular function</h2>
+<h3 id="best-supported-assignment">Best-supported assignment</h3>
+<p>The probable primary role is <strong>noncatalytic molecular scaffolding or partner recruitment through a WD40 β-propeller</strong>. Plant WD40 proteins are well documented as components of transcriptional, signaling, protein-stability, developmental, and stress-response complexes. For example, TTG1 acts in a MYB–bHLH–WD40 regulatory complex, whereas other WD40 proteins participate in CUL4–DDB1 ubiquitin-ligase or chromatin-regulatory assemblies. These examples establish the functional versatility of the fold, not the identity of the DRS1 complex. (xu2019nucleocytoplasmictraffickingof pages 13-13, sharma2016expansionandfunction pages 10-11)</p>
+<h3 id="catalysis-substrate-specificity-and-transport">Catalysis, substrate specificity, and transport</h3>
+<p>There is <strong>no evidence that Q9SAI7 is an enzyme</strong>; therefore, no reaction, catalytic mechanism, cofactor, or substrate specificity can presently be assigned. There is likewise <strong>no evidence that it is a transporter</strong>, and no transported substrate has been identified. The domain architecture instead favors an adapter/scaffold interpretation, although this remains inferential until direct biochemical work is performed. (sharma2016expansionandfunction pages 1-2, sharma2016expansionandfunction pages 2-3)</p>
+<h3 id="interacting-partners">Interacting partners</h3>
+<p>No experimentally validated binding partner for Q9SAI7/At1g80710 was identified. DDB1, CUL4, ABI5, XPO1, and other partners reported for distinct WD40 proteins must not be entered as DRS1 interactors. The most informative initial experiments would be affinity-purification mass spectrometry or proximity labeling from a functional, native-promoter DRS1 fusion, followed by reciprocal co-immunoprecipitation and genetic validation.</p>
+<h2 id="4-cellular-localization">4. Cellular localization</h2>
+<p>The intracellular location at which DRS1 functions is <strong>unknown</strong>. No target-specific fluorescent-protein localization, immunocytochemistry, biochemical fractionation, organellar proteomics, or nuclear-import/export study was retrieved.</p>
+<p>WD40 proteins can be nuclear, cytoplasmic, organelle-associated, or dynamically distributed. XIW1, for example, occurs in both the cytoplasm and nucleus, but that observation is protein-specific and cannot be transferred to DRS1. (xu2019nucleocytoplasmictraffickingof pages 2-4, xu2019nucleocytoplasmictraffickingof pages 1-2)</p>
+<p>Consequently, assigning DRS1 to the nucleus merely from the DDB2/WDR76-family label would be premature. A native-promoter fluorescent fusion that rescues a verified drs1 phenotype would provide substantially stronger localization evidence than transient overexpression alone.</p>
+<h2 id="5-biological-processes-and-pathways">5. Biological processes and pathways</h2>
+<h3 id="drought-and-aba-signaling">Drought and ABA signaling</h3>
+<p>The synonym <strong>DROUGHT SENSITIVE 1</strong> suggests that the locus may have received a phenotype-based designation connected to water deficit. However, the retrieved literature did not provide the originating mutant study, allelic evidence, complementation, physiological measurements, or a molecular mechanism for At1g80710. The name by itself is therefore insufficient to conclude that DRS1 is an ABA-pathway component.</p>
+<p>This distinction is important because several unrelated Arabidopsis WD40 proteins do regulate ABA or drought responses by different mechanisms. ABD1 acts through CUL4–DDB1 and ABI5 turnover, while XIW1 regulates ABI5 stability and trafficking. Their mechanistic diversity shows why “WD40 protein associated with drought” is not a transferable annotation. (seo2014abd1isanarabidopsisdcaf pages 2-4, seo2014abd1isanarabidopsisdcaf pages 9-10, seo2014abd1isanarabidopsisdcaf pages 1-2, xu2019nucleocytoplasmictraffickingof pages 2-4)</p>
+<h3 id="dna-damage-and-ubiquitin-dependent-regulation">DNA damage and ubiquitin-dependent regulation</h3>
+<p>The DDB2/WDR76-family annotation makes roles in DNA-associated or protein-complex regulation plausible hypotheses. Yet no direct evidence was found for DRS1 in DNA-damage recognition, repair, chromatin regulation, or ubiquitin-dependent proteolysis. ABD1 demonstrates that an Arabidopsis WD40/DCAF can bind DDB1 and act as a CUL4 substrate receptor, but ABD1 is a different locus and cannot establish the same activity for DRS1. (seo2014abd1isanarabidopsisdcaf pages 2-4, seo2014abd1isanarabidopsisdcaf pages 14-15)</p>
+<h3 id="current-pathway-annotation">Current pathway annotation</h3>
+<p>At present, the appropriate pathway designation is <strong>unresolved</strong>. The most that can be said is that DRS1 probably participates in a multiprotein regulatory complex, with drought/stress involvement suggested by nomenclature but not mechanistically established in the evidence retrieved.</p>
+<h2 id="6-recent-developments-applications-and-quantitative-evidence">6. Recent developments, applications, and quantitative evidence</h2>
+<h3 id="20232024-literature">2023–2024 literature</h3>
+<p>No target-specific publication from <strong>2023 or 2024</strong> was found for “At1g80710,” “Q9SAI7,” “F23A5.6,” or the exact Arabidopsis DRS1 identity. Recent work on other Arabidopsis WD40 proteins cannot remedy that evidence gap. Therefore, there is no defensible 2023–2024 update on DRS1 mechanism, localization, interactors, structure, or phenotype.</p>
+<h3 id="real-world-applications">Real-world applications</h3>
+<p>No crop-engineering, breeding, diagnostic, biotechnology, or field implementation specifically involving At1g80710 was identified. DRS1 may eventually be relevant to drought-resilience research, but translational use would require at minimum:</p>
+<ol>
+<li>independently validated loss- and gain-of-function alleles;</li>
+<li>complementation proving locus–phenotype causality;</li>
+<li>quantitative drought assays under controlled and field-like conditions;</li>
+<li>determination of growth or yield penalties;</li>
+<li>identification of the molecular complex and pathway; and</li>
+<li>conservation and functional validation of orthologs in crops.</li>
+</ol>
+<h3 id="relevant-statistics">Relevant statistics</h3>
+<p>The only reliable quantitative family-level statistic retrieved is the estimate of approximately <strong>237 WD40 proteins in Arabidopsis</strong> and nearly <strong>200 in rice</strong>. This large family size underscores the risk of inferring specific function from the domain alone. (sharma2016expansionandfunction pages 1-2)</p>
+<p>No trustworthy target-specific values were found for expression changes, survival, water loss, stomatal conductance, protein abundance, interaction affinity, mutant effect size, or structural confidence. Quantitative values reported for ABD1, XIW1, or other WD40 proteins would be irrelevant to Q9SAI7.</p>
+<h2 id="7-expert-assessment-and-evidence-ranking">7. Expert assessment and evidence ranking</h2>
+<p><strong>High confidence:</strong> the supplied identifier mapping, organism, WD-repeat annotation, and DDB2/WDR76-family placement.</p>
+<p><strong>Moderate confidence:</strong> Q9SAI7 likely adopts a WD40 β-propeller and functions as a protein-interaction scaffold. This is a structure/family-based inference supported by established WD40 biology. (sharma2016expansionandfunction pages 1-2, sharma2016expansionandfunction pages 2-3)</p>
+<p><strong>Low confidence/hypothesis only:</strong> participation in drought response, ABA signaling, DNA-damage biology, chromatin regulation, or CUL4–DDB1-mediated ubiquitination.</p>
+<p><strong>Unknown:</strong> exact complex, binding partners, biochemical pathway, localization, regulated substrate, molecular phenotype, tissue-specific role, and translational utility.</p>
+<h2 id="8-recommended-functional-annotation-strategy">8. Recommended functional-annotation strategy</h2>
+<p>The most decisive next steps are: (i) verify independent drs1 alleles and rescue with genomic At1g80710; (ii) quantify drought responses alongside ABA sensitivity, stomatal conductance, water-loss rate, osmotic controls, and developmental covariates; (iii) localize a functional native-promoter DRS1 fusion; (iv) identify partners by affinity purification/proximity labeling; (v) test candidate DDB1/CUL4 association only after unbiased interaction analysis; and (vi) determine a full-length structure experimentally or compare a high-confidence predicted model with plant WDR76/DDB2 homologs. These experiments would distinguish a genuine drought-signaling component from a broader protein-homeostasis, chromatin, or DNA-associated scaffold.</p>
+<h2 id="overall-conclusion">Overall conclusion</h2>
+<p><strong>The gene symbol “DRS1” is ambiguous and literature is limited for this specific protein.</strong> For the correctly identified Arabidopsis target Q9SAI7/At1g80710, available annotation supports a <strong>WD40-repeat DDB2/WDR76-family protein whose most likely broad role is nonenzymatic assembly of a protein complex</strong>. There is presently insufficient target-specific evidence to state which complex, pathway, or cellular compartment is involved. The drought-related name is biologically suggestive but cannot substitute for direct genetic and mechanistic evidence, and findings for ABD1, XIW1, HOS15, or similarly named genes must not be transferred to DRS1.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(seo2014abd1isanarabidopsisdcaf pages 2-4): Kyoung-In Seo, Jae-Hoon Lee, Cynthia D. Nezames, Shangwei Zhong, Eunyoung Song, Myung-Ok Byun, and Xing Wang Deng. Abd1 is an<i>arabidopsis</i>dcaf substrate receptor for cul4-ddb1–based e3 ligases that acts as a negative regulator of abscisic acid signaling. The Plant Cell, 26(2):695-711, Feb 2014. URL: https://doi.org/10.1105/tpc.113.119974, doi:10.1105/tpc.113.119974. This article has 202 citations.</p>
+</li>
+<li>
+<p>(seo2014abd1isanarabidopsisdcaf pages 10-11): Kyoung-In Seo, Jae-Hoon Lee, Cynthia D. Nezames, Shangwei Zhong, Eunyoung Song, Myung-Ok Byun, and Xing Wang Deng. Abd1 is an<i>arabidopsis</i>dcaf substrate receptor for cul4-ddb1–based e3 ligases that acts as a negative regulator of abscisic acid signaling. The Plant Cell, 26(2):695-711, Feb 2014. URL: https://doi.org/10.1105/tpc.113.119974, doi:10.1105/tpc.113.119974. This article has 202 citations.</p>
+</li>
+<li>
+<p>(seo2014abd1isanarabidopsisdcaf pages 14-15): Kyoung-In Seo, Jae-Hoon Lee, Cynthia D. Nezames, Shangwei Zhong, Eunyoung Song, Myung-Ok Byun, and Xing Wang Deng. Abd1 is an<i>arabidopsis</i>dcaf substrate receptor for cul4-ddb1–based e3 ligases that acts as a negative regulator of abscisic acid signaling. The Plant Cell, 26(2):695-711, Feb 2014. URL: https://doi.org/10.1105/tpc.113.119974, doi:10.1105/tpc.113.119974. This article has 202 citations.</p>
+</li>
+<li>
+<p>(seo2014abd1isanarabidopsisdcaf pages 1-2): Kyoung-In Seo, Jae-Hoon Lee, Cynthia D. Nezames, Shangwei Zhong, Eunyoung Song, Myung-Ok Byun, and Xing Wang Deng. Abd1 is an<i>arabidopsis</i>dcaf substrate receptor for cul4-ddb1–based e3 ligases that acts as a negative regulator of abscisic acid signaling. The Plant Cell, 26(2):695-711, Feb 2014. URL: https://doi.org/10.1105/tpc.113.119974, doi:10.1105/tpc.113.119974. This article has 202 citations.</p>
+</li>
+<li>
+<p>(xu2019nucleocytoplasmictraffickingof pages 2-4): Xuezhong Xu, Wang Wan, Guobin Jiang, Yue Xi, Haijian Huang, Jiajia Cai, Yanan Chang, Cheng-Guo Duan, Satendra K. Mangrauthia, Xinxiang Peng, Jian-Kang Zhu, and Guohui Zhu. Nucleocytoplasmic trafficking of the arabidopsis wd40 repeat protein xiw1 regulates abi5 stability and abscisic acid responses. Molecular plant, 12:1598-1611, Dec 2019. URL: https://doi.org/10.1016/j.molp.2019.07.001, doi:10.1016/j.molp.2019.07.001. This article has 94 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(xu2019nucleocytoplasmictraffickingof pages 1-2): Xuezhong Xu, Wang Wan, Guobin Jiang, Yue Xi, Haijian Huang, Jiajia Cai, Yanan Chang, Cheng-Guo Duan, Satendra K. Mangrauthia, Xinxiang Peng, Jian-Kang Zhu, and Guohui Zhu. Nucleocytoplasmic trafficking of the arabidopsis wd40 repeat protein xiw1 regulates abi5 stability and abscisic acid responses. Molecular plant, 12:1598-1611, Dec 2019. URL: https://doi.org/10.1016/j.molp.2019.07.001, doi:10.1016/j.molp.2019.07.001. This article has 94 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sharma2016expansionandfunction pages 1-2): Manisha Sharma and Girdhar K. Pandey. Expansion and function of repeat domain proteins during stress and development in plants. Frontiers in Plant Science, Jan 2016. URL: https://doi.org/10.3389/fpls.2015.01218, doi:10.3389/fpls.2015.01218. This article has 231 citations.</p>
+</li>
+<li>
+<p>(sharma2016expansionandfunction pages 2-3): Manisha Sharma and Girdhar K. Pandey. Expansion and function of repeat domain proteins during stress and development in plants. Frontiers in Plant Science, Jan 2016. URL: https://doi.org/10.3389/fpls.2015.01218, doi:10.3389/fpls.2015.01218. This article has 231 citations.</p>
+</li>
+<li>
+<p>(sharma2016expansionandfunction pages 13-14): Manisha Sharma and Girdhar K. Pandey. Expansion and function of repeat domain proteins during stress and development in plants. Frontiers in Plant Science, Jan 2016. URL: https://doi.org/10.3389/fpls.2015.01218, doi:10.3389/fpls.2015.01218. This article has 231 citations.</p>
+</li>
+<li>
+<p>(xu2019nucleocytoplasmictraffickingof pages 13-13): Xuezhong Xu, Wang Wan, Guobin Jiang, Yue Xi, Haijian Huang, Jiajia Cai, Yanan Chang, Cheng-Guo Duan, Satendra K. Mangrauthia, Xinxiang Peng, Jian-Kang Zhu, and Guohui Zhu. Nucleocytoplasmic trafficking of the arabidopsis wd40 repeat protein xiw1 regulates abi5 stability and abscisic acid responses. Molecular plant, 12:1598-1611, Dec 2019. URL: https://doi.org/10.1016/j.molp.2019.07.001, doi:10.1016/j.molp.2019.07.001. This article has 94 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sharma2016expansionandfunction pages 10-11): Manisha Sharma and Girdhar K. Pandey. Expansion and function of repeat domain proteins during stress and development in plants. Frontiers in Plant Science, Jan 2016. URL: https://doi.org/10.3389/fpls.2015.01218, doi:10.3389/fpls.2015.01218. This article has 231 citations.</p>
+</li>
+<li>
+<p>(seo2014abd1isanarabidopsisdcaf pages 9-10): Kyoung-In Seo, Jae-Hoon Lee, Cynthia D. Nezames, Shangwei Zhong, Eunyoung Song, Myung-Ok Byun, and Xing Wang Deng. Abd1 is an<i>arabidopsis</i>dcaf substrate receptor for cul4-ddb1–based e3 ligases that acts as a negative regulator of abscisic acid signaling. The Plant Cell, 26(2):695-711, Feb 2014. URL: https://doi.org/10.1105/tpc.113.119974, doi:10.1105/tpc.113.119974. This article has 202 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="DRS1-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>sharma2016expansionandfunction pages 1-2</li>
+<li>xu2019nucleocytoplasmictraffickingof pages 2-4</li>
+<li>xu2019nucleocytoplasmictraffickingof pages 1-2</li>
+<li>sharma2016expansionandfunction pages 2-3</li>
+<li>sharma2016expansionandfunction pages 13-14</li>
+<li>xu2019nucleocytoplasmictraffickingof pages 13-13</li>
+<li>sharma2016expansionandfunction pages 10-11</li>
+<li>https://doi.org/10.1105/tpc.113.119974</li>
+<li>https://doi.org/10.1016/j.molp.2019.07.001</li>
+<li>https://doi.org/10.3389/fpls.2015.01218</li>
+<li>https://doi.org/10.1105/tpc.113.119974,</li>
+<li>https://doi.org/10.1016/j.molp.2019.07.001,</li>
+<li>https://doi.org/10.3389/fpls.2015.01218,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(DRS1-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9SAI7" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="drs1-q9sai7-evidence-and-exact-input-prediction-review">DRS1 (Q9SAI7): evidence and exact-input prediction review</h1>
+<p>DRS1 has direct Arabidopsis drought and ABA evidence, despite the generated research report failing to find it. Its proposed role as a specific 5-hydroxymethylcytosine reader is not established: the emitted donor carries an inferred WDR76 function, and the abundance and regulatory significance of genomic 5hmC in Arabidopsis are strongly limited by direct chemical measurements.</p>
+<h2 id="input-identity-and-functional-boundary">Input identity and functional boundary</h2>
+<p>Q9SAI7 is AT1G80710/DRS1, a 516-residue WD40 protein placed in PTHR14773:SF0 (WD REPEAT-CONTAINING PROTEIN 76). The 2010 primary paper explicitly identifies AT1G80710 as DRS1 and tests two independent insertion alleles. This is distinct from ABD1 and XIW1. The emitted 5hmC donor Q4KLQ5 is Xenopus laevis wdr76, whose function text is marked ECO:0000250 and is not a direct binding assay.</p>
+<h2 id="biological-evidence">Biological evidence</h2>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/18223036/">PMID:18223036 — Characterization of Arabidopsis and rice DWD proteins and their roles as substrate receptors for CUL4-RING E3 ubiquitin ligases.</a>: </li>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/20118918/">PMID:20118918 — Rational association of genes with traits using a genome-scale gene network for Arabidopsis thaliana.</a>: Two independent Arabidopsis drs1 alleles have deficient water retention and ABA-insensitive transpiration, establishing the target-specific phenotype.</li>
+</ul>
+<blockquote>
+<p>An independent T-DNA allele (Salk_149366C) that we designate as drs1-2 exhibited the same phenotypes in relative water content following drought and ABA-insensitive water transpiration</p>
+<p>The mutant was insensitive to ABA on water loss whereas the wild type lost significantly less water in the presence of 10 μM ABA</p>
+<p>Drs1 is a WD-40 repeat family protein containing a DWD (DDB1 binding WD40) motif</p>
+</blockquote>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/27248496/">PMID:27248496 — WDR76 Co-Localizes with Heterochromatin Related Proteins and Rapidly Responds to DNA Damage.</a>: Human WDR76 has chromatin-associated localization and a rapid DNA-damage response; these observations define homolog evidence, not an Arabidopsis assay.</li>
+</ul>
+<blockquote>
+<p>WDR76 co-localizes to puncta with the heterochromatin<br />
+proteins CBX1 and CBX5</p>
+</blockquote>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/25380728/">PMID:25380728 — 5-hydroxymethylcytosine is not present in appreciable quantities in Arabidopsis DNA.</a>: Sensitive assays constrain the amount of genomic 5hmC in the Arabidopsis tissues and genotypes tested, arguing against an assumed abundant canonical 5hmC signaling system.</li>
+</ul>
+<blockquote>
+<p>Enzymatic radiolabeling and mass spectrometry, the most<br />
+sensitive methods for detection that we used, failed to detect<br />
+5-hydroxymethylcytosine in A. thaliana genomic DNA</p>
+</blockquote>
+<h2 id="exact-non-go-claims">Exact non-GO claims</h2>
+<p>The complete emitted record is preserved in <a href="DRS1-protnlm-source.json">DRS1-protnlm-source.json</a>. Assessments below address the selected protein product; evidence on longer products is identified explicitly.</p>
+<h3 id="protein-name">Protein name</h3>
+<blockquote>
+<p>DNA damage-binding protein CMR1</p>
+</blockquote>
+<p>UNC (CS 1) for the full functional name “DNA damage-binding protein CMR1”. A WDR76/CMR1-family relationship is supported, but DRS1-specific binding to damaged DNA has not been demonstrated. The name must not imply the yeast gene itself or substitute a conserved-family hypothesis for the experimentally established Arabidopsis identity. <a href="https://pubmed.ncbi.nlm.nih.gov/20118918">PMID:20118918</a>(https://pubmed.ncbi.nlm.nih.gov/20118918/); <a href="https://pubmed.ncbi.nlm.nih.gov/27248496/">human homolog study</a>.</p>
+<h3 id="function">Function</h3>
+<blockquote>
+<p>Specifically binds 5-hydroxymethylcytosine (5hmC), suggesting that it acts as a specific reader of 5hmC</p>
+</blockquote>
+<p>UNC (CS 1). A selective 5hmC-reader function has not been demonstrated for DRS1. The frog Wdr76 donor text is itself an orthology inference. Moreover, sensitive Arabidopsis genomic-DNA assays found no appreciable 5hmC, limiting the proposed physiological reader context. These observations do not show that purified DRS1 cannot bind a synthetic 5hmC-containing DNA substrate, exclude trace oxidative products, or address RNA hydroxymethylcytosine. Thus the claim is not confidently scored as either correct or an absolute biochemical impossibility. <a href="https://pubmed.ncbi.nlm.nih.gov/25380728">PMID:25380728</a>(https://pubmed.ncbi.nlm.nih.gov/25380728/); <a href="DRS1-5hmc-prediction-donor.json">donor record</a>.</p>
+<h3 id="location">Location</h3>
+<blockquote>
+<p>Nucleus</p>
+</blockquote>
+<p>CNN (CS 2). The broad nuclear location overlaps the existing IBA/ISM annotations and is consistent with the conserved WDR76/CMR1 branch and experimental nuclear/chromatin localization of the human homolog. This does not validate the more specific 5hmC reader or heterochromatin hypotheses. <a href="https://pubmed.ncbi.nlm.nih.gov/27248496">PMID:27248496</a>(https://pubmed.ncbi.nlm.nih.gov/27248496/).</p>
+<p>No GO or EC term was emitted in this record; the name, function and location assessments above constitute its prediction review.</p>
+<h2 id="family-integration">Family integration</h2>
+<p>PTHR14773 captures a WDR76-related repeat family with broad nuclear DNA/chromatin associations. Conserved localization and broad binding need to be separated from particular base recognition, checkpoint mechanisms and a plant drought phenotype. A DWD motif does not identify a ubiquitination substrate or prove membership in the precise CUL4 complex.</p>
+<h2 id="evidence-limits">Evidence limits</h2>
+<p>The DRS1/AraNet paper, the DWD-family paper and the Arabidopsis 5hmC study have cached full text. The genuine Falcon report missed the direct DRS1 paper and therefore its “no target-specific publication” conclusion is not adopted. The direct evidence supports physiology, while the proposed mechanistic connection through chromatin or a DDB1-CUL4 ligase remains open. The 2013 modified-base-reader study (PMID:23434322) is abstract-only in the cache and is not treated as a direct assay of DRS1.</p>
+            </div>
+        </details>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Protnlm Function Review</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(DRS1-protnlm-function-review.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q9SAI7" data-a="DOC: Protnlm Function Review" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="drs1-protnlm-function-review">DRS1: ProtNLM function review</h1>
+<p><a href="DRS1-protnlm-source.json">Exact emitted record</a>, retrieved 2026-09-10T14:34:41.431468+00:00.</p>
+<h2 id="original-prediction-and-assessment">Original prediction and assessment</h2>
+<blockquote>
+<p>Specifically binds 5-hydroxymethylcytosine (5hmC), suggesting that it acts as a specific reader of 5hmC</p>
+</blockquote>
+<p>UNC (CS 1). A selective 5hmC-reader function has not been demonstrated for DRS1. The frog Wdr76 donor text is itself an orthology inference. Moreover, sensitive Arabidopsis genomic-DNA assays found no appreciable 5hmC, limiting the proposed physiological reader context. These observations do not show that purified DRS1 cannot bind a synthetic 5hmC-containing DNA substrate, exclude trace oxidative products, or address RNA hydroxymethylcytosine. Thus the claim is not confidently scored as either correct or an absolute biochemical impossibility. <a href="https://pubmed.ncbi.nlm.nih.gov/25380728">PMID:25380728</a>(https://pubmed.ncbi.nlm.nih.gov/25380728/); <a href="DRS1-5hmc-prediction-donor.json">donor record</a>.</p>
+<p>The assessment concerns the selected accession Q9SAI7. <a href="DRS1-notes.md#exact-non-go-claims">Other emitted outputs and evidence context</a>.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q9SAI7
+gene_symbol: DRS1
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:3702
+  label: Arabidopsis thaliana
+description: DRS1 is an Arabidopsis WDR76/CMR1-related WD40 protein required for normal water retention
+  during drought and for the ABA-dependent reduction of leaf water loss. Two independent drs1 insertion
+  alleles support this role. Its DWD-containing repeat architecture suggests protein-complex interactions,
+  while the biochemical partners linking it to drought physiology and the specificity of any chromatin
+  or DNA binding remain unresolved.
+existing_annotations:
+- term:
+    id: GO:0000792
+    label: heterochromatin
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  supporting_entities:
+  - PANTHER:PTN000381277
+  - UniProtKB:Q9H967
+  review:
+    action: UNDECIDED
+    summary: Human WDR76 associates with heterochromatin-related proteins, but this precise chromatin
+      compartment is not directly resolved for DRS1. The Arabidopsis drought experiments establish a phenotype
+      without chromatin localization. The IBA is a considered family inference, not contradicted by the
+      plant phenotype, yet the specific compartment remains uncertain.
+    supported_by:
+    - &amp;id001
+      reference_id: PMID:27248496
+      supporting_text: &#39;WDR76 co-localizes to puncta with the heterochromatin
+
+        proteins CBX1 and CBX5&#39;
+    - &amp;id003
+      reference_id: PMID:20118918
+      supporting_text: An independent T-DNA allele (Salk_149366C) that we designate as drs1-2 exhibited
+        the same phenotypes in relative water content following drought and ABA-insensitive water transpiration
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  supporting_entities:
+  - PANTHER:PTN000381277
+  - SGD:S000002315
+  review:
+    action: ACCEPT
+    summary: The WDR76/CMR1 phylogenetic assignment supports broad DNA binding and is compatible with
+      the conserved DNA-associated repeat family. No target-specific evidence demonstrates loss of broad
+      DNA interaction. Retaining this IBA does not imply recognition of damaged DNA or a particular modified
+      base.
+    supported_by:
+    - *id001
+    - &amp;id002
+      reference_id: PMID:20118918
+      supporting_text: Drs1 is a WD-40 repeat family protein containing a DWD (DDB1 binding WD40) motif
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  supporting_entities:
+  - PANTHER:PTN000381277
+  - SGD:S000002315
+  - UniProtKB:Q9H967
+  review:
+    action: ACCEPT
+    summary: Nuclear localization is a reasonable conserved inference for the WDR76/CMR1 branch, consistent
+      with the independently studied nuclear/chromatin-associated human homolog. The plant drought phenotype
+      neither proves localization nor refutes this broad compartment.
+    supported_by:
+    - *id001
+    - *id002
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: ISM
+  original_reference_id: GO_REF:0000122
+  qualifier: located_in
+  review:
+    action: ACCEPT
+    summary: The nuclear localization inference agrees with the WDR76-family context. It is retained without
+      claiming target-specific microscopy or a precise heterochromatin compartment.
+    supported_by:
+    - *id001
+    - *id002
+- term:
+    id: GO:0009414
+    label: response to water deprivation
+  evidence_type: IMP
+  original_reference_id: PMID:20118918
+  qualifier: acts_upstream_of_or_within
+  review:
+    action: ACCEPT
+    summary: This IMP is directly supported by reduced water retention in two independent DRS1 insertion
+      alleles. The primary paper explicitly names AT1G80710, so the evidence is target-specific and not
+      merely a network-prediction assertion.
+    supported_by:
+    - *id003
+- term:
+    id: GO:0009737
+    label: response to abscisic acid
+  evidence_type: IMP
+  original_reference_id: PMID:20118918
+  qualifier: acts_upstream_of_or_within
+  review:
+    action: ACCEPT
+    summary: The primary experiment directly shows ABA-insensitive water transpiration in drs1 leaves,
+      with confirmation by a second allele. Retain the ABA response while avoiding an unsupported receptor
+      or general germination mechanism.
+    supported_by:
+    - &amp;id004
+      reference_id: PMID:20118918
+      supporting_text: The mutant was insensitive to ABA on water loss whereas the wild type lost significantly
+        less water in the presence of 10 μM ABA
+    - *id003
+- term:
+    id: GO:0080008
+    label: Cul4-RING E3 ubiquitin ligase complex
+  evidence_type: ISS
+  original_reference_id: PMID:18223036
+  qualifier: part_of
+  supporting_entities:
+  - AGI_LocusCode:AT4G15900
+  review:
+    action: UNDECIDED
+    summary: The DWD motif supports a plausible DDB1-CUL4 substrate-receptor relationship, but the target
+      paper does not demonstrate DRS1 association with a CUL4 complex or identify its substrate. PMID:18223036
+      tests selected DWD proteins and PRL1; its existence does not establish that DRS1 itself was one
+      of the experimentally confirmed binders. The ISS hypothesis remains plausible but unresolved.
+    supported_by:
+    - *id002
+- term:
+    id: GO:2000001
+    label: regulation of DNA damage checkpoint
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  supporting_entities:
+  - PANTHER:PTN000381277
+  - SGD:S000002315
+  review:
+    action: UNDECIDED
+    summary: Recruitment of a WDR76 homolog to DNA damage does not by itself establish regulation of the
+      DNA damage checkpoint in Arabidopsis. The DRS1 study does not assay checkpoint signaling, and no
+      target-specific loss of the ancestral role is demonstrated. The precise IBA process remains uncertain.
+    supported_by:
+    - *id001
+    - *id003
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000122
+  title: AtSubP analysis
+  findings: []
+- id: PMID:18223036
+  title: Characterization of Arabidopsis and rice DWD proteins and their roles as substrate receptors
+    for CUL4-RING E3 ubiquitin ligases.
+  findings: []
+- id: PMID:20118918
+  title: Rational association of genes with traits using a genome-scale gene network for Arabidopsis thaliana.
+  findings:
+  - statement: Two independent Arabidopsis drs1 alleles have deficient water retention and ABA-insensitive
+      transpiration, establishing the target-specific phenotype.
+    supporting_text: An independent T-DNA allele (Salk_149366C) that we designate as drs1-2 exhibited
+      the same phenotypes in relative water content following drought and ABA-insensitive water transpiration
+  - statement: The target mutation affects ABA-dependent leaf water loss; this does not establish an ABA
+      receptor or a universal effect on all ABA responses.
+    supporting_text: The mutant was insensitive to ABA on water loss whereas the wild type lost significantly
+      less water in the presence of 10 μM ABA
+  - statement: The primary DRS1 study identifies a DWD motif but presents DDB1-CUL4 substrate-receptor
+      function as a family-based hypothesis rather than a demonstrated DRS1 complex.
+    supporting_text: Drs1 is a WD-40 repeat family protein containing a DWD (DDB1 binding WD40) motif
+  full_text_unavailable: false
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Primary report checked against the cached abstract/full text; the evidence scope is
+      stated in the finding.
+- id: PMID:27248496
+  title: WDR76 Co-Localizes with Heterochromatin Related Proteins and Rapidly Responds to DNA Damage.
+  findings:
+  - statement: Human WDR76 has chromatin-associated localization and a rapid DNA-damage response; these
+      observations define homolog evidence, not an Arabidopsis assay.
+    supporting_text: &#39;WDR76 co-localizes to puncta with the heterochromatin
+
+      proteins CBX1 and CBX5&#39;
+  full_text_unavailable: false
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Primary report checked against the cached abstract/full text; the evidence scope is
+      stated in the finding.
+- id: PMID:25380728
+  title: 5-hydroxymethylcytosine is not present in appreciable quantities in Arabidopsis DNA.
+  findings:
+  - statement: Sensitive assays constrain the amount of genomic 5hmC in the Arabidopsis tissues and genotypes
+      tested, arguing against an assumed abundant canonical 5hmC signaling system.
+    supporting_text: &#39;Enzymatic radiolabeling and mass spectrometry, the most
+
+      sensitive methods for detection that we used, failed to detect
+
+      5-hydroxymethylcytosine in A. thaliana genomic DNA&#39;
+  full_text_unavailable: false
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: Primary report checked against the cached abstract/full text; the evidence scope is
+      stated in the finding.
+- id: file:ARATH/DRS1/DRS1-5hmc-prediction-donor.json
+  title: Frozen Wdr76 prediction donor with inferred functional evidence
+- id: file:ARATH/DRS1/DRS1-protnlm-source.json
+  title: Frozen exact-input ProtNLM output and UniProt sequence for Q9SAI7
+core_functions:
+- description: Supports water retention during drought and the ABA-dependent reduction of leaf water loss;
+    the biochemical mechanism connecting the WD40 protein to these responses remains unresolved.
+  directly_involved_in:
+  - id: GO:0009414
+    label: response to water deprivation
+  - id: GO:0009737
+    label: response to abscisic acid
+  supported_by:
+  - *id003
+  - *id004
+suggested_questions:
+- question: Which biochemical partners link DRS1 to ABA-dependent water retention, and is the DWD motif
+    required for that function?
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
