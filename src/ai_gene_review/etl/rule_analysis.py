@@ -1775,6 +1775,14 @@ def render_rule_review_html(
     with open(review_yaml_path, 'r') as f:
         rule_data = yaml.safe_load(f)
 
+    # Older reviews sometimes record only a condition-set count.
+    # Preserve that count for display without treating it as iterable details.
+    recorded_condition_count = None
+    conditions = rule_data.get('rule', {}).get('condition_sets')
+    if isinstance(conditions, int):
+        recorded_condition_count = conditions
+        rule_data['rule']['condition_sets'] = []
+
     # Read raw YAML content for preview
     with open(review_yaml_path, 'r') as f:
         yaml_content = f.read()
@@ -1797,7 +1805,7 @@ def render_rule_review_html(
     stats = {}
     if 'rule' in rule_data and 'condition_sets' in rule_data['rule']:
         condition_sets = rule_data['rule']['condition_sets']
-        stats['condition_sets'] = len(condition_sets)
+        stats['condition_sets'] = recorded_condition_count if recorded_condition_count is not None else len(condition_sets)
 
         # Count total pairwise overlaps from all condition sets
         total_pairs = 0
@@ -1866,7 +1874,7 @@ def render_rule_review_html(
 
     # Write output
     with open(output_path, 'w', encoding='utf-8') as f:
-        f.write(html)
+        f.write("\n".join(line.rstrip() for line in html.splitlines()) + "\n")
 
     print(f"HTML review rendered to {output_path}")
     return output_path
