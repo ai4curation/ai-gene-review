@@ -494,6 +494,34 @@ AlkB."* NRP is a secreted, SDF-1-like factor translated from a **different readi
 same locus**. Its chemoattractant activity was annotated onto the dioxygenase. The mouse
 annotation likely warrants MGI's attention as well.
 
+### The ontology cannot express protein nitration at all
+
+GLOD4 is reported to catalyse selective peroxynitrite-mediated protein tyrosine nitration
+(PMID:41628334, *PNAS* 2026). **GO has no term for protein nitration, in any aspect** — verified:
+QuickGO searches for "protein nitration", "tyrosine nitration" and "nitrase" return nothing
+relevant. The near misses are all wrong in a way that matters:
+
+- `GO:0017014` protein **nitrosylation** is S-nitrosylation by NO, and the paper specifically
+  excludes NO and NO-derived oxidants as cosubstrates.
+- `GO:0072541` peroxynitrite reductase and `GO:0062213` peroxynitrite isomerase denote
+  **detoxification** of peroxynitrite to nitrite/nitrate — using either would invert the biology,
+  turning an enzyme that installs a modification into one that removes the oxidant.
+- `GO:0018212` peptidyl-tyrosine modification is obsolete.
+
+So the only truthful annotation available is the near-vacuous `GO:0140096` catalytic activity,
+acting on a protein. This is a clean ontology gap rather than a curation failure, and it is the
+mirror image of the FTO m6Am problem noted above: where GO lacks a term, a real activity gets
+recorded worse than a contested one that happens to have precise vocabulary.
+
+### UniProt cites a review as function evidence for PEX39
+
+The FUNCTION block on **Q5I0X4 (PEX39)** cites two references: PMID:40739340, the primary
+*Nat Cell Biol* 2025 paper, and **PMID:37160800** — which is "Peroxisomes: novel findings and
+future directions", a *Histochem Cell Biol* 2023 review/meeting article that predates the
+deorphanization and is not primary evidence for anything about PEX39's function. Verified against
+the UniProt REST API and PubMed. Minor, but it is the kind of citation that later propagates as
+though it were independent support.
+
 ### Two suspected data errors, flagged not acted on
 
 - **ZBP1** `GO:0005515` IPI from PMID:19590578 lists **Q13601** in `WITH/FROM`. Q13601 is **KRR1**,
