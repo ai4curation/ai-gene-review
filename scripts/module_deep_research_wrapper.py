@@ -48,7 +48,12 @@ UNRESOLVED_PLACEHOLDER_PATTERNS = (
 
 
 def deep_research_client_command() -> list[str]:
-    """Return the command prefix for invoking deep-research-client."""
+    """Return the client command with an explicit Python >=3.12,<4.0 request.
+
+    This takes precedence over the ambient/UV_PYTHON default. Override the
+    package with DEEP_RESEARCH_CLIENT_UVX_FROM, or replace the whole command
+    (including interpreter selection) with DEEP_RESEARCH_CLIENT_CMD.
+    """
     override = os.environ.get("DEEP_RESEARCH_CLIENT_CMD")
     if override:
         return shlex.split(override)

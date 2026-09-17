@@ -58,8 +58,10 @@ def deep_research_client_command() -> list[str]:
     """Return the command prefix for invoking deep-research-client.
 
     Use uvx by default so research jobs do not need to sync this repository's
-    large Python environment. Set DEEP_RESEARCH_CLIENT_CMD to override, e.g.
-    DEEP_RESEARCH_CLIENT_CMD=deep-research-client.
+    large Python environment. Request Python >=3.12,<4.0 explicitly, overriding
+    the ambient/UV_PYTHON default. DEEP_RESEARCH_CLIENT_UVX_FROM overrides the
+    package; DEEP_RESEARCH_CLIENT_CMD replaces the whole command (including
+    interpreter selection), e.g. DEEP_RESEARCH_CLIENT_CMD=deep-research-client.
     """
     override = os.environ.get("DEEP_RESEARCH_CLIENT_CMD")
     if override:
