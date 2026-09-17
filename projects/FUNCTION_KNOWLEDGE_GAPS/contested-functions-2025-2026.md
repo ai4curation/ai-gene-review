@@ -589,6 +589,21 @@ need either requoting or demotion to a non-quote field; they are not necessarily
 summaries, but they are not quotations and should not be readable as evidence that a source said
 something in those words.
 
+### A confirmed broken citation in GOA, live now
+
+**NLRP3** carries `GO:0060090` molecular adaptor activity and `GO:0030674`
+protein-macromolecule adaptor activity as **IDA from PMID:1189953**. That PMID resolves to
+*"[Profanities and the profane person]"*, Acta Psiquiatr Psicol Am Lat, **1975**. The intended
+reference is plainly **PMID:31189953** — "Structural mechanism for NEK7-licensed activation of
+NLRP3 inflammasome", *Nature* 2019 — a digit-dropped identifier. Other NLRP3 annotations from that
+same paper (`GO:0051604`, `GO:0140608`) use the correct ID, so the error is isolated to these two
+rows. Confirmed against both the cached GOA file and a live QuickGO query, so it is present in the
+current data rather than a stale local copy.
+
+Unlike the two below, this one is not a judgement call: a well-formed identifier that resolves to
+the wrong paper is exactly the failure mode the project's own reference-review guidance exists to
+catch, and it is invisible to any check that only asks whether a PMID resolves.
+
 ### Two suspected data errors, flagged not acted on
 
 - **ZBP1** `GO:0005515` IPI from PMID:19590578 lists **Q13601** in `WITH/FROM`. Q13601 is **KRR1**,
