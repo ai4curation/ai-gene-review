@@ -177,6 +177,9 @@ just deep-research-interpro-family PTHR10314 perplexity --database panther
 - [x] Captured the family verdicts as proposed interpro2go edits in SSSOM YAML
       (`INTERPRO/interpro2go.sssom.yaml`, 17 mappings over the 6 entries) — the
       consortium-facing deliverable, validated via `just validate-interpro-mappings`
+- [x] Recorded 3 mappings caught from the opposite direction — found while reviewing
+      *genes*, not families (`IPR045122`/`GO:0005227`, `IPR042371`/`GO:0003726`,
+      `IPR006935`/`GO:0003677`); SSSOM now 29 mappings
 - [ ] Continue down the worklist (`interpro_family_priorities.tsv`)
 
 ## Family deep-research verdicts (falcon/Edison)
@@ -195,9 +198,42 @@ just deep-research-interpro-family PTHR10314 perplexity --database panther
 
 - [ ] Run `just deep-research-interpro-family <IPR>` (falcon/Edison default) for the next entries
 
-Last updated: 2026-06-20
+Last updated: 2026-09-17
 
 # NOTES
+
+## 2026-09-17
+
+**Three mappings found gene-first rather than family-first.** The contested-function
+review ([Contested gene functions, 2025-2026](FUNCTION_KNOWLEDGE_GAPS/contested-functions-2025-2026.md))
+read ~60 human genes one at a time and, as a side effect, caught three InterPro2GO
+mappings that the family worklist had not reached. They are now in the SSSOM (25 → 29
+mappings). All three entry names, types and match counts were verified against the live
+InterPro API, and the GO term definitions against QuickGO.
+
+- **`IPR045122` → `GO:0005227` calcium-activated cation channel activity — REMOVE.** The
+  entry is named "Calcium permeable stress-gated cation channel 1-like"; the GO term
+  requires a channel that opens *when calcium binds it*. Permeable-to-calcium and
+  gated-by-calcium are opposite directions of causation, and the TMEM63/OSCA channels this
+  entry covers are stretch- and osmolarity-gated. A **name-collision** failure mode, not a
+  fold-≠-function one: the two readings of "calcium ... cation channel" are not
+  distinguishable without reading the term definition. Lands on TMEM63A/B/C in human.
+- **`IPR042371` → `GO:0003726` double-stranded RNA adenosine deaminase activity — REMOVE.**
+  A catalytic activity mapped onto a binding domain. The deaminase lives in ADAR1's
+  separate deaminase domain, not in the Zα domain this entry describes — so ZBP1, which has
+  a Zα domain and no deaminase domain, inherits an enzymatic activity it cannot perform.
+  The entry's `GO:0003723 RNA binding` is sound and is recorded as an ACCEPT row.
+- **`IPR006935` → `GO:0003677` DNA binding — REMOVE.** The entry ("Helicase/UvrB,
+  N-terminal") is dominated by DNA-acting enzymes, but the same N-terminal fold is in the
+  RNA-sensing RIG-I-like receptors, so IFIH1 (MDA5), a cytosolic dsRNA sensor, inherits
+  DNA binding. The nucleic-acid *substrate* is a property of the enzyme, not of the shared
+  helicase fold; `GO:0005524` and `GO:0016787` on the same entry are unaffected.
+
+The methodological point: the family worklist is ranked by *how many reviewers already
+flagged an entry*, so it is structurally blind to mappings that are wrong but rarely
+reviewed — `IPR045122` has three human members and would never rise up that ranking.
+Reviewing genes deeply and harvesting the InterPro defects that fall out is a
+complementary intake path, and cheap when the gene review is happening anyway.
 
 ## 2026-06-20
 
