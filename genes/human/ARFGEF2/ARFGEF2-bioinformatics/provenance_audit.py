@@ -42,6 +42,9 @@ from uniprot import (
     quickgo_by_gene,
     quickgo_by_gene_and_reference,
     quickgo_by_reference,
+    summarise,
+    uniprot_entry,
+    uniprot_search,
 )
 
 HERE = Path(__file__).parent
@@ -164,6 +167,83 @@ def reference_entities(pmid: str) -> dict:
     return prof
 
 
+def cilium_census(goa: list[dict[str, str]]) -> dict:
+    """E. Does any other Sec7-family GEF carry a cilium-compartment term?
+
+    The `GO:0005879 axonemal microtubule` rows on ARFGEF2 claim a cilium. This
+    checks the claim "no other large ArfGEF has one" instead of asserting it: the
+    cohort is the four human large ArfGEFs plus every protein resolvable from the
+    gene's own WITH/FROM column, and the query is for `GO:0005879` itself and for
+    the whole `GO:0005929 cilium` branch via goUsage=descendants.
+    """
+    # Accessions for the four human large ArfGEFs are DERIVED from a gene-name
+    # search, never hand-written: a first pass of this function hardcoded
+    # "Q9Y678" as GBF1, which is actually COPG1, and the resulting census would
+    # have supported the right conclusion with the wrong cohort.
+    cohort: dict[str, str] = {}
+    large_arfgefs = []
+    for sym in ("ARFGEF1", "ARFGEF2", "ARFGEF3", "GBF1"):
+        hits = [h for h in uniprot_search(
+            f"gene_exact:{sym} AND organism_id:9606 AND reviewed:true", size=5)
+            if h.get("entryType", "").startswith("UniProtKB reviewed")]
+        if len(hits) != 1:
+            raise RuntimeError(
+                f"gene-name lookup for {sym} returned {len(hits)} reviewed human entries "
+                f"({[h['primaryAccession'] for h in hits]}); resolve the ambiguity explicitly."
+            )
+        acc = hits[0]["primaryAccession"]
+        cohort[acc] = sym
+        large_arfgefs.append(acc)
+
+    for row in goa:
+        for tok in (row["WITH/FROM"] or "").split("|"):
+            tok = tok.strip()
+            if tok.startswith("UniProtKB:"):
+                cohort.setdefault(tok.split(":", 1)[1].split("-")[0], "")
+
+    out = {}
+    for acc in sorted(cohort):
+        rows = quickgo_by_gene(acc)
+        # Print the resolved gene symbol for every accession: a label taken on
+        # trust is how the COPG1/GBF1 mix-up above stayed invisible.
+        s = summarise(uniprot_entry(acc))
+        cilium = [r for r in rows if r["goId"] in CILIUM_TERMS]
+        out[acc] = {
+            "declared_label": cohort[acc],
+            "resolved_gene": s["gene"],
+            "organism": s["organism"],
+            "n_annotations": len(rows),
+            "cilium_terms": sorted({r["goId"] for r in cilium}),
+        }
+        if cohort[acc] and s["gene"] != cohort[acc]:
+            raise RuntimeError(
+                f"{acc} was sought as {cohort[acc]} but resolves to {s['gene']}"
+            )
+    holders = [a for a, v in out.items() if v["cilium_terms"]]
+    return {
+        "cohort_size": len(out),
+        "large_arfgef_accessions": large_arfgefs,
+        "large_arfgef_cilium_holders": [a for a in large_arfgefs if out[a]["cilium_terms"]],
+        "per_accession": out,
+        "cilium_term_holders": holders,
+    }
+
+
+# GO:0005879 plus the cilium/axoneme compartment terms an ArfGEF would plausibly
+# be given if it were ciliary. Checked explicitly rather than by branch closure,
+# so the cohort query stays a single cheap call per accession.
+CILIUM_TERMS = {
+    "GO:0005879",  # axonemal microtubule
+    "GO:0005930",  # axoneme
+    "GO:0005929",  # cilium
+    "GO:0097546",  # ciliary base
+    "GO:0036064",  # ciliary basal body
+    "GO:0060170",  # ciliary membrane
+    "GO:0035869",  # ciliary transition zone
+    "GO:0030992",  # intraciliary transport particle B
+}
+
+
 def main() -> None:
     goa = load_goa()
     goa_pmids = sorted({m.group(1) for row in goa
@@ -206,6 +286,7 @@ def main() -> None:
         "coverage": coverage,
         "pmids_with_zero_go_annotations_anywhere": zero_anywhere,
         "pmids_with_zero_annotations_on_subject": zero_on_subject,
+        "cilium_census": cilium_census(goa),
     }
     (HERE / "provenance_audit.json").write_text(json.dumps(out, indent=2) + "\n")
 
@@ -234,6 +315,11 @@ def main() -> None:
     if lit_nonnumeric:
         print(f"   non-numeric PMID-shaped tokens in the affinage record "
               f"(NOT PubMed ids): {sorted(lit_nonnumeric)}")
+    cc = out["cilium_census"]
+    print()
+    print(f"E. cilium census over {cc['cohort_size']} Sec7-family / large-ArfGEF accessions: "
+          f"{len(cc['cilium_term_holders'])} hold a cilium-compartment term "
+          f"{cc['cilium_term_holders']}")
 
 
 if __name__ == "__main__":

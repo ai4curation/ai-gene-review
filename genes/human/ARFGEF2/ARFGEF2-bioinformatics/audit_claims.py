@@ -329,7 +329,30 @@ def check_numbers(audit: dict, texts: dict[str, str], problems: list[str]) -> in
          "literature PMIDs with zero GO annotations anywhere"),
         (str(len(audit["pmids_with_zero_annotations_on_subject"])), "33",
          "literature PMIDs with zero annotations on ARFGEF2"),
+        (str(audit["cilium_census"]["cohort_size"]), "13", "accessions in the cilium census"),
+        (str(len(audit["cilium_census"]["large_arfgef_cilium_holders"])), "1",
+         "large ArfGEFs holding a cilium-compartment term"),
     ]
+    # The cilium census's conclusion is a membership claim, not a count, so check
+    # membership too: a cohort of the right SIZE with the wrong members would
+    # pass every numeric check. This is the COPG1-for-GBF1 bug, guarded.
+    census = audit["cilium_census"]
+    resolved = {v["resolved_gene"] for v in census["per_accession"].values()}
+    for sym in ("ARFGEF1", "ARFGEF2", "ARFGEF3", "GBF1"):
+        if sym not in resolved:
+            problems.append(f"cilium census cohort is missing {sym}; the census claim is about the "
+                            f"four human large ArfGEFs and cannot be made without it")
+    if census["large_arfgef_cilium_holders"] != ["Q9Y6D5"]:
+        problems.append(
+            f"cilium census: expected ARFGEF2 (Q9Y6D5) to be the only large-ArfGEF holder, got "
+            f"{census['large_arfgef_cilium_holders']}"
+        )
+    exoc7 = next((v for v in census["per_accession"].values() if v["resolved_gene"] == "EXOC7"), None)
+    if exoc7 is None or "GO:0036064" not in exoc7["cilium_terms"]:
+        problems.append(
+            "cilium census: the EXOC7 ciliary-basal-body result is asserted in RESULTS.md and the "
+            "notes as the counterweight to the axoneme argument, but the audit no longer shows it"
+        )
     for computed, asserted, what in claims:
         if computed != asserted:
             problems.append(
@@ -461,6 +484,25 @@ def self_test(raw_review: str, texts: dict[str, str], audit: dict, goa_rows) -> 
     assert mutated_audit["rat_funnel"]["n_human_rows"] == 20
     mutated_audit["rat_funnel"]["n_human_rows"] = 19
     cases.append(("number drift", raw_review, texts, mutated_audit, goa_rows, "number drift"))
+
+    # 7b. cohort membership broken while the COUNT stays right - the
+    #     COPG1-for-GBF1 bug, which no numeric check can see.
+    mutated_audit = copy.deepcopy(audit)
+    gbf1 = next(a for a, v in mutated_audit["cilium_census"]["per_accession"].items()
+                if v["resolved_gene"] == "GBF1")
+    mutated_audit["cilium_census"]["per_accession"][gbf1]["resolved_gene"] = "COPG1"
+    assert mutated_audit["cilium_census"]["cohort_size"] == audit["cilium_census"]["cohort_size"]
+    cases.append(("cohort membership (count unchanged)", raw_review, texts, mutated_audit, goa_rows,
+                  "missing GBF1"))
+
+    # 7c. the counterweight result silently disappearing
+    mutated_audit = copy.deepcopy(audit)
+    exo = next(a for a, v in mutated_audit["cilium_census"]["per_accession"].items()
+               if v["resolved_gene"] == "EXOC7")
+    assert mutated_audit["cilium_census"]["per_accession"][exo]["cilium_terms"] == ["GO:0036064"]
+    mutated_audit["cilium_census"]["per_accession"][exo]["cilium_terms"] = []
+    cases.append(("EXOC7 counterweight lost", raw_review, texts, mutated_audit, goa_rows,
+                  "EXOC7 ciliary-basal-body result"))
 
     # 8. a retracted phrasing reappearing
     mutated_texts = dict(texts)

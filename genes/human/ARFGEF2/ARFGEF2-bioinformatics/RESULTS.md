@@ -132,7 +132,36 @@ is no child to propose; the ARF1/ARF3 substrate preference has to be recorded
 machine-readably (`core_functions[].substrates`, and a `has_input` extension on
 the annotation) rather than as a more specific term.
 
-## 6. WITH/FROM resolution
+## 6. Cilium census: is a ciliary term plausible anywhere near this protein?
+
+The two `GO:0005879 axonemal microtubule` rows claim a cilium. Rather than assert
+"no other ArfGEF has one", the claim was measured. The cohort is the four human
+large ArfGEFs — **accessions derived by gene-name lookup, not written by hand**,
+after a first pass hardcoded `Q9Y678` as GBF1 when it is in fact **COPG1** — plus
+the nine proteins resolvable from this gene's own WITH/FROM column. Thirteen
+accessions; each was queried for `GO:0005879` and the cilium/axoneme compartment
+terms an ArfGEF would plausibly receive if it were ciliary.
+
+| accession | gene | cilium terms held | note |
+|---|---|---|---|
+| `Q9Y6D6` | ARFGEF1 | — | large ArfGEF |
+| `Q9Y6D5` | ARFGEF2 | `GO:0005879` | this projection only |
+| `Q5TH69` | ARFGEF3 | — | large ArfGEF |
+| `Q92538` | GBF1 | — | large ArfGEF |
+| `Q7TSU1` | Arfgef2 (rat) | `GO:0005879` | the donor of the human rows |
+| `Q9UPT5` | EXOC7 | `GO:0036064` | **ciliary basal body** |
+| `A5PKW4` `O43739` `Q14432` `Q15438` `Q5JU85` `Q99417` `Q9UIA0` | PSD, CYTH3, PDE3A, CYTH1, IQSEC2, MYCBP, CYTH4 | — | |
+
+Two results, and the second is the one that complicates the story:
+
+1. Of the four human large ArfGEFs, **only ARFGEF2 holds a cilium-compartment
+   term, and only by the projection under review**. The family gives no
+   independent support to a ciliary localisation.
+2. **EXOC7/Exo70 — the exocyst subunit BIG2 binds and co-localises with at the
+   MTOC — carries `GO:0036064` ciliary basal body.** So a ciliary context near
+   BIG2 is not absurd, and the honest verdict is "flag and measure", not "delete".
+
+## 7. WITH/FROM resolution
 
 All **45 distinct WITH/FROM tokens** across the 47 rows that carry one resolved;
 **0 unresolved**. Five MOD ids returned more than one UniProt hit

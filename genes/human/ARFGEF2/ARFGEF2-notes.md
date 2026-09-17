@@ -90,14 +90,29 @@ decisive:
 2. The **rat UniProt entry's own `SUBCELLULAR LOCATION` section, curated from the
    same paper**, records the generic *"Cytoplasm, cytoskeleton"* and lists no
    cilium, axoneme or flagellum anywhere.
-3. Neither BIG1 nor BIG2 nor any large ArfGEF carries a cilium-compartment term,
-   and human ARFGEF2 has no other cilium-associated evidence of any kind.
+3. A measured census (RESULTS.md §6) over 13 accessions — the four human large
+   ArfGEFs, with accessions **derived by gene-name lookup** rather than written
+   by hand, plus the nine proteins resolvable from this gene's WITH/FROM column
+   — finds exactly **one** cilium-compartment holder among the large ArfGEFs,
+   and it is ARFGEF2 itself by this very projection. (The first pass of that
+   script hardcoded `Q9Y678` as GBF1; it is **COPG1**. The conclusion survived,
+   the cohort did not, which is why the accessions are now derived and the
+   resolved gene symbol is asserted against the one sought.)
 
 The related, non-ciliary observation that *does* exist for human BIG2 is
 cytoplasmic-microtubule and centrosome association: *"endogenous BIG2 and Exo70
 in HepG2 cells were visualized at Golgi membranes and apparently at the
 microtubule-organizing center (MTOC). Both were identified in purified
 centrosomes."* [PMID:15705715].
+
+**And the census returned one result that cuts against my own argument, which is
+reported rather than suppressed: EXOC7/Exo70 — the exocyst subunit BIG2 binds and
+co-localises with at the MTOC — itself carries `GO:0036064` ciliary basal body.**
+BIG2 therefore has a documented partner at the ciliary base, even though BIG2 has
+never been looked for there. That does not rescue *axonemal microtubule*, which is
+a different compartment from the basal body, but it is exactly why the right
+action is to flag and measure rather than to delete, and it is the motivation for
+the first suggested experiment.
 
 I have **not** asserted the rat IDA is wrong — I cannot see what the curator saw.
 The two human rows are ISS and Compara IEA, so I marked those as over-annotated
