@@ -31,6 +31,8 @@ from typing import Any
 import yaml
 from jinja2 import Environment, FileSystemLoader
 
+from ai_gene_review.render_modules import clean_rendered_html
+
 CS_MAP = {"COR": 2, "CNN": 2, "LSP": 2, "UNC": 1, "PLI": 0, "NPI": 0, "REP": 0}
 ASSESSMENT_ORDER = ["COR", "CNN", "LSP", "UNC", "PLI", "NPI", "REP"]
 
@@ -155,12 +157,13 @@ def render_prediction_eval(
         autoescape=True,
     )
     template = env.get_template(template_path.name)
-    return template.render(
+    rendered = template.render(
         title=title,
         subtitle=subtitle,
         proteins=proteins,
         **stats,
     )
+    return clean_rendered_html(rendered)
 
 
 def main() -> None:

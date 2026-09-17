@@ -1,0 +1,2802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rgn - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>rgn</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/M9PFV8" target="_blank" class="term-link">
+                        M9PFV8
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Drosophila melanogaster</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "rgn";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">6</span> Annotations</a>
+
+
+
+        <a href="#review-research" title="Deep research and hypothesis research reports"><span class="nav-count">1</span> Research</a>
+
+
+
+
+
+        <a href="#review-core-functions" title="Core biological functions"><span class="nav-count">1</span> Core Function</a>
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">5</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">1</span> Documents</a>
+
+
+
+
+
+
+
+
+
+
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="M9PFV8" data-a="DESCRIPTION: Regeneration is a secretory-pathway C-type-lectin-..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Regeneration is a secretory-pathway C-type-lectin-domain protein implicated in imaginal-disc regeneration. Genetic perturbation affects blastema formation and growth, while its ligand specificity and the relationship between the 808-residue isoform and its inferred trans-Golgi localization remain unresolved.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005802" target="_blank" class="term-link">
+                                    GO:0005802
+                                </a>
+                            </span>
+                            <span class="term-label">trans-Golgi network</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="M9PFV8" data-a="GO:0005802" data-r="GO_REF:0000033" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Trans-Golgi-network residence is unresolved for the exact long isoform.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The IBA is a curated phylogenetic assertion. The 808-residue record contains an N-terminal signal peptide and a C-type lectin domain; those features establish secretory-pathway compatibility but do not distinguish soluble secretion from Golgi residence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/rgn/rgn-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001304; C-type_lectin-like.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/rgn/rgn-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR016186; C-type_lectin-like/link_sf.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/rgn/rgn-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   SIGNAL          1..23
+FT                   /evidence=&#34;ECO:0000256|SAM:SignalP&#34;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/rgn/rgn-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   DOMAIN          70..199
+FT                   /note=&#34;C-type lectin&#34;
+FT                   /evidence=&#34;ECO:0000259|PROSITE:PS50041&#34;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18485344" target="_blank" class="term-link">
+                                        PMID:18485344
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We identified three genes, regeneration (rgn), augmenter
+of liver regeneration (alr) and Matrix metalloproteinase-1 (Mmp1) expressed
+specifically in blastema cells during disc regeneration.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030140" target="_blank" class="term-link">
+                                    GO:0030140
+                                </a>
+                            </span>
+                            <span class="term-label">trans-Golgi network transport vesicle</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="M9PFV8" data-a="GO:0030140" data-r="GO_REF:0000033" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Transport-vesicle residence needs a resolved localization inference.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> A signal peptide and lectin fold do not identify a trans-Golgi transport vesicle. No exact-isoform localization experiment or resolved ancestral assertion is available in the inspected evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/rgn/rgn-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001304; C-type_lectin-like.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/rgn/rgn-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR016186; C-type_lectin-like/link_sf.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/rgn/rgn-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   SIGNAL          1..23
+FT                   /evidence=&#34;ECO:0000256|SAM:SignalP&#34;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/rgn/rgn-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   DOMAIN          70..199
+FT                   /note=&#34;C-type lectin&#34;
+FT                   /evidence=&#34;ECO:0000259|PROSITE:PS50041&#34;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18485344" target="_blank" class="term-link">
+                                        PMID:18485344
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We identified three genes, regeneration (rgn), augmenter
+of liver regeneration (alr) and Matrix metalloproteinase-1 (Mmp1) expressed
+specifically in blastema cells during disc regeneration.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030246" target="_blank" class="term-link">
+                                    GO:0030246
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="M9PFV8" data-a="GO:0030246" data-r="GO_REF:0000104" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A C-type lectin-like fold does not establish carbohydrate binding.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Several proteins retain this fold without the canonical carbohydrate-binding activity. The exact target has no mapped ligand-binding assay.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/rgn/rgn-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001304; C-type_lectin-like.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/rgn/rgn-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR016186; C-type_lectin-like/link_sf.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/rgn/rgn-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   SIGNAL          1..23
+FT                   /evidence=&#34;ECO:0000256|SAM:SignalP&#34;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/rgn/rgn-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   DOMAIN          70..199
+FT                   /note=&#34;C-type lectin&#34;
+FT                   /evidence=&#34;ECO:0000259|PROSITE:PS50041&#34;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18485344" target="_blank" class="term-link">
+                                        PMID:18485344
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We identified three genes, regeneration (rgn), augmenter
+of liver regeneration (alr) and Matrix metalloproteinase-1 (Mmp1) expressed
+specifically in blastema cells during disc regeneration.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030246" target="_blank" class="term-link">
+                                    GO:0030246
+                                </a>
+                            </span>
+                            <span class="term-label">carbohydrate binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16475980" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16475980
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Participation of a galactose-specific C-type lectin in Droso...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="M9PFV8" data-a="GO:0030246" data-r="PMID:16475980" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The ISS lectin-binding transfer needs more specific support.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PMID:16475980 directly assays DL1 and discusses Drosophila lectins. It supplies useful family biology but does not establish carbohydrate binding by the long Rgn isoform; target-specific ligand or conserved-binding-site evidence is required.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/rgn/rgn-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001304; C-type_lectin-like.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/rgn/rgn-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR016186; C-type_lectin-like/link_sf.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/rgn/rgn-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   SIGNAL          1..23
+FT                   /evidence=&#34;ECO:0000256|SAM:SignalP&#34;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/rgn/rgn-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   DOMAIN          70..199
+FT                   /note=&#34;C-type lectin&#34;
+FT                   /evidence=&#34;ECO:0000259|PROSITE:PS50041&#34;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18485344" target="_blank" class="term-link">
+                                        PMID:18485344
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We identified three genes, regeneration (rgn), augmenter
+of liver regeneration (alr) and Matrix metalloproteinase-1 (Mmp1) expressed
+specifically in blastema cells during disc regeneration.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042246" target="_blank" class="term-link">
+                                    GO:0042246
+                                </a>
+                            </span>
+                            <span class="term-label">tissue regeneration</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18485344" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18485344
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Three genes control the timing, the site and the size of bla...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="M9PFV8" data-a="GO:0042246" data-r="PMID:18485344" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Regeneration-associated expression supports physiological context.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> PMID:18485344 reports rgn expression in regenerating blastema cells. Expression alone does not define a molecular function; the accompanying genetic evidence supports the biological role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/rgn/rgn-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001304; C-type_lectin-like.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/rgn/rgn-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR016186; C-type_lectin-like/link_sf.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/rgn/rgn-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   SIGNAL          1..23
+FT                   /evidence=&#34;ECO:0000256|SAM:SignalP&#34;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/rgn/rgn-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   DOMAIN          70..199
+FT                   /note=&#34;C-type lectin&#34;
+FT                   /evidence=&#34;ECO:0000259|PROSITE:PS50041&#34;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18485344" target="_blank" class="term-link">
+                                        PMID:18485344
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We identified three genes, regeneration (rgn), augmenter
+of liver regeneration (alr) and Matrix metalloproteinase-1 (Mmp1) expressed
+specifically in blastema cells during disc regeneration.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042246" target="_blank" class="term-link">
+                                    GO:0042246
+                                </a>
+                            </span>
+                            <span class="term-label">tissue regeneration</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IMP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18485344" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:18485344
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    Three genes control the timing, the site and the size of bla...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="M9PFV8" data-a="GO:0042246" data-r="PMID:18485344" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Rgn contributes to imaginal-disc regeneration.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The full text of PMID:18485344 maps rgn alleles to CG6014 and reports altered blastema regeneration after genetic perturbation. The gene-level process is well supported although the molecular mechanism and isoform contributions remain unresolved.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/rgn/rgn-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR001304; C-type_lectin-like.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/rgn/rgn-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR016186; C-type_lectin-like/link_sf.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/rgn/rgn-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   SIGNAL          1..23
+FT                   /evidence=&#34;ECO:0000256|SAM:SignalP&#34;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/rgn/rgn-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   DOMAIN          70..199
+FT                   /note=&#34;C-type lectin&#34;
+FT                   /evidence=&#34;ECO:0000259|PROSITE:PS50041&#34;</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18485344" target="_blank" class="term-link">
+                                        PMID:18485344
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We identified three genes, regeneration (rgn), augmenter
+of liver regeneration (alr) and Matrix metalloproteinase-1 (Mmp1) expressed
+specifically in blastema cells during disc regeneration.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section" id="review-core-functions">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Regeneration is a secretory-pathway C-type-lectin-domain protein implicated in imaginal-disc regeneration. Genetic perturbation affects blastema formation and growth, while its ligand specificity and the relationship between the 808-residue isoform and its inferred trans-Golgi localization remain unresolved.</h3>
+                <span class="vote-buttons" data-g="M9PFV8" data-a="FUNCTION: Regeneration is a secretory-pathway C-type-lectin-..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0042246" target="_blank" class="term-link">
+                                tissue regeneration
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/18485344" target="_blank" class="term-link">
+                                PMID:18485344
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">We identified three genes, regeneration (rgn), augmenter
+of liver regeneration (alr) and Matrix metalloproteinase-1 (Mmp1) expressed
+specifically in blastema cells during disc regeneration.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16475980" target="_blank" class="term-link">
+                            PMID:16475980
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Participation of a galactose-specific C-type lectin in Drosophila immunity.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18485344" target="_blank" class="term-link">
+                            PMID:18485344
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Three genes control the timing, the site and the size of blastema formation in Drosophila.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:DROME/rgn/rgn-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">DROME/rgn/rgn-uniprot.txt</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section" id="review-research">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rgn-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="M9PFV8" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional annotation report: *Drosophila melanogaster* **rgn** (CG6014; UniProt M9PFV8)</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">14 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-10T14:40:38.771146</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="rgn-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="functional-annotation-report-drosophila-melanogaster-rgn-cg6014-uniprot-m9pfv8">Functional annotation report: <em>Drosophila melanogaster</em> <strong>rgn</strong> (CG6014; UniProt M9PFV8)</h1>
+<h2 id="executive-conclusion">Executive conclusion</h2>
+<p>The gene symbol <strong>rgn is ambiguous across organisms</strong>, but the target specified here can be verified as the <em>Drosophila melanogaster</em> gene <strong>regeneration</strong> (<em>rgn</em>; <strong>CG6014</strong>, <strong>FBgn0261258</strong>), represented by UniProt <strong>M9PFV8</strong> and described with isoforms B and C. It must not be confused with mammalian <strong>RGN/regucalcin</strong>, which is a different protein. The fly literature uses <em>regeneration/rgn</em> in the imaginal-disc regeneration context and connects it to blastema formation, matching the supplied identity rather than the mammalian homonym (smithbolton2016drosophilaimaginaldiscsas pages 5-6, bergmann2010apoptosisstemcells pages 5-6).</p>
+<p>The strongest defensible functional annotation is:</p>
+<blockquote>
+<p><strong>Rgn is a poorly characterized, C-type-lectin-like protein required for the correct temporal and spatial organization of the regenerative blastema in injured Drosophila imaginal discs. Genetic evidence places it among Wingless/Wnt-responsive regeneration genes, but its ligand, biochemical activity, immediate interaction partners, and subcellular location remain unknown.</strong></p>
+</blockquote>
+<p>Consequently, Rgn should presently be annotated as a <strong>regulator/effector of epithelial tissue regeneration</strong>, not as a proven enzyme, carbohydrate-binding lectin, receptor, or transporter.</p>
+<table>
+<thead>
+<tr>
+<th>Question/feature</th>
+<th>Best-supported conclusion</th>
+<th>Evidence type/source/year</th>
+<th>Confidence</th>
+<th>Key limitation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity</td>
+<td>The research target is <em>Drosophila melanogaster</em> <strong>regeneration</strong> (<strong>rgn/CG6014; FBgn0261258; UniProt M9PFV8</strong>), not mammalian <strong>RGN/regucalcin</strong> or another similarly named gene.</td>
+<td>Identifier/alias correspondence supplied by UniProt; <em>Drosophila</em> literature independently uses <strong>rgn/regeneration</strong> for the imaginal-disc regeneration gene (2010–2016) (smithbolton2016drosophilaimaginaldiscsas pages 5-6, bergmann2010apoptosisstemcells pages 5-6)</td>
+<td>High</td>
+<td>M9PFV8 is not extensively characterized experimentally; identifier matching does not establish molecular function.</td>
+</tr>
+<tr>
+<td>Primary biological function</td>
+<td>Genetic evidence places <strong>rgn</strong> in the control of regenerative blastema formation after imaginal-disc injury. The primary study is summarized as showing control of blastema <strong>timing, site, and size</strong>, while a later expert review specifically emphasizes control of <strong>timing</strong> (sap2015globalquantitativeproteomics pages 5-8, bergmann2010apoptosisstemcells pages 5-6).</td>
+<td>Functional genetics from McClure, Sustar &amp; Schubiger (2008), as summarized in peer-reviewed reviews (2010, 2016) (smithbolton2016drosophilaimaginaldiscsas pages 5-6, bergmann2010apoptosisstemcells pages 5-6)</td>
+<td>Moderate–high</td>
+<td>Available excerpts do not provide allele identities, rescue tests, effect sizes, or enough primary-study detail to assign separate molecular mechanisms to timing, position, and size.</td>
+</tr>
+<tr>
+<td>Wg/Wnt pathway placement</td>
+<td><strong>rgn</strong> was identified among conserved <strong>Wingless (Wg/Wnt) target genes</strong> functioning in P35-independent imaginal-disc regeneration, supporting placement downstream of or responsive to Wg during blastema formation (bergmann2010apoptosisstemcells pages 5-6).</td>
+<td>Genetic-screen/review synthesis (2010) (bergmann2010apoptosisstemcells pages 5-6)</td>
+<td>Moderate</td>
+<td>Direct Wg binding to an <strong>rgn</strong> regulatory element, pathway epistasis, and direct transcriptional regulation were not demonstrated in the retrieved material. General requirements for Wg, JNK, and other regenerative pathways must not be attributed automatically to Rgn.</td>
+</tr>
+<tr>
+<td>Protein architecture</td>
+<td>UniProt-supplied annotations assign a <strong>C-type lectin-like domain/fold</strong> (InterPro IPR001304, IPR016186, IPR016187; Pfam Lectin_C/PF00059). This supports a possible ligand-binding or interaction role, but only as a structural/bioinformatic hypothesis.</td>
+<td>Computational domain annotation supplied with the target record; no retrieved Rgn-specific structural experiment</td>
+<td>Moderate for fold assignment; low for functional inference</td>
+<td>A C-type lectin-like fold does not by itself establish carbohydrate binding, calcium dependence, receptor activity, secretion, or substrate specificity.</td>
+</tr>
+<tr>
+<td>Cellular/subcellular localization</td>
+<td><strong>Unknown.</strong> The retrieved Rgn-specific literature does not establish whether Rgn acts intracellularly, at the plasma membrane, in extracellular space, or in a particular blastema cell population (sap2015globalquantitativeproteomics pages 5-8, smithbolton2016drosophilaimaginaldiscsas pages 5-6).</td>
+<td>Absence of direct localization evidence in retrieved experimental/review literature</td>
+<td>Low/undetermined</td>
+<td>No Rgn-specific antibody imaging, tagged-protein localization, secretion assay, topology experiment, or spatial transcript analysis was found.</td>
+</tr>
+<tr>
+<td>Biochemical ligand or activity</td>
+<td><strong>Unknown.</strong> No catalytic reaction, substrate, glycan ligand, binding partner, or receptor/adaptor mechanism has been experimentally assigned to Rgn.</td>
+<td>Evidence-gap assessment; reviews support a regeneration phenotype but not biochemical mechanism (sap2015globalquantitativeproteomics pages 5-8, smithbolton2016drosophilaimaginaldiscsas pages 5-6, bergmann2010apoptosisstemcells pages 5-6)</td>
+<td>High confidence that no assignment is supported by the retrieved evidence</td>
+<td>Negative literature retrieval is not proof that no unpublished or database-linked evidence exists; biochemical testing is still required.</td>
+</tr>
+<tr>
+<td>Ecdysone response</td>
+<td>Rgn is an <strong>ecdysone-responsive protein candidate</strong> from a SILAC screen of Kc cells. The experiment quantified <strong>5,748 proteins across six time points from 0–96 h</strong>, and Rgn appeared among a small set changing at early times (sap2015globalquantitativeproteomics pages 5-8).</td>
+<td>High-throughput quantitative proteomics, Sap et al. (published February 2015) (sap2015globalquantitativeproteomics pages 5-8)</td>
+<td>Low–moderate</td>
+<td>No Rgn-specific fold change, peptide validation, immunoblot, perturbation, or functional linkage to ecdysone was reported in the available text; the study’s detailed validation concerned BR-C, not Rgn.</td>
+</tr>
+<tr>
+<td>Recent research status, 2023–2024</td>
+<td>No <strong>2023–2024 Rgn/CG6014-specific</strong> mechanistic publication was retrieved. Modern regeneration studies refine blastema cell states and pathways, but available text does not explicitly validate <strong>rgn</strong> as a marker or effector (worley2021criticalgeneticprogram pages 24-35, worley2021criticalgeneticprogram pages 16-18).</td>
+<td>Targeted literature search plus comparison with a 2021 single-cell imaginal-disc regeneration study</td>
+<td>Moderate</td>
+<td>Search coverage and text availability are incomplete; failure to retrieve a paper is not definitive evidence of absence.</td>
+</tr>
+<tr>
+<td>Research applications</td>
+<td><strong>rgn</strong> is currently most defensible as a genetic entry point for studying how Wg-responsive programs coordinate the temporal and spatial organization of epithelial repair. Priority applications are endogenous tagging/localization, injury-resolved single-cell expression, Wg-response tests, genetic rescue/epistasis, and biochemical ligand screens.</td>
+<td>Evidence-guided research interpretation based on the established blastema phenotype and unresolved molecular mechanism (smithbolton2016drosophilaimaginaldiscsas pages 5-6, bergmann2010apoptosisstemcells pages 5-6)</td>
+<td>Moderate</td>
+<td>These are proposed research uses, not established clinical, agricultural, or biotechnology implementations.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Evidence-weighted summary for </em>Drosophila melanogaster<em> rgn/CG6014, separating functional genetics and proteomics from domain-based inference and unresolved questions. It highlights that blastema regulation is supported, whereas localization and biochemical activity remain unknown.</em></p>
+<h2 id="1-identity-and-domain-verification">1. Identity and domain verification</h2>
+<h3 id="11-correct-gene-and-organism">1.1 Correct gene and organism</h3>
+<p>The requested identifiers are mutually consistent: <em>rgn</em>, <em>regeneration</em>, CG6014/Dmel\CG6014, FBgn0261258, and UniProt M9PFV8 refer to a protein from <strong><em>Drosophila melanogaster</em></strong>. The phenotype literature describes a fly gene named <em>regeneration/rgn</em> implicated in imaginal-disc blastema formation, independently supporting the supplied identity (smithbolton2016drosophilaimaginaldiscsas pages 5-6, bergmann2010apoptosisstemcells pages 5-6).</p>
+<p>This qualification is essential because <strong>RGN</strong> commonly denotes vertebrate regucalcin in other literature. No regucalcin findings should be transferred to M9PFV8.</p>
+<h3 id="12-protein-architecture">1.2 Protein architecture</h3>
+<p>The supplied UniProt record assigns the protein a <strong>C-type lectin-like domain/fold</strong>, including InterPro IPR001304, IPR016186 and IPR016187 and Pfam <strong>Lectin_C/PF00059</strong>. This architecture is compatible with a molecular-recognition or protein-interaction role, but a C-type lectin-like fold does <strong>not</strong> by itself demonstrate carbohydrate binding, calcium dependence, secretion, receptor activity, or a particular ligand.</p>
+<p>No retrieved study reported purified Rgn protein, a solved structure, glycan-array analysis, calcium-binding measurements, ligand-binding kinetics, catalytic assays, or mutational analysis of the predicted domain. Accordingly, “C-type lectin-like protein” is an appropriate structural description; “C-type lectin” as an experimentally demonstrated biochemical function is not.</p>
+<h2 id="2-primary-biological-function">2. Primary biological function</h2>
+<h3 id="21-regulation-of-blastema-formation">2.1 Regulation of blastema formation</h3>
+<p>Rgn was initially identified through genetic screening related to altered tissue identity and outgrowth—transdetermination—and was subsequently tested in fragmented imaginal discs. A later authoritative review states that <em>rgn</em>, together with <em>mmp1</em> and <em>alr</em>, is important for blastema formation after disc fragmentation (smithbolton2016drosophilaimaginaldiscsas pages 5-6).</p>
+<p>The 2008 primary study is summarized in later sources as showing that Rgn controls the <strong>timing, site, and size</strong> of blastema formation. A mechanistic review places particular emphasis on <strong>timing</strong>, distinguishing Rgn from Alr, which regulates blastema-cell proliferation and the extent of regeneration, and Mmp1, which limits regenerative proliferation by controlling arrest outside the blastema (sap2015globalquantitativeproteomics pages 5-8, bergmann2010apoptosisstemcells pages 5-6). This distinction suggests that Rgn’s most specific established role is not simply “promoting proliferation”; rather, it helps determine <strong>when and where a regenerative growth zone forms and how it is delimited</strong>.</p>
+<p>The accessible evidence does not provide allele-by-allele effect sizes, rescue data, or enough primary-study detail to determine whether the timing, position, and size phenotypes reflect one molecular mechanism or several. Thus, “controls blastema formation” is secure, whereas a more specific biochemical explanation remains premature.</p>
+<h3 id="22-tissue-and-biological-process">2.2 Tissue and biological process</h3>
+<p>The demonstrated setting is the <strong>larval imaginal disc</strong>, a proliferative epithelial primordium that generates adult structures during metamorphosis. Following fragmentation or spatially restricted damage, proliferative activity becomes concentrated in a blastema near the wound. Cells near the wound produce larger clones than cells outside it, while distant cells reduce proliferation or arrest (smithbolton2016drosophilaimaginaldiscsas pages 5-6). Rgn’s phenotype should therefore be interpreted within <strong>epithelial wound repair, compensatory growth, and appendage-primordium regeneration</strong>.</p>
+<p>There is no comparable direct evidence in the retrieved literature for a primary role in adult gut repair, neuronal regeneration, immunity, metabolism, or normal organogenesis. Those functions should not be inferred merely because other C-type lectin-like proteins participate in such processes.</p>
+<h2 id="3-pathway-placement">3. Pathway placement</h2>
+<h3 id="31-winglesswnt-signaling">3.1 Wingless/Wnt signaling</h3>
+<p>The clearest pathway connection is to <strong>Wingless (Wg), the Drosophila Wnt ligand</strong>. An expert review describes <em>rgn</em> as one of at least three conserved Wg target genes functioning in P35-independent tissue regeneration and reports that genetic analysis assigned Rgn a role in blastema timing (bergmann2010apoptosisstemcells pages 5-6).</p>
+<p>In injured imaginal discs, Wg is induced near wound edges or in blastema-forming cells; Wg signaling promotes regenerative proliferation and induces growth regulators including Myc and Cyclin E (smithbolton2016drosophilaimaginaldiscsas pages 5-6). These observations provide the physiological setting for <em>rgn</em>, but they do not prove that Rgn directly binds Wg, is a Wg receptor, or transduces the canonical pathway. The conservative model is:</p>
+<p><strong>injury → Wg/Wnt response → induction or deployment of Rgn and other regeneration effectors → properly timed and positioned blastema formation.</strong></p>
+<p>Direct transcriptional regulation remains incompletely demonstrated in the retrieved evidence: no Rgn enhancer with TCF/Pangolin occupancy, reporter assay, ChIP result, or decisive epistasis experiment was available. Therefore, “Wg-responsive/target gene” is supported at the genetic-screen level; “direct canonical Wg transcriptional target” remains to be established.</p>
+<h3 id="32-jnk-hippoyorkie-jakstat-egfr-and-damage-signaling">3.2 JNK, Hippo/Yorkie, JAK/STAT, EGFR and damage signaling</h3>
+<p>JNK is activated at damaged disc margins and is needed for wound closure and regenerative growth. JNK-positive cells contribute extensively to regenerated tissue; JNK also promotes Yorkie activity through the Ajuba–Hippo module. Wg, JNK, Yorkie and other pathways collectively organize the blastema (smithbolton2016drosophilaimaginaldiscsas pages 5-6). However, the retrieved literature does <strong>not</strong> demonstrate that Rgn physically or genetically acts in the JNK–Hippo module.</p>
+<p>Modern single-cell work identified regeneration-specific epithelial populations and an Ets21C-associated program containing <em>Ilp8</em>, <em>Mmp1</em>, <em>upd1–3</em>, <em>Wnt4</em>, <em>Wnt6</em> and <em>wg</em>. In one dataset, regenerating discs comprised 6,613 epithelial cells, 7,466 myoblasts, 224 hemocytes and 17 tracheal cells; the study resolved two blastema populations that were nearly absent from normally developing discs (worley2021criticalgeneticprogram pages 24-35). Nevertheless, available text did not identify <em>rgn/CG6014</em> as a marker or Ets21C target. These recent pathway findings therefore provide context, not direct Rgn annotation.</p>
+<h2 id="4-cellular-and-subcellular-localization">4. Cellular and subcellular localization</h2>
+<p>The location at which the Rgn protein acts is <strong>unknown</strong>. Its phenotype is expressed at the level of the imaginal-disc blastema, but the retrieved evidence does not resolve whether Rgn is made by blastema epithelial cells, adjacent surviving cells, myoblasts, hemocytes, or another population. Nor does it establish whether the protein is extracellular, membrane-associated, cytoplasmic, organellar, or nuclear (sap2015globalquantitativeproteomics pages 5-8, smithbolton2016drosophilaimaginaldiscsas pages 5-6).</p>
+<p>The predicted C-type lectin-like domain may motivate a hypothesis of extracellular or cell-surface molecular recognition, but localization cannot be inferred from the fold alone. A defensible database annotation should therefore avoid assigning “secreted,” “plasma membrane,” or “extracellular matrix” without independent signal-peptide/topology evidence and experimental confirmation.</p>
+<p>Priority localization experiments would include endogenous CRISPR tagging with functional rescue, time-resolved imaging after injury, extracellular staining without permeabilization, secretion assays, and spatial transcriptomics or injury-stage single-cell RNA sequencing with explicit CG6014 analysis.</p>
+<h2 id="5-biochemical-mechanism-and-substrate-specificity">5. Biochemical mechanism and substrate specificity</h2>
+<p>No enzymatic reaction is known for Rgn. There is no evidence that it is a transporter, and no transported substrate has been identified. Likewise, no carbohydrate, glycoprotein, lipid, extracellular-matrix component, or protein ligand has been shown to bind Rgn.</p>
+<p>The best current molecular hypothesis is that its C-type lectin-like fold mediates <strong>molecular recognition or assembly of a signaling/adhesion complex</strong> during blastema organization. This remains an inference, not an established function. Suitable tests include recombinant-domain glycan arrays, unbiased affinity purification–mass spectrometry, proximity labeling in regenerating discs, surface-plasmon resonance against candidate ligands, calcium-dependence assays, and structure-guided mutation of conserved domain residues.</p>
+<h2 id="6-evidence-for-hormonal-regulation">6. Evidence for hormonal regulation</h2>
+<p>A 2015 SILAC proteomics study treated Drosophila Kc cells with ecdysone and quantified <strong>5,748 proteins at six time points spanning 0–96 hours</strong>. Rgn was among a small set of proteins whose abundance deviated at early time points, making it a candidate ecdysone-responsive protein (publication: February 2015; DOI/URL: https://doi.org/10.1002/pmic.201400308) (sap2015globalquantitativeproteomics pages 5-8).</p>
+<p>This result is suggestive because ecdysone coordinates larval development and metamorphosis, processes that constrain the regenerative window. Nevertheless, it is high-throughput evidence only. The accessible report gives no Rgn-specific fold change, peptide-spectrum validation, immunoblot, transcript confirmation, or functional perturbation. Detailed validation in the study concerned BR-C rather than Rgn (sap2015globalquantitativeproteomics pages 5-8). Rgn should therefore not yet be called an established component of the ecdysone pathway.</p>
+<h2 id="7-recent-developments-and-status-of-the-field">7. Recent developments and status of the field</h2>
+<p>No 2023–2024 publication specifically resolving Rgn/CG6014’s mechanism, ligand, structure, or localization was retrieved. The latest relevant advances instead concern the broader architecture of Drosophila regeneration: injury-specific epithelial states, secretory blastema programs, Ets21C-associated transcription, Wg/JNK signaling, and developmental-delay mechanisms. For example, single-cell analysis separated epithelial, myoblast and hemocyte populations and identified two regeneration-associated blastema clusters, but the accessible results did not explicitly implicate <em>rgn</em> (worley2021criticalgeneticprogram pages 24-35, worley2021criticalgeneticprogram pages 16-18).</p>
+<p>Thus, the gene remains substantially under-annotated despite modern systems-level resources. Absence from accessible text should not be interpreted as biological absence: CG6014 may be expressed below detection thresholds, in a narrow temporal window, or under an alternative identifier in supplementary matrices. Reanalysis of deposited single-cell datasets using FBgn0261258/CG6014 would be informative.</p>
+<h2 id="8-applications-and-real-world-implementation">8. Applications and real-world implementation</h2>
+<p>There is no documented clinical, diagnostic, agricultural or industrial implementation of Rgn. Its present application is primarily as a <strong>Drosophila genetic research target</strong> for dissecting how Wnt-responsive injury programs establish the timing, position and extent of regenerative growth.</p>
+<p>Potential research uses include:</p>
+<ol>
+<li>identifying molecular checkpoints that initiate a blastema;</li>
+<li>separating spatial organization of repair from generic mitogenic signaling;</li>
+<li>determining whether a lectin-like recognition mechanism links tissue damage to regenerative patterning;</li>
+<li>testing how endocrine maturation signals intersect with local injury responses; and</li>
+<li>comparing regenerative programs with aberrant growth, because injury-associated pathways can be co-opted in tumors.</li>
+</ol>
+<p>These are experimental opportunities, not established translational applications.</p>
+<h2 id="9-evidence-weighted-annotation-recommendation">9. Evidence-weighted annotation recommendation</h2>
+<p><strong>Recommended functional statement:</strong> “C-type lectin-like protein required for normal imaginal-disc regeneration; genetically regulates the timing and spatial organization of blastema formation and is associated with Wingless/Wnt-responsive regenerative signaling.”</p>
+<p><strong>Recommended biological processes:</strong> imaginal-disc regeneration; epithelial wound response; blastema formation; regulation of regenerative growth.</p>
+<p><strong>Pathway:</strong> Wg/Wnt-responsive regeneration, with broader JNK/Hippo/JAK–STAT injury signaling treated as contextual rather than directly demonstrated Rgn pathways.</p>
+<p><strong>Localization:</strong> unknown.</p>
+<p><strong>Molecular activity and ligand:</strong> unknown; no catalytic reaction, transporter substrate, or lectin ligand has been demonstrated.</p>
+<p><strong>Confidence:</strong> moderate-to-high for the blastema phenotype; moderate for Wg-pathway placement; low for any molecular-mechanistic or localization assignment.</p>
+<h2 id="key-references">Key references</h2>
+<ul>
+<li>McClure KD, Sustar A, Schubiger G. “Three genes control the timing, the site and the size of blastema formation in Drosophila.” <em>Developmental Biology</em> (July 2008). DOI/URL: https://doi.org/10.1016/j.ydbio.2008.04.004. The direct genetic study is not fully accessible in the retrieved corpus; its findings are corroborated by subsequent peer-reviewed reviews (sap2015globalquantitativeproteomics pages 5-8, smithbolton2016drosophilaimaginaldiscsas pages 5-6, bergmann2010apoptosisstemcells pages 5-6).</li>
+<li>Bergmann A, Steller H. “Apoptosis, Stem Cells, and Tissue Regeneration.” <em>Science Signaling</em> (26 October 2010), 3:re8. https://doi.org/10.1126/scisignal.3145re8 (bergmann2010apoptosisstemcells pages 5-6).</li>
+<li>Sap KA et al. “Global quantitative proteomics reveals novel factors in the ecdysone signaling pathway in Drosophila melanogaster.” <em>PROTEOMICS</em> (February 2015), 15:725–738. https://doi.org/10.1002/pmic.201400308 (sap2015globalquantitativeproteomics pages 5-8).</li>
+<li>Smith-Bolton RK. “Drosophila Imaginal Discs as a Model of Epithelial Wound Repair and Regeneration.” <em>Advances in Wound Care</em> (June 2016), 5:251–261. https://doi.org/10.1089/wound.2014.0547 (smithbolton2016drosophilaimaginaldiscsas pages 5-6).</li>
+<li>Worley MI et al. “Critical genetic program for Drosophila imaginal disc regeneration revealed by single-cell analysis.” bioRxiv (July 2021). https://doi.org/10.1101/2021.07.08.451678. This supplies current blastema-cell context but no explicit Rgn-specific validation in the accessible text (worley2021criticalgeneticprogram pages 24-35, worley2021criticalgeneticprogram pages 16-18).</li>
+</ul>
+<p>References</p>
+<ol>
+<li>
+<p>(smithbolton2016drosophilaimaginaldiscsas pages 5-6): Rachel K. Smith-Bolton. <i>drosophila</i>imaginal discs as a model of epithelial wound repair and regeneration. Jun 2016. URL: https://doi.org/10.1089/wound.2014.0547, doi:10.1089/wound.2014.0547. This article has 33 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bergmann2010apoptosisstemcells pages 5-6): Andreas Bergmann and Hermann Steller. Apoptosis, stem cells, and tissue regeneration. Science Signaling, 3:re8-re8, Oct 2010. URL: https://doi.org/10.1126/scisignal.3145re8, doi:10.1126/scisignal.3145re8. This article has 418 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(sap2015globalquantitativeproteomics pages 5-8): Karen A. Sap, Karel Bezstarosti, Dick H. W. Dekkers, Mirjam van den Hout, Wilfred van Ijcken, Erikjan Rijkers, and Jeroen A. A. Demmers. Global quantitative proteomics reveals novel factors in the ecdysone signaling pathway in drosophila melanogaster. PROTEOMICS, 15:725-738, Feb 2015. URL: https://doi.org/10.1002/pmic.201400308, doi:10.1002/pmic.201400308. This article has 15 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(worley2021criticalgeneticprogram pages 24-35): Melanie I. Worley, Nicholas J. Everetts, Riku Yasutomi, Nir Yosef, and Iswar K. Hariharan. Critical genetic program for drosophila imaginal disc regeneration revealed by single-cell analysis. bioRxiv, Jul 2021. URL: https://doi.org/10.1101/2021.07.08.451678, doi:10.1101/2021.07.08.451678. This article has 3 citations.</p>
+</li>
+<li>
+<p>(worley2021criticalgeneticprogram pages 16-18): Melanie I. Worley, Nicholas J. Everetts, Riku Yasutomi, Nir Yosef, and Iswar K. Hariharan. Critical genetic program for drosophila imaginal disc regeneration revealed by single-cell analysis. bioRxiv, Jul 2021. URL: https://doi.org/10.1101/2021.07.08.451678, doi:10.1101/2021.07.08.451678. This article has 3 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="rgn-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>bergmann2010apoptosisstemcells pages 5-6</li>
+<li>sap2015globalquantitativeproteomics pages 5-8</li>
+<li>smithbolton2016drosophilaimaginaldiscsas pages 5-6</li>
+<li>worley2021criticalgeneticprogram pages 24-35</li>
+<li>worley2021criticalgeneticprogram pages 16-18</li>
+<li>https://doi.org/10.1002/pmic.201400308</li>
+<li>https://doi.org/10.1016/j.ydbio.2008.04.004.</li>
+<li>https://doi.org/10.1126/scisignal.3145re8</li>
+<li>https://doi.org/10.1089/wound.2014.0547</li>
+<li>https://doi.org/10.1101/2021.07.08.451678.</li>
+<li>https://doi.org/10.1089/wound.2014.0547,</li>
+<li>https://doi.org/10.1126/scisignal.3145re8,</li>
+<li>https://doi.org/10.1002/pmic.201400308,</li>
+<li>https://doi.org/10.1101/2021.07.08.451678,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rgn-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="M9PFV8" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="rgn-m9pfv8-evidence-and-protnlm-claim-review">rgn (M9PFV8): evidence and ProtNLM claim review</h1>
+<p>Regeneration is a secretory-pathway C-type-lectin-domain protein implicated in imaginal-disc regeneration. Genetic perturbation affects blastema formation and growth, while its ligand specificity and the relationship between the 808-residue isoform and its inferred trans-Golgi localization remain unresolved.</p>
+<p>Exact input: <a href="https://www.uniprot.org/uniprotkb/M9PFV8/entry">M9PFV8</a>, 808 residues. The accession was fetched explicitly with the gene-directory alias; no canonical-sequence substitution is made.</p>
+<p>Raw emitted predictions: <a href="rgn-predictions-source.json">rgn-predictions-source.json</a>. Source features: <a href="rgn-uniprot.txt">rgn-uniprot.txt</a>, with an exact extraction in <a href="rgn-sequence-evidence.json">rgn-sequence-evidence.json</a>.</p>
+<h2 id="sequence-and-domain-evidence">Sequence and domain evidence</h2>
+<p>These are sequence/domain observations or explicitly named feature predictions, not measurements of biological function. ARBA assertions and ProtNLM-derived UniProt names are not counted as validation.</p>
+<div class="codehilite"><pre><span></span><code>DR   InterPro; IPR001304; C-type_lectin-like.
+DR   InterPro; IPR016186; C-type_lectin-like/link_sf.
+DR   InterPro; IPR016187; CTDL_fold.
+FT   SIGNAL          1..23
+FT                   /evidence=&quot;ECO:0000256|SAM:SignalP&quot;
+FT   DOMAIN          70..199
+FT                   /note=&quot;C-type lectin&quot;
+FT                   /evidence=&quot;ECO:0000259|PROSITE:PS50041&quot;
+</code></pre></div>
+
+<h2 id="protnlm-claims">ProtNLM claims</h2>
+<p>The snapshot emits names and location/keyword statements, with no GO or EC prediction for this target. Each actual statement is assessed below; no GO term has been substituted for it. Categories follow the function-prediction rubric, with nonspecific “uncharacterized” names marked UNC because they contain no testable function. CNN records an independently supported existing annotation; it does not assert a particular training-set composition.</p>
+<table>
+<thead>
+<tr>
+<th>Kind</th>
+<th>Verbatim emitted statement</th>
+<th>Assessment</th>
+<th>Evidence and limitation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td>C-type lectin domain-containing protein</td>
+<td>CNN</td>
+<td>PROSITE identifies a C-type lectin-like domain at residues 70-199; PMID:18485344 independently describes the signal sequence and CTLD in Rgn. The domain claim is supported without assigning carbohydrate specificity.</td>
+</tr>
+<tr>
+<td>Location</td>
+<td>Secreted (SL-0243)</td>
+<td>UNC</td>
+<td>The signal peptide and lectin domain make secretion plausible, and PMID:18485344 independently discusses this architecture. However, the exact long isoform has curated trans-Golgi/vesicle assertions and no direct secretion assay; secretory-pathway entry does not establish release as a soluble extracellular protein.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="literature-evidence">Literature evidence</h2>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/18485344">PMID:18485344</a>(https://pubmed.ncbi.nlm.nih.gov/18485344/): “We identified three genes, regeneration (rgn), augmenter of liver regeneration (alr) and Matrix metalloproteinase-1 (Mmp1) expressed specifically in blastema cells during disc regeneration.”</li>
+</ul>
+<h2 id="annotation-decisions">Annotation decisions</h2>
+<ul>
+<li>GO:0005802 trans-Golgi network (IBA): <strong>UNDECIDED</strong>. The IBA is a curated phylogenetic assertion. The 808-residue record contains an N-terminal signal peptide and a C-type lectin domain; those features establish secretory-pathway compatibility but do not distinguish soluble secretion from Golgi residence.</li>
+<li>GO:0030140 trans-Golgi network transport vesicle (IBA): <strong>UNDECIDED</strong>. A signal peptide and lectin fold do not identify a trans-Golgi transport vesicle. No exact-isoform localization experiment or resolved ancestral assertion is available in the inspected evidence.</li>
+<li>GO:0030246 carbohydrate binding (IEA): <strong>UNDECIDED</strong>. Several proteins retain this fold without the canonical carbohydrate-binding activity. The exact target has no mapped ligand-binding assay.</li>
+<li>GO:0030246 carbohydrate binding (ISS): <strong>UNDECIDED</strong>. PMID:16475980 directly assays DL1 and discusses Drosophila lectins. It supplies useful family biology but does not establish carbohydrate binding by the long Rgn isoform; target-specific ligand or conserved-binding-site evidence is required.</li>
+<li>GO:0042246 tissue regeneration (IEP): <strong>KEEP_AS_NON_CORE</strong>. PMID:18485344 reports rgn expression in regenerating blastema cells. Expression alone does not define a molecular function; the accompanying genetic evidence supports the biological role.</li>
+<li>GO:0042246 tissue regeneration (IMP): <strong>ACCEPT</strong>. The full text of PMID:18485344 maps rgn alleles to CG6014 and reports altered blastema regeneration after genetic perturbation. The gene-level process is well supported although the molecular mechanism and isoform contributions remain unresolved.</li>
+</ul>
+<h2 id="research-provenance">Research provenance</h2>
+<p>Genuine external literature research is requested through the repository Falcon wrapper, with perplexity-lite configured as fallback. Provider output is retained separately as <code>rgn-deep-research-&lt;provider&gt;.md</code>; its source leads are checked against the underlying publications and exact sequence record.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: M9PFV8
+gene_symbol: rgn
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:7227
+  label: Drosophila melanogaster
+description: Regeneration is a secretory-pathway C-type-lectin-domain protein implicated in imaginal-disc
+  regeneration. Genetic perturbation affects blastema formation and growth, while its ligand specificity
+  and the relationship between the 808-residue isoform and its inferred trans-Golgi localization remain
+  unresolved.
+existing_annotations:
+- term:
+    id: GO:0005802
+    label: trans-Golgi network
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  supporting_entities:
+  - MGI:MGI:105079
+  - MGI:MGI:105080
+  - PANTHER:PTN000575073
+  - RGD:620445
+  - UniProtKB:O43493
+  review:
+    action: UNDECIDED
+    summary: Trans-Golgi-network residence is unresolved for the exact long isoform.
+    reason: The IBA is a curated phylogenetic assertion. The 808-residue record contains an N-terminal
+      signal peptide and a C-type lectin domain; those features establish secretory-pathway compatibility
+      but do not distinguish soluble secretion from Golgi residence.
+    supported_by:
+    - reference_id: file:DROME/rgn/rgn-uniprot.txt
+      supporting_text: DR   InterPro; IPR001304; C-type_lectin-like.
+    - reference_id: file:DROME/rgn/rgn-uniprot.txt
+      supporting_text: DR   InterPro; IPR016186; C-type_lectin-like/link_sf.
+    - reference_id: file:DROME/rgn/rgn-uniprot.txt
+      supporting_text: &#39;FT   SIGNAL          1..23
+
+        FT                   /evidence=&#34;ECO:0000256|SAM:SignalP&#34;&#39;
+    - reference_id: file:DROME/rgn/rgn-uniprot.txt
+      supporting_text: &#39;FT   DOMAIN          70..199
+
+        FT                   /note=&#34;C-type lectin&#34;
+
+        FT                   /evidence=&#34;ECO:0000259|PROSITE:PS50041&#34;&#39;
+    - reference_id: PMID:18485344
+      supporting_text: &#39;We identified three genes, regeneration (rgn), augmenter
+
+        of liver regeneration (alr) and Matrix metalloproteinase-1 (Mmp1) expressed
+
+        specifically in blastema cells during disc regeneration.&#39;
+- term:
+    id: GO:0030140
+    label: trans-Golgi network transport vesicle
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  supporting_entities:
+  - MGI:MGI:105079
+  - PANTHER:PTN000575073
+  review:
+    action: UNDECIDED
+    summary: Transport-vesicle residence needs a resolved localization inference.
+    reason: A signal peptide and lectin fold do not identify a trans-Golgi transport vesicle. No exact-isoform
+      localization experiment or resolved ancestral assertion is available in the inspected evidence.
+    supported_by:
+    - reference_id: file:DROME/rgn/rgn-uniprot.txt
+      supporting_text: DR   InterPro; IPR001304; C-type_lectin-like.
+    - reference_id: file:DROME/rgn/rgn-uniprot.txt
+      supporting_text: DR   InterPro; IPR016186; C-type_lectin-like/link_sf.
+    - reference_id: file:DROME/rgn/rgn-uniprot.txt
+      supporting_text: &#39;FT   SIGNAL          1..23
+
+        FT                   /evidence=&#34;ECO:0000256|SAM:SignalP&#34;&#39;
+    - reference_id: file:DROME/rgn/rgn-uniprot.txt
+      supporting_text: &#39;FT   DOMAIN          70..199
+
+        FT                   /note=&#34;C-type lectin&#34;
+
+        FT                   /evidence=&#34;ECO:0000259|PROSITE:PS50041&#34;&#39;
+    - reference_id: PMID:18485344
+      supporting_text: &#39;We identified three genes, regeneration (rgn), augmenter
+
+        of liver regeneration (alr) and Matrix metalloproteinase-1 (Mmp1) expressed
+
+        specifically in blastema cells during disc regeneration.&#39;
+- term:
+    id: GO:0030246
+    label: carbohydrate binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: enables
+  supporting_entities:
+  - UniRule:UR000415793
+  review:
+    action: UNDECIDED
+    summary: A C-type lectin-like fold does not establish carbohydrate binding.
+    reason: Several proteins retain this fold without the canonical carbohydrate-binding activity. The
+      exact target has no mapped ligand-binding assay.
+    supported_by:
+    - reference_id: file:DROME/rgn/rgn-uniprot.txt
+      supporting_text: DR   InterPro; IPR001304; C-type_lectin-like.
+    - reference_id: file:DROME/rgn/rgn-uniprot.txt
+      supporting_text: DR   InterPro; IPR016186; C-type_lectin-like/link_sf.
+    - reference_id: file:DROME/rgn/rgn-uniprot.txt
+      supporting_text: &#39;FT   SIGNAL          1..23
+
+        FT                   /evidence=&#34;ECO:0000256|SAM:SignalP&#34;&#39;
+    - reference_id: file:DROME/rgn/rgn-uniprot.txt
+      supporting_text: &#39;FT   DOMAIN          70..199
+
+        FT                   /note=&#34;C-type lectin&#34;
+
+        FT                   /evidence=&#34;ECO:0000259|PROSITE:PS50041&#34;&#39;
+    - reference_id: PMID:18485344
+      supporting_text: &#39;We identified three genes, regeneration (rgn), augmenter
+
+        of liver regeneration (alr) and Matrix metalloproteinase-1 (Mmp1) expressed
+
+        specifically in blastema cells during disc regeneration.&#39;
+- term:
+    id: GO:0030246
+    label: carbohydrate binding
+  evidence_type: ISS
+  original_reference_id: PMID:16475980
+  qualifier: enables
+  supporting_entities:
+  - FB:FBgn0016675
+  review:
+    action: UNDECIDED
+    summary: The ISS lectin-binding transfer needs more specific support.
+    reason: PMID:16475980 directly assays DL1 and discusses Drosophila lectins. It supplies useful family
+      biology but does not establish carbohydrate binding by the long Rgn isoform; target-specific ligand
+      or conserved-binding-site evidence is required.
+    supported_by:
+    - reference_id: file:DROME/rgn/rgn-uniprot.txt
+      supporting_text: DR   InterPro; IPR001304; C-type_lectin-like.
+    - reference_id: file:DROME/rgn/rgn-uniprot.txt
+      supporting_text: DR   InterPro; IPR016186; C-type_lectin-like/link_sf.
+    - reference_id: file:DROME/rgn/rgn-uniprot.txt
+      supporting_text: &#39;FT   SIGNAL          1..23
+
+        FT                   /evidence=&#34;ECO:0000256|SAM:SignalP&#34;&#39;
+    - reference_id: file:DROME/rgn/rgn-uniprot.txt
+      supporting_text: &#39;FT   DOMAIN          70..199
+
+        FT                   /note=&#34;C-type lectin&#34;
+
+        FT                   /evidence=&#34;ECO:0000259|PROSITE:PS50041&#34;&#39;
+    - reference_id: PMID:18485344
+      supporting_text: &#39;We identified three genes, regeneration (rgn), augmenter
+
+        of liver regeneration (alr) and Matrix metalloproteinase-1 (Mmp1) expressed
+
+        specifically in blastema cells during disc regeneration.&#39;
+- term:
+    id: GO:0042246
+    label: tissue regeneration
+  evidence_type: IEP
+  original_reference_id: PMID:18485344
+  qualifier: involved_in
+  review:
+    action: KEEP_AS_NON_CORE
+    summary: Regeneration-associated expression supports physiological context.
+    reason: PMID:18485344 reports rgn expression in regenerating blastema cells. Expression alone does
+      not define a molecular function; the accompanying genetic evidence supports the biological role.
+    supported_by:
+    - reference_id: file:DROME/rgn/rgn-uniprot.txt
+      supporting_text: DR   InterPro; IPR001304; C-type_lectin-like.
+    - reference_id: file:DROME/rgn/rgn-uniprot.txt
+      supporting_text: DR   InterPro; IPR016186; C-type_lectin-like/link_sf.
+    - reference_id: file:DROME/rgn/rgn-uniprot.txt
+      supporting_text: &#39;FT   SIGNAL          1..23
+
+        FT                   /evidence=&#34;ECO:0000256|SAM:SignalP&#34;&#39;
+    - reference_id: file:DROME/rgn/rgn-uniprot.txt
+      supporting_text: &#39;FT   DOMAIN          70..199
+
+        FT                   /note=&#34;C-type lectin&#34;
+
+        FT                   /evidence=&#34;ECO:0000259|PROSITE:PS50041&#34;&#39;
+    - reference_id: PMID:18485344
+      supporting_text: &#39;We identified three genes, regeneration (rgn), augmenter
+
+        of liver regeneration (alr) and Matrix metalloproteinase-1 (Mmp1) expressed
+
+        specifically in blastema cells during disc regeneration.&#39;
+- term:
+    id: GO:0042246
+    label: tissue regeneration
+  evidence_type: IMP
+  original_reference_id: PMID:18485344
+  qualifier: involved_in
+  review:
+    action: ACCEPT
+    summary: Rgn contributes to imaginal-disc regeneration.
+    reason: The full text of PMID:18485344 maps rgn alleles to CG6014 and reports altered blastema regeneration
+      after genetic perturbation. The gene-level process is well supported although the molecular mechanism
+      and isoform contributions remain unresolved.
+    supported_by:
+    - reference_id: file:DROME/rgn/rgn-uniprot.txt
+      supporting_text: DR   InterPro; IPR001304; C-type_lectin-like.
+    - reference_id: file:DROME/rgn/rgn-uniprot.txt
+      supporting_text: DR   InterPro; IPR016186; C-type_lectin-like/link_sf.
+    - reference_id: file:DROME/rgn/rgn-uniprot.txt
+      supporting_text: &#39;FT   SIGNAL          1..23
+
+        FT                   /evidence=&#34;ECO:0000256|SAM:SignalP&#34;&#39;
+    - reference_id: file:DROME/rgn/rgn-uniprot.txt
+      supporting_text: &#39;FT   DOMAIN          70..199
+
+        FT                   /note=&#34;C-type lectin&#34;
+
+        FT                   /evidence=&#34;ECO:0000259|PROSITE:PS50041&#34;&#39;
+    - reference_id: PMID:18485344
+      supporting_text: &#39;We identified three genes, regeneration (rgn), augmenter
+
+        of liver regeneration (alr) and Matrix metalloproteinase-1 (Mmp1) expressed
+
+        specifically in blastema cells during disc regeneration.&#39;
+references:
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations between related
+    proteins based on shared sequence features
+  findings: []
+- id: PMID:16475980
+  title: Participation of a galactose-specific C-type lectin in Drosophila immunity.
+  full_text_unavailable: false
+  findings: []
+- id: PMID:18485344
+  title: Three genes control the timing, the site and the size of blastema formation in Drosophila.
+  full_text_unavailable: false
+  findings: []
+- id: file:DROME/rgn/rgn-uniprot.txt
+  title: DROME/rgn/rgn-uniprot.txt
+  findings: []
+core_functions:
+- description: Regeneration is a secretory-pathway C-type-lectin-domain protein implicated in imaginal-disc
+    regeneration. Genetic perturbation affects blastema formation and growth, while its ligand specificity
+    and the relationship between the 808-residue isoform and its inferred trans-Golgi localization remain
+    unresolved.
+  supported_by:
+  - reference_id: PMID:18485344
+    supporting_text: &#39;We identified three genes, regeneration (rgn), augmenter
+
+      of liver regeneration (alr) and Matrix metalloproteinase-1 (Mmp1) expressed
+
+      specifically in blastema cells during disc regeneration.&#39;
+  directly_involved_in:
+  - id: GO:0042246
+    label: tissue regeneration
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

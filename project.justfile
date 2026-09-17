@@ -6,6 +6,8 @@ oak_config := "conf/oak_config.yaml"
 ref_validator_config := "conf/reference_validator_config.yaml"
 term_validator := "scripts/run_term_validator.sh"
 ref_validator := "scripts/run_reference_validator.sh"
+history_schema_path := "src/ai_gene_review/schema/history.yaml"
+history_dir := "history"
 
 all: validate-all test
 
@@ -91,23 +93,53 @@ sync-codex-skills:
 # Fetch gene data from UniProt and GOA
 # Use --alias to specify a custom directory name and file prefix
 # Use --force to overwrite existing UniProt and GOA files
+# Accession precedence: --uniprot-id, existing review id, then symbol resolution
 # Example: just fetch-gene 9BACT F0JBF1 --alias HgcB
 # Example: just fetch-gene human TP53 --force
-fetch-gene organism gene *args="":
+[positional-arguments]
+fetch-gene organism gene *args:
     #!/usr/bin/env bash
+    set -euo pipefail
+    organism="$1"
+    gene="$2"
+    shift 2
+
+    force=0
+    file_prefix="$gene"
+    expect_alias=0
+    for arg in "$@"; do
+        if (( expect_alias == 1 )); then
+            file_prefix="$arg"
+            expect_alias=0
+            continue
+        fi
+        case "$arg" in
+            --alias|-a) expect_alias=1 ;;
+            --alias=*) file_prefix="${arg#--alias=}" ;;
+            -a?*) file_prefix="${arg#-a}" ;;
+            -fa) force=1; expect_alias=1 ;;
+            -fa?*) force=1; file_prefix="${arg#-fa}" ;;
+            --force|-f) force=1 ;;
+            --) break ;;
+        esac
+    done
+    if [ -z "$file_prefix" ]; then
+        file_prefix="$gene"
+    fi
+
     # Check if gene directory already exists and warn if --force not used
-    gene_dir="genes/{{organism}}/{{gene}}"
-    if [[ "{{args}}" != *"--force"* ]] && [ -d "$gene_dir" ]; then
-        uniprot_file="$gene_dir/{{gene}}-uniprot.txt"
-        goa_file="$gene_dir/{{gene}}-goa.tsv"
+    gene_dir="genes/$organism/$file_prefix"
+    if (( force == 0 )) && [ -d "$gene_dir" ]; then
+        uniprot_file="$gene_dir/$file_prefix-uniprot.txt"
+        goa_file="$gene_dir/$file_prefix-goa.tsv"
         if [ -f "$uniprot_file" ] || [ -f "$goa_file" ]; then
-            echo "⚠️  Gene data for {{organism}}/{{gene}} already exists."
+            echo "⚠️  Gene data for $organism/$file_prefix already exists."
             echo "   To prevent churn, existing files will not be overwritten unless they differ from remote."
-            echo "   Use 'just fetch-gene {{organism}} {{gene}} --force' to force overwrite."
+            echo "   Add --force to this command to force overwrite."
             echo ""
         fi
     fi
-    uv run --no-dev ai-gene-review fetch-gene {{organism}} {{gene}} --output-dir . {{args}}
+    uv run --no-dev ai-gene-review fetch-gene "$organism" "$gene" --output-dir . "$@"
 
 # Fetch ncRNA gene data from RNAcentral
 # Use --alias to specify a custom directory name and file prefix
@@ -115,12 +147,24 @@ fetch-gene organism gene *args="":
 # Example: just fetch-ncrna human SNORD3A
 # Example: just fetch-ncrna human XIST --alias lncRNA-XIST
 # Example: just fetch-ncrna human U1 --rnacentral-id URS000012345_9606
-fetch-ncrna organism gene *args="":
-    uv run ai-gene-review fetch-ncrna {{organism}} {{gene}} --output-dir . {{args}}
+[positional-arguments]
+fetch-ncrna organism gene *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    organism="$1"
+    gene="$2"
+    shift 2
+    uv run ai-gene-review fetch-ncrna "$organism" "$gene" --output-dir . "$@"
 
 # Fetch ncRNA gene data from RNAcentral (alias for consistency)
-fetch-rna-gene organism gene *args="":
-    uv run ai-gene-review fetch-ncrna {{organism}} {{gene}} --output-dir . {{args}}
+[positional-arguments]
+fetch-rna-gene organism gene *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    organism="$1"
+    gene="$2"
+    shift 2
+    uv run ai-gene-review fetch-ncrna "$organism" "$gene" --output-dir . "$@"
 
 # Fetch gene descriptions from external sources (Alliance_Imported, Alliance_Automated, UniProt, RefSeq)
 # Example: just fetch-descriptions yeast CAT2
@@ -146,6 +190,54 @@ fetch-panther-paint family *args="":
 # Families whose members resolve to no node-level annotations are skipped.
 fetch-panther-paint-all *args="":
     uv run ai-gene-review fetch-panther-paint --all --output-dir . {{args}}
+
+# Regenerate the PANTHER IBA project tables through public wrapper recipes.
+# These may download cached PAINT source data on the first run.
+[group('QC')]
+refresh-panther-iba-propagation:
+    uv run python projects/PANTHER_IBA_REVIEW/extract_iba_propagation.py
+
+[group('QC')]
+refresh-panther-iba-node-annotations:
+    uv run python projects/PANTHER_IBA_REVIEW/extract_node_annotations.py
+
+[group('QC')]
+refresh-panther-iba-function-losses:
+    uv run python projects/PANTHER_IBA_REVIEW/extract_function_losses.py
+
+[group('QC')]
+refresh-panther-iba-project: refresh-panther-iba-propagation refresh-panther-iba-node-annotations refresh-panther-iba-function-losses
+
+# Rebuild interpro/panther/panther.obo from PANTHER's HMM classifications.
+# This is the authority behind PANTHER family/subfamily id + label validation
+# (conf/oak_config.yaml routes the PANTHER prefix at it). Re-run after a PANTHER
+# release bump, then re-run `just validate-modules`.
+# NOTE ON CHURN: the artifact is ~14 MB / 700k lines and is regenerated wholesale,
+# so a release bump rewrites the entire file in one commit. That is the price of
+# offline, reproducible, pinned-release validation; expect the diff to be large
+# and review it by the reported family/subfamily counts rather than line by line.
+# A bump will also surface label drift as new validation errors -- run
+# `just fix-panther-labels` afterwards, and check any DIVERGENT labels by hand.
+[group('QC')]
+build-panther-obo *args="":
+    uv run ai-gene-review build-panther-obo --output-dir . {{args}}
+
+# Refresh interpro/panther/panther-members.tsv (UniProt accession -> PANTHER
+# family) for the accessions cited as representative_members in modules/.
+# This backs the check that a declared family really contains its own member,
+# which is what distinguishes a mis-grounded family from a mislabelled one.
+# Run after adding modules that cite new representative proteins.
+[group('QC')]
+refresh-panther-members *args="":
+    uv run ai-gene-review refresh-panther-members --output-dir . {{args}}
+
+# Verify every committed interpro/panther/*/*-paint.tsv row against PANTHER's
+# upstream IBD.gaf. PTN claims are validated against slices that curation PRs
+# commit alongside the claim, so without this the check is self-certifying.
+# Network-bound; intended for the scheduled full run rather than per-PR CI.
+[group('QC')]
+verify-panther-paint *args="":
+    uv run ai-gene-review verify-panther-paint --output-dir . {{args}}
 
 # Fetch and cache a single GO-CAM model to gocams/<id>/<id>-src.yaml
 # Example: just fetch-gocam gomodel:568b0f9600000284
@@ -188,6 +280,12 @@ descriptions-status organism *args="":
 #   just litscan-module-member --date-from 2026-01-01 --date-to 2026-06-19
 litscan-module-member *args="":
     uv run ai-gene-review litscan module-member {{args}}
+
+# Generic provider-selecting entry point documented in AGENTS.md and automation prompts.
+# Supports --provider, --alias, --fallback, --timeout, and --extra-args (which must come last).
+# Example: just deep-research human TP53 --provider perplexity
+deep-research organism gene_id *args="":
+    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} {{args}}
 
 # Deep research using OpenAI (GPT models)
 # Gene symbol automatically looked up from UniProt file if --alias not provided
@@ -257,7 +355,7 @@ deep-research-asta organism gene_id *args="":
 #   just deep-research-codex human TP53
 #   just deep-research-codex METEA C5B1I4 --alias mllA
 deep-research-codex organism gene_id *args="":
-    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} cyberian --extra-args --param agent_type=codex {{args}}
+    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} codex {{args}}
 
 # Deep research on an InterPro entry (family/domain) behind InterPro2GO annotations.
 # Metadata is auto-fetched and cached under interpro/<database>/<ID>/ if absent.
@@ -675,7 +773,7 @@ term-deep-research-cyberian concept *args="":
     uv run python scripts/concept_deep_research_wrapper.py "{{concept}}" cyberian {{args}}
 
 term-deep-research-codex concept *args="":
-    uv run python scripts/concept_deep_research_wrapper.py "{{concept}}" cyberian --extra-args --param agent_type=codex {{args}}
+    uv run python scripts/concept_deep_research_wrapper.py "{{concept}}" codex {{args}}
 
 # Module deep research (targets module YAMLs and writes beside the YAML by default)
 # Examples:
@@ -715,16 +813,57 @@ module-pathway-deep-research-falcon module pathway organism *args="":
     uv run python scripts/module_pathway_taxon_deep_research_wrapper.py "{{module}}" "{{pathway}}" "{{organism}}" falcon {{args}}
 
 # Fetch a specific PMID
-fetch-pmid pmid output_dir="publications":
-    uv run ai-gene-review fetch-pmid {{pmid}} --output-dir {{output_dir}}
+[positional-arguments]
+fetch-pmid pmid *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    pmids=("$1")
+    shift
+    while (( $# > 0 )) && [[ "$1" =~ ^(PMID:)?[0-9]+$ ]]; do
+        pmids+=("$1")
+        shift
+    done
+    output_dir="publications"
+    if (( $# > 0 )) && [[ "$1" != -* ]]; then
+        output_dir="$1"
+        shift
+    fi
+    uv run ai-gene-review fetch-pmid "${pmids[@]}" --output-dir "$output_dir" "$@"
 
 # Fetch all PMIDs referenced in a gene's review file
-fetch-gene-pmids organism gene output_dir="publications":
-    uv run ai-gene-review fetch-gene-pmids {{organism}} {{gene}} --output-dir {{output_dir}}
+[positional-arguments]
+fetch-gene-pmids organism gene *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    organism="$1"
+    gene="$2"
+    shift 2
+    output_dir="publications"
+    if (( $# > 0 )) && [[ "$1" != -* ]]; then
+        output_dir="$1"
+        shift
+    fi
+    uv run ai-gene-review fetch-gene-pmids "$organism" "$gene" --output-dir "$output_dir" "$@"
+
+# Fetch FEBA/RB-TnSeq fitness evidence for a bacterial gene.
+# Writes genes/ORGANISM/GENE/GENE-fitness.md.
+# Example: just fetch-fitness ECOLI SlyD
+fetch-fitness organism gene:
+    uv run python scripts/fetch_fitness_data.py {{organism}} {{gene}}
 
 # Fetch PMIDs from a file
-fetch-pmids-from-file file output_dir="publications":
-    uv run ai-gene-review fetch-pmids-from-file {{file}} --output-dir {{output_dir}}
+[positional-arguments]
+fetch-pmids-from-file file *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    input_file="$1"
+    shift
+    output_dir="publications"
+    if (( $# > 0 )) && [[ "$1" != -* ]]; then
+        output_dir="$1"
+        shift
+    fi
+    uv run ai-gene-review fetch-pmids-from-file "$input_file" --output-dir "$output_dir" "$@"
 
 # Refresh PMID titles in gene review YAML files (replaces TODO placeholders with actual titles)
 refresh-pmid-titles organism="" gene="":
@@ -814,6 +953,14 @@ audit-fulltext-flags *args="":
 [group('QC')]
 validate-references file:
     {{ref_validator}} validate data {{file}} --schema {{schema_path}} --target-class GeneReview --config {{ref_validator_config}}
+
+# Schema and source-evidence validation for external prediction review sidecars.
+# Missing publication caches are fetched; unavailable sources fail rather than
+# silently certifying an unchecked quotation. Caches remain regenerable context.
+[group('QC')]
+validate-predictions +files:
+    uv run linkml-validate --schema {{schema_path}} --target-class PredictionReview {{files}}
+    uv run python -m ai_gene_review.validation.prediction_evidence --fetch --require-excerpts --report reports/prediction-evidence.json {{files}}
 
 # Reference validation for all gene review files
 [group('QC')]
@@ -1059,15 +1206,15 @@ validate-all:
 
 # Compliance report for recommended fields (separate from validation-all.tsv)
 compliance-all:
-    @echo "Analyzing recommended-field compliance..."
+    @echo "Analyzing evidence-aware compliance..."
     @mkdir -p reports
-    uv run ai-gene-review compliance --tsv-output reports/compliance-all.tsv "genes/*/*/*-ai-review.yaml"
+    uv run ai-gene-review compliance --config conf/qc_config.yaml --tsv-output reports/compliance-all.tsv --summary-output reports/compliance-summary.tsv "genes/*/*/*-ai-review.yaml"
 
 # Compliance report with HTML dashboard (linkml-data-qc)
 compliance-dashboard:
     @echo "Generating compliance dashboard..."
     @mkdir -p reports/compliance-dashboard
-    uv run linkml-data-qc --schema src/ai_gene_review/schema/gene_review.yaml --target-class GeneReview --dashboard-dir reports/compliance-dashboard genes --pattern "**/*-ai-review.yaml"
+    uv run ai-gene-review compliance --config conf/qc_config.yaml --tsv-output reports/compliance-all.tsv --summary-output reports/compliance-summary.tsv --dashboard-dir reports/compliance-dashboard "genes/*/*/*-ai-review.yaml"
 
 # Validate all gene review files (summary only, no details)
 validate-all-summary:
@@ -1360,6 +1507,14 @@ render-organism organism:
 render-all:
     uv run python -m ai_gene_review.render --all genes/
 
+# Assemble the already-rendered public site without changing the active Pages source.
+# This transitional artifact preserves the URLs currently served from main:/.
+stage-pages:
+    uv run python -m ai_gene_review.tools.stage_pages --manifest _site-manifest.json
+
+# Build the complete disposable publication tree used by the Pages migration.
+build-pages: render-all render-projects validate-modules render-modules deploy-browser stage-pages
+
 # Render prediction evaluation table from *-predictions-review.yaml files
 render-prediction-eval pattern='genes/*/*/*-protnlm-predictions-review.yaml' output='pages/projects/PROTNLM_EVALUATION/protnlm-eval.html' title='ProtNLM-50 Prediction Evaluation':
     uv run python -m ai_gene_review.render_prediction_eval '{{pattern}}' -o '{{output}}' --title '{{title}}'
@@ -1369,6 +1524,26 @@ render-bioreason-eval:
     uv run python -m ai_gene_review.render_prediction_eval 'genes/*/*/*-sft-predictions.yaml' -o 'pages/projects/BIOREASON_COMPARISON/sft-eval.html' --title 'BioReason-Pro SFT Prediction Evaluation'
     uv run python -m ai_gene_review.render_prediction_eval 'genes/*/*/*-gogpt-leaf-predictions.yaml' -o 'pages/projects/BIOREASON_COMPARISON/gogpt-eval.html' --title 'BioReason-Pro GO-GPT Prediction Evaluation'
     uv run python -m ai_gene_review.render_prediction_eval 'projects/BIOREASON_COMPARISON/recapitulation-experiment/claude-expt-1/genes/ECOLI/*/*-det-predictions-review.yaml' -o 'pages/projects/BIOREASON_COMPARISON/deepectf-eval.html' --title 'BioReason-Pro DeepECTF Evaluation (ESR-ECOLI-DET-Mini)'
+
+# Refresh the deterministic BioReason benchmark cohort, gene, quality, and metrics sidecars
+refresh-bioreason-benchmark-sidecars:
+    uv run python projects/BIOREASON_COMPARISON/write_benchmark_sidecars.py
+
+# Audit SFT prediction reviews against the current GOA/AIGR snapshot without writing
+check-bioreason-sft-reviews:
+    uv run python scripts/auto_review_sft_predictions.py
+
+# Refresh SFT prediction reviews against the current GOA/AIGR snapshot
+refresh-bioreason-sft-reviews:
+    uv run python scripts/auto_review_sft_predictions.py --apply
+
+# Check committed GO-GPT leaf reviews against their raw BioReason web exports
+check-gogpt-web-exports:
+    uv run python scripts/gogpt_predict.py --check-web-exports
+
+# Refresh committed GO-GPT leaf reviews from their raw BioReason web exports
+refresh-gogpt-web-exports:
+    uv run python scripts/gogpt_predict.py --refresh-web-exports
 
 # Render project markdown files to HTML with auto-linked gene symbols
 render-projects:
@@ -2124,6 +2299,19 @@ deep-research-backfill provider *args="":
 
 # ============== Publications Cache Management ==============
 
+# Warm the publications cache via the linkml-reference-validator full-text
+# provider chain (PMC, Europe PMC preprints, Unpaywall, OpenAlex). Covers
+# DOI-only records without a PMC ID; every cleanly concluded attempt is durably
+# tagged full_text_attempted so bounded runs drain the backlog incrementally
+# (dismech-style warm-reference-cache).
+# Example: just warm-publications 200
+warm-publications limit="100":
+    uv run ai-gene-review warm-publications --limit {{limit}}
+
+# Non-network preview of what a warm sweep would attempt
+warm-publications-preview limit="20":
+    uv run ai-gene-review warm-publications --dry-run --limit {{limit}}
+
 # Refresh publications cache for PMC articles with missing full text (small batch)
 refresh-publications count="50":
     @echo "Refreshing publications cache ({{count}} articles)..."
@@ -2510,11 +2698,12 @@ ui-legacy port="5123":
 
 # Run GO-GPT prediction for a gene (outputs PredictionReview YAML)
 # Requires: GO-GPT model at ~/repos/BioReason-Pro/models/gogpt
+# Set BIOREASON_PYTHON to override the default ~/repos/BioReason-Pro/.venv interpreter.
 # Examples:
 #   just gogpt-predict human TP53
 #   just gogpt-predict PSEPK rpoS
 gogpt-predict organism gene:
-    ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py {{organism}} {{gene}} --output-dir .
+    uv run python -m ai_gene_review.run_bioreason_python scripts/gogpt_predict.py {{organism}} {{gene}} --output-dir .
 
 # Run GO-GPT prediction and compare with curated review
 # Outputs GENE-gogpt-predictions.yaml in PredictionReview schema format
@@ -2522,11 +2711,11 @@ gogpt-predict organism gene:
 #   just gogpt-compare human TP53
 #   just gogpt-compare PSEPK rpoS
 gogpt-compare organism gene:
-    ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py {{organism}} {{gene}} --compare --output-dir .
+    uv run python -m ai_gene_review.run_bioreason_python scripts/gogpt_predict.py {{organism}} {{gene}} --compare --output-dir .
 
 # Alias for gogpt-compare
 gogpt-review organism gene:
-    ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py {{organism}} {{gene}} --compare --output-dir .
+    uv run python -m ai_gene_review.run_bioreason_python scripts/gogpt_predict.py {{organism}} {{gene}} --compare --output-dir .
 
 # Run GO-GPT predictions for all genes in an organism
 gogpt-predict-organism organism:
@@ -2539,7 +2728,7 @@ gogpt-predict-organism organism:
             uniprot="$gene_dir/${gene}-uniprot.txt"
             if [ -f "$uniprot" ]; then
                 echo "Processing $gene..."
-                ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py {{organism}} "$gene" --compare --output-dir . 2>&1 || echo "  Failed: $gene"
+                uv run python -m ai_gene_review.run_bioreason_python scripts/gogpt_predict.py {{organism}} "$gene" --compare --output-dir . 2>&1 || echo "  Failed: $gene"
                 count=$((count + 1))
             fi
         fi
@@ -2560,7 +2749,7 @@ gogpt-compare-all:
                 uniprot="$gene_dir/${gene}-uniprot.txt"
                 if [ -f "$review" ] && [ -f "$uniprot" ]; then
                     echo "Comparing $organism/$gene..."
-                    ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py "$organism" "$gene" --compare --output-dir . 2>&1 || echo "  Failed: $organism/$gene"
+                    uv run python -m ai_gene_review.run_bioreason_python scripts/gogpt_predict.py "$organism" "$gene" --compare --output-dir . 2>&1 || echo "  Failed: $organism/$gene"
                     total=$((total + 1))
                 fi
             fi
@@ -2584,3 +2773,118 @@ cron-profile-preview name:
 # `on.schedule` block, leaving workflow_dispatch intact.
 cron-profile name:
     uv run python scripts/apply_cron_profile.py {{name}}
+
+# Rewrite PANTHER family/subfamily term.label values to PANTHER's official names.
+# `term.label` must be verifiable; put your own description in `preferred_term`.
+# Descriptors whose family does not contain their representative member are
+# skipped -- relabelling those would hide a wrong family id. Fix the id first.
+# Example: just fix-panther-labels --apply
+[group('QC')]
+fix-panther-labels *args="":
+    uv run ai-gene-review fix-panther-labels --output-dir . {{args}}
+
+# Check PANTHER family ids written into module PROSE (notes/description/statement)
+# against interpro/panther/panther-members.tsv. Module validation only reads
+# term.id/label pairs, so a PANTHER id in free text is invisible to it -- nine
+# such claims were contradicted by the repo's own data. Catches 7 of those 9;
+# symbol-phrased and first-of-a-shared-pair claims are documented misses.
+[group('QC')]
+scan-prose-panther *args="":
+    uv run python -m ai_gene_review.validation.prose_panther_scan {{args}}
+
+# Print every row of the PANTHER review report's scope table.
+# That table went stale four times because its rows had no committed
+# derivation; paste this output over the table after a merge.
+[group('QC')]
+panther-report-stats *args="":
+    uv run ai-gene-review panther-report-stats --output-dir . {{args}}
+
+# ============ History records (ported from dismech) ============
+# Append-only curation session history under history/. See docs/history.md.
+
+# Scaffold a new append-only history record (pass-through to scripts/new_history.py).
+# Run `just new-history --help` for all options. Prints the created path.
+# Example:
+#   just new-history --kind gene --organism human --slug CFAP300 --event CREATE \
+#     --outcome changed --summary "Create review: CFAP300" --agent-tool claude-code \
+#     --pr 2500 --details "..."
+# `[positional-arguments]` + "$@" is required, not stylistic: interpolating
+# {{ARGS}} joins the variadic args into one space-separated string and loses
+# shell quoting, so a multi-word --summary/--details would reach argparse as
+# separate tokens ("unrecognized arguments").
+[group('QC')]
+[positional-arguments]
+new-history *ARGS:
+    uv run python scripts/new_history.py "$@"
+
+# Validate a single history record
+[group('QC')]
+validate-history file:
+    uv run linkml-validate --schema {{history_schema_path}} --target-class HistoryRecord {{file}}
+
+# Validate all history records
+[group('QC')]
+validate-history-all:
+    #!/usr/bin/env bash
+    set -e
+    if [[ ! -d "{{history_dir}}" ]]; then
+        echo "No history directory found."
+        exit 0
+    fi
+    files=()
+    while IFS= read -r f; do
+        files+=("$f")
+    done < <(find "{{history_dir}}" -type f -name '*.yaml' | sort)
+    if [ ${#files[@]} -eq 0 ]; then
+        echo "No history YAML files found in {{history_dir}}."
+        exit 0
+    fi
+    printf 'Validating %s history record(s).\n' "${#files[@]}"
+    uv run linkml-validate --schema {{history_schema_path}} --target-class HistoryRecord "${files[@]}"
+
+# Retrospectively backfill history records from PR metadata (needs `gh`).
+# Prefer --state merged: an open PR's new targets are not on this checkout,
+# so its records get skipped as missing (see docs/history.md).
+# Example: just backfill-history --state merged --dry-run
+[group('QC')]
+[positional-arguments]
+backfill-history *ARGS:
+    uv run python scripts/backfill_history_from_prs.py "$@"
+
+# ============== PANTHER Family Reviews ==============
+
+# Validate curated PANTHER family reviews, in four stages:
+#   1. structural schema validation against FamilyReview;
+#   2. GO term id/label validation via linkml-term-validator;
+#   3. residue-site validation -- every curated position resolved against the
+#      anchor's actual UniProt sequence, plus controls, PAINT node assertions and
+#      PANTHER id/label/membership;
+#   4. cross-checks against the gene corpus, and gene-level residue claims.
+# Sequences are cached under .cache/uniprot_seq (restored in CI by actions/cache).
+validate-families:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    files=$(find interpro/panther -name "PTHR*-review.yaml" 2>/dev/null | sort)
+    if [ -z "$files" ]; then
+        echo "No family review YAML files found"
+        exit 0
+    fi
+    rc=0
+    while IFS= read -r f; do
+        echo "Schema-validating $f"
+        uv run linkml-validate --schema src/ai_gene_review/schema/family_review.yaml \
+            --target-class FamilyReview "$f" || rc=1
+    done <<< "$files"
+    echo "Validating GO term ids and labels..."
+    while IFS= read -r f; do
+        uv run linkml-term-validator validate-data "$f" \
+            -s src/ai_gene_review/schema/family_review.yaml \
+            -t FamilyReview --labels -c conf/oak_config.yaml || rc=1
+    done <<< "$files"
+    echo "Validating curated residue sites against UniProt sequences..."
+    uv run python -m ai_gene_review.validation.family_residue_validator || rc=1
+    echo "Cross-checking family reviews against the gene corpus..."
+    uv run python -m ai_gene_review.validation.family_gene_crosscheck || rc=1
+    echo "Validating gene-level residue claims..."
+    uv run python -m ai_gene_review.validation.gene_residue_claims || rc=1
+    exit $rc

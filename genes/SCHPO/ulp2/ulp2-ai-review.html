@@ -1,0 +1,3348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ulp2 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ulp2</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O13769" target="_blank" class="term-link">
+                        O13769
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Schizosaccharomyces pombe (strain 972 / ATCC 24843)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ulp2";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">13</span> Annotations</a>
+
+
+
+        <a href="#review-research" title="Deep research and hypothesis research reports"><span class="nav-count">1</span> Research</a>
+
+
+
+        <a href="#external-predictions" title="External predictions assessed separately from GOA annotations" class="nav-external"><span class="nav-count">2</span> External</a>
+
+
+
+        <a href="#review-core-functions" title="Core biological functions"><span class="nav-count">1</span> Core Function</a>
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">6</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">1</span> Documents</a>
+
+
+
+
+
+
+
+
+
+        <a href="#review-questions" title="Suggested questions for experts"><span class="nav-count">1</span> Questions</a>
+
+
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O13769" data-a="DESCRIPTION: Ulp2 is a SUMO-specific cysteine protease that rem..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Ulp2 is a SUMO-specific cysteine protease that removes SUMO from high-molecular-weight conjugates. It resides mainly in intranuclear foci, with a smaller cytoplasmic pool, and differs from the predominantly nuclear-pore-associated Ulp1 protease. Ulp2 has much weaker SUMO-precursor processing activity than Ulp1. It occurs in large complexes containing RNA-metabolism and translation proteins, including eIF4G, linking SUMO turnover to these cellular systems without establishing a specific translation-regulatory mechanism.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005515" target="_blank" class="term-link">
+                                    GO:0005515
+                                </a>
+                            </span>
+                            <span class="term-label">protein binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IPI</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24818994" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24818994
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The S. pombe translation initiation factor eIF4G is Sumoylat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O13769" data-a="GO:0005515" data-r="PMID:24818994" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The interaction evidence establishes co-purification with translation and RNA-metabolism proteins, but generic protein binding does not specify Ulp2 molecular function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The interaction evidence establishes co-purification with translation and RNA-metabolism proteins, but generic protein binding does not specify Ulp2 molecular function. Retain the physical-interaction evidence as non-core; SUMO deconjugation is the informative enzymatic activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24818994" target="_blank" class="term-link">
+                                        PMID:24818994
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We demonstrate that it co-purifies with a number of proteins, many of which are involved in RNA metabolism or protein synthesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16823372
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ORFeome cloning and global analysis of protein localization ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O13769" data-a="GO:0005634" data-r="PMID:16823372" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct imaging shows predominantly nuclear Ulp2 foci and a smaller cytoplasmic pool, supporting this compartment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct imaging shows predominantly nuclear Ulp2 foci and a smaller cytoplasmic pool, supporting this compartment. This also supports the conserved localization assertion without assuming that Ulp2 shares Ulp1 nuclear-pore localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24818994" target="_blank" class="term-link">
+                                        PMID:24818994
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Figure 3 indicates that Ulp2 is present in foci that are predominantly nuclear, with a small proportion in the cytoplasm.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O13769" data-a="GO:0005634" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct imaging shows predominantly nuclear Ulp2 foci and a smaller cytoplasmic pool, supporting this compartment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct imaging shows predominantly nuclear Ulp2 foci and a smaller cytoplasmic pool, supporting this compartment. This also supports the conserved localization assertion without assuming that Ulp2 shares Ulp1 nuclear-pore localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24818994" target="_blank" class="term-link">
+                                        PMID:24818994
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Figure 3 indicates that Ulp2 is present in foci that are predominantly nuclear, with a small proportion in the cytoplasm.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O13769" data-a="GO:0005634" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct imaging shows predominantly nuclear Ulp2 foci and a smaller cytoplasmic pool, supporting this compartment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct imaging shows predominantly nuclear Ulp2 foci and a smaller cytoplasmic pool, supporting this compartment. This also supports the conserved localization assertion without assuming that Ulp2 shares Ulp1 nuclear-pore localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24818994" target="_blank" class="term-link">
+                                        PMID:24818994
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Figure 3 indicates that Ulp2 is present in foci that are predominantly nuclear, with a small proportion in the cytoplasm.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O13769" data-a="GO:0005737" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Direct imaging shows predominantly nuclear Ulp2 foci and a smaller cytoplasmic pool, supporting this compartment.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Direct imaging shows predominantly nuclear Ulp2 foci and a smaller cytoplasmic pool, supporting this compartment. This also supports the conserved localization assertion without assuming that Ulp2 shares Ulp1 nuclear-pore localization.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24818994" target="_blank" class="term-link">
+                                        PMID:24818994
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Figure 3 indicates that Ulp2 is present in foci that are predominantly nuclear, with a small proportion in the cytoplasm.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006508" target="_blank" class="term-link">
+                                    GO:0006508
+                                </a>
+                            </span>
+                            <span class="term-label">proteolysis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O13769" data-a="GO:0006508" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The broad proteolysis/peptidase assertion is correct, but direct biochemical experiments establish SUMO deconjugation by a cysteine protease.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The broad proteolysis/peptidase assertion is correct, but direct biochemical experiments establish SUMO deconjugation by a cysteine protease. Use deSUMOylase activity to preserve modifier specificity; ubiquitin-like does not mean ubiquitin itself is the substrate.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016926" target="_blank" class="term-link">
+                                    protein desumoylation
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24818994" target="_blank" class="term-link">
+                                        PMID:24818994
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These results confirm that like S. cerevisiae Ulp2, S. pombe Ulp2 is a cysteine protease whose main function is in deconjugating SUMO from target proteins.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008234" target="_blank" class="term-link">
+                                    GO:0008234
+                                </a>
+                            </span>
+                            <span class="term-label">cysteine-type peptidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O13769" data-a="GO:0008234" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The broad proteolysis/peptidase assertion is correct, but direct biochemical experiments establish SUMO deconjugation by a cysteine protease.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The broad proteolysis/peptidase assertion is correct, but direct biochemical experiments establish SUMO deconjugation by a cysteine protease. Use deSUMOylase activity to preserve modifier specificity; ubiquitin-like does not mean ubiquitin itself is the substrate.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016929" target="_blank" class="term-link">
+                                    deSUMOylase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24818994" target="_blank" class="term-link">
+                                        PMID:24818994
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These results confirm that like S. cerevisiae Ulp2, S. pombe Ulp2 is a cysteine protease whose main function is in deconjugating SUMO from target proteins.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0010494" target="_blank" class="term-link">
+                                    GO:0010494
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasmic stress granule</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24818994" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24818994
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The S. pombe translation initiation factor eIF4G is Sumoylat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="O13769" data-a="GO:0010494" data-r="PMID:24818994" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The accessible full text shows stress-dependent eIF4G/SUMO cytoplasmic foci and separately localizes Ulp2, but does not unambiguously establish Ulp2 itself in stress granules.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The accessible full text shows stress-dependent eIF4G/SUMO cytoplasmic foci and separately localizes Ulp2, but does not unambiguously establish Ulp2 itself in stress granules. The source-specific localization requires inspection of the relevant target image or supplementary evidence. This does not contradict the independently demonstrated cytoplasmic Ulp2 pool.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24818994" target="_blank" class="term-link">
+                                        PMID:24818994
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Figure 3 indicates that Ulp2 is present in foci that are predominantly nuclear, with a small proportion in the cytoplasm.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016926" target="_blank" class="term-link">
+                                    GO:0016926
+                                </a>
+                            </span>
+                            <span class="term-label">protein desumoylation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O13769" data-a="GO:0016926" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Purified fission-yeast Ulp2 deconjugates SUMO from high-molecular-weight species in an NEM-sensitive assay, directly establishing the cysteine-protease mechanism and SUMO substrate specificity..
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Purified fission-yeast Ulp2 deconjugates SUMO from high-molecular-weight species in an NEM-sensitive assay, directly establishing the cysteine-protease mechanism and SUMO substrate specificity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24818994" target="_blank" class="term-link">
+                                        PMID:24818994
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These results confirm that like S. cerevisiae Ulp2, S. pombe Ulp2 is a cysteine protease whose main function is in deconjugating SUMO from target proteins.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016929" target="_blank" class="term-link">
+                                    GO:0016929
+                                </a>
+                            </span>
+                            <span class="term-label">deSUMOylase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24818994" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24818994
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The S. pombe translation initiation factor eIF4G is Sumoylat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O13769" data-a="GO:0016929" data-r="PMID:24818994" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Purified fission-yeast Ulp2 deconjugates SUMO from high-molecular-weight species in an NEM-sensitive assay, directly establishing the cysteine-protease mechanism and SUMO substrate specificity..
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Purified fission-yeast Ulp2 deconjugates SUMO from high-molecular-weight species in an NEM-sensitive assay, directly establishing the cysteine-protease mechanism and SUMO substrate specificity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24818994" target="_blank" class="term-link">
+                                        PMID:24818994
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These results confirm that like S. cerevisiae Ulp2, S. pombe Ulp2 is a cysteine protease whose main function is in deconjugating SUMO from target proteins.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019783" target="_blank" class="term-link">
+                                    GO:0019783
+                                </a>
+                            </span>
+                            <span class="term-label">ubiquitin-like protein peptidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O13769" data-a="GO:0019783" data-r="GO_REF:0000117" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The broad proteolysis/peptidase assertion is correct, but direct biochemical experiments establish SUMO deconjugation by a cysteine protease.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The broad proteolysis/peptidase assertion is correct, but direct biochemical experiments establish SUMO deconjugation by a cysteine protease. Use deSUMOylase activity to preserve modifier specificity; ubiquitin-like does not mean ubiquitin itself is the substrate.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016929" target="_blank" class="term-link">
+                                    deSUMOylase activity
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24818994" target="_blank" class="term-link">
+                                        PMID:24818994
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These results confirm that like S. cerevisiae Ulp2, S. pombe Ulp2 is a cysteine protease whose main function is in deconjugating SUMO from target proteins.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0070139" target="_blank" class="term-link">
+                                    GO:0070139
+                                </a>
+                            </span>
+                            <span class="term-label">SUMO-specific endopeptidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="O13769" data-a="GO:0070139" data-r="GO_REF:0000033" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The target can process SUMO precursor weakly in vitro, but the direct comparison shows substantially poorer maturation activity than Ulp1 and identifies deconjugation as its main role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The target can process SUMO precursor weakly in vitro, but the direct comparison shows substantially poorer maturation activity than Ulp1 and identifies deconjugation as its main role. Retain the SUMO-specific endopeptidase assertion as a minor biochemical capacity rather than the core molecular function.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24818994" target="_blank" class="term-link">
+                                        PMID:24818994
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Using assays we described previously [13], we demonstrate that Ulp2 is significantly less able than Ulp1 to process SUMO to the mature form (Figure 1A, lane 2 (Ulp1) and lane 3 (Ulp2)), but is capable of deconjugating SUMO from high Mr species in an N-ethylmaleimide- (NEM)-dependent manner (Figure 1B).</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24818994" target="_blank" class="term-link">
+                                        PMID:24818994
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These results confirm that like S. cerevisiae Ulp2, S. pombe Ulp2 is a cysteine protease whose main function is in deconjugating SUMO from target proteins.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:2000765" target="_blank" class="term-link">
+                                    GO:2000765
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of cytoplasmic translation</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">EXP</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24818994" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:24818994
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The S. pombe translation initiation factor eIF4G is Sumoylat...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-undecided">
+                            UNDECIDED
+                        </span>
+                        <span class="vote-buttons" data-g="O13769" data-a="GO:2000765" data-r="PMID:24818994" data-act="UNDECIDED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Ulp2 co-purifies with translation factors and eIF4G sumoylation changes during osmotic stress.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Ulp2 co-purifies with translation factors and eIF4G sumoylation changes during osmotic stress. The paper does not establish an Ulp2-dependent change in translation rate or a resolved regulatory mechanism; its discussion explicitly leaves the role of eIF4G sumoylation open. The physiological translation-regulation assertion therefore remains unresolved.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/24818994" target="_blank" class="term-link">
+                                        PMID:24818994
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We demonstrate that it co-purifies with a number of proteins, many of which are involved in RNA metabolism or protein synthesis.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section" id="review-core-functions">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>SUMO deconjugating cysteine protease acting predominantly in the nucleus, with a smaller cytoplasmic pool.</h3>
+                <span class="vote-buttons" data-g="O13769" data-a="FUNCTION: SUMO deconjugating cysteine protease acting predom..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016929" target="_blank" class="term-link">
+                            deSUMOylase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016926" target="_blank" class="term-link">
+                                protein desumoylation
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                nucleus
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                cytoplasm
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24818994" target="_blank" class="term-link">
+                                PMID:24818994
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">These results confirm that like S. cerevisiae Ulp2, S. pombe Ulp2 is a cysteine protease whose main function is in deconjugating SUMO from target proteins.</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/24818994" target="_blank" class="term-link">
+                                PMID:24818994
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Figure 3 indicates that Ulp2 is present in foci that are predominantly nuclear, with a small proportion in the cytoplasm.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link">
+                            PMID:16823372
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ORFeome cloning and global analysis of protein localization in the fission yeast Schizosaccharomyces pombe.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24818994" target="_blank" class="term-link">
+                            PMID:24818994
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The S. pombe translation initiation factor eIF4G is Sumoylated and associates with the SUMO protease Ulp2.</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section" id="review-questions">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> Is eIF4G a direct physiological Ulp2 substrate, and does its deSUMOylation control translation initiation or stress-granule recruitment?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="O13769" data-a="Q: Is eIF4G a direct physiological Ulp2 substrate, an..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+    <section class="section external-predictions" id="external-predictions" aria-labelledby="external-predictions-title">
+        <h2 class="section-title" id="external-predictions-title">External Prediction Reviews</h2>
+        <p class="prediction-notice">These computational predictions are reviewed separately from the GOA annotation set used for this review.
+            The assessments below are from this project and do not constitute official GO annotations or endorsement by GO/UniProt.
+            They are not included in the existing annotation review above.</p>
+
+
+        <article class="prediction-review">
+        <h3>ProtNLM2 <span class="badge">External predictions</span></h3>
+        <p class="prediction-source"><a href="ulp2-protnlm-predictions-review.yaml">View prediction review YAML</a> &middot; ulp2-protnlm-predictions-review.yaml
+            &middot; Review status: COMPLETE</p>
+
+        <p>Both broad peptidase predictions are supported but lose the experimentally established SUMO-deconjugating specificity.</p>
+
+        <p class="prediction-source">Review score: 2 = concordant with evidence; 1 = uncertain; 0 = discordant with evidence. This is an assessment score, not a model probability.</p>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0019783" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:0019783
+                    </a>
+                    <span class="term-label">ubiquitin-like protein peptidase activity</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_MF</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-lsp">
+                        LSP — Less precise than existing annotation
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 2/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM2
+                 &middot; Version: pre-release post-processed-2026_02_28k.xml
+
+                 &middot; <a href="#" target="_blank" class="term-link">file:SCHPO/ulp2/ulp2-protnlm-source.xml</a>
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> Purified fission-yeast Ulp2 directly deconjugates SUMO from high-molecular-weight species, and the study identifies it as a cysteine protease. SUMO is a ubiquitin-like modifier, so the broad ubiquitin-like protein peptidase term is biologically correct. The more specific deSUMOylase activity GO:0016929 is experimentally established and already annotated; the XML records hydration from that term. This prediction loses substrate specificity and is therefore LSP. It does not imply a demonstrated ability to remove ubiquitin itself.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24818994" target="_blank" class="term-link">PMID:24818994</a>:
+
+
+                        <span class="finding-text">"These results confirm that like S. cerevisiae Ulp2, S. pombe Ulp2 is a cysteine protease whose main function is in deconjugating SUMO from target proteins."</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008234" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:0008234
+                    </a>
+                    <span class="term-label">cysteine-type peptidase activity</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_MF</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-lsp">
+                        LSP — Less precise than existing annotation
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 2/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM2
+                 &middot; Version: pre-release post-processed-2026_02_28k.xml
+
+                 &middot; <a href="#" target="_blank" class="term-link">file:SCHPO/ulp2/ulp2-protnlm-source.xml</a>
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> Direct biochemical experiments establish Ulp2 as a SUMO-deconjugating cysteine protease, including sensitivity to N-ethylmaleimide. The conserved C48 catalytic domain is consistent with that mechanism. Cysteine-type peptidase activity is true but less precise than the already annotated deSUMOylase activity and its SUMO substrate specificity.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24818994" target="_blank" class="term-link">PMID:24818994</a>:
+
+
+                        <span class="finding-text">"These results confirm that like S. cerevisiae Ulp2, S. pombe Ulp2 is a cysteine protease whose main function is in deconjugating SUMO from target proteins."</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        </article>
+
+    </section>
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section" id="review-research">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ulp2-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O13769" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *Schizosaccharomyces pombe ulp2* (UniProt O13769)</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">14 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-08T19:27:50.789974</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="ulp2-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="functional-annotation-report-schizosaccharomyces-pombe-ulp2-uniprot-o13769">Functional Annotation Report: <em>Schizosaccharomyces pombe ulp2</em> (UniProt O13769)</h1>
+<h2 id="executive-summary">Executive summary</h2>
+<p>The requested target is the fission-yeast gene <strong>ulp2</strong> (systematic locus <strong>SPAC17A5.07c</strong>), encoding <strong>ubiquitin-like-specific protease 2</strong> in <em>Schizosaccharomyces pombe</em> strain 972. The organism-specific experimental literature identifies this protein as a <strong>SUMO/Pmt3-specific cysteine isopeptidase</strong> whose principal function is to remove SUMO from high-molecular-weight SUMO conjugates—probably including poly-SUMO chains—rather than to mature precursor SUMO. This biochemical behavior agrees with the supplied UniProt assignment to peptidase family C48 and its papain-like/SENP catalytic domain architecture. (jongjitwimol2014thes.pombe pages 4-5, jongjitwimol2014thes.pombe pages 5-7)</p>
+<p>Ulp2 is found mainly in <strong>intranuclear foci</strong>, with a smaller cytoplasmic pool and little detectable nuclear-envelope localization. It participates in large protein assemblies and helps maintain SUMO-chain homeostasis in pathways involving SUMO-targeted ubiquitin ligases (STUbLs) and PP2A-Pab1B55. Its deletion is viable but produces severe growth and morphological abnormalities, accumulation of high-molecular-weight SUMO species, and sensitivity to heat, hydroxyurea, cycloheximide, and osmotic stress. A second experimentally supported context is association with RNA-processing, ribosome-biogenesis, and translation proteins, including SUMOylated eIF4G; however, eIF4G has not been proven to be a direct catalytic substrate of Ulp2. (nie2016functionalcrosstalkbetween pages 7-10, jongjitwimol2014thes.pombe pages 4-5, jongjitwimol2014thes.pombe pages 5-7, jongjitwimol2014thes.pombe pages 7-9)</p>
+<h2 id="1-mandatory-identity-verification">1. Mandatory identity verification</h2>
+<h3 id="11-gene-symbol-protein-and-organism">1.1 Gene symbol, protein, and organism</h3>
+<p>The relevant literature explicitly studies <strong><em>S. pombe</em> Ulp2</strong>, not merely a same-named protein from another organism. It describes Ulp2 as a fission-yeast SUMO-specific cysteine protease and compares it with <em>S. pombe</em> Ulp1 and with budding-yeast proteases only for evolutionary interpretation. Thus, the experimental target matches the supplied identity: <strong>ulp2 / SPAC17A5.07c / UniProt O13769</strong>, from <strong><em>Schizosaccharomyces pombe</em></strong>. The primary paper passages do not print the O13769 accession, so accession-to-locus mapping derives from the supplied UniProt record, while protein function and organism are independently concordant with the literature. (jongjitwimol2014thes.pombe pages 2-3, jongjitwimol2014thes.pombe pages 4-5)</p>
+<h3 id="12-family-and-domain-consistency">1.2 Family and domain consistency</h3>
+<p>The supplied annotations—<strong>peptidase C48</strong>, <strong>Peptidase_C48_C/PF02902</strong>, <strong>sentrin-specific protease</strong>, and a <strong>papain-like cysteine-peptidase fold</strong>—are fully consistent with the experimental result that purified Ulp2 is inhibited by the cysteine-reactive reagent N-ethylmaleimide and deconjugates SUMO. The literature therefore supports the family-level annotation experimentally, even though a structure of this specific protein was not identified in the retrieved corpus. (jongjitwimol2014thes.pombe pages 4-5, jongjitwimol2014thes.pombe pages 5-7)</p>
+<h3 id="13-ambiguity-warning">1.3 Ambiguity warning</h3>
+<p>The symbol <strong>ULP2</strong> is also widely used for the <em>Saccharomyces cerevisiae</em> SUMO protease. Those proteins are homologous and share broad biochemical behavior, but results obtained only in budding yeast—such as particular centromeric, nucleolar, DDK, or cohesin substrates—must <strong>not</strong> be assigned directly to O13769. This report uses budding-yeast findings only as explicitly labeled orthology context, not as evidence for the fission-yeast protein.</p>
+<h2 id="2-primary-molecular-function-and-reaction">2. Primary molecular function and reaction</h2>
+<h3 id="21-catalyzed-reaction">2.1 Catalyzed reaction</h3>
+<p>The best-supported reaction is hydrolysis of the isopeptide bond connecting the C-terminal carboxyl group of SUMO/Pmt3 to a lysine side chain on a substrate or another SUMO molecule:</p>
+<p><strong>SUMO–substrate + H₂O → free SUMO + deSUMOylated substrate</strong></p>
+<p>For a SUMO chain, repeated cleavage shortens or dismantles the chain. Purified <em>S. pombe</em> Ulp2 removed SUMO from high-molecular-weight conjugates, and this activity was inhibited by <strong>5 mM NEM</strong>, identifying it as cysteine-protease-dependent deSUMOylation. (jongjitwimol2014thes.pombe pages 4-5, jongjitwimol2014thes.pombe pages 5-7)</p>
+<h3 id="22-deconjugation-versus-sumo-maturation">2.2 Deconjugation versus SUMO maturation</h3>
+<p>Ulp2 is substantially poorer than Ulp1 at processing precursor SUMO. In the reported assay, <strong>2.32 µg Ulp2</strong> had markedly less precursor-processing activity than <strong>0.72 µg Ulp1</strong>, whereas Ulp2 efficiently depleted high-molecular-weight SUMO conjugates when tested over <strong>0.6–4.8 µg</strong>. These results support deconjugation—and particularly disassembly of heavily SUMOylated species—as its principal physiological reaction rather than exposure of the mature SUMO C terminus. (jongjitwimol2014thes.pombe pages 4-5, jongjitwimol2014thes.pombe pages 5-7)</p>
+<h3 id="23-substrate-specificity">2.3 Substrate specificity</h3>
+<p>The strongest substrate assignment is a <strong>class</strong>, not a single named protein: Ulp2 preferentially acts on <strong>high-molecular-weight SUMO-containing species</strong>, consistent with multiply SUMOylated proteins and/or poly-SUMO chains. Loss of ulp2 slightly increased these species, and chain-deficient SUMO alleles suppress ulp2-deletion phenotypes, strengthening the conclusion that harmful SUMO-chain accumulation is physiologically relevant. (nie2016functionalcrosstalkbetween pages 7-10, jongjitwimol2014thes.pombe pages 4-5, nie2016functionalcrosstalkbetween pages 1-2)</p>
+<p>No kinetic constants, linkage-specific cleavage rates, or complete substrate repertoire were reported. It is therefore premature to claim that O13769 exclusively recognizes a particular Pmt3-chain linkage or a defined sequence motif.</p>
+<h2 id="3-cellular-localization">3. Cellular localization</h2>
+<p>Immunofluorescence of genomically tagged Ulp2 showed <strong>predominantly nuclear foci</strong>, a smaller cytoplasmic component, frequent overlap with SUMO, and little if any signal at the nuclear periphery. Its distribution was broadly similar in S phase, early and late G2, and mitosis. This differs from <em>S. pombe</em> Ulp1, which is associated with nuclear pores for much of the cell cycle and relocalizes during mitosis. (jongjitwimol2014thes.pombe pages 4-5, jongjitwimol2014thes.pombe pages 5-7)</p>
+<p>Accordingly, Ulp2 most likely carries out its principal SUMO-chain-editing function in the <strong>nucleoplasm or intranuclear bodies</strong>, rather than at nuclear pores. The minor cytoplasmic pool could support additional functions, but the available microscopy did not quantify nuclear/cytoplasmic partitioning or identify specific nuclear subcompartments.</p>
+<p>Gel filtration supports localization within macromolecular assemblies: Ulp2 appeared both in the column void and in fractions corresponding to approximately <strong>670 kDa</strong>, indicating at least two high-molecular-weight complexes. Most Ulp2 was not associated with actively translating polysomes because its sedimentation persisted after EDTA disrupted polysomes. (jongjitwimol2014thes.pombe pages 4-5, jongjitwimol2014thes.pombe pages 5-7, jongjitwimol2014thes.pombe pages 9-11)</p>
+<h2 id="4-biological-processes-and-pathways">4. Biological processes and pathways</h2>
+<h3 id="41-sumo-chain-homeostasis-and-genome-maintenance">4.1 SUMO-chain homeostasis and genome maintenance</h3>
+<p>The central pathway role is to restrain accumulation of high-molecular-weight or poly-SUMO conjugates. In fission yeast, excessive SUMO chains are associated with growth defects, genotoxic sensitivity, and genome instability; reducing chain formation suppresses phenotypes caused by loss of Ulp2. Ulp2 therefore acts as a corrective or editing enzyme that prevents SUMO-chain signaling from becoming excessive or persistent. (nie2016functionalcrosstalkbetween pages 7-10, nie2016functionalcrosstalkbetween pages 1-2)</p>
+<p>Current SUMO biology places this reaction in balance with <strong>STUbLs</strong>, which recognize poly-SUMO-modified proteins and add ubiquitin, promoting extraction from complexes and/or proteasomal destruction. A 2024 review emphasizes that SUMO proteases tune or reverse SUMO-dependent events, while SUMO chains provide interaction scaffolds and STUbLs terminate or redirect those events during replication, repair, mitosis, and chromatin regulation. That review does <strong>not</strong>, however, directly analyze <em>S. pombe</em> Ulp2, so it supplies pathway context rather than protein-specific evidence. (thu2024multifacetedrolesof pages 14-15, thu2024multifacetedrolesof pages 1-2)</p>
+<h3 id="42-functional-relationship-with-stubl">4.2 Functional relationship with STUbL</h3>
+<p>The <em>S. pombe</em> STUbL system comprises Rfp1/Rfp2 and Slx8. Genetic evidence indicates that reducing SUMO-chain abundance makes STUbL activity less critical, supporting a model in which both Ulp2 and STUbL prevent toxic persistence of poly-SUMO species through different biochemical routes: Ulp2 removes SUMO, whereas STUbL directs selected SUMOylated targets into ubiquitin-dependent processing. (nie2016functionalcrosstalkbetween pages 7-10, nie2016functionalcrosstalkbetween pages 1-2, chang2021sumotargetedubiquitinligases pages 11-12)</p>
+<p>This is a pathway-level relationship; the retrieved studies did not establish a stable Ulp2–STUbL physical complex or identify a common named substrate whose fate was directly tracked through both systems.</p>
+<h3 id="43-pp2a-pab1b55-crosstalk">4.3 PP2A-Pab1B55 crosstalk</h3>
+<p>A 2016 genetic study found that the hypomorphic <strong>pab1-1</strong> allele, which reduces PP2A-Pab1B55 activity, strongly suppressed the hydroxyurea sensitivity of <strong>ulp2Δ</strong> cells. The double mutant showed a small but detectable reduction in high-molecular-weight SUMO conjugates relative to ulp2Δ alone. Pab1 overproduction had the opposite general effect, increasing high-molecular-weight SUMO conjugates, especially when STUbL function was compromised. (nie2016functionalcrosstalkbetween pages 13-14, nie2016functionalcrosstalkbetween pages 7-10)</p>
+<p>The suppression was not explained simply by altered cell-cycle timing or generalized genotoxin resistance: pab1-1 failed to rescue several checkpoint, recombination, and replication-stress mutants. The most defensible interpretation is that PP2A-Pab1B55 influences SUMO-pathway output, directly or indirectly, thereby changing the burden placed on Ulp2 and STUbL. The precise PP2A substrate responsible remains unresolved. (nie2016functionalcrosstalkbetween pages 4-7, nie2016functionalcrosstalkbetween pages 7-10)</p>
+<h3 id="44-rna-metabolism-ribosome-biogenesis-and-translation">4.4 RNA metabolism, ribosome biogenesis, and translation</h3>
+<p>Affinity purification of Ulp2-TAP recovered many proteins involved in RNA synthesis and processing, ribosome biogenesis, translation initiation, and elongation. Examples included eIF2 and eIF3 subunits, eIF4G, elongation factors, PABP, Rrp5, Exo2, Dhp1, Upf1, Nop2, Dbp2, and Prp19; fewer DNA-metabolism proteins, including Rfc5, were also detected. (jongjitwimol2014thes.pombe pages 4-5, jongjitwimol2014thes.pombe pages 7-9)</p>
+<p>These observations indicate that Ulp2 occupies complexes connected to RNA and protein synthesis, but co-purification does not demonstrate direct binding or catalytic substrate status. The predominance of nuclear Ulp2 and lack of stable polysome association suggest that its translation-related role may involve nuclear RNA maturation, ribosome assembly, or regulation of translation factors before or outside active polysomes. (jongjitwimol2014thes.pombe pages 2-3, jongjitwimol2014thes.pombe pages 9-11)</p>
+<h3 id="45-eif4g-as-a-candidate-regulated-protein">4.5 eIF4G as a candidate regulated protein</h3>
+<p>Most eIF4G co-eluted with Ulp2, and denaturing His-SUMO pull-downs established that <em>S. pombe</em> eIF4G is SUMOylated in vivo. By contrast, eIF3h co-purified with Ulp2 but was not detectably SUMOylated, suggesting indirect association through the eIF3 complex. (jongjitwimol2014thes.pombe pages 5-7, jongjitwimol2014thes.pombe pages 7-9, jongjitwimol2014thes.pombe pages 9-11)</p>
+<p>After 30 minutes in <strong>1 M KCl</strong>, a stress that produces cytoplasmic stress granules, relative eIF4G SUMOylation rose from <strong>1.0 to 1.5</strong>; treatment with cycloheximide left it at <strong>1.0</strong>. eIF4G and SUMO occasionally colocalized in cytoplasmic stress granules, while a significant fraction of nuclear eIF4G overlapped SUMO under basal conditions. (jongjitwimol2014thes.pombe pages 7-9)</p>
+<p>Nevertheless, eIF4G should be described only as a <strong>candidate Ulp2-regulated substrate</strong>. The study did not show increased eIF4G SUMOylation in ulp2Δ cells, direct cleavage of SUMO–eIF4G by purified Ulp2, or dependence of eIF4G localization or turnover on Ulp2. The authors explicitly left open whether SUMO directs eIF4G toward stress granules, altered interactions, or degradation. (jongjitwimol2014thes.pombe pages 11-12, jongjitwimol2014thes.pombe pages 7-9)</p>
+<h2 id="5-loss-of-function-phenotypes-and-quantitative-observations">5. Loss-of-function phenotypes and quantitative observations</h2>
+<p>Disruption of ulp2 was <strong>not lethal</strong>, but mutant cells formed very small colonies and displayed pronounced morphological abnormalities. Cultures contained enough dead cells that approximately <strong>tenfold more mutant cells</strong> had to be plated than wild type in serial-dilution assays. (jongjitwimol2014thes.pombe pages 4-5, jongjitwimol2014thes.pombe pages 5-7)</p>
+<p>The deletion strain was sensitive to:</p>
+<ul>
+<li>elevated temperature;</li>
+<li><strong>2 mM hydroxyurea</strong>, indicating vulnerability to DNA-replication stress;</li>
+<li><strong>10 and 20 mg/ml cycloheximide</strong> as reported in the paper, indicating sensitivity to translation inhibition; and</li>
+<li><strong>1 M KCl</strong>, indicating osmotic/stress-granule-associated sensitivity. (jongjitwimol2014thes.pombe pages 4-5)</li>
+</ul>
+<p>These are assay conditions rather than formal effect sizes; no IC50 values, survival percentages, or catalytic rates were reported. The phenotypes are consistent with a broad failure of SUMO homeostasis but do not independently identify specific substrates.</p>
+<p>The evidence is summarized below.</p>
+<table>
+<thead>
+<tr>
+<th>Annotation aspect</th>
+<th>Best-supported conclusion</th>
+<th>Evidence type</th>
+<th>Key experiment/statistic</th>
+<th>Confidence/caveat</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity/domain concordance</td>
+<td><em>S. pombe</em> <strong>ulp2</strong> encodes a SUMO-specific cysteine protease consistent with O13769 and the supplied peptidase-C48/SENP-family annotation.</td>
+<td>Organism-specific biochemical characterization and sequence comparison</td>
+<td>Purified fission-yeast Ulp2 displayed NEM-sensitive SUMO-deconjugating activity, as expected for a cysteine SENP-family protease. (jongjitwimol2014thes.pombe pages 4-5, jongjitwimol2014thes.pombe pages 5-7)</td>
+<td><strong>High</strong> for protein class and identity; the examined paper passage does not explicitly state accession O13769.</td>
+</tr>
+<tr>
+<td>Catalytic reaction</td>
+<td>Ulp2 hydrolyzes the isopeptide linkage joining SUMO/Pmt3 to proteins or SUMO chains. Its principal role is deconjugation rather than precursor-SUMO maturation.</td>
+<td>Purified-enzyme assays</td>
+<td>Ulp2 removed SUMO from high-molecular-weight conjugates after 2 h at 20°C; 5 mM NEM inhibited activity. Even 2.32 µg Ulp2 processed precursor SUMO much less effectively than 0.72 µg Ulp1. (jongjitwimol2014thes.pombe pages 4-5, jongjitwimol2014thes.pombe pages 5-7)</td>
+<td><strong>High</strong> for deconjugation; EC 3.4.22.- is nonspecific, and kinetic constants were not reported.</td>
+</tr>
+<tr>
+<td>Substrate preference</td>
+<td>The best-supported substrate class is high-molecular-weight SUMO conjugates, including poly-SUMO-containing species; precursor SUMO is a poor substrate.</td>
+<td>In vitro deconjugation, mutant conjugate profiles, and genetic chain-blocking evidence</td>
+<td>Increasing purified Ulp2 from 0.6 to 4.8 µg depleted high-Mr SUMO species; <em>ulp2Δ</em> modestly increased those species, while chain-deficient SUMO suppressed <em>ulp2Δ</em> phenotypes. (nie2016functionalcrosstalkbetween pages 7-10, jongjitwimol2014thes.pombe pages 4-5, jongjitwimol2014thes.pombe pages 5-7)</td>
+<td><strong>High</strong> for substrate class; <strong>low–moderate</strong> for individual physiological substrates because direct turnover of a named substrate was not demonstrated.</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Ulp2 occurs predominantly in intranuclear foci, with a smaller cytoplasmic pool; it is largely absent from the nuclear periphery and changes little across the cell cycle.</td>
+<td>Immunofluorescence of genomically tagged protein</td>
+<td>Ulp2-Myc foci were examined in S phase, early and late G2, and mitosis; many overlapped SUMO, whereas little or no nuclear-envelope signal was detected. (jongjitwimol2014thes.pombe pages 4-5, jongjitwimol2014thes.pombe pages 5-7)</td>
+<td><strong>High</strong> under the tested conditions; nuclear and cytoplasmic fractions were not quantified.</td>
+</tr>
+<tr>
+<td>Complexes/interactors</td>
+<td>Ulp2 resides in at least two large complexes and associates with proteins involved in RNA processing, ribosome biogenesis, translation, and, less prominently, DNA metabolism.</td>
+<td>Gel filtration and Ulp2-TAP affinity purification followed by LC-MS/MS</td>
+<td>Ulp2 eluted in the column void and near 670 kDa. Co-purifying proteins included eIF2/eIF3 subunits, eIF4G, elongation factors, PABP, Rrp5, Exo2, Dhp1, Upf1, Nop2, Prp19, and Rfc5. (jongjitwimol2014thes.pombe pages 4-5, jongjitwimol2014thes.pombe pages 5-7, jongjitwimol2014thes.pombe pages 7-9)</td>
+<td><strong>Moderate</strong>; co-elution and co-purification indicate shared complexes but not direct binding or substrate status.</td>
+</tr>
+<tr>
+<td>eIF4G relationship</td>
+<td>Fission-yeast eIF4G is SUMOylated and co-complexes with Ulp2, making it a candidate Ulp2-regulated protein. eIF3h associates with Ulp2 but was not detectably SUMOylated.</td>
+<td>Gel filtration, denaturing His-SUMO pull-down, and microscopy</td>
+<td>Most eIF4G co-eluted with Ulp2. After 30 min in 1 M KCl, relative eIF4G SUMOylation increased from 1.0 to 1.5; cycloheximide-treated cells remained at 1.0. (jongjitwimol2014thes.pombe pages 5-7, jongjitwimol2014thes.pombe pages 7-9)</td>
+<td><strong>Moderate</strong> for association; <strong>low</strong> for eIF4G as a direct Ulp2 substrate because Ulp2-dependent deSUMOylation was not demonstrated.</td>
+</tr>
+<tr>
+<td>Stress/deletion phenotypes</td>
+<td><strong>ulp2</strong> is nonessential under standard laboratory conditions, but deletion causes severe growth and morphological defects and sensitivity to heat, replication stress, translation inhibition, and osmotic stress.</td>
+<td>Targeted deletion and serial-dilution growth assays</td>
+<td><em>ulp2Δ</em> formed very small colonies; approximately 10-fold more mutant cells had to be plated. Sensitivity occurred with 2 mM HU, 10–20 mg/ml cycloheximide, and 1 M KCl. (jongjitwimol2014thes.pombe pages 4-5, jongjitwimol2014thes.pombe pages 5-7)</td>
+<td><strong>High</strong> for phenotypes; assay concentrations are not quantitative effect sizes, and pleiotropy does not identify a unique substrate.</td>
+</tr>
+<tr>
+<td>SUMO-chain/STUbL/PP2A pathway</td>
+<td>Ulp2 restricts harmful high-Mr or poly-SUMO accumulation and interacts genetically with the Rfp1/Rfp2-Slx8 STUbL system and PP2A-Pab1B55 regulation of SUMO output.</td>
+<td>Genetic suppression and SUMO immunoblotting</td>
+<td>Hypomorphic <strong>pab1-1</strong> strongly suppressed <em>ulp2Δ</em> HU sensitivity and produced a small but detectable reduction in high-Mr SUMO species; chain-deficient SUMO alleles also suppressed <em>ulp2Δ</em> phenotypes. (nie2016functionalcrosstalkbetween pages 7-10, nie2016functionalcrosstalkbetween pages 1-2)</td>
+<td><strong>High</strong> for genetic interaction; <strong>moderate</strong> for mechanism because PP2A may affect SUMO-chain abundance directly or indirectly.</td>
+</tr>
+<tr>
+<td>Recent-literature status</td>
+<td>No retrieved 2023–2024 peer-reviewed primary study directly advanced annotation of O13769. A September 2024 review supports the general SUMO-protease and STUbL framework but does not specifically analyze <em>S. pombe</em> Ulp2.</td>
+<td>Targeted recent-literature search and authoritative review synthesis</td>
+<td>The latest direct protein-specific evidence retrieved was chiefly from 2014 and 2016; the 2024 review addresses SUMO chains, STUbLs, DNA repair, replication, and mitosis. (thu2024multifacetedrolesof pages 14-15, thu2024multifacetedrolesof pages 1-2)</td>
+<td><strong>High</strong> for the retrieved-corpus assessment, but this does not prove that no other relevant publication exists; budding-yeast findings remain orthology context only.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Compact evidence assessment for Schizosaccharomyces pombe Ulp2/O13769, separating direct biochemical and cellular results from pathway inference and unresolved substrate assignments. Findings from budding-yeast Ulp2 are not treated as direct evidence.</em></p>
+<h2 id="6-current-expert-interpretation">6. Current expert interpretation</h2>
+<p>The most parsimonious model is that <em>S. pombe</em> Ulp2 is a <strong>nuclear SUMO-chain editor</strong>. Its catalytic C48/SENP domain hydrolyzes SUMO isopeptide linkages on highly modified proteins or chains. This limits both direct poly-SUMO signaling and the production of substrates recognized by STUbLs. By controlling the lifetime of these conjugates in large nuclear assemblies, Ulp2 supports genome maintenance, stress tolerance, RNA metabolism, and ribosome/translation-factor regulation. (nie2016functionalcrosstalkbetween pages 7-10, jongjitwimol2014thes.pombe pages 4-5, thu2024multifacetedrolesof pages 14-15, nie2016functionalcrosstalkbetween pages 1-2)</p>
+<p>The genome-stability and RNA/translation observations are not mutually exclusive. SUMOylation often regulates groups of physically associated proteins rather than isolated substrates, and SUMO chains can act as scaffolds for SUMO-interacting proteins. Consequently, loss of one chain-editing protease can perturb multiple large assemblies without implying that every co-purifying protein is an Ulp2 substrate. (thu2024multifacetedrolesof pages 14-15, thu2024multifacetedrolesof pages 1-2)</p>
+<p>Claims that Ulp2 directly regulates fission-yeast condensin, cohesin, centromeres, DDK, or particular nucleolar factors remain insufficiently supported by the retrieved <em>S. pombe</em>-specific evidence. Many precise examples in these areas derive from <em>S. cerevisiae</em> Ulp2 or mammalian SENP6/7 and should be tested directly before transfer to O13769.</p>
+<h2 id="7-recent-developments-20232024">7. Recent developments, 2023–2024</h2>
+<p>A targeted search retrieved <strong>no 2023–2024 peer-reviewed primary study that directly advanced the molecular annotation of O13769/SPAC17A5.07c</strong>. The most recent direct protein-specific studies recovered here are principally the 2014 biochemical/localization/interactome paper and the 2016 PP2A–SUMO genetic study.</p>
+<p>The main relevant 2024 development is a broad review published in <strong>September 2024</strong>, which integrates SUMO proteases, SUMO chains, and STUbLs across DNA replication, repair, mitosis, and chromatin biology. It reinforces the contemporary view that SUMO chains are dynamic interaction platforms and that proteases and STUbLs jointly determine their duration and outcome, but it does not provide new direct evidence about <em>S. pombe</em> Ulp2. (thu2024multifacetedrolesof pages 14-15, thu2024multifacetedrolesof pages 1-2)</p>
+<p>A 2024 doctoral thesis on SUMOylation, centromere biology, and replication-fork restart in <em>S. pombe</em> appeared in the search results, but full text was unavailable through the retrieval system; it was therefore not used as evidence. This limitation is preferable to importing detailed conclusions from a same-named budding-yeast protein.</p>
+<h2 id="8-applications-and-real-world-implementation">8. Applications and real-world implementation</h2>
+<p>There is no established clinical, industrial, or agricultural application specific to <em>S. pombe</em> Ulp2. Its current practical value is as a <strong>research-system component</strong> for:</p>
+<ol>
+<li>dissecting how deSUMOylation and STUbL-mediated ubiquitination divide responsibility for SUMO-chain clearance;</li>
+<li>modeling genome instability caused by disturbed SUMO homeostasis;</li>
+<li>studying PP2A–SUMO pathway crosstalk;</li>
+<li>identifying SUMO-regulated RNA-processing, ribosome-biogenesis, and translation assemblies; and</li>
+<li>testing conserved principles relevant to human SENP enzymes without assuming one-to-one substrate conservation. (nie2016functionalcrosstalkbetween pages 13-14, nie2016functionalcrosstalkbetween pages 7-10, jongjitwimol2014thes.pombe pages 7-9, thu2024multifacetedrolesof pages 14-15)</li>
+</ol>
+<p>The ulp2Δ strain’s strong but viable phenotypes make it experimentally useful for suppressor screens, chemical-genetic assays, and quantitative SUMO-proteomics. Translational relevance lies in conserved pathway logic—SENP/STUbL regulation and genome stability—not in direct therapeutic targeting of the yeast protein.</p>
+<h2 id="9-recommended-functional-annotation">9. Recommended functional annotation</h2>
+<p><strong>Molecular function:</strong> SUMO/Pmt3-specific cysteine isopeptidase; preferentially deconjugates SUMO from high-molecular-weight, likely poly-SUMO-containing conjugates; weak precursor-SUMO-processing activity.</p>
+<p><strong>Biological process:</strong> maintenance of SUMO-chain homeostasis; protection against replication/genotoxic stress; functional coordination with the Rfp1/Rfp2–Slx8 STUbL and PP2A-Pab1B55 pathways; probable regulation of nuclear RNA-processing, ribosome-biogenesis, and translation-factor assemblies.</p>
+<p><strong>Cellular component:</strong> predominantly intranuclear foci/high-molecular-weight nuclear complexes, with a minor cytoplasmic pool; little or no nuclear-pore localization.</p>
+<p><strong>Best-supported substrate class:</strong> high-molecular-weight SUMO conjugates/poly-SUMO species.</p>
+<p><strong>Candidate named substrate:</strong> eIF4G, based on SUMOylation and shared complexes, but direct Ulp2-dependent deSUMOylation remains unproven.</p>
+<h2 id="10-key-references">10. Key references</h2>
+<ul>
+<li>
+<p>Jongjitwimol J. et al. <strong>“The <em>S. pombe</em> Translation Initiation Factor eIF4G Is Sumoylated and Associates with the SUMO Protease Ulp2.”</strong> <em>PLOS ONE</em> 9:e94182. Published <strong>May 2014</strong>. https://doi.org/10.1371/journal.pone.0094182. Principal source for catalytic activity, localization, complexes, deletion phenotypes, and eIF4G association. (jongjitwimol2014thes.pombe pages 4-5, jongjitwimol2014thes.pombe pages 5-7, jongjitwimol2014thes.pombe pages 7-9, jongjitwimol2014thes.pombe pages 9-11)</p>
+</li>
+<li>
+<p>Nie M. et al. <strong>“Functional Crosstalk between the PP2A and SUMO Pathways Revealed by Analysis of STUbL Suppressor, razor 1-1.”</strong> <em>PLOS Genetics</em> 12:e1006165. Published <strong>11 July 2016</strong>. https://doi.org/10.1371/journal.pgen.1006165. Principal source for PP2A-Pab1B55 suppression, SUMO-chain burden, and Ulp2/STUbL pathway relationships. (nie2016functionalcrosstalkbetween pages 13-14, nie2016functionalcrosstalkbetween pages 4-7, nie2016functionalcrosstalkbetween pages 7-10, nie2016functionalcrosstalkbetween pages 1-2)</p>
+</li>
+<li>
+<p>Thu YM. <strong>“Multifaceted roles of SUMO in DNA metabolism.”</strong> <em>Nucleus</em> 15. Published <strong>September 2024</strong>. https://doi.org/10.1080/19491034.2024.2398450. Current general review of SUMO chains, proteases, STUbLs, and genome maintenance; not direct evidence for <em>S. pombe</em> Ulp2. (thu2024multifacetedrolesof pages 14-15, thu2024multifacetedrolesof pages 1-2)</p>
+</li>
+</ul>
+<h2 id="conclusion">Conclusion</h2>
+<p>O13769 is correctly annotated as the <em>S. pombe</em> Ulp2 SUMO-specific protease. Its experimentally established primary function is cysteine-dependent hydrolysis of SUMO isopeptide bonds, with preference for high-molecular-weight SUMO conjugates rather than SUMO-precursor maturation. It works mainly in nuclear foci and large complexes, where it constrains potentially toxic SUMO-chain accumulation and interfaces genetically with STUbL and PP2A-dependent control. Associations with RNA-processing, ribosome-biogenesis, and translation proteins—especially SUMOylated eIF4G—extend its likely functional scope, but named physiological substrates remain incompletely validated. The major annotation gap is therefore not enzyme class or localization, but precise substrate identity, chain-linkage preference, and complex-specific recruitment mechanisms.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(jongjitwimol2014thes.pombe pages 4-5): Jirapas Jongjitwimol, Min Feng, Lihong Zhou, Oliver Wilkinson, Lauren Small, Robert Baldock, Deborah L. Taylor, Duncan Smith, Lucas D. Bowler, Simon J. Morley, and Felicity Z. Watts. The s. pombe translation initiation factor eif4g is sumoylated and associates with the sumo protease ulp2. PLoS ONE, 9:e94182, May 2014. URL: https://doi.org/10.1371/journal.pone.0094182, doi:10.1371/journal.pone.0094182. This article has 15 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jongjitwimol2014thes.pombe pages 5-7): Jirapas Jongjitwimol, Min Feng, Lihong Zhou, Oliver Wilkinson, Lauren Small, Robert Baldock, Deborah L. Taylor, Duncan Smith, Lucas D. Bowler, Simon J. Morley, and Felicity Z. Watts. The s. pombe translation initiation factor eif4g is sumoylated and associates with the sumo protease ulp2. PLoS ONE, 9:e94182, May 2014. URL: https://doi.org/10.1371/journal.pone.0094182, doi:10.1371/journal.pone.0094182. This article has 15 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nie2016functionalcrosstalkbetween pages 7-10): Minghua Nie, Emily Arner, John Prudden, Lana Schaffer, Steven Head, and Michael N. Boddy. Functional crosstalk between the pp2a and sumo pathways revealed by analysis of stubl suppressor, razor 1-1. Jul 2016. URL: https://doi.org/10.1371/journal.pgen.1006165, doi:10.1371/journal.pgen.1006165. This article has 4 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jongjitwimol2014thes.pombe pages 7-9): Jirapas Jongjitwimol, Min Feng, Lihong Zhou, Oliver Wilkinson, Lauren Small, Robert Baldock, Deborah L. Taylor, Duncan Smith, Lucas D. Bowler, Simon J. Morley, and Felicity Z. Watts. The s. pombe translation initiation factor eif4g is sumoylated and associates with the sumo protease ulp2. PLoS ONE, 9:e94182, May 2014. URL: https://doi.org/10.1371/journal.pone.0094182, doi:10.1371/journal.pone.0094182. This article has 15 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jongjitwimol2014thes.pombe pages 2-3): Jirapas Jongjitwimol, Min Feng, Lihong Zhou, Oliver Wilkinson, Lauren Small, Robert Baldock, Deborah L. Taylor, Duncan Smith, Lucas D. Bowler, Simon J. Morley, and Felicity Z. Watts. The s. pombe translation initiation factor eif4g is sumoylated and associates with the sumo protease ulp2. PLoS ONE, 9:e94182, May 2014. URL: https://doi.org/10.1371/journal.pone.0094182, doi:10.1371/journal.pone.0094182. This article has 15 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nie2016functionalcrosstalkbetween pages 1-2): Minghua Nie, Emily Arner, John Prudden, Lana Schaffer, Steven Head, and Michael N. Boddy. Functional crosstalk between the pp2a and sumo pathways revealed by analysis of stubl suppressor, razor 1-1. Jul 2016. URL: https://doi.org/10.1371/journal.pgen.1006165, doi:10.1371/journal.pgen.1006165. This article has 4 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jongjitwimol2014thes.pombe pages 9-11): Jirapas Jongjitwimol, Min Feng, Lihong Zhou, Oliver Wilkinson, Lauren Small, Robert Baldock, Deborah L. Taylor, Duncan Smith, Lucas D. Bowler, Simon J. Morley, and Felicity Z. Watts. The s. pombe translation initiation factor eif4g is sumoylated and associates with the sumo protease ulp2. PLoS ONE, 9:e94182, May 2014. URL: https://doi.org/10.1371/journal.pone.0094182, doi:10.1371/journal.pone.0094182. This article has 15 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(thu2024multifacetedrolesof pages 14-15): Yee Mon Thu. Multifaceted roles of sumo in dna metabolism. Nucleus, Sep 2024. URL: https://doi.org/10.1080/19491034.2024.2398450, doi:10.1080/19491034.2024.2398450. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(thu2024multifacetedrolesof pages 1-2): Yee Mon Thu. Multifaceted roles of sumo in dna metabolism. Nucleus, Sep 2024. URL: https://doi.org/10.1080/19491034.2024.2398450, doi:10.1080/19491034.2024.2398450. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(chang2021sumotargetedubiquitinligases pages 11-12): Ya-Chu Chang, Marissa K. Oram, and Anja-Katrin Bielinsky. Sumo-targeted ubiquitin ligases and their functions in maintaining genome stability. May 2021. URL: https://doi.org/10.3390/ijms22105391, doi:10.3390/ijms22105391. This article has 80 citations.</p>
+</li>
+<li>
+<p>(nie2016functionalcrosstalkbetween pages 13-14): Minghua Nie, Emily Arner, John Prudden, Lana Schaffer, Steven Head, and Michael N. Boddy. Functional crosstalk between the pp2a and sumo pathways revealed by analysis of stubl suppressor, razor 1-1. Jul 2016. URL: https://doi.org/10.1371/journal.pgen.1006165, doi:10.1371/journal.pgen.1006165. This article has 4 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(nie2016functionalcrosstalkbetween pages 4-7): Minghua Nie, Emily Arner, John Prudden, Lana Schaffer, Steven Head, and Michael N. Boddy. Functional crosstalk between the pp2a and sumo pathways revealed by analysis of stubl suppressor, razor 1-1. Jul 2016. URL: https://doi.org/10.1371/journal.pgen.1006165, doi:10.1371/journal.pgen.1006165. This article has 4 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(jongjitwimol2014thes.pombe pages 11-12): Jirapas Jongjitwimol, Min Feng, Lihong Zhou, Oliver Wilkinson, Lauren Small, Robert Baldock, Deborah L. Taylor, Duncan Smith, Lucas D. Bowler, Simon J. Morley, and Felicity Z. Watts. The s. pombe translation initiation factor eif4g is sumoylated and associates with the sumo protease ulp2. PLoS ONE, 9:e94182, May 2014. URL: https://doi.org/10.1371/journal.pone.0094182, doi:10.1371/journal.pone.0094182. This article has 15 citations and is from a peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="ulp2-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>nie2016functionalcrosstalkbetween pages 7-10</li>
+<li>nie2016functionalcrosstalkbetween pages 1-2</li>
+<li>thu2024multifacetedrolesof pages 14-15</li>
+<li>thu2024multifacetedrolesof pages 1-2</li>
+<li>chang2021sumotargetedubiquitinligases pages 11-12</li>
+<li>nie2016functionalcrosstalkbetween pages 13-14</li>
+<li>nie2016functionalcrosstalkbetween pages 4-7</li>
+<li>https://doi.org/10.1371/journal.pone.0094182.</li>
+<li>https://doi.org/10.1371/journal.pgen.1006165.</li>
+<li>https://doi.org/10.1080/19491034.2024.2398450.</li>
+<li>https://doi.org/10.1371/journal.pone.0094182,</li>
+<li>https://doi.org/10.1371/journal.pgen.1006165,</li>
+<li>https://doi.org/10.1080/19491034.2024.2398450,</li>
+<li>https://doi.org/10.3390/ijms22105391,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ulp2-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O13769" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="ulp2-notes">ulp2 notes</h1>
+<p>Identity: ulp2, UniProt O13769; current PomBase systematic identifier is recorded in the benchmark cohort. The UniProt sequence is the reviewed current record, whereas the source XML uses placeholder taxonomy and sequence fields. Those placeholders are not biological evidence.</p>
+<h2 id="protnlm-source-provenance">ProtNLM source provenance</h2>
+<p>Source: PRE-RELEASE post-processed-2026_02_28k.xml. The exact entry is in <code>ulp2-protnlm-source.xml</code>. No entry belongs to the published 26,856-record pilot list. Current API availability does not change the original source version.</p>
+<p>The XML evidence keys, model scores, string-match hydration metadata and alignment accessions/scores are retained verbatim in that source file. Assessments use current sequence features and primary sources; annotation overlap and ARBA output do not independently validate a prediction.</p>
+<h2 id="biological-evidence-and-interpretation">Biological evidence and interpretation</h2>
+<p>LSP: Purified fission-yeast Ulp2 directly deconjugates SUMO from high-molecular-weight species, and the study identifies it as a cysteine protease. SUMO is a ubiquitin-like modifier, so the broad ubiquitin-like protein peptidase term is biologically correct. The more specific deSUMOylase activity GO:0016929 is experimentally established and already annotated; the XML records hydration from that term. This prediction loses substrate specificity and is therefore LSP. It does not imply a demonstrated ability to remove ubiquitin itself.</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/24818994" title="These results confirm that like S. cerevisiae Ulp2, S. pombe Ulp2 is a cysteine protease whose main function is in deconjugating SUMO from target proteins.">PMID:24818994</a></p>
+<p>LSP: Direct biochemical experiments establish Ulp2 as a SUMO-deconjugating cysteine protease, including sensitivity to N-ethylmaleimide. The conserved C48 catalytic domain is consistent with that mechanism. Cysteine-type peptidase activity is true but less precise than the already annotated deSUMOylase activity and its SUMO substrate specificity. The XML keyword hydration does not supply independent validation; the target biochemical result does.</p>
+<p><a href="https://pubmed.ncbi.nlm.nih.gov/24818994" title="These results confirm that like S. cerevisiae Ulp2, S. pombe Ulp2 is a cysteine protease whose main function is in deconjugating SUMO from target proteins.">PMID:24818994</a></p>
+<h2 id="ontology-specificity">Ontology specificity</h2>
+<p>QuickGO GO:0070139 (SUMO-specific endopeptidase activity), accessed 2026-09-08: "Catalysis of the hydrolysis of peptide bonds between an alpha-carboxyl group and an alpha-amino group within the small conjugating protein SUMO.". The frozen JSON is adjacent to this file.</p>
+<h2 id="assay-scope">Assay scope</h2>
+<p>The full text of <a href="https://pubmed.ncbi.nlm.nih.gov/24818994">PMID:24818994</a>(https://pubmed.ncbi.nlm.nih.gov/24818994/), DOI <a href="https://doi.org/10.1371/journal.pone.0094182">10.1371/journal.pone.0094182</a>, separates precursor maturation from deconjugation. Figure 1 compares full-length SUMO processing by Ulp1 and Ulp2, then tests high-molecular-weight SUMO conjugates in pombe extracts with increasing Ulp2 amounts and an NEM-treated enzyme control. These experiments establish deSUMOylation more specifically than either external peptidase prediction. Reduced precursor-processing efficiency is not a demonstration of absolute inability to process precursor SUMO.</p>
+<p>The eIF4G/eIF3h interactions do not make Ulp2 a constitutive translating-ribosome component. The discussion reports that Ulp2 remained in large sedimenting complexes when EDTA disrupted polysomes. Its stress and translation-factor associations therefore should not be treated as evidence for ribosomal residence or an intrinsic translation activity. This is the same primary study used in the review, not an additional experimental replication.</p>
+<h2 id="appraisal-of-completed-falcon-report">Appraisal of completed Falcon report</h2>
+<p>The original Falcon request completed after 1295.37 seconds (about 21.6 minutes), despite the wrapper reporting a 600-second timeout and the fallback failing with quota HTTP401. The returned provider report and its artifact were retained unchanged and inspected. No duplicate request was made.</p>
+<p>The report agrees with the primary biochemical and localization evidence already used here: Ulp2 is predominantly a SUMO-deconjugating cysteine protease in intranuclear foci, with substantially weaker SUMO-precursor processing than Ulp1. Its eIF4G discussion correctly distinguishes co-purification and eIF4G sumoylation from direct Ulp2-dependent substrate turnover. It supplies no evidence resolving the specific stress-granule or translation-regulation assertions. Both external broad peptidase predictions therefore remain LSP.</p>
+<p>The additional 2016 primary source was verified and cached in full: PMID:27398807, Functional Crosstalk between the PP2A and SUMO Pathways Revealed by Analysis of STUbL Suppressor, razor 1-1. The Ulp2-relevant results support genetic suppression and altered SUMO-conjugate abundance: <a href="https://pubmed.ncbi.nlm.nih.gov/27398807" title="Strikingly, as for slx8-29, we found that pab1-1 strongly suppressed the HU sensitivity of ulp2∆ cells (Fig 6A). Moreover, western analysis of SUMO again revealed a small but detectable reduction in HMW species in ulp2∆ pab1-1 double mutant versus ulp2∆ single mutant cells (Fig 6B).">PMID:27398807</a>. This strengthens SUMO-homeostasis context without changing modifier specificity, localization or the existing GO judgments.</p>
+<p>The STUbL relationship must remain genotype-dependent rather than being reduced to two interchangeable routes that prevent SUMO accumulation. The primary paper explicitly states <a href="https://pubmed.ncbi.nlm.nih.gov/27398807" title="Therefore, unscheduled STUbL activity on SUMO-chain modified proteins, rather than the SUMO chains themselves, is toxic to ulp2∆ cells.">PMID:27398807</a>. Neither the generated synthesis nor this genetic relationship identifies a direct Ulp2-STUbL complex or a shared named substrate. No biological YAML changes were warranted by the late report.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O13769
+gene_symbol: ulp2
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:284812
+  label: Schizosaccharomyces pombe (strain 972 / ATCC 24843)
+description: Ulp2 is a SUMO-specific cysteine protease that removes SUMO from high-molecular-weight conjugates.
+  It resides mainly in intranuclear foci, with a smaller cytoplasmic pool, and differs from the predominantly
+  nuclear-pore-associated Ulp1 protease. Ulp2 has much weaker SUMO-precursor processing activity than
+  Ulp1. It occurs in large complexes containing RNA-metabolism and translation proteins, including eIF4G,
+  linking SUMO turnover to these cellular systems without establishing a specific translation-regulatory
+  mechanism.
+existing_annotations:
+- term:
+    id: GO:0005515
+    label: protein binding
+  evidence_type: IPI
+  original_reference_id: PMID:24818994
+  qualifier: enables
+  supporting_entities:
+  - PomBase:SPAC17C9.03
+  review:
+    summary: The interaction evidence establishes co-purification with translation and RNA-metabolism
+      proteins, but generic protein binding does not specify Ulp2 molecular function.
+    action: KEEP_AS_NON_CORE
+    reason: The interaction evidence establishes co-purification with translation and RNA-metabolism proteins,
+      but generic protein binding does not specify Ulp2 molecular function. Retain the physical-interaction
+      evidence as non-core; SUMO deconjugation is the informative enzymatic activity.
+    supported_by:
+    - &amp;id003
+      reference_id: PMID:24818994
+      supporting_text: We demonstrate that it co-purifies with a number of proteins, many of which are
+        involved in RNA metabolism or protein synthesis.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: HDA
+  original_reference_id: PMID:16823372
+  qualifier: is_active_in
+  review:
+    summary: Direct imaging shows predominantly nuclear Ulp2 foci and a smaller cytoplasmic pool, supporting
+      this compartment.
+    action: ACCEPT
+    reason: Direct imaging shows predominantly nuclear Ulp2 foci and a smaller cytoplasmic pool, supporting
+      this compartment. This also supports the conserved localization assertion without assuming that
+      Ulp2 shares Ulp1 nuclear-pore localization.
+    supported_by:
+    - &amp;id001
+      reference_id: PMID:24818994
+      supporting_text: Figure 3 indicates that Ulp2 is present in foci that are predominantly nuclear,
+        with a small proportion in the cytoplasm.
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  supporting_entities:
+  - FB:FBgn0030420
+  - FB:FBgn0035713
+  - PANTHER:PTN002930416
+  - UniProtKB:Q9BQF6
+  - UniProtKB:Q9GZR1
+  review:
+    summary: Direct imaging shows predominantly nuclear Ulp2 foci and a smaller cytoplasmic pool, supporting
+      this compartment.
+    action: ACCEPT
+    reason: Direct imaging shows predominantly nuclear Ulp2 foci and a smaller cytoplasmic pool, supporting
+      this compartment. This also supports the conserved localization assertion without assuming that
+      Ulp2 shares Ulp1 nuclear-pore localization.
+    supported_by:
+    - *id001
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB-SubCell:SL-0191
+  review:
+    summary: Direct imaging shows predominantly nuclear Ulp2 foci and a smaller cytoplasmic pool, supporting
+      this compartment.
+    action: ACCEPT
+    reason: Direct imaging shows predominantly nuclear Ulp2 foci and a smaller cytoplasmic pool, supporting
+      this compartment. This also supports the conserved localization assertion without assuming that
+      Ulp2 shares Ulp1 nuclear-pore localization.
+    supported_by:
+    - *id001
+- term:
+    id: GO:0005737
+    label: cytoplasm
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: is_active_in
+  supporting_entities:
+  - FB:FBgn0030420
+  - FB:FBgn0035713
+  - MGI:MGI:1913565
+  - MGI:MGI:1922075
+  - PANTHER:PTN002930416
+  - PomBase:SPAC17A5.07c
+  review:
+    summary: Direct imaging shows predominantly nuclear Ulp2 foci and a smaller cytoplasmic pool, supporting
+      this compartment.
+    action: ACCEPT
+    reason: Direct imaging shows predominantly nuclear Ulp2 foci and a smaller cytoplasmic pool, supporting
+      this compartment. This also supports the conserved localization assertion without assuming that
+      Ulp2 shares Ulp1 nuclear-pore localization.
+    supported_by:
+    - *id001
+- term:
+    id: GO:0006508
+    label: proteolysis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  supporting_entities:
+  - InterPro:IPR003653
+  review:
+    summary: The broad proteolysis/peptidase assertion is correct, but direct biochemical experiments
+      establish SUMO deconjugation by a cysteine protease.
+    action: MODIFY
+    reason: The broad proteolysis/peptidase assertion is correct, but direct biochemical experiments establish
+      SUMO deconjugation by a cysteine protease. Use deSUMOylase activity to preserve modifier specificity;
+      ubiquitin-like does not mean ubiquitin itself is the substrate.
+    supported_by:
+    - &amp;id002
+      reference_id: PMID:24818994
+      supporting_text: These results confirm that like S. cerevisiae Ulp2, S. pombe Ulp2 is a cysteine
+        protease whose main function is in deconjugating SUMO from target proteins.
+    proposed_replacement_terms:
+    - id: GO:0016926
+      label: protein desumoylation
+- term:
+    id: GO:0008234
+    label: cysteine-type peptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  supporting_entities:
+  - InterPro:IPR003653
+  review:
+    summary: The broad proteolysis/peptidase assertion is correct, but direct biochemical experiments
+      establish SUMO deconjugation by a cysteine protease.
+    action: MODIFY
+    reason: The broad proteolysis/peptidase assertion is correct, but direct biochemical experiments establish
+      SUMO deconjugation by a cysteine protease. Use deSUMOylase activity to preserve modifier specificity;
+      ubiquitin-like does not mean ubiquitin itself is the substrate.
+    supported_by:
+    - *id002
+    proposed_replacement_terms:
+    - id: GO:0016929
+      label: deSUMOylase activity
+- term:
+    id: GO:0010494
+    label: cytoplasmic stress granule
+  evidence_type: IDA
+  original_reference_id: PMID:24818994
+  qualifier: is_active_in
+  review:
+    summary: The accessible full text shows stress-dependent eIF4G/SUMO cytoplasmic foci and separately
+      localizes Ulp2, but does not unambiguously establish Ulp2 itself in stress granules.
+    action: UNDECIDED
+    reason: The accessible full text shows stress-dependent eIF4G/SUMO cytoplasmic foci and separately
+      localizes Ulp2, but does not unambiguously establish Ulp2 itself in stress granules. The source-specific
+      localization requires inspection of the relevant target image or supplementary evidence. This does
+      not contradict the independently demonstrated cytoplasmic Ulp2 pool.
+    supported_by:
+    - *id001
+- term:
+    id: GO:0016926
+    label: protein desumoylation
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  supporting_entities:
+  - MGI:MGI:1913565
+  - PANTHER:PTN002930416
+  - UniProtKB:Q9GZR1
+  review:
+    summary: Purified fission-yeast Ulp2 deconjugates SUMO from high-molecular-weight species in an NEM-sensitive
+      assay, directly establishing the cysteine-protease mechanism and SUMO substrate specificity..
+    action: ACCEPT
+    reason: Purified fission-yeast Ulp2 deconjugates SUMO from high-molecular-weight species in an NEM-sensitive
+      assay, directly establishing the cysteine-protease mechanism and SUMO substrate specificity.
+    supported_by:
+    - *id002
+- term:
+    id: GO:0016929
+    label: deSUMOylase activity
+  evidence_type: IDA
+  original_reference_id: PMID:24818994
+  qualifier: enables
+  review:
+    summary: Purified fission-yeast Ulp2 deconjugates SUMO from high-molecular-weight species in an NEM-sensitive
+      assay, directly establishing the cysteine-protease mechanism and SUMO substrate specificity..
+    action: ACCEPT
+    reason: Purified fission-yeast Ulp2 deconjugates SUMO from high-molecular-weight species in an NEM-sensitive
+      assay, directly establishing the cysteine-protease mechanism and SUMO substrate specificity.
+    supported_by:
+    - *id002
+- term:
+    id: GO:0019783
+    label: ubiquitin-like protein peptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  supporting_entities:
+  - ARBA:ARBA00027361
+  review:
+    summary: The broad proteolysis/peptidase assertion is correct, but direct biochemical experiments
+      establish SUMO deconjugation by a cysteine protease.
+    action: MODIFY
+    reason: The broad proteolysis/peptidase assertion is correct, but direct biochemical experiments establish
+      SUMO deconjugation by a cysteine protease. Use deSUMOylase activity to preserve modifier specificity;
+      ubiquitin-like does not mean ubiquitin itself is the substrate.
+    supported_by:
+    - *id002
+    proposed_replacement_terms:
+    - id: GO:0016929
+      label: deSUMOylase activity
+- term:
+    id: GO:0070139
+    label: SUMO-specific endopeptidase activity
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: enables
+  supporting_entities:
+  - MGI:MGI:1913565
+  - PANTHER:PTN002930416
+  - UniProtKB:Q9GZR1
+  review:
+    summary: The target can process SUMO precursor weakly in vitro, but the direct comparison shows substantially
+      poorer maturation activity than Ulp1 and identifies deconjugation as its main role.
+    action: KEEP_AS_NON_CORE
+    reason: The target can process SUMO precursor weakly in vitro, but the direct comparison shows substantially
+      poorer maturation activity than Ulp1 and identifies deconjugation as its main role. Retain the SUMO-specific
+      endopeptidase assertion as a minor biochemical capacity rather than the core molecular function.
+    supported_by:
+    - reference_id: PMID:24818994
+      supporting_text: Using assays we described previously [13], we demonstrate that Ulp2 is significantly
+        less able than Ulp1 to process SUMO to the mature form (Figure 1A, lane 2 (Ulp1) and lane 3 (Ulp2)),
+        but is capable of deconjugating SUMO from high Mr species in an N-ethylmaleimide- (NEM)-dependent
+        manner (Figure 1B).
+    - *id002
+- term:
+    id: GO:2000765
+    label: regulation of cytoplasmic translation
+  evidence_type: EXP
+  original_reference_id: PMID:24818994
+  qualifier: involved_in
+  review:
+    summary: Ulp2 co-purifies with translation factors and eIF4G sumoylation changes during osmotic stress.
+    action: UNDECIDED
+    reason: Ulp2 co-purifies with translation factors and eIF4G sumoylation changes during osmotic stress.
+      The paper does not establish an Ulp2-dependent change in translation rate or a resolved regulatory
+      mechanism; its discussion explicitly leaves the role of eIF4G sumoylation open. The physiological
+      translation-regulation assertion therefore remains unresolved.
+    supported_by:
+    - *id003
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping,
+    accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: PMID:16823372
+  title: ORFeome cloning and global analysis of protein localization in the fission yeast Schizosaccharomyces
+    pombe.
+  findings: []
+- id: PMID:24818994
+  title: The S. pombe translation initiation factor eIF4G is Sumoylated and associates with the SUMO protease
+    Ulp2.
+  findings: []
+  full_text_unavailable: false
+core_functions:
+- description: SUMO deconjugating cysteine protease acting predominantly in the nucleus, with a smaller
+    cytoplasmic pool.
+  molecular_function:
+    id: GO:0016929
+    label: deSUMOylase activity
+  directly_involved_in:
+  - id: GO:0016926
+    label: protein desumoylation
+  locations:
+  - id: GO:0005634
+    label: nucleus
+  - id: GO:0005737
+    label: cytoplasm
+  supported_by:
+  - *id002
+  - *id001
+suggested_questions:
+- question: Is eIF4G a direct physiological Ulp2 substrate, and does its deSUMOylation control translation
+    initiation or stress-granule recruitment?
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

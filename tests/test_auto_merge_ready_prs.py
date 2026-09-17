@@ -101,6 +101,12 @@ def test_fully_ready_pr_is_eligible():
     assert decide(make_pr()).eligible
 
 
+def test_approved_draft_requires_explicit_opt_in():
+    pr = make_pr(isDraft=True, mergeStateStatus="DRAFT")
+    assert not decide(pr).eligible
+    assert decide(pr, include_drafts=True).eligible
+
+
 def test_required_check_can_be_enabled():
     assert decide(make_pr(), required_checks=[REQUIRED_CHECK]).eligible
 
@@ -367,54 +373,69 @@ def test_recorded_stale_base_does_not_block_an_independent_pr():
 # Changed-file path scope
 
 
-def test_default_allowed_path_prefixes_are_the_conservative_content_set():
-    assert auto_merge.DEFAULT_ALLOWED_PATH_PREFIXES == (
-        "genes/",
-        "genesets/",
-        "gocams/",
-        "interpro/",
-        "modules/",
-        "pages/",
-        "projects/",
-        "publications/",
-        "reactome/",
-        "rules/",
-        "terms/",
-        "families/",
-        "research/",
-    )
-
-
-def test_allowed_path_canary_mix_is_eligible():
-    canaries = [
-        f"{prefix}path-canary.yaml"
-        for prefix in auto_merge.DEFAULT_ALLOWED_PATH_PREFIXES
+def test_pr_2804_style_curation_with_shared_go_cache_is_eligible():
+    # Representative paths from PR #2804: its cache update was the sole scope veto.
+    files = [
+        "cache/go/terms.csv",
+        "genes/PSEPK/PP_0075/PP_0075-ai-review.yaml",
+        "genes/PSEPK/PP_0076/PP_0076-ai-review.html",
+        "genes/PSEPK/betC/betC-notes.md",
+        "modules/bacterial_choline_o_sulfate_uptake_and_desulfation.yaml",
+        "pages/modules/bacterial_choline_o_sulfate_uptake_and_desulfation.html",
+        "projects/P_PUTIDA/batches/choline_o_sulfate_uptake_desulfation.md",
+        "publications/PMID_17116241.md",
     ]
-    assert decide(make_pr(changedFiles=len(canaries), changed_files=canaries)).eligible
+    assert decide(
+        make_pr(number=2804, changedFiles=len(files), changed_files=files),
+        required_checks=[REQUIRED_CHECK],
+    ).eligible
+
+
+def test_curation_history_is_eligible_with_its_curated_content():
+    files = [
+        "genes/human/EXAMPLE/EXAMPLE-ai-review.yaml",
+        "history/genes/human/EXAMPLE/session.yaml",
+        "modules/example.yaml",
+        "history/modules/example/session.yaml",
+        "gocams/example/example-review.yaml",
+        "history/gocams/example/session.yaml",
+        "projects/EXAMPLE.md",
+        "history/projects/EXAMPLE/session.yaml",
+    ]
+    assert decide(make_pr(changedFiles=len(files), changed_files=files)).eligible
 
 
 @pytest.mark.parametrize(
-    "disallowed",
+    "path",
     [
         ".github/workflows/main.yaml",
         "scripts/release.py",
         "src/ai_gene_review/cli.py",
+        "docs/policy.md",
         "pyproject.toml",
+        "cache/go/terms.csv",
+        "cache/go/other.csv",
+        "cache/go/terms.csv.bak",
+        "cache/go/terms.csv/nested.yaml",
+        "cache/go/terms.csv-malicious",
+        "cache/other/terms.csv",
+        "history/schema/session.yaml",
+        "history/other/session.yaml",
+        "history/session.yaml",
+        "history/genes-other/session.yaml",
     ],
 )
-def test_one_disallowed_path_vetoes_otherwise_allowed_changes(disallowed):
+def test_default_scope_accepts_all_normalized_repo_paths(path):
     decision = decide(
         make_pr(
             changedFiles=2,
             changed_files=[
                 "genes/human/EXAMPLE/EXAMPLE-ai-review.yaml",
-                disallowed,
+                path,
             ],
         )
     )
-    assert not decision.eligible
-    assert "outside the allowed path scope" in decision.reason
-    assert disallowed in decision.reason
+    assert decision.eligible
 
 
 @pytest.mark.parametrize("changed_files", [None, [], [None], [""], [{}]])
@@ -425,13 +446,24 @@ def test_missing_empty_or_malformed_changed_files_fail_closed(changed_files):
     assert "file" in decision.reason
 
 
-def test_additional_path_prefix_expands_without_replacing_defaults():
+def test_explicit_path_prefixes_define_the_entire_optional_scope():
     pr = make_pr(
         changedFiles=2,
         changed_files=["genes/human/EXAMPLE/review.yaml", "docs/policy.md"],
     )
-    assert not decide(pr).eligible
-    assert decide(pr, allowed_path_prefixes=["docs/"]).eligible
+    assert decide(pr).eligible
+    restricted = decide(pr, allowed_path_prefixes=["docs/"])
+    assert not restricted.eligible
+    assert "outside the allowed path scope" in restricted.reason
+    assert "genes/human/EXAMPLE/review.yaml" in restricted.reason
+    assert decide(pr, allowed_path_prefixes=["docs/", "genes/"]).eligible
+
+
+@pytest.mark.parametrize("path", ["genes-other/review.yaml", "genes.md"])
+def test_explicit_path_prefix_requires_a_directory_boundary(path):
+    decision = decide(make_pr(changed_files=[path]), allowed_path_prefixes=["genes/"])
+    assert not decision.eligible
+    assert path in decision.reason
 
 
 @pytest.mark.parametrize("count", [None, True, 0, -1, "1"])
@@ -477,6 +509,9 @@ def test_duplicate_rest_filenames_fail_closed():
         "genes\\human\\review.yaml",
         "genes/human/review.yaml\n.github/workflows/main.yaml",
         " genes/human/review.yaml",
+        "cache/go/./terms.csv",
+        "cache/go/terms.csv ",
+        "history/genes/../../schema/session.yaml",
     ],
 )
 def test_non_normalized_repo_paths_fail_closed(path):
@@ -485,18 +520,47 @@ def test_non_normalized_repo_paths_fail_closed(path):
     assert "non-normalized changed-file path" in decision.reason
 
 
-def test_rename_source_path_is_also_within_the_perimeter():
+def test_default_scope_accepts_renames_across_repo_directories():
     moved_from_infrastructure = make_pr(
         changed_files=["genes/human/EXAMPLE/moved.yaml"],
         previous_changed_filenames=[".github/workflows/main.yaml"],
     )
-    assert not decide(moved_from_infrastructure).eligible
+    assert decide(moved_from_infrastructure).eligible
+    assert not decide(
+        moved_from_infrastructure, allowed_path_prefixes=["genes/"]
+    ).eligible
     assert decide(
         make_pr(
             changed_files=["genes/human/EXAMPLE/new.yaml"],
             previous_changed_filenames=["genes/human/EXAMPLE/old.yaml"],
-        )
+        ),
+        allowed_path_prefixes=["genes/"],
     ).eligible
+
+
+@pytest.mark.parametrize(
+    ("prefix", "allowed", "disallowed"),
+    [
+        ("cache/go/", "cache/go/terms.csv", "cache/other/terms.csv"),
+        (
+            "history/genes/",
+            "history/genes/human/EXAMPLE/session.yaml",
+            "history/schema/session.yaml",
+        ),
+        ("genes/", "genes/human/EXAMPLE/review.yaml", ".github/workflows/main.yaml"),
+    ],
+)
+@pytest.mark.parametrize("rename_into_allowed_scope", [False, True])
+def test_explicit_scope_checks_both_rename_paths(
+    prefix, allowed, disallowed, rename_into_allowed_scope
+):
+    old, new = (disallowed, allowed) if rename_into_allowed_scope else (allowed, disallowed)
+    decision = decide(
+        make_pr(changed_files=[new], previous_changed_filenames=[old]),
+        allowed_path_prefixes=[prefix],
+    )
+    assert not decision.eligible
+    assert disallowed in decision.reason
 
 
 # Check rollup and named required checks
@@ -815,6 +879,10 @@ def _run_main(
     views=None,
     args=(),
     post_file_heads=None,
+    list_view=None,
+    ready_calls=None,
+    draft_calls=None,
+    merge_error=None,
 ):
     monkeypatch.setenv("GH_MERGE_TOKEN", "writer-token")
     view = view or make_pr(number=42)
@@ -822,10 +890,12 @@ def _run_main(
     last_view = {"value": dict(view)}
     post_file_heads = list(post_file_heads or [HEAD_SHA, HEAD_SHA])
     merges = []
+    ready_calls = ready_calls if ready_calls is not None else []
+    draft_calls = draft_calls if draft_calls is not None else []
     monkeypatch.setattr(
         auto_merge,
         "list_open_prs",
-        lambda _repo, _limit, _base: [make_pr(number=42)],
+        lambda _repo, _limit, _base: [dict(list_view or make_pr(number=42))],
     )
 
     def fake_view_pr(_repo, _number):
@@ -855,11 +925,21 @@ def _run_main(
 
     monkeypatch.setattr(
         auto_merge,
-        "merge_pr",
-        lambda repo, number, days, head, _token: merges.append(
-            (repo, number, days, head)
-        ),
+        "mark_pr_ready",
+        lambda repo, number, _token: ready_calls.append((repo, number)),
     )
+    monkeypatch.setattr(
+        auto_merge,
+        "mark_pr_draft",
+        lambda repo, number, _token: draft_calls.append((repo, number)),
+    )
+
+    def fake_merge(repo, number, days, head, _token):
+        if merge_error is not None:
+            raise merge_error
+        merges.append((repo, number, days, head))
+
+    monkeypatch.setattr(auto_merge, "merge_pr", fake_merge)
     summary = tmp_path / "summary.md"
     code = auto_merge.main(["--repo", "o/r", "--summary-file", str(summary), *args])
     return code, merges, summary.read_text()
@@ -878,6 +958,152 @@ def test_explicit_dry_run_never_merges(monkeypatch, tmp_path):
     assert code == 0
     assert merges == []
     assert "Would merge 1" in summary
+
+
+def test_include_drafts_audit_reports_without_marking_ready(monkeypatch, tmp_path):
+    draft = make_pr(number=42, isDraft=True, mergeStateStatus="DRAFT")
+    ready_calls = []
+    code, merges, summary = _run_main(
+        monkeypatch,
+        tmp_path,
+        view=draft,
+        list_view=draft,
+        ready_calls=ready_calls,
+        args=("--dry-run", "--include-drafts"),
+    )
+    assert code == 0
+    assert merges == []
+    assert ready_calls == []
+    assert "Would merge 1" in summary
+
+
+def test_include_drafts_execute_marks_ready_then_reverifies_and_merges(
+    monkeypatch, tmp_path
+):
+    draft = make_pr(number=42, isDraft=True, mergeStateStatus="DRAFT")
+    ready = make_pr(number=42, isDraft=False)
+    ready_calls = []
+    draft_calls = []
+    code, merges, summary = _run_main(
+        monkeypatch,
+        tmp_path,
+        views=[draft, ready],
+        list_view=draft,
+        ready_calls=ready_calls,
+        draft_calls=draft_calls,
+        args=(
+            "--execute",
+            "--required-check",
+            REQUIRED_CHECK,
+            "--include-drafts",
+        ),
+    )
+    assert code == 0
+    assert ready_calls == [("o/r", 42)]
+    assert draft_calls == []
+    assert merges == [("o/r", 42, 3, HEAD_SHA)]
+    assert "Merged 1" in summary
+
+
+def test_include_drafts_execute_requires_ready_transition(monkeypatch, tmp_path):
+    draft = make_pr(number=42, isDraft=True, mergeStateStatus="DRAFT")
+    ready_calls = []
+    draft_calls = []
+    code, merges, summary = _run_main(
+        monkeypatch,
+        tmp_path,
+        views=[draft, draft],
+        list_view=draft,
+        ready_calls=ready_calls,
+        draft_calls=draft_calls,
+        args=(
+            "--execute",
+            "--required-check",
+            REQUIRED_CHECK,
+            "--include-drafts",
+        ),
+    )
+    assert code == 0
+    assert ready_calls == [("o/r", 42)]
+    assert draft_calls == [("o/r", 42)]
+    assert merges == []
+    assert "state changed after verification: draft" in summary
+
+
+def test_include_drafts_restores_draft_after_final_guard_failure(monkeypatch, tmp_path):
+    draft = make_pr(number=42, isDraft=True, mergeStateStatus="BLOCKED")
+    held = make_pr(number=42, labels=[{"name": "shepherd:hold"}])
+    draft_calls = []
+    code, merges, summary = _run_main(
+        monkeypatch,
+        tmp_path,
+        views=[draft, held],
+        list_view=draft,
+        draft_calls=draft_calls,
+        args=(
+            "--execute",
+            "--required-check",
+            REQUIRED_CHECK,
+            "--include-drafts",
+        ),
+    )
+    assert code == 0
+    assert merges == []
+    assert draft_calls == [("o/r", 42)]
+    assert "state changed after verification: held by label" in summary
+
+
+@pytest.mark.parametrize("message", ["already merged", "pull request is closed"])
+def test_include_drafts_does_not_redraft_a_pr_that_is_gone(
+    monkeypatch, tmp_path, message
+):
+    draft = make_pr(number=42, isDraft=True, mergeStateStatus="DRAFT")
+    ready = make_pr(number=42, isDraft=False)
+    draft_calls = []
+    error = subprocess.CalledProcessError(1, "gh", stderr=message)
+    code, merges, summary = _run_main(
+        monkeypatch,
+        tmp_path,
+        views=[draft, ready],
+        list_view=draft,
+        draft_calls=draft_calls,
+        merge_error=error,
+        args=(
+            "--execute",
+            "--required-check",
+            REQUIRED_CHECK,
+            "--include-drafts",
+        ),
+    )
+    assert code == 0
+    assert merges == []
+    assert draft_calls == []
+    assert message in summary
+
+
+def test_include_drafts_redrafts_after_open_pr_merge_race(monkeypatch, tmp_path):
+    draft = make_pr(number=42, isDraft=True, mergeStateStatus="BLOCKED")
+    ready = make_pr(number=42, isDraft=False)
+    draft_calls = []
+    error = subprocess.CalledProcessError(1, "gh", stderr="head branch was modified")
+    code, merges, summary = _run_main(
+        monkeypatch,
+        tmp_path,
+        views=[draft, ready],
+        list_view=draft,
+        draft_calls=draft_calls,
+        merge_error=error,
+        args=(
+            "--execute",
+            "--required-check",
+            REQUIRED_CHECK,
+            "--include-drafts",
+        ),
+    )
+    assert code == 0
+    assert merges == []
+    assert draft_calls == [("o/r", 42)]
+    assert "head branch was modified" in summary
 
 
 def test_execute_merges_and_pins_verified_head(monkeypatch, tmp_path):
@@ -916,14 +1142,20 @@ def test_hold_added_after_verification_blocks_execute(monkeypatch, tmp_path):
     assert "state changed after verification: held by label" in summary
 
 
-def test_disallowed_path_added_on_second_read_blocks_execute(monkeypatch, tmp_path):
+def test_explicit_path_scope_is_enforced_again_on_second_read(monkeypatch, tmp_path):
     initial = make_pr(number=42)
     changed = make_pr(number=42, changed_files=["scripts/new_release.py"])
     code, merges, summary = _run_main(
         monkeypatch,
         tmp_path,
         views=[initial, changed],
-        args=("--execute", "--required-check", REQUIRED_CHECK),
+        args=(
+            "--execute",
+            "--required-check",
+            REQUIRED_CHECK,
+            "--allowed-path-prefix",
+            "genes/",
+        ),
     )
     assert code == 0
     assert merges == []
@@ -988,7 +1220,17 @@ def test_head_movement_during_final_file_read_is_a_benign_skip(monkeypatch, tmp_
     assert "head moved during the file-list read" in summary
 
 
-def test_allowed_path_cli_extension_preserves_default_paths(monkeypatch, tmp_path):
+@pytest.mark.parametrize(
+    ("path_args", "eligible"),
+    [
+        ((), True),
+        (("--allowed-path-prefix", "docs/"), False),
+        (("--allowed-path-prefix", "docs/", "--allowed-path-prefix", "genes/"), True),
+    ],
+)
+def test_allowed_path_cli_is_an_optional_restriction(
+    monkeypatch, tmp_path, path_args, eligible
+):
     view = make_pr(
         number=42,
         changedFiles=2,
@@ -998,11 +1240,14 @@ def test_allowed_path_cli_extension_preserves_default_paths(monkeypatch, tmp_pat
         monkeypatch,
         tmp_path,
         view=view,
-        args=("--dry-run", "--allowed-path-prefix", "docs/"),
+        args=("--dry-run", *path_args),
     )
     assert code == 0
     assert merges == []
-    assert "Would merge 1" in summary
+    assert ("Would merge 1" in summary) is eligible
+    if not eligible:
+        assert "outside the allowed path scope" in summary
+        assert "genes/human/EXAMPLE/review.yaml" in summary
 
 
 def test_execute_and_dry_run_are_mutually_exclusive(monkeypatch):
@@ -1216,6 +1461,32 @@ def test_execute_processes_oldest_candidate_first(monkeypatch, tmp_path):
 # Merge invocation and reporting
 
 
+def test_ready_and_redraft_use_only_the_dedicated_writer(monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        auto_merge,
+        "_gh",
+        lambda args, *, token=None: calls.append((args, token)) or "",
+    )
+    auto_merge.mark_pr_ready("o/r", 7, "writer-token")
+    auto_merge.mark_pr_draft("o/r", 7, "writer-token")
+    assert calls == [
+        (["pr", "ready", "7", "--repo", "o/r"], "writer-token"),
+        (["pr", "ready", "7", "--repo", "o/r", "--undo"], "writer-token"),
+    ]
+
+
+@pytest.mark.parametrize("function", ["mark_pr_ready", "mark_pr_draft"])
+def test_ready_state_writes_refuse_empty_token(monkeypatch, function):
+    monkeypatch.setattr(
+        auto_merge,
+        "_gh",
+        lambda *_args, **_kwargs: pytest.fail("gh must not run without a token"),
+    )
+    with pytest.raises(ValueError):
+        getattr(auto_merge, function)("o/r", 7, "  ")
+
+
 def test_merge_pr_always_pins_the_head(monkeypatch):
     calls = []
     monkeypatch.setattr(
@@ -1270,6 +1541,9 @@ GH_REFUSAL = (
 
 def test_benign_race_and_error_rendering():
     assert auto_merge.is_benign_merge_failure(GH_REFUSAL)
+    assert not auto_merge.is_pr_gone_merge_failure(GH_REFUSAL)
+    assert auto_merge.is_pr_gone_merge_failure("pull request is closed")
+    assert auto_merge.is_pr_gone_merge_failure("already merged")
     exc = subprocess.CalledProcessError(1, "gh", stderr=GH_REFUSAL)
     assert auto_merge._gh_error(exc).startswith("Pull request")
     assert "--admin" not in auto_merge._gh_error(exc)

@@ -1,10 +1,12 @@
 """Security contracts for the deterministic PR Shepherd closing pass."""
 
 import re
+import os
 import subprocess
 from pathlib import Path
 
 import yaml
+import pytest
 
 
 ROOT = Path(__file__).parents[1]
@@ -51,8 +53,134 @@ def test_merge_controller_is_a_separate_job_with_trusted_checkout():
     assert checkout["with"]["persist-credentials"] is False
 
 
+def test_review_recovery_has_an_independent_runner_budget_and_credential():
+    workflow = _workflow(SHEPHERD)
+    jobs = workflow["jobs"]
+    assert "concurrency" not in workflow
+    assert len({job["concurrency"]["group"] for job in jobs.values()}) == len(jobs)
+    retry = jobs["retry-reviews"]
+    assert "needs" not in retry
+    assert "run_agent" not in retry["if"]
+    assert "merge_mode" not in retry["if"]
+    assert retry["permissions"] == {
+        "contents": "read",
+        "actions": "read",
+        "pull-requests": "read",
+    }
+    assert retry["env"]["RETRY_LIMIT"] == "${{ inputs.max_review_retries || '5' }}"
+    checkout = _step(retry, "Checkout trusted default branch")
+    assert checkout["with"]["ref"] == "${{ github.event.repository.default_branch }}"
+    assert checkout["with"]["persist-credentials"] is False
+    assert not any("claude-code-action" in use for use in _action_uses(retry))
+    token = _step(retry, "Generate scoped retry token")
+    assert "env.RETRY_MODE == 'execute'" in token["if"]
+    assert "env.RETRY_LIMIT != '0'" in token["if"]
+    assert {k: v for k, v in token["with"].items() if k.startswith("permission-")} == {
+        "permission-actions": "write"
+    }
+    run = _step(retry, "Retry failed reviews (deterministic)")
+    assert run["env"]["GH_TOKEN"] == "${{ github.token }}"
+    assert run["env"]["GH_RETRY_TOKEN"] == "${{ steps.retry-token.outputs.token }}"
+    inputs = workflow[True]["workflow_dispatch"]["inputs"]
+    assert inputs["review_retry_mode"]["default"] == "audit"
+    retry_mode = retry["env"]["RETRY_MODE"]
+    assert (
+        "vars.PR_SHEPHERD_RETRY_ENABLED == 'false' && 'audit' || 'execute'"
+        in retry_mode
+    )
+    assert "inputs.review_retry_mode || 'audit'" in retry_mode
+
+
+@pytest.mark.parametrize(
+    ("mode", "limit", "pr", "expected_mode"),
+    [
+        ("audit", "5", "2804", "--dry-run"),
+        ("execute", "5", "", "--execute"),
+        ("execute", "0", "", "--dry-run"),
+    ],
+)
+def test_retry_workflow_invokes_explicit_modes(
+    tmp_path, mode, limit, pr, expected_mode
+):
+    """Exercise the actual shell so zero budgets and audit cannot issue writes."""
+    retry = _workflow(SHEPHERD)["jobs"]["retry-reviews"]
+    script = _step(retry, "Retry failed reviews (deterministic)")["run"]
+    uv = tmp_path / "uv"
+    uv.write_text('#!/bin/sh\nprintf "%s\\n" "$@"\n')
+    uv.chmod(0o755)
+    env = dict(
+        os.environ,
+        PATH=f"{tmp_path}:{os.environ['PATH']}",
+        RETRY_MODE=mode,
+        RETRY_LIMIT=limit,
+        RETRY_DELAY="1",
+        SPECIFIC_PR=pr,
+        GITHUB_REPOSITORY="ai4curation/ai-gene-review",
+    )
+    result = subprocess.run(
+        ["bash", "-c", script], env=env, text=True, capture_output=True, check=True
+    )
+    args = result.stdout.splitlines()
+    assert expected_mode in args
+    assert ("--execute" in args) != ("--dry-run" in args)
+    assert args[args.index("--max-retries") + 1] == limit
+    assert ("--specific-pr" in args) == bool(pr)
+
+
+def test_review_triggers_share_one_lane_without_comment_cancellation():
+    workflow = _workflow(CLAUDE_REVIEW)
+    assert workflow["run-name"].startswith("Review PR #")
+    assert {"opened", "synchronize", "reopened", "ready_for_review"} <= set(
+        workflow[True]["pull_request"]["types"]
+    )
+    group = workflow["concurrency"]["group"]
+    assert "claude-review-${{ github.event_name }}" not in group
+    assert "github.event.comment.body == '/review'" in group
+    assert "github.event.comment.author_association" in group
+    assert "format('ignored-{0}', github.run_id)" in group
+    assert workflow["concurrency"]["cancel-in-progress"] is True
+
+
+def test_review_comment_authorization_matches_the_concurrency_lane():
+    """Changing comment authorization must also change its cancellation lane."""
+    workflow = _workflow(CLAUDE_REVIEW)
+    predicate = """github.event.issue.pull_request != null &&
+        github.event.comment.body == '/review' &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'),
+                 github.event.comment.author_association)"""
+
+    # Compare normalized tokens, including the entire role list and exact
+    # comment match, so neither predicate can acquire an extra/missing guard.
+    def tokens(value):
+        return re.sub(r"\s+", "", value)
+
+    concurrency = tokens(workflow["concurrency"]["group"])
+    job_condition = tokens(workflow["jobs"]["claude-review"]["if"])
+    shared = tokens(predicate)
+    assert f"!({shared})" in concurrency
+    assert f"github.event_name=='issue_comment'&&{shared})" in job_condition
+
+
+def test_agent_scope_includes_maintainer_codex_branches_without_retry_overlap():
+    prompt = _step(_workflow(SHEPHERD)["jobs"]["shepherd"], "Run PR Shepherd")["with"][
+        "prompt"
+    ]
+    assert "`codex/`" in prompt
+    assert "gh pr list --limit 1000" in prompt
+    assert "Never modify human-authored PRs." not in prompt
+    assert "SPECIFIC_PR does not bypass" in prompt
+    assert "independent deterministic retry-reviews" in prompt
+    assert "Do not rerun them or dispatch replacements here" in prompt
+    assert "Failed runs outside the 30-day window or at the 50-attempt limit" in prompt
+
+
 def test_audit_and_execute_have_literal_modes_and_distinct_tokens():
-    merge_job = _workflow(SHEPHERD)["jobs"]["merge-ready"]
+    workflow = _workflow(SHEPHERD)
+    # PyYAML 1.1 parses the unquoted workflow key `on` as boolean true.
+    include_drafts = workflow[True]["workflow_dispatch"]["inputs"]["include_drafts"]
+    assert include_drafts["type"] == "boolean"
+    assert include_drafts["default"] is False
+    merge_job = workflow["jobs"]["merge-ready"]
     audit = _step(merge_job, "Audit merge-ready PRs (deterministic)")
     execute = _step(merge_job, "Merge ready PRs (deterministic)")
 
@@ -69,6 +197,8 @@ def test_audit_and_execute_have_literal_modes_and_distinct_tokens():
         assert '--required-check "test (3.12)"' in step["run"]
         assert "--trusted-reviewer" not in step["run"]
         assert "--allowed-path-prefix" not in step["run"]
+        assert "draft_args+=(--include-drafts)" in step["run"]
+        assert '"${draft_args[@]}"' in step["run"]
 
 
 def test_execute_is_feature_gated_main_only_and_narrowly_scoped():
@@ -106,6 +236,73 @@ def test_reviewer_app_token_cannot_write_pr_contents():
         if name.startswith("permission-")
     }
     assert permissions == {"permission-pull-requests": "write"}
+
+
+def test_generated_pages_runs_daily_or_manually():
+    """Batch regeneration daily instead of rebuilding on every merge."""
+    workflow = _workflow(GENERATE_PAGES)
+    triggers = workflow[True]
+    assert set(triggers) == {"schedule", "workflow_dispatch"}
+    assert triggers["schedule"] == [{"cron": "23 8 * * *"}]
+    assert triggers["workflow_dispatch"] is None
+    assert workflow["concurrency"]["cancel-in-progress"] is False
+
+
+def test_daily_generation_relies_on_main_validation_workflow():
+    """A last-commit diff cannot validate a day's merges; main CI owns validation."""
+    generation = GENERATE_PAGES.read_text()
+    assert "HEAD~1" not in generation
+    assert "steps.changed.outputs.files" not in generation
+    main_ci = _workflow(ROOT / ".github/workflows/main.yaml")
+    assert "pull_request" in main_ci[True]
+    assert "schedule" in main_ci[True]
+    validation = _step(main_ci["jobs"]["test"], "Validate gene reviews (scoped)")
+    assert "just validate-changed" in validation["run"]
+    assert "just validate-all" in validation["run"]
+
+
+def test_pages_artifact_failures_do_not_block_regeneration():
+    """Artifact failures remain observable without failing the legacy PR lane."""
+    job = _workflow(GENERATE_PAGES)["jobs"]["generate-pages"]
+    stage = _step(job, "Stage GitHub Pages artifact")
+    summary = _step(job, "Summarize staged Pages site")
+    upload = _step(job, "Upload GitHub Pages artifact")
+    for step in (stage, summary, upload):
+        assert step["continue-on-error"] is True
+    for step in (summary, upload):
+        assert step["if"] == "steps.pages-stage.outcome == 'success'"
+    assert stage["id"] == "pages-stage"
+    warning = _step(job, "Warn when Pages artifact build fails")
+    for step in (stage, summary, upload):
+        assert f"steps.{step['id']}.outcome == 'failure'" in warning["if"]
+    assert "::warning" in warning["run"]
+
+
+def test_pages_deployment_requires_opt_in_and_publishable_artifact():
+    """Only a complete, within-budget artifact may reach the Pages environment."""
+    jobs = _workflow(GENERATE_PAGES)["jobs"]
+    build = jobs["generate-pages"]
+    deploy = jobs["deploy-pages"]
+    assert deploy["needs"] == "generate-pages"
+    assert "vars.PAGES_ARTIFACT_DEPLOY_ENABLED == 'true'" in deploy["if"]
+    assert "needs.generate-pages.outputs.deployable == 'true'" in deploy["if"]
+    assert "steps.pages-upload.outcome == 'success'" in build["outputs"]["deployable"]
+    assert (
+        "steps.pages-summary.outputs.deployable == 'true'"
+        in build["outputs"]["deployable"]
+    )
+    summary = _step(build, "Summarize staged Pages site")["run"]
+    assert ".deployable == true" in summary
+    assert ".broken_local_links" in summary
+    assert ".off_base_path_links" in summary
+    assert "likely missing site-prefix links" in summary
+    assert deploy["concurrency"] == {"group": "pages", "cancel-in-progress": False}
+    assert deploy["permissions"] == {"pages": "write", "id-token": "write"}
+    assert deploy["environment"]["name"] == "github-pages"
+    assert (
+        _step(deploy, "Deploy validated Pages artifact")["uses"]
+        == "actions/deploy-pages@v4"
+    )
 
 
 def test_generated_pages_waits_for_ci_and_exact_head_approval():

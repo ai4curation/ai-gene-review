@@ -1,0 +1,3079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rpa49 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>rpa49</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/O14086" target="_blank" class="term-link">
+                        O14086
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Schizosaccharomyces pombe (strain 972 / ATCC 24843)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "rpa49";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">10</span> Annotations</a>
+
+
+
+        <a href="#review-research" title="Deep research and hypothesis research reports"><span class="nav-count">1</span> Research</a>
+
+
+
+        <a href="#external-predictions" title="External predictions assessed separately from GOA annotations" class="nav-external"><span class="nav-count">2</span> External</a>
+
+
+
+        <a href="#review-core-functions" title="Core biological functions"><span class="nav-count">1</span> Core Function</a>
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">8</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">2</span> Documents</a>
+
+
+
+
+
+
+
+
+
+
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="O14086" data-a="DESCRIPTION: Rpa49, also characterized as RPA51, is a Pol I-spe..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Rpa49, also characterized as RPA51, is a Pol I-specific accessory subunit in the nucleolus. It supports efficient ribosomal DNA transcription and transcription elongation by RNA polymerase I. It is functionally conserved with budding-yeast A49 and acts within the polymerase complex rather than providing an independent RNA-polymerase catalytic center.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0001188" target="_blank" class="term-link">
+                                    GO:0001188
+                                </a>
+                            </span>
+                            <span class="term-label">RNA polymerase I preinitiation complex assembly</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14086" data-a="GO:0001188" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RNA polymerase I preinitiation complex assembly is supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Budding-yeast A49/A34 promotes recruitment of Rrn3 and its release during elongation (PMID:18086878). Functional complementation by fission-yeast RPA51 (PMID:12893961) supports the PAINT transfer of conserved Pol I preinitiation participation. This remains a homolog-based process inference rather than a target preinitiation assay.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/18086878" target="_blank" class="term-link">
+                                        PMID:18086878
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">These data suggest a dual role of
+the Rpa49-Rpa34 dimer during the recruitment of Rrn3 and its subsequent
+dissociation from the elongating polymerase.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12893961" target="_blank" class="term-link">
+                                        PMID:12893961
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">rpa51+ is required for cell growth at
+lower but not at higher temperatures and is able to complement S. cerevisiae
+rpa49Delta mutation, indicating that RPA51 is a functionally-conserved subunit
+of Pol I between the budding yeast and the fission yeast.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003677" target="_blank" class="term-link">
+                                    GO:0003677
+                                </a>
+                            </span>
+                            <span class="term-label">DNA binding</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14086" data-a="GO:0003677" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DNA binding is supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The characterized budding-yeast A49 C-terminal tandem-winged-helix domain binds DNA (PMID:20797630). Fission-yeast RPA51 complements the budding-yeast rpa49 deletion (PMID:12893961), and the target has the diagnostic A49-family domain. Together these justify conserved DNA-binding activity by family transfer, without asserting a target-specific promoter preference.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/20797630" target="_blank" class="term-link">
+                                        PMID:20797630
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">The C-terminal region of A49 forms a &#34;tandem
+winged helix&#34; (tWH) domain that binds DNA with a preference for the upstream
+promoter nontemplate strand and is predicted in TFIIE.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12893961" target="_blank" class="term-link">
+                                        PMID:12893961
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">rpa51+ is required for cell growth at
+lower but not at higher temperatures and is able to complement S. cerevisiae
+rpa49Delta mutation, indicating that RPA51 is a functionally-conserved subunit
+of Pol I between the budding yeast and the fission yeast.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005634" target="_blank" class="term-link">
+                                    GO:0005634
+                                </a>
+                            </span>
+                            <span class="term-label">nucleus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16823372
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ORFeome cloning and global analysis of protein localization ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14086" data-a="GO:0005634" data-r="PMID:16823372" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> nucleus is supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Nuclear localization is compatible with Pol I subunit membership and rDNA transcription. The genome-scale localization annotation is retained; the abstract does not independently expose the individual image. The source excerpt records the target HDA/IC annotation, not a reinspection of the individual microscopy image.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/rpa49/rpa49-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   GO; GO:0005634; C:nucleus; HDA:PomBase.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005730" target="_blank" class="term-link">
+                                    GO:0005730
+                                </a>
+                            </span>
+                            <span class="term-label">nucleolus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">HDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:16823372
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    ORFeome cloning and global analysis of protein localization ...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14086" data-a="GO:0005730" data-r="PMID:16823372" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> nucleolus is supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Nucleolar residence is consistent with the direct Pol I/rDNA-transcription role and the curated localization experiment. The source excerpt records the target HDA/IC annotation, not a reinspection of the individual microscopy image.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/rpa49/rpa49-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   GO; GO:0005730; C:nucleolus; HDA:PomBase.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005730" target="_blank" class="term-link">
+                                    GO:0005730
+                                </a>
+                            </span>
+                            <span class="term-label">nucleolus</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000044
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14086" data-a="GO:0005730" data-r="GO_REF:0000044" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> nucleolus is supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Nucleolar residence is consistent with the direct Pol I/rDNA-transcription role and the curated localization experiment.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:SCHPO/rpa49/rpa49-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   GO; GO:0005730; C:nucleolus; HDA:PomBase.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005736" target="_blank" class="term-link">
+                                    GO:0005736
+                                </a>
+                            </span>
+                            <span class="term-label">RNA polymerase I complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14086" data-a="GO:0005736" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RNA polymerase I complex is supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Purification and association experiments directly establish RPA51/Rpa49 as a Pol I subunit (PMID:12893961).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12893961" target="_blank" class="term-link">
+                                        PMID:12893961
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We also found that RPA51 associates significantly
+with Pol I in the stationary phase, suggesting that Pol I inactivation in the
+stationary phase of yeast does not result from the RPA51 dissociation.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005736" target="_blank" class="term-link">
+                                    GO:0005736
+                                </a>
+                            </span>
+                            <span class="term-label">RNA polymerase I complex</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12893961" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12893961
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The fission yeast RPA51 is a functional homolog of the buddi...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14086" data-a="GO:0005736" data-r="PMID:12893961" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> RNA polymerase I complex is supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Purification and association experiments directly establish RPA51/Rpa49 as a Pol I subunit (PMID:12893961).
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12893961" target="_blank" class="term-link">
+                                        PMID:12893961
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">We also found that RPA51 associates significantly
+with Pol I in the stationary phase, suggesting that Pol I inactivation in the
+stationary phase of yeast does not result from the RPA51 dissociation.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006351" target="_blank" class="term-link">
+                                    GO:0006351
+                                </a>
+                            </span>
+                            <span class="term-label">DNA-templated transcription</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-modify">
+                            MODIFY
+                        </span>
+                        <span class="vote-buttons" data-g="O14086" data-a="GO:0006351" data-r="GO_REF:0000002" data-act="MODIFY">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DNA-templated transcription is reviewed in the context of rpa49.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The broad DNA-templated transcription annotation is compatible with the biology, but transcription elongation by RNA polymerase I captures the supported rpa49 function more precisely.
+                        </div>
+
+
+
+                        <div style="margin-top: 0.5rem;">
+                            <strong>Proposed replacements:</strong>
+
+                            <span class="badge">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006362" target="_blank" class="term-link">
+                                    transcription elongation by RNA polymerase I
+                                </a>
+                            </span>
+
+                        </div>
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12893961" target="_blank" class="term-link">
+                                        PMID:12893961
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Transcripts analysis in vivo and in vitro shows that RPA51 plays a
+general role for maximizing transcription of rDNA whereas it is dispensable for
+non-specific transcription.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006362" target="_blank" class="term-link">
+                                    GO:0006362
+                                </a>
+                            </span>
+                            <span class="term-label">transcription elongation by RNA polymerase I</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IBA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000033
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14086" data-a="GO:0006362" data-r="GO_REF:0000033" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> transcription elongation by RNA polymerase I is supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The paper identifies RPA51 as a functionally conserved Pol I subunit required for maximal rDNA transcription. Retain PomBase&#39;s experimental elongation assignment and the concordant PAINT inference; the subunit supports the polymerase rather than catalyzing RNA synthesis independently.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12893961" target="_blank" class="term-link">
+                                        PMID:12893961
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Transcripts analysis in vivo and in vitro shows that RPA51 plays a
+general role for maximizing transcription of rDNA whereas it is dispensable for
+non-specific transcription.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006362" target="_blank" class="term-link">
+                                    GO:0006362
+                                </a>
+                            </span>
+                            <span class="term-label">transcription elongation by RNA polymerase I</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IDA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12893961" target="_blank" class="term-link" style="font-size: 0.75rem;">
+                                PMID:12893961
+                            </a>
+
+
+
+                                <br>
+                                <span style="font-size: 0.7rem; color: #666; font-style: italic;">
+                                    The fission yeast RPA51 is a functional homolog of the buddi...
+                                </span>
+
+
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="O14086" data-a="GO:0006362" data-r="PMID:12893961" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> transcription elongation by RNA polymerase I is supported.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The paper identifies RPA51 as a functionally conserved Pol I subunit required for maximal rDNA transcription. Retain PomBase&#39;s experimental elongation assignment and the concordant PAINT inference; the subunit supports the polymerase rather than catalyzing RNA synthesis independently.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/12893961" target="_blank" class="term-link">
+                                        PMID:12893961
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">Transcripts analysis in vivo and in vitro shows that RPA51 plays a
+general role for maximizing transcription of rDNA whereas it is dispensable for
+non-specific transcription.</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section" id="review-core-functions">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Supports efficient Pol I transcription of ribosomal DNA as the conserved A49 accessory subunit.</h3>
+                <span class="vote-buttons" data-g="O14086" data-a="FUNCTION: Supports efficient Pol I transcription of ribosoma..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006362" target="_blank" class="term-link">
+                                transcription elongation by RNA polymerase I
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005730" target="_blank" class="term-link">
+                                nucleolus
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">In Complex:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005736" target="_blank" class="term-link">
+                            RNA polymerase I complex
+                        </a>
+                    </span>
+                </div>
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            <a href="https://pubmed.ncbi.nlm.nih.gov/12893961" target="_blank" class="term-link">
+                                PMID:12893961
+                            </a>
+
+                        </span>
+
+                        <div class="finding-text">Transcripts analysis in vivo and in vitro shows that RPA51 plays a
+general role for maximizing transcription of rDNA whereas it is dispensable for
+non-specific transcription.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000033.md" target="_blank" class="term-link">
+                            GO_REF:0000033
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Annotation inferences using phylogenetic trees</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000044.md" target="_blank" class="term-link">
+                            GO_REF:0000044
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping, accompanied by conservative changes to GO terms applied by UniProt</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12893961" target="_blank" class="term-link">
+                            PMID:12893961
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">The fission yeast RPA51 is a functional homolog of the budding yeast A49 subunit of RNA polymerase I and required for maximizing transcription of ribosomal DNA.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/16823372" target="_blank" class="term-link">
+                            PMID:16823372
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">ORFeome cloning and global analysis of protein localization in the fission yeast Schizosaccharomyces pombe.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:SCHPO/rpa49/rpa49-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">rpa49 UniProt sequence/domain and annotation record</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/18086878" target="_blank" class="term-link">
+                            PMID:18086878
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Two RNA polymerase I subunits control the binding and release of Rrn3 during transcription.</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20797630" target="_blank" class="term-link">
+                            PMID:20797630
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">RNA polymerase I contains a TFIIF-related DNA-binding subcomplex.</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+    <section class="section external-predictions" id="external-predictions" aria-labelledby="external-predictions-title">
+        <h2 class="section-title" id="external-predictions-title">External Prediction Reviews</h2>
+        <p class="prediction-notice">These computational predictions are reviewed separately from the GOA annotation set used for this review.
+            The assessments below are from this project and do not constitute official GO annotations or endorsement by GO/UniProt.
+            They are not included in the existing annotation review above.</p>
+
+
+        <article class="prediction-review">
+        <h3>ProtNLM2 <span class="badge">External predictions</span></h3>
+        <p class="prediction-source"><a href="rpa49-protnlm-predictions-review.yaml">View prediction review YAML</a> &middot; rpa49-protnlm-predictions-review.yaml
+            &middot; Review status: COMPLETE</p>
+
+        <p>The broad GO predictions describe established biology; all are less specific than supported curated annotations (LSP).</p>
+
+        <p class="prediction-source">Review score: 2 = concordant with evidence; 1 = uncertain; 0 = discordant with evidence. This is an assessment score, not a model probability.</p>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0000428" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:0000428
+                    </a>
+                    <span class="term-label">DNA-directed RNA polymerase complex</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_CC</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-lsp">
+                        LSP — Less precise than existing annotation
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 2/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM2
+                 &middot; Version: pre-release post-processed-2026_02_28k.xml
+
+                 &middot; <a href="#" target="_blank" class="term-link">file:SCHPO/rpa49/rpa49-protnlm-source.xml</a>
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> S. pombe RPA51/Rpa49 is an experimentally established Pol I subunit required for efficient rDNA transcription (PMID:12893961). The predicted DNA-directed RNA polymerase complex is biologically supported. The existing RNA polymerase I complex annotation is more specific within the same GO aspect, so the prediction is LSP. This is a process/complex assignment to an accessory subunit, not independent polymerase catalysis.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12893961" target="_blank" class="term-link">PMID:12893961</a>:
+
+
+                        <span class="finding-text">"Transcripts analysis in vivo and in vitro shows that RPA51 plays a
+general role for maximizing transcription of rDNA whereas it is dispensable for
+non-specific transcription."</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        <div class="prediction-card">
+            <div class="prediction-header">
+                <div>
+
+                    <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006351" target="_blank" class="term-link" style="font-weight: 600;">
+                        GO:0006351
+                    </a>
+                    <span class="term-label">DNA-templated transcription</span>
+
+                    <span class="badge" style="margin-left: 0.5rem;">GO_BP</span>
+
+
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem;">
+
+                    <span class="assessment-badge assessment-lsp">
+                        LSP — Less precise than existing annotation
+                    </span>
+
+
+                    <span class="confidence-score">Review score: 2/2</span>
+
+                </div>
+            </div>
+            <div class="prediction-source">
+                <strong>Prediction method:</strong> ProtNLM2
+                 &middot; Version: pre-release post-processed-2026_02_28k.xml
+
+                 &middot; <a href="#" target="_blank" class="term-link">file:SCHPO/rpa49/rpa49-protnlm-source.xml</a>
+
+            </div>
+
+
+
+            <div style="margin-top: 0.75rem;">
+                <strong>Review rationale:</strong> S. pombe RPA51/Rpa49 is an experimentally established Pol I subunit required for efficient rDNA transcription (PMID:12893961). The predicted DNA-templated transcription is biologically supported. The existing transcription elongation by RNA polymerase I annotation is more specific within the same GO aspect, so the prediction is LSP. This is a process/complex assignment to an accessory subunit, not independent polymerase catalysis.
+            </div>
+
+
+            <div class="supported-by" style="margin-top: 0.75rem;">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12893961" target="_blank" class="term-link">PMID:12893961</a>:
+
+
+                        <span class="finding-text">"Transcripts analysis in vivo and in vitro shows that RPA51 plays a
+general role for maximizing transcription of rDNA whereas it is dispensable for
+non-specific transcription."</span>
+
+                    </li>
+
+                </ul>
+            </div>
+
+
+        </div>
+
+        </article>
+
+    </section>
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section" id="review-research">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rpa49-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O14086" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional annotation report: *Schizosaccharomyces pombe* **rpa49** (UniProt O14086)</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">13 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-08T19:13:02.243727</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="rpa49-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="functional-annotation-report-schizosaccharomyces-pombe-rpa49-uniprot-o14086">Functional annotation report: <em>Schizosaccharomyces pombe</em> <strong>rpa49</strong> (UniProt O14086)</h1>
+<h2 id="executive-conclusion">Executive conclusion</h2>
+<p>The target is correctly identified as <strong>rpa49/SPAC2F3.03c from <em>Schizosaccharomyces pombe</em> strain 972</strong>, encoding the A49-family subunit of DNA-directed RNA polymerase I (Pol I). Its supplied UniProt classification—eukaryotic RPA49/POLR1E family, InterPro RNA_pol-assoc_fac_A49-like, and Pfam RNA_pol_I_A49—is consistent with the conserved architecture and function reported for A49 orthologs.</p>
+<p>However, the literature is limited for this specific fission-yeast protein: no primary publication centered on O14086/SPAC2F3.03c was recovered. Most precise mechanistic evidence comes from budding yeast (<em>Saccharomyces cerevisiae</em>) Rpa49 and mammalian orthologous Pol I subunits. These studies are therefore used as <strong>orthology-based inference</strong>, not represented as direct experiments on O14086. Searches also retrieved differently named mammalian components; importantly, mammalian <strong>PAF53 corresponds functionally to yeast Rpa49</strong>, whereas mammalian PAF49 is the A34-family partner. This nomenclature difference must not be mistaken for direct evidence about fission-yeast rpa49 (mcnamar2023paf49anrna pages 1-2, mcnamar2023paf49anrna pages 6-8).</p>
+<p>The best-supported annotation is: <strong>Rpa49 is a noncatalytic, Pol I-specific structural and transcription-regulatory subunit that helps couple promoter initiation and escape to rapid, accurate, processive transcription of ribosomal DNA.</strong> It is expected to function in the nucleus, predominantly at nucleolar rDNA, as part of an Rpa49–A34-family heterodimer. It also facilitates recovery from backtracking through cooperation with the transcript-cleavage subunit Rpa12; Rpa49 itself is not the catalytic nuclease (merkl2018rnapolymerasei pages 1-6, merkl2018rnapolymerasei pages 17-20, merkl2018rnapolymerasei pages 15-17).</p>
+<h2 id="1-identity-and-ambiguity-assessment">1. Identity and ambiguity assessment</h2>
+<ul>
+<li><strong>Accession:</strong> UniProt O14086  </li>
+<li><strong>Gene:</strong> <em>rpa49</em>  </li>
+<li><strong>Systematic locus:</strong> SPAC2F3.03c  </li>
+<li><strong>Organism:</strong> <em>Schizosaccharomyces pombe</em> strain 972 / ATCC 24843  </li>
+<li><strong>Product:</strong> DNA-directed RNA polymerase I subunit A49  </li>
+<li><strong>Family/domain assignment supplied:</strong> eukaryotic RPA49/POLR1E family; RNA_pol-assoc_fac_A49-like (IPR009668); RNA_pol_I_A49 (PF06870)</li>
+</ul>
+<p>These identifiers are mutually coherent and match the expected Pol I A49 protein class. The symbol is nevertheless hazardous in cross-species searches because mammalian nomenclature uses <strong>PAF49</strong> for the A34-like partner and <strong>PAF53/POLR1E</strong> for the Rpa49-like protein. The 2023 mammalian study explicitly describes the PAF53–PAF49 heterodimer as corresponding to the yeast Rpa49–Rpa34.5 pair (mcnamar2023paf49anrna pages 1-2).</p>
+<p>Accordingly, this report does <strong>not</strong> transfer claims merely because a paper contains “RPA49” or “PAF49.” Evidence was retained only when the protein’s position in the Pol I A49/A34 heterodimer established orthology. No evidence for an unrelated similarly named gene was used.</p>
+<h2 id="2-primary-molecular-function">2. Primary molecular function</h2>
+<h3 id="21-a-pol-i-accessory-subunit-not-an-independent-enzyme">2.1 A Pol I accessory subunit, not an independent enzyme</h3>
+<p>Rpa49 should be annotated as a component and regulator of <strong>DNA-dependent RNA polymerase I</strong>, the enzyme that transcribes tandem rDNA repeats into the large precursor rRNA. Rpa49 does not independently catalyze nucleotide polymerization. The Pol I catalytic center performs template-directed addition of ribonucleoside triphosphates to nascent pre-rRNA; Rpa49 instead organizes DNA engagement and polymerase conformational behavior.</p>
+<p>Likewise, Rpa49 is <strong>not an RNA endonuclease</strong>. Budding-yeast experiments indicate that its lobe-binding module promotes transcript cleavage and restart by positioning or regulating Rpa12.2, whose C-terminal domain supplies the cleavage-related activity. The appropriate annotation is therefore “facilitates Pol I transcript cleavage/backtracking recovery,” not “catalyzes RNA cleavage” (merkl2018rnapolymerasei pages 1-6, merkl2018rnapolymerasei pages 17-20).</p>
+<h3 id="22-conserved-modular-architecture">2.2 Conserved modular architecture</h3>
+<p>Budding-yeast Rpa49 has two functionally distinct regions:</p>
+<ol>
+<li>An <strong>N-terminal dimerization/lobe-binding region</strong>, which complexes with Rpa34.5 and docks on the Pol I lobe opposite the stalk.</li>
+<li>A mobile <strong>C-terminal tandem winged-helix (tWH) region</strong>, joined by a linker and positioned near the DNA-binding cleft and upstream-DNA/stalk interface.</li>
+</ol>
+<p>The tWH region binds DNA and supports promoter-dependent transcription and extension from transcription bubbles. Its proposed mechanical roles include stabilizing upstream DNA, favoring clamp closure, and promoting rapid nucleotide incorporation. The N-terminal module integrates those effects with Rpa12-dependent pausing, backtracking, cleavage, and restart (merkl2018rnapolymerasei pages 1-6, merkl2018rnapolymerasei pages 15-17).</p>
+<p>This architecture agrees with the supplied A49-family domain annotation for O14086. Nevertheless, exact domain boundaries and direct DNA-binding measurements have not been established for the <em>S. pombe</em> protein in the recovered literature.</p>
+<h3 id="23-heterodimeric-structural-role">2.3 Heterodimeric structural role</h3>
+<p>The N terminus of budding-yeast Rpa49 forms a heterodimer with Rpa34.5. In mammals, the corresponding PAF53–PAF49 pair is likewise required for stable Pol I function. Mammalian domain-rescue experiments showed that residues 1–200 of PAF49—the A34-like partner, not the Rpa49 ortholog—were sufficient to restore rDNA transcription and proliferation, whereas disruption of dimerization or polymerase binding prevented rescue. These data reinforce the conserved importance of the heterodimeric interface while remaining indirect for O14086 (mcnamar2023paf49anrna pages 1-2, mcnamar2023paf49anrna pages 6-8).</p>
+<table>
+<thead>
+<tr>
+<th>Annotation claim</th>
+<th>Best evidence</th>
+<th>Species/source</th>
+<th>Evidence status for O14086</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity: <strong>rpa49 / SPAC2F3.03c</strong>, UniProt <strong>O14086</strong>; RPA49/POLR1E family with RNA_pol-assoc_fac_A49-like/PF06870 domain</td>
+<td>The accession, locus, organism, protein name, family, and domain supplied for the target are mutually consistent; retrieved papers establish that Rpa49/A49 and mammalian PAF53—not PAF49—are orthologous proteins.</td>
+<td><em>S. pombe</em> database annotation; comparative Pol I literature (mcnamar2023paf49anrna pages 1-2, mcnamar2023paf49anrna pages 6-8)</td>
+<td><strong>Direct database annotation</strong>; no O14086-focused primary experiment retrieved</td>
+<td>High for identity; moderate–high for family/domain</td>
+</tr>
+<tr>
+<td>Structural/regulatory subunit of DNA-directed RNA polymerase I</td>
+<td>Orthologous A49 is incorporated into Pol I and contains an N-terminal lobe-binding region plus a mobile C-terminal tandem winged-helix module near the DNA-binding cleft (merkl2018rnapolymerasei pages 1-6, merkl2018rnapolymerasei pages 6-9)</td>
+<td>Primarily <em>S. cerevisiae</em> biochemical/structural evidence</td>
+<td><strong>Ortholog inference</strong> supported by direct O14086 family annotation</td>
+<td>High</td>
+</tr>
+<tr>
+<td>Forms a heterodimer with the Pol I A34-family subunit</td>
+<td>Yeast Rpa49NT–Rpa34.5 constitutes a dimerization/lobe-binding module; the corresponding mammalian PAF53–PAF49 pair is likewise required for stable Pol I function (mcnamar2023paf49anrna pages 1-2, mcnamar2023paf49anrna pages 6-8, merkl2018rnapolymerasei pages 1-6)</td>
+<td><em>S. cerevisiae</em> and mammalian ortholog systems</td>
+<td><strong>Ortholog inference</strong>; the exact <em>S. pombe</em> partner interaction was not directly demonstrated in retrieved sources</td>
+<td>High for conserved mechanism; moderate for O14086-specific interaction</td>
+</tr>
+<tr>
+<td>Promotes rDNA transcription rather than catalyzing a separate reaction</td>
+<td>Mammalian depletion experiments showed that the corresponding heterodimer is required for rDNA transcription; in yeast, A49 supports promoter-dependent transcription, RNA extension, and Pol I recruitment to rRNA genes (mcnamar2023paf49anrna pages 1-2, mcnamar2023paf49anrna pages 6-8, merkl2018rnapolymerasei pages 1-6)</td>
+<td>Mammalian cells and <em>S. cerevisiae</em></td>
+<td><strong>Ortholog inference</strong>; no direct O14086 transcription assay retrieved</td>
+<td>High for broad function; moderate–high for species-specific annotation</td>
+</tr>
+<tr>
+<td>Contributes to initiation, promoter escape, and transition to elongation</td>
+<td>The A49 tWH region stabilizes upstream DNA/closed-clamp states, while its repositioning during promoter escape may be coupled to release of initiation factor Rrn3 (merkl2018rnapolymerasei pages 1-6, pilsl2022reconstitutionofthe pages 17-19)</td>
+<td><em>S. cerevisiae</em> structural and reconstituted-transcription work</td>
+<td><strong>Ortholog inference</strong></td>
+<td>Moderate–high</td>
+</tr>
+<tr>
+<td>Regulates elongation speed, processivity, and fidelity</td>
+<td>In a 169-nt chase assay, over 90% of wild-type Pol I transcripts reached full length versus about 60% after loss of Rpa49; at 20 µM NTP, relevant lobe-module mutants completed no more than 30% by 60 s versus almost 60% for wild type. Domain-separation experiments reveal a speed–accuracy trade-off (merkl2018rnapolymerasei pages 6-9, merkl2018rnapolymerasei pages 15-17)</td>
+<td><em>S. cerevisiae</em> in-vitro transcription</td>
+<td><strong>Ortholog inference</strong>, with strong quantitative support for the conserved A49 mechanism</td>
+<td>High mechanistically; moderate–high for O14086</td>
+</tr>
+<tr>
+<td>Supports transcription through chromatin/nucleosomes</td>
+<td>Efficient nucleosomal-template transcription required the Rpa49 heterodimer, Rpa49NT, Rpa49CT, and Rpa12.2 CTD; purified heterodimer rescued Rpa49-deficient Pol I (merkl2018rnapolymerasei pages 17-20, merkl2018rnapolymerasei pages 15-17)</td>
+<td><em>S. cerevisiae</em> in-vitro system</td>
+<td><strong>Ortholog inference</strong></td>
+<td>Moderate–high</td>
+</tr>
+<tr>
+<td>Facilitates RNA cleavage/backtracking recovery indirectly; <strong>is not itself the catalytic nuclease</strong></td>
+<td>The Rpa49–Rpa34.5 lobe module stimulates Rpa12.2-dependent transcript cleavage and restart of arrested complexes. Catalytic cleavage is associated with Rpa12.2; Rpa49 organizes or modulates this activity (merkl2018rnapolymerasei pages 1-6, merkl2018rnapolymerasei pages 6-9, merkl2018rnapolymerasei pages 17-20)</td>
+<td><em>S. cerevisiae</em> biochemical evidence</td>
+<td><strong>Ortholog inference</strong>; annotation should be “positive regulator/facilitator of Pol I transcript cleavage,” not “RNA endonuclease”</td>
+<td>High for noncatalytic role; moderate for O14086-specific details</td>
+</tr>
+<tr>
+<td>Nuclear and probably nucleolar localization at actively transcribed rDNA</td>
+<td>Pol I transcribes rDNA in the nucleolus, and A49-family proteins are integral/dissociable Pol I-associated factors; mammalian depletion produces nucleolar stress and reorganization (mcnamar2023paf49anrna pages 1-2, mcnamar2023paf49anrna pages 13-14)</td>
+<td>General Pol I cell biology and mammalian PAF53 evidence</td>
+<td><strong>Expected localization by complex/pathway inference</strong>; direct microscopy or fractionation evidence for O14086 was not retrieved</td>
+<td>High for nuclear; moderate–high for nucleolar; low for direct experimental status</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Evidence-grade annotation of fission-yeast Rpa49 that separates direct target-database identification from functional inference based on conserved budding-yeast and mammalian orthologs.</em></p>
+<h2 id="3-biological-processes-and-pathway-placement">3. Biological processes and pathway placement</h2>
+<h3 id="31-ribosomal-dna-transcription-and-ribosome-biogenesis">3.1 Ribosomal-DNA transcription and ribosome biogenesis</h3>
+<p>The immediate pathway is <strong>RNA polymerase I transcription of rDNA</strong>, producing the precursor from which the mature large-ribosomal-subunit and small-ribosomal-subunit rRNAs are processed. Consequently, Rpa49 contributes to ribosome biogenesis at the transcriptional stage. This is more precise than assigning it a generic role in gene expression or translation.</p>
+<p>In mammalian cells, acute depletion of either heterodimer component inhibited rDNA transcription within approximately <strong>3 hours</strong>, followed over longer periods by nucleolar stress, p53 accumulation, and cell-cycle arrest. Partner depletion also destabilized the remaining subunit; PAF53 had an approximately <strong>twofold longer half-life</strong> than degron-tagged PAF49. These are mammalian observations, but they provide recent experimental support for a conserved role of the heterodimer in maintaining Pol I transcriptional competence (McNamar et al., published online 24 June 2023; August 2023 issue; DOI/URL: https://doi.org/10.1016/j.jbc.2023.104951) (mcnamar2023paf49anrna pages 1-2, mcnamar2023paf49anrna pages 13-14).</p>
+<h3 id="32-initiation-and-promoter-escape">3.2 Initiation and promoter escape</h3>
+<p>Structural and reconstitution studies suggest that the A49 tWH module changes position between initiation and elongation. In its elongation position it would conflict with bound Rrn3, supporting a model in which A49 movement accompanies or promotes Rrn3 release during promoter escape and conversion to a processive elongation complex. A49 depletion increases Rrn3 association within rDNA gene bodies, consistent with defective initiation-factor release. These results derive from budding yeast and should be regarded as a strong mechanistic model rather than a direct demonstration in <em>S. pombe</em> (pilsl2022reconstitutionofthe pages 17-19).</p>
+<h3 id="33-elongation-speed-processivity-and-fidelity">3.3 Elongation speed, processivity, and fidelity</h3>
+<p>Defined budding-yeast transcription assays provide the most informative quantitative evidence. On a template containing a <strong>169-nucleotide G-less cassette</strong>, more than <strong>90%</strong> of arrested wild-type Pol I transcripts reached full length after a two-minute chase, compared with approximately <strong>60%</strong> for Pol I lacking Rpa49. Removing broader lobe-module functions reduced completion below <strong>50%</strong>. At 20 µM NTP, relevant mutants completed no more than <strong>30%</strong> of products by 60 seconds, versus almost <strong>60%</strong> for wild type (Merkl et al., October 2018 preprint; DOI/URL: https://doi.org/10.1101/433375) (merkl2018rnapolymerasei pages 6-9).</p>
+<p>Domain-separation experiments reveal that Rpa49 does not simply accelerate Pol I. The isolated C-terminal module can increase movement, but without coordination by the N-terminal dimerization module it reduces processivity and fidelity. The intact heterodimer therefore manages a <strong>speed–accuracy–processivity trade-off</strong>, restraining indiscriminate rapid synthesis while limiting pausing and productive-complex loss (merkl2018rnapolymerasei pages 15-17).</p>
+<h3 id="34-backtracking-cleavage-and-restart">3.4 Backtracking, cleavage, and restart</h3>
+<p>The Rpa49/Rpa34.5 module cooperates with Rpa12.2 to release stalled complexes and resume elongation. In one restart assay, an Rpa12 C-terminal perturbation resumed only about <strong>40%</strong> by 60 seconds, whereas selected complexes lacking full Rpa12.2 or supplied with Rpa49CT exceeded <strong>85%</strong>. Interpretation requires caution because different deletions change arrest propensity, cleavage, and movement in distinct ways; the key conclusion is coordinated control, not that loss of one component universally improves transcription (merkl2018rnapolymerasei pages 6-9).</p>
+<p>Thus, O14086 is best predicted to act as a <strong>scaffold/allosteric regulator of proofreading and arrest recovery</strong>. It does not define substrate specificity beyond operating on Pol I rDNA transcription complexes and their nascent pre-rRNA.</p>
+<h3 id="35-chromatin-traversal">3.5 Chromatin traversal</h3>
+<p>Reconstituted budding-yeast Pol I and Pol III complexes containing their lobe-binding modules can transcribe nucleosomal templates more effectively than Pol II under the tested conditions. For Pol I, efficient passage required contributions from the Rpa49 heterodimer, both Rpa49 terminal modules, and the Rpa12.2 C terminus; adding purified heterodimer rescued an Rpa49-deficient enzyme. This supports a role in maintaining processive rDNA transcription in chromatin, although native rDNA can occupy specialized chromatin states and direct confirmation in fission yeast is lacking (merkl2018rnapolymerasei pages 17-20, merkl2018rnapolymerasei pages 15-17).</p>
+<h2 id="4-cellular-localization">4. Cellular localization</h2>
+<p>The predicted functional site is the <strong>nucleus, particularly the nucleolus and actively transcribed rDNA repeats</strong>. This follows from Rpa49’s assignment as a Pol I-specific subunit and its role in precursor-rRNA synthesis. Mammalian heterodimer depletion produces nucleolar reorganization and nucleolar stress, consistent with action in that compartment (mcnamar2023paf49anrna pages 1-2, mcnamar2023paf49anrna pages 13-14).</p>
+<p>This localization should be annotated with evidence qualification: nuclear/nucleolar localization is highly plausible from conserved complex membership and pathway context, but the retrieved sources did not provide O14086-specific fluorescence microscopy, fractionation, or rDNA-occupancy data. It is therefore stronger as a <strong>conserved functional inference</strong> than as a direct localization experiment in <em>S. pombe</em>.</p>
+<h2 id="5-recent-developments-and-current-expert-interpretation">5. Recent developments and current expert interpretation</h2>
+<p>The strongest recent study is the 2023 JBC analysis of the mammalian heterodimer. Acute degron experiments established that PAF49 is required for rDNA transcription and for stabilization of its PAF53/Rpa49-like partner. Proteasome inhibition with MG132 prevented partner degradation and restored rDNA transcription, indicating that heterodimer integrity controls both Pol I association and subunit stability rather than merely adding a passive structural mass (mcnamar2023paf49anrna pages 13-14, mcnamar2023paf49anrna pages 6-8).</p>
+<p>A 2025 evolutionary review proposes that the A34/A49 heterodimer may stabilize Rrn3 binding at the Pol I stalk and coordinate initiation, elongation, processivity, and pre-rRNA processing. The initiation model is useful but remains partly speculative and is focused on the A34-family partner; it should not be elevated above direct biochemical A49 evidence (Knutson and Rothblum, January 2025; DOI/URL: https://doi.org/10.3390/genes16010061) (knutson2025evolutionaryandstructural pages 12-14).</p>
+<p>No highly specific 2023–2024 primary study of <em>S. pombe</em> O14086 was found. Thus, the current annotation depends on strong evolutionary conservation and detailed work in <em>S. cerevisiae</em> and mammals rather than newly generated fission-yeast evidence.</p>
+<h2 id="6-applications-and-real-world-relevance">6. Applications and real-world relevance</h2>
+<p>Rpa49-family biology has three principal applications:</p>
+<ol>
+<li><strong>Mechanistic models of ribosome biogenesis.</strong> Domain deletions and reconstituted transcription complexes are used to dissect how Pol I balances speed, fidelity, processivity, pausing, and chromatin traversal.</li>
+<li><strong>Interpretation of nucleolar-stress phenotypes.</strong> Mammalian depletion links heterodimer failure to rapid loss of rDNA transcription, nucleolar reorganization, p53 accumulation, and proliferation arrest (mcnamar2023paf49anrna pages 1-2, mcnamar2023paf49anrna pages 13-14).</li>
+<li><strong>Pol I therapeutic research.</strong> Because elevated ribosome production supports proliferative growth, the heterodimer–polymerase interfaces offer potential points for disrupting Pol I assembly or stability. The 2023 study reported inhibition of Pol I transcription in normal and cancer-cell systems when required interactions were disrupted, although no approved drug specifically targeting Rpa49/O14086 was identified (mcnamar2023paf49anrna pages 1-2).</li>
+</ol>
+<p>For <em>S. pombe</em>, practical applications are presently research-oriented: O14086 tagging, conditional depletion, ChIP at rDNA, nascent-rRNA measurements, and genetic interaction with the A34- and Rpa12-family subunits would directly test the inferred annotation.</p>
+<h2 id="7-recommended-functional-annotation">7. Recommended functional annotation</h2>
+<p><strong>Primary function:</strong> Noncatalytic A49-family subunit of DNA-directed RNA polymerase I; forms an A34-family heterodimer and promotes productive rDNA transcription by stabilizing DNA/polymerase interactions and coordinating initiation-factor release, elongation speed, processivity, fidelity, and recovery from backtracking.</p>
+<p><strong>Biological process:</strong> Pol I transcription of rDNA; precursor-rRNA synthesis; ribosome biogenesis; regulation of transcription elongation and transcript-cleavage-dependent arrest recovery.</p>
+<p><strong>Localization:</strong> Nuclear; expected enrichment in the nucleolus and at active rDNA transcription units.</p>
+<p><strong>Catalytic/substrate statement:</strong> No independent catalytic reaction is established. It acts on the Pol I transcription machinery assembled on rDNA and indirectly modulates Rpa12-dependent cleavage of backtracked nascent pre-rRNA.</p>
+<p><strong>Evidence grade:</strong> High confidence in identity and broad Pol I-subunit function from UniProt family/domain annotation plus conserved ortholog evidence; moderate-to-high confidence in detailed mechanism and nucleolar localization; low direct-experimental coverage for O14086 itself.</p>
+<h2 id="overall-assessment">Overall assessment</h2>
+<p>O14086 is best understood as a <strong>Pol I-specific transcription factor embedded in the polymerase</strong>, combining TFIIF-like dimerization/scaffolding with a mobile winged-helix DNA-engagement module. Its broader biological consequences—growth, stress responses, or ribosome abundance—are downstream of this precise molecular role. The principal annotation limitation is not conflicting evidence but the absence of direct, protein-specific work in <em>S. pombe</em>; the mechanistic assignment is therefore compelling but predominantly inferred from conserved Pol I systems.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(mcnamar2023paf49anrna pages 1-2): Rachel McNamar, Emma Freeman, Kairo N. Baylor, Aula M. Fakhouri, Sui Huang, Bruce A. Knutson, and Lawrence I. Rothblum. Paf49: an rna polymerase i subunit essential for rdna transcription and stabilization of paf53. Aug 2023. URL: https://doi.org/10.1016/j.jbc.2023.104951, doi:10.1016/j.jbc.2023.104951. This article has 14 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mcnamar2023paf49anrna pages 6-8): Rachel McNamar, Emma Freeman, Kairo N. Baylor, Aula M. Fakhouri, Sui Huang, Bruce A. Knutson, and Lawrence I. Rothblum. Paf49: an rna polymerase i subunit essential for rdna transcription and stabilization of paf53. Aug 2023. URL: https://doi.org/10.1016/j.jbc.2023.104951, doi:10.1016/j.jbc.2023.104951. This article has 14 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(merkl2018rnapolymerasei pages 1-6): Philipp E. Merkl, Michael Pilsl, Tobias Fremter, Gernot Längst, Philipp Milkereit, Joachim Griesenbeck, and Herbert Tschochner. Rna polymerase i transcription fidelity, speed and processivity depend on the interplay of its lobe binding subunits. bioRxiv, Oct 2018. URL: https://doi.org/10.1101/433375, doi:10.1101/433375. This article has 1 citations.</p>
+</li>
+<li>
+<p>(merkl2018rnapolymerasei pages 17-20): Philipp E. Merkl, Michael Pilsl, Tobias Fremter, Gernot Längst, Philipp Milkereit, Joachim Griesenbeck, and Herbert Tschochner. Rna polymerase i transcription fidelity, speed and processivity depend on the interplay of its lobe binding subunits. bioRxiv, Oct 2018. URL: https://doi.org/10.1101/433375, doi:10.1101/433375. This article has 1 citations.</p>
+</li>
+<li>
+<p>(merkl2018rnapolymerasei pages 15-17): Philipp E. Merkl, Michael Pilsl, Tobias Fremter, Gernot Längst, Philipp Milkereit, Joachim Griesenbeck, and Herbert Tschochner. Rna polymerase i transcription fidelity, speed and processivity depend on the interplay of its lobe binding subunits. bioRxiv, Oct 2018. URL: https://doi.org/10.1101/433375, doi:10.1101/433375. This article has 1 citations.</p>
+</li>
+<li>
+<p>(merkl2018rnapolymerasei pages 6-9): Philipp E. Merkl, Michael Pilsl, Tobias Fremter, Gernot Längst, Philipp Milkereit, Joachim Griesenbeck, and Herbert Tschochner. Rna polymerase i transcription fidelity, speed and processivity depend on the interplay of its lobe binding subunits. bioRxiv, Oct 2018. URL: https://doi.org/10.1101/433375, doi:10.1101/433375. This article has 1 citations.</p>
+</li>
+<li>
+<p>(pilsl2022reconstitutionofthe pages 17-19): Michael Pilsl. Reconstitution of the rna polymerase i initiation complex from recombinant initiation factors and regulation of its activity. Text, Jan 2022. URL: https://doi.org/10.5283/epub.52649, doi:10.5283/epub.52649. This article has 1 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(mcnamar2023paf49anrna pages 13-14): Rachel McNamar, Emma Freeman, Kairo N. Baylor, Aula M. Fakhouri, Sui Huang, Bruce A. Knutson, and Lawrence I. Rothblum. Paf49: an rna polymerase i subunit essential for rdna transcription and stabilization of paf53. Aug 2023. URL: https://doi.org/10.1016/j.jbc.2023.104951, doi:10.1016/j.jbc.2023.104951. This article has 14 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(knutson2025evolutionaryandstructural pages 12-14): Bruce A. Knutson and Lawrence I. Rothblum. Evolutionary and structural insights into the rna polymerase i a34 protein family: a focus on intrinsic disorder and phase separation. Jan 2025. URL: https://doi.org/10.3390/genes16010061, doi:10.3390/genes16010061. This article has 2 citations.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="rpa49-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>pilsl2022reconstitutionofthe pages 17-19</li>
+<li>merkl2018rnapolymerasei pages 6-9</li>
+<li>merkl2018rnapolymerasei pages 15-17</li>
+<li>knutson2025evolutionaryandstructural pages 12-14</li>
+<li>merkl2018rnapolymerasei pages 1-6</li>
+<li>merkl2018rnapolymerasei pages 17-20</li>
+<li>https://doi.org/10.1016/j.jbc.2023.104951</li>
+<li>https://doi.org/10.1101/433375</li>
+<li>https://doi.org/10.3390/genes16010061</li>
+<li>https://doi.org/10.1016/j.jbc.2023.104951,</li>
+<li>https://doi.org/10.1101/433375,</li>
+<li>https://doi.org/10.5283/epub.52649,</li>
+<li>https://doi.org/10.3390/genes16010061,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rpa49-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O14086" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="rpa49-functional-evidence">rpa49: functional evidence</h1>
+<p>Rpa49, also characterized as RPA51, is a Pol I-specific accessory subunit in the nucleolus. It supports efficient ribosomal DNA transcription and transcription elongation by RNA polymerase I. It is functionally conserved with budding-yeast A49 and acts within the polymerase complex rather than providing an independent RNA-polymerase catalytic center.</p>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/12893961">PMID:12893961</a> "Transcripts analysis in vivo and in vitro shows that RPA51 plays a<br />
+general role for maximizing transcription of rDNA whereas it is dispensable for<br />
+non-specific transcription."</li>
+</ul>
+<p>Evidence interpretation: sequence/domain records are used for family placement; AI descriptions and ARBA labels are not independent validation. Family transfer is limited to conserved properties and is identified as inference. Genome-scale localization annotations are retained where consistent with the biology; an abstract does not expose every individual observation. All original annotation rows are preserved.</p>
+<p>ProtNLM provenance: pre-release <code>post-processed-2026_02_28k.xml</code>, exact entry and all evidence keys preserved in the source XML/JSON. These current Swiss-Prot entries are absent from the public TrEMBL pilot. Known-function overlap does not establish model training membership. See the function sidecar for atom-by-atom paragraph assessments.</p>
+<p>Research provenance: the gene-focused Falcon report was generated concurrently with publication caching. The report was inspected for source leads; the biological decisions above rely on the cited primary records and specified family evidence.</p>
+<p>The completed Falcon search has retrieval gaps: its inability to locate target-level localization is not used to override PomBase’s HDA records. Curated genomic-screen observations and the directly inspected papers take precedence over an empty literature-search result.</p>
+            </div>
+        </details>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Protnlm Function Review</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(rpa49-protnlm-function-review.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="O14086" data-a="DOC: Protnlm Function Review" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="rpa49-protnlm2-function-description-review">rpa49: ProtNLM2 function-description review</h1>
+<p>Source: <strong>pre-release <code>post-processed-2026_02_28k.xml</code></strong>, accession <code>O14086</code>. The exact entry is preserved in <a href="rpa49-protnlm-source.xml">rpa49-protnlm-source.xml</a>; all original evidence elements and model scores are retained in <a href="rpa49-protnlm-source.json">rpa49-protnlm-source.json</a>. This record is currently Swiss-Prot and is absent from the published 26,856-record TrEMBL pilot list. The current public ProtNLM endpoint returns this record; API availability is distinct from membership in the published pilot list. No training-membership inference is made.</p>
+<h2 id="original-paragraph-1">Original paragraph 1</h2>
+<blockquote>
+<p>DNA-dependent RNA polymerase catalyzes the transcription of DNA into RNA using the four ribonucleoside triphosphates as substrates.</p>
+</blockquote>
+<p>Original evidence key(s): <code>1</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Atomic claim</th>
+<th>Assessment</th>
+<th>Evidence and limit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The associated DNA-dependent RNA polymerase transcribes DNA using ribonucleoside triphosphates</td>
+<td>CNN at holoenzyme level</td>
+<td>The grammatical subject is DNA-dependent RNA polymerase, and Rpa49 is an experimentally established Pol I subunit. The chemistry describes that associated enzyme. The paragraph omits Rpa49’s informative role in maximizing rDNA transcription.</td>
+</tr>
+<tr>
+<td>Independent Rpa49 polymerase activity</td>
+<td>Not asserted; would be incorrect</td>
+<td>Rpa49/RPA51 is an accessory A49-family subunit: Pol I lacking it retains nonspecific transcription. No intrinsic RNA-polymerase catalytic center or isolated-subunit synthesis is established. The GO process/complex predictions remain valid because participation in transcription does not require independent catalysis.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="primary-evidence">Primary evidence</h2>
+<ul>
+<li><a href="https://pubmed.ncbi.nlm.nih.gov/12893961">PMID:12893961</a>(https://pubmed.ncbi.nlm.nih.gov/12893961/) (cached as <code>publications/PMID_12893961.md</code>).</li>
+</ul>
+<p>Family and feature provenance: <a href="rpa49-uniprot.txt">rpa49-uniprot.txt</a>.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: O14086
+gene_symbol: rpa49
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:284812
+  label: Schizosaccharomyces pombe (strain 972 / ATCC 24843)
+description: Rpa49, also characterized as RPA51, is a Pol I-specific accessory subunit in the nucleolus.
+  It supports efficient ribosomal DNA transcription and transcription elongation by RNA polymerase I.
+  It is functionally conserved with budding-yeast A49 and acts within the polymerase complex rather than
+  providing an independent RNA-polymerase catalytic center.
+existing_annotations:
+- term:
+    id: GO:0001188
+    label: RNA polymerase I preinitiation complex assembly
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  supporting_entities:
+  - MGI:MGI:1929022
+  - PANTHER:PTN000374345
+  review:
+    summary: RNA polymerase I preinitiation complex assembly is supported.
+    action: ACCEPT
+    reason: Budding-yeast A49/A34 promotes recruitment of Rrn3 and its release during elongation (PMID:18086878).
+      Functional complementation by fission-yeast RPA51 (PMID:12893961) supports the PAINT transfer of
+      conserved Pol I preinitiation participation. This remains a homolog-based process inference rather
+      than a target preinitiation assay.
+    supported_by:
+    - reference_id: PMID:18086878
+      supporting_text: &#39;These data suggest a dual role of
+
+        the Rpa49-Rpa34 dimer during the recruitment of Rrn3 and its subsequent
+
+        dissociation from the elongating polymerase.&#39;
+    - reference_id: PMID:12893961
+      supporting_text: &#39;rpa51+ is required for cell growth at
+
+        lower but not at higher temperatures and is able to complement S. cerevisiae
+
+        rpa49Delta mutation, indicating that RPA51 is a functionally-conserved subunit
+
+        of Pol I between the budding yeast and the fission yeast.&#39;
+- term:
+    id: GO:0003677
+    label: DNA binding
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  supporting_entities:
+  - InterPro:IPR009668
+  review:
+    summary: DNA binding is supported.
+    action: ACCEPT
+    reason: The characterized budding-yeast A49 C-terminal tandem-winged-helix domain binds DNA (PMID:20797630).
+      Fission-yeast RPA51 complements the budding-yeast rpa49 deletion (PMID:12893961), and the target
+      has the diagnostic A49-family domain. Together these justify conserved DNA-binding activity by family
+      transfer, without asserting a target-specific promoter preference.
+    supported_by:
+    - reference_id: PMID:20797630
+      supporting_text: &#39;The C-terminal region of A49 forms a &#34;tandem
+
+        winged helix&#34; (tWH) domain that binds DNA with a preference for the upstream
+
+        promoter nontemplate strand and is predicted in TFIIE.&#39;
+    - reference_id: PMID:12893961
+      supporting_text: &#39;rpa51+ is required for cell growth at
+
+        lower but not at higher temperatures and is able to complement S. cerevisiae
+
+        rpa49Delta mutation, indicating that RPA51 is a functionally-conserved subunit
+
+        of Pol I between the budding yeast and the fission yeast.&#39;
+- term:
+    id: GO:0005634
+    label: nucleus
+  evidence_type: HDA
+  original_reference_id: PMID:16823372
+  qualifier: is_active_in
+  review:
+    summary: nucleus is supported.
+    action: ACCEPT
+    reason: Nuclear localization is compatible with Pol I subunit membership and rDNA transcription. The
+      genome-scale localization annotation is retained; the abstract does not independently expose the
+      individual image. The source excerpt records the target HDA/IC annotation, not a reinspection of
+      the individual microscopy image.
+    supported_by:
+    - reference_id: file:SCHPO/rpa49/rpa49-uniprot.txt
+      supporting_text: DR   GO; GO:0005634; C:nucleus; HDA:PomBase.
+- term: &amp;id003
+    id: GO:0005730
+    label: nucleolus
+  evidence_type: HDA
+  original_reference_id: PMID:16823372
+  qualifier: is_active_in
+  review:
+    summary: nucleolus is supported.
+    action: ACCEPT
+    reason: Nucleolar residence is consistent with the direct Pol I/rDNA-transcription role and the curated
+      localization experiment. The source excerpt records the target HDA/IC annotation, not a reinspection
+      of the individual microscopy image.
+    supported_by:
+    - reference_id: file:SCHPO/rpa49/rpa49-uniprot.txt
+      supporting_text: DR   GO; GO:0005730; C:nucleolus; HDA:PomBase.
+- term:
+    id: GO:0005730
+    label: nucleolus
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000044
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB-SubCell:SL-0188
+  review:
+    summary: nucleolus is supported.
+    action: ACCEPT
+    reason: Nucleolar residence is consistent with the direct Pol I/rDNA-transcription role and the curated
+      localization experiment.
+    supported_by:
+    - reference_id: file:SCHPO/rpa49/rpa49-uniprot.txt
+      supporting_text: DR   GO; GO:0005730; C:nucleolus; HDA:PomBase.
+- term: &amp;id004
+    id: GO:0005736
+    label: RNA polymerase I complex
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: part_of
+  supporting_entities:
+  - MGI:MGI:1929022
+  - PANTHER:PTN000374345
+  - PomBase:SPAC2F3.03c
+  - SGD:S000005192
+  - UniProtKB:Q9GZS1
+  review:
+    summary: RNA polymerase I complex is supported.
+    action: ACCEPT
+    reason: Purification and association experiments directly establish RPA51/Rpa49 as a Pol I subunit
+      (PMID:12893961).
+    supported_by:
+    - reference_id: PMID:12893961
+      supporting_text: &#39;We also found that RPA51 associates significantly
+
+        with Pol I in the stationary phase, suggesting that Pol I inactivation in the
+
+        stationary phase of yeast does not result from the RPA51 dissociation.&#39;
+- term:
+    id: GO:0005736
+    label: RNA polymerase I complex
+  evidence_type: IDA
+  original_reference_id: PMID:12893961
+  qualifier: part_of
+  review:
+    summary: RNA polymerase I complex is supported.
+    action: ACCEPT
+    reason: Purification and association experiments directly establish RPA51/Rpa49 as a Pol I subunit
+      (PMID:12893961).
+    supported_by:
+    - reference_id: PMID:12893961
+      supporting_text: &#39;We also found that RPA51 associates significantly
+
+        with Pol I in the stationary phase, suggesting that Pol I inactivation in the
+
+        stationary phase of yeast does not result from the RPA51 dissociation.&#39;
+- term:
+    id: GO:0006351
+    label: DNA-templated transcription
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  supporting_entities:
+  - InterPro:IPR009668
+  review:
+    summary: DNA-templated transcription is reviewed in the context of rpa49.
+    action: MODIFY
+    reason: The broad DNA-templated transcription annotation is compatible with the biology, but transcription
+      elongation by RNA polymerase I captures the supported rpa49 function more precisely.
+    supported_by: &amp;id001
+    - reference_id: PMID:12893961
+      supporting_text: &#39;Transcripts analysis in vivo and in vitro shows that RPA51 plays a
+
+        general role for maximizing transcription of rDNA whereas it is dispensable for
+
+        non-specific transcription.&#39;
+    proposed_replacement_terms:
+    - id: GO:0006362
+      label: transcription elongation by RNA polymerase I
+- term: &amp;id002
+    id: GO:0006362
+    label: transcription elongation by RNA polymerase I
+  evidence_type: IBA
+  original_reference_id: GO_REF:0000033
+  qualifier: involved_in
+  supporting_entities:
+  - PANTHER:PTN000374345
+  - PomBase:SPAC2F3.03c
+  - SGD:S000005192
+  - UniProtKB:Q9GZS1
+  review:
+    summary: transcription elongation by RNA polymerase I is supported.
+    action: ACCEPT
+    reason: The paper identifies RPA51 as a functionally conserved Pol I subunit required for maximal
+      rDNA transcription. Retain PomBase&#39;s experimental elongation assignment and the concordant PAINT
+      inference; the subunit supports the polymerase rather than catalyzing RNA synthesis independently.
+    supported_by: *id001
+- term:
+    id: GO:0006362
+    label: transcription elongation by RNA polymerase I
+  evidence_type: IDA
+  original_reference_id: PMID:12893961
+  qualifier: involved_in
+  review:
+    summary: transcription elongation by RNA polymerase I is supported.
+    action: ACCEPT
+    reason: The paper identifies RPA51 as a functionally conserved Pol I subunit required for maximal
+      rDNA transcription. Retain PomBase&#39;s experimental elongation assignment and the concordant PAINT
+      inference; the subunit supports the polymerase rather than catalyzing RNA synthesis independently.
+    supported_by: *id001
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO terms
+  findings: []
+- id: GO_REF:0000033
+  title: Annotation inferences using phylogenetic trees
+  findings: []
+- id: GO_REF:0000044
+  title: Gene Ontology annotation based on UniProtKB/Swiss-Prot Subcellular Location vocabulary mapping,
+    accompanied by conservative changes to GO terms applied by UniProt
+  findings: []
+- id: PMID:12893961
+  title: The fission yeast RPA51 is a functional homolog of the budding yeast A49 subunit of RNA polymerase
+    I and required for maximizing transcription of ribosomal DNA.
+  findings: []
+- id: PMID:16823372
+  title: ORFeome cloning and global analysis of protein localization in the fission yeast Schizosaccharomyces
+    pombe.
+  findings: []
+- id: file:SCHPO/rpa49/rpa49-uniprot.txt
+  title: rpa49 UniProt sequence/domain and annotation record
+  findings: []
+- id: PMID:18086878
+  title: Two RNA polymerase I subunits control the binding and release of Rrn3 during transcription.
+  findings: []
+- id: PMID:20797630
+  title: RNA polymerase I contains a TFIIF-related DNA-binding subcomplex.
+  findings: []
+core_functions:
+- description: Supports efficient Pol I transcription of ribosomal DNA as the conserved A49 accessory
+    subunit.
+  contributes_to_molecular_function:
+    id: GO:0003899
+    label: DNA-directed RNA polymerase activity
+  directly_involved_in:
+  - *id002
+  locations:
+  - *id003
+  in_complex: *id004
+  supported_by: *id001
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

@@ -5,11 +5,13 @@ This is intended as the non-agentic closing step of the PR Shepherd. It never
 judges a change. It re-reads GitHub state immediately before merging and only
 merges when every mechanical guard passes:
 
-* the PR is open, non-draft, unassigned, and targets the configured base;
+* the PR is open, unassigned, targets the configured base, and is non-draft
+  unless a manual run explicitly opts approved drafts into the pass;
 * the aggregate review decision is APPROVED;
 * at least one approval is bound to the exact current PR head;
 * the PR is old enough, conflict-free, and GitHub reports a CLEAN merge state;
-* every changed file is under a conservative content-path allowlist;
+* the changed-file inventory is complete and valid, and any explicitly requested
+  path restriction is satisfied (all paths are eligible by default);
 * every reported check is complete and non-failing, with at least one SUCCESS;
 * every optionally named required check has an explicit SUCCESS result.
 
@@ -42,8 +44,11 @@ The controller is report-only by default. Actual merging requires the explicit
 ``--execute`` flag and a separate ``GH_MERGE_TOKEN`` credential. Read operations
 continue to use the read-only ``GH_TOKEN``; the writer credential is injected
 only into the merge and courtesy-comment subprocesses. ``--dry-run`` is retained
-as a visible workflow guard. The ``shepherd:hold`` label, assignment, draft
-state, and the separate ``auto/generate-*`` lane all veto this controller.
+as a visible workflow guard. The ``shepherd:hold`` label, assignment, and the
+separate ``auto/generate-*`` lane always veto this controller. Draft state also
+vetoes by default; ``--include-drafts`` makes an eligible draft auditable and,
+in execute mode, marks it ready before the final full re-read and merge.
+If any post-transition guard or merge fails, the controller restores draft state.
 """
 
 from __future__ import annotations
@@ -69,21 +74,6 @@ VIEW_FIELDS = (
 
 DEFAULT_TRUSTED_REVIEWERS: tuple[str, ...] = ()
 DEFAULT_EXCLUDED_HEAD_PREFIXES = ("auto/generate-",)
-DEFAULT_ALLOWED_PATH_PREFIXES = (
-    "genes/",
-    "genesets/",
-    "gocams/",
-    "interpro/",
-    "modules/",
-    "pages/",
-    "projects/",
-    "publications/",
-    "reactome/",
-    "rules/",
-    "terms/",
-    "families/",
-    "research/",
-)
 MAX_REST_CHANGED_FILES = 3_000
 PASSING_CONCLUSIONS = frozenset({"SUCCESS", "SKIPPED", "NEUTRAL"})
 PASSING_STATES = frozenset({"SUCCESS", "NEUTRAL"})
@@ -95,6 +85,7 @@ BENIGN_MERGE_FAILURES = (
     "pull request is closed",
     "no commits between",
 )
+PR_GONE_MERGE_FAILURES = ("already merged", "pull request is closed")
 GH_STATUS_MARKERS = ("X ", "! ", "✓ ")
 
 MERGE_COMMENT = (
@@ -359,7 +350,11 @@ def changed_files_decision(
     previous_filenames: list[str] | None = None,
     allowed_path_prefixes: Iterable[str] = (),
 ) -> Decision:
-    """Require every changed file to stay within a conservative content scope."""
+    """Validate the inventory and optionally restrict both sides of renames.
+
+    File paths do not veto approved, green PRs by default. Callers can explicitly
+    opt into a restricted sweep by supplying the complete allowed prefix list.
+    """
     if (
         isinstance(expected_file_count, bool)
         or not isinstance(expected_file_count, int)
@@ -379,12 +374,7 @@ def changed_files_decision(
     previous_filenames = previous_filenames or []
 
     prefixes = tuple(
-        dict.fromkeys(
-            (
-                *DEFAULT_ALLOWED_PATH_PREFIXES,
-                *(prefix.strip() for prefix in allowed_path_prefixes if prefix.strip()),
-            )
-        )
+        dict.fromkeys(prefix.strip() for prefix in allowed_path_prefixes if prefix.strip())
     )
     malformed = [
         path
@@ -422,14 +412,14 @@ def changed_files_decision(
     disallowed = sorted(
         path
         for path in (*changed_files, *previous_filenames)
-        if not any(path.startswith(prefix) for prefix in prefixes)
+        if prefixes and not any(path.startswith(prefix) for prefix in prefixes)
     )
     if disallowed:
         return Decision(
             False,
             "changed files outside the allowed path scope: " + ", ".join(disallowed),
         )
-    return Decision(True, f"{len(changed_files)} changed file(s) in allowed paths")
+    return Decision(True, f"{len(changed_files)} changed file(s) verified")
 
 
 def evaluate(
@@ -443,6 +433,7 @@ def evaluate(
     hold_label: str = "shepherd:hold",
     excluded_head_prefixes: Iterable[str] = DEFAULT_EXCLUDED_HEAD_PREFIXES,
     allowed_path_prefixes: Iterable[str] = (),
+    include_drafts: bool = False,
     final: bool = True,
 ) -> Decision:
     """Apply cheap list guards or the complete final merge predicate."""
@@ -451,7 +442,7 @@ def evaluate(
         return Decision(False, "no state in the API response")
     if state and state != "OPEN":
         return Decision(False, f"not open (state={state.lower()})")
-    if pr.get("isDraft"):
+    if pr.get("isDraft") and not include_drafts:
         return Decision(False, "draft")
     if pr.get("baseRefName") != base_branch:
         return Decision(
@@ -517,7 +508,12 @@ def evaluate(
     if mergeable != "MERGEABLE":
         return Decision(False, f"mergeability is {mergeable.lower() or 'unset'}")
     merge_state = (pr.get("mergeStateStatus") or "").upper()
-    if merge_state != "CLEAN":
+    draft_preflight_state = (
+        bool(pr.get("isDraft"))
+        and include_drafts
+        and merge_state in {"BLOCKED", "DRAFT"}
+    )
+    if merge_state != "CLEAN" and not draft_preflight_state:
         return Decision(
             False, f"merge state is {merge_state.lower() or 'unset'}, not clean"
         )
@@ -558,6 +554,12 @@ def _gh_error(exc: subprocess.CalledProcessError) -> str:
 def is_benign_merge_failure(stderr: str) -> bool:
     lowered = stderr.lower()
     return any(marker in lowered for marker in BENIGN_MERGE_FAILURES)
+
+
+def is_pr_gone_merge_failure(stderr: str) -> bool:
+    """Return true when a benign merge race left no open PR to re-draft."""
+    lowered = stderr.lower()
+    return any(marker in lowered for marker in PR_GONE_MERGE_FAILURES)
 
 
 def list_open_prs(repo: str, limit: int, base_branch: str) -> list[dict]:
@@ -764,6 +766,24 @@ def merge_pr(
         )
 
 
+def mark_pr_ready(repo: str, number: int, write_token: str) -> None:
+    """Convert a verified draft to ready immediately before its final re-read."""
+    write_token = write_token.strip()
+    if not write_token:
+        raise ValueError(
+            "refusing to mark a draft ready without a dedicated write token"
+        )
+    _gh(["pr", "ready", str(number), "--repo", repo], token=write_token)
+
+
+def mark_pr_draft(repo: str, number: int, write_token: str) -> None:
+    """Restore draft state after an opted-in ready transition did not merge."""
+    write_token = write_token.strip()
+    if not write_token:
+        raise ValueError("refusing to restore draft state without a write token")
+    _gh(["pr", "ready", str(number), "--repo", repo, "--undo"], token=write_token)
+
+
 def render_summary(
     merged: list[dict],
     skipped: list[dict],
@@ -826,6 +846,14 @@ def main(argv: list[str] | None = None) -> int:
         help="max open PRs to scan (default: 300)",
     )
     parser.add_argument(
+        "--include-drafts",
+        action="store_true",
+        help=(
+            "consider approved drafts; execute marks an otherwise eligible draft "
+            "ready immediately before final verification (default: exclude drafts)"
+        ),
+    )
+    parser.add_argument(
         "--trusted-reviewer",
         action="append",
         type=trusted_reviewer_login,
@@ -841,8 +869,8 @@ def main(argv: list[str] | None = None) -> int:
         type=directory_path_prefix,
         default=[],
         help=(
-            "additional normalized directory prefix allowed by the merge controller; "
-            "must end with '/', repeatable (the conservative defaults always remain)"
+            "restrict merging to this normalized directory prefix; must end with '/', "
+            "repeatable (default: all paths; supplied prefixes define the entire scope)"
         ),
     )
     parser.add_argument(
@@ -919,6 +947,7 @@ def main(argv: list[str] | None = None) -> int:
             hold_label=args.hold_label,
             excluded_head_prefixes=excluded_head_prefixes,
             allowed_path_prefixes=args.allowed_path_prefix,
+            include_drafts=args.include_drafts,
             final=False,
         )
         if decision.eligible:
@@ -980,78 +1009,117 @@ def main(argv: list[str] | None = None) -> int:
             hold_label=args.hold_label,
             excluded_head_prefixes=excluded_head_prefixes,
             allowed_path_prefixes=args.allowed_path_prefix,
+            include_drafts=args.include_drafts,
         )
         if not decision.eligible:
             print(f"SKIP  #{number}: {decision.reason}")
             skipped.append({"number": number, "reason": decision.reason})
             continue
         if dry_run:
+            action = "mark ready and merge" if fresh.get("isDraft") else "merge"
             print(
-                f"DRY-RUN would merge #{number}: {fresh['title']} — {decision.reason}"
+                f"DRY-RUN would {action} #{number}: {fresh['title']} — "
+                f"{decision.reason}"
             )
             merged.append({"number": number, "title": fresh["title"]})
             continue
-        # Re-read every load-bearing field immediately before the write. This
-        # catches a newly added hold/assignee, review or check change, and head
-        # movement. The exact reviewed/tested head remains pinned at merge time.
-        try:
-            fresh = view_pr(args.repo, number)
-            fresh["reviews"] = list_pr_reviews(args.repo, number)
-            files = list_pr_files(args.repo, number)
-            fresh["changed_files"] = list(files.filenames)
-            fresh["previous_changed_filenames"] = list(files.previous_filenames)
-            require_unchanged_file_inventory_head(
-                args.repo, number, fresh.get("headRefOid")
-            )
-        except HeadMovedError as exc:
-            reason = str(exc)
-            print(f"SKIP  #{number}: {reason}")
-            skipped.append({"number": number, "reason": reason})
-            continue
-        except (subprocess.CalledProcessError, ValueError) as exc:
-            detail = (
-                _gh_error(exc)
-                if isinstance(exc, subprocess.CalledProcessError)
-                else str(exc)
-            )
-            reason = f"could not perform final re-verification: {detail}"
-            print(f"FAIL  #{number}: {reason}", file=sys.stderr)
-            failed.append({"number": number, "reason": reason})
-            continue
-
-        final_decision = evaluate(
-            fresh,
-            now=datetime.now(timezone.utc),
-            min_age_days=args.min_age_days,
-            base_branch=args.base_branch,
-            trusted_reviewers=trusted_reviewers,
-            required_checks=args.required_check,
-            hold_label=args.hold_label,
-            excluded_head_prefixes=excluded_head_prefixes,
-            allowed_path_prefixes=args.allowed_path_prefix,
-        )
-        if not final_decision.eligible:
-            reason = f"state changed after verification: {final_decision.reason}"
-            print(f"SKIP  #{number}: {reason}")
-            skipped.append({"number": number, "reason": reason})
-            continue
-        try:
-            merge_pr(
-                args.repo,
-                number,
-                args.min_age_days,
-                fresh["headRefOid"],
-                write_token,
-            )
-        except subprocess.CalledProcessError as exc:
-            reason = _gh_error(exc)
-            if is_benign_merge_failure(exc.stderr or reason):
-                print(f"SKIP  #{number}: {reason}")
-                skipped.append({"number": number, "reason": reason})
-            else:
+        marked_ready = bool(fresh.get("isDraft"))
+        if marked_ready:
+            try:
+                mark_pr_ready(args.repo, number, write_token)
+            except (subprocess.CalledProcessError, ValueError) as exc:
+                detail = (
+                    _gh_error(exc)
+                    if isinstance(exc, subprocess.CalledProcessError)
+                    else str(exc)
+                )
+                reason = f"could not mark verified draft ready: {detail}"
                 print(f"FAIL  #{number}: {reason}", file=sys.stderr)
                 failed.append({"number": number, "reason": reason})
-            continue
+                continue
+        merge_completed = False
+        pr_gone = False
+        try:
+            # Re-read every load-bearing field immediately before the write.
+            # This catches a newly added hold/assignee, review or check change,
+            # and head movement. The exact reviewed/tested head remains pinned.
+            try:
+                fresh = view_pr(args.repo, number)
+                fresh["reviews"] = list_pr_reviews(args.repo, number)
+                files = list_pr_files(args.repo, number)
+                fresh["changed_files"] = list(files.filenames)
+                fresh["previous_changed_filenames"] = list(files.previous_filenames)
+                require_unchanged_file_inventory_head(
+                    args.repo, number, fresh.get("headRefOid")
+                )
+            except HeadMovedError as exc:
+                reason = str(exc)
+                print(f"SKIP  #{number}: {reason}")
+                skipped.append({"number": number, "reason": reason})
+                continue
+            except (subprocess.CalledProcessError, ValueError) as exc:
+                detail = (
+                    _gh_error(exc)
+                    if isinstance(exc, subprocess.CalledProcessError)
+                    else str(exc)
+                )
+                reason = f"could not perform final re-verification: {detail}"
+                print(f"FAIL  #{number}: {reason}", file=sys.stderr)
+                failed.append({"number": number, "reason": reason})
+                continue
+
+            final_decision = evaluate(
+                fresh,
+                now=datetime.now(timezone.utc),
+                min_age_days=args.min_age_days,
+                base_branch=args.base_branch,
+                trusted_reviewers=trusted_reviewers,
+                required_checks=args.required_check,
+                hold_label=args.hold_label,
+                excluded_head_prefixes=excluded_head_prefixes,
+                allowed_path_prefixes=args.allowed_path_prefix,
+                # Require a successful ready transition and catch a PR changed
+                # back to draft between the two verification reads.
+                include_drafts=False,
+            )
+            if not final_decision.eligible:
+                reason = f"state changed after verification: {final_decision.reason}"
+                print(f"SKIP  #{number}: {reason}")
+                skipped.append({"number": number, "reason": reason})
+                continue
+            try:
+                merge_pr(
+                    args.repo,
+                    number,
+                    args.min_age_days,
+                    fresh["headRefOid"],
+                    write_token,
+                )
+                merge_completed = True
+            except subprocess.CalledProcessError as exc:
+                reason = _gh_error(exc)
+                merge_error = exc.stderr or reason
+                if is_benign_merge_failure(merge_error):
+                    pr_gone = is_pr_gone_merge_failure(merge_error)
+                    print(f"SKIP  #{number}: {reason}")
+                    skipped.append({"number": number, "reason": reason})
+                else:
+                    print(f"FAIL  #{number}: {reason}", file=sys.stderr)
+                    failed.append({"number": number, "reason": reason})
+                continue
+        finally:
+            if marked_ready and not merge_completed and not pr_gone:
+                try:
+                    mark_pr_draft(args.repo, number, write_token)
+                except (subprocess.CalledProcessError, ValueError) as exc:
+                    detail = (
+                        _gh_error(exc)
+                        if isinstance(exc, subprocess.CalledProcessError)
+                        else str(exc)
+                    )
+                    reason = f"could not restore draft state: {detail}"
+                    print(f"FAIL  #{number}: {reason}", file=sys.stderr)
+                    failed.append({"number": number, "reason": reason})
         print(f"MERGED #{number}: {fresh['title']}")
         merged.append({"number": number, "title": fresh["title"]})
 
