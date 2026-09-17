@@ -99,6 +99,16 @@ def query_reference(pmid: str) -> dict[str, object]:
     on_arhgap23 = [
         r for r in results if r["geneProductId"] == f"UniProtKB:{ARHGAP23}"
     ]
+    # A per-gene count taken from ONE PAGE of a truncated result is a page
+    # artefact that reads as a finding: "0 rows on ARHGAP21" from the first 100
+    # of 18,539 annotations says nothing at all.  Report such counts as
+    # unavailable rather than as zero.  Only the per-gene *presence* observed on
+    # the page is real; its absence is not.
+    def page_scoped(rows: list[dict[str, object]]) -> object:
+        if truncated and not rows:
+            return None  # unknown, NOT zero
+        return rows
+
     return {
         "pmid": pmid,
         "annotations_total": hits,
@@ -106,16 +116,22 @@ def query_reference(pmid: str) -> dict[str, object]:
         "truncated": truncated,
         "entity_count": None if truncated else len(entities),
         "entities": None if truncated else entities,
-        "arhgap21_rows": [
-            {"go_id": r["goId"], "evidence": r["goEvidence"], "assigned_by": r.get("assignedBy")}
-            for r in on_target
-        ],
-        "arhgap10_modern_rows": [
-            {"go_id": r["goId"], "evidence": r["goEvidence"]} for r in on_arhgap10
-        ],
-        "arhgap23_rows": [
-            {"go_id": r["goId"], "evidence": r["goEvidence"]} for r in on_arhgap23
-        ],
+        "arhgap21_rows": page_scoped(
+            [
+                {
+                    "go_id": r["goId"],
+                    "evidence": r["goEvidence"],
+                    "assigned_by": r.get("assignedBy"),
+                }
+                for r in on_target
+            ]
+        ),
+        "arhgap10_modern_rows": page_scoped(
+            [{"go_id": r["goId"], "evidence": r["goEvidence"]} for r in on_arhgap10]
+        ),
+        "arhgap23_rows": page_scoped(
+            [{"go_id": r["goId"], "evidence": r["goEvidence"]} for r in on_arhgap23]
+        ),
     }
 
 
@@ -132,11 +148,19 @@ def main() -> int:
         for p, v in {**primary, **screens}.items()
         if v["arhgap10_modern_rows"]
     }
+    # Papers whose result set we could not fully read cannot clear the
+    # symbol-collision check -- say so instead of counting them as clean.
+    misattribution_unchecked = sorted(
+        p for p, v in {**primary, **screens}.items() if v["arhgap10_modern_rows"] is None
+    )
 
     # A paper that produced no ARHGAP21 annotation at all is a coverage gap.
-    # Distinguish it from a paper we could not fully read (truncated).
+    # Distinguish it from a paper we could not fully read (truncated), where
+    # an empty page is unknown rather than zero.
     zero_on_target = sorted(
-        p for p, v in primary.items() if not v["arhgap21_rows"] and not v["truncated"]
+        p
+        for p, v in primary.items()
+        if v["arhgap21_rows"] == [] and not v["truncated"]
     )
     unknown_on_target = sorted(p for p, v in primary.items() if v["truncated"])
 
@@ -151,34 +175,37 @@ def main() -> int:
         "primary_papers_with_zero_arhgap21_annotations": zero_on_target,
         "primary_papers_truncated_so_unknown": unknown_on_target,
         "misattributed_to_modern_arhgap10": misattributed,
+        "misattribution_unchecked_because_truncated": misattribution_unchecked,
     }
 
     dest = Path(__file__).with_name("reference_coverage.json")
     dest.write_text(json.dumps(out, indent=2, sort_keys=True) + "\n")
 
+    def fmt_rows(rows: object) -> str:
+        if rows is None:
+            return "unknown(truncated)"
+        return ",".join(r["go_id"] + "/" + r["evidence"] for r in rows) or "-"
+
     print("PRIMARY PAPERS (human ARHGAP21)")
-    print(f"{'PMID':<10} {'annots':>7} {'ents':>5} {'onARHGAP21':>11}  terms")
+    print(f"{'PMID':<10} {'annots':>7} {'ents':>6}  terms on ARHGAP21")
     for p in sorted(PRIMARY_PMIDS):
         v = primary[p]
-        terms = ",".join(r["go_id"] + "/" + r["evidence"] for r in v["arhgap21_rows"])
         ents = "trunc" if v["truncated"] else str(v["entity_count"])
-        print(
-            f"{p:<10} {str(v['annotations_total']):>7} {ents:>5} "
-            f"{len(v['arhgap21_rows']):>11}  {terms or '-'}"
-        )
+        print(f"{p:<10} {str(v['annotations_total']):>7} {ents:>6}  {fmt_rows(v['arhgap21_rows'])}")
     print()
-    print("SCREENS")
+    print("SCREENS (entity counts unavailable: every result set is paginated)")
     for p in sorted(SCREEN_PMIDS):
         v = screens[p]
         ents = "trunc" if v["truncated"] else str(v["entity_count"])
         print(
             f"{p:<10} annots={str(v['annotations_total']):>6} entities={ents:>6} "
-            f"onARHGAP21={len(v['arhgap21_rows'])}"
+            f"ARHGAP21={fmt_rows(v['arhgap21_rows'])}"
         )
     print()
     print("primary papers producing ZERO ARHGAP21 annotations:", zero_on_target)
     print("primary papers truncated (coverage unknown):", unknown_on_target)
     print("annotations mis-landed on modern ARHGAP10 (A1A4S6):", misattributed or "NONE")
+    print("symbol-collision check not possible (truncated):", misattribution_unchecked)
     print(f"\nwrote {dest}")
     return 0
 
