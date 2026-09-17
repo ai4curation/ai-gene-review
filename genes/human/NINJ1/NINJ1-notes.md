@@ -61,9 +61,9 @@ whether it exists. Every model is an instance of `GO:0140912 membrane destabiliz
 ("Binding to a membrane and increasing its permeability"), so the dispute does not change the
 action on any annotation. It is recorded in the `reason` and raised in `suggested_questions`.
 
-The 2026 Genentech perspective ([PMID:42350666 "Surveying the roles of NINJ1 in plasma
-membrane rupture", Deshpande I & Kayagaki N, Nat Struct Mol Biol 2026,
-doi 10.1038/s41594-026-01834-3]) was fetched but PubMed indexes **no abstract** for it and it
+The 2026 Genentech perspective (PMID:42350666, *Surveying the roles of NINJ1 in plasma
+membrane rupture*, Deshpande I & Kayagaki N, Nat Struct Mol Biol 2026,
+doi 10.1038/s41594-026-01834-3) was fetched but PubMed indexes **no abstract** for it and it
 is not in PMC, so its content could not be retrieved. It is cited in `references` with
 `full_text_unavailable: true` and `correctness: UNVERIFIED`, and **no claim in this review
 rests on it**.

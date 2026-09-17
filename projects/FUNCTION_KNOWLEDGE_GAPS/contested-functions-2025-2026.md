@@ -501,8 +501,26 @@ Verified live against the InterPro and QuickGO APIs.
 **InterPro IPR042371** is the generic **"Z-binding domain"** entry, and it carries both
 `GO:0003723` RNA binding *and* `GO:0003726` **double-stranded RNA adenosine deaminase activity**.
 The deaminase activity belongs to ADAR1, which shares the Zα domain. ZBP1 has a Zα domain and no
-deaminase domain, so it inherits an enzymatic activity it cannot perform. A domain-level signature
-should not carry an activity that belongs to only one of the proteins bearing that domain.
+deaminase domain, so it inherits an enzymatic activity it cannot perform.
+
+### InterPro2GO gives every RIG-I-like receptor a DNA-binding activity
+
+**InterPro IPR006935** is "Helicase/UvrB, N-terminal", and it maps to `GO:0003677` **DNA
+binding**, `GO:0005524` ATP binding and `GO:0016787` hydrolase activity. The family is dominated
+by DNA-acting enzymes — UvrB, type III restriction endonucleases — but the same N-terminal fold is
+present in the RNA-sensing RIG-I-like receptors, so **IFIH1 (MDA5), a cytosolic double-stranded
+*RNA* sensor, carries a DNA-binding annotation**. MDA5 has no reported direct DNA binding, and
+activation by DNA viruses is accepted to be indirect via RNA. The signature matches **73,506
+proteins**. Verified against the InterPro API.
+
+### The shape these three share
+
+All three are the same failure, and it is worth naming because a per-gene fix will not stop it:
+**a domain-level signature carries an activity that belongs to only some of the proteins bearing
+that domain.** A Zα domain does not make you a deaminase; a helicase N-terminal fold does not make
+you DNA-binding; being calcium-*permeable* does not make you calcium-*activated*. The mapping is
+made once at the family level and then inherited by every member, including the ones for which it
+is false. Three were found in a sample of ~55 genes, which suggests the rate is not negligible.
 
 ### A frameshifted ORF's activity annotated onto the parent protein
 
