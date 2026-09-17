@@ -3,7 +3,7 @@ title: "Glycobiology Project"
 maturity: IN_PROGRESS
 tags: [BIOLOGY_DOMAIN, PIPELINE]
 species: [human]
-genes: [B3GALNT2, LGALS3, PMM2, POFUT1, MGAT1, ST6GAL1, B4GALT1]
+genes: [B3GALNT2, LGALS3, PMM2, POFUT1, MGAT1, ST6GAL1, B4GALT1, GALNT1, C1GALT1, C1GALT1C1, GCNT1]
 ---
 
 # Glycobiology Project
@@ -195,6 +195,76 @@ independent 2,735-annotation module cohort
 ([pathway modules](GLYCOBIOLOGY/GLYCOBIOLOGY-modules.md)) reproduces this at
 scale.
 
+## Phase 3 — mucin-type O-glycan initiation
+
+The O-glycosylation gap identified when the pathway modules were indexed is now
+partly closed. Four human genes covering the initiation and first two elongation
+steps of mucin-type O-glycan biosynthesis were reviewed de novo (72 annotations,
+all validate clean):
+
+| Gene | UniProt | Role | N |
+|------|---------|------|--:|
+| **GALNT1** | Q10472 | GalNAc-T1 (GT27); transfers GalNAc to Ser/Thr — the committed initiating step, one of 20 paralogues | 29 |
+| **C1GALT1** | Q9NS00 | T-synthase (GT31); adds Gal to form the core 1 disaccharide (T antigen) | 13 |
+| **C1GALT1C1** | Q96EU7 | Cosmc; the dedicated ER folding chaperone for C1GALT1 — a non-catalytic member of the pathway | 9 |
+| **GCNT1** | Q02742 | C2GnT1 (GT14); adds the core 2 beta-1,6 branch that licenses selectin-ligand synthesis | 21 |
+
+Verdicts: 45 ACCEPT / 14 MODIFY / 5 NON_CORE / 5 OVER / 2 REMOVE / 1 NEW. Every
+`supporting_text` quote was verified as a verbatim substring of the cached
+publication (124 quotes, 0 failures) and every proposed GO term checked against
+QuickGO for existence, aspect and obsolescence.
+
+**Note on provenance.** Deep-research tooling was unavailable in this environment
+(the configured OpenAI key is rejected), so these four carry no
+`-deep-research-PROVIDER.md` file, unlike the Phase 1 and 2 exemplars. The
+reviews are grounded instead in the cached publications, which were present for
+every PMID cited by GOA. Per repository policy no self-authored file was named as
+though it were provider deep research.
+
+### What Phase 3 adds to the audit
+
+- **The chaperone/enzyme boundary is already curated correctly, and that is the
+  finding.** Cosmc is a chaperone with no transferase activity, and GOA carries
+  `GO:0016263` on it as a **NOT** annotation — the curators had explicitly negated
+  the client enzyme's activity on its chaperone. This was the batch's most
+  instructive row: read without the negation flag it looks like a textbook
+  necessity-mistaken-for-possession error, and it is the opposite. The seeding
+  pipeline carries `negated: true` correctly; the lesson is for the reviewer, who
+  must read the flag before reasoning about the row, since the negation inverts
+  the meaning of an otherwise ordinary-looking IMP.
+- **Generic-MF collapse recurs, and extends to cellular components.** Both
+  `GO:0016757 glycosyltransferase activity` rows were MODIFY'd to the specific
+  child, matching Phases 1-2. But the dominant MODIFY here was locational: six
+  `GO:0016020 membrane` rows across three genes collapsed to `GO:0000139 Golgi
+  membrane`. Bare `membrane` on a type II Golgi glycosyltransferase is the
+  cellular-component analogue of the generic-MF problem.
+- **Guilt-by-substrate is strongest where the product has famous physiology.**
+  GCNT1 carries leukocyte tethering or rolling, its positive regulation, and cell
+  adhesion molecule production — all because it builds the core 2 branch of a
+  selectin ligand. The tethering assays behind them were run on GOLPH3-depleted
+  cells, not GCNT1-depleted cells. GALNT1 carries `GO:0019082 viral protein
+  processing` because Reactome models it glycosylating SARS-CoV-2 ORF3a; the
+  enzyme's activity does not change with the provenance of its acceptor.
+- **A committed pathway enzyme was missing from its own pathway.** C1GALT1 had
+  **no** mucin-type O-glycosylation process annotation: its only two
+  biological-process rows were angiogenesis and kidney development, both cited to
+  a case-control SNP association study for IgA nephropathy. The comparator check
+  confirms a gap rather than a convention — GALNT1 (upstream), GCNT1 (downstream)
+  and even C1GALT1's own non-catalytic chaperone all carry the process term. Added
+  as the batch's single `NEW`.
+- **A citation that format validation cannot catch.** PMID:17228361 is correctly
+  identified and correctly titled, and supports neither annotation drawn from it;
+  it is recorded `MISCITED` in `reference_review`.
+- **Restraint where the cache is thin.** PMID:16638743 is a GalNAc-T3/FGF23 paper
+  cited as an IDA on GALNT1, abstract-only in our cache. Rather than allege
+  mis-attribution, it is marked `UNVERIFIED` and the annotation ACCEPTed: a
+  selectivity claim of that kind is normally established against a panel of
+  isoforms, and the asserted activity is independently certain for this gene.
+
+Still uncovered on this axis: the remaining GALNT paralogues (the family's
+acceptor-specificity differences are what GO does not currently express), core 3
+and core 4 branching, and the sialyl/fucosyl capping steps.
+
 ## Pathway modules
 
 Alongside the single-gene exemplars, the repo holds **17 curated glycobiology
@@ -296,7 +366,9 @@ fuller candidate list; these are the already-curated anchors.
   1 REMOVE / 1 NEW). **17 pathway modules** and their **100-gene / 2,735-annotation**
   cohort are now indexed under
   [GLYCOBIOLOGY-modules.md](GLYCOBIOLOGY/GLYCOBIOLOGY-modules.md) and reproduce
-  the same skew independently.
+  the same skew independently. **Phase 3** adds four mucin-type O-glycan genes
+  (GALNT1, C1GALT1, C1GALT1C1, GCNT1; 72 annotations), partly closing the
+  O-glycosylation gap.
 - **Next steps**: (1) run the GOA closure query for the anchor terms across the
   animal taxa to enumerate the glycogene set and its verdict baseline — the
   107-gene reviewed corpus (7 exemplars + 100 module genes) is the denominator to
@@ -307,4 +379,5 @@ fuller candidate list; these are the already-curated anchors.
   (GPC6, Notch1, Uggt1) and a glycosidase/CDG type-II gene; (5) close the
   **O-glycosylation gap** with a mucin-type GALNT-initiated O-glycan module;
   (6) re-review the module cohort for `proposed_new_terms`, which it currently
-  under-proposes (1 across 100 genes).
+  under-proposes (1 across 100 genes); (7) extend Phase 3 across the remaining GALNT paralogues and the
+  core 3/core 4 and capping steps.

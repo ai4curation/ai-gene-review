@@ -19,9 +19,12 @@ modules are *pathway-level* `ModuleReview` documents that place glycogenes in
 ordered biosynthetic and catabolic sequences. Together they reach glycoconjugate classes the exemplars never touch —
 GPI anchors, glycosphingolipids, and the lysosomal catabolism of glycolipids and
 glycosaminoglycans — rather than only the glycosyltransferase/lectin axes.
-**O-glycosylation remains a genuine hole**: no module covers mucin-type
-GALNT-initiated O-glycan biosynthesis, and the exemplars reach O-linked biology
-only through single genes (POFUT1, B3GALNT2).
+**O-glycosylation remains a hole at module level**: no module covers mucin-type
+GALNT-initiated O-glycan biosynthesis, though the project's
+[Phase 3 gene batch](../GLYCOBIOLOGY.md#phase-3--mucin-type-o-glycan-initiation)
+(GALNT1, C1GALT1, C1GALT1C1, GCNT1) now covers the initiation and first two
+elongation steps as single-gene reviews. A module assembling them into the
+ordered pathway is the obvious next step.
 
 **Scope note.** A `ModuleReview` is not a GO-CAM. The decision to **PUNT**
 GO-CAM/causal modelling in
