@@ -410,6 +410,26 @@ The anchor assertion earned its keep immediately: when the eighth mutation was a
 anchor was copied by hand and dropped the word `regeneration`, and the run reported `ANCHOR
 NOT FOUND - mutation would have been a silent no-op` instead of quietly claiming a pass.
 
+**Presence is not enough — the anchor must be *unique*.** The eighth mutation's corrected
+anchor then matched **two** sites (`:788` and `:1030`), and `replace(old, new, 1)` takes the
+first, so the mutation would have silently tested a row it was not written for. Matching
+twice is the same failure as matching zero times, wearing a passing result. Added:
+
+```python
+if n > 1:
+    failures.append(f"{name}: ANCHOR AMBIGUOUS - matches {n} sites, mutation would hit the first")
+```
+
+On its first run it failed the suite on a **pre-existing** ambiguous anchor that nobody had
+flagged: the `MODIFY → GO:0034237` mutation matches both `GO:0034237` rows (`:69-71` and
+`:236-238`), whose `proposed_replacement_terms` blocks are byte-identical. That mutation had
+been quietly exercising the first row since it was written. Both anchors now extend into
+text unique to their row.
+
+That is twice in consecutive rounds that a guard added for one reason caught something else
+on the commit that introduced it — which is the argument for writing the general check
+rather than lengthening the one anchor that was complained about.
+
 Two further defects came out of that, both worth recording because neither was found by
 reading:
 
