@@ -506,6 +506,27 @@ annotation likely warrants MGI's attention as well.
 
 Recorded so the same ground is not re-covered.
 
+- **AGO1 / AGO1x readthrough** — reviewed; **changed no annotation**, and that is the finding.
+  None of the AGO1x papers appears in AGO1's GOA, and UniProt has no isoform record for AGO1x, so
+  there was nothing to adjudicate. Worth recording that the challenge is narrower than its title
+  suggests: PMID:40500330 (*EMBO J* 2025) is a Letter attacking the **dual-luciferase
+  quantification** in PMID:31330067/PMID:38499809, and does not address the ribosome-profiling,
+  mass-spectrometry or proteoform-antibody evidence in the same 2019 paper. Nor is AGO1x a
+  single-group claim — PMID:32812257 (*EMBO J* 2020, Zavolan lab) reports it independently with a
+  different function. Defensible reading: the ~20% readthrough figure is very likely wrong; the
+  proteoform's existence at lower levels is open.
+- **PHGDH moonlighting** — recorded, core function untouched. Note for anyone tempted to use the
+  correction (PMID:41838922) as evidence of trouble: it changes a reviewer's name from "Andrew
+  Piper" to "Andrew Pieper" and nothing else. The real caveats stand without it — one lab, two
+  mutually-independent mechanisms within a year, no replication, and a DNA-binding element that is
+  AlphaFold-predicted rather than solved and sits *inside* the NAD(H)-binding Rossmann fold, so
+  the deletion used to test it could perturb cofactor binding instead.
+- **APLP1 as an alpha-synuclein receptor** — recorded, no receptor MF added. The in vivo rescue is
+  an *Aplp1/Lag3 double* knockout, so APLP1 is never isolated, and the supporting papers share
+  senior authorship. Also worth stating precisely: PMID:34309222, the LAG3 refutation, **does not
+  mention APLP1 anywhere** (zero occurrences in cached full text), so it is evidence against LAG3
+  only. Ontology gap found: GO has `GO:0001540` amyloid-beta binding but **no alpha-synuclein
+  binding term**.
 - **AARS1 lactyltransferase** — no published rebuttal found in the window, and the repo's
   1860-line review already qualifies the activity to elevated-lactate, substrate-specific
   contexts rather than dominant basal global lactylation. Handled well already.
