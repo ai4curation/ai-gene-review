@@ -40,7 +40,7 @@ that the retracted `PMID:27683220` keeps `is_invalid: true` and is never cited a
 support.
 
 ```bash
-python3 akap12_audit.py     # exit 0 = all assertions hold
+uv run python akap12_audit.py     # exit 0 = all assertions hold
 ```
 
 The assertions are **structural**, computed from the parsed YAML. An earlier
@@ -61,8 +61,15 @@ working tree — a test must not be able to damage the artifact it is testing.
 Two entries are **controls** that must *not* trip the audit, so a guard that fires on
 everything is caught too.
 
+Each anchor must match **exactly once**. Matching zero times means the mutation changed
+nothing and "passed" vacuously; matching twice means `replace(..., 1)` silently hit
+whichever row came first, so the mutation stopped testing the row it was written for. This
+document has near-duplicate rows — two `MODIFY → GO:0034237` rows with identical
+`proposed_replacement_terms`, and two rows sharing a `supporting_text` — and the
+ambiguity check caught a real instance of the second failure the moment it was added.
+
 ```bash
-python3 akap12_audit_selftest.py
+uv run python akap12_audit_selftest.py
 ```
 
 This exists because a check that passes on a broken document is worse than no

@@ -54,8 +54,10 @@ MUTATIONS = [
         # exercises the root_cause-vs-action coherence guard: an over-annotation row whose
         # propagation_review simultaneously claims nothing went wrong.
         "root_cause contradicts action",
-        "        regeneration or formation of liver fibrosis after various injuries.\n    propagation_review:\n      root_cause: SOURCE_WEAK_OR_INFERRED\n",
-        "        regeneration or formation of liver fibrosis after various injuries.\n    propagation_review:\n      root_cause: NO_FAILURE_CORE\n",
+        # Two rows (GO:0035733 and GO:0061870) share an identical supporting_text and
+        # propagation_review head, so the anchor runs down to the first line that differs.
+        "      root_cause: SOURCE_WEAK_OR_INFERRED\n      failure_modes:\n      - SOURCE_EVIDENCE_WEAK\n      - CONTEXT_OR_TISSUE_MISMATCH\n      source_entities:\n      - source_id: UniProtKB:Q5QD51\n        source_label: Akap12 (Rattus norvegicus), reviewed (Swiss-Prot), 1687 aa\n        source_status: SOURCE_WEAK_OR_INFERRED\n        comment: A true orthologue, but its GO:0035733 annotation is IEP from PMID:23925424,\n",
+        "      root_cause: NO_FAILURE_CORE\n      failure_modes:\n      - SOURCE_EVIDENCE_WEAK\n      - CONTEXT_OR_TISSUE_MISMATCH\n      source_entities:\n      - source_id: UniProtKB:Q5QD51\n        source_label: Akap12 (Rattus norvegicus), reviewed (Swiss-Prot), 1687 aa\n        source_status: SOURCE_WEAK_OR_INFERRED\n        comment: A true orthologue, but its GO:0035733 annotation is IEP from PMID:23925424,\n",
         "asserts no failure",
     ),
     (
@@ -72,8 +74,10 @@ MUTATIONS = [
     ),
     (
         "required claim partially deleted",
-        "    proposed_replacement_terms:\n    - id: GO:0034237\n      label: protein kinase A regulatory subunit binding\n",
-        "    proposed_replacement_terms:\n    - id: GO:0005515\n      label: protein binding\n",
+        # Both MODIFY->GO:0034237 rows carry an identical proposed_replacement_terms block,
+        # so the anchor includes the preceding reason line that is unique to this one.
+        "      discards the one fact that names the gene.\n    proposed_replacement_terms:\n    - id: GO:0034237\n      label: protein kinase A regulatory subunit binding\n",
+        "      discards the one fact that names the gene.\n    proposed_replacement_terms:\n    - id: GO:0005515\n      label: protein binding\n",
         "MODIFY rows targeting GO:0034237",
     ),
     (
@@ -113,8 +117,15 @@ original = (ROOT / REL).read_text()
 with tempfile.TemporaryDirectory() as td:
     mutant_path = Path(td) / "AKAP12-ai-review.yaml"
     for name, old, new, expect in MUTATIONS:
-        if old not in original:
+        n = original.count(old)
+        if n == 0:
             failures.append(f"{name}: ANCHOR NOT FOUND - mutation would have been a silent no-op")
+            continue
+        # An anchor matching more than once is as bad as matching none: replace(..., 1) would
+        # silently mutate whichever row happens to come first, so the mutation stops testing
+        # the row it was written for and nothing would say so.
+        if n > 1:
+            failures.append(f"{name}: ANCHOR AMBIGUOUS - matches {n} sites, mutation would hit the first")
             continue
         mutated = original.replace(old, new, 1)
         assert mutated != original, f"{name}: mutation produced no change"
