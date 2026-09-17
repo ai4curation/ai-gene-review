@@ -199,7 +199,7 @@ scale.
 
 The O-glycosylation gap identified when the pathway modules were indexed is now
 partly closed. Four human genes covering the initiation and first two elongation
-steps of mucin-type O-glycan biosynthesis were reviewed de novo (72 annotations,
+steps of mucin-type O-glycan biosynthesis were reviewed de novo (73 annotations,
 all validate clean):
 
 | Gene | UniProt | Role | N |
@@ -207,9 +207,9 @@ all validate clean):
 | **GALNT1** | Q10472 | GalNAc-T1 (GT27); transfers GalNAc to Ser/Thr — the committed initiating step, one of 20 paralogues | 29 |
 | **C1GALT1** | Q9NS00 | T-synthase (GT31); adds Gal to form the core 1 disaccharide (T antigen) | 13 |
 | **C1GALT1C1** | Q96EU7 | Cosmc; the dedicated ER folding chaperone for C1GALT1 — a non-catalytic member of the pathway | 9 |
-| **GCNT1** | Q02742 | C2GnT1 (GT14); adds the core 2 beta-1,6 branch that licenses selectin-ligand synthesis | 21 |
+| **GCNT1** | Q02742 | C2GnT1 (GT14); adds the core 2 beta-1,6 branch that licenses selectin-ligand synthesis | 22 |
 
-Verdicts: 45 ACCEPT / 14 MODIFY / 5 NON_CORE / 5 OVER / 2 REMOVE / 1 NEW. Every
+Verdicts: 44 ACCEPT / 14 MODIFY / 5 NON_CORE / 6 OVER / 3 REMOVE / 1 NEW. Every
 `supporting_text` quote was verified as a verbatim substring of the cached
 publication (124 quotes, 0 failures) and every proposed GO term checked against
 QuickGO for existence, aspect and obsolescence.
@@ -367,7 +367,7 @@ fuller candidate list; these are the already-curated anchors.
   cohort are now indexed under
   [GLYCOBIOLOGY-modules.md](GLYCOBIOLOGY/GLYCOBIOLOGY-modules.md) and reproduce
   the same skew independently. **Phase 3** adds four mucin-type O-glycan genes
-  (GALNT1, C1GALT1, C1GALT1C1, GCNT1; 72 annotations), partly closing the
+  (GALNT1, C1GALT1, C1GALT1C1, GCNT1; 73 annotations), partly closing the
   O-glycosylation gap.
 - **Next steps**: (1) run the GOA closure query for the anchor terms across the
   animal taxa to enumerate the glycogene set and its verdict baseline — the
