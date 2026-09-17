@@ -421,10 +421,17 @@ reading:
   **7** times, mostly in explanatory prose — so swapping one of the two
   `proposed_replacement_terms` out still left 6 and the check passed a genuinely broken
   document. The self-test caught it. Replaced with a **structural** assertion over the
-  parsed document (exactly 2 MODIFY rows target `GO:0034237`, exactly 2 target `GO:0008013`,
-  exactly 1 targets `GO:0007188`, and no MODIFY row proposes bare `GO:0005515`), plus a
+  parsed document (exactly 2 MODIFY rows target `GO:0034237`, exactly 1 targets
+  `GO:0007188`, and no MODIFY row proposes bare `GO:0005515`), plus a
   check that the retracted `PMID:27683220` stays `is_invalid` and is never cited as support.
   Derive thresholds from computed structure, never from a number you chose.
+- **And the structural assertion itself went stale.** That check originally also asserted
+  "exactly 2 MODIFY rows target `GO:0008013`". Withdrawing the CTNNB1 MODIFY took that count
+  to **0**, so the assertion was false — and because the script lived in a scratchpad and was
+  never committed, nothing re-ran it to notice. Fixed here, and the script is now committed
+  under `AKAP12-bioinformatics/` so the next edit is checked rather than trusted. Current
+  actions: ACCEPT 11 / KEEP_AS_NON_CORE 17 / MODIFY 3 / MARK_AS_OVER_ANNOTATED 7 / NEW 4 = 42.
+  An uncommitted check is not a check.
 
 `checkquotes.py` from the shared scratchpad was run after confirming it resolved the correct
 repo root (it prints it; it derived this worktree, not another agent's). 77 quotes, 0
