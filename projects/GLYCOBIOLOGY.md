@@ -211,7 +211,7 @@ all validate clean):
 
 Verdicts: 44 ACCEPT / 14 MODIFY / 5 NON_CORE / 6 OVER / 3 REMOVE / 1 NEW. Every
 `supporting_text` quote was verified as a verbatim substring of the cached
-publication (124 quotes, 0 failures) and every proposed GO term checked against
+publication (164 quotes, 0 failures) and every proposed GO term checked against
 QuickGO for existence, aspect and obsolescence.
 
 **Note on provenance.** Deep-research tooling was unavailable in this environment
