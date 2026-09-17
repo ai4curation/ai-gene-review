@@ -278,6 +278,22 @@ def test_pages_artifact_failures_do_not_block_regeneration():
     assert "::warning" in warning["run"]
 
 
+def test_pages_artifact_contains_rule_and_prediction_builds():
+    """Both renderers must finish before the deployable artifact is staged."""
+    job = _workflow(GENERATE_PAGES)["jobs"]["generate-pages"]
+    steps = job["steps"]
+    stage_index = steps.index(_step(job, "Stage GitHub Pages artifact"))
+    upload_index = steps.index(_step(job, "Upload GitHub Pages artifact"))
+    for name, command in (
+        ("Render cached rule reviews and index", "just render-rule-pages"),
+        ("Render ProtNLM prediction evaluations from all review sidecars", "just render-prediction-eval"),
+        ("Build shared predictions browser", "just deploy-predictions-browser"),
+    ):
+        build = _step(job, name)
+        assert build["run"] == command
+        assert steps.index(build) < stage_index < upload_index
+
+
 def test_pages_deployment_requires_opt_in_and_publishable_artifact():
     """Only a complete, within-budget artifact may reach the Pages environment."""
     jobs = _workflow(GENERATE_PAGES)["jobs"]
@@ -428,6 +444,12 @@ def test_generated_artifact_allowlist_is_fully_anchored():
         "app/index.html",
         "app/data.js",
         "app/schema.js",
+        "app/predictions/index.html",
+        "app/predictions/data.js",
+        "app/predictions/schema.js",
+        "app/predictions/source-files.json",
+        "rules/arba/index.html",
+        "rules/arba/ARBA00000900/ARBA00000900-review.html",
         "reports/validation-all.tsv",
     ):
         assert allowed(path), path
@@ -437,6 +459,10 @@ def test_generated_artifact_allowlist_is_fully_anchored():
         "genes/human/TP53/TP53-ai-review.html-notes.md",
         "pages",
         "app/extra.js",
+        "app/predictions/source-files.json.bak",
+        "app/predictions/curated-review.yaml",
+        "rules/arba/ARBA00000900/ARBA00000900-review.yaml",
+        "rules/arba/ARBA00000900/ARBA00000900-review.html.bak",
         "reports",
         "src/ai_gene_review/render.py",
     ):

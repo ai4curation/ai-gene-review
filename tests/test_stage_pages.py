@@ -60,6 +60,35 @@ def test_stage_pages_preserves_urls_and_copies_linked_sources(tmp_path: Path) ->
     assert manifest.linked_source_bytes_not_staged == 0
 
 
+def test_stage_pages_includes_prediction_browser_and_dynamic_sources(tmp_path: Path) -> None:
+    """Sources linked through exported rows survive deployment, not just file://."""
+    _site_fixture(tmp_path)
+    browser = tmp_path / "app/predictions"
+    _write(browser / "index.html", '<script src="data.js"></script><script src="schema.js"></script>')
+    _write(browser / "data.js", "window.predictionData = {sets: [], claims: []};")
+    _write(browser / "schema.js", "window.searchSchema = {};")
+    source = "genes/human/ABC1/ABC1-predictions-review.yaml"
+    _write(tmp_path / source, "predictions: []\n")
+    _write(browser / "source-files.json", json.dumps([source]))
+
+    manifest = stage_pages(tmp_path, tmp_path / "_site")
+
+    assert (tmp_path / "_site/app/predictions/data.js").is_file()
+    assert (tmp_path / "_site" / source).read_text() == "predictions: []\n"
+    assert manifest.broken_local_links == 0
+
+
+@pytest.mark.parametrize("source", ["../outside.txt", ".git/config", "_site/private.txt"])
+def test_prediction_browser_manifest_cannot_publish_private_paths(tmp_path: Path, source: str) -> None:
+    """Treat a generated dependency list with the same boundary as static links."""
+    _site_fixture(tmp_path)
+    for filename in ("index.html", "data.js", "schema.js"):
+        _write(tmp_path / "app/predictions" / filename)
+    _write(tmp_path / "app/predictions/source-files.json", json.dumps([source]))
+    with pytest.raises(ValueError, match="Invalid prediction browser source"):
+        stage_pages(tmp_path, tmp_path / "_site")
+
+
 def test_stage_pages_includes_transitive_publication_dependencies(
     tmp_path: Path,
 ) -> None:

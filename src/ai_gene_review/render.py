@@ -647,6 +647,7 @@ def collect_prediction_reviews(
     Filenames may use the main review's accession or its biological symbol.
     Keep each document separate to preserve source provenance and avoid adding
     external predictions to the GOA annotation review or its statistics.
+    Completed summaries with an explicit empty list document reviewed absence.
     """
     prefixes = {yaml_path.stem.removesuffix("-ai-review")}
     if data.get("gene_symbol"):
@@ -664,17 +665,36 @@ def collect_prediction_reviews(
                 f"Prediction review ID mismatch in {path}: "
                 f"{review['id']} != {data['id']}"
             )
-        if not review.get("predictions"):
+        reviewed_absence = (
+            review.get("predictions") == []
+            and review.get("status") == "COMPLETE"
+            and bool(review.get("id"))
+            and bool((review.get("description") or "").strip())
+        )
+        if not review.get("predictions") and not reviewed_absence:
             continue
         methods = sorted({
             pred.get("source_method") or "Unknown method"
             for pred in review["predictions"]
         })
+        # Empty records have no per-prediction source_method; the established
+        # suffix identifies the method family, without implying a model version.
+        if not methods and any(stem == f"{prefix}-protnlm" for prefix in prefixes):
+            methods = ["ProtNLM"]
         genes_dir = next(
             (parent for parent in yaml_path.resolve().parents if parent.name == "genes"),
             None,
         )
         reference_hrefs = {}
+        source_documents = []
+        source_root = genes_dir.parent if genes_dir is not None else path.parent
+        for document in review.get("source_documents") or []:
+            source_path = source_root / document
+            if source_path.is_file():
+                source_documents.append({
+                    "label": document,
+                    "href": os.path.relpath(source_path.resolve(), output_dir.resolve()),
+                })
         if genes_dir is not None:
             for pred in review["predictions"]:
                 for support in (pred.get("review") or {}).get("supported_by") or []:
@@ -686,11 +706,12 @@ def collect_prediction_reviews(
                                 source_path.resolve(), output_dir.resolve()
                             )
         sections.append({
-            "title": ", ".join(methods),
+            "title": ", ".join(methods) or "Prediction coverage review",
             "filename": path.name,
             "href": os.path.relpath(path.resolve(), output_dir.resolve()),
             "review": review,
             "reference_hrefs": reference_hrefs,
+            "source_documents": source_documents,
         })
     return sections
 

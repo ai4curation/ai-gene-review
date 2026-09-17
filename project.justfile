@@ -1513,10 +1513,10 @@ stage-pages:
     uv run python -m ai_gene_review.tools.stage_pages --manifest _site-manifest.json
 
 # Build the complete disposable publication tree used by the Pages migration.
-build-pages: render-all render-projects validate-modules render-modules deploy-browser stage-pages
+build-pages: render-all render-projects render-prediction-eval validate-modules render-modules deploy-browser deploy-predictions-browser stage-pages
 
 # Render prediction evaluation table from *-predictions-review.yaml files
-render-prediction-eval pattern='genes/*/*/*-protnlm-predictions-review.yaml' output='pages/projects/PROTNLM_EVALUATION/protnlm-eval.html' title='ProtNLM-50 Prediction Evaluation':
+render-prediction-eval pattern='genes/*/*/*-protnlm-predictions-review.yaml' output='pages/projects/PROTNLM_EVALUATION/protnlm-eval.html' title='ProtNLM Prediction Evaluation':
     uv run python -m ai_gene_review.render_prediction_eval '{{pattern}}' -o '{{output}}' --title '{{title}}'
 
 # Render the BioReason-Pro comparison prediction evaluation tables (SFT, GO-GPT, DeepECTF)
@@ -1851,6 +1851,10 @@ deploy-browser: export-annotations-json
     cp src/ai_gene_review/browser/index.html app/
     echo "Browser deployed to app/ directory"
     echo "To view: open app/index.html or run 'just serve-browser'"
+
+# Build the shared prediction-set and claim browser, including narrative reviews.
+deploy-predictions-browser:
+    uv run python -m ai_gene_review.tools.build_prediction_browser
 
 # Serve the linkml-browser app locally  
 serve-browser:

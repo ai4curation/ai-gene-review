@@ -296,6 +296,16 @@ window.searchSchema = {
       "label": "Tags",
       "type": "array"
     }
+  ],
+  "navigationLinks": [
+    {
+      "label": "Predictions",
+      "href": "predictions/index.html"
+    },
+    {
+      "label": "Projects",
+      "href": "../pages/projects/index.html"
+    }
   ]
 };
 window.dispatchEvent(new Event('searchDataReady'));
