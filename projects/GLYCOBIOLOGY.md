@@ -132,19 +132,21 @@ All seven validate clean (`status: DRAFT`).
 | Gene | N | ACCEPT | NON_CORE | OVER | MODIFY | REMOVE | NEW |
 |------|--:|-------:|---------:|-----:|-------:|-------:|----:|
 | B3GALNT2 | 16 | 5 | 2 | 2 | 7 | 0 | 0 |
-| LGALS3 | 106 | 21 | 64 | 20 | 0 | 0 | 1 |
-| PMM2 | 23 | 16 | 2 | 1 | 1 | 3 | 0 |
+| LGALS3 | 106 | 23 | 62 | 20 | 0 | 0 | 1 |
+| PMM2 | 23 | 16 | 2 | 4 | 1 | 0 | 0 |
 | POFUT1 | 21 | 15 | 2 | 3 | 1 | 0 | 0 |
 | MGAT1 | 26 | 11 | 6 | 5 | 4 | 0 | 0 |
 | ST6GAL1 | 35 | 23 | 5 | 2 | 4 | 1 | 0 |
 | B4GALT1 | 76 | 44 | 21 | 6 | 5 | 0 | 0 |
-| **Total** | **303** | **135** | **102** | **39** | **22** | **4** | **1** |
+| **Total** | **303** | **137** | **100** | **42** | **22** | **1** | **1** |
 
-Only **4/303 REMOVE** (all high-throughput-interactome `protein binding`), against
-**102 NON_CORE + 39 OVER + 22 MODIFY** — i.e. ~54% of annotations are *demoted or
-refined* but ~99% are *retained in some form*. The mis-annotation signal is
-overwhelmingly **altitude/specificity and pleiotropy**, not wrong functions —
-exactly the project's prediction.
+Only **1/303 REMOVE** (ST6GAL1, a high-throughput-interactome `protein binding`),
+against **100 NON_CORE + 42 OVER + 22 MODIFY** — i.e. ~54% of annotations are
+*demoted or refined* but **99.7%** are *retained in some form*. The
+mis-annotation signal is overwhelmingly **altitude/specificity and pleiotropy**,
+not wrong functions — exactly the project's prediction. (PMM2's three former
+REMOVEs have since been softened to `MARK_AS_OVER_ANNOTATED`; the counts above
+are recomputed from the YAMLs rather than carried forward.)
 
 ### What the exemplars confirmed (audit hypotheses → evidence)
 
@@ -171,7 +173,7 @@ exactly the project's prediction.
   immune/apoptosis/fibrosis/cancer biology is downstream of one core activity
   (β-galactoside CRD binding + N-terminal LLPS lattice). A new `GO:0062093 lysophagy`
   annotation was *added* (the damaged-endomembrane glycan-sensing role).
-- **GO coverage gaps surfaced for curation — 7 `proposed_new_terms`** across the set:
+- **GO coverage gaps surfaced for curation — 8 `proposed_new_terms`** across the set:
   protein-O-mannose β-1,3-GalNAc-T activity (B3GALNT2, the [RHEA](RHEA.md)-flagged
   EC 2.4.1.313 gap); galectin-glycan-lattice-assembly + damaged-endomembrane-glycan-
   sensor (LGALS3); phosphomannomutase-in-GDP-mannose-biosynthesis (PMM2);
@@ -185,10 +187,51 @@ exactly the project's prediction.
   stale EC number (ST6GAL1 "2.4.99.1" → current 2.4.3.1) were rejected and recorded
   in notes rather than cited.
 
-Net: across 144 annotations the verdict skew (only 3 REMOVE, all
-high-throughput-interactome `protein binding`; heavy NON_CORE + MODIFY) matches
-the project's prediction — glycogene mis-annotation is dominated by **altitude /
-specificity and pleiotropy**, not outright wrong functions.
+Net: across all 303 exemplar annotations the verdict skew (a single REMOVE, a
+high-throughput-interactome `protein binding`; heavy NON_CORE + OVER + MODIFY)
+matches the project's prediction — glycogene mis-annotation is dominated by
+**altitude / specificity and pleiotropy**, not outright wrong functions. The
+independent 2,735-annotation module cohort
+([pathway modules](GLYCOBIOLOGY/GLYCOBIOLOGY-modules.md)) reproduces this at
+scale.
+
+## Pathway modules
+
+Alongside the single-gene exemplars, the repo holds **17 curated glycobiology
+`ModuleReview` documents** — pathway-level decompositions of N-glycan LLO
+assembly and transfer, dolichol/nucleotide-sugar donor supply, the five GPI-anchor
+stages, glycosphingolipid biosynthesis, and the lysosomal catabolism of
+glycolipids, heparan sulfate and keratan/chondroitin sulfate. Index, with the
+cohort analysis:
+**[GLYCOBIOLOGY-modules.md](GLYCOBIOLOGY/GLYCOBIOLOGY-modules.md)**.
+
+These were curated independently and, until now, were linked from no project page
+— so the corpus is considerably larger than the exemplar set alone implies. The
+17 modules cite **100 distinct human gene reviews** (all present in
+`genes/human/`, **zero overlap** with the seven exemplars) carrying **2,735
+adjudicated annotations**. That cohort is a second, independent verdict baseline:
+
+| Cohort | N | ACCEPT | NON_CORE | OVER | MODIFY | REMOVE | NEW |
+|--------|--:|-------:|---------:|-----:|-------:|-------:|----:|
+| Module genes (100) | 2735 | 63.2% | 17.8% | 15.4% | 2.7% | 0.5% | 0.4% |
+| Exemplars (7) | 303 | 45.2% | 33.0% | 13.9% | 7.3% | 0.3% | 0.3% |
+
+It corroborates the project's central claim on 10× the data — REMOVE stays
+under 1%, retention ~99.5% — while showing the exemplar set is deliberately
+NON_CORE-skewed (62 of its 100 NON_CORE verdicts are LGALS3 alone). The gap
+between the two rows is a **gene-class effect**, narrow biosynthetic enzymes
+versus a pleiotropic lectin, and should be read that way when the GOA closure
+query yields a third number.
+
+Two gaps the module axis exposes:
+
+- **O-glycosylation is uncovered.** No module addresses mucin-type,
+  GALNT-initiated O-glycan biosynthesis; the exemplars reach O-linked biology
+  only via POFUT1 and B3GALNT2.
+- **The module cohort under-proposes new terms** — 1 `proposed_new_terms` entry
+  across 100 genes, against 8 across the 7 exemplars. Almost certainly a
+  curation-process artifact rather than a real coverage difference, and a
+  concrete re-review target.
 
 ## Candidate animal genes already in the repo
 
@@ -229,6 +272,11 @@ fuller candidate list; these are the already-curated anchors.
 
 - How large is the animal glycogene set under the anchor terms, and what is the
   ACCEPT/MODIFY/OVER/REMOVE verdict distribution relative to the corpus baseline?
+  *(Partly answered: 107 glycogenes are already reviewed — see
+  [pathway modules](GLYCOBIOLOGY/GLYCOBIOLOGY-modules.md) — but the two cohorts
+  give materially different distributions, so "the" baseline depends on
+  gene-class composition. The closure query needs to report that composition, not
+  just a single percentage.)*
 - Can CAZy GT/GH family membership be used as an independent check on
   glycosyltransferase/glycosidase MF annotations (right family → right activity
   class)?
@@ -244,11 +292,19 @@ fuller candidate list; these are the already-curated anchors.
   LGALS3, PMM2, POFUT1, MGAT1, ST6GAL1, B4GALT1; 303 annotations; all validate
   clean), each backed by a **FutureHouse Falcon deep-research report** integrated
   into the YAML. They confirm the altitude/specificity + pleiotropy
-  over-annotation hypotheses (135 ACCEPT / 102 NON_CORE / 39 OVER / 22 MODIFY /
-  4 REMOVE / 1 NEW).
+  over-annotation hypotheses (137 ACCEPT / 100 NON_CORE / 42 OVER / 22 MODIFY /
+  1 REMOVE / 1 NEW). **17 pathway modules** and their **100-gene / 2,735-annotation**
+  cohort are now indexed under
+  [GLYCOBIOLOGY-modules.md](GLYCOBIOLOGY/GLYCOBIOLOGY-modules.md) and reproduce
+  the same skew independently.
 - **Next steps**: (1) run the GOA closure query for the anchor terms across the
-  animal taxa to enumerate the glycogene set and its verdict baseline; (2) flesh
-  out [GLYCOBIOLOGY-resources.md](GLYCOBIOLOGY/GLYCOBIOLOGY-resources.md) with
-  access recipes; (3) promote the 7 exemplar `proposed_new_terms` as GO new-term
+  animal taxa to enumerate the glycogene set and its verdict baseline — the
+  107-gene reviewed corpus (7 exemplars + 100 module genes) is the denominator to
+  measure it against; (2) flesh out
+  [GLYCOBIOLOGY-resources.md](GLYCOBIOLOGY/GLYCOBIOLOGY-resources.md) with access
+  recipes; (3) promote the 8 exemplar `proposed_new_terms` as GO new-term
   requests; (4) extend the review/Falcon pass to the already-curated anchor genes
-  (GPC6, Notch1, Uggt1) and a glycosidase/CDG type-II gene.
+  (GPC6, Notch1, Uggt1) and a glycosidase/CDG type-II gene; (5) close the
+  **O-glycosylation gap** with a mucin-type GALNT-initiated O-glycan module;
+  (6) re-review the module cohort for `proposed_new_terms`, which it currently
+  under-proposes (1 across 100 genes).
