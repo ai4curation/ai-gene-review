@@ -65,7 +65,7 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import requests
 import yaml
@@ -222,9 +222,7 @@ def collect_citations(review_path: Path) -> List[Citation]:
 
     # everything else (core_functions, proposed_new_terms, ...)
     rest = {
-        k: v
-        for k, v in data.items()
-        if k not in ("references", "existing_annotations")
+        k: v for k, v in data.items() if k not in ("references", "existing_annotations")
     }
     for other_pmid in set(_walk_reference_ids(rest)):
         out.append(
@@ -310,9 +308,10 @@ def parse_efetch_xml(xml_text: str) -> Dict[str, PubMedRecord]:
                     journal.find("Title")
                 )
                 year = journal.find("JournalIssue/PubDate/Year")
-                rec.year = _text(year) or _text(
-                    journal.find("JournalIssue/PubDate/MedlineDate")
-                )[:4]
+                rec.year = (
+                    _text(year)
+                    or _text(journal.find("JournalIssue/PubDate/MedlineDate"))[:4]
+                )
             for ptype in art.findall("PublicationTypeList/PublicationType"):
                 value = _text(ptype)
                 if value:
@@ -329,11 +328,19 @@ def parse_efetch_xml(xml_text: str) -> Dict[str, PubMedRecord]:
 
 def fetch_records(
     pmids: List[str], batch_size: int = 200, delay: float = 0.5, retries: int = 3
-) -> Dict[str, PubMedRecord]:
-    """Fetch PubMed records for ``pmids`` (``PMID:n`` strings) in polite batches."""
+) -> Tuple[Dict[str, PubMedRecord], List[str]]:
+    """Fetch PubMed records for ``pmids`` (``PMID:n`` strings) in polite batches.
+
+    Returns the records **and** the PMIDs whose batch never came back. Those two
+    outcomes must stay distinguishable: a PMID that PubMed has no record for and
+    a PMID we simply failed to ask about both look like "not retracted" in the
+    records dict, and the caller has to be able to tell them apart before
+    reporting a clean bill of health.
+    """
     api_key = os.environ.get("NCBI_API_KEY")
     session = requests.Session()
     out: Dict[str, PubMedRecord] = {}
+    failed: List[str] = []
     batches = [pmids[i : i + batch_size] for i in range(0, len(pmids), batch_size)]
     for index, batch in enumerate(batches, start=1):
         payload = {
@@ -357,6 +364,7 @@ def fetch_records(
                         f"attempts: {exc}",
                         file=sys.stderr,
                     )
+                    failed.extend(batch)
                 else:
                     time.sleep(delay * 4 * attempt)
         print(
@@ -364,7 +372,7 @@ def fetch_records(
             file=sys.stderr,
         )
         time.sleep(delay)
-    return out
+    return out, failed
 
 
 # ---------------------------------------------------------------------------
@@ -381,9 +389,7 @@ def write_reports(
     """Write the TSV + JSON reports; return the summary dict."""
     # A record that is itself a notice is never a problem, only its subject is.
     flagged = {
-        pmid: rec
-        for pmid, rec in records.items()
-        if rec.flags and not rec.is_notice
+        pmid: rec for pmid, rec in records.items() if rec.flags and not rec.is_notice
     }
 
     rows = []
@@ -402,7 +408,8 @@ def write_reports(
                 "flags": ";".join(rec.flags),
                 "publication_types": ";".join(rec.publication_types),
                 "comments_corrections": ";".join(
-                    f"{k}:{','.join(v)}" for k, v in sorted(rec.comments_corrections.items())
+                    f"{k}:{','.join(v)}"
+                    for k, v in sorted(rec.comments_corrections.items())
                 ),
                 "notice_pmids": ";".join(notices),
                 "title": rec.title,
@@ -416,30 +423,40 @@ def write_reports(
                 ),
                 "already_flagged_is_invalid": any(c.already_invalid for c in cites),
                 "annotation_details": ";".join(
-                    sorted({f"{c.organism}/{c.gene} {c.detail}".strip() for c in cites if c.site == "annotation"})
+                    sorted(
+                        {
+                            f"{c.organism}/{c.gene} {c.detail}".strip()
+                            for c in cites
+                            if c.site == "annotation"
+                        }
+                    )
                 ),
             }
         )
 
     out_dir.mkdir(parents=True, exist_ok=True)
     tsv_path = out_dir / "retraction-check.tsv"
-    fieldnames = list(rows[0].keys()) if rows else [
-        "pmid",
-        "severity",
-        "flags",
-        "publication_types",
-        "comments_corrections",
-        "notice_pmids",
-        "title",
-        "journal",
-        "year",
-        "n_citing_genes",
-        "citing_genes",
-        "citation_sites",
-        "used_as_annotation_evidence",
-        "already_flagged_is_invalid",
-        "annotation_details",
-    ]
+    fieldnames = (
+        list(rows[0].keys())
+        if rows
+        else [
+            "pmid",
+            "severity",
+            "flags",
+            "publication_types",
+            "comments_corrections",
+            "notice_pmids",
+            "title",
+            "journal",
+            "year",
+            "n_citing_genes",
+            "citing_genes",
+            "citation_sites",
+            "used_as_annotation_evidence",
+            "already_flagged_is_invalid",
+            "annotation_details",
+        ]
+    )
     with tsv_path.open("w", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames, delimiter="\t")
         writer.writeheader()
@@ -452,7 +469,9 @@ def write_reports(
 
     summary = {
         "generated_by": "projects/RETRACTIONS/check_retractions.py",
-        "n_review_files": len({(c.organism, c.gene) for cl in citations.values() for c in cl}),
+        "n_review_files": len(
+            {(c.organism, c.gene) for cl in citations.values() for c in cl}
+        ),
         "n_distinct_pmids_cited": len(citations),
         "n_pmids_resolved": len(records),
         "n_pmids_unresolved": len(unresolved),
@@ -582,7 +601,9 @@ def write_register(summary: Dict[str, Any], out_dir: Path) -> Path:
     n_ret = len(by_sev["RETRACTED"])
     n_eoc = len(by_sev["EXPRESSION_OF_CONCERN"])
     n_err = len(by_sev["ERRATUM"])
-    ret_as_evidence = [r for r in by_sev["RETRACTED"] if r["used_as_annotation_evidence"]]
+    ret_as_evidence = [
+        r for r in by_sev["RETRACTED"] if r["used_as_annotation_evidence"]
+    ]
 
     lines: List[str] = []
     lines.append("---")
@@ -615,9 +636,7 @@ def write_register(summary: Dict[str, Any], out_dir: Path) -> Path:
     lines.append("## Retracted publications (actionable)")
     lines.append("")
     if n_ret == 0:
-        lines.append(
-            "No cited publication is currently marked retracted in PubMed."
-        )
+        lines.append("No cited publication is currently marked retracted in PubMed.")
     else:
         lines.append(
             "A retraction withdraws the *source*. It does not by itself refute a GO "
@@ -689,7 +708,11 @@ def write_register(summary: Dict[str, Any], out_dir: Path) -> Path:
             "and could not be checked. These are typically malformed or withdrawn "
             "identifiers rather than retractions"
             + (f": {listed}" if listed else "")
-            + ("" if len(unresolved) <= 10 else ", ... (full list in `retraction-check.json`)")
+            + (
+                ""
+                if len(unresolved) <= 10
+                else ", ... (full list in `retraction-check.json`)"
+            )
             + "."
         )
         lines.append("")
@@ -749,13 +772,50 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     pmids = sorted(citations, key=lambda p: int(p.split(":")[1]))
     if args.pmids:
-        wanted = {_norm_pmid(p) or _norm_pmid(f"PMID:{p}") for p in args.pmids}
-        pmids = [p for p in wanted if p]
+        # accept "--pmids 123 456", "--pmids 123,456" and "PMID:123" alike
+        raw = [tok for arg in args.pmids for tok in str(arg).split(",") if tok.strip()]
+        wanted = {_norm_pmid(tok) or _norm_pmid(f"PMID:{tok.strip()}") for tok in raw}
+        pmids = sorted((p for p in wanted if p), key=lambda p: int(p.split(":")[1]))
+        bad = [
+            tok
+            for tok in raw
+            if not (_norm_pmid(tok) or _norm_pmid(f"PMID:{tok.strip()}"))
+        ]
+        if bad:
+            parser.error(f"not valid PMIDs: {', '.join(bad)}")
     if args.limit:
         pmids = pmids[: args.limit]
 
+    # A partial run must not overwrite the reports of the last full scan. Both
+    # failure modes are easy to hit by accident: an empty selection (a mistyped
+    # --pmids) would write a zero-row TSV/JSON/register, and a --pmids/--limit
+    # spot-check would shrink them to a handful of rows. Require somewhere else
+    # to write in both cases.
+    partial = bool(args.pmids or args.limit)
+    if not pmids:
+        parser.error(
+            "no PMIDs selected to check - refusing to overwrite existing reports"
+        )
+    if partial and args.out_dir == OUT_DIR:
+        parser.error(
+            "--pmids/--limit is a partial scan and would overwrite the full-scan "
+            "reports in %s; pass --out-dir to write somewhere else" % OUT_DIR
+        )
+
     print(f"querying PubMed for {len(pmids)} PMIDs ...")
-    records = fetch_records(pmids, batch_size=args.batch_size, delay=args.delay)
+    records, failed = fetch_records(pmids, batch_size=args.batch_size, delay=args.delay)
+    if failed:
+        # Do not write reports from a partial fetch. "RETRACTED=0" after a run
+        # PubMed refused to answer is indistinguishable from a genuine all-clear,
+        # and it would overwrite the last good scan with that false reassurance.
+        print(
+            f"ERROR: {len(failed)} of {len(pmids)} PMIDs were never fetched "
+            "(PubMed requests failed after retries). Refusing to write reports "
+            "from a partial scan - re-run, or re-run the missing PMIDs with "
+            "--pmids and --out-dir.",
+            file=sys.stderr,
+        )
+        return 1
     unresolved = [p for p in pmids if p not in records]
 
     summary = write_reports(records, citations, args.out_dir, unresolved)

@@ -71,9 +71,15 @@ not a defect list.
 
 ```bash
 uv run --no-dev python projects/RETRACTIONS/check_retractions.py
-uv run --no-dev python projects/RETRACTIONS/check_retractions.py --pmids 19225519
+uv run --no-dev python projects/RETRACTIONS/check_retractions.py --pmids 19225519 --out-dir /tmp/spot
 uv run --no-dev python projects/RETRACTIONS/check_retractions.py --from-json projects/RETRACTIONS/retraction-check.json
 ```
+
+A partial run (`--pmids` or `--limit`) must be given an `--out-dir`: writing a
+handful of rows into the project directory would overwrite the last full scan with
+a report that looks like an all-clear. The checker also exits non-zero without
+writing anything if any `efetch` batch failed, for the same reason - `RETRACTED=0`
+has to mean "PubMed says none", never "PubMed did not answer".
 
 Supporting material, including the output-file descriptions and the severity tiers, is
 in [`RETRACTIONS/`](RETRACTIONS/README.md).

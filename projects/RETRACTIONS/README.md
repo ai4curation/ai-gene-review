@@ -35,8 +35,11 @@ A full pass is ~126 `efetch` requests over ~25,000 PMIDs and takes the better pa
 of an hour; set `NCBI_API_KEY` to raise the rate limit. Useful variants:
 
 ```bash
-# check specific PMIDs (still reports where they are cited in the reviews)
-uv run --no-dev python projects/RETRACTIONS/check_retractions.py --pmids 19225519
+# check specific PMIDs (still reports where they are cited in the reviews).
+# A partial run needs its own --out-dir so it cannot overwrite the full-scan
+# reports with a handful of rows; --pmids also accepts a comma-separated list.
+uv run --no-dev python projects/RETRACTIONS/check_retractions.py \
+    --pmids 19225519,16616141 --out-dir /tmp/spot
 
 # rebuild the register from the last run, no network
 uv run --no-dev python projects/RETRACTIONS/check_retractions.py \
