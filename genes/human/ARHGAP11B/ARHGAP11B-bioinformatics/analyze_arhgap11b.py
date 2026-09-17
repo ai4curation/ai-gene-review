@@ -218,11 +218,16 @@ def make_aligner() -> PairwiseAligner:
     return aln
 
 
-def align_map(seq_from: str, seq_to: str) -> dict[int, int]:
+def align_map(seq_from: str, seq_to: str, mode: str = "global") -> dict[int, int]:
     """Map 1-based positions of `seq_from` onto 1-based positions of `seq_to`."""
-    aln = make_aligner().align(seq_from, seq_to)[0]
+    aligner = make_aligner()
+    aligner.mode = mode
+    aln = aligner.align(seq_from, seq_to)[0]
     mapping: dict[int, int] = {}
     for (f0, f1), (t0, t1) in zip(aln.aligned[0], aln.aligned[1]):
+        # Biopython returns numpy ints; cast so the results are JSON-serialisable and
+        # so equality against plain-int site positions behaves predictably.
+        f0, f1, t0 = int(f0), int(f1), int(t0)
         for off in range(f1 - f0):
             mapping[f0 + off + 1] = t0 + off + 1
     return mapping
@@ -601,13 +606,69 @@ def gap_gtpase_interface(
 def partition_interface(
     interface: dict[str, Any],
     gap_ref_seq: str,
+    control_domain: tuple[int, int],
+    control_finger: int,
     paralog_seq: str,
+    paralog_domain: tuple[int, int],
+    paralog_finger: int,
     divergence_point: int,
-    paralog_domain: tuple[int, int] | None,
 ) -> dict[str, Any]:
     """Project the control GAP's interface onto ARHGAP11A, then split it by what
-    ARHGAP11B still has."""
-    mapping = align_map(gap_ref_seq, paralog_seq)
+    ARHGAP11B still has.
+
+    ARHGAP1 carries its Rho-GAP domain at the C-terminus behind a CRAL-TRIO domain,
+    while ARHGAP11A carries its at the N-terminus of a 1023-residue protein. A global
+    alignment of the two full sequences therefore pairs N-terminus with N-terminus and
+    lands the whole interface in the wrong half of ARHGAP11A -- which is exactly what
+    an earlier version of this function did, mapping the arginine finger to residue
+    684. So the control's annotated Rho-GAP domain is excised and aligned LOCALLY, and
+    the result is only accepted if the control's own arginine finger lands on the
+    paralog's own annotated arginine finger. That reciprocal anchor is the check; the
+    local alignment alone is not sufficient.
+    """
+    c_start, c_end = control_domain
+    p_start, p_end = paralog_domain
+    control_domain_seq = gap_ref_seq[c_start - 1 : c_end]
+    paralog_domain_seq = paralog_seq[p_start - 1 : p_end]
+
+    # Two projections, because either alone can mislead.
+    #
+    # LOCAL (control domain vs the whole paralog) does not assume the paralog's own
+    # domain boundary is correct -- but it is free to stop early, and on this pair it
+    # does: it ends at control 401 / paralog 204, i.e. just short of the divergence
+    # point at 220. Six interface contacts fall past its end, so reading "0 contacts
+    # lost" off the local alignment alone would report an alignment artefact as biology.
+    #
+    # GLOBAL (control domain vs paralog domain) covers both domains end to end and can
+    # therefore answer the question the local alignment declines to. Its risk is drift
+    # at low identity, so it is accepted only if it agrees with the local alignment
+    # everywhere both have an opinion.
+    local = {c_start + k - 1: v for k, v in align_map(control_domain_seq, paralog_seq, mode="local").items()}
+    glob = {
+        c_start + k - 1: p_start + v - 1
+        for k, v in align_map(control_domain_seq, paralog_domain_seq, mode="global").items()
+    }
+
+    for label, mapping_ in (("local", local), ("domain-global", glob)):
+        anchor = mapping_.get(control_finger)
+        if anchor != paralog_finger:
+            raise AnalysisError(
+                f"{label} alignment anchor failed: the control's arginine finger "
+                f"({control_finger}) maps to paralog residue {anchor}, but the paralog's own "
+                f"annotated arginine finger is {paralog_finger}. The domains are not in "
+                "register; refusing to partition an interface computed on a bad alignment."
+            )
+
+    shared = sorted(set(local) & set(glob))
+    disagreements = [(p, local[p], glob[p]) for p in shared if local[p] != glob[p]]
+    if disagreements:
+        raise AnalysisError(
+            f"the local and domain-global projections disagree at {len(disagreements)} of "
+            f"{len(shared)} shared positions (first: {disagreements[0]}). One of them is "
+            "drifting; refusing to extend the mapping past the local alignment's end."
+        )
+
+    mapping = glob
     retained, lost, unmapped = [], [], []
     for pos in interface["contact_positions_in_reference"]:
         target = mapping.get(pos)
@@ -619,18 +680,25 @@ def partition_interface(
             "control_residue": gap_ref_seq[pos - 1],
             "paralog_position": target,
             "paralog_residue": paralog_seq[target - 1],
+            "inside_paralog_rhogap_domain": p_start <= target <= p_end,
         }
         if target <= divergence_point:
             retained.append(row)
         else:
             lost.append(row)
-    in_domain_lost = None
-    if paralog_domain is not None:
-        d_start, d_end = paralog_domain
-        in_domain_lost = [r for r in lost if d_start <= r["paralog_position"] <= d_end]
     n_mapped = len(retained) + len(lost)
+    in_domain_lost = [r for r in lost if r["inside_paralog_rhogap_domain"]]
     return {
         "divergence_point": divergence_point,
+        "alignment_mode": "global, control Rho-GAP domain vs paralog Rho-GAP domain",
+        "cross_checked_against": "local, control Rho-GAP domain vs full paralog",
+        "n_positions_shared_by_both_projections": len(shared),
+        "n_projection_disagreements": 0,
+        "local_projection_last_control_position": max(local) if local else None,
+        "local_projection_last_paralog_position": max(local.values()) if local else None,
+        "anchor_control_arginine_finger": control_finger,
+        "anchor_paralog_arginine_finger": paralog_finger,
+        "anchor_verified": True,
         "n_control_contacts": len(interface["contact_positions_in_reference"]),
         "n_mapped_to_paralog": n_mapped,
         "n_unmapped": len(unmapped),
@@ -640,9 +708,7 @@ def partition_interface(
         "fraction_lost": round(len(lost) / n_mapped, 4) if n_mapped else None,
         "lost_contacts": lost,
         "retained_contacts": retained,
-        "n_lost_inside_paralog_rhogap_domain": (
-            len(in_domain_lost) if in_domain_lost is not None else None
-        ),
+        "n_lost_inside_paralog_rhogap_domain": len(in_domain_lost),
         "lost_inside_paralog_rhogap_domain": in_domain_lost,
     }
 
@@ -689,13 +755,16 @@ def run(
         raise AnalysisError("expected a Rho-GAP DOMAIN feature on both query and paralog")
 
     interface = gap_gtpase_interface(control_seq, rhoa_seq, gap_chain_id, gtpase_chain_id)
-    partition = partition_interface(
-        interface, control_seq, paralog_seq, divergence.divergence_point, paralog_domain[0]
-    )
 
     # Did the interface calculation recover the control's own arginine finger? If not,
     # the geometry is wrong and every downstream number is meaningless.
     control_fingers = site_positions(control_rec, ARGININE_FINGER_TEXT)
+    paralog_fingers = site_positions(paralog_rec, ARGININE_FINGER_TEXT)
+    if len(control_fingers) != 1 or len(paralog_fingers) != 1:
+        raise AnalysisError(
+            f"expected exactly one annotated arginine finger on each of the control "
+            f"({control_fingers}) and the paralog ({paralog_fingers}) to anchor the alignment"
+        )
     finger_in_interface = [
         p for p in control_fingers if p in interface["contact_positions_in_reference"]
     ]
@@ -704,6 +773,18 @@ def run(
             "the computed GAP:GTPase interface does not include the control's own "
             f"annotated arginine finger {control_fingers}; the contact calculation is wrong"
         )
+    if not control_domain:
+        raise AnalysisError("expected a Rho-GAP DOMAIN feature on the structural control")
+    partition = partition_interface(
+        interface,
+        control_seq,
+        control_domain[0],
+        control_fingers[0],
+        paralog_seq,
+        paralog_domain[0],
+        paralog_fingers[0],
+        divergence.divergence_point,
+    )
 
     census = None
     if not skip_census:
@@ -755,9 +836,9 @@ def run(
             },
         },
         "divergence": {
-            k: v for k, v in divergence.__dict__.items() if k != "window_profile"
+            k: v for k, v in divergence.__dict__.items() if k != "block_profile"
         },
-        "divergence_window_profile": divergence.window_profile,
+        "divergence_block_profile": divergence.block_profile,
         "arginine_finger_tests": finger_tests,
         "rhogap_family_census": census,
         "interface": interface,
@@ -833,11 +914,16 @@ def self_test() -> int:
             try:
                 run(query_seq_override=restored, skip_census=True)
                 failures.append(
-                    "T2: a query that is a pure prefix of the paralog still yielded a "
-                    "bimodal divergence point; the threshold derivation is not discriminating"
+                    "T2: a query restored to the paralog sequence still yielded a significant "
+                    "divergence point; the changepoint test is not discriminating"
                 )
             except AnalysisError as exc:
-                if "bimodal" not in str(exc):
+                msg = str(exc)
+                ok_reasons = (
+                    "no significant divergence point",
+                    "per-residue identity is constant",
+                )
+                if not any(r in msg for r in ok_reasons):
                     failures.append(f"T2: failed for the wrong reason: {exc}")
 
     # ---- T3: swap the chain roles; the frame proof must refuse.
@@ -886,10 +972,47 @@ def self_test() -> int:
     except KeyError:
         pass
 
+    # ---- T6: the interface projection must refuse an out-of-register alignment.
+    # This is the bug that actually happened: a GLOBAL alignment of ARHGAP1 onto
+    # ARHGAP11A put the arginine finger on residue 684. Reproduce it and require the
+    # anchor check to catch it. A wrong expected-anchor value stands in for any
+    # alignment that lands somewhere other than the paralog's own annotated site.
+    control_rec = fetch_uniprot(RHOGAP1_ACC)
+    paralog_rec = fetch_uniprot(PARALOG_ACC)
+    control_seq = uniprot_sequence(control_rec)
+    paralog_seq_t6 = uniprot_sequence(paralog_rec)
+    c_dom = domain_spans(control_rec, "Rho-GAP")[0]
+    p_dom = domain_spans(paralog_rec, "Rho-GAP")[0]
+    c_finger = site_positions(control_rec, ARGININE_FINGER_TEXT)[0]
+    p_finger = site_positions(paralog_rec, ARGININE_FINGER_TEXT)[0]
+    fake_iface = {"contact_positions_in_reference": [c_finger]}
+    try:
+        partition_interface(
+            fake_iface,
+            control_seq,
+            c_dom,
+            c_finger,
+            paralog_seq_t6,
+            p_dom,
+            p_finger + 1,  # deliberately wrong expected anchor
+            baseline["divergence"]["divergence_point"],
+        )
+        failures.append("T6: an out-of-register alignment was accepted; the anchor check is dead")
+    except AnalysisError as exc:
+        if "alignment anchor failed" not in str(exc):
+            failures.append(f"T6: failed for the wrong reason: {exc}")
+    # and the correct anchor must still pass, or T6 proves nothing
+    ok = partition_interface(
+        fake_iface, control_seq, c_dom, c_finger, paralog_seq_t6, p_dom, p_finger,
+        baseline["divergence"]["divergence_point"],
+    )
+    if not ok["anchor_verified"]:
+        failures.append("T6: the correct anchor did not verify; the check rejects everything")
+
     for line in failures:
         print("SELF-TEST FAIL:", line)
     if not failures:
-        print("SELF-TEST: all 5 checks fired as intended")
+        print("SELF-TEST: all 6 checks fired as intended")
     return 1 if failures else 0
 
 
@@ -944,11 +1067,13 @@ def render_markdown(res: dict[str, Any]) -> str:
         f"`{div['colinear_prefix_proved']}`."
     )
     a(
-        f"The identity threshold is derived from the observed {div['window']}-residue windowed "
-        f"identity distribution, placed inside its largest observed gap "
-        f"(width {div['threshold_gap_width']:.3f}); the derived threshold is "
-        f"{div['threshold']:.3f}. The script raises rather than guessing if that gap is "
-        f"narrower than {MIN_BIMODAL_GAP}."
+        "No identity cutoff is chosen anywhere. The boundary is the single changepoint that "
+        "maximises the between-segment sum of squares of the per-residue identity vector, and "
+        f"its significance is established by permuting that vector {div['permutations']} times: "
+        f"observed statistic {div['statistic']}, best statistic over permutations "
+        f"{div['permuted_max_statistic']}, empirical p = {div['empirical_p_value']:.2e}. "
+        "The script raises rather than reporting the argmax of noise if any permutation matches "
+        "the observed statistic."
     )
     a("")
     a(f"**Derived divergence point: residue {div['divergence_point']}.**")
@@ -1012,15 +1137,25 @@ def render_markdown(res: dict[str, Any]) -> str:
             a(
                 "Every annotated arginine-finger position in the reviewed human RhoGAP set "
                 "holds an arginine. The test therefore separates no member of this set from "
-                "any other, so it could not have predicted ARHGAP11B's inactivity — and a "
-                "\"the catalytic residue is present\" argument carries no weight for any "
-                "human RhoGAP-domain protein."
+                "any other, so it could not have predicted ARHGAP11B's inactivity."
             )
         else:
             rows = ", ".join(
-                f"{r['entry_name']} ({r['residues']})" for r in census["finger_not_arginine"]
+                f"`{r['entry_name']}` ({'/'.join(r['residues'])})"
+                for r in census["finger_not_arginine"]
             )
-            a(f"Members whose annotated finger position is not an arginine: {rows}.")
+            a(f"Members whose annotated finger position is **not** an arginine: {rows}.")
+            a("")
+            a(
+                f"So the test is not vacuous — it does flag "
+                f"{census['n_finger_position_not_arginine']} of {census['n_entries']} reviewed "
+                "human RhoGAP-profile proteins as having lost the catalytic arginine. "
+                "**ARHGAP11B is not one of them.** It is a false negative of a test that "
+                "otherwise works: a protein with two independent experimental `NOT enables "
+                "GO:0005096` annotations that nonetheless passes the catalytic-residue screen. "
+                "A curation pipeline that gates a GAP-activity term on arginine-finger "
+                "presence would therefore keep the term on this protein."
+            )
         a("")
 
     a("## 4. What the truncation actually removes")
@@ -1044,8 +1179,14 @@ def render_markdown(res: dict[str, Any]) -> str:
     )
     a("")
     a(
-        f"Those {iface['n_contacts']} contact positions are projected onto ARHGAP11A by "
-        f"alignment and split at the divergence point derived in section 1."
+        f"Those {iface['n_contacts']} contact positions are projected onto ARHGAP11A "
+        f"({part['alignment_mode']}) and split at the divergence point derived in section 1. "
+        f"The projection is accepted only because it is in register: the control's arginine "
+        f"finger ({part['anchor_control_arginine_finger']}) maps onto ARHGAP11A's own annotated "
+        f"arginine finger ({part['anchor_paralog_arginine_finger']}). Without that reciprocal "
+        f"anchor a global alignment of these two proteins lands the whole interface in the "
+        f"wrong half of ARHGAP11A, because ARHGAP1 carries its Rho-GAP domain at the C-terminus "
+        f"and ARHGAP11A at the N-terminus."
     )
     a("")
     a("| | count |")
@@ -1062,15 +1203,24 @@ def render_markdown(res: dict[str, Any]) -> str:
         )
     a("")
     if part["lost_contacts"]:
-        a("Lost contact positions (ARHGAP11A numbering):")
+        a("Interface positions ARHGAP11B does **not** have (ARHGAP11A numbering):")
         a("")
-        a("| control pos | control res | ARHGAP11A pos | ARHGAP11A res |")
-        a("|---|---|---|---|")
+        a("| control pos | control res | ARHGAP11A pos | ARHGAP11A res | inside ARHGAP11A's Rho-GAP domain |")
+        a("|---|---|---|---|---|")
         for r in part["lost_contacts"]:
             a(
                 f"| {r['control_position']} | {r['control_residue']} | "
-                f"{r['paralog_position']} | {r['paralog_residue']} |"
+                f"{r['paralog_position']} | {r['paralog_residue']} | "
+                f"{r['inside_paralog_rhogap_domain']} |"
             )
+        a("")
+        a(
+            f"The truncation therefore removes {part['n_lost_by_query']} of "
+            f"{part['n_mapped_to_paralog']} mapped GAP:GTPase interface positions "
+            f"({part['fraction_lost']:.0%}) while leaving the arginine finger in place. "
+            "The catalytic residue survives; part of the surface that has to present it to "
+            "the GTPase does not."
+        )
         a("")
     else:
         a(
