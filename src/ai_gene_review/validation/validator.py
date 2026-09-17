@@ -166,6 +166,11 @@ def validate_gene_review(
     return report
 
 
+from ai_gene_review.validation.file_supporting_text import (
+    check_file_supporting_text,
+)
+
+
 def check_best_practices_rules(
     data: Dict[str, Any],
     report: ValidationReport,
@@ -191,6 +196,64 @@ def check_best_practices_rules(
 
     # Note: GO branch validation for core_functions is handled by
     # linkml-term-validator CLI (invoked from justfile), not here.
+
+    # linkml-reference-validator checks supporting_text only for PMID: references.
+    # Quotes attributed to file: references (deep-research reports, UniProt records,
+    # GOA tables) are checked here instead -- see file_supporting_text.py.
+    if yaml_file is not None:
+        try:
+            project_root = Path(yaml_file).resolve().parents[3]
+        except IndexError:
+            project_root = Path.cwd()
+        fq = check_file_supporting_text(data, project_root)
+        by_kind: Dict[str, List[Any]] = {}
+        for issue in fq.issues:
+            by_kind.setdefault(issue.kind, []).append(issue)
+
+        for issue in by_kind.get("missing_file", []):
+            report.add_issue(
+                ValidationSeverity.ERROR,
+                f"supporting_text cites a file that does not exist: {issue.reference_id}",
+                path=issue.path or "supported_by",
+                suggestion="Correct the file: path, or remove the supporting_text",
+                validation_category="BestPractices",
+                check_type="file_supporting_text_missing",
+            )
+
+        narration = by_kind.get("narration", [])
+        if narration:
+            sample = narration[0].supporting_text[:80]
+            report.add_issue(
+                ValidationSeverity.ERROR,
+                f"{len(narration)} file: supporting_text entr"
+                f"{'y is' if len(narration) == 1 else 'ies are'} narration, not quotation "
+                f'(e.g. "{sample}...")',
+                path=narration[0].path or "supported_by",
+                suggestion=(
+                    "supporting_text must be verbatim source text. Replace the summary "
+                    "with an actual quote from the cited file, or move the summary into "
+                    "review.reason / the notes file"
+                ),
+                validation_category="BestPractices",
+                check_type="file_supporting_text_narration",
+            )
+
+        not_verbatim = by_kind.get("not_verbatim", [])
+        if not_verbatim:
+            sample = not_verbatim[0].supporting_text[:80]
+            report.add_issue(
+                ValidationSeverity.WARNING,
+                f"{len(not_verbatim)} file: supporting_text entr"
+                f"{'y is' if len(not_verbatim) == 1 else 'ies are'} not verbatim in the "
+                f'cited file (e.g. "{sample}...")',
+                path=not_verbatim[0].path or "supported_by",
+                suggestion=(
+                    "Quote the source exactly. If text was elided, mark it with '...' "
+                    "-- the check treats an ellipsis as legitimate elision"
+                ),
+                validation_category="BestPractices",
+                check_type="file_supporting_text_not_verbatim",
+            )
 
     # Check for TODO in description
     if "description" in data and "TODO" in str(data["description"]):

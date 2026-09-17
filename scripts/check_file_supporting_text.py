@@ -1,65 +1,101 @@
 #!/usr/bin/env python3
-"""Verify that `supporting_text` on `file:` references is verbatim.
+"""Repo-wide report on `file:` supporting_text quotes.
 
-The reference validator checks `supporting_text` only for `PMID:` references. Quotes
-attributed to `file:` references (deep-research reports, UniProt records, GOA tables)
-have never been checked, and paraphrase presented as quotation has accumulated there.
+The per-gene check runs inside `ai-gene-review validate`; this script is the
+whole-corpus view, for triaging the backlog. It uses the same matching logic
+(`ai_gene_review.validation.file_supporting_text`), so its verdicts and the
+validator's always agree.
 
-Run:  uv run --no-dev python scripts/check_file_supporting_text.py
+    uv run --no-dev python scripts/check_file_supporting_text.py
 
-Notes on false positives: UniProt `.txt` records carry two-letter line-prefix codes
-(DE, CC, FT...) that break naive substring matching, so those are stripped first.
-Remaining mismatches still include benign cases (smart quotes, ellipses, quotes
-stitched across non-contiguous lines). The unambiguous subset is the one reported
-separately: quotes that begin with a narration word such as "Falcon report
-summarizes", which cannot be verbatim source text by construction.
+Writes reports/file_supporting_text_report.tsv and prints a summary.
+
+Two kinds of finding:
+  narration     -- the "quote" describes the source instead of quoting it
+                   ("Falcon report summarizes ..."). Cannot be verbatim by
+                   construction; an ERROR in the validator.
+  not_verbatim  -- the words are not in the cited file. Usually real paraphrase,
+                   sometimes a quote that elides non-contiguous text without
+                   marking it with an ellipsis. A WARNING in the validator.
 """
 
-import yaml, glob, os, re, json
+from __future__ import annotations
+
+import csv
+import glob
+import sys
 from collections import Counter
+from pathlib import Path
 
-def strip_prefix(txt):
-    return "\n".join(re.sub(r'^[A-Z]{2}(   |\s{3})', '', ln) for ln in txt.splitlines())
-def norm(s): return re.sub(r'\s+', ' ', s or '').strip().lower()
+import yaml
 
-def walk(o, out):
-    if isinstance(o, dict):
-        if 'reference_id' in o and 'supporting_text' in o: out.append((o['reference_id'], o['supporting_text']))
-        for v in o.values(): walk(v, out)
-    elif isinstance(o, list):
-        for v in o: walk(v, out)
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-cache={}
-def body(p):
-    if p not in cache:
+from ai_gene_review.validation.file_supporting_text import (  # noqa: E402
+    check_file_supporting_text,
+)
+
+
+def main() -> int:
+    root = Path(__file__).resolve().parents[1]
+    out_dir = root / "reports"
+    out_dir.mkdir(exist_ok=True)
+    report = out_dir / "file_supporting_text_report.tsv"
+
+    checked = 0
+    kinds: Counter[str] = Counter()
+    per_gene: Counter[str] = Counter()
+    rows = []
+
+    files = sorted(glob.glob(str(root / "genes" / "*" / "*" / "*-ai-review.yaml")))
+    for f in files:
+        path = Path(f)
         try:
-            t=open(p,encoding='utf-8',errors='replace').read()
-            if p.endswith('.txt'): t=strip_prefix(t)
-            cache[p]=norm(t)
-        except Exception: cache[p]=None
-    return cache[p]
+            data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if not isinstance(data, dict):
+            continue
+        res = check_file_supporting_text(data, root)
+        checked += res.checked
+        for issue in res.issues:
+            kinds[issue.kind] += 1
+            per_gene[path.parent.name] += 1
+            rows.append(
+                {
+                    "organism": path.parent.parent.name,
+                    "gene": path.parent.name,
+                    "kind": issue.kind,
+                    "reference_id": issue.reference_id,
+                    "path": issue.path,
+                    "supporting_text": " ".join(issue.supporting_text.split())[:300],
+                }
+            )
 
-bad=[]; checked=Counter(); badc=Counter()
-for f in sorted(glob.glob('genes/*/*/*-ai-review.yaml')):
-    try: d=yaml.safe_load(open(f,encoding='utf-8'))
-    except Exception: continue
-    pairs=[]; walk(d,pairs)
-    for rid,txt in pairs:
-        if not isinstance(rid,str) or not rid.startswith('file:'): continue
-        p=rid[5:]; real=next((c for c in (p,os.path.join('genes',p)) if os.path.exists(c)),None)
-        if real is None: continue
-        kind = 'uniprot' if real.endswith('-uniprot.txt') else ('deep-research' if 'deep-research' in real else ('goa' if real.endswith('.tsv') else 'other-md'))
-        checked[kind]+=1
-        b=body(real)
-        if b is not None and norm(txt) not in b:
-            badc[kind]+=1; bad.append((f,rid,kind,(txt or '')[:100]))
-print('checked by type:',dict(checked))
-print('MISMATCH by type:',dict(badc))
-print()
-print('=== deep-research mismatches: how many are narrated paraphrase? ===')
-dr=[b for b in bad if b[2]=='deep-research']
-pat=re.compile(r'^(falcon|the falcon|deep research|this file|the file|synthesis|research)\b', re.I)
-narr=[b for b in dr if pat.match((b[3] or '').strip())]
-print(f'  deep-research mismatches: {len(dr)}; starting with a narration word: {len(narr)}')
-for b in narr[:10]: print('   ',b[0].split("/")[2],'|',b[3][:85])
-json.dump(bad, open('reports/file_supporting_text_mismatches.json','w'), indent=1)
+    with report.open("w", newline="", encoding="utf-8") as fh:
+        w = csv.DictWriter(
+            fh,
+            fieldnames=[
+                "organism", "gene", "kind", "reference_id", "path", "supporting_text",
+            ],
+            delimiter="\t",
+        )
+        w.writeheader()
+        w.writerows(rows)
+
+    total_issues = sum(kinds.values())
+    clean = 100 * (checked - total_issues) / checked if checked else 100.0
+    print(f"review files scanned   : {len(files)}")
+    print(f"file: quotes checked   : {checked}")
+    print(f"clean                  : {clean:.1f}%")
+    print(f"issues by kind         : {dict(kinds)}")
+    print(f"genes affected         : {len(per_gene)}")
+    print(f"report                 : {report.relative_to(root)}")
+    if per_gene:
+        worst = ", ".join(f"{g} ({n})" for g, n in per_gene.most_common(5))
+        print(f"most affected genes    : {worst}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
