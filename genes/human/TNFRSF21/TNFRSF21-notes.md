@@ -185,3 +185,11 @@ Nothing is removed. The refutation and the retraction land on claims that GOA ne
   shares authorship with the retracted paper. It is not refuted; it is untested by others.
 - `GO:0002250` adaptive immune response and `GO:0006959` humoral immune response are accepted but are
   grouping-level terms; the informative statements are the negative-regulation children.
+
+## One annotation added
+
+`GO:0004888` transmembrane signaling receptor activity is proposed as a **NEW** annotation (ISS from
+the mouse ortholog). Without it the gene has no molecular function at all once bare `GO:0005515` is
+set aside as uninformative. `GO:0005035` death receptor activity was considered and rejected: it
+requires combining with an extracellular death ligand, and DR6 has none identified. This is also the
+molecular function carried in `core_functions`.
