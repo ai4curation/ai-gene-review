@@ -130,16 +130,25 @@ def quickgo_term(go_id: str) -> dict[str, Any]:
     return json.loads(body)["results"][0]
 
 
-def _quickgo_paged(params: str, key: str, limit: int = 100) -> list[dict[str, Any]]:
-    """Page through a QuickGO annotation search, asserting no silent truncation.
+MAX_PAGES = 25  # QuickGO's own pagination ceiling for the annotation search.
 
-    The anti-truncation guard compares `numberOfHits` to `len(collected)`, never
-    to a page-size constant: if the service clamps `limit` instead of erroring, a
-    constant-based guard passes while rows were dropped.
+
+def _quickgo_paged(params: str, key: str, limit: int = 100) -> dict[str, Any]:
+    """Page through a QuickGO annotation search.
+
+    Returns `{"complete": bool, "total": int, "rows": [...]}`. `complete` is
+    computed by comparing `numberOfHits` to `len(rows)` - never to a page-size
+    constant, because if the service clamps `limit` instead of erroring, a
+    constant-based guard passes while rows were silently dropped.
+
+    A result set larger than the service will paginate is **data, not a missing
+    input**: the caller must report "unavailable" rather than deriving a number
+    from a partial page. Substituting an annotation total for an entity count,
+    or a page total for a whole, is the failure this return shape prevents.
     """
     rows: list[dict[str, Any]] = []
     page = 1
-    total: int | None = None
+    total = 0
     while True:
         body = _cached_get(
             "https://www.ebi.ac.uk/QuickGO/services/annotation/search"
@@ -152,26 +161,49 @@ def _quickgo_paged(params: str, key: str, limit: int = 100) -> list[dict[str, An
         if len(rows) >= total or not d["results"]:
             break
         page += 1
-        if page > 25:  # QuickGO caps pagination; stop and let the assert fire.
+        if page > MAX_PAGES:
             break
-    if total is not None and len(rows) != total:
-        raise RuntimeError(
-            f"QuickGO truncated: collected {len(rows)} of numberOfHits={total} for {params!r}. "
-            "Narrow the query or paginate further before drawing any conclusion."
-        )
-    return rows
+    return {"complete": len(rows) == total, "total": total, "rows": rows}
 
 
 def quickgo_by_gene(acc: str) -> list[dict[str, Any]]:
-    """All GO annotations for one gene product accession."""
-    return _quickgo_paged(f"geneProductId=UniProtKB:{acc}", f"qg_gene_{acc}")
+    """All GO annotations for one gene product accession.
+
+    A gene's own annotation set is always small enough to page fully, so an
+    incomplete result here is a real error and is raised.
+    """
+    res = _quickgo_paged(f"geneProductId=UniProtKB:{acc}", f"qg_gene_{acc}")
+    if not res["complete"]:
+        raise RuntimeError(
+            f"QuickGO returned {len(res['rows'])} of {res['total']} annotations for "
+            f"{acc}; a single gene product should page fully."
+        )
+    return res["rows"]
 
 
-def quickgo_by_reference(pmid: str) -> list[dict[str, Any]]:
+def quickgo_by_reference(pmid: str) -> dict[str, Any]:
     """All GO annotations (any species, any gene) citing one PMID.
 
     This is the projection discriminator: a reference that annotates a complex
     plus every one of its subunits with identical evidence is a projection, not
-    N independent findings.
+    N independent findings. Returns the `_quickgo_paged` envelope so callers can
+    see whether the set was collected completely.
     """
     return _quickgo_paged(f"reference=PMID:{pmid}", f"qg_ref_{pmid}")
+
+
+def quickgo_by_gene_and_reference(acc: str, pmid: str) -> list[dict[str, Any]]:
+    """Annotations on ONE gene product from ONE reference.
+
+    Exact even when the reference as a whole is too large to page (BioPlex-scale
+    screens), so "how many rows did this paper put on this gene" stays answerable
+    when "how many entities does this paper annotate" does not.
+    """
+    res = _quickgo_paged(
+        f"geneProductId=UniProtKB:{acc}&reference=PMID:{pmid}", f"qg_gr_{acc}_{pmid}"
+    )
+    if not res["complete"]:
+        raise RuntimeError(
+            f"QuickGO returned {len(res['rows'])} of {res['total']} for {acc} x PMID:{pmid}"
+        )
+    return res["rows"]

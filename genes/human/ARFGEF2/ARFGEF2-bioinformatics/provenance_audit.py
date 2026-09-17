@@ -37,7 +37,12 @@ import re
 from collections import defaultdict
 from pathlib import Path
 
-from uniprot import EXPERIMENTAL, quickgo_by_gene, quickgo_by_reference
+from uniprot import (
+    EXPERIMENTAL,
+    quickgo_by_gene,
+    quickgo_by_gene_and_reference,
+    quickgo_by_reference,
+)
 
 HERE = Path(__file__).parent
 GENE_DIR = HERE.parent
@@ -126,23 +131,37 @@ def rat_funnel(goa: list[dict[str, str]]) -> dict:
 
 
 def reference_entities(pmid: str) -> dict:
-    """C. Entity/annotation profile of one reference across all of GOA."""
-    rows = quickgo_by_reference(pmid)
-    entities = {r["geneProductId"] for r in rows}
-    on_subject = [r for r in rows if r["geneProductId"] == f"UniProtKB:{SUBJECT}"]
-    on_paralog = [r for r in rows if r["geneProductId"] == f"UniProtKB:{PARALOG}"]
-    return {
+    """C. Entity/annotation profile of one reference across all of GOA.
+
+    When the reference is too large for QuickGO to page (proteome-scale screens),
+    `entities_available` is False and `n_entities` is None: the projection test is
+    reported as unreliable rather than answered from a partial page. The
+    subject/paralog counts stay exact because they come from targeted queries.
+    """
+    res = quickgo_by_reference(pmid)
+    rows = res["rows"]
+    on_subject = quickgo_by_gene_and_reference(SUBJECT, pmid)
+    on_paralog = quickgo_by_gene_and_reference(PARALOG, pmid)
+    prof = {
         "pmid": pmid,
-        "n_annotations": len(rows),
-        "n_entities": len(entities),
-        "entities": sorted(entities),
-        "terms": sorted({r["goId"] for r in rows}),
+        "n_annotations": res["total"],
+        "entities_available": res["complete"],
+        "n_entities": len({r["geneProductId"] for r in rows}) if res["complete"] else None,
+        "entities": sorted({r["geneProductId"] for r in rows}) if res["complete"] else [],
+        "terms": sorted({r["goId"] for r in rows}) if res["complete"] else [],
+        "evidence_codes": sorted({r.get("goEvidence") or "?" for r in rows}) if res["complete"] else [],
         "n_on_subject": len(on_subject),
         "subject_terms": sorted({r["goId"] for r in on_subject}),
+        "subject_evidence": sorted({r.get("goEvidence") or "?" for r in on_subject}),
         "n_on_paralog": len(on_paralog),
         "paralog_terms": sorted({r["goId"] for r in on_paralog}),
-        "evidence_codes": sorted({r.get("goEvidence") or "?" for r in rows}),
     }
+    if not res["complete"]:
+        prof["note"] = (
+            f"reference has {res['total']} annotations, more than QuickGO will page; "
+            "entity count unavailable and the projection test is unreliable for it"
+        )
+    return prof
 
 
 def main() -> None:
@@ -200,10 +219,11 @@ def main() -> None:
               f"{hr['evidence']:<4} <- rat {hr['rat_evidence_codes']} "
               f"{hr['rat_primary_references']}")
     print()
-    print("B/C. reference profiles (n_entities / n_annotations / on subject / on paralog):")
+    print("B/C. reference profiles (entities / annotations / on subject / on paralog):")
     for p in sorted(profiles):
         pr = profiles[p]
-        print(f"   PMID:{p:<9} entities={pr['n_entities']:<3} ann={pr['n_annotations']:<5} "
+        ent = str(pr["n_entities"]) if pr["entities_available"] else "n/a"
+        print(f"   PMID:{p:<9} entities={ent:<4} ann={pr['n_annotations']:<5} "
               f"subject={pr['n_on_subject']:<2} paralog={pr['n_on_paralog']:<2} "
               f"{pr['evidence_codes']}")
     print()
