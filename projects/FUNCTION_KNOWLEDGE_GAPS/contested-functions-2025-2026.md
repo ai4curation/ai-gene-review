@@ -100,7 +100,7 @@ existing review).
 | PRSS23 | Serine protease vs serine pseudoprotease | `serine-type endopeptidase` IEA | none | High |
 | GPR50 / GPR37 / GPR158 / GPR75 | Contested or absent deorphanizations | Varies; GPR75 IBA-only | none | Med-High |
 | ALDH4A1 | Non-catalytic subunit of the MPC complex, or is MPC an MPC1/MPC2 dimer? | No MPC term | **452 lines, no MPC** | Med-High |
-| LRRC8A | Is cGAMP transport physiological or an overexpression artifact? | Yes, IDA | none | Med-High |
+| LRRC8A | cGAMP transport is real; is it *core*? (see correction below) | Yes, IDA | none | Med-High |
 | SLC7A11 | Lysosomal proton *channel*, or H⁺ leak secondary to antiport? | — | **1443 lines; overstated** | Med |
 | PNPLA3 | Own lipase activity vs ABHD5 sequestration vs neomorph | Yes, many EXP/IDA | none | Med |
 | MTCH2 / MTCH1 | Insertase vs BAX/BAK pore factor vs CPT1 regulator vs SLC25 carrier | insertase IDA (MTCH1 too) | **341 lines, thin** | Med |
@@ -393,11 +393,21 @@ Not a literature controversy so much as an internal inconsistency the controvers
   MPC as an MPC1/MPC2 heterodimer only (PMID:40101766, *Nature* 2025,
   [DOI](https://doi.org/10.1038/s41586-025-08873-8); PMID:40044865; PMID:40691140). The repo's
   452-line ALDH4A1 review has **zero** mentions of MPC or pyruvate — verified.
-- **LRRC8A** — a cGAMP-mediated antitumour response proceeds *without* LRRC8/VRAC channels
-  (PMID:41419196, *J Biol Chem* 2026, [DOI](https://doi.org/10.1016/j.jbc.2025.111060)), against
-  work treating VRAC-mediated cGAMP transport as a real tunable function (PMID:41371222,
-  *Mol Cell* 2025). GOA carries `GO:0140360` cyclic-GMP-AMP transmembrane transporter activity
-  with IDA.
+- **LRRC8A** — **Correction after review: this entry was wrong, and the review found it by reading
+  the full text.** The row above originally asked whether cGAMP transport was "physiological or an
+  overexpression artifact". PMID:41419196 makes no artifact claim. At endogenous expression it
+  states *"We conclude that VRAC is the dominant PM cGAMP transporter of MC38 cells"* and
+  *"MC38 cells produce cGAMP endogenously and use VRAC as the dominant cGAMP transporter"*. What
+  it refutes is the **requirement**: tumour growth and the cGAMP-mediated antitumour response were
+  independent of VRAC, and the authors bound their own claim to *"at least in our model"*, also
+  reporting that B16-F10 cells barely use VRAC.
+  So the real question is not whether the MF is genuine but whether it is **core**: it is one
+  permeant among many for a large-pore channel, it is a property of particular LRRC8A-containing
+  heteromers (LRRC8C/E promote it, LRRC8D suppresses it), and its in vivo weight varies by cell
+  type and stimulus. A knockout showing a response *proceeds without* a protein does not show the
+  protein cannot transport the substrate — conflating those two is the error this entry made.
+  (PMID:41419196, *J Biol Chem* 2026, [DOI](https://doi.org/10.1016/j.jbc.2025.111060);
+  PMID:41371222, *Mol Cell* 2025.) GOA carries `GO:0140360` with IDA.
 - **PNPLA3** — loss-of-function vs gain-of-function vs neomorph, with a dedicated editorial about
   the conflict (PMID:39892821, *J Hepatol* 2025; PMID:39550037; PMID:41046517, *Cell Rep* 2025,
   [DOI](https://doi.org/10.1016/j.celrep.2025.116371)). GOA carries a large and partly
