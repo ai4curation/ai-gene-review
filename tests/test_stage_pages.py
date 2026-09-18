@@ -368,12 +368,12 @@ def test_broken_links_block_deployment(tmp_path: Path) -> None:
 
 
 @pytest.mark.parametrize(
-    "size,deployable", [(1_000_000_000, True), (1_000_000_001, False)]
+    "size,deployable", [(1_000_000_001, True), (9_999_999_999, True), (10_000_000_000, False)]
 )
 def test_exact_size_budget(tmp_path: Path, size: int, deployable: bool) -> None:
     _site_fixture(tmp_path)
     manifest = replace(stage_pages(tmp_path, tmp_path / "_site"), total_bytes=size)
-    assert manifest.size_budget_bytes == 1_000_000_000
+    assert manifest.size_budget_bytes == 9_999_999_999
     assert manifest.deployable is deployable
 
 
@@ -396,7 +396,7 @@ def test_cli_serializes_readiness_and_reports_broken_links(tmp_path: Path) -> No
     )
     manifest = json.loads((tmp_path / "manifest.json").read_text())
     assert manifest["deployable"] is False
-    assert manifest["size_budget_bytes"] == 1_000_000_000
+    assert manifest["size_budget_bytes"] == 9_999_999_999
     assert manifest["broken_local_links"] == 1
     assert manifest["off_base_path_links"] == 0
     assert manifest["off_base_path_urls"] == []
@@ -493,5 +493,5 @@ def test_archive_size_accounts_for_headers_padding_and_hidden_exclusions(tmp_pat
 def test_archive_budget_blocks_build_even_when_site_bytes_fit(tmp_path: Path):
     _site_fixture(tmp_path)
     manifest = stage_pages(tmp_path, tmp_path / '_site')
-    assert replace(manifest, archive_bytes=1_073_741_824).deployable
-    assert not replace(manifest, archive_bytes=1_073_741_825).deployable
+    assert replace(manifest, archive_bytes=9_999_999_999).deployable
+    assert not replace(manifest, archive_bytes=10_000_000_000).deployable

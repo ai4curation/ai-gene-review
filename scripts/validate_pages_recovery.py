@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 """Validate provenance and publication gates before reusing a Pages artifact."""
 
+from __future__ import annotations
+
 import argparse
 import json
 import hashlib
+import re
 from pathlib import Path
 from typing import Any
 
-BUDGET = 1_000_000_000
-ARCHIVE_BUDGET = 1_073_741_824
+BUDGET = 9_999_999_999
+ARCHIVE_BUDGET = 9_999_999_999
 REQUIRED_STEPS = {
     'Render all gene review HTML pages', 'Render project pages',
     'Validate module YAML files', 'Render module pages',
@@ -50,10 +53,23 @@ def validate_source(run: dict[str, Any], jobs: dict[str, Any], artifacts: dict[s
     return selected
 
 
-def validate_manifest(manifest: dict[str, Any], archive: Path) -> None:
+def validate_manifest(manifest: dict[str, Any], archive: Path, legacy_size_sha256: str | None = None) -> None:
     """Recheck the manifest policy and the actual tar size without extracting it."""
+    if legacy_size_sha256 is not None:
+        # Explicit operator authorization for an old size-only block. Pin the
+        # exact uploaded bytes because that build skipped checksum recording.
+        if (manifest.get('deployable') is not False
+                or manifest.get('size_budget_bytes') != 1_000_000_000
+                or manifest.get('archive_size_budget_bytes') != 1_073_741_824
+                or type(manifest.get('total_bytes')) is not int
+                or manifest['total_bytes'] <= 1_000_000_000
+                or not re.fullmatch(r'[0-9a-f]{64}', legacy_size_sha256)):
+            raise ValueError('Override requires a legacy size-only blocked manifest and SHA-256')
+        manifest = dict(manifest, deployable=True, size_budget_bytes=BUDGET,
+                        archive_size_budget_bytes=ARCHIVE_BUDGET,
+                        archive_sha256=legacy_size_sha256)
     if (manifest.get('deployable') is not True
-            or manifest.get('size_budget_bytes') != BUDGET
+            or manifest.get('size_budget_bytes') not in {BUDGET, 1_000_000_000}
             or type(manifest.get('total_bytes')) is not int
             or not 0 < manifest['total_bytes'] <= BUDGET
             or manifest.get('linked_source_files_not_staged') != 0
@@ -61,7 +77,7 @@ def validate_manifest(manifest: dict[str, Any], archive: Path) -> None:
             or manifest.get('off_base_path_urls') != []):
         raise ValueError('Source manifest does not pass the publication policy')
     # Older verified builds have no archive-size field; check their actual tar.
-    if manifest.get('archive_size_budget_bytes', ARCHIVE_BUDGET) != ARCHIVE_BUDGET:
+    if manifest.get('archive_size_budget_bytes', ARCHIVE_BUDGET) not in {ARCHIVE_BUDGET, 1_073_741_824}:
         raise ValueError('Unexpected archive budget')
     if archive.is_symlink() or not archive.is_file() or not 0 < archive.stat().st_size <= ARCHIVE_BUDGET:
         raise ValueError('Pages tar archive is missing, empty, or over budget')
@@ -101,6 +117,7 @@ def main() -> None:
     manifest = commands.add_parser('manifest')
     manifest.add_argument('--manifest', required=True)
     manifest.add_argument('--archive', required=True, type=Path)
+    manifest.add_argument('--legacy-size-sha256', help='Explicitly retry an old size-only blocked build, pinned to this archive SHA-256')
     record = commands.add_parser('record')
     record.add_argument('--manifest', required=True, type=Path)
     record.add_argument('--archive', required=True, type=Path)
@@ -120,7 +137,7 @@ def main() -> None:
         print(f"Recorded actual archive: {data['archive_actual_bytes']} bytes; sha256:{data['archive_sha256']}")
     else:
         data = json.loads(Path(args.manifest).read_text())
-        validate_manifest(data, args.archive)
+        validate_manifest(data, args.archive, args.legacy_size_sha256)
         print(f"Publication checks passed: {data['total_bytes']} site bytes; {args.archive.stat().st_size} tar bytes")
 
 

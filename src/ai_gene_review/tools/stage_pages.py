@@ -26,8 +26,10 @@ from ai_gene_review.tools.pages_dependencies import TEXT_ASSETS, DependencyResol
 from ai_gene_review.publication_links import rewrite_publication_links, restore_scientific_html_notation
 
 
-PAGES_SIZE_BUDGET_BYTES = 1_000_000_000
-PAGES_ARCHIVE_BUDGET_BYTES = 1_073_741_824
+# Temporary policy: permit unsupported >1 GB deployments, below the absolute
+# 10 GB Pages artifact cutoff. Do not confuse this with supported hosting capacity.
+PAGES_SIZE_BUDGET_BYTES = 9_999_999_999
+PAGES_ARCHIVE_BUDGET_BYTES = 9_999_999_999
 MIB = 1024 * 1024
 BROWSER_FILES = ("index.html", "data.js", "schema.js")
 PREDICTION_BROWSER_FILES = (*BROWSER_FILES, "source-files.json")
@@ -442,7 +444,7 @@ def main() -> None:
         print(
             f"::warning title=Pages size budget exceeded::"
             f"Staged site is {size_mib:,.1f} MiB; warning threshold is "
-            f"{manifest.size_budget_bytes:,} bytes. Reduce it before switching Pages to Actions."
+            f"{manifest.size_budget_bytes:,} bytes. The absolute deployment ceiling is exceeded."
         )
     if manifest.archive_bytes > manifest.archive_size_budget_bytes:
         print(
