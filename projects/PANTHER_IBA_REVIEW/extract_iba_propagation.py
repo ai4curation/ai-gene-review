@@ -47,6 +47,8 @@ GENES = [
     "plo1", "ark1", "cut7", "ase1", "mid1", "cdc12", "sid2", "cdc7", "rad21",
     "sgo1", "bub1", "mad2", "mph1", "slp1", "cut1", "cut2", "cdc18", "rhp51",
     "mus81", "rqh1",
+    # batch 3
+    "ral2",
 ]
 
 IBA_REF = "GO_REF:0000033"

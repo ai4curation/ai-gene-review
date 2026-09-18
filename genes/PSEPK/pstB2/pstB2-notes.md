@@ -1,8 +1,10 @@
 # pstB2 curation notes
 
 - Q88C57 is the ATPase encoded at PP_5326 in the Pho-linked PP_5326-PP_5329
-  Pst locus, not in the PP_2656-PP_2659 operon represented by pstS, pstC, pstA,
-  and pstB1 in this batch. [file:projects/P_PUTIDA/deep-research/PSEPK__bacterial_pst_phosphate_uptake__ppu02010-deep-research-openscientist.md,
+  Pst locus, with PP_5327 PstA, PP_5328 PstC-like permease, and PP_5329 PstS;
+  it is not in the PP_2656-PP_2659 candidate operon. This complete assignment
+  is based on locus evidence rather than a demonstrated KT2440 complex.
+  [file:projects/P_PUTIDA/deep-research/PSEPK__bacterial_pst_phosphate_uptake__ppu02010-deep-research-openscientist.md,
   "PP_5326 pstB2"]
 - UniProt assigns Q88C57 to the phosphate-importer ATPase family through HAMAP
   and gives the phosphate-coupled transport reaction. [file:PSEPK/pstB2/pstB2-uniprot.txt,

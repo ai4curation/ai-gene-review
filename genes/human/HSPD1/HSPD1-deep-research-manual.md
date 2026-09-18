@@ -1,0 +1,33 @@
+# Human HSPD1: primary-source research synthesis
+
+Human HSPD1 (UniProt P10809) encodes the mitochondrial type I chaperonin Hsp60. Together with the Hsp10 co-chaperonin, it uses ATP to support folding of imported mitochondrial proteins. It is structurally and mechanistically distinct from the cytosolic type II CCT/TRiC chaperonin. Mitochondrial Hsp60 can also occur outside mitochondria under particular conditions; those observations do not convert it into a CCT subunit.
+
+This is a manual research synthesis, prepared on 2026-09-08 after the external Falcon request exceeded its 600-second local timeout and the Perplexity fallback returned HTTP 401, insufficient quota. Sources below were retrieved separately into the publication cache and inspected. The completed Falcon output subsequently arrived and is preserved separately; its structural and client-folding findings are integrated in HSPD1-notes.md.
+
+## Identity, mechanism, and direct biochemical evidence
+
+The human UniProt record supplies the exact 573-residue precursor sequence, its mitochondrial targeting region, chaperonin family membership, and nucleotide-binding features. These sequence features establish the identity used for comparison; curated functional prose is secondary to the experiments below.
+
+Viitanen and colleagues expressed and purified a mammalian mitochondrial chaperonin 60 and demonstrated ATP-dependent recovery of active ribulose-bisphosphate carboxylase from unfolded protein with mammalian chaperonin 10. Bacterial chaperonin 10 did not substitute in that assay. The work identifies a functional mammalian Hsp60/Hsp10 folding system and illustrates co-chaperonin specificity. Rubisco is an experimental folding substrate, not evidence that Rubisco is a physiological human mitochondrial client. The abstract describes a mammalian protein without establishing that every construct was human; its contribution here is mammalian mechanistic evidence. [PMID:1346131](https://pubmed.ncbi.nlm.nih.gov/1346131/), *Mammalian mitochondrial chaperonin 60 functions as a single toroidal ring*. Cached abstract only.
+
+Nisemblat and colleagues directly determined the human mitochondrial chaperonin complex structure at 3.15 Å. The double-ring, football-shaped assembly is an intermediate of the human type I system, with differences in inter-ring arrangement from bacterial GroEL. Thus, neither the earlier single-ring biochemical result nor the later double-ring structure warrants a simplistic claim that Hsp60 has exactly one immutable oligomeric state. The decisive distinction from CCT is the type I Hsp60/Hsp10 system, not merely counting rings. [PMID:25918392](https://pubmed.ncbi.nlm.nih.gov/25918392/), [DOI:10.1073/pnas.1411718112](https://doi.org/10.1073/pnas.1411718112). The inspected cache contains the abstract; detailed residue contacts are not inferred from an unread full text.
+
+These results support ATP-dependent protein folding chaperone activity and mitochondrial matrix localization as the central annotation. Generic unfolded-protein binding is mechanistically compatible but less descriptive than ATP-dependent folding. Physical association in an interactome does not independently establish that each partner is a folding substrate.
+
+## Extra-mitochondrial pools and cell-death effects
+
+Chandra and colleagues examined several apoptosis-inducing conditions. Hsp60 accumulated in the cytosol both with and without detectable mitochondrial release. Knockdown results distinguished a pro-death role in BMD188-induced apoptosis, associated with caspase-3 maturation, from pro-survival effects in other tested apoptotic settings. This is direct evidence that opposite cell-death annotations can be contextually compatible; neither should be removed simply because it opposes the other. These activities remain secondary to the constitutive mitochondrial folding system. [PMID:17823127](https://pubmed.ncbi.nlm.nih.gov/17823127/), [DOI:10.1074/jbc.M702777200](https://doi.org/10.1074/jbc.M702777200). Cached abstract only.
+
+The GOA set also includes immune-response, Toll-like-receptor, cytokine, cell-surface and extracellular annotations. Each requires attention to experimental preparation, receptor context and the identity of the assayed Hsp60. Recombinant-protein preparations can raise questions about co-purifying agonists, but that possibility is not itself evidence that a particular curator's annotation is false. The current review leaves unresolved immune mechanism assignments UNDECIDED where the necessary assay controls have not been verified. It retains documented secondary localization and physical interaction observations without treating them all as core chaperone functions.
+
+## Human-to-horse comparison and prediction assessment
+
+The selected horse sequence F6Z587 is 541 residues, compared with 573 residues for human P10809. Reproducible global alignment places a 32-residue internal deletion against human residues 171–202. The N-terminal mitochondrial targeting region and annotated nucleotide-binding positions remain present. High identity in the aligned portion establishes a close HSPD1 relationship but cannot establish that the deletion leaves the folding cycle intact. Transcript/model verification and structural inspection are needed before assigning the exact selected protein confident ATP-dependent folding competence.
+
+This limitation does not support the ProtNLM alternative: the selected protein belongs to the mitochondrial Hsp60 family, whereas the prediction describes cytosolic CCT/TRiC and its characteristic client spectrum. An existing horse electronic annotation to the CCT complex has the same type I/type II mismatch and is removed on this positive structural and family distinction. The horse ATP-dependent folding annotations remain UNDECIDED because of the internal deletion, rather than being replaced with CCT activity.
+
+See [the reproducible comparison](../../HORSE/HSPD1/HSPD1-bioinformatics/RESULTS.md) for sequence inputs, alignment and mapped features. Family identity, catalytic competence of the selected sequence, and the biological validity of the external prediction are separate questions.
+
+## Remaining questions
+
+The exact biological status of the horse deletion is unresolved: it may reflect a transcript form, a gene model issue, or a genuine sequence difference. No horse-specific assay of F6Z587 was located. For human secondary immune annotations, full-text examination of assay controls is needed before firm mechanistic conclusions. For interactome-derived associations, targeted substrate-folding experiments would distinguish client relationships from co-complex or stress-related associations.
