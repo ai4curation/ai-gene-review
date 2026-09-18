@@ -74,4 +74,4 @@ flowchart TD
 ## Link to Project Context
 
 See broader B. subtilis notes and existing review status in:
-- [projects/BACSU.md](projects/BACSU.md)
+- [projects/BACSU.md](../BACSU.md)
