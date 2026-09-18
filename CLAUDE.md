@@ -39,6 +39,21 @@ gocams/
     MODEL-src.yaml <- cached gocam-py model (activities/annotons; DO NOT EDIT)
     MODEL-review.yaml <- optional reviewer assessment
   index.tsv <- gene_product -> GO-CAM activity (annoton) index; join key to reviews/modules
+history/
+  genes/<ORGANISM>/<GENE>/ <- append-only curation session records (see docs/history.md)
+  modules/<SLUG>/, gocams/<MODEL>/, projects/<SLUG>/, schema/, other/
+
+## History records
+
+`history/` holds append-only curation session provenance, one YAML per session
+per target, kept outside the curated files themselves (mechanism ported from
+dismech). When a PR creates or edits curated content (a gene review, module,
+GO-CAM review, or project page), add a matching record — scaffold it with
+`just new-history` (never hand-write the filename/session id), edit the
+emitted `details`, then check it with `just validate-history <path>`. Records
+are append-only: never rewrite an existing record's `target.slug`/`target.path`;
+use `target.superseded_by` for renames. See `docs/history.md` for the format
+and `just backfill-history` for retrospectively generating records from PRs.
 
 You can regenerate the derived files by running commands like:
 
@@ -152,7 +167,9 @@ ActionEnum:
         description: The annotation is not clear, and the reviewer is not sure what to do with it. ALWAYS USE THIS IF YOU ARE UNABLE TO ACCESS
           RELEVANT PUBLICATIONS
       NEW:
-        
+        description: This is a proposed annotation, not one that exists in the existing GO annotations. Use this to propose a new annotation
+          not covered by the existing GO annotations. Use this conservatively, do not over-annotate, especially for biological process.
+          Do not use for indirect or pleiotropic effects. Be sure you have good evidence, this can be from multiple sources.
 ```      
 
 ### Do not overrule curators from incomplete evidence
@@ -183,6 +200,83 @@ Therefore:
 - Reserve confident "this reference is about organism/gene X" caveats for cases where the
   **cached abstract explicitly states it** (e.g. "in nontransformed mammalian cells"). Do
   not infer the organism or assay details that the abstract does not state.
+
+### Do not add what curators deliberately declined to add
+
+The mirror image of the rule above, and the one that governs `NEW`. Everything else
+in this document is an audit of assertions that exist; `NEW` is the one action that
+manufactures an assertion, and it needs its own bar.
+
+**A gene product is `involved_in` a process only if the product itself does some of the
+work of that process — catalysing a step, or contributing the structure or cofactor
+activity that a step depends on.** Being consumed by the process, being required for it,
+or being the thing it acts on is not participation. The distinction matters most where
+the evidence is strongest: knockout abolishes the outcome, rescue restores it, and
+human loss-of-function is lethal — all of which establish that the gene product is
+**necessary**, which is exactly what being a substrate means. Necessity evidence and
+participation evidence are indistinguishable in a GAF row, so ask explicitly *which
+entity performs the step* before proposing a process term, and do not let a mountain
+of perturbation data stand in for an answer.
+
+**"Every other participant has this term and my gene does not" is not evidence of a
+gap.** It is usually evidence that the term means something your gene does not do.
+Before proposing `NEW` on that reasoning, run the comparator check: name two or three
+other gene products standing in the **same role** relative to the same kind of process,
+and see
+whether they carry the term. This converts "the curators overlooked it" from an
+assumption into a prediction you can falsify in one QuickGO query, and a systematic
+absence across species and MODs should be read as a convention you have not yet
+identified, not as a twenty-year oversight.
+
+A worked example, from a review where this went wrong (`genes/human/AGT`, PR #2972).
+`GO:0002003 angiotensin maturation` is annotated to every protease that acts on
+angiotensinogen — REN, ACE, ACE2, ENPEP, MME and a dozen more — and to no
+angiotensinogen in human, mouse or rat. That was read as a pathway-completeness gap.
+The comparator check settles it the other way in a single query: INS is absent from
+`GO:0030070` insulin processing, whose annotations are the convertases; POMC, GCG,
+PENK and NPPA are absent from `GO:0016486` peptide hormone processing, on which CORIN
+sits but its substrate pro-ANP does not; APP is absent from `GO:0034205` amyloid-beta
+formation among 182 annotations. The reason is structural: `GO:0002003 is_a GO:0016486`
+peptide hormone processing, under protein processing and proteolysis — the term
+describes the cleaving, and the substrate does none of it.
+
+The convention is not absolute, and the exceptions tell you where the line is. GO
+*does* annotate thyroglobulin to `GO:0006590` thyroid hormone generation, fibrinogen to
+`GO:0042730` fibrinolysis, and C3 to `GO:0006956` complement activation. Each of those
+substrates does some of the work, and the three span the range of what that can mean.
+Thyroglobulin is the **scaffold** case: TPO catalyses the iodination and the coupling,
+but thyroglobulin supplies the tyrosyl residues and holds the donor and acceptor pair in
+position — and `GO:0006590` carries both, the peroxidase and the scaffold, each by IDA.
+Fibrin is the **cofactor** case: it polymerises, then accelerates its own lysis by acting
+as the template for tPA-mediated plasminogen activation. C3 is the **chemistry** case: it
+carries an internal thioester that cleavage exposes, which C3b then uses to form its own
+covalent bond to the target surface. Angiotensinogen is none of the three — it supplies
+no residue to the product beyond the bond that is cut, positions nothing, and catalyses
+nothing; renin performs every step of the conversion. So the test is never "is my gene
+the substrate" but "does my gene do any of the work", and a fibrinogen-shaped case can
+legitimately carry the term.
+
+Therefore, before proposing a `NEW` process term:
+
+- **Name the entity that performs the step.** If the answer is another gene product,
+  the term belongs to that one. Necessity evidence does not answer this question.
+- **Run the comparator check** above, and treat a systematic absence as a convention
+  to identify rather than a gap to fill.
+- **Read the term's parents.** They usually say what kind of thing carries the term.
+  A process under `GO:0006508 proteolysis` names whatever does the cleaving — which is
+  the substrate itself in the autoprocessing case (`GO:0016540`), and otherwise is not.
+- **Check `gocams/index.tsv` and the cached models.** They often contain the gene
+  already, in the role GO intends for it — the renin-angiotensin model
+  (`gocams/6246724f00000549/`) has AGT twice over, as the hormone-activity node and as
+  the proteases' input molecule. A curator
+  who modelled the pathway, included your gene, and gave it a different term made a
+  decision to argue with explicitly, not an absence to fill in.
+- **Reject a term that is an ancestor or descendant** of another you are proposing, or
+  of one the gene already carries. That is redundancy, not added coverage.
+
+Where a substrate relationship genuinely needs to be machine-readable, the GO mechanism
+for it lives on the enzyme (`has input`), not on the substrate. Raise it as a
+`suggested_questions` entry rather than asserting it as an annotation.
 
 ### What an IBA asserts: read the phylogeny, not the donor count
 
@@ -317,6 +411,16 @@ This complements (does not replace) the existing `is_invalid` (retracted/replace
 reference has not been manually adjudicated. **Verify, don't trust**: confirm a PMID against PubMed (or
 anchor a claim to a checkable fact such as the GOA evidence code) before marking it `VERIFIED` — an
 LLM-generated deep-research summary asserting a citation is not sufficient.
+
+**Deleted duplicate PMIDs and conflicting findings:** Keep GOA's
+`original_reference_id`. Record a verified canonical identifier in
+`reference_review.replacement` with `reference_id`, `reason`, and verification
+notes; fetch failure alone does not establish a remapping or retraction. Quote
+the canonical paper using its own `reference_id` in `review.supported_by`.
+For a statement from P1 contradicted by P2, use P1's
+`findings[].finding_review` with `finding_status`, `superseded_by`, and
+`supported_by` containing P2's exact snippet. See
+[Reference Curation](docs/reference_curation.md) for examples and validation rules.
 
 ## Tools
 
@@ -515,7 +619,11 @@ just deploy-browser    # update data.js + index.html for the interactive browser
 Output: `app/`
 
 ### CI automation
-The `generate-pages` workflow runs on push to main when gene YAMLs, schema, templates, or project markdown change. It renders everything and creates a PR. Pages deploy directly from main — no gh-pages branch needed for the static content.
+The `generate-pages` workflow runs daily at 08:23 UTC, with manual runs available
+through GitHub Actions. It renders everything and creates a PR. Its publication
+schedule is exempt from agent cron profiles. Gene reviews are validated in PR CI
+and by the weekly full validation workflow. Pages deploy directly from main — no
+gh-pages branch needed for the static content.
 
 ## General guidelines
 

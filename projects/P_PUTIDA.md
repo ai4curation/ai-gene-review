@@ -358,10 +358,21 @@ or are differently named / fused in *Pseudomonas* (trpG, pheC, tyrA).
   preserving the unresolved cytoplasmic D-alanine source as a real hole.
 - [ ] For each later module batch, full `fetch-gene` only the genes selected by module review.
 - [ ] Track module satisfiability gaps, over-annotations, missing GO terms, and candidate new module documents.
+- [x] Curate the PP_2842-PP_2849 UreA-G urease biogenesis and urea-hydrolysis batch as a separate three-stage module.
 
 # NOTES
 
 ## 2026-08-11
+
+Created the urease-biogenesis and urea-hydrolysis batch from the complete
+reviewed PP_2842-PP_2849 `ureDABCEFG` locus. This corrects the first-pass
+partition, which split `ureABC` into the broad KEGG arginine map and the four
+activation proteins into a generic folding/turnover bucket. The reusable module
+now separates apo-UreABC assembly, UreDEFG-dependent nickel/GTP activation, and
+mature urea hydrolysis. General nickel uptake, urea transport, `ureJ`, and
+downstream ammonia assimilation are recorded as context or follow-up rather
+than core parts. Historical artifacts from `86cf4fd8e9` were inspected only
+path-by-path; no giant commit was rebased or cherry-picked.
 
 Curated the focused D-amino-acid cell-wall precursor-supply batch from broad
 KEGG pathway `ppu00470`. The reusable module has three substantive parts:
