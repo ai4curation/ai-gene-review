@@ -1,0 +1,120 @@
+# Manual shortcut for publishing an already-built site; no data restoration.
+# Use when Build and deploy site finished rendering, validation, and artifact
+# uploads successfully, but publication failed or was skipped (for example,
+# a Pages service error or deployment being disabled at build time).
+# For a build blocked only by the former 1 GB size gate, provide
+# legacy_size_sha256: SHA-256 of its original downloaded artifact.tar. This
+# explicitly authorizes the old size-only block; integrity checks still apply.
+# It can also redeploy a known-good, still-retained build intentionally.
+#
+# Run on main with source_run_id set to that completed build's Actions run ID.
+# Pages must use GitHub Actions and PAGES_ARTIFACT_DEPLOY_ENABLED must be true.
+# The source Pages artifact must still exist (retained for 3 days). This checks
+# build provenance and publication gates, then deploys the exact stored site.
+# It does not rebuild from current main; choosing an older run publishes that
+# older snapshot. For new content, failed validation, or expired artifacts, run
+# Build and deploy site (generate-pages.yaml) instead.
+# This workflow is never scheduled and is not needed for normal daily publishing.
+name: Deploy existing Pages artifact
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: Completed Build and deploy site run ID with a validated, unexpired artifact
+        required: true
+        type: string
+      legacy_size_sha256:
+        description: Optional archive SHA-256 to authorize retrying an old 1 GB size-only block
+        required: false
+        type: string
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy-existing-pages:
+    if: >-
+      ${{ vars.PAGES_ARTIFACT_DEPLOY_ENABLED == 'true' &&
+          github.ref == format('refs/heads/{0}', github.event.repository.default_branch) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          sparse-checkout: scripts
+
+      - name: Verify source run and successful publication steps
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          [[ "$SOURCE_RUN_ID" =~ ^[0-9]+$ ]]
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID" > run.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID/jobs?filter=latest&per_page=100" > jobs.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID/artifacts?per_page=100" > artifacts.json
+          WORKFLOW_ID=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/generate-pages.yaml" --jq .id)
+          python3 scripts/validate_pages_recovery.py source \
+            --run run.json --jobs jobs.json --artifacts artifacts.json \
+            --repository "$GITHUB_REPOSITORY" --branch "$DEFAULT_BRANCH" --workflow-id "$WORKFLOW_ID" \
+            --github-output "$GITHUB_OUTPUT"
+          echo "Reusing validated build from run $SOURCE_RUN_ID ($(jq -r .head_sha run.json))." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Download source publication manifest
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.source.outputs.manifest_artifact_id }}
+          merge-multiple: true
+          path: diagnostics
+          run-id: ${{ inputs.source_run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Download source Pages archive
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ steps.source.outputs.pages_artifact_id }}
+          merge-multiple: true
+          path: payload
+          run-id: ${{ inputs.source_run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Verify manifest and archive size
+        env:
+          LEGACY_SIZE_SHA256: ${{ inputs.legacy_size_sha256 }}
+        run: |
+          set -euo pipefail
+          extra=()
+          if [ -n "$LEGACY_SIZE_SHA256" ]; then
+            extra+=(--legacy-size-sha256 "$LEGACY_SIZE_SHA256")
+          fi
+          python3 scripts/validate_pages_recovery.py manifest \
+            --manifest diagnostics/_site-manifest.json --archive payload/artifact.tar "${extra[@]}"
+
+      # Re-upload the unchanged tar into this run so deploy-pages obtains its
+      # artifact and OIDC deployment identity from the same trusted workflow run.
+      - name: Upload validated archive for deployment
+        uses: actions/upload-artifact@v4
+        with:
+          name: github-pages
+          path: payload/artifact.tar
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Deploy validated Pages artifact
+        id: deployment
+        uses: actions/deploy-pages@v4
+        with:
+          artifact_name: github-pages

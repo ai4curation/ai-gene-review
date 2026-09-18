@@ -38,7 +38,9 @@ transfer reaction.
 - [x] Complete and document annotation-reviewer passes for both selected genes.
 - [x] Verify cross-species PANTHER membership and PAINT nodes from local canonical data.
 - [x] Complete module + `ppu00052` + PSEPK OpenScientist research (1,689.92
-  seconds; 28 minutes 9.92 seconds).
+  seconds; 28 minutes 9.92 seconds); the later UDP-glucose/UDP-galactose supply
+  batch provides the completed positive-route analysis while this page retains
+  the absent-Leloir result.
 - [x] Complete GalE OpenScientist research.
 - [x] Complete final validation and rendering after research ingestion.
 - [ ] Obtain external review of the non-draft wave136 PR.
@@ -129,3 +131,20 @@ PP_1165 as substrate-uncertain and treated GalE as insufficient to establish
 catabolic pathway coverage. Its broader suggestion that PP_0501 is a second
 GALE is not adopted here: the local PP_0501 evidence does not establish that
 specific reaction, so PP_0501 remains outside this focused selected-gene set.
+
+## 2026-09-01 GALM family repair
+
+The reusable module's mutarotase leaf is now grounded on
+`PANTHER:PTHR10091:SF0` (`GALACTOSE MUTAROTASE`) rather than the heterogeneous
+parent aldose-1-epimerase family. Reviewed E. coli GalM P0A9C3 and human GALM
+Q96C23 both belong to that subfamily. The module also records the verified
+PAINT node PTN000009552, which supports GO:0004034 and GO:0033499 from those
+bacterial and human seeds. The unresolved KT2440 aldose 1-epimerase candidate
+PP_1165 is not used as a galactose-specific representative, so this refinement
+does not fill the absent PSEPK Leloir route.
+
+The broad GALE parent family remains intentional: human GALE resolves to
+PTHR43725:SF47, while current PSEPK metadata assigns Q88I72 to the heterogeneous
+SF53 grouping labelled `UDP-ARABINOSE 4-EPIMERASE 1`. The exact reaction and
+protein records support both exemplars, but that subfamily label does not
+justify narrowing the reusable GalE selector.

@@ -13,7 +13,9 @@ def create_test_goa_file(annotations: list) -> Path:
     with tempfile.NamedTemporaryFile(mode="w", suffix="-goa.tsv", delete=False) as f:
         # Write header
         f.write(
-            "DB\tDB_Object_ID\tDB_Object_Symbol\tQualifier\tGO_ID\tGO_Term\tGO_Aspect\tEvidence_Type\tEvidence_Code\tReference\tDate\tAssignedBy\n"
+            "GENE PRODUCT DB\tGENE PRODUCT ID\tSYMBOL\tQUALIFIER\tGO TERM\t"
+            "GO NAME\tGO ASPECT\tECO ID\tGO EVIDENCE CODE\tREFERENCE\t"
+            "WITH/FROM\tTAXON ID\tTAXON NAME\tASSIGNED BY\tGENE NAME\tDATE\n"
         )
 
         # Write annotations
@@ -21,8 +23,9 @@ def create_test_goa_file(annotations: list) -> Path:
             f.write(
                 f"UniProtKB\t{ann['id']}\t{ann['symbol']}\t{ann.get('qualifier', '')}\t"
                 f"{ann['go_id']}\t{ann['go_term']}\t{ann.get('aspect', 'P')}\t"
-                f"{ann['evidence']}\t{ann['evidence']}\t{ann['reference']}\t"
-                f"20240101\tGOA\n"
+                f"ECO:0000000\t{ann['evidence']}\t{ann['reference']}\t"
+                f"{ann.get('with_from', '')}\tNCBITaxon:9606\tHomo sapiens\t"
+                f"GOA\tTest protein\t20240101\n"
             )
 
         return Path(f.name)
