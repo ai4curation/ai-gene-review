@@ -1,0 +1,2484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>apt - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>apt</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88F33" target="_blank" class="term-link">
+                        Q88F33
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-draft">
+                    DRAFT
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "apt";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88F33" data-a="DESCRIPTION: Apt (PP_4266) is the adenine phosphoribosyltransfe..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>Apt (PP_4266) is the adenine phosphoribosyltransferase of the purine salvage pathway. It transfers a phosphoribosyl group from PRPP to adenine to form AMP and diphosphate, returning preformed adenine to the adenylate pool. The KT2440 assignment is supported by the reviewed UniProt entry, HAMAP rule MF_00004, Rhea reaction 16609, and the adenine phosphoribosyltransferase family rather than by a direct biochemical study of this protein.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003999" target="_blank" class="term-link">
+                                    GO:0003999
+                                </a>
+                            </span>
+                            <span class="term-label">adenine phosphoribosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F33" data-a="GO:0003999" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Apt catalyzes the adenine and PRPP to AMP salvage reaction.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the substrate-specific molecular function supported by the reviewed UniProt entry, EC 2.4.2.7, Rhea 16609, and HAMAP MF_00004.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/apt/apt-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">Catalyzes a salvage reaction resulting in the formation of</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/apt/apt-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0003999	adenine phosphoribosyltransferase activity</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/apt/apt-deep-research-openscientist.md
+
+                                </span>
+
+                                <div class="support-text">encodes **adenine phosphoribosyltransferase (APRT, EC 2.4.2.7)**</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005737" target="_blank" class="term-link">
+                                    GO:0005737
+                                </a>
+                            </span>
+                            <span class="term-label">cytoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F33" data-a="GO:0005737" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cytoplasmic localization is plausible but is not a core function.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> UniProt predicts a soluble cytoplasmic enzyme from HAMAP. Localization supplies context and should not be elevated to a core catalytic role.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/apt/apt-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">SUBCELLULAR LOCATION: Cytoplasm</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005829" target="_blank" class="term-link">
+                                    GO:0005829
+                                </a>
+                            </span>
+                            <span class="term-label">cytosol</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F33" data-a="GO:0005829" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The TreeGrafter cytosol inference is redundant localization context.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is compatible with the predicted cytoplasmic location but does not add a distinct biological function and lacks direct localization evidence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/apt/apt-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0005829	cytosol</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006168" target="_blank" class="term-link">
+                                    GO:0006168
+                                </a>
+                            </span>
+                            <span class="term-label">adenine salvage</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F33" data-a="GO:0006168" data-r="GO_REF:0000002" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Apt directly performs the single-step salvage of adenine to AMP.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The UniProt function and pathway comments explicitly identify this as adenine salvage, and the accepted molecular function executes the process.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/apt/apt-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">AMP biosynthesis via salvage pathway</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/apt/apt-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0006168	adenine salvage</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044209" target="_blank" class="term-link">
+                                    GO:0044209
+                                </a>
+                            </span>
+                            <span class="term-label">AMP salvage</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88F33" data-a="GO:0044209" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Formation of AMP from adenine is the product-defined view of Apt salvage.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Apt forms AMP from adenine and PRPP; UniPathway and UniRule support the one-step AMP salvage route.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/apt/apt-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">AMP, that is energically less costly than de novo synthesis</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:PSEPK/apt/apt-goa.tsv
+
+                                </span>
+
+                                <div class="support-text">GO:0044209	AMP salvage</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Transfers a phosphoribosyl group from PRPP to adenine, producing AMP and diphosphate in the adenine-salvage branch of purine metabolism.</h3>
+                <span class="vote-buttons" data-g="Q88F33" data-a="FUNCTION: Transfers a phosphoribosyl group from PRPP to aden..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003999" target="_blank" class="term-link">
+                            adenine phosphoribosyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006168" target="_blank" class="term-link">
+                                adenine salvage
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0044209" target="_blank" class="term-link">
+                                AMP salvage
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/apt/apt-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">Catalyzes a salvage reaction resulting in the formation of</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/apt/apt-uniprot.txt
+
+                        </span>
+
+                        <div class="finding-text">AMP biosynthesis via salvage pathway</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/apt/apt-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">UniProtKB reviewed entry for Apt</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"Catalyzes a salvage reaction resulting in the formation of"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"AMP biosynthesis via salvage pathway"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"SUBCELLULAR LOCATION: Cytoplasm"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/apt/apt-goa.tsv
+
+                    </span>
+                </div>
+
+                <div class="reference-title">QuickGO GOA annotations for Apt</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"GO:0003999	adenine phosphoribosyltransferase activity"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"GO:0006168	adenine salvage"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement"></div>
+
+                        <div class="finding-text">"GO:0044209	AMP salvage"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/apt/apt-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist functional review of PSEPK apt</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report independently recovers Q88F33 as the type I adenine phosphoribosyltransferase responsible for adenine-to-AMP salvage.</div>
+
+                        <div class="finding-text">"encodes **adenine phosphoribosyltransferase (APRT, EC 2.4.2.7)**"</div>
+
+                    </li>
+
+                    <li class="finding-item">
+                        <div class="finding-statement">No target-specific structure, kinetics, or knockout phenotype was found for Q88F33, so ortholog-derived mechanistic and physiological details were not treated as KT2440 evidence.</div>
+
+                        <div class="finding-text">"There is no published crystal structure, kinetic characterization, or knockout phenotype study for the PP_4266 gene product itself."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Questions for Experts</h2>
+
+        <div class="question-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <p><strong>Q:</strong> How much does Apt contribute to adenylate maintenance when KT2440 grows on extracellular adenine or adenosine?</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88F33" data-a="Q: How much does Apt contribute to adenylate maintena..." data-r="" data-act="QUESTION">
+                    <button class="vote-btn" data-v="up" title="Good question to ask">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful question">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Suggested Experiments</h2>
+
+        <div class="experiment-card">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+
+                    <p><strong>Experiment:</strong> Measure adenine-dependent AMP formation by purified Apt and compare adenine utilization and adenylate pools in wild type and an apt deletion strain.</p>
+
+
+
+                    <p style="margin-top: 0.5rem;">Type: enzyme assay and targeted metabolomics</p>
+
+                </div>
+                <span class="vote-buttons" data-g="Q88F33" data-a="EXPERIMENT: Measure adenine-dependent AMP formation by purifie..." data-r="" data-act="EXPERIMENT">
+                    <button class="vote-btn" data-v="up" title="Useful experiment">👍</button>
+                    <button class="vote-btn" data-v="down" title="Not a useful experiment">👎</button>
+                </span>
+            </div>
+        </div>
+
+    </div>
+
+
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(apt-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88F33" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *apt* (Adenine Phosphoribosyltransferase, APRT) in *Pseudomonas putida* KT2440</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+                    <span class="report-badge">16 citations</span>
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-08-19T08:49:42.942428</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="apt-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="apt-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-apt-adenine-phosphoribosyltransferase-aprt-in-pseudomonas-putida-kt2440">Functional Annotation Report: <em>apt</em> (Adenine Phosphoribosyltransferase, APRT) in <em>Pseudomonas putida</em> KT2440</h1>
+<p><strong>UniProt Accession:</strong> Q88F33 | <strong>Gene:</strong> <em>apt</em> | <strong>Ordered Locus:</strong> PP_4266<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)<br />
+<strong>EC:</strong> 2.4.2.7 | <strong>Protein family:</strong> Purine/pyrimidine phosphoribosyltransferase (type I PRTase)<br />
+<strong>Domains:</strong> Pfam PF00156 (Pribosyltran); InterPro IPR005764 (Ade_phspho_trans), IPR050120 (Adenine_PRTase), IPR000836 (PRTase_dom), IPR029057 (PRTase-like)</p>
+<hr />
+<h2 id="summary">Summary</h2>
+<p>The gene <em>apt</em> (locus PP_4266; UniProt Q88F33) of <em>Pseudomonas putida</em> KT2440 encodes <strong>adenine phosphoribosyltransferase (APRT, EC 2.4.2.7)</strong>, a Mg²⁺-dependent cytoplasmic enzyme that catalyzes the single, committed step of the adenine salvage pathway: the transfer of the 5-phosphoribosyl group from 5-phospho-α-D-ribose-1-diphosphate (PRPP) onto the N9 nitrogen of free adenine, producing <strong>adenosine-5′-monophosphate (AMP) and inorganic pyrophosphate (PPi)</strong>. The identity is unambiguous — the gene symbol, the EC number, the protein family, and the diagnostic type I PRTase domains (Pfam PF00156; InterPro IPR005764/IPR000836) all converge on a well-characterized enzyme class, and the assignment is propagated by curated HAMAP rule MF_00004. Although no crystal structure or dedicated kinetic study exists for the <em>P. putida</em> enzyme itself, its function can be assigned with high confidence through strong sequence conservation and an extensive body of structural and biochemical work on orthologous APRTs from human, <em>Giardia lamblia</em>, <em>Leishmania tarentolae</em>, <em>Francisella tularensis</em>, and <em>Fusobacterium nucleatum</em>.</p>
+<p>Mechanistically, APRT is a symmetric <strong>homodimer</strong> in which each subunit is built on a Rossmann-fold core capped by a small "hood" domain unique to APRTs; the active site lies at or near the dimer interface. Catalysis proceeds through an ordered mechanism in which PRPP binds first (stabilizing the active conformation and forming a pyrophosphate-binding pocket via a non-proline <em>cis</em>-peptide bond), a flexible catalytic loop closes over the active site, a conserved active-site glutamate acts as a general base to deprotonate adenine N9, and the deprotonated purine attacks the anomeric carbon of PRPP through a <strong>dissociative, oxocarbenium-ion-like transition state</strong>. The reaction is thermodynamically and kinetically driven toward AMP synthesis — the reverse reaction is &gt;100-fold slower. Strict specificity for the 6-<strong>amino</strong>purine adenine (as opposed to the 6-<strong>oxo</strong>purines hypoxanthine, guanine, and xanthine handled by the separate HG(X)PRTase family) is enforced by an N–H···N1 hydrogen bond from a rigid, aromatic/proline-stabilized base-binding loop.</p>
+<p>Physiologically, APRT is the terminal recycling node of adenine metabolism. The free adenine it salvages arises both from exogenous uptake and, importantly, from the endogenous <strong>MTAN reaction</strong> (5′-methylthioadenosine/S-adenosylhomocysteine nucleosidase), which releases adenine as a byproduct of polyamine (spermidine) biosynthesis, SAM-dependent methylation, and autoinducer/quorum-sensing metabolism. By returning this adenine to the AMP/adenylate pool, APRT keeps these metabolic fluxes running and prevents inhibitory adenine accumulation. In <em>P. putida</em> KT2440, which retains a functional de novo purine biosynthesis pathway, <em>apt</em> is a <strong>dispensable, non-essential</strong> salvage enzyme: it is not required for viability on glucose minimal medium, and its loss manifests phenotypically only under purine limitation, when de novo synthesis is blocked, or through loss of the ability to activate (and hence resistance to) toxic adenine analogs such as 2,6-diaminopurine and 6-methylpurine.</p>
+<hr />
+<h2 id="geneprotein-identification-and-verification">Gene/Protein Identification and Verification</h2>
+<p>The mandatory identity check is satisfied on all counts:</p>
+<table>
+<thead>
+<tr>
+<th>Verification criterion</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Gene symbol "<em>apt</em>" matches protein description</td>
+<td>✅ <em>apt</em> is the canonical symbol for adenine phosphoribosyltransferase across bacteria</td>
+</tr>
+<tr>
+<td>Organism</td>
+<td>✅ <em>Pseudomonas putida</em> KT2440 (PSEPK), locus PP_4266</td>
+</tr>
+<tr>
+<td>Protein family / domains align with literature</td>
+<td>✅ Type I PRTase, Pfam PF00156, matches structurally characterized APRTs (human, <em>Giardia</em>, <em>Leishmania</em>, <em>Francisella</em>, <em>Fusobacterium</em>)</td>
+</tr>
+<tr>
+<td>Diagnostic sequence motif</td>
+<td>✅ Q88F33 carries the type I PRTase PRPP-binding motif (Asp–Asp…TGG dyad coordinating the ribose 2′,3′-OH)</td>
+</tr>
+<tr>
+<td>Risk of symbol ambiguity</td>
+<td>Low — "<em>apt</em>" unambiguously denotes APRT in bacterial genetics; EC 2.4.2.7 and HAMAP MF_00004 fix the assignment</td>
+</tr>
+</tbody>
+</table>
+<p>Literature is abundant for the <strong>enzyme class</strong> (APRT) even though it is limited for the <em>P. putida</em> ortholog specifically. Functional assignment therefore relies on orthology transfer from biochemically and structurally characterized homologs — an appropriate and robust approach for a highly conserved housekeeping salvage enzyme.</p>
+<hr />
+<h2 id="key-findings">Key Findings</h2>
+<h3 id="finding-1-apt-encodes-adenine-phosphoribosyltransferase-catalyzing-adenine-prpp-amp-ppi">Finding 1 — <em>apt</em> encodes adenine phosphoribosyltransferase catalyzing adenine + PRPP → AMP + PPi</h3>
+<p>The primary function of the <em>apt</em> gene product is enzymatic. APRT catalyzes the Mg²⁺-dependent transfer of the 5-phosphoribosyl group from <strong>PRPP</strong> to the <strong>N9 position of adenine</strong>, yielding <strong>AMP + pyrophosphate</strong>:</p>
+<div class="codehilite"><pre><span></span><code>adenine  +  PRPP  ──(APRT, Mg²⁺)──►  AMP  +  PPi
+       (6-aminopurine)                     (adenylate)
+</code></pre></div>
+
+<p>The reaction is defined by EC 2.4.2.7. Detailed kinetics from the closely related <em>Giardia lamblia</em> enzyme establish substrate specificity and directionality: adenine has a <em>K</em>ₘ of 4.2 µM and PRPP a <em>K</em>ₘ of 143 µM, with a forward <em>k</em>cat of 2.8 s⁻¹. The reverse reaction (AMP + PPi → adenine + PRPP) is more than 100-fold slower (<em>k</em>cat = 9.5 × 10⁻³ s⁻¹; AMP and PPi <em>K</em>ₘ values of 87 and 450 µM), which drives net flux toward AMP synthesis — exactly what a salvage enzyme must do to replenish the nucleotide pool. Product-inhibition studies show the forward reaction follows a <strong>random Bi-Bi mechanism</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/12171924/">PMID: 12171924</a>:</p>
+<blockquote>
+<p>"Adenine and alpha-d-5-phosphoribosyl-1-pyrophosphate (PRPP) have K(m) values of 4.2 and 143 microm with a k(cat) of 2.8 s(-1) in the forward reaction, whereas AMP and PP(i) have K(m) values of 87 and 450 microm with a k(cat) of 9.5 x 10(-3) s(-1) in the reverse reaction. Product inhibition studies indicated that the forward reaction follows a random Bi Bi mechanism."</p>
+</blockquote>
+<p>The salvage role is stated directly in the structural literature: "APRT is an enzyme involved in the salvage of adenine (a 6-aminopurine), converting it to AMP" <a href="https://pubmed.ncbi.nlm.nih.gov/29694705/">PMID: 29694705</a>.</p>
+<blockquote>
+<p><strong>Evidence quality:</strong> High. Kinetic mechanism and parameters are from precise enzymological studies of orthologs; the EC assignment and conserved catalytic motifs are present in the target sequence.</p>
+</blockquote>
+<h3 id="finding-2-adenine-specificity-is-imposed-by-an-nhn1-hydrogen-bond-from-a-rigid-base-binding-loop">Finding 2 — Adenine specificity is imposed by an N–H···N1 hydrogen bond from a rigid base-binding loop</h3>
+<p>APRT must select adenine (a 6-<strong>amino</strong>purine) and exclude the 6-<strong>oxo</strong>purines (hypoxanthine, guanine, xanthine), which are handled by the mechanistically and structurally distinct HG(X)PRTase family. Crystallographic and bioinformatic analysis — including a survey of ~4,000 APRT sequences at an 80% identity cutoff — shows this discrimination is achieved through an <strong>N–H···N hydrogen bond between the backbone of the base-binding loop and the N1 atom of adenine</strong> <a href="https://pubmed.ncbi.nlm.nih.gov/29694705/">PMID: 29694705</a>: "an N-H···N hydrogen bond between the base-binding loop and the N1 atom of adenine is the key interaction that differentiates adenine from 6-oxopurines." The 6-amino group's electronic configuration positions N1 as a hydrogen-bond acceptor in a geometry incompatible with 6-oxopurines.</p>
+<p>The base-binding loop is rigidified by conserved aromatic and proline residues, and its integrity is functionally essential: an <strong>F23A mutation</strong> on this loop "severely affects the efficiency of the enzyme" <a href="https://pubmed.ncbi.nlm.nih.gov/29694705/">PMID: 29694705</a>. Evolutionarily, APRTs are structurally distinct from HG(X)PRTases and are most closely related to orotate phosphoribosyltransferases, consistent with a shared type I PRTase ancestry but divergent base-recognition modules. This same substrate promiscuity toward adenine analogs (2,6-diaminopurine, 6-methylpurine) is the basis of the analog-activation phenotype discussed in Finding 4.</p>
+<blockquote>
+<p><strong>Evidence quality:</strong> High. Combines crystallography, large-scale sequence bioinformatics, and site-directed mutagenesis on an APRT ortholog.</p>
+</blockquote>
+<h3 id="finding-3-aprt-is-a-cytoplasmic-homodimeric-type-i-prtase-with-a-rossmann-fold-core-catalytic-loop-mg-prpp-chemistry-and-a-general-base-glutamate">Finding 3 — APRT is a cytoplasmic homodimeric type I PRTase with a Rossmann-fold core, catalytic loop, Mg-PRPP chemistry, and a general-base glutamate</h3>
+<p>Multiple independent crystal structures define the architecture and mechanism of the APRT family: human APRT <a href="https://pubmed.ncbi.nlm.nih.gov/18399692/">PMID: 18399692</a>, <em>Leishmania tarentolae</em> APRT <a href="https://pubmed.ncbi.nlm.nih.gov/14726202/">PMID: 14726202</a>, and <em>Giardia lamblia</em> APRT <a href="https://pubmed.ncbi.nlm.nih.gov/12171925/">PMID: 12171925</a>.</p>
+<ul>
+<li><strong>Quaternary structure:</strong> APRT is a <strong>symmetric homodimer</strong>; each monomer is built around a Rossmann-fold core "common to all known purine phosphoribosyltransferases," capped by a small <strong>hood domain unique to the APRTases</strong>, with catalytic sites at/near the subunit interface <a href="https://pubmed.ncbi.nlm.nih.gov/12171925/">PMID: 12171925</a>: "Giardia APRTase is a symmetric homodimer with the monomers built around Rossman fold cores, an element common to all known purine phosphoribosyltransferases. The catalytic sites are capped with a small hood domain that is unique to the APRTases."</li>
+<li><strong>PPi-binding chemistry:</strong> A non-proline <em>cis</em>-peptide bond forms the pyrophosphate-binding site upon Mg-PRPP binding, and "the pyrophosphoryl charge is neutralized by a single Mg2+ ion and Arg(63), in contrast to the hypoxanthine-guanine phosphoribosyltransferases, which use two Mg2+ ions" <a href="https://pubmed.ncbi.nlm.nih.gov/12171925/">PMID: 12171925</a>. This single-Mg²⁺/Arg mechanism is a defining feature separating APRT from HGPRT.</li>
+<li><strong>Catalytic base:</strong> A conserved active-site glutamate (Glu100 in <em>Giardia</em>, Glu104 in human) functions as the general acid/base. Structural work proposes "the role of Glu104 as the residue that abstracts the proton of adenine N9 atom before its nucleophilic attack on the PRPP anomeric carbon" <a href="https://pubmed.ncbi.nlm.nih.gov/18399692/">PMID: 18399692</a>.</li>
+<li><strong>Substrate binding order &amp; transition state:</strong> PRPP binds first and AMP leaves last <a href="https://pubmed.ncbi.nlm.nih.gov/14726202/">PMID: 14726202</a>; the reaction proceeds via a <strong>dissociative, oxocarbenium-ion-like transition state</strong> with a flexible catalytic loop closing over the active site during turnover, a paradigm supported by transition-state analysis of related phosphoribosyltransferases <a href="https://pubmed.ncbi.nlm.nih.gov/28872824/">PMID: 28872824</a>.</li>
+</ul>
+<p>Because this is a soluble metabolic housekeeping enzyme with no signal peptide or membrane-spanning region, its site of action is the <strong>cytoplasm</strong>, where PRPP, adenine, and Mg²⁺ are available.</p>
+<blockquote>
+<p><strong>Evidence quality:</strong> High. Three independent crystal structures across divergent organisms converge on the same architecture and mechanism.</p>
+</blockquote>
+<h3 id="finding-4-physiological-role-adenine-salvage-into-amp-loss-confers-resistance-to-toxic-adenine-analogs">Finding 4 — Physiological role: adenine salvage into AMP; loss confers resistance to toxic adenine analogs</h3>
+<p>Classic <em>Escherichia coli</em> K-12 genetics directly establishes the in vivo physiological role. In <em>E. coli</em>, "Two pathways of adenine utilization are only known in Escherichia coli K-12: the conversion to adenosine monophosphate by adenine phosphoribosyltransferase (apt gene) and ribosylation to adenine nucleosides by purine nucleoside phosphorylase (deoD gene)" <a href="https://pubmed.ncbi.nlm.nih.gov/6809533/">PMID: 6809533</a>. APRT is thus one of only two routes by which a cell assimilates exogenous adenine, and the only route that directly yields a nucleotide.</p>
+<p>Genetic mapping placed <em>apt</em> between <em>proC</em> and <em>purE</em>, and showed that <em>apt</em> mutations block growth of purine auxotrophs (<em>pur</em> mutants) on adenine — and, in <em>pur pup</em> backgrounds, on purine ribonucleosides — with the degree of blocking scaling with residual APRT activity.</p>
+<p>Crucially, loss-of-function <em>apt</em> mutations confer <strong>resistance to the toxic adenine analogs 2,6-diaminopurine (DAP) and 6-methylpurine (MP)</strong> because APRT activates these analogs into cytotoxic nucleotides: "Independently obtained mutations (apt) of resistance to DAP (2,6-diaminopurine) and MP (6-methylpurine), that affect adenine phosphoribosyltransferase (APRT) in Escherichia coli" <a href="https://pubmed.ncbi.nlm.nih.gov/348574/">PMID: 348574</a>. This gain-of-resistance-on-loss phenotype is a hallmark of salvage enzymes that inadvertently activate substrate mimics, and it is the classic genetic handle used to isolate <em>apt</em> mutants. Complementary work confirmed that <em>pur apt</em> mutants fail to grow on DAP as sole purine source <a href="https://pubmed.ncbi.nlm.nih.gov/334631/">PMID: 334631</a>.</p>
+<blockquote>
+<p><strong>Evidence quality:</strong> High for the enzyme class (direct <em>E. coli</em> genetics); inferred for <em>P. putida</em> by orthology.</p>
+</blockquote>
+<h3 id="finding-5-aprt-recycles-adenine-generated-by-mtan-linking-it-to-polyamine-synthesis-methylation-and-quorum-sensing">Finding 5 — APRT recycles adenine generated by MTAN, linking it to polyamine synthesis, methylation, and quorum sensing</h3>
+<p>APRT does not act in isolation — a major endogenous source of the free adenine it salvages is the <strong>MTAN (5′-methylthioadenosine/S-adenosylhomocysteine nucleosidase)</strong> reaction. MTAN irreversibly hydrolyzes the N-ribosidic bond of two key metabolites:</p>
+<ul>
+<li><strong>MTA (5′-methylthioadenosine)</strong> — a byproduct of spermidine/polyamine biosynthesis</li>
+<li><strong>SAH (S-adenosylhomocysteine)</strong> — a byproduct of SAM-dependent methylation reactions and of autoinducer (AI-2) synthesis in quorum sensing</li>
+</ul>
+<p>Each hydrolysis releases <strong>adenine</strong> plus the corresponding thioribose (5-methylthioribose or S-ribosylhomocysteine). This adenine is then returned to the nucleotide pool by APRT. The MTAN literature states this coupling explicitly: MTAN "is therefore involved in quorum sensing, recycling MTA from the polyamine pathway via adenine phosphoribosyltransferase and recycling MTR to methionine" <a href="https://pubmed.ncbi.nlm.nih.gov/15749708/">PMID: 15749708</a>.</p>
+<p>MTAN "plays a central role in three essential metabolic pathways in bacteria: methionine salvage, purine salvage, and polyamine biosynthesis" <a href="https://pubmed.ncbi.nlm.nih.gov/20954236/">PMID: 20954236</a>. APRT provides the <strong>terminal purine-recycling step</strong> downstream of MTAN, keeping these fluxes running and preventing the accumulation of adenine, which could feedback-inhibit upstream reactions. This is the most specific, non-pleiotropic pathway context for <em>apt</em>: it is the downstream metabolic partner of MTAN.</p>
+<blockquote>
+<p><strong>Evidence quality:</strong> High for the MTAN→APRT coupling in bacteria generally; the <em>P. putida</em> MTAN/polyamine pathways are present but the coupling has not been experimentally traced in this organism.</p>
+</blockquote>
+<h3 id="finding-6-apt-is-a-dispensable-non-essential-salvage-enzyme-in-p-putida-kt2440-which-retains-de-novo-purine-biosynthesis">Finding 6 — <em>apt</em> is a dispensable (non-essential) salvage enzyme in <em>P. putida</em> KT2440, which retains de novo purine biosynthesis</h3>
+<p><em>P. putida</em> KT2440 grows on glucose minimal medium, which requires an operative <strong>de novo purine biosynthesis</strong> pathway (synthesizing IMP → AMP/GMP from simple precursors). When de novo synthesis supplies AMP, the salvage enzyme APRT is not required for viability. A genome-wide <strong>mini-Tn5 transposon conditional-essentiality screen</strong> on glucose minimal medium — which rescued 48 conditionally essential knockouts and cross-checked results against an in silico model predicting 68 essential genes — did <strong>not</strong> identify <em>apt</em>/PP_4266 among essential or conditionally essential genes <a href="https://pubmed.ncbi.nlm.nih.gov/20158506/">PMID: 20158506</a>: "a genome-wide collection of single-gene P. putida KT2440 knockouts was generated by mini-Tn5 transposon mutagenesis and used to identify genes essential for growth in minimal medium with glucose."</p>
+<p>This is fully consistent with salvage-enzyme biochemistry: APRT's phenotype manifests only under purine limitation, when de novo synthesis is blocked, or through activation of toxic adenine analogs. Its non-essentiality does not diminish its physiological importance for energy-efficient nucleotide recycling, but it defines its role as auxiliary/optimizing rather than obligatory.</p>
+<blockquote>
+<p><strong>Evidence quality:</strong> Moderate-to-high — direct genome-wide data in the target organism, though absence-of-essentiality is inferential (the screen documents the essential set; <em>apt</em> is not in it).</p>
+</blockquote>
+<hr />
+<h2 id="mechanistic-model-interpretation">Mechanistic Model / Interpretation</h2>
+<p>APRT sits at a well-defined node in purine and methyl-cycle metabolism. The integrated model is:</p>
+<div class="codehilite"><pre><span></span><code>   <span class="n">POLYAMINE</span> <span class="n">SYNTHESIS</span>          <span class="n">SAM</span><span class="o">-</span><span class="n">DEPENDENT</span> <span class="n">METHYLATION</span> <span class="o">/</span> <span class="n">QUORUM</span> <span class="n">SENSING</span>
+   <span class="p">(</span><span class="n">spermidine</span><span class="p">)</span>                 <span class="p">(</span><span class="n">methyltransferases</span><span class="p">,</span> <span class="n">AI</span><span class="o">-</span><span class="mi">2</span> <span class="n">synthesis</span><span class="p">)</span>
+<span class="err">│</span>                                     <span class="err">│</span>
+<span class="err">▼</span>                                     <span class="err">▼</span>
+       <span class="n">MTA</span>                                   <span class="n">SAH</span>
+<span class="err">│</span>                                     <span class="err">│</span>
+<span class="err">└──────────────►</span> <span class="n">MTAN</span> <span class="err">◄───────────────┘</span>
+          <span class="err">│</span>  <span class="p">(</span><span class="n">irreversible</span> <span class="n">N</span><span class="o">-</span><span class="n">ribosidic</span> <span class="n">hydrolysis</span><span class="p">)</span>
+          <span class="err">▼</span>
+     <span class="n">free</span> <span class="n">ADENINE</span>  <span class="err">◄────</span> <span class="n">exogenous</span> <span class="n">adenine</span> <span class="n">uptake</span>
+          <span class="err">│</span>
+          <span class="err">│</span>  <span class="o">+</span> <span class="n">PRPP</span> <span class="o">+</span> <span class="n">Mg²</span><span class="err">⁺</span>
+          <span class="err">▼</span>
+    <span class="err">╔═══════════════╗</span>
+    <span class="err">║</span>  <span class="n">APRT</span> <span class="p">(</span><span class="n">apt</span><span class="p">,</span>   <span class="err">║</span>   <span class="n">general</span><span class="o">-</span><span class="n">base</span> <span class="n">Glu</span> <span class="n">deprotonates</span> <span class="n">N9</span><span class="p">;</span>
+    <span class="err">║</span>   <span class="n">PP_4266</span><span class="p">)</span>    <span class="err">║</span>   <span class="n">single</span> <span class="n">Mg²</span><span class="err">⁺</span> <span class="o">+</span> <span class="n">Arg</span> <span class="n">neutralize</span> <span class="n">PPi</span><span class="p">;</span>
+    <span class="err">║</span>  <span class="n">EC</span> <span class="mf">2.4</span><span class="p">.</span><span class="mf">2.7</span>   <span class="err">║</span>   <span class="n">dissociative</span> <span class="n">oxocarbenium</span><span class="o">-</span><span class="n">like</span> <span class="n">TS</span>
+    <span class="err">╚═══════════════╝</span>
+          <span class="err">│</span>
+          <span class="err">▼</span>
+    <span class="n">AMP</span>  <span class="o">+</span>  <span class="n">PPi</span>   <span class="err">──►</span>  <span class="n">adenylate</span><span class="o">/</span><span class="n">energy</span> <span class="n">pool</span> <span class="p">(</span><span class="n">ADP</span><span class="p">,</span> <span class="n">ATP</span><span class="p">)</span>
+
+   <span class="n">Parallel</span><span class="o">/</span><span class="n">independent</span> <span class="n">supply</span><span class="p">:</span>  <span class="n">de</span> <span class="n">novo</span> <span class="n">purine</span> <span class="n">biosynthesis</span> <span class="err">──►</span> <span class="n">IMP</span> <span class="err">──►</span> <span class="n">AMP</span>
+   <span class="p">(</span><span class="n">makes</span> <span class="n">APRT</span> <span class="n">dispensable</span> <span class="n">for</span> <span class="n">viability</span> <span class="n">on</span> <span class="n">minimal</span> <span class="n">medium</span><span class="p">)</span>
+</code></pre></div>
+
+<p><strong>Reaction chemistry (subunit level).</strong> Each of the two identical active sites in the homodimer operates by an ordered pathway: PRPP binds first and stabilizes the catalytically competent conformation; a non-proline <em>cis</em>-peptide creates the pyrophosphate pocket; a single Mg²⁺ ion together with a conserved arginine neutralizes the developing negative charge on the leaving pyrophosphate; the conserved active-site glutamate abstracts the proton from adenine N9; and the resulting nucleophile attacks the anomeric (C1′) carbon of the ribose through a dissociative, oxocarbenium-ion-like transition state, forming the β-N9-glycosidic bond of AMP. Substrate selection for adenine over 6-oxopurines occurs upstream of chemistry, via the N–H···N1 hydrogen bond from the rigid base-binding loop.</p>
+<p><strong>Substrate specificity summary:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Value / assignment</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Purine base substrate</td>
+<td>Adenine (6-aminopurine) only</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29694705/">PMID: 29694705</a></td>
+</tr>
+<tr>
+<td>Ribose-phosphate donor</td>
+<td>PRPP (5-phospho-α-D-ribose-1-diphosphate)</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12171924/">PMID: 12171924</a></td>
+</tr>
+<tr>
+<td>Metal cofactor</td>
+<td>Single Mg²⁺</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12171925/">PMID: 12171925</a></td>
+</tr>
+<tr>
+<td>Products</td>
+<td>AMP + PPi</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12171924/">PMID: 12171924</a></td>
+</tr>
+<tr>
+<td>Directionality</td>
+<td>Forward (synthesis) favored &gt;100-fold</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12171924/">PMID: 12171924</a></td>
+</tr>
+<tr>
+<td>Kinetic mechanism</td>
+<td>Random Bi-Bi</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12171924/">PMID: 12171924</a></td>
+</tr>
+<tr>
+<td>Toxic analog substrates</td>
+<td>2,6-diaminopurine, 6-methylpurine (activated to toxic nucleotides)</td>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/348574/">PMID: 348574</a></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Localization.</strong> APRT is a soluble <strong>cytoplasmic</strong> enzyme (no signal peptide, no transmembrane region; substrates PRPP, adenine, and Mg²⁺ are cytoplasmic). It carries out its function inside the cell, feeding the intracellular adenylate pool.</p>
+<p><strong>Pathway placement and energetics.</strong> APRT is the single, committed step of adenine salvage. Its importance is set by demand: salvaging one adenine to AMP costs one PRPP, far cheaper than de novo synthesis of a purine ring (which consumes multiple ATP, glutamine, glycine, formyl-tetrahydrofolate, and aspartate). PRPP is a shared currency also feeding de novo purine/pyrimidine synthesis, histidine and tryptophan biosynthesis, and NAD salvage, so APRT competes for the cellular PRPP pool. In <em>P. putida</em>, which grows well on minimal medium via de novo synthesis, APRT is an efficiency/recycling enzyme rather than a survival-critical one — hence its dispensability.</p>
+<hr />
+<h2 id="evidence-base">Evidence Base</h2>
+<table>
+<thead>
+<tr>
+<th>PMID</th>
+<th>Title (abbreviated)</th>
+<th>Role in this report</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12171924/">12171924</a></td>
+<td><em>G. lamblia</em> APRT unique reaction mechanism &amp; substrate binding</td>
+<td>Kinetic parameters, random Bi-Bi mechanism, directionality → <strong>F1</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/29694705/">29694705</a></td>
+<td><em>F. tularensis</em> APRT structures; N–H···N1 specificity</td>
+<td>Adenine-vs-6-oxopurine discrimination; F23A mutagenesis; salvage role → <strong>F1, F2</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/12171925/">12171925</a></td>
+<td>Closed-site complexes of <em>Giardia</em> APRT</td>
+<td>Homodimer, Rossmann fold + hood domain, single Mg²⁺/Arg63 PPi chemistry → <strong>F3</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/18399692/">18399692</a></td>
+<td>Human APRT structural complexes</td>
+<td>Glu104 as general base abstracting adenine N9 proton → <strong>F3</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/14726202/">14726202</a></td>
+<td><em>L. tarentolae</em> APRT structure</td>
+<td>Substrate order (PRPP first, AMP last), type I PRTase mechanism → <strong>F3</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/6809533/">6809533</a></td>
+<td><em>E. coli</em> K-12 adenine assimilation pathways</td>
+<td><em>apt</em>/APRT as one of two adenine-utilization routes; AMP formation → <strong>F4</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/348574/">348574</a></td>
+<td><em>apt</em> mutations conferring DAP/MP resistance</td>
+<td>APRT activates toxic adenine analogs; loss → resistance → <strong>F4</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/334631/">334631</a></td>
+<td>Genetic control of DAP assimilation in <em>E. coli</em></td>
+<td><em>pur apt</em> fails to grow on DAP; corroborates salvage role → <strong>F4</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/15749708/">15749708</a></td>
+<td>Femtomolar MTAN inhibitors</td>
+<td>Explicit MTAN→APRT recycling of MTA/polyamine-derived adenine → <strong>F5</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20954236/">20954236</a></td>
+<td><em>H. pylori</em> MTAN active-site rearrangements</td>
+<td>MTAN central to methionine/purine salvage + polyamine synthesis → <strong>F5</strong></td>
+</tr>
+<tr>
+<td><a href="https://pubmed.ncbi.nlm.nih.gov/20158506/">20158506</a></td>
+<td>Conditionally essential genes in <em>P. putida</em> KT2440</td>
+<td>Genome-wide essentiality screen; <em>apt</em> not essential → <strong>F6</strong></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Supporting context (not primary evidence):</strong> Structural work on related type I PRTases — human nicotinic acid PRTase <a href="https://pubmed.ncbi.nlm.nih.gov/26042198/">PMID: 26042198</a>, <em>B. subtilis</em> xanthine PRTase <a href="https://pubmed.ncbi.nlm.nih.gov/16716072/">PMID: 16716072</a>, ATP-PRTase transition-state analysis <a href="https://pubmed.ncbi.nlm.nih.gov/28872824/">PMID: 28872824</a> — reinforces the dissociative-transition-state model and the family-wide "PRPP binds first at a dimer interface" theme. MTAN transition-state and inhibitor studies <a href="https://pubmed.ncbi.nlm.nih.gov/16128565/">PMID: 16128565</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/27019223/">PMID: 27019223</a>, <a href="https://pubmed.ncbi.nlm.nih.gov/15122881/">PMID: 15122881</a> corroborate the upstream adenine-generating chemistry. A recent bacterial APRT structure — <em>Fusobacterium nucleatum</em> FnAPRT, which captured <strong>ligand-induced conformational changes</strong> on binding the products AMP and phosphate <a href="https://pubmed.ncbi.nlm.nih.gov/41588988/">PMID: 41588988</a> — confirms the closing-loop/product-recognition model in a bacterial APRT, strengthening orthology transfer to <em>P. putida</em>.</p>
+<p><strong>How the evidence converges vs. challenges the annotation:</strong> No reviewed paper challenges the assignment. All lines of evidence — sequence motifs in Q88F33, three independent crystal structures across kingdoms, precise enzyme kinetics, and classical bacterial genetics — support the annotation "adenine phosphoribosyltransferase, adenine salvage, cytoplasmic, non-essential." The only genuine gap is the absence of organism-specific (<em>P. putida</em>) biochemical characterization.</p>
+<hr />
+<h2 id="supported-vs-refuted-hypotheses">Supported vs. Refuted Hypotheses</h2>
+<ul>
+<li><strong>Supported:</strong> <em>apt</em>/PP_4266 encodes adenine phosphoribosyltransferase catalyzing adenine + PRPP → AMP + PPi (EC 2.4.2.7); it is a Mg²⁺-dependent, homodimeric, cytoplasmic type I PRTase; substrate specificity for adenine is structurally hard-wired via the base-binding loop N–H···N1 contact; it functions in adenine salvage, activates toxic adenine analogs, and is the terminal purine-recycling partner of MTAN; it is non-essential in KT2440 under standard growth.</li>
+<li><strong>Refuted / excluded:</strong> APRT is <em>not</em> a 6-oxopurine salvage enzyme (guanine/hypoxanthine/xanthine are handled by HGPRT/XPRT); it is not membrane-associated; it does not participate in <em>de novo</em> purine ring synthesis; it is not essential for viability on glucose minimal medium.</li>
+</ul>
+<hr />
+<h2 id="limitations-and-knowledge-gaps">Limitations and Knowledge Gaps</h2>
+<ol>
+<li>
+<p><strong>No <em>P. putida</em>-specific experimental data.</strong> There is no published crystal structure, kinetic characterization, or knockout phenotype study for the PP_4266 gene product itself. All mechanistic and kinetic detail is transferred by orthology from human, <em>Giardia</em>, <em>Leishmania</em>, <em>Francisella</em>, and <em>Fusobacterium</em> enzymes. Given the high conservation of APRT and the HAMAP rule assignment, this transfer is reliable, but organism-specific kinetic constants (<em>K</em>ₘ, <em>k</em>cat) for the <em>P. putida</em> enzyme are unknown.</p>
+</li>
+<li>
+<p><strong>Essentiality is inferred from absence in a screen.</strong> Finding 6 rests on <em>apt</em> not appearing among essential/conditionally essential genes in a mini-Tn5 screen. Transposon screens can miss genes due to insertion-site bias or redundancy, so "non-essential on glucose minimal medium" is well-supported but a dedicated clean-deletion phenotype under purine-limited conditions would be more definitive.</p>
+</li>
+<li>
+<p><strong>MTAN→APRT coupling not directly traced in <em>P. putida</em>.</strong> The coupling is firmly established in <em>E. coli</em> and other bacteria and the relevant pathways (polyamine synthesis, SAM methylation, MTAN) exist in <em>P. putida</em>, but the specific metabolic flux from MTAN-derived adenine through PP_4266 has not been experimentally measured in this organism.</p>
+</li>
+<li>
+<p><strong>Regulation unknown.</strong> Whether <em>apt</em> expression in <em>P. putida</em> is constitutive or regulated (e.g., by purine availability, PurR-type repression, or growth phase), and whether APRT activity is allosterically modulated, has not been characterized here.</p>
+</li>
+<li>
+<p><strong>Kinetic parameters are from a divergent eukaryote.</strong> The quantitative kinetics (Finding 1) come from <em>G. lamblia</em>; absolute values likely differ for the bacterial enzyme, though the qualitative mechanism (random Bi-Bi, forward-favored, Mg²⁺-dependent) is conserved.</p>
+</li>
+</ol>
+<hr />
+<h2 id="proposed-follow-up-experiments-actions">Proposed Follow-up Experiments / Actions</h2>
+<ol>
+<li>
+<p><strong>Recombinant expression and kinetic characterization</strong> of PP_4266. Clone, His-tag, and purify the <em>P. putida</em> APRT; determine <em>K</em>ₘ/<em>k</em>cat for adenine and PRPP, Mg²⁺ dependence, and pH optimum, replacing orthology-inferred parameters with organism-specific values.</p>
+</li>
+<li>
+<p><strong>Substrate-specificity panel.</strong> Assay the purified enzyme against adenine, 2,6-diaminopurine, 6-methylpurine, and 6-oxopurines (hypoxanthine, guanine) to confirm strict 6-aminopurine specificity and quantify analog activation.</p>
+</li>
+<li>
+<p><strong>Clean deletion phenotyping.</strong> Construct an unmarked ΔPP_4266 strain and test growth on (i) glucose minimal medium (expected: no defect), (ii) purine-limited / de novo-blocked conditions with adenine as sole purine source (expected: defect), and (iii) media containing DAP or 6-methylpurine (expected: resistance vs. sensitive wild type). This directly validates Findings 4 and 6 in the target organism.</p>
+</li>
+<li>
+<p><strong>MTAN–APRT flux tracing.</strong> Use ¹³C/¹⁵N-labeled MTA or SAH with metabolomics/isotope tracing in wild-type vs. ΔPP_4266 to confirm that MTAN-derived adenine is recycled into AMP via APRT in <em>P. putida</em>, testing Finding 5 in situ.</p>
+</li>
+<li>
+<p><strong>Structure determination.</strong> Solve the crystal (or high-confidence AlphaFold) structure — apo, PRPP-bound, and AMP-bound — of <em>P. putida</em> APRT to confirm the homodimer, hood domain, catalytic loop closure, the base-binding loop N–H···N1 contact, and the identity of the general-base glutamate and Mg²⁺/Arg pyrophosphate site.</p>
+</li>
+<li>
+<p><strong>Expression/regulation analysis.</strong> RT-qPCR or RNA-seq of <em>apt</em> under purine-replete vs. purine-limited growth, and in stationary vs. exponential phase, to determine whether salvage capacity is regulated.</p>
+</li>
+</ol>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p><em>apt</em> (PP_4266; Q88F33) of <em>Pseudomonas putida</em> KT2440 encodes <strong>adenine phosphoribosyltransferase (APRT, EC 2.4.2.7)</strong>, a cytoplasmic, Mg²⁺-dependent, homodimeric type I purine phosphoribosyltransferase. Its primary and specific function is to catalyze the committed step of adenine salvage — transfer of a phosphoribosyl group from PRPP to the N9 of adenine to form AMP + pyrophosphate — with strict selectivity for the 6-aminopurine adenine enforced by an N–H···N1 hydrogen bond from a rigid base-binding loop, and with catalysis driven by a conserved general-base glutamate through a dissociative transition state. Biologically, it is the terminal recycling node that returns free adenine — including adenine released by MTAN from the polyamine, methylation, and quorum-sensing branches of sulfur/methyl metabolism — to the adenylate pool. In <em>P. putida</em> KT2440, which retains de novo purine biosynthesis, APRT is a dispensable, energy-saving salvage enzyme whose phenotype emerges only under purine limitation or through activation of, and hence resistance to, toxic adenine analogs.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="apt-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="apt-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>PMID:12171924</li>
+<li>PMID:29694705</li>
+<li>PMID:18399692</li>
+<li>PMID:14726202</li>
+<li>PMID:12171925</li>
+<li>PMID:28872824</li>
+<li>PMID:6809533</li>
+<li>PMID:15749708</li>
+<li>PMID:20954236</li>
+<li>PMID:20158506</li>
+<li>PMID:26042198</li>
+<li>PMID:16716072</li>
+<li>PMID:16128565</li>
+<li>PMID:27019223</li>
+<li>PMID:15122881</li>
+<li>PMID:41588988</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(apt-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88F33" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="apt-curation-notes">apt curation notes</h1>
+<h2 id="2026-08-13-first-pass-review">2026-08-13 first-pass review</h2>
+<p>The reviewed UniProt entry assigns Apt to the one-step adenine salvage reaction,<br />
+forming AMP from adenine and PRPP [UniProtKB:Q88F33, "Catalyzes a salvage<br />
+reaction resulting in the formation of AMP"]. The assignment is computational<br />
+(HAMAP MF_00004 and Rhea 16609), not a direct assay of the KT2440 protein.</p>
+<p>The two localization rows are retained as non-core context. They are not copied<br />
+to the module because cytoplasm/cytosol adds no step-defining information. The<br />
+PANTHER family is PTHR11776, and the current PSEPK protein is in PTHR11776:SF7;<br />
+the exact UniProt exemplar is required because that subfamily's display label is<br />
+generic.</p>
+<p>The OpenScientist report independently recovers the Q88F33/PP_4266 identity and<br />
+the adenine + PRPP to AMP reaction. It also states that no PP_4266-specific<br />
+structure, kinetic characterization, or knockout phenotype was found<br />
+[file:PSEPK/apt/apt-deep-research-openscientist.md "There is no published<br />
+crystal structure, kinetic characterization, or knockout phenotype study for<br />
+the PP_4266 gene product itself."]. Its homodimer, detailed catalytic mechanism,<br />
+MTAN coupling, non-essentiality, and toxic-analog phenotype claims are drawn<br />
+from orthologs or broad screens and were not promoted to KT2440-specific facts.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88F33
+gene_symbol: apt
+product_type: PROTEIN
+status: DRAFT
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)
+description: &gt;-
+  Apt (PP_4266) is the adenine phosphoribosyltransferase of the purine salvage
+  pathway. It transfers a phosphoribosyl group from PRPP to adenine to form AMP
+  and diphosphate, returning preformed adenine to the adenylate pool. The KT2440
+  assignment is supported by the reviewed UniProt entry, HAMAP rule MF_00004,
+  Rhea reaction 16609, and the adenine phosphoribosyltransferase family rather
+  than by a direct biochemical study of this protein.
+existing_annotations:
+  - term:
+      id: GO:0003999
+      label: adenine phosphoribosyltransferase activity
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: enables
+    review:
+      summary: Apt catalyzes the adenine and PRPP to AMP salvage reaction.
+      action: ACCEPT
+      reason: &gt;-
+        This is the substrate-specific molecular function supported by the
+        reviewed UniProt entry, EC 2.4.2.7, Rhea 16609, and HAMAP MF_00004.
+      supported_by:
+        - reference_id: file:PSEPK/apt/apt-uniprot.txt
+          supporting_text: Catalyzes a salvage reaction resulting in the formation of
+        - reference_id: file:PSEPK/apt/apt-goa.tsv
+          supporting_text: &#34;GO:0003999\tadenine phosphoribosyltransferase activity&#34;
+        - reference_id: file:PSEPK/apt/apt-deep-research-openscientist.md
+          supporting_text: &gt;-
+            encodes **adenine phosphoribosyltransferase (APRT, EC 2.4.2.7)**
+  - term:
+      id: GO:0005737
+      label: cytoplasm
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: located_in
+    review:
+      summary: Cytoplasmic localization is plausible but is not a core function.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        UniProt predicts a soluble cytoplasmic enzyme from HAMAP. Localization
+        supplies context and should not be elevated to a core catalytic role.
+      supported_by:
+        - reference_id: file:PSEPK/apt/apt-uniprot.txt
+          supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+  - term:
+      id: GO:0005829
+      label: cytosol
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000118
+    qualifier: located_in
+    review:
+      summary: The TreeGrafter cytosol inference is redundant localization context.
+      action: KEEP_AS_NON_CORE
+      reason: &gt;-
+        This is compatible with the predicted cytoplasmic location but does not
+        add a distinct biological function and lacks direct localization evidence.
+      supported_by:
+        - reference_id: file:PSEPK/apt/apt-goa.tsv
+          supporting_text: &#34;GO:0005829\tcytosol&#34;
+  - term:
+      id: GO:0006168
+      label: adenine salvage
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000002
+    qualifier: involved_in
+    review:
+      summary: Apt directly performs the single-step salvage of adenine to AMP.
+      action: ACCEPT
+      reason: &gt;-
+        The UniProt function and pathway comments explicitly identify this as
+        adenine salvage, and the accepted molecular function executes the process.
+      supported_by:
+        - reference_id: file:PSEPK/apt/apt-uniprot.txt
+          supporting_text: AMP biosynthesis via salvage pathway
+        - reference_id: file:PSEPK/apt/apt-goa.tsv
+          supporting_text: &#34;GO:0006168\tadenine salvage&#34;
+  - term:
+      id: GO:0044209
+      label: AMP salvage
+    evidence_type: IEA
+    original_reference_id: GO_REF:0000120
+    qualifier: involved_in
+    review:
+      summary: Formation of AMP from adenine is the product-defined view of Apt salvage.
+      action: ACCEPT
+      reason: &gt;-
+        Apt forms AMP from adenine and PRPP; UniPathway and UniRule support the
+        one-step AMP salvage route.
+      supported_by:
+        - reference_id: file:PSEPK/apt/apt-uniprot.txt
+          supporting_text: AMP, that is energically less costly than de novo synthesis
+        - reference_id: file:PSEPK/apt/apt-goa.tsv
+          supporting_text: &#34;GO:0044209\tAMP salvage&#34;
+references:
+  - id: GO_REF:0000002
+    title: Gene Ontology annotation through association of InterPro records with GO terms
+  - id: GO_REF:0000118
+    title: TreeGrafter-generated GO annotations
+  - id: GO_REF:0000120
+    title: Combined Automated Annotation using Multiple IEA Methods
+  - id: file:PSEPK/apt/apt-uniprot.txt
+    title: UniProtKB reviewed entry for Apt
+    findings:
+      - supporting_text: Catalyzes a salvage reaction resulting in the formation of
+      - supporting_text: AMP biosynthesis via salvage pathway
+      - supporting_text: &#34;SUBCELLULAR LOCATION: Cytoplasm&#34;
+  - id: file:PSEPK/apt/apt-goa.tsv
+    title: QuickGO GOA annotations for Apt
+    findings:
+      - supporting_text: &#34;GO:0003999\tadenine phosphoribosyltransferase activity&#34;
+      - supporting_text: &#34;GO:0006168\tadenine salvage&#34;
+      - supporting_text: &#34;GO:0044209\tAMP salvage&#34;
+  - id: file:PSEPK/apt/apt-deep-research-openscientist.md
+    title: OpenScientist functional review of PSEPK apt
+    findings:
+      - statement: &gt;-
+          The report independently recovers Q88F33 as the type I adenine
+          phosphoribosyltransferase responsible for adenine-to-AMP salvage.
+        supporting_text: &gt;-
+          encodes **adenine phosphoribosyltransferase (APRT, EC 2.4.2.7)**
+      - statement: &gt;-
+          No target-specific structure, kinetics, or knockout phenotype was
+          found for Q88F33, so ortholog-derived mechanistic and physiological
+          details were not treated as KT2440 evidence.
+        supporting_text: &gt;-
+          There is no published crystal structure, kinetic characterization,
+          or knockout phenotype study for the PP_4266 gene product itself.
+    reference_review:
+      relevance: MEDIUM
+      correctness: MISCITED
+      review_notes: &gt;-
+        The report correctly identifies the target and exact salvage reaction,
+        but presents ortholog-derived oligomeric, mechanistic, MTAN-coupling,
+        essentiality, and toxic-analog claims as target-level conclusions.
+        Those stronger claims were not imported.
+core_functions:
+  - description: &gt;-
+      Transfers a phosphoribosyl group from PRPP to adenine, producing AMP and
+      diphosphate in the adenine-salvage branch of purine metabolism.
+    molecular_function:
+      id: GO:0003999
+      label: adenine phosphoribosyltransferase activity
+    directly_involved_in:
+      - id: GO:0006168
+        label: adenine salvage
+      - id: GO:0044209
+        label: AMP salvage
+    supported_by:
+      - reference_id: file:PSEPK/apt/apt-uniprot.txt
+        supporting_text: Catalyzes a salvage reaction resulting in the formation of
+      - reference_id: file:PSEPK/apt/apt-uniprot.txt
+        supporting_text: AMP biosynthesis via salvage pathway
+proposed_new_terms: []
+suggested_questions:
+  - question: &gt;-
+      How much does Apt contribute to adenylate maintenance when KT2440 grows
+      on extracellular adenine or adenosine?
+suggested_experiments:
+  - description: &gt;-
+      Measure adenine-dependent AMP formation by purified Apt and compare
+      adenine utilization and adenylate pools in wild type and an apt deletion strain.
+    experiment_type: enzyme assay and targeted metabolomics
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
