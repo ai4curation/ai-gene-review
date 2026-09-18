@@ -1,0 +1,7 @@
+# awd review notes
+
+All four seeded annotations and the original function paragraph are supported by the intact same-gene enzyme core. The selected 168 aa PC/PD sequence has 15 extra N-terminal residues, while the reviewed record questions that initiation. This discrepancy is documented without alleging a prediction-input error. [PMID:1320004](https://pubmed.ncbi.nlm.nih.gov/1320004/) purified the fly enzyme and [PMID:7559441](https://pubmed.ncbi.nlm.nih.gov/7559441/) connects conserved-site mutations to catalytic impairment. Native enzyme assays plus exact core conservation support the transfer.
+
+## Provider research assessment
+
+The completed Falcon synthesis was inspected. It supports canonical NDP kinase chemistry and identifies endocytic trafficking as a well-established cellular role. The primary PMID:24528630 was cached with full text and read: live trafficking, compartment markers, mutant clones and epistasis place Awd in early-endosome maturation needed for Notch progression. This supports a NEW early-to-late-endosomal transport annotation, with ISS specifying transfer to the exact longer PC/PD product. Awd is not the receptor protease, and local GTP channeling to Rab5/dynamin is not directly established. The provider’s His119 refers to the 153-residue form; it maps to His134 in the exact accession. The extracellular-release thesis observations and disputed protein-kinase activities do not change the core NDP-kinase assessment. PMID:11768313 is a review, not a purified-protein primary experiment.
