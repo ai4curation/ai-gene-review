@@ -75,6 +75,8 @@ taxon-scope, conformance, and chaining checking.
 
 from __future__ import annotations
 
+from ai_gene_review.module_gene_symbols import symbol_label_warnings
+
 import csv
 import re
 import sys
@@ -1745,6 +1747,7 @@ def validate_module_file(
     # warning. Resolution touches the GO/RHEA ontology DBs, so it degrades to
     # "no findings" when those are unavailable.
     warnings.extend(validate_chaining(doc))
+    warnings.extend(symbol_label_warnings(doc))
 
     # Reference titles: every literature reference (PMID/DOI ``id``/``source_id``
     # paired with a ``title``) must match the fetched/cached publication title
