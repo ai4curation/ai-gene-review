@@ -2,33 +2,68 @@
 provider: openscientist
 model: openscientist-autonomous
 cached: false
-start_time: '2026-07-18T15:33:10.826302'
-end_time: '2026-07-18T15:55:03.162307'
-duration_seconds: 1312.34
+start_time: '2026-09-01T10:50:37.348275'
+end_time: '2026-09-01T11:11:14.080092'
+duration_seconds: 1236.73
 template_file: templates/module_research.md.j2
 template_variables:
   module_title: Endogenous protein lipoylation
-  module_summary: Endogenous protein lipoylation is a two-reaction pathway that installs
-    a lipoyl cofactor on conserved lysine residues in lipoyl domains. A LipB-family
-    octanoyltransferase first transfers an octanoyl group from octanoyl-acyl carrier
-    protein to the target protein. LipA-family lipoate synthase then uses radical-SAM
-    chemistry and iron-sulfur clusters to insert sulfur atoms at C6 and C8 of the
-    protein-bound octanoyl group. The resulting lipoyl domains act as swinging arms
-    in alpha-ketoacid dehydrogenase complexes and the glycine cleavage system. Exogenous-lipoate
-    salvage by lipoate--protein ligases and alternative GcvH-relay architectures are
-    outside this module boundary.
-  module_outline: "- Endogenous protein lipoylation\n  - 1. transfer of octanoyl from\
-    \ acyl carrier protein to a lipoyl domain\n  - Octanoyl-ACP to octanoylated lipoyl-domain\
-    \ protein\n    - LipB-family lipoyl(octanoyl) transferase (molecular player: LipB\
-    \ family octanoyltransferases; activity or role: lipoyl(octanoyl) transferase\
-    \ activity)\n  - 2. sulfur insertion into the protein-bound octanoyl group\n \
-    \ - Octanoylated lipoyl-domain protein to lipoylated protein\n    - LipA-family\
-    \ lipoate synthase (molecular player: LipA family lipoate synthases; activity\
-    \ or role: lipoate synthase activity)"
-  module_connections: '- Octanoyl-ACP to octanoylated lipoyl-domain protein feeds
-    into Octanoylated lipoyl-domain protein to lipoylated protein: The octanoylated
-    lipoyl-domain protein made by LipB is the direct macromolecular substrate for
-    LipA.'
+  module_summary: 'Endogenous protein lipoylation builds a lipoyl cofactor directly
+    on conserved lysine residues in lipoyl domains. All characterized routes transfer
+    an octanoyl group from octanoyl-acyl carrier protein to a protein carrier and
+    use a radical-SAM lipoate synthase to insert sulfur atoms at C6 and C8. The topology
+    varies by lineage: some organisms modify client lipoyl domains directly, whereas
+    others use GcvH as an obligatory relay carrier and an amidotransferase to deliver
+    the modified acyl group to client proteins. This module models the direct bacterial
+    route, the characterized Bacillus relay, and the characterized human mitochondrial
+    relay as alternatives. Exogenous lipoate salvage by ATP-dependent lipoate-protein
+    ligases and the downstream lipoate-dependent enzyme complexes are outside the
+    boundary.'
+  module_outline: "- Endogenous protein lipoylation\n  - Alternative versions by route\
+    \ topology and lineage: Endogenous protein-lipoylation topologies\n    - Direct\
+    \ LipB-LipA route\n      - 1. direct octanoyl transfer from acyl carrier protein\
+    \ to a client lipoyl domain\n      - Direct octanoylation of a client lipoyl domain\n\
+    \        - LipB-family octanoyltransferase (molecular player: LipB family octanoyltransferases;\
+    \ activity or role: lipoyl(octanoyl) transferase activity)\n      - 2. sulfur\
+    \ insertion into the directly octanoylated client lipoyl domain\n      - Sulfur\
+    \ insertion on the client lipoyl domain\n        - LipA-family lipoate synthase\
+    \ (molecular player: LipA family lipoate synthases; activity or role: lipoate\
+    \ synthase activity)\n    - Bacillus GcvH octanoyl-relay route\n      - 1. octanoyl\
+    \ transfer from acyl carrier protein to GcvH\n      - LipM-dependent GcvH octanoylation\n\
+    \        - LipM octanoyltransferase (molecular player: Octanoyltransferase LipM\
+    \ family; activity or role: GcvH-directed lipoyl(octanoyl) transferase activity)\n\
+    \      - 2. transfer of octanoyl from GcvH to client E2 lipoyl domains\n     \
+    \ - LipL-dependent octanoyl relay to E2\n        - LipL octanoyl-GcvH amidotransferase\
+    \ (molecular player: Octanoyltransferase LipL family; activity or role: octanoyl-GcvH:protein\
+    \ amidotransferase activity)\n      - 3. sulfur insertion into octanoylated client\
+    \ E2 lipoyl domains\n      - LipA sulfur insertion on client E2\n        - Bacillus\
+    \ LipA lipoate synthase (molecular player: LipA family lipoate synthases; activity\
+    \ or role: lipoate synthase activity)\n    - Human mitochondrial GCSH lipoyl-relay\
+    \ route\n      - 1. octanoyl transfer from mitochondrial acyl carrier protein\
+    \ to GCSH\n      - LIPT2-dependent GCSH octanoylation\n        - LIPT2 octanoyltransferase\
+    \ (molecular player: LipB family octanoyltransferases; activity or role: GCSH-directed\
+    \ lipoyl(octanoyl) transferase activity)\n      - 2. sulfur insertion into GCSH-bound\
+    \ octanoyl\n      - LIAS sulfur insertion on GCSH\n        - LIAS lipoate synthase\
+    \ (molecular player: LipA family lipoate synthases; activity or role: lipoate\
+    \ synthase activity)\n      - 3. transfer of mature lipoyl from GCSH to client\
+    \ E2 lipoyl domains\n      - LIPT1-dependent lipoyl relay to E2\n        - LIPT1\
+    \ lipoyl-GCSH amidotransferase (molecular player: Lipoate-protein ligase family;\
+    \ activity or role: lipoyl-GCSH:protein amidotransferase activity)"
+  module_connections: '- Direct octanoylation of a client lipoyl domain feeds into
+    Sulfur insertion on the client lipoyl domain: Direct LipB octanoylation precedes
+    LipA sulfur insertion.
+
+    - LipM-dependent GcvH octanoylation feeds into LipL-dependent octanoyl relay to
+    E2: GcvH carries octanoyl from LipM to LipL.
+
+    - LipL-dependent octanoyl relay to E2 feeds into LipA sulfur insertion on client
+    E2: LipL transfer to E2 precedes LipA sulfur insertion.
+
+    - LIPT2-dependent GCSH octanoylation feeds into LIAS sulfur insertion on GCSH:
+    GCSH-bound octanoyl is sulfurated before transfer to E2.
+
+    - LIAS sulfur insertion on GCSH feeds into LIPT1-dependent lipoyl relay to E2:
+    Mature lipoyl is relayed from GCSH to client E2 proteins.'
 provider_config:
   timeout: 3600
   max_retries: 3
@@ -38,10 +73,10 @@ provider_config:
     use_hypotheses: false
     investigation_mode: autonomous
     poll_interval: 30
-    timeout: 3600
+    timeout: 7200
     save_artifacts: true
     artifact_max_bytes: 5242880
-citation_count: 20
+citation_count: 22
 artifact_count: 2
 artifact_sources:
   openscientist_artifacts_zip: 2
@@ -70,21 +105,47 @@ Endogenous protein lipoylation
 
 ## Working Scope
 
-Endogenous protein lipoylation is a two-reaction pathway that installs a lipoyl cofactor on conserved lysine residues in lipoyl domains. A LipB-family octanoyltransferase first transfers an octanoyl group from octanoyl-acyl carrier protein to the target protein. LipA-family lipoate synthase then uses radical-SAM chemistry and iron-sulfur clusters to insert sulfur atoms at C6 and C8 of the protein-bound octanoyl group. The resulting lipoyl domains act as swinging arms in alpha-ketoacid dehydrogenase complexes and the glycine cleavage system. Exogenous-lipoate salvage by lipoate--protein ligases and alternative GcvH-relay architectures are outside this module boundary.
+Endogenous protein lipoylation builds a lipoyl cofactor directly on conserved lysine residues in lipoyl domains. All characterized routes transfer an octanoyl group from octanoyl-acyl carrier protein to a protein carrier and use a radical-SAM lipoate synthase to insert sulfur atoms at C6 and C8. The topology varies by lineage: some organisms modify client lipoyl domains directly, whereas others use GcvH as an obligatory relay carrier and an amidotransferase to deliver the modified acyl group to client proteins. This module models the direct bacterial route, the characterized Bacillus relay, and the characterized human mitochondrial relay as alternatives. Exogenous lipoate salvage by ATP-dependent lipoate-protein ligases and the downstream lipoate-dependent enzyme complexes are outside the boundary.
 
 ## Provisional Biological Outline
 
 - Endogenous protein lipoylation
-  - 1. transfer of octanoyl from acyl carrier protein to a lipoyl domain
-  - Octanoyl-ACP to octanoylated lipoyl-domain protein
-    - LipB-family lipoyl(octanoyl) transferase (molecular player: LipB family octanoyltransferases; activity or role: lipoyl(octanoyl) transferase activity)
-  - 2. sulfur insertion into the protein-bound octanoyl group
-  - Octanoylated lipoyl-domain protein to lipoylated protein
-    - LipA-family lipoate synthase (molecular player: LipA family lipoate synthases; activity or role: lipoate synthase activity)
+  - Alternative versions by route topology and lineage: Endogenous protein-lipoylation topologies
+    - Direct LipB-LipA route
+      - 1. direct octanoyl transfer from acyl carrier protein to a client lipoyl domain
+      - Direct octanoylation of a client lipoyl domain
+        - LipB-family octanoyltransferase (molecular player: LipB family octanoyltransferases; activity or role: lipoyl(octanoyl) transferase activity)
+      - 2. sulfur insertion into the directly octanoylated client lipoyl domain
+      - Sulfur insertion on the client lipoyl domain
+        - LipA-family lipoate synthase (molecular player: LipA family lipoate synthases; activity or role: lipoate synthase activity)
+    - Bacillus GcvH octanoyl-relay route
+      - 1. octanoyl transfer from acyl carrier protein to GcvH
+      - LipM-dependent GcvH octanoylation
+        - LipM octanoyltransferase (molecular player: Octanoyltransferase LipM family; activity or role: GcvH-directed lipoyl(octanoyl) transferase activity)
+      - 2. transfer of octanoyl from GcvH to client E2 lipoyl domains
+      - LipL-dependent octanoyl relay to E2
+        - LipL octanoyl-GcvH amidotransferase (molecular player: Octanoyltransferase LipL family; activity or role: octanoyl-GcvH:protein amidotransferase activity)
+      - 3. sulfur insertion into octanoylated client E2 lipoyl domains
+      - LipA sulfur insertion on client E2
+        - Bacillus LipA lipoate synthase (molecular player: LipA family lipoate synthases; activity or role: lipoate synthase activity)
+    - Human mitochondrial GCSH lipoyl-relay route
+      - 1. octanoyl transfer from mitochondrial acyl carrier protein to GCSH
+      - LIPT2-dependent GCSH octanoylation
+        - LIPT2 octanoyltransferase (molecular player: LipB family octanoyltransferases; activity or role: GCSH-directed lipoyl(octanoyl) transferase activity)
+      - 2. sulfur insertion into GCSH-bound octanoyl
+      - LIAS sulfur insertion on GCSH
+        - LIAS lipoate synthase (molecular player: LipA family lipoate synthases; activity or role: lipoate synthase activity)
+      - 3. transfer of mature lipoyl from GCSH to client E2 lipoyl domains
+      - LIPT1-dependent lipoyl relay to E2
+        - LIPT1 lipoyl-GCSH amidotransferase (molecular player: Lipoate-protein ligase family; activity or role: lipoyl-GCSH:protein amidotransferase activity)
 
 ## Known Relationships Among Steps
 
-- Octanoyl-ACP to octanoylated lipoyl-domain protein feeds into Octanoylated lipoyl-domain protein to lipoylated protein: The octanoylated lipoyl-domain protein made by LipB is the direct macromolecular substrate for LipA.
+- Direct octanoylation of a client lipoyl domain feeds into Sulfur insertion on the client lipoyl domain: Direct LipB octanoylation precedes LipA sulfur insertion.
+- LipM-dependent GcvH octanoylation feeds into LipL-dependent octanoyl relay to E2: GcvH carries octanoyl from LipM to LipL.
+- LipL-dependent octanoyl relay to E2 feeds into LipA sulfur insertion on client E2: LipL transfer to E2 precedes LipA sulfur insertion.
+- LIPT2-dependent GCSH octanoylation feeds into LIAS sulfur insertion on GCSH: GCSH-bound octanoyl is sulfurated before transfer to E2.
+- LIAS sulfur insertion on GCSH feeds into LIPT1-dependent lipoyl relay to E2: Mature lipoyl is relayed from GCSH to client E2 proteins.
 
 ## Assignment
 
@@ -156,265 +217,252 @@ system to all biology.
 
 ## Output
 
-# Endogenous Protein Lipoylation: A Substrate-Coupled, Two-Reaction Cofactor Assembly System
+# Endogenous Protein Lipoylation: How Cells Build a Sulfur-Containing Cofactor Directly on Their Enzymes
 
-*A commissioned review-style synthesis for a molecular biology audience*
+*A review-style synthesis. Citations are given as PubMed IDs (PMID), linked to PubMed.*
 
 ---
 
 ## 1. Executive Summary
 
-Endogenous protein lipoylation is the *de novo* biosynthetic route by which cells build the lipoyl cofactor—an eight-carbon, dithiolane-containing prosthetic group—directly onto a conserved lysine residue of specialized **lipoyl domains**. Unlike almost every other protein cofactor, the lipoyl group is not synthesized as a free molecule and then attached; it is assembled *in situ* on its cognate protein. This defining logic reduces the pathway to just two obligatory chemical steps carried out by two enzyme families. First, a **LipB-family octanoyltransferase** transfers an octanoyl moiety from octanoyl-acyl carrier protein (octanoyl-ACP), a product of type-II/mitochondrial fatty-acid synthesis, onto the target lysine, generating an octanoylated intermediate. Second, a **LipA-family radical-SAM lipoate synthase** inserts two sulfur atoms at carbons C6 and C8 of the protein-bound octanoyl group, yielding the mature lipoyllysine. The finished lipoyl domains then serve as "swinging arms" that channel reaction intermediates within the 2-oxoacid dehydrogenase complexes (pyruvate, 2-oxoglutarate, branched-chain, 2-oxoadipate) and the glycine cleavage system.
+Lipoic acid (6,8-dithiooctanoic acid) is an essential redox cofactor for a small set of central-metabolism multienzyme complexes: the 2-oxoacid dehydrogenases (pyruvate dehydrogenase, PDH; 2-oxoglutarate/α-ketoglutarate dehydrogenase, OGDH/α-KGDH; branched-chain ketoacid dehydrogenase, BCKDH; 2-oxoadipate dehydrogenase) and the glycine cleavage system (GCS). Unlike almost every other cofactor, lipoate is **not synthesized as a free molecule and then attached**; instead it is **assembled in place, atom by atom, on a specific lysine of its cognate protein** ([PMID: 27074917](https://pubmed.ncbi.nlm.nih.gov/27074917/)). This defines the biological system reviewed here — *endogenous protein lipoylation* — and separates it cleanly from exogenous lipoate salvage by ATP-dependent lipoate-protein ligases (LplA-type), which is a distinct, parallel system explicitly excluded from this scope.
 
-The mechanistic heart of the pathway is remarkable. LipA (LIAS in humans) is a radical S-adenosylmethionine (SAM) enzyme carrying two [4Fe-4S] clusters: a canonical "radical-SAM" cluster that reductively cleaves SAM to generate 5′-deoxyadenosyl radicals (which abstract hydrogen atoms from C6 and C8), and an **auxiliary cluster that is literally cannibalized as the sulfur donor**. Because the auxiliary cluster is destroyed during each catalytic cycle, LipA is a single-turnover enzyme *in vitro* and depends on cellular iron-sulfur cluster machinery to be reconstituted for further rounds of catalysis. This sacrificial chemistry, the strict dependence on a fatty-acid-synthesis-derived octanoyl-ACP precursor, and the assembly-on-protein logic together constitute the ancient, deeply conserved core of the system across all three domains of life.
+Two chemical operations are universal and obligatory: (i) transfer of an **octanoyl group from octanoyl–acyl carrier protein (octanoyl-ACP)**, diverted from type-II/mitochondrial fatty acid synthesis, onto a protein acceptor; and (ii) **radical-SAM sulfur insertion at C6 and C8** by lipoyl synthase (LipA/LIAS), which sacrifices one of its own iron–sulfur clusters as the sulfur source ([PMID: 27506792](https://pubmed.ncbi.nlm.nih.gov/27506792/); [PMID: 25100160](https://pubmed.ncbi.nlm.nih.gov/25100160/)). What varies across life is the **topology** of step (i): some lineages octanoylate the client lipoyl domain directly (the *E. coli* LipB→LipA route), whereas others octanoylate the glycine-cleavage H-protein (GcvH/GCSH) first and use an amidotransferase to relay the modified group to client E2 domains (the *Bacillus subtilis* LipM/LipL and human LIPT2/LIAS/LIPT1 relays). The relay routes differ in a crucial detail: in *Bacillus* the **octanoyl** group is relayed to E2 and sulfur is inserted last, whereas in humans sulfur is inserted on **GCSH** first and the **mature lipoyl** group is relayed ([PMID: 23960015](https://pubmed.ncbi.nlm.nih.gov/23960015/); [PMID: 28757203](https://pubmed.ncbi.nlm.nih.gov/28757203/)).
 
-Superimposed on this conserved core is well-documented lineage-specific variation in *pathway topology*. *Escherichia coli* and plants use the streamlined two-enzyme route in which LipB octanoylates E2 subunits directly. *Bacillus subtilis*, mammals, and fungi instead route the octanoyl group through the glycine cleavage H protein (**GcvH**) and require a third protein—an amidotransferase (LipL in bacteria; the LIPT1/LIPT2 division of labor in humans)—to relay the modified group onto the E2 subunits. Some archaea split the sulfur-insertion chemistry between two lipoyl synthase paralogs (LipS1 and LipS2). This review delineates the boundaries of the system, distinguishes it from the mechanistically separate exogenous-lipoate **salvage** pathway (ATP-dependent lipoate-protein ligases, LplA/LplJ) and from the downstream phenomenon of **cuproptosis**, and lays out where the evidence is strong, where it is indirect, and what remains unresolved.
+The system is ancient, essential, and modular. Its parts have been reshuffled by extensive horizontal gene transfer, gene fusion, and loss, producing unexpected combinations — including a recently characterized bacterial route that splits sulfur insertion across two radical-SAM proteins (LipS1/LipS2) ([PMID: 37368881](https://pubmed.ncbi.nlm.nih.gov/37368881/)). Failures of the human pathway cause severe, often lethal neonatal mitochondrial encephalopathies ([PMID: 24777537](https://pubmed.ncbi.nlm.nih.gov/24777537/); [PMID: 28757203](https://pubmed.ncbi.nlm.nih.gov/28757203/)), and lipoylated proteins are the direct targets of copper-induced cell death (cuproptosis), linking this biosynthetic module to contemporary disease biology.
 
 ---
 
 ## 2. Definition and Biological Boundaries
 
-### 2.1 What is included
+**What is included.** Endogenous protein lipoylation comprises the enzymatic steps that build the lipoyl cofactor *de novo* on an apo lipoyl domain, starting from octanoyl-ACP:
 
-The endogenous protein lipoylation system, as scoped here, comprises exactly two catalytic reactions and the molecular players that carry them out:
+1. **Octanoyl transfer** from octanoyl-ACP to a protein acceptor (a client E2/H lipoyl domain directly, or GcvH/GCSH as a relay carrier).
+2. **Amidotransfer/relay** of the (octanoyl or lipoyl) group from the carrier to client lipoyl domains, in relay topologies only.
+3. **Sulfur insertion** at C6 and C8 by a radical-SAM lipoyl synthase.
 
-1. **Octanoyl transfer**: transfer of an octanoyl group from octanoyl-ACP onto the ε-amino group of a specific lysine in a lipoyl domain, catalyzed by a **LipB-family lipoyl(octanoyl)transferase**.
-2. **Sulfur insertion**: radical-SAM–dependent insertion of sulfur at C6 and C8 of the protein-bound octanoyl group, catalyzed by a **LipA-family lipoate synthase**.
+The product is a lipoyllysine amide on a conserved lysine within a ~80-residue lipoyl domain that acts as a swinging arm during catalysis.
 
-The direct product of step 1—an octanoylated lipoyl-domain protein—is the obligatory macromolecular substrate for step 2. The two steps are therefore substrate-coupled through a *protein-bound* intermediate, which is the single most important structural fact about the pathway.
+**What lies just outside the boundary (and is frequently conflated).**
 
-A key upstream boundary is the octanoyl-ACP precursor, which is a product of type-II fatty-acid synthesis (FAS II) in bacteria and of the mitochondrial fatty-acid synthesis (mtFAS) system in eukaryotes. Because the octanoyl donor is FAS-derived, endogenous lipoylation is metabolically welded to fatty-acid biosynthesis. This coupling is part of the conserved ancient core (see §5).
+- **Exogenous lipoate/octanoate salvage.** ATP-dependent lipoate-protein ligases (*E. coli* LplA; *B. subtilis* LplJ; human LIPT1 acting in a salvage-like transfer; *Plasmodium* LplA1/LplA2) attach *pre-formed* lipoate scavenged from the environment or from other proteins. This is mechanistically distinct (adenylation chemistry, no sulfur insertion) and is a common source of confusion because several enzymes are annotated as "lipoate ligases" yet actually catalyze octanoyltransfer in biosynthesis (e.g., *B. subtilis* LipM) ([PMID: 20882995](https://pubmed.ncbi.nlm.nih.gov/20882995/)). Salvage can mask biosynthetic phenotypes (e.g., *Plasmodium* LipB is dispensable in blood stages because a salvage ligase compensates) ([PMID: 18069893](https://pubmed.ncbi.nlm.nih.gov/18069893/)).
+- **Upstream fatty-acid synthesis.** FAS II / mitochondrial FAS (mtFAS) produces the octanoyl-ACP feedstock. It is the dedicated, non-substitutable supplier but is not part of the lipoylation module proper ([PMID: 20226757](https://pubmed.ncbi.nlm.nih.gov/20226757/); [PMID: 31473256](https://pubmed.ncbi.nlm.nih.gov/31473256/)).
+- **Iron–sulfur cluster biogenesis.** LipA/LIAS consumes and must regenerate an auxiliary [4Fe-4S] cluster; the ISC machinery and carriers (NfuA, IscU) are enabling partners, not lipoylation enzymes ([PMID: 30097094](https://pubmed.ncbi.nlm.nih.gov/30097094/)).
+- **Downstream lipoate-dependent enzymology and its consequences.** The catalytic use of lipoate by PDH/OGDH/BCKDH/GCS, the reoxidation of dihydrolipoate by dihydrolipoyl dehydrogenase (DLD/E3), and copper-dependent cell death (cuproptosis) targeting lipoylated proteins are outcomes of lipoylation, not steps within it.
 
-### 2.2 What is *not* included (and is often confused)
-
-Three neighboring processes are frequently conflated with *de novo* lipoylation but are mechanistically distinct and lie outside this module:
-
-- **Exogenous-lipoate salvage.** Many bacteria (e.g., *E. coli*) also possess an ATP-dependent **lipoate-protein ligase** (LplA in *E. coli*; LplJ in *B. subtilis*) that scavenges *free* lipoate (or octanoate) from the environment and attaches it directly to lysines of E2/GcvH in a classical two-step adenylation reaction. This is chemically and enzymologically unrelated to *de novo* assembly, which never proceeds through a free lipoate intermediate. Eukaryotes generally retain only the *de novo* pathway [PMID: 40813772](https://pubmed.ncbi.nlm.nih.gov/40813772/).
-
-- **The GcvH-relay/amidotransferase architecture as a "different pathway."** In the *B. subtilis*/mammalian topology, GcvH is an obligatory carrier and an amidotransferase relays the group to E2. While the working brief nominally set "alternative GcvH-relay architectures" aside as a module boundary, the evidence reviewed here shows the relay is not a salvage phenomenon but is integral to *de novo* lipoylation in those lineages; it is best treated as a *topological variant* of the same biosynthetic system rather than a separate pathway.
-
-- **Cuproptosis.** The mature lipoylated proteins (especially DLAT of the pyruvate dehydrogenase complex) are the molecular *trigger* of copper-dependent cell death (cuproptosis): copper binds lipoylated TCA-cycle enzymes, causing their aggregation and loss of Fe-S cluster proteins. Cuproptosis is a *downstream consequence* of having lipoylated proteins, not part of the biosynthetic machinery, and should be treated separately [PMID: 42418063](https://pubmed.ncbi.nlm.nih.gov/42418063/).
-
-### 2.3 Competing definitions
-
-The principal definitional tension in the literature concerns whether the multi-protein GcvH-relay constitutes part of "the" lipoylation pathway or a distinct route. Cronan's synthesis argues that the more complex relay may in fact be the *ancestral* arrangement and the streamlined *E. coli* two-enzyme route a derived simplification [PMID: 27074917](https://pubmed.ncbi.nlm.nih.gov/27074917/). Under that reading, "endogenous protein lipoylation" is best defined by its conserved *chemistry* (octanoyl transfer + radical-SAM sulfur insertion, both on protein-bound substrate), with topology treated as a variable feature.
+**Competing definitions.** Some literature uses "lipoic acid metabolism" as an umbrella covering biosynthesis *and* salvage; others reserve "lipoate biosynthesis" for the two-enzyme *E. coli* paradigm and treat the relay as an "assembly" pathway. Because the enzymes are annotated inconsistently — the PF03099 cofactor-transferase family contains octanoyltransferases, amidotransferases, and ligases that are hard to tell apart by sequence ([PMID: 27074917](https://pubmed.ncbi.nlm.nih.gov/27074917/)) — functional assignment must rest on biochemistry, not annotation.
 
 ---
 
 ## 3. Mechanistic Overview
 
-### 3.1 The best current model
+### 3.1 The two invariant chemical operations (Finding F001)
 
-The consensus sequence of events, integrating bacterial and human data, is:
+**Octanoyl transfer.** LipB-family and LplA-like (LipM) octanoyltransferases use a **thioester-linked acyl-enzyme intermediate**: the octanoyl group is transferred from octanoyl-ACP onto an active-site cysteine (e.g., LipM Cys150) and then onto the ε-amino group of the target lysine, forming an amide. The primary literature states this directly: *"LipB transfers the octanoyl moiety from octanoyl-acyl carrier protein to the lipoyl domains of the 2-oxoacid dehydrogenases via a thioester-linked octanoyl-LipB intermediate. The octanoylated dehydrogenase is then converted to the enzymatically active lipoylated species by insertion of two sulfur atoms into the octanoyl moiety by the S-adenosyl-L-methionine radical enzyme, LipA"* ([PMID: 20882995](https://pubmed.ncbi.nlm.nih.gov/20882995/)). This is a group-transfer reaction with no net redox change and no ATP requirement (contrast salvage ligases, which adenylate lipoate). The defining conceptual feature of the whole system is that *"the cofactor is assembled on its cognate proteins rather than being assembled and subsequently attached as in the typical pathway, like that of biotin attachment"* ([PMID: 27074917](https://pubmed.ncbi.nlm.nih.gov/27074917/)).
 
-```
-        FAS II / mtFAS
-             │
-             ▼
-      octanoyl-ACP  ──────┐
-                          │  (1) LipB-family octanoyltransferase
-                          │      transfers octanoyl to Lys of lipoyl domain
-                          ▼
-   octanoylated lipoyl-domain protein   ← the direct macromolecular
-                          │                substrate for step 2
-                          │  (2) LipA-family lipoate synthase (radical-SAM)
-                          │      inserts S at C6 then C8
-                          ▼
-        lipoylated protein (mature lipoyllysine "swinging arm")
-                          │
-                          ▼
-   active 2-oxoacid dehydrogenases + glycine cleavage system
-```
+**Sulfur insertion (Finding F002).** Lipoyl synthase (LipA in bacteria; LIAS in humans) is a radical S-adenosylmethionine (SAM) enzyme with **two [4Fe-4S] clusters**: a canonical radical-SAM cluster that reductively cleaves SAM to generate 5′-deoxyadenosyl radicals (which abstract hydrogen atoms from the unactivated C6 and C8 of the octanoyl chain), and an **auxiliary cluster**, *"bound by a CX4CX5C motif unique to lipoyl synthase. The fourth ligand to the auxiliary cluster is an extremely unusual serine residue,"* and site-directed mutants show *"this conserved serine ligand is essential for the sulfur insertion steps"* ([PMID: 25100160](https://pubmed.ncbi.nlm.nih.gov/25100160/)). Crystallographic snapshots of a turnover intermediate from *M. tuberculosis* LipA directly visualize the auxiliary cluster being dismantled: *"the serine ligand dissociates from the cluster, the iron ion is lost, and a sulfur atom that is still part of the cluster becomes covalently attached to C6 of the octanoyl substrate. This intermediate structure provides a clear picture of iron-sulfur cluster destruction in action, supporting the role of the auxiliary cluster as the sulfur source"* ([PMID: 27506792](https://pubmed.ncbi.nlm.nih.gov/27506792/)). Because the cluster is consumed, sustained turnover requires cluster regeneration — *"Escherichia coli proteins NfuA or IscU can confer catalytic properties to E. coli LipA in vitro"* ([PMID: 30097094](https://pubmed.ncbi.nlm.nih.gov/30097094/)).
 
-In the **direct (E. coli/plant) topology**, LipB octanoylates the E2 lipoyl domains themselves, and LipA thiolates them in place. In the **relay (B. subtilis/mammal/fungal) topology**, the octanoyltransferase (LipM in *B. subtilis*; LIPT2 in humans) modifies *only GcvH*; sulfur insertion may occur on GcvH-bound octanoyl; and an amidotransferase (LipL in *B. subtilis*; LIPT1 in humans) then transfers the (octanoyl or lipoyl) group from GcvH onto the E2 subunits via a thioester acyl-enzyme intermediate using a Cys-Lys catalytic dyad.
+### 3.2 The three modeled topologies (Finding F003)
 
-### 3.2 Which steps are obligatory, conditional, or accessory
+**(A) Direct LipB→LipA route (E. coli, plants, plastids).** LipB octanoylates the client lipoyl domain directly; LipA then sulfurates it. Only two enzymes are required — the minimal pathway ([PMID: 20882995](https://pubmed.ncbi.nlm.nih.gov/20882995/); [PMID: 27074917](https://pubmed.ncbi.nlm.nih.gov/27074917/)).
 
-- **Obligatory:** (i) provision of octanoyl-ACP from FAS; (ii) octanoyl transfer to a protein lysine; (iii) radical-SAM sulfur insertion at C6 and C8. Without any of these there is no lipoylation and aerobic/one-carbon metabolism is blocked.
-- **Conditional (lineage-specific but obligatory where present):** the GcvH relay and the amidotransferase step are obligatory in *B. subtilis*, mammals, and fungi—Δ*gcvH* *B. subtilis* strains are lipoate auxotrophs—but absent in the *E. coli*/plant topology.
-- **Accessory but essential in practice:** the iron-sulfur cluster biogenesis machinery that reconstitutes LipA/LIAS's sacrificial auxiliary cluster after each turnover. Without cluster regeneration the enzyme performs only a single turnover.
+**(B) Bacillus GcvH octanoyl-relay (Gram-positive bacteria).** Four proteins:
+1. **LipM** octanoylates **GcvH** (not the client); notably, *"B. subtilis encodes an octanoyltransferase that has virtually no sequence resemblance to E. coli LipB but instead has a sequence that resembles that of the E. coli lipoate ligase, LplA"* ([PMID: 20882995](https://pubmed.ncbi.nlm.nih.gov/20882995/));
+2. **LipL** amidotransfers the **octanoyl** group from octanoyl-GcvH to client E2 lipoyl domains — *"LipL, transfers octanoate from octanoyl-GCV to other LDs in an amido-transfer reaction"* ([PMID: 23960015](https://pubmed.ncbi.nlm.nih.gov/23960015/));
+3. **LipA** inserts sulfur on the E2-bound octanoyl chain.
 
-### 3.3 The sulfur-insertion chemistry in detail
+Deletion of either gene abolishes lipoate synthesis despite an intact LipA: *"B. subtilis ΔlipL strains are unable to synthesize lipoic acid despite the presence of LipM and the sulphur insertion enzyme, LipA, which should suffice for lipoic acid biosynthesis based on the E. coli model"* ([PMID: 21338420](https://pubmed.ncbi.nlm.nih.gov/21338420/)).
 
-LipA is a member of the radical-SAM superfamily. It binds two [4Fe-4S] clusters:
+**(C) Human mitochondrial GCSH lipoyl-relay.** Three lipoate-specific enzymes: *"Mitochondrial lipoate synthesis involves three enzymatic steps catalyzed sequentially by lipoyl(octanoyl) transferase 2 (LIPT2), lipoic acid synthetase (LIAS), and lipoyltransferase 1 (LIPT1)"* ([PMID: 28757203](https://pubmed.ncbi.nlm.nih.gov/28757203/)):
+1. **LIPT2** octanoylates **GCSH** (the human GcvH);
+2. **LIAS** inserts sulfur on GCSH-bound octanoyl, producing **mature lipoyl-GCSH**;
+3. **LIPT1** transfers the **mature lipoyl** group from GCSH to client E2 domains.
 
-- The **radical-SAM cluster** binds SAM and, upon reduction, cleaves it homolytically to methionine plus a 5′-deoxyadenosyl radical. Two successive radicals abstract hydrogen atoms from C6 and C8 of the octanoyl chain.
-- The **auxiliary cluster** supplies the sulfur atoms that are inserted at those carbons. EPR trapping detected ⁵⁷Fe hyperfine coupling between a substrate-derived radical and this cluster, and the cluster is progressively degraded during turnover—accounting for the single-turnover behavior observed *in vitro* [PMID: 26390103](https://pubmed.ncbi.nlm.nih.gov/26390103/); [PMID: 29051382](https://pubmed.ncbi.nlm.nih.gov/29051382/). The reaction proceeds through a discrete **C6-monothiolated intermediate**, a feature conserved between *E. coli* and *Mycobacterium tuberculosis* LipA [PMID: 26841001](https://pubmed.ncbi.nlm.nih.gov/26841001/).
+**Key ordering distinction.** In route (B) the relay moves an *octanoyl* group and sulfur insertion is the last step (on E2); in route (C) sulfur insertion precedes the relay, which moves a *fully mature lipoyl* group. This is a genuine mechanistic difference, not a notational one, supported by the enzymology (LipL transfers octanoate) and by human genetics (LIPT1 loss spares the GCS; see §6).
+
+### 3.3 Obligatory vs. conditional vs. accessory steps
+
+- **Obligatory (all routes):** octanoyl transfer from octanoyl-ACP; radical-SAM sulfur insertion. No route bypasses either.
+- **Conditional (relay lineages only):** GcvH/GCSH octanoylation and the LipL/LIPT1 amidotransfer. These are dispensable in direct-route organisms but strictly required where the client-directed octanoyltransferase is absent.
+- **Accessory/enabling:** octanoyl-ACP supply (FAS II/mtFAS); auxiliary-cluster regeneration (NfuA/IscU); DLD/E3 recycling of dihydrolipoate (downstream).
 
 ---
 
 ## 4. Major Molecular Players and Active Assemblies
 
-### 4.1 Enzyme families and their orthologs
+| Player | Family / fold | Reaction in endogenous lipoylation | Notes |
+|---|---|---|---|
+| **LipB** | Cofactor transferase PF03099 (LipB subtype) | Octanoyl-ACP → client lipoyl-domain Lys | Minimal direct route; Cys-thioester intermediate [20882995] |
+| **LipM** | PF03099, **LplA-like** | Octanoyl-ACP → **GcvH** | Annotated as "ligase" but is an octanoyltransferase; Cys150 nucleophile [20882995] |
+| **LipL** | PF03099 (amidotransferase) | Octanoyl-**GcvH** → client E2 (amidotransfer) | Obligatory relay; also required in scavenging [21338420, 23960015, 31066113] |
+| **LIPT2** | LipB-family | Octanoyl-(mt)ACP → **GCSH** | Human GcvH-directed octanoyltransferase [28757203] |
+| **LIPT1** | Lipoate-protein ligase family | Lipoyl-**GCSH** → client E2 | Relays *mature* lipoyl; also salvage-competent [24777537, 33487163] |
+| **LipA / LIAS** | Radical-SAM, two [4Fe-4S] | Sulfur insertion at C6, C8 | Auxiliary cluster = sacrificial S donor; unique Ser ligand [25100160, 27506792] |
+| **LipS1 + LipS2** | Two radical-SAM proteins | Split sulfur insertion (LipA-independent lineages) | Newly characterized bipartite synthase [37368881] |
+| **GcvH / GCSH** | Glycine-cleavage H-protein (lipoyl-domain fold) | Obligatory acyl/lipoyl **relay carrier** | Central hub; moonlights beyond its GCS role [31066113] |
+| **octanoyl-ACP** | ACP + 4′-phosphopantetheine | Committed acyl donor | From FAS II / mtFAS [20226757, 31473256] |
+| **NfuA / IscU** | Fe–S carriers | Regenerate LipA auxiliary cluster | Enabling, not core [30097094] |
 
-| Step | Bacterial (E. coli) | Bacterial (B. subtilis) | Human (mitochondrial) | Chemistry |
-|------|--------------------|-----------------------|----------------------|-----------|
-| Octanoyl transfer | **LipB** (octanoyltransferase) | **LipM** (octanoylates GcvH only) | **LIPT2** | Acyl transfer from octanoyl-ACP to Lys |
-| Amidotransfer relay | — (not used) | **LipL** (GcvH → E2) | **LIPT1** (relay to E2) | Thioester acyl-enzyme, Cys-Lys dyad |
-| Sulfur insertion | **LipA** | **LipA** | **LIAS** | Radical-SAM, dual [4Fe-4S], C6/C8 thiolation |
-| Carrier protein | — | **GcvH** (obligatory) | **GcvH** (obligatory) | Swinging-arm intermediate carrier |
-| Salvage (outside module) | LplA | LplJ | (LIPT1 can also ligate) | ATP-dependent free-lipoate ligation |
-
-### 4.2 The lipoyl domain and "on-site" assembly
-
-A crucial structural feature is that lipoylation occurs on a small, conserved **lipoyl domain** (a β-barrel with a protruding β-turn that presents the target lysine). Proteomic and copurification work in *E. coli* shows that the intact pyruvate and 2-oxoglutarate dehydrogenase complexes co-purify with both LipB and LipA—meaning the assembly enzymes are physically recruited "on site" to the dehydrogenases where their substrate domains reside [PMID: 21209092](https://pubmed.ncbi.nlm.nih.gov/21209092/). Notably, the salvage ligase LplA shows no such interaction, and GcvH does not copurify with LipA/LipB in *E. coli*, underscoring both the compartmentalized specificity of *de novo* assembly and the topology difference from the GcvH-relay lineages.
-
-### 4.3 The human enzymes and clinical validation
-
-Human intramitochondrial lipoate synthesis proceeds sequentially through **LIPT2 → LIAS → LIPT1** [PMID: 28757203](https://pubmed.ncbi.nlm.nih.gov/28757203/). This ordering is not merely biochemical inference; it is validated by human genetics. Biallelic *LIPT2* mutations in three individuals caused severe neonatal encephalopathy with reduced pyruvate dehydrogenase and 2-oxoglutarate dehydrogenase activities, reduced leucine catabolic flux, and decreased protein lipoylation—phenotypes rescued in fibroblasts by wild-type LIPT2 [PMID: 28757203](https://pubmed.ncbi.nlm.nih.gov/28757203/). *LIAS* mutations produce a nonketotic-hyperglycinemia-like disorder with early-onset convulsions plus an energy-metabolism defect, while *LIPT1* deficiency characteristically spares the glycine cleavage system (because GCS lipoylation via GcvH does not require the LIPT1 relay step) [PMID: 24777537](https://pubmed.ncbi.nlm.nih.gov/24777537/). Because LIAS is Fe-S dependent, mutations in the mitochondrial Fe-S cluster assembly machinery (NFU1, BOLA3, ISCA2, IBA57, GLRX5) also produce LIAS-deficiency-like phenotypes [PMID: 27586888](https://pubmed.ncbi.nlm.nih.gov/27586888/); [PMID: 28803783](https://pubmed.ncbi.nlm.nih.gov/28803783/).
+**Active assemblies.** The functional "reaction unit" is an enzyme paired with a **lipoyl-domain-fold substrate** (client E2/BCKDH/OGDH domains, or GcvH/GCSH). Substrate recognition is domain-based and specific: relay carriers and clients present near-identical folds, which is precisely why an amidotransferase (LipL/LIPT1) can move a group between them, and why salvage ligases with strict subunit specificity cannot substitute for the relay (Finding F007). As shown in *B. subtilis*, *"a ∆lipL mutant, in which the endogenous lipoylation pathway of E2 subunits is blocked, showed growth defects in minimal media even when supplemented with lipoate and despite the presence of a functional LplJ,"* because *"the crucial role of LipL during lipoate utilization relies on the strict substrate specificity of LplJ, determined by charge complementarity between the ligase and the lipoylable subunits"* ([PMID: 31066113](https://pubmed.ncbi.nlm.nih.gov/31066113/)).
 
 ---
 
 ## 5. Evolutionary and Cell-Biological Variation
 
-### 5.1 Deep conservation across three domains of life
+### 5.1 Across lineages (Finding F004)
 
-Lipoate-dependent enzymes (the 2-oxoacid dehydrogenases and the glycine cleavage system) and the LipB/LipA-type assembly logic occur in bacteria, archaea, and eukaryotes; lipoate is explicitly characterized as a cofactor "required in three domains of life" [PMID: 25611823](https://pubmed.ncbi.nlm.nih.gov/25611823/). The two features that appear to constitute the ancient, invariant core are (i) the **radical-SAM sulfur-insertion chemistry** embodied in the LipA family and (ii) the **strict dependence on a FAS-derived octanoyl-ACP precursor**. These are shared across lineages that otherwise differ substantially in pathway topology.
+- **Direct route:** *E. coli* and most Gram-negative bacteria; **plants** use the *E. coli*-type LipB/LipA logic in plastids and mitochondria ([PMID: 27074917](https://pubmed.ncbi.nlm.nih.gov/27074917/); [PMID: 32111914](https://pubmed.ncbi.nlm.nih.gov/32111914/)).
+- **Relay route:** *Bacillus subtilis*, *Staphylococcus aureus* and other Gram-positives (LipM/LipL/GcvH) ([PMID: 21338420](https://pubmed.ncbi.nlm.nih.gov/21338420/); [PMID: 31451544](https://pubmed.ncbi.nlm.nih.gov/31451544/)); **fungi and mammals** use a *B. subtilis*-type relay through the H-protein (GCSH/Gcv3) ([PMID: 27074917](https://pubmed.ncbi.nlm.nih.gov/27074917/); [PMID: 33487163](https://pubmed.ncbi.nlm.nih.gov/33487163/)).
+- **Bipartite-synthase route:** some bacteria/archaea use *"a novel lipoate assembly pathway in bacteria based on a sLpl(AB) lipoate:protein ligase, which attaches octanoate or lipoate to apo-proteins, and 2 radical SAM proteins, LipS1 and LipS2, which work together as lipoyl synthase and insert 2 sulfur atoms"* ([PMID: 37368881](https://pubmed.ncbi.nlm.nih.gov/37368881/)) — showing even the "invariant" sulfur-insertion chemistry can be partitioned.
 
-### 5.2 Topological variants as lineage-specific elaborations
+The transferases (all except sulfur-insertion enzymes) belong to *"PFAM family PF03099 (the cofactor transferase family). Although these enzymes share some sequence similarity, they catalyze three markedly distinct enzyme reactions"* ([PMID: 27074917](https://pubmed.ncbi.nlm.nih.gov/27074917/)). Their phylogenetic distribution *"in the 2 prokaryotic domains was shaped by a complex network of horizontal gene transfers, acquisition of additional genes, fusions, and losses"* ([PMID: 37368881](https://pubmed.ncbi.nlm.nih.gov/37368881/)), making the pathway a mix-and-match assembly of interchangeable modules.
 
-| Topology | Representative lineages | Proteins | Distinguishing feature |
-|----------|------------------------|----------|------------------------|
-| Direct E2 octanoylation | E. coli, plants | LipB, LipA | Two enzymes; E2 modified directly |
-| GcvH relay + amidotransfer | B. subtilis, mammals, fungi | LipM/LIPT2, LipL/LIPT1, LipA/LIAS, GcvH | Three+ proteins; GcvH obligatory carrier |
-| Split sulfur insertion | Some archaea (Thermococcus & relatives) | LipS1, LipS2 | Two paralogous synthases act at the two carbons |
+### 5.2 Across compartments and life stages (Finding F006)
 
-The GcvH-relay topology requires GcvH as an obligatory carrier: Δ*gcvH* *B. subtilis* strains are lipoate auxotrophs, and LipL catalyzes the amidotransfer (transamidation) of the octanoyl moiety from octanoyl-GcvH to the E2 subunit of pyruvate dehydrogenase via a thioester acyl-enzyme intermediate [PMID: 21338420](https://pubmed.ncbi.nlm.nih.gov/21338420/); [PMID: 21338421](https://pubmed.ncbi.nlm.nih.gov/21338421/). Cronan maps the *E. coli*-type topology onto plants and the *B. subtilis*-type relay onto mammals and fungi [PMID: 27074917](https://pubmed.ncbi.nlm.nih.gov/27074917/).
+Apicomplexan parasites are the clearest example of *compartment-determined* topology. *Plasmodium* runs de novo biosynthesis exclusively in the apicoplast: *"LA biosynthesis, comprising octanoyl-acyl carrier protein (ACP): protein N-octanoyltransferase (LipB) and lipoate synthase (LipA), is exclusively found in the apicoplast of Plasmodium where it generates LA de novo from octanoyl-ACP, provided by the type II fatty acid biosynthesis (FAS II) pathway"* ([PMID: 22607141](https://pubmed.ncbi.nlm.nih.gov/22607141/)), while running salvage in the mitochondrion (LplA1; dual-targeted LplA2) — spatially and functionally separate systems.
 
-A distinct archaeal variant splits the sulfur-insertion chemistry: rather than a single LipA thiolating both C6 and C8, some archaea use two lipoyl synthase paralogs, **LipS1 and LipS2**, that act at the two carbons [PMID: 36281299](https://pubmed.ncbi.nlm.nih.gov/36281299/). This is a lineage-specific reorganization of the *same* radical-SAM chemistry rather than a new mechanism.
+Their essentiality is **stage-specific**. Apicoplast LipB is dispensable in blood stages: *"disruption of the LipB gene did not negatively affect parasite growth despite a drastic loss of LA (>90%). Surprisingly, the sole, apicoplast-located pyruvate dehydrogenase still showed lipoylation, suggesting that an alternative lipoylation pathway exists"* ([PMID: 18069893](https://pubmed.ncbi.nlm.nih.gov/18069893/)). Yet de novo synthesis is critical for liver-stage maturation: *"sporozoites lacking the apicoplast lipoic acid protein ligase LipB are markedly attenuated in their infectivity for mice, and in vitro studies document a very late liver stage arrest"* ([PMID: 23490300](https://pubmed.ncbi.nlm.nih.gov/23490300/)).
 
-### 5.3 Compartmentalization
+### 5.3 Across physiological states (Finding F008)
 
-In eukaryotes the entire *de novo* pathway is **mitochondrial**, tied to mtFAS-derived octanoyl-ACP. This spatial confinement means cytosolic or exogenous free lipoate cannot substitute for the *de novo* route in supplying the mitochondrial matrix pool via biosynthesis—consistent with the clinical observation that lipoate supplementation did not improve the course of LIPT2 disease [PMID: 28757203](https://pubmed.ncbi.nlm.nih.gov/28757203/).
-
-### 5.4 The single-turnover problem and its resolutions
-
-Because the auxiliary [4Fe-4S] cluster is consumed, cells must regenerate it. Two resolutions are documented:
-
-- **In humans**, [2Fe-2S]-cluster-bound forms of **ISCU** and **ISCA2** reconstitute LIAS and enable complete product turnover, with an ordered assembly in which the auxiliary cluster is installed before the reducing (radical-SAM) cluster [PMID: 33562493](https://pubmed.ncbi.nlm.nih.gov/33562493/).
-- **In E. coli**, the auxiliary cluster is destroyed and then reformed during catalysis (McCarthy & Booker, *Science* 2017), physically closing the catalytic cycle *in vivo*.
-
-The archaeal LipS1/LipS2 split may represent an alternative evolutionary solution that distributes the sulfur-donor burden across two proteins [PMID: 36281299](https://pubmed.ncbi.nlm.nih.gov/36281299/).
+Because octanoyl-ACP is the committed feedstock, lipoylation is coupled to fatty-acid/acetyl-CoA flux and to respiratory state. In yeast, *"defects in mitochondrial FAS... result in... loss of cellular lipoic acid"* that cannot be rescued by exogenous fatty acids ([PMID: 20226757](https://pubmed.ncbi.nlm.nih.gov/20226757/)). Moreover, *"octanoyl-ACP provides the C8 backbone for endogenous lipoic acid synthesis. Accumulating evidence suggests that mtFAS-generated acyl-ACPs act as signaling molecules in an intramitochondrial metabolic state sensing circuit, coordinating mitochondrial acetyl-CoA levels with mitochondrial respiration, Fe-S cluster biogenesis and protein lipoylation"* ([PMID: 31473256](https://pubmed.ncbi.nlm.nih.gov/31473256/)). Downstream, lipoylation status governs susceptibility to **cuproptosis**, a copper-dependent regulated cell death in which *"copper binds lipoylated mitochondrial proteins, promotes aggregation of tricarboxylic acid cycle components, destabilizes iron-sulfur cluster proteins, and elicits FDX1- and protein lipoylation-dependent proteotoxic stress"* ([PMID: 42653078](https://pubmed.ncbi.nlm.nih.gov/42653078/)) — a physiologically and therapeutically important consequence of the pathway's output.
 
 ---
 
 ## 6. Constraints, Dependencies, and Failure Modes
 
-### 6.1 Obligatory ordering
+**Mandatory ordering.**
+- Octanoylation **must precede** sulfur insertion everywhere — LipA/LIAS act only on an octanoyl chain already amide-linked to a lysine, never on free octanoate.
+- In relay routes, GcvH/GCSH octanoylation **precedes** the amidotransfer to E2.
+- The **relative order of sulfur insertion and relay differs by lineage** (Bacillus: relay octanoyl → sulfurate on E2 [PMID: 23960015]; human: sulfurate on GCSH → relay mature lipoyl [PMID: 28757203]).
 
-The pathway is strictly ordered by chemistry: **octanoyl transfer must precede sulfur insertion**, because LipA acts only on a *protein-bound* octanoyl group, not on free octanoate. This was demonstrated directly in *E. coli*: sulfur atoms are inserted into octanoyl moieties already amide-linked to a PDH subunit or a derived domain [PMID: 14700636](https://pubmed.ncbi.nlm.nih.gov/14700636/). This is the mechanistic basis for the "assembly-on-protein" definition of the system: unlike biotin, which is synthesized free and then attached, the lipoyl cofactor is built on its cognate protein [PMID: 27074917](https://pubmed.ncbi.nlm.nih.gov/27074917/).
+**Substrate/compartment constraints.**
+- The acyl donor must be **octanoyl-ACP**; free octanoate or dietary lipoate cannot feed the de novo route (mtFAS loss abolishes cellular lipoate and is not rescued by exogenous fatty acids) ([PMID: 20226757](https://pubmed.ncbi.nlm.nih.gov/20226757/)).
+- In relay lineages, the client E2 subunits can **only** be modified via the GcvH/GCSH relay; the salvage ligase's strict subunit specificity rules out a direct ligase-to-E2 shortcut (*B. subtilis* ΔlipL fails even with lipoate + functional LplJ) ([PMID: 31066113](https://pubmed.ncbi.nlm.nih.gov/31066113/)).
+- LipA/LIAS depends on Fe–S cluster supply/repair; iron or ISC deficiency phenocopies lipoylation failure ([PMID: 30097094](https://pubmed.ncbi.nlm.nih.gov/30097094/)).
 
-### 6.2 Mutually exclusive / compartment-specific features
+**Human failure modes — which independently validate pathway order (Finding F005).**
 
-- **De novo vs salvage are mutually exclusive at the mechanistic level** even when co-present in one cell: salvage attaches pre-formed free lipoate (LplA/LplJ), whereas de novo never passes through free lipoate. Eukaryotes generally retain only de novo lipoylation [PMID: 40813772](https://pubmed.ncbi.nlm.nih.gov/40813772/).
-- **Relay vs direct topology are lineage-specific**: an organism using the GcvH relay cannot lipoylate E2 without GcvH and the amidotransferase, whereas a direct-topology organism has no such requirement.
-- **Substrate specificity of the relay** further constrains routing: in *B. subtilis*, LipL is essential to modify E2 subunits even during lipoate scavenging, because the ligase LplJ has strict substrate specificity determined by charge complementarity [PMID: 31066113](https://pubmed.ncbi.nlm.nih.gov/31066113/).
+| Gene | Step | Biochemical signature | GCS status |
+|---|---|---|---|
+| **LIPT2** | GCSH octanoylation | ↓ PDHc, ↓ α-KGDHc, ↓ protein lipoylation, mild ↑ glycine; rescued by WT LIPT2 | affected |
+| **LIAS** | Sulfur insertion on GCSH | NKH-like early convulsions + mitochondrial energy defect | affected |
+| **LIPT1** | Lipoyl relay to E2 | Combined 2-oxoacid dehydrogenase deficiency, Leigh-like | **spared** |
 
-### 6.3 Failure modes
-
-- Loss of any de novo enzyme (LIPT2, LIAS, LIPT1) or of the mtFAS octanoyl supply abolishes lipoylation of PDH, α-KGDH, BCKDH, 2-OADH, and (except in LIPT1 deficiency) the GCS, blocking aerobic and one-carbon metabolism and causing severe neonatal/infantile encephalopathy [PMID: 28757203](https://pubmed.ncbi.nlm.nih.gov/28757203/); [PMID: 24777537](https://pubmed.ncbi.nlm.nih.gov/24777537/).
-- Loss of Fe-S cluster biogenesis (NFU1, BOLA3, ISCA2, IBA57, GLRX5) produces a *secondary* LIAS deficiency with a LIAS-like phenotype [PMID: 27586888](https://pubmed.ncbi.nlm.nih.gov/27586888/); [PMID: 28803783](https://pubmed.ncbi.nlm.nih.gov/28803783/).
-- Downstream, the *presence* of correctly lipoylated TCA-cycle proteins becomes a liability under copper overload, sensitizing cells to cuproptosis—a distinct failure mode governed by FDX1 and LIPT1 [PMID: 42418063](https://pubmed.ncbi.nlm.nih.gov/42418063/).
-
-### 6.4 Evidence that rules out otherwise-plausible paths
-
-- LipA acting on *free* octanoate is ruled out by the direct demonstration that its substrate is protein-bound octanoyl [PMID: 14700636](https://pubmed.ncbi.nlm.nih.gov/14700636/).
-- A single-cluster LipA doing multiple turnovers without regeneration is ruled out by the destruction of the auxiliary cluster and the single-turnover phenotype in vitro [PMID: 29051382](https://pubmed.ncbi.nlm.nih.gov/29051382/).
-- Salvage substituting for de novo in the GCS lipoylation of some organisms is constrained by strict ligase substrate specificity [PMID: 31066113](https://pubmed.ncbi.nlm.nih.gov/31066113/).
+For LIPT2, *"affected individuals' fibroblasts showed reduced oxygen consumption rates, PDHc, α-KGDHc activities, leucine catabolic flux, and decreased protein lipoylation. A normalization of lipoylation was observed after expression of wild-type LIPT2"* ([PMID: 28757203](https://pubmed.ncbi.nlm.nih.gov/28757203/)). The decisive genetic evidence for step order is that *"LIPT1 deficiency spares the GCS, and resulted in a combined 2-oxoacid dehydrogenase deficiency"* ([PMID: 24777537](https://pubmed.ncbi.nlm.nih.gov/24777537/)). Because GCSH is lipoylated *upstream* of LIPT1, loss of LIPT1 leaves a functional H-protein (intact GCS) while starving E2 clients — exactly the pattern predicted by the "sulfur-first, relay-last" human topology, and not by any alternative ordering.
 
 ---
 
-## 7. Mechanistic Model / Integrated Interpretation
+## 7. Mechanistic Model / Interpretation
 
-Pulling the findings together, endogenous protein lipoylation is best understood as **one conserved chemical program executed through variable protein plumbing**. The invariant core is: (octanoyl-ACP from FAS) → (transfer to a protein lysine) → (radical-SAM thiolation of the protein-bound chain, at the cost of a sacrificial Fe-S cluster). Everything that varies between lineages—direct vs relay routing, one vs two synthases, which Fe-S donors regenerate the cluster—is elaboration around that core.
+The system is best understood as a **conserved two-reaction core** wrapped in a **variable delivery topology**. The core chemistry is fixed because both operations are hard problems evolution solved once: capturing a thioester-activated C8 chain onto a specific lysine, and functionalizing two inert C–H bonds with sulfur using a consumable Fe–S cluster. Everything else — whether a relay carrier is used, whether sulfur is inserted before or after relay, whether the pathway runs in an apicoplast or a mitochondrion — is a modular arrangement of interchangeable PF03099 transferases plus a radical-SAM synthase.
 
 ```
-        ┌─────────────────────── CONSERVED CORE ───────────────────────┐
-        │  octanoyl-ACP → [protein-Lys–octanoyl] → [protein-Lys–lipoyl] │
-        │        (LipB fam)              (LipA fam radical-SAM,          │
-        │                                 sacrificial aux [4Fe-4S])     │
-        └───────────────────────────────────────────────────────────────┘
-                     │                      │                     │
-        DIRECT (E.coli/plant)   RELAY (B.sub/mammal/fungi)   SPLIT (archaea)
-        LipB→E2; LipA           LipM→GcvH; LipL amidotransfer  LipS1 + LipS2
-                                to E2; LIPT2/LIPT1 in humans    at C6 / C8
+                 ┌─────────────────── CONSERVED CORE ───────────────────┐
+ octanoyl-ACP ──▶│ octanoyltransfer (thioester acyl-enzyme intermediate) │──▶ radical-SAM ──▶ lipoyl-protein
+ (from FAS II /  │                                                        │   sulfur insertion
+  mtFAS)         └──────────────────────────────────────────────────────┘   (sacrificial aux [4Fe-4S])
+
+   VARIABLE TOPOLOGY:
+   • Direct:   transfer & sulfur both on E2 client            (E. coli, plants)        [2 enzymes]
+   • Relay-A:  transfer→GcvH, relay octanoyl→E2, sulfur on E2  (Bacillus: LipM/LipL/LipA) [4 proteins]
+   • Relay-B:  transfer→GCSH, sulfur on GCSH, relay lipoyl→E2  (human: LIPT2/LIAS/LIPT1)  [3 enzymes]
+   • Split-S:  sLplAB ligase + LipS1 + LipS2 for sulfur       (novel bacterial route)
 ```
 
-The clinical genetics provide an unusually clean natural knockout series confirming the order and non-redundancy of the human enzymes, and the observation that LIPT1 deficiency spares the GCS is an elegant confirmation that GCS lipoylation (via GcvH) bypasses the E2-directed relay step. The whole system's dependence on both FAS and Fe-S biogenesis makes it a sensitive integrator of mitochondrial biosynthetic health, which is why so many seemingly unrelated Fe-S mutations converge on a lipoylation-deficiency phenotype.
+This modular view explains the pathway's patchy, HGT-driven phylogenetic distribution and its clinical logic in one framework: perturbing the core (LIAS, mtFAS) is globally catastrophic, whereas perturbing a topology-specific relay component (LIPT1, LipL) produces a more selective, **position-diagnostic** phenotype (the GCS-sparing signature of LIPT1 deficiency being the clearest example). For understanding the ancestral role of the expanded transferase family, LipB best represents the primitive acyltransfer chemistry, while the LplA-like members (LipM, LipL) represent later relay/ligase specializations; the H-protein-centered relay may be the more ancient "primordial moonlighting" configuration, with the two-enzyme direct route a streamlined derivative.
 
 ---
 
-## 8. Controversies and Open Questions
+## 8. Evidence Base
 
-**Strongly supported claims.** The assembly-on-protein logic, the two-step chemistry, the dual-cluster radical-SAM mechanism of LipA with a sacrificial auxiliary cluster, the C6-monothiolated intermediate, the GcvH-relay architecture in *B. subtilis*, and the human LIPT2→LIAS→LIPT1 order (validated by patient genetics) are all strongly supported by convergent in vitro biochemistry, structural/spectroscopic data, and genetics.
-
-**Areas of genuine disagreement or indirect evidence.**
-
-1. **Evolutionary polarity of the topologies.** Is the multi-protein GcvH relay ancestral (with the *E. coli* two-enzyme route a derived streamlining, as Cronan argues [PMID: 27074917](https://pubmed.ncbi.nlm.nih.gov/27074917/)), or is the relay a later elaboration? The "evolutionary relic" interpretation is plausible but not settled; it rests largely on distribution/parsimony arguments rather than formal ancestral-state reconstruction.
-
-2. **Where exactly sulfur insertion occurs in the relay topology.** In the GcvH-relay lineages, whether LipA/LIAS thiolates the octanoyl group while it is on GcvH, on E2, or on both, and how amidotransfer timing interleaves with thiolation, is incompletely resolved and may differ between *B. subtilis*, *S. aureus*, and mammals. Dynamic-relay studies in *S. aureus* [PMID: 31451544](https://pubmed.ncbi.nlm.nih.gov/31451544/) hint at more fluid intermediate trafficking than simple linear schemes suggest.
-
-3. **Generalization across organisms.** Much mechanistic detail derives from *E. coli* and, for the relay, from *B. subtilis*; human LIAS reconstitution data are more recent [PMID: 33562493](https://pubmed.ncbi.nlm.nih.gov/33562493/). Mixing data across these systems risks overgeneralization, particularly regarding cluster-donor identity and turnover kinetics.
-
-4. **Physiological cluster donors and turnover in vivo.** ISCU/ISCA2 reconstitute human LIAS in vitro [PMID: 33562493](https://pubmed.ncbi.nlm.nih.gov/33562493/), and the *E. coli* cluster reforms during catalysis, but the full in vivo choreography of auxiliary-cluster resupply, and whether it is rate-limiting for lipoylation flux under physiological or disease conditions, remains open.
-
-**Most important open questions.**
-- What is the ancestral topology, and can ancestral-sequence reconstruction of LipB/LipM and LipL/LIPT1 resolve the polarity debate?
-- What is the precise substrate state (GcvH- vs E2-bound) for LIAS thiolation in mammals?
-- How is auxiliary-cluster regeneration coupled to Fe-S biogenesis flux, and does this coupling explain the LIAS-like phenotypes of Fe-S biogenesis mutations?
-- Can the archaeal LipS1/LipS2 split inform engineered multi-turnover lipoyl synthases (relevant to lipoic-acid bioproduction; cf. [PMID: 36639019](https://pubmed.ncbi.nlm.nih.gov/36639019/))?
+| PMID | How it supports / challenges the model |
+|---|---|
+| [27074917](https://pubmed.ncbi.nlm.nih.gov/27074917/) | Authoritative synthesis: in-situ assembly (vs. biotin); PF03099 shared ancestry with three distinct reactions; lineage distribution. **Supports** F001, F004. |
+| [20882995](https://pubmed.ncbi.nlm.nih.gov/20882995/) | E. coli LipB thioester mechanism; LipM is LplA-like, not LipB-like. **Supports** F001, F003. |
+| [25100160](https://pubmed.ncbi.nlm.nih.gov/25100160/) | LipA two-cluster architecture; unique CX4CX5C serine ligand essential for sulfur insertion. **Supports** F002. |
+| [27506792](https://pubmed.ncbi.nlm.nih.gov/27506792/) | Crystallographic snapshots of auxiliary-cluster destruction and sulfur transfer to C6. **Supports** F002 (settles sacrificial-cluster debate). |
+| [26390103](https://pubmed.ncbi.nlm.nih.gov/26390103/) | EPR trapping places substrate radical within bonding distance of cluster iron. **Supports** F002. |
+| [30097094](https://pubmed.ncbi.nlm.nih.gov/30097094/) | NfuA/IscU regenerate LipA cluster, enabling turnover. **Supports** F002 (turnover constraint). |
+| [21338420](https://pubmed.ncbi.nlm.nih.gov/21338420/) | Bacillus four-protein requirement; ΔlipL cannot synthesize lipoate despite LipA. **Supports** F003, F007. |
+| [23960015](https://pubmed.ncbi.nlm.nih.gov/23960015/) | LipL transfers octanoate (amidotransfer), fixing Bacillus step order. **Supports** F008 step-order. |
+| [28757203](https://pubmed.ncbi.nlm.nih.gov/28757203/) | Human LIPT2/LIAS/LIPT1 three-step relay; LIPT2 disease rescued by WT. **Supports** F003, F005. |
+| [24777537](https://pubmed.ncbi.nlm.nih.gov/24777537/) | LIPT1 deficiency spares GCS → downstream position. **Supports** F005 (relay order). |
+| [37368881](https://pubmed.ncbi.nlm.nih.gov/37368881/) | Novel sLplAB–LipS1/LipS2 route; HGT-shaped distribution. **Supports** F004 (modularity). |
+| [22607141](https://pubmed.ncbi.nlm.nih.gov/22607141/) | Plasmodium apicoplast-confined de novo route from FAS II octanoyl-ACP. **Supports** F006. |
+| [18069893](https://pubmed.ncbi.nlm.nih.gov/18069893/) | LipB dispensable in blood stages (salvage redundancy). **Supports** F006 (partitioning). |
+| [23490300](https://pubmed.ncbi.nlm.nih.gov/23490300/) | De novo route essential in liver stage. **Supports** F006 (stage specificity). |
+| [31066113](https://pubmed.ncbi.nlm.nih.gov/31066113/) | LipL/GcvH bottleneck required even during salvage; LplJ charge-complementarity constraint. **Supports** F007. |
+| [31451544](https://pubmed.ncbi.nlm.nih.gov/31451544/) | Dynamic GcvH relay in S. aureus. **Supports** F007 (generality). |
+| [20226757](https://pubmed.ncbi.nlm.nih.gov/20226757/) | mtFAS is non-bypassable source of octanoyl-ACP. **Supports** F008. |
+| [31473256](https://pubmed.ncbi.nlm.nih.gov/31473256/) | Octanoyl-ACP feedstock; acyl-ACP metabolic-state sensing. **Supports** F008. |
+| [33487163](https://pubmed.ncbi.nlm.nih.gov/33487163/) | Yeast lipoylation genetics; substrate flexibility; engineered bypass with activating enzymes. **Nuances** F008 constraint. |
+| [42653078](https://pubmed.ncbi.nlm.nih.gov/42653078/) | Cuproptosis targets lipoylated proteins (downstream relevance). **Contextualizes** output. |
 
 ---
 
-## 9. Evidence Base
+## 9. Controversies and Open Questions
 
-| PMID | Title (abbrev.) | Role in this review |
-|------|-----------------|---------------------|
-| [14700636](https://pubmed.ncbi.nlm.nih.gov/14700636/) | *Assembly of the covalent linkage between lipoic acid and its cognate enzymes* | Direct proof LipA acts on protein-bound octanoyl (obligatory ordering) |
-| [27074917](https://pubmed.ncbi.nlm.nih.gov/27074917/) | *Assembly of Lipoic Acid on Its Cognate Enzymes* (Cronan) | Authoritative synthesis: assembly-on-protein logic; topology mapping; ancestral-relic argument |
-| [26390103](https://pubmed.ncbi.nlm.nih.gov/26390103/) | *Radical Intermediate in Lipoyl Cofactor Biosynthesis* | Auxiliary cluster as sulfur donor; ⁵⁷Fe hyperfine coupling |
-| [29051382](https://pubmed.ncbi.nlm.nih.gov/29051382/) | *Destruction and reformation of an Fe-S cluster during LipA catalysis* | Auxiliary cluster destroyed → single turnover in vitro |
-| [26841001](https://pubmed.ncbi.nlm.nih.gov/26841001/) | *Lipoyl Synthase from M. tuberculosis* | Conserved two-cluster architecture and C6-monothiolated intermediate |
-| [21338420](https://pubmed.ncbi.nlm.nih.gov/21338420/) | *Two-gene requirement for octanoyltransfer in B. subtilis* | Three-protein relay architecture distinct from E. coli |
-| [21338421](https://pubmed.ncbi.nlm.nih.gov/21338421/) | *Novel amidotransferase (LipL) in B. subtilis* | Defines GcvH→E2 amidotransfer; GcvH obligatory |
-| [28757203](https://pubmed.ncbi.nlm.nih.gov/28757203/) | *Biallelic LIPT2 mutations cause neonatal encephalopathy* | Human enzyme order LIPT2→LIAS→LIPT1; clinical validation |
-| [24777537](https://pubmed.ncbi.nlm.nih.gov/24777537/) | *Lipoic acid biosynthesis defects* | Human pathway overview; LIPT1 spares GCS; Fe-S links |
-| [27586888](https://pubmed.ncbi.nlm.nih.gov/27586888/) | *Differential diagnosis of lipoic acid synthesis defects* | Enzyme list; Fe-S biogenesis convergence |
-| [28803783](https://pubmed.ncbi.nlm.nih.gov/28803783/) | *Mutations in Fe-S/lipoic pathways, fibroblast profiles* | Secondary LIAS deficiency from Fe-S defects |
-| [33562493](https://pubmed.ncbi.nlm.nih.gov/33562493/) | *Human LIAS reconstitution; ISCA2/ISCU donors* | Cluster regeneration and ordered assembly resolve single-turnover |
-| [36281299](https://pubmed.ncbi.nlm.nih.gov/36281299/) | *LipS1 and LipS2 characterization* | Archaeal two-gene sulfur-insertion variant |
-| [25611823](https://pubmed.ncbi.nlm.nih.gov/25611823/) | *A new regulatory mechanism for bacterial lipoic acid synthesis* | Cofactor required in three domains of life |
-| [21209092](https://pubmed.ncbi.nlm.nih.gov/21209092/) | *Protein-protein interactions in assembly on 2-oxoacid dehydrogenases* | LipA/LipB recruited "on site"; LplA/GcvH specificity |
-| [31066113](https://pubmed.ncbi.nlm.nih.gov/31066113/) | *Lipoyl-relay of exogenous lipoate in B. subtilis* | Relay substrate specificity; salvage constraints |
-| [31451544](https://pubmed.ncbi.nlm.nih.gov/31451544/) | *Dynamic Relay of Protein-Bound Lipoic Acid in S. aureus* | Suggests fluid intermediate trafficking in relay |
-| [40813772](https://pubmed.ncbi.nlm.nih.gov/40813772/) | *Common bacterial salvage lipoylation protein boosts metabolism* | De novo vs salvage boundary; eukaryotes retain only de novo |
-| [42418063](https://pubmed.ncbi.nlm.nih.gov/42418063/) | *Copper homeostasis and cuproptosis* | Downstream cuproptosis boundary (FDX1/LIPT1) |
-| [36639019](https://pubmed.ncbi.nlm.nih.gov/36639019/) | *Metabolic engineering of E. coli for free lipoic acid* | Applied relevance; toxicity of overexpressing LipB/LipA |
+1. **The sacrificial-cluster model — largely settled, historically contested.** The idea that LipA destroys its auxiliary cluster each turnover was initially controversial (an enzyme that consumes part of itself). Crystallographic and spectroscopic evidence now strongly support it ([PMID: 27506792](https://pubmed.ncbi.nlm.nih.gov/27506792/); [PMID: 26390103](https://pubmed.ncbi.nlm.nih.gov/26390103/); [PMID: 25100160](https://pubmed.ncbi.nlm.nih.gov/25100160/)), but the *in vivo* stoichiometry and the exact identity/kinetics of the physiological cluster-regeneration system across organisms remain incompletely defined ([PMID: 30097094](https://pubmed.ncbi.nlm.nih.gov/30097094/)).
+
+2. **Exact acyl species and order in relay routes.** The Bacillus de novo route relays **octanoate** with sulfur inserted last ([PMID: 23960015](https://pubmed.ncbi.nlm.nih.gov/23960015/)), whereas the human route sulfurates GCSH first and relays **lipoate** ([PMID: 28757203](https://pubmed.ncbi.nlm.nih.gov/28757203/)). Whether some organisms are flexible (LipA able to act on either GcvH-bound or E2-bound octanoyl) is not fully resolved, and abstracts sometimes describe steps loosely, which can mislead cross-organism comparison.
+
+3. **Annotation vs. function.** Many PF03099 members are misannotated as "lipoate ligases" when they are octanoyltransferases or amidotransferases; conversely LIPT1 is a genuine ligase-family member that acts as a relay amidotransferase. Functional inference from sequence alone is unreliable ([PMID: 27074917](https://pubmed.ncbi.nlm.nih.gov/27074917/)).
+
+4. **Depth of origin and the ancestral state.** The transferases share the PF03099 fold and were distributed by extensive HGT, fusion, and loss ([PMID: 37368881](https://pubmed.ncbi.nlm.nih.gov/37368881/)), making a simple linear evolutionary narrative untenable. The bipartite LipS1/LipS2 synthase shows the sulfur-insertion step is also evolutionarily labile.
+
+5. **Regulation.** How lipoylation flux is regulated beyond substrate supply (mtFAS/mtACP sensing [PMID: 31473256]) — demand-driven control, turnover of lipoylated proteins, and tissue/developmental differences in mammals — is largely unmapped.
+
+6. **Extrapolation risk.** Much mechanism is drawn from *E. coli*, *B. subtilis*, *M. tuberculosis* LipA structures, and yeast genetics; direct structural/biochemical data on the *human* LIPT2/LIAS/LIPT1 enzymes are comparatively thin, and inferences about human ordering rest substantially on patient biochemistry and heterologous complementation ([PMID: 33487163](https://pubmed.ncbi.nlm.nih.gov/33487163/)). Claims should not be generalized across these systems without care.
 
 ---
 
 ## 10. Limitations and Knowledge Gaps
 
-- **Organism mixing.** The integrated model blends *E. coli*, *B. subtilis*, *M. tuberculosis*, archaeal, and human data. While the core chemistry is conserved, quantitative kinetics, cluster-donor identities, and relay intermediate states should not be assumed identical across these systems.
-- **In vitro vs in vivo turnover.** The single-turnover phenotype is an in vitro observation; the physiological rate-limiting features of cluster regeneration in vivo are inferred, not fully measured.
-- **Relay intermediate ambiguity.** The exact protein-bound state (GcvH vs E2) at which LIAS thiolates in mammals is not definitively established.
-- **Evolutionary polarity is unresolved.** The "relay-is-ancestral" hypothesis is attractive but based on distribution/parsimony, not formal ancestral reconstruction.
-- **This review is literature-based**, without new primary data generated in this investigation; conclusions inherit the limitations of the cited studies.
+- **No primary experimental data were generated** in this investigation; the synthesis is literature-based, drawing on 35 papers and 8 confirmed findings. Conclusions inherit the limitations of the underlying studies.
+- **Uneven organism coverage.** Mechanistic depth is greatest for *E. coli*, *B. subtilis*, yeast, and human; archaeal and many bacterial lineages are represented mainly by phylogenomics ([PMID: 37368881](https://pubmed.ncbi.nlm.nih.gov/37368881/)) rather than biochemistry.
+- **Structural coverage is partial.** LipA has excellent structural data; the human relay transferases (LIPT2, LIPT1) and the amidotransfer transition states are less well resolved.
+- **In vivo regulation** of the acyl-ACP metabolic-sensing circuit is still largely a model ([PMID: 31473256](https://pubmed.ncbi.nlm.nih.gov/31473256/)).
 
 ---
 
 ## 11. Proposed Follow-up Experiments / Actions
 
-1. **Resolve the thiolation substrate state in mammals.** Use reconstituted human LIAS with defined octanoyl-GcvH vs octanoyl-E2 lipoyl-domain substrates to determine kinetic preference; complement with cellular pulse-chase of lipoylation intermediates.
-2. **Ancestral-sequence reconstruction** of LipB/LipM, LipL/LIPT1, and LipA/LIAS to test whether the GcvH relay or the direct route is ancestral, addressing the polarity controversy.
-3. **Quantify cluster-regeneration flux in vivo.** Combine ISCU/ISCA2 perturbation with lipoylation-flux measurements to test whether auxiliary-cluster resupply is rate-limiting and whether it explains Fe-S-mutation phenotypes.
-4. **Characterize the archaeal LipS1/LipS2 split mechanistically** (which paralog acts at C6 vs C8; whether each carries its own sacrificial cluster) as a potential blueprint for engineered multi-turnover synthases.
-5. **Structural work on the amidotransferase step**—capture the LipL/LIPT1 thioester acyl-enzyme intermediate to define the Cys-Lys dyad geometry and GcvH docking.
-6. **Systematically map the de novo/salvage boundary** across pathogens to evaluate the amidotransferase as an antimicrobial target in Gram-positive organisms.
+1. **Direct kinetic reconstitution of the human relay** with purified LIPT2, LIAS (+ Fe–S regeneration), LIPT1, GCSH, and E2 lipoyl domains to confirm the sulfur-first order and measure step commitment, rather than inferring it from disease genetics.
+2. **Define the sLplAB–LipS1/LipS2 mechanism**: determine which radical-SAM protein donates which sulfur (C6 vs C8), whether they act processively, and reconstruct ancestral vs derived status by ancestral-sequence reconstruction.
+3. **Test therapeutic bypass** of human mtFAS/lipoylation disorders using mitochondrially targeted octanoate/lipoate-activating enzymes, extending the yeast proof-of-concept ([PMID: 33487163](https://pubmed.ncbi.nlm.nih.gov/33487163/)) to patient-derived fibroblasts.
+4. **Map lipoylation–cuproptosis coupling** by titrating LIPT2/LIAS/LIPT1 activity and quantifying DLAT lipoylation vs copper-induced death, to test whether endogenous lipoylation flux is a cuproptosis vulnerability biomarker.
+5. **Systematic Fe–S regeneration dependency**: measure lipoylation flux as a function of NfuA/IscU (and mammalian NFU1/ISCU) availability to quantify the turnover constraint in vivo.
+6. **Structural biology of the amidotransfer step**: solve LipL–GcvH and LIPT1–GCSH complex structures to understand how relay carrier and client E2 are discriminated.
 
 ---
 
-*Prepared as a commissioned review synthesis. All mechanistic claims are anchored to the cited primary literature and authoritative reviews; uncertainty is flagged explicitly throughout, and single-organism findings are not assumed to generalize across all lineages.*
+## 12. Key References
+
+- Cronan JE. *Assembly of Lipoic Acid on Its Cognate Enzymes: an Extraordinary and Essential Biosynthetic Pathway.* Microbiol Mol Biol Rev, 2016. **[PMID: 27074917](https://pubmed.ncbi.nlm.nih.gov/27074917/).**
+- Christensen QH, Cronan JE. *A new family of octanoyltransferases generally annotated as lipoate protein ligases* (LipM). 2010. **[PMID: 20882995](https://pubmed.ncbi.nlm.nih.gov/20882995/).**
+- Martin N, et al. *A novel two-gene requirement for the octanoyltransfer reaction of B. subtilis lipoic acid biosynthesis* (LipL). 2011. **[PMID: 21338420](https://pubmed.ncbi.nlm.nih.gov/21338420/).**
+- Hermes FA, Cronan JE. *The S. cerevisiae lipoate protein ligase homologue Lip3.* 2013. **[PMID: 23960015](https://pubmed.ncbi.nlm.nih.gov/23960015/).**
+- Rasetto NB, et al. *Unravelling the lipoyl-relay of exogenous lipoate utilization in B. subtilis.* 2019. **[PMID: 31066113](https://pubmed.ncbi.nlm.nih.gov/31066113/).**
+- Teoh WP, et al. *Dynamic Relay of Protein-Bound Lipoic Acid in Staphylococcus aureus.* 2019. **[PMID: 31451544](https://pubmed.ncbi.nlm.nih.gov/31451544/).**
+- Harmer JE, et al. *Structures of lipoyl synthase reveal a compact active site for controlling sequential sulfur insertion reactions.* 2014. **[PMID: 25100160](https://pubmed.ncbi.nlm.nih.gov/25100160/).**
+- McLaughlin MI, et al. *Crystallographic snapshots of sulfur insertion by lipoyl synthase.* PNAS, 2016. **[PMID: 27506792](https://pubmed.ncbi.nlm.nih.gov/27506792/).**
+- Lanz ND, et al. *Characterization of a Radical Intermediate in Lipoyl Cofactor Biosynthesis.* 2015. **[PMID: 26390103](https://pubmed.ncbi.nlm.nih.gov/26390103/).**
+- McCarthy EL, Booker SJ. *Iron-Sulfur Cluster Regeneration in E. coli Lipoyl Synthase.* 2018. **[PMID: 30097094](https://pubmed.ncbi.nlm.nih.gov/30097094/).**
+- Habarou F, et al. *Biallelic Mutations in LIPT2 Cause a Mitochondrial Lipoylation Defect Associated with Severe Neonatal Encephalopathy.* Am J Hum Genet, 2017. **[PMID: 28757203](https://pubmed.ncbi.nlm.nih.gov/28757203/).**
+- Mayr JA, et al. *Lipoic acid biosynthesis defects.* 2014. **[PMID: 24777537](https://pubmed.ncbi.nlm.nih.gov/24777537/).**
+- Pietikäinen LP, et al. *Genetic dissection of the mitochondrial lipoylation pathway in yeast.* 2021. **[PMID: 33487163](https://pubmed.ncbi.nlm.nih.gov/33487163/).**
+- Tanabe TS, et al. *Identification of a novel lipoic acid biosynthesis pathway reveals the complex evolution of lipoate assembly in prokaryotes* (sLplAB–LipS1/LipS2). 2023. **[PMID: 37368881](https://pubmed.ncbi.nlm.nih.gov/37368881/).**
+- Hiltunen JK, et al. *Mitochondrial fatty acid synthesis and respiration.* 2010. **[PMID: 20226757](https://pubmed.ncbi.nlm.nih.gov/20226757/).**
+- Masud AJ, et al. *Mitochondrial ACP at the interface of metabolic state sensing and mitochondrial function.* 2019. **[PMID: 31473256](https://pubmed.ncbi.nlm.nih.gov/31473256/).**
+- Storm J, Müller S. *Lipoic acid metabolism of Plasmodium — a suitable drug target.* 2012. **[PMID: 22607141](https://pubmed.ncbi.nlm.nih.gov/22607141/).**
+- Günther S, et al. *Apicoplast lipoic acid protein ligase B is not essential for P. falciparum.* 2007. **[PMID: 18069893](https://pubmed.ncbi.nlm.nih.gov/18069893/).**
+- Falkard B, et al. *A key role for lipoic acid synthesis during Plasmodium liver stage development.* 2013. **[PMID: 23490300](https://pubmed.ncbi.nlm.nih.gov/23490300/).**
+- Deschermeier C, et al. *Knockout studies reveal an important role of Plasmodium LplA1 for asexual blood stage parasite survival.* 2012. **[PMID: 19434237](https://pubmed.ncbi.nlm.nih.gov/19434237/).**
+
+---
+
+*Prepared as an autonomous literature synthesis of endogenous protein lipoylation. Scope excludes ATP-dependent salvage ligation of free lipoate and the downstream lipoate-dependent enzyme complexes, per the review brief. Uncertainty is flagged in §9–§10; mechanistic ordering claims for the human route rest partly on patient biochemistry and heterologous complementation rather than direct enzymology, and should be interpreted accordingly.*
 
 
 ## Artifacts
@@ -424,23 +472,25 @@ The clinical genetics provide an unusually clean natural knockout series confirm
 
 ## Citations
 
-1. PMID:40813772
-2. PMID:42418063
-3. PMID:27074917
-4. PMID:26390103
-5. PMID:29051382
-6. PMID:26841001
-7. PMID:21209092
-8. PMID:28757203
-9. PMID:24777537
-10. PMID:27586888
-11. PMID:28803783
-12. PMID:25611823
+1. PMID:27074917
+2. PMID:27506792
+3. PMID:25100160
+4. PMID:23960015
+5. PMID:28757203
+6. PMID:37368881
+7. PMID:24777537
+8. PMID:20882995
+9. PMID:18069893
+10. PMID:20226757
+11. PMID:31473256
+12. PMID:30097094
 13. PMID:21338420
-14. PMID:21338421
-15. PMID:36281299
-16. PMID:33562493
-17. PMID:14700636
-18. PMID:31066113
-19. PMID:31451544
-20. PMID:36639019
+14. PMID:31066113
+15. PMID:32111914
+16. PMID:31451544
+17. PMID:33487163
+18. PMID:22607141
+19. PMID:23490300
+20. PMID:42653078
+21. PMID:26390103
+22. PMID:19434237

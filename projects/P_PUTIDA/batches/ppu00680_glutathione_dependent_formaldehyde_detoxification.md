@@ -29,7 +29,7 @@ glutathione dependence remain unresolved.
 
 - [x] Define a reusable three-step formaldehyde-detoxification module.
 - [x] Curate the two KT2440 gene reviews.
-- [ ] Complete OpenScientist gene, module, and module + pathway + taxon research (jobs active; non-blocking for draft publication).
+- [x] Complete OpenScientist gene, module, and module + pathway + taxon research.
 - [x] Complete independent annotation-reviewer and module audits.
 - [x] Validate and render all artifacts.
 - [x] Publish as one draft PR.
@@ -40,3 +40,14 @@ glutathione dependence remain unresolved.
 |---|---|---|---|
 | `frmA` | PP_1616 | Q88MF5 | S-(hydroxymethyl)glutathione oxidation |
 | `frmC` | PP_1617 | Q88MF4 | S-formylglutathione hydrolysis |
+
+## Research Integration
+
+The completed generic and PSEPK-specific OpenScientist reports support the
+three-step boundary and find the branch satisfiable through FrmA and FrmC.
+They also support treating glutathione capture as spontaneous and the FrmA
+oxidation as NAD+-biased. The stronger provider interpretation that this is a
+secondary or backup route is retained as an inference: KT2440 genetics show
+parallel formaldehyde oxidation capacity, but do not directly quantify flux
+through FrmA-FrmC. PP_3970 remains outside this module because its precise
+substrate chemistry and glutathione dependence are unresolved.
