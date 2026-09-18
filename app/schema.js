@@ -6,6 +6,16 @@ window.searchSchema = {
   "itemsPerPage": 50,
   "facetItemsToShow": 15,
   "defaultView": "table",
+  "navigationLinks": [
+    {
+      "label": "Predictions",
+      "href": "predictions/index.html"
+    },
+    {
+      "label": "Projects",
+      "href": "../pages/projects/index.html"
+    }
+  ],
   "customCss": ".sidebar { width: 340px; min-width: 340px; } .results-grid { grid-template-columns: 1fr; }",
   "searchableFields": [
     "gene_symbol",
@@ -295,16 +305,6 @@ window.searchSchema = {
       "field": "tags",
       "label": "Tags",
       "type": "array"
-    }
-  ],
-  "navigationLinks": [
-    {
-      "label": "Predictions",
-      "href": "predictions/index.html"
-    },
-    {
-      "label": "Projects",
-      "href": "../pages/projects/index.html"
     }
   ]
 };
