@@ -1,0 +1,2067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CG46301 - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.625rem;
+            margin-bottom: 2rem;
+        }
+
+        .section-nav a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            background: var(--bg-light);
+            color: #374151;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .section-nav a:hover {
+            background: #eff6ff;
+            border-color: #93c5fd;
+            color: #1e40af;
+        }
+
+        .section-nav a:focus-visible {
+            outline: 3px solid #2563eb;
+            outline-offset: 3px;
+        }
+
+        .section-nav .nav-count {
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .section-nav .nav-external {
+            border-color: #c4b5fd;
+            background: #faf5ff;
+            color: #5b21b6;
+        }
+
+        .section[id] {
+            scroll-margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .external-predictions {
+            border: 2px solid #a78bfa;
+            border-left: 6px solid #7c3aed;
+            border-radius: 0.5rem;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            background: #faf5ff;
+        }
+
+        .prediction-notice {
+            color: #4c1d95;
+            margin-bottom: 1.25rem;
+        }
+
+        .prediction-review + .prediction-review {
+            border-top: 1px solid #c4b5fd;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+        }
+
+        .prediction-review h3, .prediction-review > p {
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            overflow-wrap: anywhere;
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CG46301</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/A0A1W5PXH3" target="_blank" class="term-link">
+                        A0A1W5PXH3
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Drosophila melanogaster</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "CG46301";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+
+    <nav class="section-nav" aria-label="Page sections">
+
+
+        <a href="#review-annotations" title="Existing annotation review entries"><span class="nav-count">3</span> Annotations</a>
+
+
+
+        <a href="#review-research" title="Deep research and hypothesis research reports"><span class="nav-count">1</span> Research</a>
+
+
+
+
+
+
+
+        <a href="#review-references" title="References cited in the gene review"><span class="nav-count">3</span> References</a>
+
+
+
+        <a href="#review-documentation" title="Additional documentation and notes"><span class="nav-count">1</span> Documents</a>
+
+
+
+
+
+
+
+
+
+
+
+
+        <a href="#review-raw-yaml">Raw YAML</a>
+    </nav>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="A0A1W5PXH3" data-a="DESCRIPTION: CG46301 is a 1237-residue NOL4/NOL4L-family protei..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>CG46301 is a 1237-residue NOL4/NOL4L-family protein with a nucleolar-protein-4 helical domain. Its gene model incorporates the CG17341 and CG16879 names. A nuclear location is inferred by curated similarity annotation, while its molecular activity and the role of its extended sequence remain unresolved.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section" id="review-annotations">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0003674" target="_blank" class="term-link">
+                                    GO:0003674
+                                </a>
+                            </span>
+                            <span class="term-label">molecular_function</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A1W5PXH3" data-a="GO:0003674" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Molecular activity is not established.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> NOL4/NOL4L family assignment and the helical domain are insufficient to specify an enzymatic or RNA-processing activity.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG46301/CG46301-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR056549; HTH_NOL4.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG46301/CG46301-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR039788; NOL4/NOL4L.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG46301/CG46301-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   DOMAIN          789..886
+FT                   /note=&#34;Nucleolar protein 4 helical&#34;
+FT                   /evidence=&#34;ECO:0000259|Pfam:PF23079&#34;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005654" target="_blank" class="term-link">
+                                    GO:0005654
+                                </a>
+                            </span>
+                            <span class="term-label">nucleoplasm</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000024
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A1W5PXH3" data-a="GO:0005654" data-r="GO_REF:0000024" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Nucleoplasmic localization is a reasonable curated family inference.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The NOL4/NOL4L assignment supports the existing ISS nuclear localization inference; there is no target-specific evidence contradicting it. The name nucleolar protein does not by itself establish nucleolar residence.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG46301/CG46301-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR056549; HTH_NOL4.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG46301/CG46301-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR039788; NOL4/NOL4L.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG46301/CG46301-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   DOMAIN          789..886
+FT                   /note=&#34;Nucleolar protein 4 helical&#34;
+FT                   /evidence=&#34;ECO:0000259|Pfam:PF23079&#34;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008150" target="_blank" class="term-link">
+                                    GO:0008150
+                                </a>
+                            </span>
+                            <span class="term-label">biological_process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ND</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000015
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="A0A1W5PXH3" data-a="GO:0008150" data-r="GO_REF:0000015" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Biological process remains unknown.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The exact 1237-residue gene model contains NOL4-family sequence but no directly characterized biological process is established.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG46301/CG46301-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR056549; HTH_NOL4.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG46301/CG46301-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">DR   InterPro; IPR039788; NOL4/NOL4L.</div>
+
+                            </div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    file:DROME/CG46301/CG46301-uniprot.txt
+
+                                </span>
+
+                                <div class="support-text">FT   DOMAIN          789..886
+FT                   /note=&#34;Nucleolar protein 4 helical&#34;
+FT                   /evidence=&#34;ECO:0000259|Pfam:PF23079&#34;</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+
+
+    <div class="section" id="review-references">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000015.md" target="_blank" class="term-link">
+                            GO_REF:0000015
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Use of the ND evidence code for Gene Ontology (GO) terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000024.md" target="_blank" class="term-link">
+                            GO_REF:0000024
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator judgment of sequence similarity</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:DROME/CG46301/CG46301-uniprot.txt
+
+                    </span>
+                </div>
+
+                <div class="reference-title">DROME/CG46301/CG46301-uniprot.txt</div>
+
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+
+    <!-- External predictions are deliberately separate from GOA annotations. -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section" id="review-research">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Falcon</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CG46301-deep-research-falcon.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A1W5PXH3" data-a="DEEP_RESEARCH: Falcon" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional-annotation report: *Drosophila melanogaster* CG17341/CG46301</span>
+
+
+                    <span class="report-badge">Falcon</span>
+
+
+                    <span class="report-badge">Edison Scientific Literature</span>
+
+
+                    <span class="report-badge">24 citations</span>
+
+
+                    <span class="report-badge">1 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-10T14:33:38.946051</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="CG46301-deep-research-falcon_artifacts/artifact-00.md" class="term-link">Edison artifact artifact-00</a>
+                        <span>(text/markdown)</span>
+                    </div>
+
+
+                </div>
+
+                <p>The research report should be a detailed narrative explaining the function, biological processes, and localization of the gene product. Citations should be given for all claims.</p>
+<p>You should prioritize authoritative reviews and primary scientific literature when conducting research. You can supplement<br />
+this with annotations you find in gene/protein databases, but these can be outdated or inaccurate.</p>
+<p>We are specifically interested in the primary function of the gene - for enzymes, what reaction is catalyzed, and what is the substrate specificity? For transporters, what is the substrate? For structural proteins or adapters, what is the broader structural role? For signaling molecules, what is the role in the pathway.</p>
+<p>We are interested in where in or outside the cell the gene product carries out its function.</p>
+<p>We are also interested in the signaling or biochemical pathways in which the gene functions. We are less interested in broad pleiotropic effects, except where these elucidate the precise role.</p>
+<p>Include evidence where possible. We are interested in both experimental evidence as well as inference from structure, evolution, or bioinformatic analysis. Precise studies should be prioritized over high-throughput, where available.</p>
+<h1 id="functional-annotation-report-drosophila-melanogaster-cg17341cg46301">Functional-annotation report: <em>Drosophila melanogaster</em> CG17341/CG46301</h1>
+<h2 id="executive-conclusion">Executive conclusion</h2>
+<p>The gene symbol <strong>CG17341 is ambiguous in the practical sense that literature is extremely limited for this specific protein</strong>. For the explicitly specified target—<em>D. melanogaster</em> CG17341/CG46301, FlyBase FBgn0283651, UniProt A0A1W5PXH3—I found <strong>no target-specific publication that experimentally establishes its molecular function, biochemical activity, localization, pathway, interaction partners, expression pattern, or phenotype</strong>. The most defensible annotation is therefore: <strong>an uncharacterized <em>Drosophila</em> member of the NOL4/NOL4L family containing predicted NOL4-associated helical/HTH-like domains</strong>.</p>
+<p>It should <strong>not</strong> presently be called an enzyme, transporter, DNA-binding protein, ribosome-biogenesis factor, or confirmed nucleolar protein. A transcriptional co-regulatory role and nuclear/nucleolar localization are testable hypotheses derived from family annotation and mammalian NOL4 experiments, not established properties of CG46301.</p>
+<h2 id="1-identity-verification">1. Identity verification</h2>
+<p>The requested record identifies the target as UniProt <strong>A0A1W5PXH3</strong> from <em>Drosophila melanogaster</em>, with current or historical identifiers <strong>CG17341, CG46301, Dmel\CG46301, Dmel_CG46301, CG16879, BG:DS01523.1, BG:DS01759.1, and DS01759.1</strong>, and FlyBase identifier <strong>FBgn0283651</strong>. This identity is internally consistent with the user-supplied UniProt metadata. The multiple CG and assembly-style names most likely reflect gene-model history and should be reconciled against the current FlyBase transcript model before designing primers, RNAi reagents, or genome edits.</p>
+<p>Exact literature searches using A0A1W5PXH3, FBgn0283651, CG46301, and CG17341 did not retrieve a paper directly characterizing this fly gene. Critically, the prominent NOL4 mechanistic paper retrieved studied <strong>mouse NOL4 proteins</strong>; <em>Drosophila</em> S2 cells were used only as a heterologous reporter system. It is therefore not direct evidence about endogenous CG46301 (takayanagikiya2014splicingvariantsof pages 5-6, takayanagikiya2014splicingvariantsof pages 1-3).</p>
+<p>FlyBase remains the appropriate organism-specific authority for resolving current symbols and gene models. Its 2024 update describes integration of Fly Cell Atlas and FlyAtlas 2 expression data, updated DIOPT/OrthoDB orthology, and expression displays spanning approximately 20 high-level cell categories. Publication: Öztürk-Çolak et al., February 2024, <em>Genetics</em>, https://doi.org/10.1093/genetics/iyad211 (ozturkcolak2024flybaseupdatesto pages 1-1).</p>
+<h2 id="2-protein-family-and-domain-interpretation">2. Protein-family and domain interpretation</h2>
+<p>The supplied annotation assigns the protein to <strong>NOL4/NOL4L</strong> (InterPro IPR039788) and identifies <strong>HTH_NOL4</strong> (IPR056549) and <strong>HTH_NOL4_2nd/PF23079</strong> regions. These are sequence-classification statements: they indicate homology to a conserved NOL4-family architecture and predict predominantly helical, HTH-like regions. They do not independently demonstrate sequence-specific DNA binding, RNA binding, catalysis, or localization.</p>
+<p>This distinction matters because A0A1W5PXH3 appears to be an automatically annotated rather than experimentally reviewed protein. UniProtKB combines expert-curated Swiss-Prot records with unreviewed TrEMBL records; automatic annotation can transfer information using InterPro classifications and UniRule models. The 2023 UniProt report described 8,280 UniRules and more than 227 million UniProtKB sequences, illustrating both the reach and inferential nature of automated propagation. Publication: Bateman et al., online 21 November 2022/2023 database issue, <em>Nucleic Acids Research</em>, https://doi.org/10.1093/nar/gkac1052 (bateman2023uniprottheuniversal pages 1-1, bateman2023uniprottheuniversal pages 3-4).</p>
+<p>Accordingly, the safest domain-level statement is: <strong>CG46301 encodes a predicted NOL4/NOL4L-family helical protein</strong>. “HTH” in a domain label should not be converted into a claim of direct DNA binding without biochemical or structural validation.</p>
+<h2 id="3-primary-molecular-function">3. Primary molecular function</h2>
+<h3 id="current-status">Current status</h3>
+<p>The <strong>primary molecular function is unknown</strong>. No catalytic reaction, substrate, cofactor, ligand, transported solute, membrane topology, nucleic-acid target, or endogenous binding partner was found for CG46301. There is consequently no basis for assigning an EC number, transporter class, or substrate specificity.</p>
+<h3 id="family-level-mechanistic-clue">Family-level mechanistic clue</h3>
+<p>Takayanagi-Kiya et al. identified murine NOL4 variants as interaction partners of the transcription factors Mlr1 and Mlr2. Their yeast-two-hybrid screens tested approximately <strong>4.0 × 10⁷ Mlr1-bait</strong> and <strong>1.1 × 10⁷ Mlr2-bait</strong> transformants. NOL4 represented 228 Mlr1-positive clones and two Mlr2-positive clones. GST pull-downs showed that NOL4-S interacted with both factors, whereas a variant lacking most of an NLS-containing conserved region, NOL4-SΔ, retained Mlr1 binding but lost Mlr2 binding (takayanagikiya2014splicingvariantsof pages 4-5, takayanagikiya2014splicingvariantsof pages 1-3).</p>
+<p>In transfected S2 cells, Mlr1 and Mlr2 activated their reporter by approximately threefold and twofold, respectively. NOL4-S modestly suppressed both, whereas NOL4-SΔ nearly abolished Mlr1-driven activity but enhanced Mlr2-driven activity. Neither variant measurably changed basal transcription, proliferation, or death in that assay (takayanagikiya2014splicingvariantsof pages 5-6). Publication: Takayanagi-Kiya et al., November 2014, <em>Zoological Science</em> 31:735–740, https://doi.org/10.2108/zs140049.</p>
+<p>These experiments suggest that <strong>some mammalian NOL4 proteins can act as isoform-dependent transcription-factor cofactors</strong>. They do not establish that CG46301 binds fly transcription factors or regulates transcription. The study itself noted conservation of NOL4-family proteins in mammals and insects but left the corresponding tissue-level complexes unresolved (takayanagikiya2014splicingvariantsof pages 6-7).</p>
+<h2 id="4-cellular-localization">4. Cellular localization</h2>
+<p>Localization of endogenous CG46301 is <strong>not established</strong>. The phrase “nucleolar protein 4 helical domain-containing” is a homology-derived protein description, not localization evidence. No target-specific microscopy, biochemical fractionation, proximity labeling, or validated nucleolar proteomics result was retrieved.</p>
+<p>Recent experiments reinforce why caution is necessary. Ogienko et al. tested candidate nucleolus-localizing signals in engineered H2B-GFP reporters. In <em>Drosophila</em> Kc167 cells, conventional basic motifs produced nucleolar localization in only <strong>0.64–3.2%</strong> of transfected cells. In S2 cells, selected constructs reached <strong>41.6%, 41.8%, and 44.8%</strong>, while the established RKKRKKK motif reached 34.0%; in human HEK293T cells, RKKRKKK reached only 0.17%. Thus localization depended strongly on motif, position, fusion context, species, and cell line (ogienko2024newfunctionalmotifs pages 7-9, ogienko2024newfunctionalmotifs pages 4-7). Publication: Ogienko et al., January 2024, <em>International Journal of Molecular Sciences</em> 25:1230, https://doi.org/10.3390/ijms25021230.</p>
+<p>Moreover, several known nucleolar proteins lack a computationally predicted NoLS and may be recruited through protein interactions. A predicted NLS/NoLS can therefore generate a hypothesis but cannot establish the localization of CG46301 (ogienko2024newfunctionalmotifs pages 4-7, ogienko2024newfunctionalmotifs pages 2-4).</p>
+<h2 id="5-biological-processes-and-pathways">5. Biological processes and pathways</h2>
+<p>No experimentally supported biological process or pathway can currently be assigned to CG46301. In particular:</p>
+<ul>
+<li><strong>Ribosome biogenesis and pre-rRNA processing:</strong> plausible only because of the family name; unproven.</li>
+<li><strong>Transcriptional regulation:</strong> weak family-level hypothesis based on murine NOL4–Mlr experiments; unproven in flies.</li>
+<li><strong>Canonical signaling pathways:</strong> no evidence for membership in Notch, Wnt, Hedgehog, JAK/STAT, Hippo, insulin, Toll, or other curated pathways.</li>
+<li><strong>Metabolism or transport:</strong> no evidence for enzymatic or transporter activity.</li>
+</ul>
+<p>FlyBase’s 2024 signaling resource curated 17 major <em>Drosophila</em> pathways using experimental evidence, but no retrieved source placed CG46301 in one of them. Absence from retrieved evidence should be interpreted as <strong>unresolved annotation</strong>, not proof that the gene has no pathway role.</p>
+<h2 id="6-expression-phenotypes-and-recent-omics">6. Expression, phenotypes, and recent omics</h2>
+<p>No defensible gene-specific tissue, developmental-stage, single-cell, sex-biased, or perturbation-response statistic was recovered. Likewise, no validated loss-of-function phenotype, viability effect, fertility phenotype, morphology, or behavioral role was found.</p>
+<p>A 2024 early-embryo proteomics study detected <strong>6,111 protein groups and 6,259 phosphosites across 1,847 proteins</strong>, but CG17341/CG46301/A0A1W5PXH3 was not named in the article text available here. Its possible presence in supplementary matrices could not be determined, and the study therefore cannot be cited as evidence of target expression or phosphorylation (gomez2024differentialregulationof pages 5-6). Publication: Gomez et al., September 2024, <em>eLife</em>, https://doi.org/10.7554/elife.99263.</p>
+<p>This is a general limitation of sparsely characterized proteins: failure to find a named result in article text does not equal absence from large supplementary datasets. The current FlyBase Gene Report, Fly Cell Atlas, FlyAtlas 2, modENCODE, and proteomics repositories should be queried using <strong>all aliases and the current transcript/protein sequence</strong>, rather than the symbol alone.</p>
+<h2 id="7-evidence-graded-summary">7. Evidence-graded summary</h2>
+<table>
+<thead>
+<tr>
+<th>Topic</th>
+<th>Best-supported conclusion</th>
+<th>Evidence type/grade</th>
+<th>Key limitation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Identity and aliases</td>
+<td>The specified target is a <em>Drosophila melanogaster</em> protein represented by UniProt A0A1W5PXH3 and associated with CG17341, CG46301, Dmel-CG46301, FBgn0283651, CG16879, BG:DS01523.1, BG:DS01759.1, and DS01759.1. Exact-identifier searches retrieved no target-specific paper.</td>
+<td><strong>Database identity; moderate confidence.</strong> Identifier mapping derives from the user-supplied UniProt record, not independently retrieved experimental literature. FlyBase is the authoritative organism-specific resource and incorporates updated orthology and single-cell datasets (ozturkcolak2024flybaseupdatesto pages 1-1).</td>
+<td>Historical aliases may reflect changes in gene models. Current FlyBase release coordinates and transcript mappings should be checked before designing reagents.</td>
+</tr>
+<tr>
+<td>Protein family and domains</td>
+<td>The supplied annotation places the protein in the NOL4/NOL4L family, InterPro IPR039788, and predicts HTH_NOL4 and HTH_NOL4_2nd regions, including Pfam PF23079. This supports evolutionary membership in a conserved, predominantly helical protein family; it does <strong>not</strong> establish DNA binding, catalytic activity, or nucleolar residence.</td>
+<td><strong>Computational family/domain prediction; low-to-moderate functional confidence.</strong> UniProt automatic annotation commonly propagates information using InterPro classifications and UniRule models (bateman2023uniprottheuniversal pages 1-1, bateman2023uniprottheuniversal pages 3-4).</td>
+<td>No experimental structure, domain-deletion study, ligand-binding assay, or biochemical test was retrieved for the fly protein.</td>
+</tr>
+<tr>
+<td>Primary molecular function</td>
+<td><strong>Unknown for CG17341/CG46301.</strong> A nuclear protein-interaction or transcriptional co-regulatory role is a cautious hypothesis based on mammalian NOL4-family evidence, but it has not been demonstrated for the fly target.</td>
+<td><strong>No direct target-specific evidence; very low confidence for the hypothesis.</strong></td>
+<td>Family homology alone cannot identify a relevant partner, target gene, direction of regulation, or physiological context.</td>
+</tr>
+<tr>
+<td>Catalytic or transport activity</td>
+<td>No evidence identifies CG17341/CG46301 as an enzyme or transporter. No reaction, substrate, cofactor, kinetic parameter, transported solute, or membrane topology is established.</td>
+<td><strong>Negative evidence assessment; function remains unassigned.</strong></td>
+<td>Absence of an annotated catalytic motif or publication is not proof that the protein lacks biochemical activity.</td>
+</tr>
+<tr>
+<td>Localization</td>
+<td>Localization is <strong>unknown</strong>. The name “nucleolar protein 4 helical domain-containing protein” is family-derived and must not be treated as evidence that endogenous CG17341/CG46301 resides in the nucleolus.</td>
+<td><strong>No direct microscopy, fractionation, proximity-labeling, or validated localization evidence.</strong> Candidate NoLS motifs show strong construct, species, and cell dependence (ogienko2024newfunctionalmotifs pages 7-9, ogienko2024newfunctionalmotifs pages 4-7, ogienko2024newfunctionalmotifs pages 9-11).</td>
+<td>Basic NoLS motifs localized reporters to nucleoli in only 0.64–3.2% of Drosophila Kc167 cells, whereas selected constructs exceeded 40% in S2 cells. Reporter behavior cannot establish localization of this endogenous protein (ogienko2024newfunctionalmotifs pages 7-9, ogienko2024newfunctionalmotifs pages 4-7).</td>
+</tr>
+<tr>
+<td>Biological process or pathway</td>
+<td>No experimentally supported biological process or signaling or biochemical pathway can be assigned. Membership in ribosome biogenesis, rRNA processing, or a canonical signaling pathway is unproven.</td>
+<td><strong>No direct target-specific evidence.</strong></td>
+<td>A predicted nucleolar-protein-family domain does not demonstrate participation in ribosome production or nucleolar stress responses.</td>
+</tr>
+<tr>
+<td>Expression and phenotype</td>
+<td>No defensible target-specific tissue, developmental-stage, single-cell, loss-of-function, viability, fertility, or morphological result was retrieved. Modern FlyBase reports can display Fly Cell Atlas and FlyAtlas 2 summaries across approximately 20 high-level cell types (ozturkcolak2024flybaseupdatesto pages 1-1).</td>
+<td><strong>Current status unknown; database query opportunity rather than experimental conclusion.</strong></td>
+<td>Failure to retrieve a publication is not evidence of no expression or phenotype. High-throughput supplementary datasets and current FlyBase alleles and stocks require direct inspection.</td>
+</tr>
+<tr>
+<td>Family-level NOL4 evidence</td>
+<td>In mouse, NOL4 splice variants bind Mlr1 and Mlr2 transcription factors and differentially alter reporter transcription. Yeast two-hybrid screens tested 4.0 × 10⁷ Mlr1-bait and 1.1 × 10⁷ Mlr2-bait transformants; NOL4 accounted for 228 Mlr1-positive and 2 Mlr2-positive clones. GST pull-downs showed NOL4-S binding both factors, whereas NOL4-SΔ bound Mlr1 but not Mlr2 (takayanagikiya2014splicingvariantsof pages 4-5, takayanagikiya2014splicingvariantsof pages 1-3).</td>
+<td><strong>Direct experiments on murine NOL4; indirect family-level evidence for the fly target.</strong> Drosophila S2 cells served only as a heterologous reporter system; Mlr1 and Mlr2 activated reporters approximately threefold and twofold, respectively (takayanagikiya2014splicingvariantsof pages 5-6).</td>
+<td>These results do not identify CG17341/CG46301 as the tested protein and do not prove conserved partners, transcriptional effects, localization, or pathway function in flies.</td>
+</tr>
+<tr>
+<td>Highest-priority validation experiments</td>
+<td>Confirm the transcript and protein sequence by FlyBase mapping and RT-PCR or RACE; endogenously tag CG46301 by CRISPR and compare its localization with fibrillarin across tissues and stages; generate null or degron alleles with genomic rescue; identify partners by affinity-purification mass spectrometry or proximity labeling; test nucleic-acid association if justified; and assay pre-rRNA processing or transcription only if localization or interaction data support those mechanisms.</td>
+<td><strong>Proposed validation strategy; not evidence of existing function.</strong> Endogenous tagging is preferred because engineered NoLS reporters vary sharply among Kc167, S2, and human cells (ogienko2024newfunctionalmotifs pages 7-9, ogienko2024newfunctionalmotifs pages 13-14).</td>
+<td>Tag position may alter localization or interactions. Phenotypes require independent alleles, untagged controls, and genomic rescue. Candidate assays should test rather than assume a nucleolar mechanism.</td>
+</tr>
+</tbody>
+</table>
+<p><em>Table: Evidence-graded assessment of what is known, predicted, and untested for </em>D. melanogaster<em> CG17341/CG46301. It distinguishes supplied database annotation from direct experiments and avoids unsupported assignment of nucleolar localization or biochemical activity.</em></p>
+<h2 id="8-current-applications-and-real-world-implementation">8. Current applications and real-world implementation</h2>
+<p>There is no demonstrated biological or biotechnological application specific to CG46301. At present, its practical value is as an <strong>uncharacterized candidate for functional-genomics investigation</strong>. Useful implementations would include endogenous tagging to study nuclear organization, systematic RNAi/CRISPR screens, and comparative analysis of NOL4-family evolution. Therapeutic, diagnostic, agricultural, or pathway-engineering claims would be premature.</p>
+<p>The broader 2023–2024 development relevant to this target is methodological: FlyBase now integrates single-cell expression and improved orthology, while UniProt couples large-scale automatic annotation to curated provenance. These resources make hypothesis generation easier, but they do not replace target-specific experiments (bateman2023uniprottheuniversal pages 1-1, ozturkcolak2024flybaseupdatesto pages 1-1, bateman2023uniprottheuniversal pages 2-3).</p>
+<h2 id="9-recommended-experiments">9. Recommended experiments</h2>
+<ol>
+<li><strong>Resolve the gene model.</strong> Confirm current FlyBase coordinates, transcripts, coding sequence, and correspondence among CG17341, CG46301, and historical aliases. Validate transcription by RT-PCR/RACE and sequencing.</li>
+<li><strong>Establish localization endogenously.</strong> Introduce small N- and C-terminal CRISPR tags in separate lines; compare with fibrillarin and nuclear markers across development and tissues. Include untagged controls and rescue tests.</li>
+<li><strong>Determine requirement and phenotype.</strong> Generate independent null/degron alleles and a genomic rescue. Measure viability, fertility, development, cell proliferation, and tissue-specific phenotypes without assuming a nucleolar mechanism.</li>
+<li><strong>Identify molecular partners.</strong> Apply affinity-purification mass spectrometry or proximity labeling from endogenous expression levels. Test any conserved transcription-factor interactions independently.</li>
+<li><strong>Test mechanism only after localization/interaction evidence.</strong> If nucleolar association is observed, assay pre-rRNA processing, nascent rRNA synthesis, ribosomal-subunit profiles, and nucleolar morphology. If chromatin or transcription-factor association is observed, perform CUT&amp;RUN/ChIP and transcriptomics.</li>
+<li><strong>Dissect PF23079 function.</strong> Use structure prediction followed by conservation-guided mutations or domain deletion, testing folding, localization, and partner binding separately.</li>
+</ol>
+<h2 id="final-assessment">Final assessment</h2>
+<p><strong>CG17341/CG46301 is not presently functionally annotated at a level that supports a precise mechanistic claim.</strong> The protein is best described as a predicted <em>D. melanogaster</em> NOL4/NOL4L-family helical-domain protein. Its primary function, cellular site of action, pathway, expression pattern, and physiological role remain unknown. Mammalian NOL4 data justify investigating a nuclear transcriptional-cofactor role, and the family name justifies testing nucleolar localization, but neither should be entered as an experimentally established annotation for A0A1W5PXH3.</p>
+<p>References</p>
+<ol>
+<li>
+<p>(takayanagikiya2014splicingvariantsof pages 5-6): Seika Takayanagi-Kiya, Kayo Misawa-Hojo, Taketoshi Kiya, Takekazu Kunieda, and Takeo Kubo. Splicing variants of nol4 differentially regulate the transcription activity of mlr1 and mlr2 in cultured cells. Zoological Science, 31:735-740, Nov 2014. URL: https://doi.org/10.2108/zs140049, doi:10.2108/zs140049. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(takayanagikiya2014splicingvariantsof pages 1-3): Seika Takayanagi-Kiya, Kayo Misawa-Hojo, Taketoshi Kiya, Takekazu Kunieda, and Takeo Kubo. Splicing variants of nol4 differentially regulate the transcription activity of mlr1 and mlr2 in cultured cells. Zoological Science, 31:735-740, Nov 2014. URL: https://doi.org/10.2108/zs140049, doi:10.2108/zs140049. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ozturkcolak2024flybaseupdatesto pages 1-1): Arzu Öztürk-Çolak, Steven J Marygold, Giulia Antonazzo, Helen Attrill, Damien Goutte-Gattat, Victoria K Jenkins, Beverley B Matthews, Gillian Millburn, Gilberto dos Santos, Christopher J Tabone, Norbert Perrimon, Susan Russo Gelbart, Kris Broll, Madeline Crosby, Gilberto dos Santos, Kathleen Falls, L Sian Gramates, Victoria K Jenkins, Ian Longden, Beverley B Matthews, Jolene Seme, Christopher J Tabone, Pinglei Zhou, Mark Zytkovicz, Nick Brown, Giulia Antonazzo, Helen Attrill, Damien Goutte-Gattat, Aoife Larkin, Steven Marygold, Alex McLachlan, Gillian Millburn, Clare Pilgrim, Arzu Öztürk-Çolak, Thomas Kaufman, Brian Calvi, Seth Campbell, Josh Goodman, Victor Strelets, Jim Thurmond, Richard Cripps, and TyAnna Lovato. Flybase: updates to the drosophila genes and genomes database. Genetics, Feb 2024. URL: https://doi.org/10.1093/genetics/iyad211, doi:10.1093/genetics/iyad211. This article has 479 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bateman2023uniprottheuniversal pages 1-1): A. Bateman, M. Martin, S. Orchard, M. Magrane, Shadab Ahmad, E. Alpi, E. Bowler-Barnett, R. Britto, Hema Bye-A-Jee, Austra Cukura, Paul Denny, Tunca Dogan, Thankgod Ebenezer, Jun Fan, Penelope Garmiri, Leonardo Jose da Costa Gonzales, E. Hatton-Ellis, Abdulrahman Hussein, A. Ignatchenko, Giuseppe Insana, Rizwan Ishtiaq, Vishal Joshi, Dushyanth Jyothi, Swaathi Kandasaamy, A. Lock, Aurélien Luciani, Marija Lugarić, Jie Luo, Yvonne Lussi, Alistair MacDougall, F. Madeira, Mahdi Mahmoudy, Alok Mishra, Katie Moulang, Andrew Nightingale, Sangya Pundir, G. Qi, Shriya Raj, P. Raposo, Daniel L Rice, Rabie Saidi, Rafael Santos, Elena Speretta, J. Stephenson, Prabhat Totoo, Edward Turner, N. Tyagi, Preethi Vasudev, Kate Warner, Xavier Watkins, Rossana Zaru, H. Zellner, A. Bridge, L. Aimo, Ghislaine Argoud-Puy, A. Auchincloss, K. Axelsen, Parit Bansal, Delphine Baratin, Teresa M Batista Neto, M. Blatter, Jerven T. Bolleman, E. Boutet, L. Breuza, B. Gil, Cristina Casals-Casas, Kamal Chikh Echioukh, E. Coudert, Béatrice A. Cuche, E. de Castro, A. Estreicher, M. Famiglietti, M. Feuermann, E. Gasteiger, P. Gaudet, S. Gehant, V. Gerritsen, A. Gos, N. Gruaz, C. Hulo, Nevila Hyka-Nouspikel, F. Jungo, A. Kerhornou, Philippe le Mercier, D. Lieberherr, P. Masson, A. Morgat, Venkatesh Muthukrishnan, S. Paesano, I. Pedruzzi, S. Pilbout, L. Pourcel, S. Poux, Monica Pozzato, Manuela Pruess, Nicole Redaschi, C. Rivoire, Christian J. A. Sigrist, K. Sonesson, S. Sundaram, Cathy H. Wu, C. Arighi, L. Arminski, Chuming Chen, Yongxing Chen, Hongzhan Huang, K. Laiho, P. McGarvey, D. Natale, Karen E. Ross, C. R. Vinayaka, Qinghua Wang, Yuqi Wang, and Jian Zhang. Uniprot: the universal protein knowledgebase in 2023. Nucleic Acids Research, 51:D523-D531, Nov 2023. URL: https://doi.org/10.1093/nar/gkac1052, doi:10.1093/nar/gkac1052. This article has 6201 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(bateman2023uniprottheuniversal pages 3-4): A. Bateman, M. Martin, S. Orchard, M. Magrane, Shadab Ahmad, E. Alpi, E. Bowler-Barnett, R. Britto, Hema Bye-A-Jee, Austra Cukura, Paul Denny, Tunca Dogan, Thankgod Ebenezer, Jun Fan, Penelope Garmiri, Leonardo Jose da Costa Gonzales, E. Hatton-Ellis, Abdulrahman Hussein, A. Ignatchenko, Giuseppe Insana, Rizwan Ishtiaq, Vishal Joshi, Dushyanth Jyothi, Swaathi Kandasaamy, A. Lock, Aurélien Luciani, Marija Lugarić, Jie Luo, Yvonne Lussi, Alistair MacDougall, F. Madeira, Mahdi Mahmoudy, Alok Mishra, Katie Moulang, Andrew Nightingale, Sangya Pundir, G. Qi, Shriya Raj, P. Raposo, Daniel L Rice, Rabie Saidi, Rafael Santos, Elena Speretta, J. Stephenson, Prabhat Totoo, Edward Turner, N. Tyagi, Preethi Vasudev, Kate Warner, Xavier Watkins, Rossana Zaru, H. Zellner, A. Bridge, L. Aimo, Ghislaine Argoud-Puy, A. Auchincloss, K. Axelsen, Parit Bansal, Delphine Baratin, Teresa M Batista Neto, M. Blatter, Jerven T. Bolleman, E. Boutet, L. Breuza, B. Gil, Cristina Casals-Casas, Kamal Chikh Echioukh, E. Coudert, Béatrice A. Cuche, E. de Castro, A. Estreicher, M. Famiglietti, M. Feuermann, E. Gasteiger, P. Gaudet, S. Gehant, V. Gerritsen, A. Gos, N. Gruaz, C. Hulo, Nevila Hyka-Nouspikel, F. Jungo, A. Kerhornou, Philippe le Mercier, D. Lieberherr, P. Masson, A. Morgat, Venkatesh Muthukrishnan, S. Paesano, I. Pedruzzi, S. Pilbout, L. Pourcel, S. Poux, Monica Pozzato, Manuela Pruess, Nicole Redaschi, C. Rivoire, Christian J. A. Sigrist, K. Sonesson, S. Sundaram, Cathy H. Wu, C. Arighi, L. Arminski, Chuming Chen, Yongxing Chen, Hongzhan Huang, K. Laiho, P. McGarvey, D. Natale, Karen E. Ross, C. R. Vinayaka, Qinghua Wang, Yuqi Wang, and Jian Zhang. Uniprot: the universal protein knowledgebase in 2023. Nucleic Acids Research, 51:D523-D531, Nov 2023. URL: https://doi.org/10.1093/nar/gkac1052, doi:10.1093/nar/gkac1052. This article has 6201 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+<li>
+<p>(takayanagikiya2014splicingvariantsof pages 4-5): Seika Takayanagi-Kiya, Kayo Misawa-Hojo, Taketoshi Kiya, Takekazu Kunieda, and Takeo Kubo. Splicing variants of nol4 differentially regulate the transcription activity of mlr1 and mlr2 in cultured cells. Zoological Science, 31:735-740, Nov 2014. URL: https://doi.org/10.2108/zs140049, doi:10.2108/zs140049. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(takayanagikiya2014splicingvariantsof pages 6-7): Seika Takayanagi-Kiya, Kayo Misawa-Hojo, Taketoshi Kiya, Takekazu Kunieda, and Takeo Kubo. Splicing variants of nol4 differentially regulate the transcription activity of mlr1 and mlr2 in cultured cells. Zoological Science, 31:735-740, Nov 2014. URL: https://doi.org/10.2108/zs140049, doi:10.2108/zs140049. This article has 5 citations and is from a peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ogienko2024newfunctionalmotifs pages 7-9): Anna A. Ogienko, Mariya O. Korepina, Alexey V. Pindyurin, and Evgeniya S. Omelina. New functional motifs for the targeted localization of proteins to the nucleolus in drosophila and human cells. Jan 2024. URL: https://doi.org/10.3390/ijms25021230, doi:10.3390/ijms25021230. This article has 3 citations.</p>
+</li>
+<li>
+<p>(ogienko2024newfunctionalmotifs pages 4-7): Anna A. Ogienko, Mariya O. Korepina, Alexey V. Pindyurin, and Evgeniya S. Omelina. New functional motifs for the targeted localization of proteins to the nucleolus in drosophila and human cells. Jan 2024. URL: https://doi.org/10.3390/ijms25021230, doi:10.3390/ijms25021230. This article has 3 citations.</p>
+</li>
+<li>
+<p>(ogienko2024newfunctionalmotifs pages 2-4): Anna A. Ogienko, Mariya O. Korepina, Alexey V. Pindyurin, and Evgeniya S. Omelina. New functional motifs for the targeted localization of proteins to the nucleolus in drosophila and human cells. Jan 2024. URL: https://doi.org/10.3390/ijms25021230, doi:10.3390/ijms25021230. This article has 3 citations.</p>
+</li>
+<li>
+<p>(gomez2024differentialregulationof pages 5-6): Juan Manuel Gomez, Hendrik Nolte, Elisabeth Vogelsang, Bipasha Dey, Michiko Takeda, Girolamo Giudice, Miriam Faxel, Theresa Haunold, Alina Cepraga, Robert P Zinzen, Marcus Krüger, Evangelia Petsalaki, Yu-Chiun Wang, and Maria Leptin. Differential regulation of the proteome and phosphoproteome along the dorso-ventral axis of the early drosophila embryo. Sep 2024. URL: https://doi.org/10.7554/elife.99263, doi:10.7554/elife.99263. This article has 6 citations and is from a domain leading peer-reviewed journal.</p>
+</li>
+<li>
+<p>(ogienko2024newfunctionalmotifs pages 9-11): Anna A. Ogienko, Mariya O. Korepina, Alexey V. Pindyurin, and Evgeniya S. Omelina. New functional motifs for the targeted localization of proteins to the nucleolus in drosophila and human cells. Jan 2024. URL: https://doi.org/10.3390/ijms25021230, doi:10.3390/ijms25021230. This article has 3 citations.</p>
+</li>
+<li>
+<p>(ogienko2024newfunctionalmotifs pages 13-14): Anna A. Ogienko, Mariya O. Korepina, Alexey V. Pindyurin, and Evgeniya S. Omelina. New functional motifs for the targeted localization of proteins to the nucleolus in drosophila and human cells. Jan 2024. URL: https://doi.org/10.3390/ijms25021230, doi:10.3390/ijms25021230. This article has 3 citations.</p>
+</li>
+<li>
+<p>(bateman2023uniprottheuniversal pages 2-3): A. Bateman, M. Martin, S. Orchard, M. Magrane, Shadab Ahmad, E. Alpi, E. Bowler-Barnett, R. Britto, Hema Bye-A-Jee, Austra Cukura, Paul Denny, Tunca Dogan, Thankgod Ebenezer, Jun Fan, Penelope Garmiri, Leonardo Jose da Costa Gonzales, E. Hatton-Ellis, Abdulrahman Hussein, A. Ignatchenko, Giuseppe Insana, Rizwan Ishtiaq, Vishal Joshi, Dushyanth Jyothi, Swaathi Kandasaamy, A. Lock, Aurélien Luciani, Marija Lugarić, Jie Luo, Yvonne Lussi, Alistair MacDougall, F. Madeira, Mahdi Mahmoudy, Alok Mishra, Katie Moulang, Andrew Nightingale, Sangya Pundir, G. Qi, Shriya Raj, P. Raposo, Daniel L Rice, Rabie Saidi, Rafael Santos, Elena Speretta, J. Stephenson, Prabhat Totoo, Edward Turner, N. Tyagi, Preethi Vasudev, Kate Warner, Xavier Watkins, Rossana Zaru, H. Zellner, A. Bridge, L. Aimo, Ghislaine Argoud-Puy, A. Auchincloss, K. Axelsen, Parit Bansal, Delphine Baratin, Teresa M Batista Neto, M. Blatter, Jerven T. Bolleman, E. Boutet, L. Breuza, B. Gil, Cristina Casals-Casas, Kamal Chikh Echioukh, E. Coudert, Béatrice A. Cuche, E. de Castro, A. Estreicher, M. Famiglietti, M. Feuermann, E. Gasteiger, P. Gaudet, S. Gehant, V. Gerritsen, A. Gos, N. Gruaz, C. Hulo, Nevila Hyka-Nouspikel, F. Jungo, A. Kerhornou, Philippe le Mercier, D. Lieberherr, P. Masson, A. Morgat, Venkatesh Muthukrishnan, S. Paesano, I. Pedruzzi, S. Pilbout, L. Pourcel, S. Poux, Monica Pozzato, Manuela Pruess, Nicole Redaschi, C. Rivoire, Christian J. A. Sigrist, K. Sonesson, S. Sundaram, Cathy H. Wu, C. Arighi, L. Arminski, Chuming Chen, Yongxing Chen, Hongzhan Huang, K. Laiho, P. McGarvey, D. Natale, Karen E. Ross, C. R. Vinayaka, Qinghua Wang, Yuqi Wang, and Jian Zhang. Uniprot: the universal protein knowledgebase in 2023. Nucleic Acids Research, 51:D523-D531, Nov 2023. URL: https://doi.org/10.1093/nar/gkac1052, doi:10.1093/nar/gkac1052. This article has 6201 citations and is from a highest quality peer-reviewed journal.</p>
+</li>
+</ol>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="CG46301-deep-research-falcon_artifacts/artifact-00.md">Edison artifact artifact-00</a></li>
+</ul>
+<h2 id="citations">Citations</h2>
+<ol>
+<li>ozturkcolak2024flybaseupdatesto pages 1-1</li>
+<li>takayanagikiya2014splicingvariantsof pages 5-6</li>
+<li>takayanagikiya2014splicingvariantsof pages 6-7</li>
+<li>gomez2024differentialregulationof pages 5-6</li>
+<li>takayanagikiya2014splicingvariantsof pages 1-3</li>
+<li>bateman2023uniprottheuniversal pages 1-1</li>
+<li>bateman2023uniprottheuniversal pages 3-4</li>
+<li>takayanagikiya2014splicingvariantsof pages 4-5</li>
+<li>ogienko2024newfunctionalmotifs pages 7-9</li>
+<li>ogienko2024newfunctionalmotifs pages 4-7</li>
+<li>ogienko2024newfunctionalmotifs pages 2-4</li>
+<li>ogienko2024newfunctionalmotifs pages 9-11</li>
+<li>ogienko2024newfunctionalmotifs pages 13-14</li>
+<li>bateman2023uniprottheuniversal pages 2-3</li>
+<li>https://doi.org/10.1093/genetics/iyad211</li>
+<li>https://doi.org/10.1093/nar/gkac1052</li>
+<li>https://doi.org/10.2108/zs140049.</li>
+<li>https://doi.org/10.3390/ijms25021230.</li>
+<li>https://doi.org/10.7554/elife.99263.</li>
+<li>https://doi.org/10.2108/zs140049,</li>
+<li>https://doi.org/10.1093/genetics/iyad211,</li>
+<li>https://doi.org/10.1093/nar/gkac1052,</li>
+<li>https://doi.org/10.3390/ijms25021230,</li>
+<li>https://doi.org/10.7554/elife.99263,</li>
+</ol>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+    <div class="section" id="review-documentation">
+        <h2 class="section-title">📚 Additional Documentation</h2>
+
+        <details class="markdown-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">Notes</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(CG46301-notes.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="A0A1W5PXH3" data-a="DOC: Notes" data-r="" data-act="DOCUMENTATION" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This documentation is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This documentation needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+                <h1 id="cg46301-a0a1w5pxh3-evidence-and-protnlm-claim-review">CG46301 (A0A1W5PXH3): evidence and ProtNLM claim review</h1>
+<p>CG46301 is a 1237-residue NOL4/NOL4L-family protein with a nucleolar-protein-4 helical domain. Its gene model incorporates the CG17341 and CG16879 names. A nuclear location is inferred by curated similarity annotation, while its molecular activity and the role of its extended sequence remain unresolved.</p>
+<p>Exact input: <a href="https://www.uniprot.org/uniprotkb/A0A1W5PXH3/entry">A0A1W5PXH3</a>, 1237 residues. The accession was fetched explicitly with the gene-directory alias; no canonical-sequence substitution is made.</p>
+<p>Raw emitted predictions: <a href="CG46301-predictions-source.json">CG46301-predictions-source.json</a>. Source features: <a href="CG46301-uniprot.txt">CG46301-uniprot.txt</a>, with an exact extraction in <a href="CG46301-sequence-evidence.json">CG46301-sequence-evidence.json</a>.</p>
+<h2 id="sequence-and-domain-evidence">Sequence and domain evidence</h2>
+<p>These are sequence/domain observations or explicitly named feature predictions, not measurements of biological function. ARBA assertions and ProtNLM-derived UniProt names are not counted as validation.</p>
+<div class="codehilite"><pre><span></span><code>DR   InterPro; IPR056549; HTH_NOL4.
+DR   InterPro; IPR039788; NOL4/NOL4L.
+FT   DOMAIN          789..886
+FT                   /note=&quot;Nucleolar protein 4 helical&quot;
+FT                   /evidence=&quot;ECO:0000259|Pfam:PF23079&quot;
+</code></pre></div>
+
+<h2 id="protnlm-claims">ProtNLM claims</h2>
+<p>The snapshot emits names and location/keyword statements, with no GO or EC prediction for this target. Each actual statement is assessed below; no GO term has been substituted for it. Categories follow the function-prediction rubric, with nonspecific “uncharacterized” names marked UNC because they contain no testable function. CNN records an independently supported existing annotation; it does not assert a particular training-set composition.</p>
+<table>
+<thead>
+<tr>
+<th>Kind</th>
+<th>Verbatim emitted statement</th>
+<th>Assessment</th>
+<th>Evidence and limitation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name</td>
+<td>Nucleolar protein 4</td>
+<td>CNN</td>
+<td>IPR039788 establishes NOL4/NOL4L-family membership and PF23079 identifies a nucleolar-protein-4 helical domain. The family-level name is supported; the wording alone is not evidence of nucleolar localization or a specific NOL4 paralog.</td>
+</tr>
+<tr>
+<td>Location</td>
+<td>Nucleus (SL-0191)</td>
+<td>LSP</td>
+<td>The existing curated ISS nucleoplasm annotation is a more specific nuclear location. Family architecture supports this inference without establishing a nucleolar role.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="literature-evidence">Literature evidence</h2>
+<p>No target-specific primary finding is used to establish a molecular activity here. The current assessment is bounded by exact-record architecture and the explicitly identified curated inferences.</p>
+<h2 id="annotation-decisions">Annotation decisions</h2>
+<ul>
+<li>GO:0003674 molecular_function (ND): <strong>ACCEPT</strong>. NOL4/NOL4L family assignment and the helical domain are insufficient to specify an enzymatic or RNA-processing activity.</li>
+<li>GO:0005654 nucleoplasm (ISS): <strong>ACCEPT</strong>. The NOL4/NOL4L assignment supports the existing ISS nuclear localization inference; there is no target-specific evidence contradicting it. The name nucleolar protein does not by itself establish nucleolar residence.</li>
+<li>GO:0008150 biological_process (ND): <strong>ACCEPT</strong>. The exact 1237-residue gene model contains NOL4-family sequence but no directly characterized biological process is established.</li>
+</ul>
+<h2 id="research-assessment">Research assessment</h2>
+<p>The Falcon source leads do not establish a fly-specific molecular activity. PMID:25366156 studies murine NOL4 splice variants interacting with mouse Mlr proteins; use of Drosophila S2 cells as an assay host does not make the assayed NOL4 a fly gene product. The exact NOL4-family architecture and existing curated ISS support a nuclear inference, with no transfer of the mouse transcriptional mechanism.</p>
+<p>Provider output: <a href="CG46301-deep-research-falcon.md">CG46301-deep-research-falcon.md</a>. Primary papers and source records, rather than provider verdicts, support the assessment.</p>
+<p>The annotation and prediction assessments are complete. UNC/UNDECIDED record delimited scientific or evidence uncertainty. Empty core-function lists indicate that no sufficiently resolved molecular activity can be asserted, rather than an unfinished review.</p>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- YAML Preview Section -->
+    <div class="section" id="review-raw-yaml">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: A0A1W5PXH3
+gene_symbol: CG46301
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:7227
+  label: Drosophila melanogaster
+description: CG46301 is a 1237-residue NOL4/NOL4L-family protein with a nucleolar-protein-4 helical domain.
+  Its gene model incorporates the CG17341 and CG16879 names. A nuclear location is inferred by curated
+  similarity annotation, while its molecular activity and the role of its extended sequence remain unresolved.
+existing_annotations:
+- term:
+    id: GO:0003674
+    label: molecular_function
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: enables
+  review:
+    action: ACCEPT
+    summary: Molecular activity is not established.
+    reason: NOL4/NOL4L family assignment and the helical domain are insufficient to specify an enzymatic
+      or RNA-processing activity.
+    supported_by:
+    - reference_id: file:DROME/CG46301/CG46301-uniprot.txt
+      supporting_text: DR   InterPro; IPR056549; HTH_NOL4.
+    - reference_id: file:DROME/CG46301/CG46301-uniprot.txt
+      supporting_text: DR   InterPro; IPR039788; NOL4/NOL4L.
+    - reference_id: file:DROME/CG46301/CG46301-uniprot.txt
+      supporting_text: &#39;FT   DOMAIN          789..886
+
+        FT                   /note=&#34;Nucleolar protein 4 helical&#34;
+
+        FT                   /evidence=&#34;ECO:0000259|Pfam:PF23079&#34;&#39;
+- term:
+    id: GO:0005654
+    label: nucleoplasm
+  evidence_type: ISS
+  original_reference_id: GO_REF:0000024
+  qualifier: located_in
+  supporting_entities:
+  - UniProtKB:Q96MY1
+  review:
+    action: ACCEPT
+    summary: Nucleoplasmic localization is a reasonable curated family inference.
+    reason: The NOL4/NOL4L assignment supports the existing ISS nuclear localization inference; there
+      is no target-specific evidence contradicting it. The name nucleolar protein does not by itself establish
+      nucleolar residence.
+    supported_by:
+    - reference_id: file:DROME/CG46301/CG46301-uniprot.txt
+      supporting_text: DR   InterPro; IPR056549; HTH_NOL4.
+    - reference_id: file:DROME/CG46301/CG46301-uniprot.txt
+      supporting_text: DR   InterPro; IPR039788; NOL4/NOL4L.
+    - reference_id: file:DROME/CG46301/CG46301-uniprot.txt
+      supporting_text: &#39;FT   DOMAIN          789..886
+
+        FT                   /note=&#34;Nucleolar protein 4 helical&#34;
+
+        FT                   /evidence=&#34;ECO:0000259|Pfam:PF23079&#34;&#39;
+- term:
+    id: GO:0008150
+    label: biological_process
+  evidence_type: ND
+  original_reference_id: GO_REF:0000015
+  qualifier: involved_in
+  review:
+    action: ACCEPT
+    summary: Biological process remains unknown.
+    reason: The exact 1237-residue gene model contains NOL4-family sequence but no directly characterized
+      biological process is established.
+    supported_by:
+    - reference_id: file:DROME/CG46301/CG46301-uniprot.txt
+      supporting_text: DR   InterPro; IPR056549; HTH_NOL4.
+    - reference_id: file:DROME/CG46301/CG46301-uniprot.txt
+      supporting_text: DR   InterPro; IPR039788; NOL4/NOL4L.
+    - reference_id: file:DROME/CG46301/CG46301-uniprot.txt
+      supporting_text: &#39;FT   DOMAIN          789..886
+
+        FT                   /note=&#34;Nucleolar protein 4 helical&#34;
+
+        FT                   /evidence=&#34;ECO:0000259|Pfam:PF23079&#34;&#39;
+references:
+- id: GO_REF:0000015
+  title: Use of the ND evidence code for Gene Ontology (GO) terms
+  findings: []
+- id: GO_REF:0000024
+  title: Manual transfer of experimentally-verified manual GO annotation data to orthologs by curator
+    judgment of sequence similarity
+  findings: []
+- id: file:DROME/CG46301/CG46301-uniprot.txt
+  title: DROME/CG46301/CG46301-uniprot.txt
+  findings: []
+core_functions: []
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
