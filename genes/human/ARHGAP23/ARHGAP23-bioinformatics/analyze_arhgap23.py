@@ -864,7 +864,11 @@ def muller_mutant_and_controls() -> dict[str, Any]:
     }
 
 
-LITERATURE_GROUPS_REQUIRED = ("in vitro", "in vivo")
+# Every group the report RENDERS must be required, not just the two the argument turns on.
+# A group that is rendered but not required would print as "(empty)" if it went missing,
+# which is the same absent-versus-empty confusion this guard exists to prevent - and it
+# would bite hardest on "reference", whose block extent is the only unbounded one.
+LITERATURE_GROUPS_REQUIRED = ("integrated", "in vitro", "in vivo", "reference")
 
 
 def _require_literature_groups(groups: dict[str, Any]) -> None:
@@ -1404,23 +1408,41 @@ def self_test() -> int:
     anchors += 1
     applied += 1
     _expect_raises(
-        lambda: _require_literature_groups({"in vivo": {"RhoA": "+"}}),
+        lambda: _require_literature_groups(
+            {g: {"RhoA": "+"} for g in LITERATURE_GROUPS_REQUIRED if g != "in vitro"}
+        ),
         "with no 'in vitro'",
         "missing literature block",
     )
 
-    # Negative control: a layout that has the required blocks must be accepted silently.
+    # ... and a group that the report renders but the guard forgot must also abort, which
+    # is the absent-versus-empty confusion one level up.
     anchors += 1
     applied += 1
-    _require_literature_groups({"in vitro": {}, "in vivo": {}, "integrated": {}})
+    _expect_raises(
+        lambda: _require_literature_groups(
+            {g: {} for g in LITERATURE_GROUPS_REQUIRED if g != "reference"}
+        ),
+        "with no 'reference'",
+        "rendered group missing from the guard",
+    )
 
-    # Mutation 14: taking every matching column instead of the first run must change the
-    # answer, which is what makes the first-run rule load-bearing rather than decorative.
+    # Negative control: a layout that has every required block must be accepted silently.
     anchors += 1
     applied += 1
-    assert lit["screen_calls"] != {"RhoA": 0, "Rac1": 0, "Cdc42": 0}, (
-        "the screen block has collapsed onto the derived flag columns; the first-run rule "
-        "in _block is not being applied"
+    _require_literature_groups({g: {} for g in LITERATURE_GROUPS_REQUIRED})
+
+    # Mutation 14: the screen block must hold the call vocabulary, not the derived flag
+    # columns. Asserting the vocabulary rather than one known-wrong triple is what makes the
+    # first-run rule in _block load-bearing: any collapse onto the numeric flags fails, not
+    # just the particular (0, 0, 0) that the naive implementation happened to produce.
+    anchors += 1
+    applied += 1
+    bad = {k: v for k, v in lit["screen_calls"].items() if str(v).strip() not in ("+", "-")}
+    assert not bad, (
+        f"the screen block holds {bad}, which is outside the +/- call vocabulary; it has "
+        "collapsed onto the derived flag columns and the first-run rule in _block is not "
+        "being applied"
     )
 
     # Mutation 11: an ambiguous supplementary row must not be resolved by picking one.
@@ -1749,8 +1771,10 @@ def render_markdown(res: dict[str, Any]) -> str:
     L.append("")
     L.append("| literature column | RhoA | Rac1 | Cdc42 |")
     L.append("|---|---|---|---|")
-    for g in ("integrated", "in vitro", "in vivo", "reference"):
-        cells = lit["groups"].get(g, {})
+    for g in LITERATURE_GROUPS_REQUIRED:
+        # Direct indexing on purpose: every rendered group is required above, so a missing
+        # one must raise here rather than render as an empty row.
+        cells = lit["groups"][g]
         L.append(
             f"| {g} | "
             + " | ".join(
@@ -1761,12 +1785,16 @@ def render_markdown(res: dict[str, Any]) -> str:
         )
     L.append("")
     L.append(
-        f"The **\"in vitro\" row is empty for all three GTPases** "
-        f"({'confirmed' if lit['in_vitro_empty'] else 'NOT confirmed'} by this parse) while the "
-        f"\"in vivo\" row is not ({'empty' if lit['in_vivo_empty'] else 'populated'}). That is the "
-        "machine-checkable form of this review's statement that no purified-protein GAP assay "
-        "exists for ARHGAP23, and it is checked here rather than asserted because it is otherwise "
-        "the one load-bearing claim in the review that nothing re-runs."
+        "This parse finds the **\"in vitro\" row "
+        + ("empty for all three GTPases" if lit["in_vitro_empty"] else "POPULATED")
+        + "**, and the **\"in vivo\" row "
+        + ("also empty" if lit["in_vivo_empty"] else "populated")
+        + "**. The contrast is the point: an empty in-vitro row means nothing if every row is "
+        "empty. This is the machine-checkable form of the review's statement that no "
+        "purified-protein GAP assay exists for ARHGAP23, and it is checked here rather than "
+        "asserted because it is otherwise the one load-bearing claim in the review that nothing "
+        "re-runs. Every group in the table above is required to be present, so an absent column "
+        "aborts the run instead of rendering as an empty one."
     )
     L.append("")
     L.append(

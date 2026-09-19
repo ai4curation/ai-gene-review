@@ -82,6 +82,11 @@ MUTATIONS: list[tuple[str, str, str]] = [
         "    for needed in LITERATURE_GROUPS_REQUIRED:\n        if False:",
     ),
     (
+        "render a literature group the presence guard does not require",
+        'LITERATURE_GROUPS_REQUIRED = ("integrated", "in vitro", "in vivo", "reference")',
+        'LITERATURE_GROUPS_REQUIRED = ("in vitro", "in vivo")',
+    ),
+    (
         "resolve an ambiguous supplementary row by picking the first",
         '            f"expected exactly 1 row for {symbol} in the supplementary sheet, found {len(hits)}"',
         '            "an ambiguity that is no longer reported"',
