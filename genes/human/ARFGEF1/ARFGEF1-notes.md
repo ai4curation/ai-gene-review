@@ -109,11 +109,18 @@ subunit binding` records. UniProt hedges it (`Proposed to act as A
 kinase-anchoring protein (AKAP)`) but asserts the binding experimentally:
 `Interacts with PRKAR1A and PRKAR2A (PubMed:12571360).`
 
-**Regulation.** PKA phosphorylation of Ser-883 reduces GEF activity and is
-reversed by PP1γ [PMID:17360629]; the same site plus a `711..715` NLS drives
-cAMP-induced nuclear accumulation [PMID:16467138] (UniProt `MUTAGEN 883 S->A:
-Abolishes cAMP-induced nuclear localization.`). PDE3A-containing AKAP complexes
-keep local cAMP low so the GEF stays active [PMID:19332778].
+**Regulation.** PKA phosphorylation reduces GEF activity and PP1γ restores it:
+
+> "GEP activity of each was significantly decreased after incubation with
+> recombinant PKA plus ATP and restored by incubation with PP1gamma."
+> [PMID:17360629]
+
+A separate PKA event, phosphorylation of Ser-883 together with a `711..715` NLS,
+drives cAMP-induced nuclear accumulation [PMID:16467138] (UniProt `MUTAGEN 883`,
+`S->A: Abolishes cAMP-induced nuclear localization.`). PDE3A-containing AKAP
+complexes keep local cAMP low so the GEF stays active [PMID:19332778].
+
+**These two are routinely conflated and the conflation is wrong — see §2.7.**
 
 **Traffic step.** Double knockdown of BIG1 and BIG2 in human cells blocks an
 identified retrograde route:
