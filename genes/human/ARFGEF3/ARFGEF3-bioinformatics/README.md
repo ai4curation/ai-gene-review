@@ -26,6 +26,12 @@ uv run --no-project --with requests --with biopython python sec7_catalytic_check
 # 4. Are the UniProt-SubCell-derived CC rows in the right GO branch?
 #    Independent of steps 1-3; can be run on its own.
 uv run --no-project --with requests python subcell_mapping_check.py
+
+# 5. What has a suspect WITH/FROM donor itself RECEIVED, and from where?
+#    Depends on step 1's output. Suspects are selected by measurement (a protein
+#    donor lacking the term's InterPro signature), never named by hand.
+uv run --no-project --with requests python reciprocal_donor_check.py
+uv run --no-project --with requests python reciprocal_donor_check.py --self-test
 ```
 
 ## Design notes

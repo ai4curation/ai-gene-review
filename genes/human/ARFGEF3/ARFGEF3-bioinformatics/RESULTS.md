@@ -161,6 +161,36 @@ retrograde, intra-Golgi, endosome-to-Golgi and exocytic steps.
 curator failing to be specific. `GRANULARITY_MISMATCH` requires the donors to
 agree; they do not. No specificity upgrade is warranted on this row.
 
+### The reciprocal half: the node donates the activity to a second member too
+
+`reciprocal_donor_check.py` asks what a suspect donor has itself *received*. Suspects
+are chosen **by measurement, not by name**: any protein donor of `GO:0005085` that
+lacks the term's own InterPro signature. Exactly one qualifies.
+
+| | `SGD:S000005241` → `P48563` MON2 |
+|---|---|
+| carries `IPR000904` / an annotated SEC7 domain | **no** |
+| receives `GO:0005085` by IBA | **yes** |
+| IBA source node | **`PANTHER:PTN008950430`** — the same node ARFGEF3's row comes from |
+| IBA WITH/FROM identical to ARFGEF3's row | **yes** (19 tokens vs 19) |
+| non-IBA evidence | IGI, IPI, ISS |
+| distinct non-IBA references | **1** (`PMID:12052896`) |
+| holds its own IDA | **no** |
+
+So one node donates exchange activity to **two** members that lack a functional Sec7
+catalytic site — ARFGEF3, which has the domain but not the glutamate, and MON2, which
+has neither — and neither has ever had exchange activity measured directly. MON2's own
+support traces to a single paper whose title calls Ysl2p/Mon2 "*homologous to* Sec7
+domain guanine nucleotide exchange factors" and which claims only a "*potential*
+function as an Arf guanine nucleotide exchange factor". That is an architectural and
+evidential observation about the **node**, not about ARFGEF3.
+
+Controls (`--self-test`, exits 0): a donor that *does* carry the signature is never
+selected as a suspect; the GOA/QuickGO id-prefix normalisation reconciles
+`MGI:MGI:1334257` with `MGI:1334257` without collapsing two distinct SGD ids; and the
+set-identity claim is falsifiable — removing one member from the subject's WITH/FROM
+set flips it to `False`, so a `True` is a measurement rather than a default.
+
 ---
 
 ## 3. Two CC rows sit in a disjoint GO branch, because of a SubCell mapping
@@ -214,4 +244,6 @@ rule, it would be wrong at that scale wherever the regulated reading applies.
 | `sec7_glutamic_finger.tsv` | per-sequence scoring table |
 | `sec7_glutamic_finger.json` | machine-readable summary |
 | `subcell_mapping_check.py` | SubCell→GO branch check for the `GO_REF:0000044` rows |
+| `reciprocal_donor_check.py` | what a suspect donor has itself received, and from which node |
+| `reciprocal_donors.tsv` / `.json` | per-suspect-donor result |
 | `subcell_mapping.tsv` / `.json` | per-SubCell-id resolution and branch relation |
