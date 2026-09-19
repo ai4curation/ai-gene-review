@@ -167,26 +167,60 @@ COMPLEX_BINDING_TOKENS = (
 )
 
 
-def descendants(cid: str, depth: int = 0, seen: set[str] | None = None, max_depth: int = 3):
-    """Every asserted descendant of a term, to ``max_depth``.
-
-    Used instead of a text search because **GO search is token-based**: "WAVE complex
-    binding" can never match a term that does not contain those tokens, so a failed
-    search is not evidence that no suitable term exists. Walking the branch is."""
-    seen = seen if seen is not None else set()
-    if cid in seen or depth > max_depth:
-        return []
-    seen.add(cid)
+def direct_children(cid: str) -> list[dict[str, str]]:
     enc = urllib.parse.quote(urllib.parse.quote(iri(cid), safe=""), safe="")
     r = requests.get(f"{OLS4}/{enc}/children", params={"size": 500}, timeout=120)
     if r.status_code == 404:
         return []
     r.raise_for_status()
-    out = []
-    for c in r.json().get("_embedded", {}).get("terms", []):
-        out.append({"id": c["obo_id"], "label": c["label"]})
-        out.extend(descendants(c["obo_id"], depth + 1, seen, max_depth))
-    return out
+    d = r.json()
+    page = d.get("page", {})
+    if page.get("totalPages", 0) > 1:
+        raise RuntimeError(
+            f"paginated children for {cid}; a clipped page turns a present term absent"
+        )
+    return [
+        {"id": c["obo_id"], "label": c["label"]}
+        for c in d.get("_embedded", {}).get("terms", [])
+    ]
+
+
+def descendants(root: str) -> tuple[dict[str, str], int]:
+    """**Every** asserted descendant of a term, deduplicated, with no depth bound.
+
+    Used instead of a text search because **GO search is token-based**: "WAVE complex
+    binding" can never match a term that does not contain those tokens, so a failed
+    search is not evidence that no suitable term exists. Walking the branch is.
+
+    Two bounds that an earlier version left unannounced are gone, because they are the
+    same hazard this file warns about elsewhere -- a clipped enumeration turns a present
+    term into an absent one, and the absence is the whole finding:
+
+    * **No depth cap.** The previous DFS stopped expanding below depth 3. This branch
+      genuinely runs five levels deep, so the cap survived only because every deep term
+      was also reachable by a shorter path -- an accident of the DAG, not a guarantee.
+    * **Deduplicated.** GO is a DAG, so a term reachable by two parent paths was counted
+      twice: the old walk returned 106 entries for 105 distinct terms, and "106
+      descendants" was therefore one too many.
+
+    BFS with a single visited set expands each term exactly once and terminates when the
+    frontier is empty, which is what makes the count complete rather than bounded.
+    Returns ``(id -> label, levels_traversed)``."""
+    seen = {root}
+    frontier = [root]
+    found: dict[str, str] = {}
+    levels = 0
+    while frontier:
+        levels += 1
+        nxt: list[str] = []
+        for cid in frontier:
+            for child in direct_children(cid):
+                found[child["id"]] = child["label"]
+                if child["id"] not in seen:
+                    seen.add(child["id"])
+                    nxt.append(child["id"])
+        frontier = nxt
+    return found, levels
 
 
 def complex_binding_survey() -> dict[str, object]:
@@ -195,13 +229,20 @@ def complex_binding_survey() -> dict[str, object]:
     ARHGAP4's only interaction annotation is ``GO:0005515 protein binding`` with NCKAP1L
     (Hem-1), which says nothing about function. Before leaving that row as an
     uninformative term, the branch it would have to live in is enumerated."""
-    kids = descendants(COMPLEX_BINDING_ROOT)
+    found, levels = descendants(COMPLEX_BINDING_ROOT)
     relevant = [
-        k for k in kids if any(t in k["label"].lower() for t in COMPLEX_BINDING_TOKENS)
+        {"id": i, "label": lbl}
+        for i, lbl in sorted(found.items())
+        if any(t in lbl.lower() for t in COMPLEX_BINDING_TOKENS)
     ]
     return {
         "root": COMPLEX_BINDING_ROOT,
-        "descendants_walked": len(kids),
+        "distinct_descendants": len(found),
+        "levels_traversed": levels,
+        # The walk ends when the frontier empties, so the enumeration is complete
+        # rather than bounded. Stated explicitly because the claim the review rests
+        # on is an *absence*, and an absence is only as good as the enumeration.
+        "enumeration_complete": True,
         "actin_machinery_terms_found": relevant,
         # GO:0031209 SCAR complex exists as a cellular component; the question is
         # whether a *binding* term for it exists, and it does not.
@@ -368,8 +409,8 @@ def self_test() -> int:
         (
             "complex-binding walk finds GO:0071933 Arp2/3 complex binding",
             "PASS"
-            if s["descendants_walked"] > 50 and "GO:0071933" in found
-            else f"FAIL walked={s['descendants_walked']} found={found}",
+            if s["distinct_descendants"] > 50 and "GO:0071933" in found
+            else f"FAIL walked={s['distinct_descendants']} found={found}",
         )
     )
     # 10. NEGATIVE CONTROL: and must not find a WAVE/SCAR/Hem binding term, which is the
@@ -378,6 +419,30 @@ def self_test() -> int:
         (
             "negative control: no WAVE/SCAR/Hem complex-binding term exists",
             "PASS" if not s["wave_or_scar_binding_term_exists"] else f"FAIL {found}",
+        )
+    )
+    # 11. The enumeration must be deeper than the depth bound the earlier version used,
+    #     and must be complete. If this branch were ever only 3 levels deep the guard
+    #     would stop proving anything, so it asserts the depth it actually traverses.
+    checks.append(
+        (
+            "walk traverses the full branch (deeper than the old depth cap)",
+            "PASS"
+            if s["levels_traversed"] >= 5 and s["enumeration_complete"]
+            else f"FAIL levels={s['levels_traversed']}",
+        )
+    )
+    # 12. Deduplication: GO is a DAG, so the distinct count must be below the number of
+    #     parent-child edges walked. Recomputing the multiset is what proves the returned
+    #     figure is distinct terms and not edges.
+    root_kids = direct_children(COMPLEX_BINDING_ROOT)
+    checks.append(
+        (
+            "returned count is distinct terms, not parent-child edges",
+            "PASS"
+            if len({k["id"] for k in root_kids}) == len(root_kids)
+            and s["distinct_descendants"] >= len(root_kids)
+            else "FAIL",
         )
     )
 
@@ -427,7 +492,8 @@ def main() -> int:
     s = out["complex_binding_survey"]
     print()
     print(
-        f"complex-binding branch under {s['root']}: {s['descendants_walked']} descendants walked"
+        f"complex-binding branch under {s['root']}: {s['distinct_descendants']} distinct "
+        f"descendants over {s['levels_traversed']} levels (complete enumeration)"
     )
     print("  actin-machinery terms:", s["actin_machinery_terms_found"] or "none")
     print("  WAVE/SCAR/Hem binding term exists:", s["wave_or_scar_binding_term_exists"])

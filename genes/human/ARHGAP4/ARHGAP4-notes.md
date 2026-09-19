@@ -31,7 +31,8 @@ and worth stating rather than second-guessing.
 
 The only direct activity measurement is rat: "In vitro, recombinant ARHGAP4 stimulated
 the GTPase activity of three members of Rho GTPases, Rac1, Cdc42 and RhoA"
-[PMID:12414125 "In vitro, recombinant ARHGAP4 stimulated the GTPase\nactivity of three members of Rho GTPases, Rac1, Cdc42 and RhoA."].
+[PMID:12414125 "In vitro, recombinant ARHGAP4 stimulated the GTPase
+activity of three members of Rho GTPases, Rac1, Cdc42 and RhoA."].
 Reactome commits further, filing ARHGAP4 under `R-HSA-9013144 RAC1 GAPs stimulate RAC1
 GTPase activity`.
 
@@ -113,23 +114,31 @@ in-vitro assay, and nothing here licenses either "therefore active in human" or
   1999: a boy hemizygous for a 21.5 kb deletion removing AVPR2 and most of *C1*/*ARHGAP4*
   was followed for 16 years with targeted immunologic and hematologic testing — the
   tissue where the gene is enriched — and nothing beyond the AVPR2 phenotype was found
-  [PMID:10425039 "On the basis of our observations, the\nrhoGAP C1 protein is not essential for normal development in the human."],
+  [PMID:10425039 "On the basis of our observations, the
+rhoGAP C1 protein is not essential for normal development in the human."],
   leading to
-  [PMID:10425039 "Therefore, we postulate that the loss of rhoGAP C1\nfunction is most likely compensated by other members of the GAP family."].
+  [PMID:10425039 "Therefore, we postulate that the loss of rhoGAP C1
+function is most likely compensated by other members of the GAP family."].
   The one SCID case with a 34.4 kb deletion is explicitly **not** attributed to ARHGAP4:
-  [PMID:16781893 "Other patients with NDI,\nbut without immunodeficiency, have had deletions that remove all ARHGAP4 except\nexon 1"],
+  [PMID:16781893 "Other patients with NDI,
+but without immunodeficiency, have had deletions that remove all ARHGAP4 except
+exon 1"],
   and the authors attribute the SCID to loss of a conserved intergenic regulatory
   element between *ARHGAP4* and *ARD1A*.
 
 **The compensation hypothesis has been tested once, and half-refuted.** Fujimoto 2008
 profiled PBMC from patients lacking about half of *ARHGAP4* and found
-[PMID:18489790 "Gene expression profiling of PBMC lacking ARHGAP4 revealed that\nexpression of RhoGAP family genes was not influenced greatly by the lack of\nARHGAP4."],
+[PMID:18489790 "Gene expression profiling of PBMC lacking ARHGAP4 revealed that
+expression of RhoGAP family genes was not influenced greatly by the lack of
+ARHGAP4."],
 concluding that loss "is not compensated for by other family members". That refutes the
 *transcriptional* version of Schöneberg's hypothesis and leaves protein-level redundancy
 open — which is the version a combinatorial knockout would test, and which nobody has
 done. Both papers are cited in the review's knowledge gap rather than only the one that
 fits. Huang 2012 states the residual position plainly:
-[PMID:22965914 "The clinical features of loss of ARHGAP4 function remain unclear despite several\nreports of different patterns of deletions inactivating different functional\nregions of the protein."].
+[PMID:22965914 "The clinical features of loss of ARHGAP4 function remain unclear despite several
+reports of different patterns of deletions inactivating different functional
+regions of the protein."].
 
 Two single-family variant reports exist — `T491M` in an intellectual-disability family
 [PMID:26707211] and variants in X-linked early-onset temporal lobe epilepsy
@@ -170,7 +179,9 @@ Three things follow.
 
 `GO:0005515 protein binding` IPI with NCKAP1L (Hem-1, `P55160`) — UniProt's only `SUBUNIT`
 statement for this gene, from the neutrophil leading-edge complex proteomics
-[PMID:16417406 "A subset of these leading edge complexes are biochemically separable \nfrom the WAVE2 complex and contain a diverse set of potential polarity-regulating \nproteins."].
+[PMID:16417406 "A subset of these leading edge complexes are biochemically separable
+from the WAVE2 complex and contain a diverse set of potential polarity-regulating
+proteins."].
 
 My first pass marked it `KEEP_AS_NON_CORE`, reasoning that the interaction is real and the
 partner informative even if the term is not. That is not a branch the repo policy offers.
@@ -188,8 +199,10 @@ says only "binds something".
 
 **Is there a term to move to?** Answered by walking the branch, not by searching, because
 GO search is token-based and "WAVE complex binding" can never match a term lacking those
-tokens. All **106** descendants of `GO:0044877 protein-containing complex binding` contain
-exactly one actin-machinery term, `GO:0071933 Arp2/3 complex binding`. `GO:0031209 SCAR
+tokens. A complete enumeration — unbounded in depth, deduplicated — returns **105**
+distinct descendants of `GO:0044877 protein-containing complex binding` across five
+levels, containing exactly one actin-machinery term, `GO:0071933 Arp2/3 complex
+binding`. `GO:0031209 SCAR
 complex` exists but is a cellular component, not something to bind — and in any case the
 paper describes the ARHGAP4-containing complexes as *biochemically separable* from the
 WAVE2 complex proper, so SCAR-complex membership would be wrong on the biology as well as
