@@ -146,6 +146,18 @@ demonstrated from GOA rather than asserted:
 - *arginine absent, activity annotated* — **OCRL1** carries `GO:0005096` by **IDA**
   (`PMID:12915445`), ARHGAP36 by IBA, ARAP2 by IEA and IBA, FAM13B by TAS.
 
+Scope note, so the table is not read as more than it is: the alignment here independently
+recomputes the residue for ARHGAP36, DEPDC1B, OCRL1 and INPP5B — the four of Amin's seven
+whose Rho-GAP domain UniProt delimits as a single feature. For ARAP2, DEPDC1 and FAM13B
+the "no arginine finger" status is Amin's assignment, cited rather than re-derived.
+
+The claim about ARHGAP4 itself is recorded in the review as a machine-checkable
+`residue_claims` entry (anchor `Q07960`:282 R, target `P98171`:543 R, `RETAINED`, method
+`MSA`), so `just validate-families` resolves it against the actual sequences on every CI
+run that touches this gene. Mutation-tested: changing the claimed target residue to `C`
+makes that validator report `target UniProtKB:P98171:543 claimed C but the sequence has R`
+and exit non-zero, so the claim is genuinely covered rather than merely present.
+
 So R543 is consistent with catalytic competence and is evidence against a
 pseudo-enzyme reading, but on its own it licenses no conclusion about activity. The
 family-level frame says the same thing from the other side: Amin et al. 2016
