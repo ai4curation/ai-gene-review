@@ -468,8 +468,8 @@ Every rebuilt artifact must meet the budget before publication.
 
 The deployment job is disabled unless `PAGES_ARTIFACT_DEPLOY_ENABLED=true` is set
 in repository Actions variables. It requires a successful upload, at most
-1,000,000,000 site-content bytes and a separately measured GNU tar no larger than
-1,073,741,824 bytes (1 GiB, including headers and padding), no excluded orphan review pages, and no missing
+site content and a separately measured GNU tar below
+10,000,000,000 bytes (including headers and padding), no excluded orphan review pages, and no missing
 static local targets, and no likely missing site-prefix links. The CLI and CI use the same manifest `deployable` decision
 and `size_budget_bytes`. `broken_local_links` counts distinct missing paths;
 `broken_local_link_paths` lists them for diagnosis. `off_base_path_links` counts same-host URLs outside
@@ -505,9 +505,17 @@ instead. The Pages archive is retained for **3 days** (diagnostics for 7).
 Only validated default-branch builds are accepted; checks include successful
 rendering and uploads, artifact provenance, publication policy, actual archive
 size, and its recorded SHA-256.
-Both ordinary builds and recovery enforce a 1,000,000,000-byte site-content
-budget and a separate 1 GiB archive budget, allowing tar headers/padding without
-raising the published-site limit. The manifest reports estimated `archive_bytes`
+The former self-imposed 1 GB site / 1 GiB tar gates are removed. Both paths
+retain a strict less-than-10-GB ceiling matching the action's absolute archive
+cutoff. GitHub officially supports only 1 GB sites: larger deployments are an
+explicit temporary operational choice, not a promise of support or scalability.
+When deployment is enabled, a skipped or failed deployment fails the workflow.
+
+To retry a retained build blocked solely by the old 1 GB policy, supply
+`-f legacy_size_sha256=SHA256` to the manual workflow, using the SHA-256 of its
+original downloaded `artifact.tar`. This explicit override rechecks all link,
+completeness, provenance, and actual archive-size gates and verifies the supplied
+checksum. It does not permit failed integrity checks or rebuild the site. The manifest reports estimated `archive_bytes`
 and `archive_size_budget_bytes`. After upload, diagnostics record the actual
 `archive_actual_bytes` and `archive_sha256`; deployment requires that check to
 succeed. Recovery verifies that checksum, not exact equality with the estimate.

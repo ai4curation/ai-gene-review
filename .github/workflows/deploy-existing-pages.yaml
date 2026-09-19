@@ -2,6 +2,9 @@
 # Use when Build and deploy site finished rendering, validation, and artifact
 # uploads successfully, but publication failed or was skipped (for example,
 # a Pages service error or deployment being disabled at build time).
+# For a build blocked only by the former 1 GB size gate, provide
+# legacy_size_sha256: SHA-256 of its original downloaded artifact.tar. This
+# explicitly authorizes the old size-only block; integrity checks still apply.
 # It can also redeploy a known-good, still-retained build intentionally.
 #
 # Run on main with source_run_id set to that completed build's Actions run ID.
@@ -20,6 +23,10 @@ on:
       source_run_id:
         description: Completed Build and deploy site run ID with a validated, unexpired artifact
         required: true
+        type: string
+      legacy_size_sha256:
+        description: Optional archive SHA-256 to authorize retrying an old 1 GB size-only block
+        required: false
         type: string
 
 concurrency:
@@ -85,9 +92,16 @@ jobs:
           github-token: ${{ github.token }}
 
       - name: Verify manifest and archive size
+        env:
+          LEGACY_SIZE_SHA256: ${{ inputs.legacy_size_sha256 }}
         run: |
+          set -euo pipefail
+          extra=()
+          if [ -n "$LEGACY_SIZE_SHA256" ]; then
+            extra+=(--legacy-size-sha256 "$LEGACY_SIZE_SHA256")
+          fi
           python3 scripts/validate_pages_recovery.py manifest \
-            --manifest diagnostics/_site-manifest.json --archive payload/artifact.tar
+            --manifest diagnostics/_site-manifest.json --archive payload/artifact.tar "${extra[@]}"
 
       # Re-upload the unchanged tar into this run so deploy-pages obtains its
       # artifact and OIDC deployment identity from the same trusted workflow run.
