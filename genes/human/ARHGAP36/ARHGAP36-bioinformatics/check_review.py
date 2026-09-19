@@ -274,10 +274,25 @@ def self_test() -> int:
     )
 
     # Mutation 2: a residue claim that does not match the sequence.
-    claim_anchor = "          position: 258\n          residue: T"
+    #
+    # The anchor carries the whole anchor+target block of ONE claim, not just
+    # "position: 258 / residue: T". The short form used to be unique and stopped being so
+    # the moment a second claim was re-pointed to the same target -- and the
+    # matched-exactly-once assertion below caught that immediately, with
+    # "residue anchor matched 2 times, expected exactly 1", rather than silently mutating
+    # whichever claim came first. Keep the block form.
+    claim_anchor = (
+        "          accession: UniProtKB:Q07960\n"
+        "          position: 282\n"
+        "          residue: R\n"
+        "        target:\n"
+        "          accession: UniProtKB:Q6ZRI8\n"
+        "          position: 258\n"
+        "          residue: T"
+    )
     if text.count(claim_anchor) != 1:
         raise CheckError(f"residue anchor matched {text.count(claim_anchor)} times, expected exactly 1")
-    wrong = text.replace(claim_anchor, "          position: 258\n          residue: R")
+    wrong = text.replace(claim_anchor, claim_anchor[: -len("residue: T")] + "residue: R")
     res = run(wrong)
     check(
         "mutation: a residue claim contradicted by the sequence is caught",

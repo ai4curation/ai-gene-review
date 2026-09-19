@@ -288,6 +288,51 @@ The UniProt `RN` list turned out to be the cheapest place to find the first of t
 has only five references, four of which are large-scale sequencing projects, and the fifth
 is PMID:35986704.
 
+## `just validate` is not the only gate: `just validate-families` checks gene residue claims
+
+Learned from a CI failure on PR #3079, and worth recording because the name does not
+suggest it. `just validate human ARHGAP36` was green through every round; **`just
+validate-families` was not**, and it is what runs
+`ai_gene_review.validation.gene_residue_claims` over the gene corpus:
+
+```
+[FAIL] TARGET_IDENTITY ARHGAP36 GO:0005096:
+       target accession UniProtKB:B1AUC7 is not this gene (Q6ZRI8)
+```
+
+The rule is at `src/ai_gene_review/validation/gene_residue_claims.py:148-159`: a
+`residue_claim`'s **`target` must be this gene's own protein**. The `anchor` may be any
+comparator, but the target may not. That matches `ResiduePosition`'s own wording in the
+schema — "the corresponding position in **this gene's** own protein" — which I had read
+and still got wrong, because the mouse-ortholog claim was too convenient a place to put a
+cross-species measurement.
+
+The second residue claim had anchored on mouse Arhgap6 (O54834 R435) with mouse *Arhgap36*
+(B1AUC7 T246) as target, to make the "loss predates the rodent–primate split" argument
+machine-checkable. It is now re-pointed to the same anchor with **this gene** as target
+(Q6ZRI8 T258), which keeps the PAINT-donor comparison checkable and satisfies the rule.
+The dating argument is not expressible as a residue claim at all — it is about a different
+protein — so it stays in `review.reason` and in `RESULTS.md` section 4c, where it is
+reproducible.
+
+Before/after, both run locally:
+
+```
+# committed (broken) version
+exit=1  [FAIL] TARGET_IDENTITY ...   6 pass, 1 fail, 0 unresolved
+# fixed version
+exit=0                                6 pass, 0 fail, 0 unresolved
+```
+
+**For the next gene: run `just validate-families` too whenever a review carries
+`residue_claims`.** It takes far longer than `just validate` (it walks 244 family reviews
+first), but the gene-level residue check can be run alone in seconds:
+
+```
+uv run python -m ai_gene_review.validation.gene_residue_claims \
+    genes/human/<GENE>/<GENE>-ai-review.yaml
+```
+
 ## Decisions
 
 | term | action | why |
