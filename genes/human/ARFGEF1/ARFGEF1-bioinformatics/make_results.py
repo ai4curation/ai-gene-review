@@ -223,6 +223,22 @@ def build() -> str:
     A("is an **ARF1/ARF3** exchange factor. The substrate can only be recorded as an")
     A("annotation extension (`RO:0002233` has_input) or in `core_functions[].substrates`.")
     A("")
+    gtp = terms["terms"]["GO:0031267"]
+    gtp_sec = gtp.get("secondaryIds") or []
+    gtp_arf = [s for s in (gtp.get("narrow_synonyms") or [])
+               if "ARF" in s or "ADP-ribosylation factor" in s]
+    if not gtp_arf:
+        raise SystemExit(
+            "GO:0031267 has no ARF-related narrow synonym in term_status.json; "
+            "regenerate it with check_terms.py"
+        )
+    A("The same has happened on the GTPase-binding side, which matters because this")
+    A(f"review proposes `GO:0031267 {gtp['name']}` for the ARL1 interaction:")
+    A(f"{len(gtp_sec)} ids are merged into `GO:0031267`, and its narrow synonyms include")
+    A(f"{', '.join(repr(s) for s in gtp_arf)} — so an Arf-specific")
+    A("GTPase-binding term did once exist and is now only a synonym. There is no")
+    A("Arf-family child to propose.")
+    A("")
 
     A("## 3. A paralog shadow set on MYO9A from PMID:15644318")
     A("")

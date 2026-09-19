@@ -71,6 +71,13 @@ So `GO:0005085` is already maximal for ARFGEF1, whose defining property is that 
 is an **ARF1/ARF3** exchange factor. The substrate can only be recorded as an
 annotation extension (`RO:0002233` has_input) or in `core_functions[].substrates`.
 
+The same has happened on the GTPase-binding side, which matters because this
+review proposes `GO:0031267 small GTPase binding` for the ARL1 interaction:
+11 ids are merged into `GO:0031267`, and its narrow synonyms include
+'ADP-ribosylation factor binding', 'ARF binding' — so an Arf-specific
+GTPase-binding term did once exist and is now only a synonym. There is no
+Arf-family child to propose.
+
 ## 3. A paralog shadow set on MYO9A from PMID:15644318
 
 Querying GOA by reference rather than by gene returns 18 annotations for
