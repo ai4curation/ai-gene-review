@@ -1,0 +1,242 @@
+"""Check the numbers the review's PROSE asserts against the document's own structure.
+
+Written because the first draft of this review's PR body said "14 ACCEPT, 9
+KEEP_AS_NON_CORE" when the document contains 12 and 11, and "six bare screen-hit rows"
+when there are seven across five distinct partners. Nothing in the repo compares a
+sentence to the thing it describes, so the mismatch was invisible to `just validate`.
+
+Every expectation below is a claim made somewhere in the committed prose (the review's own
+`reason`/`summary`/`suggested_questions` text, the notes, or RESULTS.md). If the document
+changes and a sentence goes stale, this fails.
+
+Usage:
+    uv run --no-project --with pyyaml python audit_review.py
+    uv run --no-project --with pyyaml python audit_review.py --self-test
+"""
+
+from __future__ import annotations
+
+import argparse
+import collections
+import pathlib
+import re
+import sys
+
+import yaml
+
+HERE = pathlib.Path(__file__).parent
+GENE_DIR = HERE.parent
+REVIEW = GENE_DIR / "ARHGEF15-ai-review.yaml"
+NOTES = GENE_DIR / "ARHGEF15-notes.md"
+RESULTS = HERE / "RESULTS.md"
+
+NEURONAL_TERMS = {
+    "GO:0030425",  # dendrite
+    "GO:0098794",  # postsynapse
+    "GO:0098978",  # glutamatergic synapse
+    "GO:0150052",  # regulation of postsynapse assembly
+    "GO:2000297",  # negative regulation of synapse maturation
+}
+
+
+def facts(doc: dict) -> dict:
+    anns = doc["existing_annotations"]
+    actions = collections.Counter(a["review"]["action"] for a in anns)
+    pb = [a for a in anns if a["term"]["id"] == "GO:0005515"]
+    demoted = [a for a in pb if a["review"]["action"] == "MARK_AS_OVER_ANNOTATED"]
+    partners = {e for a in demoted for e in (a.get("supporting_entities") or [])}
+    neuronal = [a for a in anns if a["term"]["id"] in NEURONAL_TERMS]
+    mf = [a for a in anns if a["term"]["id"] == "GO:0005085"]
+    ext = [
+        a
+        for a in anns
+        if any(e.get("predicate") == "RO:0002233" for e in (a.get("extensions") or []))
+    ]
+    return {
+        "n_rows": len(anns),
+        "actions": dict(actions),
+        "n_protein_binding_rows": len(pb),
+        "n_demoted_screen_rows": len(demoted),
+        "n_distinct_screen_partners": len(partners),
+        "n_neuronal_rows": len(neuronal),
+        "n_neuronal_non_core": sum(
+            1 for a in neuronal if a["review"]["action"] == "KEEP_AS_NON_CORE"
+        ),
+        "n_mf_rows": len(mf),
+        "n_has_input_extensions": len(ext),
+        "n_references": len(doc["references"]),
+        "n_core_functions": len(doc["core_functions"]),
+        "n_knowledge_gaps": sum(
+            len(cf.get("knowledge_gaps") or []) for cf in doc["core_functions"]
+        )
+        + len(doc.get("knowledge_gaps") or []),
+        "n_suggested_questions": len(doc.get("suggested_questions") or []),
+        "n_suggested_experiments": len(doc.get("suggested_experiments") or []),
+        "n_remove": actions.get("REMOVE", 0),
+    }
+
+
+# (name, predicate over facts, the prose claim it enforces)
+EXPECTATIONS = [
+    ("all 31 GOA rows reviewed", lambda f: f["n_rows"] == 31, "31 GOA rows"),
+    ("no row left PENDING", lambda f: "PENDING" not in f["actions"], "all adjudicated"),
+    ("zero REMOVE", lambda f: f["n_remove"] == 0, "0 REMOVE"),
+    (
+        "seven protein-binding screen rows are demoted",
+        lambda f: f["n_demoted_screen_rows"] == 7,
+        "seven bare screen-hit rows",
+    ),
+    (
+        "those seven rows cover five distinct partners",
+        lambda f: f["n_distinct_screen_partners"] == 5,
+        "five distinct partners",
+    ),
+    (
+        "exactly one protein-binding row is MODIFY (the EPHA4 one)",
+        lambda f: f["n_protein_binding_rows"] - f["n_demoted_screen_rows"] == 1
+        and f["actions"].get("MODIFY") == 1,
+        "the one interaction with a mechanism",
+    ),
+    (
+        "seven neuronal/dendritic rows, all non-core",
+        lambda f: f["n_neuronal_rows"] == 7 and f["n_neuronal_non_core"] == 7,
+        "seven neuronal/dendritic rows kept as non-core",
+    ),
+    (
+        "seven GO:0005085 rows",
+        lambda f: f["n_mf_rows"] == 7,
+        "the weakest of the seven rows for this term",
+    ),
+    (
+        "five rows carry the substrate as a has_input extension",
+        lambda f: f["n_has_input_extensions"] == 5,
+        "substrate carried in RO:0002233 has_input extensions",
+    ),
+    ("two core functions", lambda f: f["n_core_functions"] == 2, "two core_functions"),
+    (
+        "two knowledge gaps",
+        lambda f: f["n_knowledge_gaps"] == 2,
+        "history record: 'two core_functions and two knowledge gaps'",
+    ),
+    (
+        "four suggested questions and three suggested experiments",
+        lambda f: f["n_suggested_questions"] == 4 and f["n_suggested_experiments"] == 3,
+        "the question and experiment lists the PR body describes",
+    ),
+]
+
+
+def prose_number_checks(f: dict) -> list[str]:
+    """Cross-check the specific figures that appear as words/digits in committed prose."""
+    problems = []
+    review_text = REVIEW.read_text()
+    notes_text = NOTES.read_text() if NOTES.exists() else ""
+
+    # "six"/"seven" bare protein-binding screen hits, stated in suggested_questions.
+    m = re.search(r"Of the (\w+) bare protein-binding screen hits", review_text)
+    if m:
+        word = m.group(1)
+        want = {7: "seven", 6: "six", 5: "five"}.get(f["n_demoted_screen_rows"])
+        if word != want:
+            problems.append(
+                f"review suggested_questions says {word!r} bare protein-binding screen hits, "
+                f"document has {f['n_demoted_screen_rows']} ({want!r})"
+            )
+
+    # "Seven of the thirty-one GOA rows are neuronal or dendritic"
+    m = re.search(r"(\w+) of the thirty-one GOA rows are neuronal or dendritic", review_text)
+    if m and m.group(1) != {7: "Seven", 6: "Six"}.get(f["n_neuronal_rows"], "?"):
+        problems.append(
+            f"review says {m.group(1)!r} neuronal/dendritic rows, document has {f['n_neuronal_rows']}"
+        )
+
+    # notes: "Existing GO record (31 GOA rows)"
+    m = re.search(r"Existing GO record \((\d+) GOA rows\)", notes_text)
+    if m and int(m.group(1)) != f["n_rows"]:
+        problems.append(f"notes says {m.group(1)} GOA rows, document has {f['n_rows']}")
+
+    return problems
+
+
+def run() -> tuple[dict, list[str]]:
+    doc = yaml.safe_load(REVIEW.read_text())
+    f = facts(doc)
+    problems = [
+        f"FAILED expectation {name!r} (enforces prose claim: {claim})"
+        for name, pred, claim in EXPECTATIONS
+        if not pred(f)
+    ]
+    problems.extend(prose_number_checks(f))
+    return f, problems
+
+
+def self_test() -> int:
+    failures = []
+
+    def expect(name: str, ok: bool, detail: str = "") -> None:
+        print(f"  [{'PASS' if ok else 'FAIL'}] {name} {detail}")
+        if not ok:
+            failures.append(name)
+
+    f, problems = run()
+    expect("the real document satisfies every expectation", not problems, "; ".join(problems))
+    expect("expectations are non-trivial (>=10 of them)", len(EXPECTATIONS) >= 10, str(len(EXPECTATIONS)))
+
+    print("mutation tests (each predicate must be able to fail):")
+    # Perturb the facts and confirm each expectation flips. A predicate that survives
+    # every perturbation of its own input is not measuring anything.
+    # The sweep must offer each predicate a perturbation capable of tripping it. An
+    # `actions` dict has several independent ways to be wrong, so try them all rather than
+    # one: with only {"ACCEPT": 1} the "no row left PENDING" predicate never saw a PENDING
+    # row and was reported unfalsifiable when it is not.
+    action_variants = [
+        {"ACCEPT": 1},
+        dict(f["actions"], PENDING=1),
+        dict(f["actions"], REMOVE=3),
+        {k: v for k, v in f["actions"].items() if k != "MODIFY"},
+    ]
+    unfalsifiable = []
+    for name, pred, _claim in EXPECTATIONS:
+        candidates = [dict(f, actions=a) for a in action_variants]
+        candidates += [
+            dict(f, **{k: f[k] + 1}) for k in f if isinstance(f[k], int) and k != "n_remove"
+        ]
+        candidates.append(dict(f, n_remove=f["n_remove"] + 1))
+        if not any(not pred(m) for m in candidates):
+            unfalsifiable.append(name)
+    expect("every expectation flips under some perturbation of the facts",
+           not unfalsifiable, str(unfalsifiable))
+
+    # The prose cross-check must fire on wrong prose, not merely pass on right prose.
+    bad = prose_number_checks(dict(f, n_demoted_screen_rows=6, n_neuronal_rows=6))
+    expect("prose cross-check reports a mismatch when the counts disagree",
+           len(bad) >= 1, str(bad))
+    good = prose_number_checks(f)
+    expect("prose cross-check is silent when they agree", good == [], str(good))
+
+    print()
+    if failures:
+        print(f"SELF-TEST FAILED: {failures}")
+        return 1
+    print("SELF-TEST PASSED")
+    return 0
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--self-test", action="store_true")
+    args = ap.parse_args()
+    if args.self_test:
+        return self_test()
+    f, problems = run()
+    for k, v in f.items():
+        print(f"  {k}: {v}")
+    print()
+    for p in problems:
+        print(f"  {p}")
+    print(f"problems={len(problems)}")
+    return 1 if problems else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
