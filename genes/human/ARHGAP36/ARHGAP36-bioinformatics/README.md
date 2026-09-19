@@ -47,10 +47,16 @@ a missing input is a hard error naming the fix, never a silently dropped section
 3. **The escape test.** The one result that would rescue the annotation is an arginine
    displaced by a residue or two, so a ±10-residue window is scanned and the nearest
    arginine reported with its offset. This check is run and reported whatever it says.
-4. **Agreement with the literature.** PMID:33999959 calls this site `Thr227`, which is not
-   canonical numbering. Rather than assume which isoform that is, the site is recomputed
-   under the canonical sequence *and every upstream splice variant*, and the published
-   number is looked for among the results.
+4. **Agreement with the literature.** Three records name this residue in three different
+   numberings — UniProt's canonical `258`, `Thr227` in PMID:33999959, and `T246` in
+   PMID:25024229. Rather than assume which isoform each belongs to, the site is recomputed
+   under the canonical sequence *and every upstream splice variant*, for the record of the
+   species each paper worked in, and each published number is looked for among the results.
+4c. **Whether the mouse ortholog shares the substitution.** This is the section that
+   decides the node-placement argument: the IBD sits at a **Eumetazoa**-level node, so a
+   substitution shared with mouse is one that predates almost everything the node
+   propagates into. The ortholog's own Site is held to the same register test as the
+   query's, and the two sites must project onto each other reciprocally.
 5. **Whether the loss is ARHGAP36's or the family's** — scored for the PAINT seed, the
    human paralog in the same PANTHER family, and all 66 reviewed human PROSITE-RhoGAP
    proteins.
@@ -88,7 +94,10 @@ checkable rather than quoted.
   which selected isoform 3 (`VSP_021357`, −136) and reported position 122 — i.e. that the
   sequence record *disagreed* with the published `Thr227`. The real answer is isoform 2
   (`VSP_021358`, −31 → 227). It now enumerates all upstream variants and reports which
-  reproduces the published number, so no pick can be wrong.
+  reproduces the published number, so no pick can be wrong. Enumerating rather than
+  picking is also what surfaced the second published numbering: `T246` from PMID:25024229
+  was already sitting in the human table under isoform 4, and turns out to be the mouse
+  canonical position, which is how the ortholog check got written at all.
 - **Prose that states a conclusion the run did not reach.** The same section printed
   "Two records reached this residue independently" unconditionally, including in the run
   where the match had failed. The sentence is now generated from the match result.
@@ -98,10 +107,13 @@ checkable rather than quoted.
   GTPase's nucleotide state and not the protein's catalytic status. The reader anchors on
   `GTPase activator` / `GTPase-activating` / `GAP for`, never on `active`.
 
-`--self-test` asserts 13 propositions, including two mutations that must flip a verdict
-(restoring the arginine; an unreachable published position), two negative controls that
-must stay silent (a substitution 60 residues away must change neither the residue verdict
-nor the escape scan), and four guards that must raise. Every mutation asserts its anchor
-holds the expected residue before mutating, so a drifted target is an error rather than a
-vacuous pass. A passing self-test only proves the guards that were written fire; it says
-nothing about the guard that was not.
+`--self-test` asserts 16 propositions. Four are mutations that must flip a verdict
+(restoring the arginine at the annotated site; the escape scan then reporting offset 0; an
+unreachable published position; the *right* position with the wrong residue — the failure
+a position-only check would miss). Two are negative controls that must stay silent: a
+substitution 60 residues away must change neither the residue verdict nor the escape scan.
+Four are guards that must raise. The rest are baselines, including the reciprocal
+human↔mouse projection that the node-placement argument depends on. Every mutation asserts
+its anchor holds the expected residue before mutating, so a drifted target is an error
+rather than a vacuous pass. A passing self-test only proves the guards that were written
+fire; it says nothing about the guard that was not.

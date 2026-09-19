@@ -103,6 +103,12 @@ NEGATIVE_REFERENCE_ACC = "Q01968"  # OCRL
 # Retains the arginine and is experimentally GAP-dead: the decoupling control.
 DECOUPLING_ACC = "Q3KRB8"  # ARHGAP11B
 
+# The mouse ortholog, same PANTHER subfamily (PTHR12635:SF8). This is the check that
+# decides whether the substitution is a human quirk or a property of the subfamily the
+# PAINT node propagates into: the IBD sits at a Eumetazoa-level node, so a loss shared
+# with mouse is a loss that predates almost everything below that node.
+ORTHOLOG_ACC = "B1AUC7"  # RHG36_MOUSE
+
 RHOA_ACC = "P61586"  # the GTPase in the control structure
 
 INTERFACE_PDB = "1TX4"
@@ -441,30 +447,36 @@ def isoform_position(rec: dict[str, Any], canonical_pos: int, vsp_id: str) -> di
     }
 
 
-# The residue the literature names for this site, and the numbering it uses.
-# PMID:33999959, Fig 2C legend: "the site that is structurally equivalent to the
-# arginine finger (Thr227)". Which isoform that numbering belongs to is NOT assumed --
-# it is identified by which UniProt splice variant reproduces it.
-PUBLISHED_SITE_POSITION = 227
-PUBLISHED_SITE_RESIDUE = "T"
+# The residue numbers the literature gives for this site. Three records name the same
+# residue in three different numberings, and which isoform each belongs to is NOT
+# assumed -- it is identified by which UniProt splice variant reproduces it.
+#
+#   PMID:33999959 (human ARHGAP36, Fig 2C legend): "the site that is structurally
+#     equivalent to the arginine finger (Thr227)"
+#   PMID:25024229 (mouse Arhgap36): "The replacement of this structural element with a
+#     threonine (T246)"
+#
+# Each is checked against the record of the species that paper worked in.
+PUBLISHED_SITES = {
+    QUERY_ACC: [(227, "T", "PMID:33999959, human ARHGAP36")],
+    ORTHOLOG_ACC: [(246, "T", "PMID:25024229, mouse Arhgap36")],
+}
 
 
-def isoform_crosscheck(rec: dict[str, Any], canonical_pos: int) -> dict[str, Any]:
-    """Recompute the site's position under every upstream splice variant.
+def isoform_crosscheck(rec: dict[str, Any], canonical_pos: int, published: list[tuple[int, str, str]]) -> dict[str, Any]:
+    """Recompute the site's position under the canonical sequence and every upstream variant.
 
     No variant is chosen in advance. Each is applied and the resulting position
-    reported, and the published number is then looked for among the results. Picking a
+    reported, and each published number is then looked for among the results. Picking a
     variant first and reporting whether it matched would let a wrong pick masquerade as
     a refutation of the literature.
     """
     upstream = [v for v in splice_variants(rec) if v["end"] < canonical_pos]
-    if not upstream:
-        raise AnalysisError("no Alternative sequence feature lies upstream of the arginine-finger site")
     rows = [isoform_position(rec, canonical_pos, v["id"]) for v in upstream]
     canonical_row = {
         "vsp": "(canonical)",
         "vsp_span": "—",
-        "vsp_description": "isoform 1, displayed sequence",
+        "vsp_description": "displayed sequence",
         "residues_removed": 0,
         "residues_added": 0,
         "offset": 0,
@@ -475,18 +487,25 @@ def isoform_crosscheck(rec: dict[str, Any], canonical_pos: int) -> dict[str, Any
         "isoform_length": len(seq_of(rec)),
     }
     all_rows = [canonical_row] + rows
-    matches = [
-        r
-        for r in all_rows
-        if r["isoform_position"] == PUBLISHED_SITE_POSITION and r["isoform_residue"] == PUBLISHED_SITE_RESIDUE
-    ]
+    claims = []
+    for pos, residue, source in published:
+        matches = [r for r in all_rows if r["isoform_position"] == pos and r["isoform_residue"] == residue]
+        claims.append(
+            {
+                "published_position": pos,
+                "published_residue": residue,
+                "source": source,
+                "matching_variants": [r["vsp"] for r in matches],
+                "reproduced": len(matches) == 1,
+                "ambiguous": len(matches) > 1,
+            }
+        )
     return {
-        "published_position": PUBLISHED_SITE_POSITION,
-        "published_residue": PUBLISHED_SITE_RESIDUE,
+        "accession": rec["primaryAccession"],
+        "entry": name_of(rec),
         "rows": all_rows,
-        "matching_variants": [r["vsp"] for r in matches],
-        "reproduced": len(matches) == 1,
-        "ambiguous": len(matches) > 1,
+        "claims": claims,
+        "all_reproduced": bool(claims) and all(c["reproduced"] for c in claims),
     }
 
 
@@ -747,7 +766,42 @@ def run(query_seq_override: str | None = None, control_overrides: dict[str, str]
     centre = own["position"]
     res["escape"] = escape_scan(query_seq, centre)
 
-    res["isoform_crosscheck"] = isoform_crosscheck(query_rec, centre)
+    res["isoform_crosscheck"] = isoform_crosscheck(query_rec, centre, PUBLISHED_SITES[QUERY_ACC])
+
+    # Ortholog check. The IBD sits at a Eumetazoa-level node, so whether the
+    # substitution is shared with the mouse ortholog decides whether it is a
+    # human-lineage quirk or a property of the subfamily the node propagates into.
+    ortholog_rec = fetch_uniprot(ORTHOLOG_ACC)
+    ortholog_finger = arginine_finger(ortholog_rec)
+    if ortholog_finger is None:
+        raise AnalysisError(f"{ORTHOLOG_ACC} has no annotated arginine finger; the ortholog check cannot run")
+    o0, o1 = rhogap_domain(ortholog_rec)
+    res["ortholog"] = {
+        "accession": ORTHOLOG_ACC,
+        "entry": name_of(ortholog_rec),
+        "length": len(seq_of(ortholog_rec)),
+        "rho_gap_domain": [o0, o1],
+        "arginine_finger_site": ortholog_finger,
+        "gap_activity_function_comment": gap_activity_claim(ortholog_rec),
+        "projected_from_query": project_domain_position(query_rec, query_seq, ortholog_rec, seq_of(ortholog_rec), centre),
+        "projected_onto_query": project_domain_position(
+            ortholog_rec, seq_of(ortholog_rec), query_rec, query_seq, ortholog_finger["position"]
+        ),
+        "shares_substitution": ortholog_finger["residue"] == own["residue"],
+        "isoform_crosscheck": isoform_crosscheck(ortholog_rec, ortholog_finger["position"], PUBLISHED_SITES[ORTHOLOG_ACC]),
+    }
+    # Each control's finger is also projected onto the ortholog, so the ortholog's own
+    # Site is held to the same register test as the query's rather than taken on trust.
+    res["ortholog"]["control_projections"] = [
+        {
+            "control": acc,
+            "control_entry": name_of(rec),
+            "projected": (p := project_domain_position(rec, seq_of(rec), ortholog_rec, seq_of(ortholog_rec), arginine_finger(rec)["position"])),
+            "residue": None if p is None else seq_of(ortholog_rec)[p - 1],
+            "agrees_with_ortholog_site": p == ortholog_finger["position"],
+        }
+        for acc, rec in control_recs.items()
+    ]
 
     family = fetch_rhogap_family()
     res["family"] = family_census(family, QUERY_ACC)
@@ -912,23 +966,41 @@ def self_test() -> int:
     # 7. The isoform cross-check must be able to FAIL. If it reports "reproduced" for a
     #    published number that no variant can produce, it is not a check.
     check(
-        "baseline: the published residue is reproduced by exactly one variant",
-        iso["reproduced"],
-        f"matching variants: {iso['matching_variants']}",
+        "baseline: every published numbering is reproduced by exactly one variant",
+        iso["all_reproduced"],
+        json.dumps(iso["claims"]),
     )
-    impossible = isoform_crosscheck(fetch_uniprot(QUERY_ACC), site)
-    impossible_positions = {r["isoform_position"] for r in impossible["rows"]}
-    bogus = max(impossible_positions) + 1000
-    saved = globals()["PUBLISHED_SITE_POSITION"]
-    try:
-        globals()["PUBLISHED_SITE_POSITION"] = bogus
-        flipped = isoform_crosscheck(fetch_uniprot(QUERY_ACC), site)
-    finally:
-        globals()["PUBLISHED_SITE_POSITION"] = saved
+    bogus = max(r["isoform_position"] for r in iso["rows"]) + 1000
+    flipped = isoform_crosscheck(fetch_uniprot(QUERY_ACC), site, [(bogus, "T", "fabricated")])
     check(
         "mutation: an unreachable published position is reported as NOT reproduced",
-        not flipped["reproduced"] and not flipped["ambiguous"],
-        json.dumps({"reproduced": flipped["reproduced"], "matching": flipped["matching_variants"]}),
+        not flipped["all_reproduced"] and not flipped["claims"][0]["ambiguous"],
+        json.dumps(flipped["claims"]),
+    )
+    # ...and it must also fail on the right position with the wrong residue, which is
+    # the failure mode a position-only check would miss.
+    wrong_residue = "R" if iso["rows"][0]["isoform_residue"] != "R" else "A"
+    flipped2 = isoform_crosscheck(fetch_uniprot(QUERY_ACC), site, [(site, wrong_residue, "fabricated")])
+    check(
+        "mutation: the right position with the wrong residue is NOT reproduced",
+        not flipped2["all_reproduced"],
+        json.dumps(flipped2["claims"]),
+    )
+
+    # 8. The ortholog check is the one that decides the node-placement argument, so it
+    #    gets the same register test and the same ability to fail.
+    orth = base["ortholog"]
+    check(
+        "baseline: every control recovers the mouse ortholog's own annotated site",
+        all(r["agrees_with_ortholog_site"] for r in orth["control_projections"]),
+        json.dumps([r for r in orth["control_projections"] if not r["agrees_with_ortholog_site"]]),
+    )
+    check(
+        "baseline: the human and mouse sites project onto each other reciprocally",
+        orth["projected_from_query"] == orth["arginine_finger_site"]["position"]
+        and orth["projected_onto_query"] == site,
+        f"human->mouse {orth['projected_from_query']} (mouse site {orth['arginine_finger_site']['position']}), "
+        f"mouse->human {orth['projected_onto_query']} (human site {site})",
     )
 
     print("PASS" if not failures else f"{len(failures)} FAILURE(S)")
@@ -1034,43 +1106,97 @@ def render_markdown(res: dict[str, Any]) -> str:
     A(f"| offset from the annotated site | {esc['nearest_offset'] if esc['nearest_offset'] is not None else '—'} |")
     A("")
 
+    def _iso_block(block: dict[str, Any], heading: str) -> None:
+        A(heading)
+        A("")
+        A("| variant | span | description | net offset | position of the site | residue | isoform length |")
+        A("|---|---|---|---|---|---|---|")
+        wanted = {(c["published_position"], c["published_residue"]) for c in block["claims"]}
+        for r in block["rows"]:
+            mark = " ←" if (r["isoform_position"], r["isoform_residue"]) in wanted else ""
+            A(
+                f"| `{r['vsp']}` | {r['vsp_span']} | {r['vsp_description']} | {r['offset']:+d} | "
+                f"**{r['isoform_position']}**{mark} | **{r['isoform_residue']}** | {r['isoform_length']} aa |"
+            )
+        A("")
+        for c in block["claims"]:
+            pub = f"{c['published_residue']}{c['published_position']}"
+            if c["reproduced"]:
+                A(f"- `{pub}` ({c['source']}) is reproduced by exactly one numbering: `{c['matching_variants'][0]}`.")
+            elif c["ambiguous"]:
+                A(f"- `{pub}` ({c['source']}) is reproduced by more than one numbering ({c['matching_variants']}); this check cannot identify which.")
+            else:
+                A(f"- `{pub}` ({c['source']}) is **not** reproduced by any numbering in this table.")
+        A("")
+
     A("## 4. Does the sequence record agree with the published residue?")
     A("")
     A(
-        f"PMID:33999959 names the equivalent position **{iso['published_residue']}{iso['published_position']}**, "
-        "in the numbering of whichever isoform that paper worked in. Rather than assume which, the site "
-        "is recomputed under the canonical sequence and under every UniProt splice variant lying wholly "
-        "upstream of it, and the published number is looked for among the results."
+        "Three records name this residue in three different numberings. Rather than assume which "
+        "isoform each belongs to, the site is recomputed under the canonical sequence and under every "
+        "UniProt splice variant lying wholly upstream of it, and each published number is looked for "
+        "among the results — against the record of the species that paper worked in."
     )
     A("")
-    A("| variant | span | description | net offset | position of the site | residue | isoform length |")
-    A("|---|---|---|---|---|---|---|")
-    for r in iso["rows"]:
-        hit = r["isoform_position"] == iso["published_position"] and r["isoform_residue"] == iso["published_residue"]
-        mark = " ←" if hit else ""
+    _iso_block(iso, f"### 4a. `{iso['entry']}` ({iso['accession']}), site {site['position']}")
+    orth = res["ortholog"]
+    _iso_block(
+        orth["isoform_crosscheck"],
+        f"### 4b. `{orth['entry']}` ({orth['accession']}), site {orth['arginine_finger_site']['position']}",
+    )
+    if iso["all_reproduced"] and orth["isoform_crosscheck"]["all_reproduced"]:
         A(
-            f"| `{r['vsp']}` | {r['vsp_span']} | {r['vsp_description']} | {r['offset']:+d} | "
-            f"**{r['isoform_position']}**{mark} | **{r['isoform_residue']}** | {r['isoform_length']} aa |"
-        )
-    A("")
-    if iso["reproduced"]:
-        A(
-            f"Exactly one variant reproduces `{iso['published_residue']}{iso['published_position']}`: "
-            f"`{iso['matching_variants'][0]}`. So the published residue and the UniProt Site are the same "
-            "residue, reached by two independent routes — a profile-based annotation rule and a "
-            "mutagenesis paper's own construct numbering — and the threonine call does not depend on "
-            "either one alone."
-        )
-    elif iso["ambiguous"]:
-        A(
-            f"More than one variant reproduces the published number ({iso['matching_variants']}), so this "
-            "cross-check does not identify a unique isoform and cannot corroborate the residue."
+            "Both published numberings fall out of the splice-variant arithmetic. The threonine call "
+            "therefore rests on three records that could each have disagreed — a profile-based UniProt "
+            "annotation and two papers' own construct numbering — and on none of them alone."
         )
     else:
         A(
-            f"No canonical or upstream-variant numbering reproduces "
-            f"`{iso['published_residue']}{iso['published_position']}`. The published residue and the "
-            "UniProt Site have **not** been shown to be the same residue by this check."
+            "Not every published numbering is reproduced, so this cross-check corroborates the UniProt "
+            "Site only in part; see the per-claim lines above for which."
+        )
+    A("")
+
+    A("## 4c. Is the substitution shared with the mouse ortholog?")
+    A("")
+    A(
+        "The IBD under review sits at PANTHER node `PTN000973894`, a **Eumetazoa**-level node. Whether "
+        "the substitution is a human-lineage quirk or a property of the subfamily the node propagates "
+        "into turns on whether the mouse ortholog shares it. Both proteins are in PANTHER subfamily "
+        "`PTHR12635:SF8`."
+    )
+    A("")
+    A("| | human `RHG36_HUMAN` | mouse `%s` |" % orth["entry"])
+    A("|---|---|---|")
+    A(f"| length | {q['length']} aa | {orth['length']} aa |")
+    A(f"| Rho-GAP DOMAIN | {q['rho_gap_domain'][0]}..{q['rho_gap_domain'][1]} | {orth['rho_gap_domain'][0]}..{orth['rho_gap_domain'][1]} |")
+    A(f"| annotated arginine-finger Site | {site['position']} | {orth['arginine_finger_site']['position']} |")
+    A(f"| residue there | **{site['residue']}** | **{orth['arginine_finger_site']['residue']}** |")
+    A("")
+    A("The ortholog's own Site is held to the same register test as the query's:")
+    A("")
+    A("| control | projects onto mouse | residue | agrees with the mouse Site |")
+    A("|---|---|---|---|")
+    for r in orth["control_projections"]:
+        A(f"| `{r['control_entry']}` | {r['projected']} | **{r['residue']}** | {_yn(r['agrees_with_ortholog_site'])} |")
+    A("")
+    A(
+        f"Human site {site['position']} projects onto mouse position {orth['projected_from_query']}; mouse "
+        f"site {orth['arginine_finger_site']['position']} projects back onto human "
+        f"{orth['projected_onto_query']}. Substitution shared: {_yn(orth['shares_substitution'])}."
+    )
+    A("")
+    if orth["shares_substitution"]:
+        A(
+            "So the arginine was already gone in the last common ancestor of mouse and human — far "
+            "below the Eumetazoan node the IBD is placed at, and therefore inside the clade that node "
+            "propagates `GO:0005096` into. The node placement, not the transfer mechanics, is what the "
+            "review has to argue with."
+        )
+    else:
+        A(
+            "The mouse ortholog does not share the substitution, so the loss is not established as "
+            "ancestral and the argument about node placement does not follow from this section."
         )
     A("")
 

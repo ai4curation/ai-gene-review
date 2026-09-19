@@ -59,17 +59,54 @@ The only result that would rescue the annotation is an arginine displaced by a r
 
 ## 4. Does the sequence record agree with the published residue?
 
-PMID:33999959 names the equivalent position **T227**, in the numbering of whichever isoform that paper worked in. Rather than assume which, the site is recomputed under the canonical sequence and under every UniProt splice variant lying wholly upstream of it, and the published number is looked for among the results.
+Three records name this residue in three different numberings. Rather than assume which isoform each belongs to, the site is recomputed under the canonical sequence and under every UniProt splice variant lying wholly upstream of it, and each published number is looked for among the results — against the record of the species that paper worked in.
+
+### 4a. `RHG36_HUMAN` (Q6ZRI8), site 258
 
 | variant | span | description | net offset | position of the site | residue | isoform length |
 |---|---|---|---|---|---|---|
-| `(canonical)` | — | isoform 1, displayed sequence | +0 | **258** | **T** | 547 aa |
+| `(canonical)` | — | displayed sequence | +0 | **258** | **T** | 547 aa |
 | `VSP_021357` | 1..136 | in isoform 3 | -136 | **122** | **T** | 411 aa |
 | `VSP_039235` | 1..48 | in isoform 5 | -48 | **210** | **T** | 499 aa |
 | `VSP_021358` | 1..32 | in isoform 2 | -31 | **227** ← | **T** | 516 aa |
 | `VSP_039236` | 1..31 | in isoform 4 | -12 | **246** | **T** | 535 aa |
 
-Exactly one variant reproduces `T227`: `VSP_021358`. So the published residue and the UniProt Site are the same residue, reached by two independent routes — a profile-based annotation rule and a mutagenesis paper's own construct numbering — and the threonine call does not depend on either one alone.
+- `T227` (PMID:33999959, human ARHGAP36) is reproduced by exactly one numbering: `VSP_021358`.
+
+### 4b. `RHG36_MOUSE` (B1AUC7), site 246
+
+| variant | span | description | net offset | position of the site | residue | isoform length |
+|---|---|---|---|---|---|---|
+| `(canonical)` | — | displayed sequence | +0 | **246** ← | **T** | 590 aa |
+| `VSP_039237` | 1..34 | in isoform 3 | -34 | **212** | **T** | 556 aa |
+| `VSP_039238` | 1..19 | in isoform 2 | -16 | **230** | **T** | 574 aa |
+
+- `T246` (PMID:25024229, mouse Arhgap36) is reproduced by exactly one numbering: `(canonical)`.
+
+Both published numberings fall out of the splice-variant arithmetic. The threonine call therefore rests on three records that could each have disagreed — a profile-based UniProt annotation and two papers' own construct numbering — and on none of them alone.
+
+## 4c. Is the substitution shared with the mouse ortholog?
+
+The IBD under review sits at PANTHER node `PTN000973894`, a **Eumetazoa**-level node. Whether the substitution is a human-lineage quirk or a property of the subfamily the node propagates into turns on whether the mouse ortholog shares it. Both proteins are in PANTHER subfamily `PTHR12635:SF8`.
+
+| | human `RHG36_HUMAN` | mouse `RHG36_MOUSE` |
+|---|---|---|
+| length | 547 aa | 590 aa |
+| Rho-GAP DOMAIN | 226..426 | 214..414 |
+| annotated arginine-finger Site | 258 | 246 |
+| residue there | **T** | **T** |
+
+The ortholog's own Site is held to the same register test as the query's:
+
+| control | projects onto mouse | residue | agrees with the mouse Site |
+|---|---|---|---|
+| `RHG01_HUMAN` | 246 | **T** | **yes** |
+| `RHG06_MOUSE` | 246 | **T** | **yes** |
+| `RHG06_HUMAN` | 246 | **T** | **yes** |
+
+Human site 258 projects onto mouse position 246; mouse site 246 projects back onto human 258. Substitution shared: **yes**.
+
+So the arginine was already gone in the last common ancestor of mouse and human — far below the Eumetazoan node the IBD is placed at, and therefore inside the clade that node propagates `GO:0005096` into. The node placement, not the transfer mechanics, is what the review has to argue with.
 
 ## 5. Is the loss ARHGAP36's, or the family's?
 
