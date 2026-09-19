@@ -39,7 +39,7 @@ are one gene's figures curated at figure granularity (SynGO contributes 12 rows
 across four synaptic terms). The defect, such as it is, is **single-source
 concentration plus double counting by two pipelines**, not phantom evidence.
 
-## 2. `GO:0017022` myosin binding is a paralog attribution
+## 2. `GO:0017022` myosin binding reaches this gene through a BIG1 paper
 
 `PMID:15644318` (Saeki *et al.* 2005) is titled *"**BIG1** is a binding partner
 of myosin IXb…"*. Across GOA it annotates **7 entities with 18 annotations**:
@@ -60,6 +60,16 @@ non-muscle myosin heavy chain IIA in HeLa cells, and direct binding between
 separately *in vitro*-synthesised BIG2 and NMHC IIA. So the finding is a broken
 **evidence chain**, not a false term — and the same paper records a genuine
 paralog difference: BIG1 binds MYPT1 and PP1cδ directly, BIG2 does not.
+
+**What this census does not establish.** `PMID:15644318` has
+`full_text_available: false` in the cache, so these counts show **what curators
+did, not what the full text contains** — the rat `GO:0017022` IPI is an
+experimental annotation made by someone who read the paper, and nothing here
+contradicts it. The defect being reported is on the *human* side: ARFGEF2's only
+support for this term is a non-experimental projection of a single rat row, while
+better, directly human evidence (`PMID:23918382`) exists and is not cited. That
+is why the review classifies the row `EVIDENCE_CIRCULAR_OR_REDUNDANT` with the
+rat source left `UNRESOLVED`, rather than `SOURCE_BAD`.
 
 ## 3. The reference-scope check on the remaining rows
 

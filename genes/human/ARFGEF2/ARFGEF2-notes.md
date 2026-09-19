@@ -142,6 +142,17 @@ BIG2 and NMHC IIA, BIG2 IP collected approximately 1% of added NMHC IIA"*
 [PMID:23918382]. So the row is kept (non-core) and the recommendation is to
 **re-reference it to `PMID:23918382` with human evidence** rather than delete it.
 
+**And the limitation, stated in the same terms as the axoneme row above:**
+`publications/PMID_15644318.md` has `full_text_available: false`. The
+by-reference census shows **what curators did, not what the full text contains**,
+and the rat `GO:0017022` row is an experimental IPI made by someone who read the
+paper. Nothing here contradicts it. The defect being reported is on the *human*
+side — ARFGEF2's only support for this term is a non-experimental projection of a
+single rat row while better, directly human evidence exists uncited — which is
+why the `propagation_review` is `EVIDENCE_CIRCULAR_OR_REDUNDANT` with the rat
+source left `UNRESOLVED`, not `SOURCE_BAD`. The section heading calls the chain
+wrong; it does not call the rat curator wrong.
+
 The same paper draws a clean paralog line that should not be blurred: *"Despite
 >70% sequence identity of the two C fragments, no interaction of BIG2-C with
 MYPT1 or PP1cδ was detected"* [PMID:23918382]. BIG1 binds the phosphatase
