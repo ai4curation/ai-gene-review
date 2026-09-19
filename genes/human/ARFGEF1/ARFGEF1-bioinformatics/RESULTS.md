@@ -25,12 +25,16 @@ grounds that its sources carry only the same family-level inference.
 
 For `GO:0005085`, all 18 donors hold **only** `GO:0005085` — not one holds a descendant.
 
+All 18 protein donors of the GO:0005085 IBA carry their own experimental evidence for that term, 16 of them as Swiss-Prot entries, and none holds a descendant of it.
+
 For `GO:0016192`, by contrast, the donors' own terms are spread across 13 distinct descendant processes (`GO:0006887`, `GO:0006888`, `GO:0006890`, `GO:0006891`, `GO:0006892`, `GO:0006893`, `GO:0006895`, `GO:0016197`, `GO:0032509`, `GO:0042147`, `GO:0043001`, `GO:0048193`, `GO:0048205`), so the generic parent is the
 genuine least common ancestor of a heterogeneous donor set rather than an
 under-specified term.
 
 For `GO:0005802`, every donor holds `GO:0005802` itself, so the propagation lands at the same
 specificity as its donors rather than above them.
+
+All 3 protein donors of the GO:0005802 IBA carry their own experimental evidence for GO:0005802 itself rather than for a parent of it.
 
 ## 2. `GO:0005086` and the substrate-specific GEF terms are gone
 

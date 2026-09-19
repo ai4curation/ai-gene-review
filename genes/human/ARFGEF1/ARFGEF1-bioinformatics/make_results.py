@@ -164,6 +164,10 @@ def build() -> str:
     A(f"For `GO:0005085`, all {gef_n} donors hold **only** "
       f"{', '.join('`' + t + '`' for t in gef_terms)} — not one holds a descendant.")
     A("")
+    A(f"All {gef_n} protein donors of the GO:0005085 IBA carry their own experimental "
+      f"evidence for that term, {gef_sp} of them as Swiss-Prot entries, and none holds "
+      "a descendant of it.")
+    A("")
     A(f"For `GO:0016192`, by contrast, the donors' own terms are spread across "
       f"{len(vmt_desc)} distinct descendant processes "
       f"({', '.join('`' + t + '`' for t in vmt_desc)}), so the generic parent is the")
@@ -173,6 +177,9 @@ def build() -> str:
     A(f"For `GO:0005802`, every donor holds {', '.join('`' + t + '`' for t in tgn_terms)} "
       "itself, so the propagation lands at the same")
     A("specificity as its donors rather than above them.")
+    A("")
+    A(f"All {tgn_n} protein donors of the GO:0005802 IBA carry their own experimental "
+      "evidence for GO:0005802 itself rather than for a parent of it.")
     A("")
 
     A("## 2. `GO:0005086` and the substrate-specific GEF terms are gone")
