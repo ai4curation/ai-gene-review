@@ -8,13 +8,13 @@ Usage::
 
     # Render all ProtNLM prediction reviews
     python -m ai_gene_review.render_prediction_eval \\
-        'genes/*/*-protnlm-predictions-review.yaml' \\
+        'genes/*/*/*-protnlm-predictions-review.yaml' \\
         -o pages/protnlm-eval.html \\
-        --title 'ARGO-ProtNLM-50 Prediction Evaluation'
+        --title 'ProtNLM Prediction Evaluation'
 
     # Render DeepECTF reviews from a specific project
     python -m ai_gene_review.render_prediction_eval \\
-        'projects/BIOREASON_COMPARISON/**/genes/*/*-det-predictions-review.yaml' \\
+        'projects/BIOREASON_COMPARISON/**/genes/*/*/*-det-predictions-review.yaml' \\
         -o pages/deepectf-eval.html
 
     # Default: all *-predictions-review.yaml under genes/
@@ -30,6 +30,8 @@ from typing import Any
 
 import yaml
 from jinja2 import Environment, FileSystemLoader
+
+from ai_gene_review.render_modules import clean_rendered_html
 
 CS_MAP = {"COR": 2, "CNN": 2, "LSP": 2, "UNC": 1, "PLI": 0, "NPI": 0, "REP": 0}
 ASSESSMENT_ORDER = ["COR", "CNN", "LSP", "UNC", "PLI", "NPI", "REP"]
@@ -155,12 +157,13 @@ def render_prediction_eval(
         autoescape=True,
     )
     template = env.get_template(template_path.name)
-    return template.render(
+    rendered = template.render(
         title=title,
         subtitle=subtitle,
         proteins=proteins,
         **stats,
     )
+    return clean_rendered_html(rendered)
 
 
 def main() -> None:
@@ -173,8 +176,8 @@ def main() -> None:
     parser.add_argument(
         "pattern",
         nargs="?",
-        default="genes/*/*-predictions-review.yaml",
-        help="Glob pattern for prediction review YAMLs (default: genes/*/*-predictions-review.yaml)",
+        default="genes/*/*/*-predictions-review.yaml",
+        help="Glob pattern for prediction review YAMLs (default: genes/*/*/*-predictions-review.yaml)",
     )
     parser.add_argument(
         "-o", "--output",

@@ -19,3 +19,10 @@
 
 Residual uncertainty: native KT2440 flux through SpeA versus SpeC and its
 environmental regulation remain unmeasured.
+
+## 2026-08-11 (carboxyspermidine-module curation, retained on merge)
+
+SpeA directly converts arginine to agmatine and belongs to the upstream
+putrescine-supply branch. Its existing broad spermidine-biosynthesis annotation
+can be retained, but its core process is putrescine biosynthesis from arginine;
+the committed carboxyspermidine module starts downstream at PP_2928.

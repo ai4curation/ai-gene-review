@@ -6,6 +6,8 @@ oak_config := "conf/oak_config.yaml"
 ref_validator_config := "conf/reference_validator_config.yaml"
 term_validator := "scripts/run_term_validator.sh"
 ref_validator := "scripts/run_reference_validator.sh"
+history_schema_path := "src/ai_gene_review/schema/history.yaml"
+history_dir := "history"
 
 all: validate-all test
 
@@ -91,6 +93,7 @@ sync-codex-skills:
 # Fetch gene data from UniProt and GOA
 # Use --alias to specify a custom directory name and file prefix
 # Use --force to overwrite existing UniProt and GOA files
+# Accession precedence: --uniprot-id, existing review id, then symbol resolution
 # Example: just fetch-gene 9BACT F0JBF1 --alias HgcB
 # Example: just fetch-gene human TP53 --force
 [positional-arguments]
@@ -188,6 +191,54 @@ fetch-panther-paint family *args="":
 fetch-panther-paint-all *args="":
     uv run ai-gene-review fetch-panther-paint --all --output-dir . {{args}}
 
+# Regenerate the PANTHER IBA project tables through public wrapper recipes.
+# These may download cached PAINT source data on the first run.
+[group('QC')]
+refresh-panther-iba-propagation:
+    uv run python projects/PANTHER_IBA_REVIEW/extract_iba_propagation.py
+
+[group('QC')]
+refresh-panther-iba-node-annotations:
+    uv run python projects/PANTHER_IBA_REVIEW/extract_node_annotations.py
+
+[group('QC')]
+refresh-panther-iba-function-losses:
+    uv run python projects/PANTHER_IBA_REVIEW/extract_function_losses.py
+
+[group('QC')]
+refresh-panther-iba-project: refresh-panther-iba-propagation refresh-panther-iba-node-annotations refresh-panther-iba-function-losses
+
+# Rebuild interpro/panther/panther.obo from PANTHER's HMM classifications.
+# This is the authority behind PANTHER family/subfamily id + label validation
+# (conf/oak_config.yaml routes the PANTHER prefix at it). Re-run after a PANTHER
+# release bump, then re-run `just validate-modules`.
+# NOTE ON CHURN: the artifact is ~14 MB / 700k lines and is regenerated wholesale,
+# so a release bump rewrites the entire file in one commit. That is the price of
+# offline, reproducible, pinned-release validation; expect the diff to be large
+# and review it by the reported family/subfamily counts rather than line by line.
+# A bump will also surface label drift as new validation errors -- run
+# `just fix-panther-labels` afterwards, and check any DIVERGENT labels by hand.
+[group('QC')]
+build-panther-obo *args="":
+    uv run ai-gene-review build-panther-obo --output-dir . {{args}}
+
+# Refresh interpro/panther/panther-members.tsv (UniProt accession -> PANTHER
+# family) for the accessions cited as representative_members in modules/.
+# This backs the check that a declared family really contains its own member,
+# which is what distinguishes a mis-grounded family from a mislabelled one.
+# Run after adding modules that cite new representative proteins.
+[group('QC')]
+refresh-panther-members *args="":
+    uv run ai-gene-review refresh-panther-members --output-dir . {{args}}
+
+# Verify every committed interpro/panther/*/*-paint.tsv row against PANTHER's
+# upstream IBD.gaf. PTN claims are validated against slices that curation PRs
+# commit alongside the claim, so without this the check is self-certifying.
+# Network-bound; intended for the scheduled full run rather than per-PR CI.
+[group('QC')]
+verify-panther-paint *args="":
+    uv run ai-gene-review verify-panther-paint --output-dir . {{args}}
+
 # Fetch and cache a single GO-CAM model to gocams/<id>/<id>-src.yaml
 # Example: just fetch-gocam gomodel:568b0f9600000284
 fetch-gocam model_id *args="":
@@ -229,6 +280,12 @@ descriptions-status organism *args="":
 #   just litscan-module-member --date-from 2026-01-01 --date-to 2026-06-19
 litscan-module-member *args="":
     uv run ai-gene-review litscan module-member {{args}}
+
+# Generic provider-selecting entry point documented in AGENTS.md and automation prompts.
+# Supports --provider, --alias, --fallback, --timeout, and --extra-args (which must come last).
+# Example: just deep-research human TP53 --provider perplexity
+deep-research organism gene_id *args="":
+    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} {{args}}
 
 # Deep research using OpenAI (GPT models)
 # Gene symbol automatically looked up from UniProt file if --alias not provided
@@ -298,7 +355,7 @@ deep-research-asta organism gene_id *args="":
 #   just deep-research-codex human TP53
 #   just deep-research-codex METEA C5B1I4 --alias mllA
 deep-research-codex organism gene_id *args="":
-    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} cyberian --extra-args --param agent_type=codex {{args}}
+    uv run python scripts/deep_research_wrapper.py {{organism}} {{gene_id}} codex {{args}}
 
 # Deep research on an InterPro entry (family/domain) behind InterPro2GO annotations.
 # Metadata is auto-fetched and cached under interpro/<database>/<ID>/ if absent.
@@ -716,7 +773,7 @@ term-deep-research-cyberian concept *args="":
     uv run python scripts/concept_deep_research_wrapper.py "{{concept}}" cyberian {{args}}
 
 term-deep-research-codex concept *args="":
-    uv run python scripts/concept_deep_research_wrapper.py "{{concept}}" cyberian --extra-args --param agent_type=codex {{args}}
+    uv run python scripts/concept_deep_research_wrapper.py "{{concept}}" codex {{args}}
 
 # Module deep research (targets module YAMLs and writes beside the YAML by default)
 # Examples:
@@ -787,6 +844,12 @@ fetch-gene-pmids organism gene *args:
         shift
     fi
     uv run ai-gene-review fetch-gene-pmids "$organism" "$gene" --output-dir "$output_dir" "$@"
+
+# Fetch FEBA/RB-TnSeq fitness evidence for a bacterial gene.
+# Writes genes/ORGANISM/GENE/GENE-fitness.md.
+# Example: just fetch-fitness ECOLI SlyD
+fetch-fitness organism gene:
+    uv run python scripts/fetch_fitness_data.py {{organism}} {{gene}}
 
 # Fetch PMIDs from a file
 [positional-arguments]
@@ -890,6 +953,14 @@ audit-fulltext-flags *args="":
 [group('QC')]
 validate-references file:
     {{ref_validator}} validate data {{file}} --schema {{schema_path}} --target-class GeneReview --config {{ref_validator_config}}
+
+# Schema and source-evidence validation for external prediction review sidecars.
+# Missing publication caches are fetched; unavailable sources fail rather than
+# silently certifying an unchecked quotation. Caches remain regenerable context.
+[group('QC')]
+validate-predictions +files:
+    uv run linkml-validate --schema {{schema_path}} --target-class PredictionReview {{files}}
+    uv run python -m ai_gene_review.validation.prediction_evidence --fetch --require-excerpts --report reports/prediction-evidence.json {{files}}
 
 # Reference validation for all gene review files
 [group('QC')]
@@ -1135,15 +1206,15 @@ validate-all:
 
 # Compliance report for recommended fields (separate from validation-all.tsv)
 compliance-all:
-    @echo "Analyzing recommended-field compliance..."
+    @echo "Analyzing evidence-aware compliance..."
     @mkdir -p reports
-    uv run ai-gene-review compliance --tsv-output reports/compliance-all.tsv "genes/*/*/*-ai-review.yaml"
+    uv run ai-gene-review compliance --config conf/qc_config.yaml --tsv-output reports/compliance-all.tsv --summary-output reports/compliance-summary.tsv "genes/*/*/*-ai-review.yaml"
 
 # Compliance report with HTML dashboard (linkml-data-qc)
 compliance-dashboard:
     @echo "Generating compliance dashboard..."
     @mkdir -p reports/compliance-dashboard
-    uv run linkml-data-qc --schema src/ai_gene_review/schema/gene_review.yaml --target-class GeneReview --dashboard-dir reports/compliance-dashboard genes --pattern "**/*-ai-review.yaml"
+    uv run ai-gene-review compliance --config conf/qc_config.yaml --tsv-output reports/compliance-all.tsv --summary-output reports/compliance-summary.tsv --dashboard-dir reports/compliance-dashboard "genes/*/*/*-ai-review.yaml"
 
 # Validate all gene review files (summary only, no details)
 validate-all-summary:
@@ -1436,8 +1507,16 @@ render-organism organism:
 render-all:
     uv run python -m ai_gene_review.render --all genes/
 
+# Assemble the already-rendered public site without changing the active Pages source.
+# This transitional artifact preserves the URLs currently served from main:/.
+stage-pages:
+    uv run python -m ai_gene_review.tools.stage_pages --manifest _site-manifest.json
+
+# Build the complete disposable publication tree used by the Pages migration.
+build-pages: render-all render-projects render-prediction-eval validate-modules render-modules deploy-browser deploy-predictions-browser stage-pages
+
 # Render prediction evaluation table from *-predictions-review.yaml files
-render-prediction-eval pattern='genes/*/*/*-protnlm-predictions-review.yaml' output='pages/projects/PROTNLM_EVALUATION/protnlm-eval.html' title='ProtNLM-50 Prediction Evaluation':
+render-prediction-eval pattern='genes/*/*/*-protnlm-predictions-review.yaml' output='pages/projects/PROTNLM_EVALUATION/protnlm-eval.html' title='ProtNLM Prediction Evaluation':
     uv run python -m ai_gene_review.render_prediction_eval '{{pattern}}' -o '{{output}}' --title '{{title}}'
 
 # Render the BioReason-Pro comparison prediction evaluation tables (SFT, GO-GPT, DeepECTF)
@@ -1445,6 +1524,26 @@ render-bioreason-eval:
     uv run python -m ai_gene_review.render_prediction_eval 'genes/*/*/*-sft-predictions.yaml' -o 'pages/projects/BIOREASON_COMPARISON/sft-eval.html' --title 'BioReason-Pro SFT Prediction Evaluation'
     uv run python -m ai_gene_review.render_prediction_eval 'genes/*/*/*-gogpt-leaf-predictions.yaml' -o 'pages/projects/BIOREASON_COMPARISON/gogpt-eval.html' --title 'BioReason-Pro GO-GPT Prediction Evaluation'
     uv run python -m ai_gene_review.render_prediction_eval 'projects/BIOREASON_COMPARISON/recapitulation-experiment/claude-expt-1/genes/ECOLI/*/*-det-predictions-review.yaml' -o 'pages/projects/BIOREASON_COMPARISON/deepectf-eval.html' --title 'BioReason-Pro DeepECTF Evaluation (ESR-ECOLI-DET-Mini)'
+
+# Refresh the deterministic BioReason benchmark cohort, gene, quality, and metrics sidecars
+refresh-bioreason-benchmark-sidecars:
+    uv run python projects/BIOREASON_COMPARISON/write_benchmark_sidecars.py
+
+# Audit SFT prediction reviews against the current GOA/AIGR snapshot without writing
+check-bioreason-sft-reviews:
+    uv run python scripts/auto_review_sft_predictions.py
+
+# Refresh SFT prediction reviews against the current GOA/AIGR snapshot
+refresh-bioreason-sft-reviews:
+    uv run python scripts/auto_review_sft_predictions.py --apply
+
+# Check committed GO-GPT leaf reviews against their raw BioReason web exports
+check-gogpt-web-exports:
+    uv run python scripts/gogpt_predict.py --check-web-exports
+
+# Refresh committed GO-GPT leaf reviews from their raw BioReason web exports
+refresh-gogpt-web-exports:
+    uv run python scripts/gogpt_predict.py --refresh-web-exports
 
 # Render project markdown files to HTML with auto-linked gene symbols
 render-projects:
@@ -1502,313 +1601,11 @@ rules-data-json cache_dir="rules/arba":
 
 # Generate HTML index of all rule reviews
 rules-index cache_dir="rules/arba":
-    #!/usr/bin/env python3
-    import yaml
-    from pathlib import Path
-    from datetime import datetime
+    uv run python -m ai_gene_review.render_rules "{{cache_dir}}"
 
-    cache_path = Path("{{cache_dir}}")
-    review_files = sorted(cache_path.glob("*/*-review.yaml"))
-
-    # Collect data from all review files
-    rules_data = []
-    for review_file in review_files:
-        try:
-            with open(review_file) as f:
-                data = yaml.safe_load(f)
-
-            rule_id = data.get('id', review_file.parent.name)
-
-            # Extract key information
-            rule_info = {
-                'rule_id': rule_id,
-                'description': data.get('description', ''),
-                'action': data.get('action', 'N/A'),
-                'status': data.get('status', 'N/A'),
-                'confidence': data.get('confidence', 0),
-                'num_condition_sets': len(data.get('rule', {}).get('condition_sets', [])),
-                'go_terms': [],
-                'parsimony': data.get('parsimony', {}).get('assessment', 'N/A'),
-                'literature_support': data.get('literature_support', {}).get('assessment', 'N/A'),
-            }
-
-            # Extract GO terms with IDs for hyperlinks
-            go_annotations = data.get('rule', {}).get('go_annotations', [])
-            for go_ann in go_annotations:
-                go_id = go_ann.get('go_id', '')
-                go_label = go_ann.get('go_label', '')
-                rule_info['go_terms'].append({'id': go_id, 'label': go_label})
-
-            rules_data.append(rule_info)
-        except Exception as e:
-            print(f"Warning: Failed to process {review_file}: {e}")
-
-    # Generate HTML
-    html = f"""<!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>ARBA Rule Reviews Index</title>
-        <style>
-            * {{{{
-                box-sizing: border-box;
-            }}}}
-            body {{{{
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-                margin: 0;
-                padding: 20px;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                min-height: 100vh;
-            }}}}
-            .container {{{{
-                max-width: 1400px;
-                margin: 0 auto;
-            }}}}
-            .header {{{{
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                padding: 40px;
-                border-radius: 12px;
-                margin-bottom: 30px;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            }}}}
-            h1 {{{{
-                margin: 0 0 10px 0;
-                font-size: 2.5em;
-                font-weight: 700;
-                text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-            }}}}
-            .summary {{{{
-                color: rgba(255,255,255,0.9);
-                font-size: 16px;
-                font-weight: 500;
-            }}}}
-            .table-container {{{{
-                background-color: #fff;
-                border-radius: 12px;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-                overflow: hidden;
-            }}}}
-            table {{{{
-                width: 100%;
-                border-collapse: collapse;
-            }}}}
-            th {{{{
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                padding: 16px 12px;
-                text-align: left;
-                font-weight: 600;
-                font-size: 13px;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-                position: sticky;
-                top: 0;
-                z-index: 10;
-            }}}}
-            td {{{{
-                padding: 14px 12px;
-                border-bottom: 1px solid #e2e8f0;
-                vertical-align: top;
-            }}}}
-            tbody tr {{{{
-                transition: all 0.2s ease;
-            }}}}
-            tbody tr:hover {{{{
-                background-color: #f7fafc;
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            }}}}
-            tbody tr:last-child td {{{{
-                border-bottom: none;
-            }}}}
-            .rule-id {{{{
-                font-weight: 700;
-                font-size: 14px;
-                color: #667eea;
-            }}}}
-            .rule-id a {{{{
-                color: #667eea;
-                text-decoration: none;
-                transition: color 0.2s ease;
-            }}}}
-            .rule-id a:hover {{{{
-                color: #764ba2;
-                text-decoration: none;
-            }}}}
-            .description {{{{
-                max-width: 500px;
-                font-size: 13px;
-                color: #4a5568;
-                line-height: 1.6;
-            }}}}
-            .go-term {{{{
-                font-family: 'SF Mono', Monaco, 'Courier New', monospace;
-                font-size: 12px;
-                background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
-                color: #4a5568;
-                padding: 4px 8px;
-                border-radius: 6px;
-                display: inline-block;
-                margin: 2px;
-                border: 1px solid #667eea30;
-                transition: all 0.2s ease;
-            }}}}
-            .go-term:hover {{{{
-                background: linear-gradient(135deg, #667eea25 0%, #764ba225 100%);
-                border-color: #667eea;
-                transform: translateY(-1px);
-            }}}}
-            .go-term a {{{{
-                color: #667eea;
-                text-decoration: none;
-                font-weight: 600;
-            }}}}
-            .go-term a:hover {{{{
-                text-decoration: underline;
-            }}}}
-            .badge {{{{
-                display: inline-block;
-                padding: 4px 10px;
-                border-radius: 16px;
-                font-size: 11px;
-                font-weight: 700;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                transition: transform 0.2s ease;
-            }}}}
-            .badge:hover {{{{
-                transform: scale(1.05);
-            }}}}
-            .action-ACCEPT {{{{ background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; }}}}
-            .action-MODIFY {{{{ background: linear-gradient(135deg, #ecc94b 0%, #d69e2e 100%); color: #744210; }}}}
-            .action-DEPRECATE {{{{ background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%); color: white; }}}}
-            .action-UNDECIDED {{{{ background: linear-gradient(135deg, #cbd5e0 0%, #a0aec0 100%); color: #2d3748; }}}}
-            .parsimony-PARSIMONIOUS {{{{ background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; }}}}
-            .parsimony-ACCEPTABLE {{{{ background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%); color: white; }}}}
-            .parsimony-REDUNDANT {{{{ background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%); color: white; }}}}
-            .parsimony-OVERLY_COMPLEX {{{{ background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%); color: white; }}}}
-            .literature-STRONG {{{{ background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; }}}}
-            .literature-MODERATE {{{{ background: linear-gradient(135deg, #ecc94b 0%, #d69e2e 100%); color: #744210; }}}}
-            .literature-WEAK {{{{ background: linear-gradient(135deg, #ed8936 0%, #dd6b20 100%); color: white; }}}}
-            .confidence {{{{
-                font-weight: 700;
-                font-size: 14px;
-                padding: 4px 8px;
-                border-radius: 6px;
-                display: inline-block;
-            }}}}
-            .confidence-high {{{{ background-color: #c6f6d5; color: #22543d; }}}}
-            .confidence-medium {{{{ background-color: #fef3c7; color: #78350f; }}}}
-            .confidence-low {{{{ background-color: #fed7aa; color: #7c2d12; }}}}
-            .footer {{{{
-                margin-top: 30px;
-                padding: 20px;
-                text-align: center;
-                color: white;
-                font-size: 13px;
-                background-color: rgba(255,255,255,0.1);
-                border-radius: 12px;
-                backdrop-filter: blur(10px);
-            }}}}
-            .footer a {{{{
-                color: white;
-                font-weight: 600;
-                text-decoration: underline;
-            }}}}
-            .footer code {{{{
-                background-color: rgba(255,255,255,0.2);
-                padding: 2px 6px;
-                border-radius: 4px;
-                font-family: 'SF Mono', Monaco, monospace;
-            }}}}
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="header">
-                <h1>ARBA Rule Reviews Index</h1>
-                <div class="summary">
-                    <strong>{len(rules_data)}</strong> rules reviewed | Generated: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
-                </div>
-            </div>
-
-            <div class="table-container">
-                <table>
-            <thead>
-                <tr>
-                    <th>Rule ID</th>
-                    <th>Description</th>
-                    <th>GO Terms</th>
-                    <th>Action</th>
-                    <th>Parsimony</th>
-                    <th>Literature</th>
-                    <th>Condition Sets</th>
-                    <th>Confidence</th>
-                </tr>
-            </thead>
-            <tbody>
-    """
-
-    for rule in rules_data:
-        # Determine confidence class
-        conf_val = rule['confidence']
-        conf_class = 'high' if conf_val >= 0.8 else ('medium' if conf_val >= 0.6 else 'low')
-
-        # Build GO terms HTML with hyperlinks
-        go_terms_html = ''
-        for term in rule['go_terms']:
-            go_id = term['id']
-            go_label = term['label']
-            # Link to QuickGO
-            go_url = f"https://www.ebi.ac.uk/QuickGO/term/{go_id}"
-            go_terms_html += f'<span class="go-term"><a href="{go_url}" target="_blank">{go_id}</a> ({go_label})</span>'
-
-        html += f"""
-                <tr>
-                    <td class="rule-id">
-                        <a href="{rule['rule_id']}/{rule['rule_id']}-review.html">{rule['rule_id']}</a>
-                    </td>
-                    <td class="description">{rule['description']}</td>
-                    <td>
-                        {go_terms_html}
-                    </td>
-                    <td>
-                        <span class="badge action-{rule['action']}">{rule['action']}</span>
-                    </td>
-                    <td>
-                        <span class="badge parsimony-{rule['parsimony']}">{rule['parsimony']}</span>
-                    </td>
-                    <td>
-                        <span class="badge literature-{rule['literature_support']}">{rule['literature_support']}</span>
-                    </td>
-                    <td style="text-align: center;">{rule['num_condition_sets']}</td>
-                    <td class="confidence confidence-{conf_class}">{conf_val:.2f}</td>
-                </tr>
-        """
-
-    html += """
-            </tbody>
-        </table>
-            </div>
-
-            <div class="footer">
-                Generated by <code>just rules-index</code> |
-                <a href="https://github.com/monarch-initiative/ai-gene-review">ai-gene-review</a>
-            </div>
-        </div>
-    </body>
-    </html>
-    """
-
-    # Write to file
-    output_file = Path("{{cache_dir}}") / "index.html"
-    with open(output_file, 'w') as f:
-        f.write(html)
-
-    print(f"✓ Generated index with {len(rules_data)} rules: {output_file}")
+# Render cached reviews and index without rerunning remote analysis
+render-rule-pages cache_dir="rules/arba":
+    uv run python -m ai_gene_review.render_rules "{{cache_dir}}" --render-reviews
 
 # Deploy linkml-browser for ARBA rule reviews
 deploy-rules-browser cache_dir="rules/arba": rules-data-json
@@ -2055,6 +1852,10 @@ deploy-browser: export-annotations-json
     echo "Browser deployed to app/ directory"
     echo "To view: open app/index.html or run 'just serve-browser'"
 
+# Build the shared prediction-set and claim browser, including narrative reviews.
+deploy-predictions-browser:
+    uv run python -m ai_gene_review.tools.build_prediction_browser
+
 # Serve the linkml-browser app locally  
 serve-browser:
     @echo "Starting local server for linkml-browser..."
@@ -2199,6 +2000,19 @@ deep-research-backfill provider *args="":
     uv run python scripts/deep_research_coverage.py backfill {{provider}} {{args}}
 
 # ============== Publications Cache Management ==============
+
+# Warm the publications cache via the linkml-reference-validator full-text
+# provider chain (PMC, Europe PMC preprints, Unpaywall, OpenAlex). Covers
+# DOI-only records without a PMC ID; every cleanly concluded attempt is durably
+# tagged full_text_attempted so bounded runs drain the backlog incrementally
+# (dismech-style warm-reference-cache).
+# Example: just warm-publications 200
+warm-publications limit="100":
+    uv run ai-gene-review warm-publications --limit {{limit}}
+
+# Non-network preview of what a warm sweep would attempt
+warm-publications-preview limit="20":
+    uv run ai-gene-review warm-publications --dry-run --limit {{limit}}
 
 # Refresh publications cache for PMC articles with missing full text (small batch)
 refresh-publications count="50":
@@ -2586,11 +2400,12 @@ ui-legacy port="5123":
 
 # Run GO-GPT prediction for a gene (outputs PredictionReview YAML)
 # Requires: GO-GPT model at ~/repos/BioReason-Pro/models/gogpt
+# Set BIOREASON_PYTHON to override the default ~/repos/BioReason-Pro/.venv interpreter.
 # Examples:
 #   just gogpt-predict human TP53
 #   just gogpt-predict PSEPK rpoS
 gogpt-predict organism gene:
-    ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py {{organism}} {{gene}} --output-dir .
+    uv run python -m ai_gene_review.run_bioreason_python scripts/gogpt_predict.py {{organism}} {{gene}} --output-dir .
 
 # Run GO-GPT prediction and compare with curated review
 # Outputs GENE-gogpt-predictions.yaml in PredictionReview schema format
@@ -2598,11 +2413,11 @@ gogpt-predict organism gene:
 #   just gogpt-compare human TP53
 #   just gogpt-compare PSEPK rpoS
 gogpt-compare organism gene:
-    ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py {{organism}} {{gene}} --compare --output-dir .
+    uv run python -m ai_gene_review.run_bioreason_python scripts/gogpt_predict.py {{organism}} {{gene}} --compare --output-dir .
 
 # Alias for gogpt-compare
 gogpt-review organism gene:
-    ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py {{organism}} {{gene}} --compare --output-dir .
+    uv run python -m ai_gene_review.run_bioreason_python scripts/gogpt_predict.py {{organism}} {{gene}} --compare --output-dir .
 
 # Run GO-GPT predictions for all genes in an organism
 gogpt-predict-organism organism:
@@ -2615,7 +2430,7 @@ gogpt-predict-organism organism:
             uniprot="$gene_dir/${gene}-uniprot.txt"
             if [ -f "$uniprot" ]; then
                 echo "Processing $gene..."
-                ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py {{organism}} "$gene" --compare --output-dir . 2>&1 || echo "  Failed: $gene"
+                uv run python -m ai_gene_review.run_bioreason_python scripts/gogpt_predict.py {{organism}} "$gene" --compare --output-dir . 2>&1 || echo "  Failed: $gene"
                 count=$((count + 1))
             fi
         fi
@@ -2636,7 +2451,7 @@ gogpt-compare-all:
                 uniprot="$gene_dir/${gene}-uniprot.txt"
                 if [ -f "$review" ] && [ -f "$uniprot" ]; then
                     echo "Comparing $organism/$gene..."
-                    ~/repos/BioReason-Pro/.venv/bin/python scripts/gogpt_predict.py "$organism" "$gene" --compare --output-dir . 2>&1 || echo "  Failed: $organism/$gene"
+                    uv run python -m ai_gene_review.run_bioreason_python scripts/gogpt_predict.py "$organism" "$gene" --compare --output-dir . 2>&1 || echo "  Failed: $organism/$gene"
                     total=$((total + 1))
                 fi
             fi
@@ -2660,3 +2475,118 @@ cron-profile-preview name:
 # `on.schedule` block, leaving workflow_dispatch intact.
 cron-profile name:
     uv run python scripts/apply_cron_profile.py {{name}}
+
+# Rewrite PANTHER family/subfamily term.label values to PANTHER's official names.
+# `term.label` must be verifiable; put your own description in `preferred_term`.
+# Descriptors whose family does not contain their representative member are
+# skipped -- relabelling those would hide a wrong family id. Fix the id first.
+# Example: just fix-panther-labels --apply
+[group('QC')]
+fix-panther-labels *args="":
+    uv run ai-gene-review fix-panther-labels --output-dir . {{args}}
+
+# Check PANTHER family ids written into module PROSE (notes/description/statement)
+# against interpro/panther/panther-members.tsv. Module validation only reads
+# term.id/label pairs, so a PANTHER id in free text is invisible to it -- nine
+# such claims were contradicted by the repo's own data. Catches 7 of those 9;
+# symbol-phrased and first-of-a-shared-pair claims are documented misses.
+[group('QC')]
+scan-prose-panther *args="":
+    uv run python -m ai_gene_review.validation.prose_panther_scan {{args}}
+
+# Print every row of the PANTHER review report's scope table.
+# That table went stale four times because its rows had no committed
+# derivation; paste this output over the table after a merge.
+[group('QC')]
+panther-report-stats *args="":
+    uv run ai-gene-review panther-report-stats --output-dir . {{args}}
+
+# ============ History records (ported from dismech) ============
+# Append-only curation session history under history/. See docs/history.md.
+
+# Scaffold a new append-only history record (pass-through to scripts/new_history.py).
+# Run `just new-history --help` for all options. Prints the created path.
+# Example:
+#   just new-history --kind gene --organism human --slug CFAP300 --event CREATE \
+#     --outcome changed --summary "Create review: CFAP300" --agent-tool claude-code \
+#     --pr 2500 --details "..."
+# `[positional-arguments]` + "$@" is required, not stylistic: interpolating
+# {{ARGS}} joins the variadic args into one space-separated string and loses
+# shell quoting, so a multi-word --summary/--details would reach argparse as
+# separate tokens ("unrecognized arguments").
+[group('QC')]
+[positional-arguments]
+new-history *ARGS:
+    uv run python scripts/new_history.py "$@"
+
+# Validate a single history record
+[group('QC')]
+validate-history file:
+    uv run linkml-validate --schema {{history_schema_path}} --target-class HistoryRecord {{file}}
+
+# Validate all history records
+[group('QC')]
+validate-history-all:
+    #!/usr/bin/env bash
+    set -e
+    if [[ ! -d "{{history_dir}}" ]]; then
+        echo "No history directory found."
+        exit 0
+    fi
+    files=()
+    while IFS= read -r f; do
+        files+=("$f")
+    done < <(find "{{history_dir}}" -type f -name '*.yaml' | sort)
+    if [ ${#files[@]} -eq 0 ]; then
+        echo "No history YAML files found in {{history_dir}}."
+        exit 0
+    fi
+    printf 'Validating %s history record(s).\n' "${#files[@]}"
+    uv run linkml-validate --schema {{history_schema_path}} --target-class HistoryRecord "${files[@]}"
+
+# Retrospectively backfill history records from PR metadata (needs `gh`).
+# Prefer --state merged: an open PR's new targets are not on this checkout,
+# so its records get skipped as missing (see docs/history.md).
+# Example: just backfill-history --state merged --dry-run
+[group('QC')]
+[positional-arguments]
+backfill-history *ARGS:
+    uv run python scripts/backfill_history_from_prs.py "$@"
+
+# ============== PANTHER Family Reviews ==============
+
+# Validate curated PANTHER family reviews, in four stages:
+#   1. structural schema validation against FamilyReview;
+#   2. GO term id/label validation via linkml-term-validator;
+#   3. residue-site validation -- every curated position resolved against the
+#      anchor's actual UniProt sequence, plus controls, PAINT node assertions and
+#      PANTHER id/label/membership;
+#   4. cross-checks against the gene corpus, and gene-level residue claims.
+# Sequences are cached under .cache/uniprot_seq (restored in CI by actions/cache).
+validate-families:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    files=$(find interpro/panther -name "PTHR*-review.yaml" 2>/dev/null | sort)
+    if [ -z "$files" ]; then
+        echo "No family review YAML files found"
+        exit 0
+    fi
+    rc=0
+    while IFS= read -r f; do
+        echo "Schema-validating $f"
+        uv run linkml-validate --schema src/ai_gene_review/schema/family_review.yaml \
+            --target-class FamilyReview "$f" || rc=1
+    done <<< "$files"
+    echo "Validating GO term ids and labels..."
+    while IFS= read -r f; do
+        uv run linkml-term-validator validate-data "$f" \
+            -s src/ai_gene_review/schema/family_review.yaml \
+            -t FamilyReview --labels -c conf/oak_config.yaml || rc=1
+    done <<< "$files"
+    echo "Validating curated residue sites against UniProt sequences..."
+    uv run python -m ai_gene_review.validation.family_residue_validator || rc=1
+    echo "Cross-checking family reviews against the gene corpus..."
+    uv run python -m ai_gene_review.validation.family_gene_crosscheck || rc=1
+    echo "Validating gene-level residue claims..."
+    uv run python -m ai_gene_review.validation.gene_residue_claims || rc=1
+    exit $rc

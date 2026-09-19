@@ -17,25 +17,58 @@ import subprocess
 import sys
 from pathlib import Path
 import re
+from typing import Any
 
 # Default timeout for deep research subprocess (seconds)
 DEFAULT_TIMEOUT = 600
 DEFAULT_OPENSCIENTIST_TIMEOUT = 7200
 DEFAULT_DRC_PACKAGE = "deep-research-client[cyberian]==0.2.7rc1"
+PROVIDERS = (
+    "openai",
+    "perplexity",
+    "perplexity-lite",
+    "falcon",
+    "cyberian",
+    "codex",
+    "asta",
+    "openscientist",
+)
+
+
+def select_provider(positional: str | None, option: str | None) -> str:
+    """Resolve the provider accepted by old and generic wrapper interfaces."""
+    if positional and option and positional != option:
+        raise ValueError(
+            f"Conflicting providers: positional '{positional}' and --provider '{option}'"
+        )
+    provider = option or positional
+    if not provider:
+        raise ValueError(
+            "A provider is required; pass --provider PROVIDER or use a "
+            "provider-specific just recipe"
+        )
+    if provider not in PROVIDERS:
+        raise ValueError(
+            f"Unsupported provider '{provider}'; choose from: {', '.join(PROVIDERS)}"
+        )
+    return provider
 
 
 def deep_research_client_command() -> list[str]:
     """Return the command prefix for invoking deep-research-client.
 
     Use uvx by default so research jobs do not need to sync this repository's
-    large Python environment. Set DEEP_RESEARCH_CLIENT_CMD to override, e.g.
-    DEEP_RESEARCH_CLIENT_CMD=deep-research-client.
+    large Python environment. Request Python >=3.12,<4.0 explicitly, overriding
+    the ambient/UV_PYTHON default. DEEP_RESEARCH_CLIENT_UVX_FROM overrides the
+    package; DEEP_RESEARCH_CLIENT_CMD replaces the whole command (including
+    interpreter selection), e.g. DEEP_RESEARCH_CLIENT_CMD=deep-research-client.
     """
     override = os.environ.get("DEEP_RESEARCH_CLIENT_CMD")
     if override:
         return shlex.split(override)
     package = os.environ.get("DEEP_RESEARCH_CLIENT_UVX_FROM", DEFAULT_DRC_PACKAGE)
-    return ["uvx", "--from", package, "deep-research-client"]
+    # The client requires Python >=3.12; do not use an older ambient interpreter.
+    return ["uvx", "--python", ">=3.12,<4.0", "--from", package, "deep-research-client"]
 
 
 def parse_uniprot_gene_name(uniprot_file: Path) -> str:
@@ -66,7 +99,7 @@ def parse_uniprot_gene_name(uniprot_file: Path) -> str:
     raise ValueError(f"Could not find gene name in {uniprot_file}")
 
 
-def parse_uniprot_context(uniprot_file: Path) -> dict:
+def parse_uniprot_context(uniprot_file: Path) -> dict[str, Any]:
     """Extract comprehensive context from UniProt file for gene identification.
 
     Args:
@@ -79,7 +112,7 @@ def parse_uniprot_context(uniprot_file: Path) -> dict:
     if not uniprot_file.exists():
         return {}
 
-    context = {
+    context: dict[str, Any] = {
         'accession': '',
         'protein_description': '',
         'gene_info': '',
@@ -164,7 +197,12 @@ def _build_cmd(
     provider_timeout: int | None = None,
 ) -> list[str]:
     """Build the deep-research-client command list."""
-    actual_provider = "perplexity" if provider == "perplexity-lite" else provider
+    if provider == "perplexity-lite":
+        actual_provider = "perplexity"
+    elif provider == "codex":
+        actual_provider = "cyberian"
+    else:
+        actual_provider = provider
 
     if use_template:
         cmd = [
@@ -211,10 +249,20 @@ def _build_cmd(
     if actual_provider == "openscientist" and provider_timeout is not None:
         cmd.extend(["--param", f"timeout={provider_timeout}"])
 
+    if provider == "codex":
+        cmd.extend(["--param", "agent_type=codex"])
+
     if extra_args:
         cmd.extend(extra_args)
 
     return cmd
+
+
+def _fallback_output_path(output_path: Path, provider: str) -> Path:
+    """Return the canonical gene research path for a fallback provider."""
+    return output_path.parent / (
+        f"{output_path.parent.name}-deep-research-{provider}{output_path.suffix}"
+    )
 
 
 def run_deep_research(
@@ -234,7 +282,7 @@ def run_deep_research(
     Args:
         organism: Organism name
         gene_id: Gene identifier (UniProt ID, locus tag, or gene symbol)
-        provider: Provider name (openai, perplexity, perplexity-lite, falcon, cyberian, openscientist)
+        provider: Provider name from ``PROVIDERS``
         gene_symbol: Gene symbol/name to use in template
         output_path: Where to write output
         uniprot_context: Dictionary with UniProt context fields
@@ -254,7 +302,7 @@ def run_deep_research(
 
         # Adjust output path for fallback providers
         if is_fallback:
-            prov_output = output_path.parent / f"{output_path.stem.rsplit('-', 1)[0]}-{prov}{output_path.suffix}"
+            prov_output = _fallback_output_path(output_path, prov)
         else:
             prov_output = output_path
 
@@ -271,7 +319,7 @@ def run_deep_research(
         )
 
         label = f"[fallback {i}/{len(providers_to_try)-1}] " if is_fallback else ""
-        print(f"{label}Running: {' '.join(cmd)}")
+        print(f"{label}Running: {shlex.join(cmd)}")
         print(f"{label}Timeout: {timeout}s")
 
         try:
@@ -299,13 +347,22 @@ def main():
     parser.add_argument("organism", help="Organism name")
     parser.add_argument("gene_id", help="Gene identifier (UniProt ID, locus tag, or gene symbol)")
     parser.add_argument(
-        "provider",
-        help="Provider (for example: openai, perplexity, perplexity-lite, falcon, cyberian, openscientist)",
+        "provider_positional",
+        nargs="?",
+        choices=PROVIDERS,
+        help="Provider used by the legacy provider-specific just recipes",
+    )
+    parser.add_argument(
+        "--provider",
+        dest="provider_option",
+        choices=PROVIDERS,
+        help="Provider (equivalent to the legacy positional provider argument)",
     )
     parser.add_argument("--alias", help="Gene symbol alias (if not provided, will lookup from UniProt)")
     parser.add_argument(
         "--fallback",
         nargs="+",
+        choices=PROVIDERS,
         metavar="PROVIDER",
         help="Ordered list of fallback providers to try if the primary provider fails or times out "
              "(e.g. --fallback perplexity-lite falcon)"
@@ -321,6 +378,10 @@ def main():
     parser.add_argument("--extra-args", nargs=argparse.REMAINDER, help="Extra args to pass to deep-research-client")
 
     args = parser.parse_args()
+    try:
+        provider = select_provider(args.provider_positional, args.provider_option)
+    except ValueError as error:
+        parser.error(str(error))
 
     # Determine gene symbol and parse UniProt context
     uniprot_context = None
@@ -365,11 +426,11 @@ def main():
         base_dir = Path(f"genes/{args.organism}/{args.gene_id}")
 
     # Construct output path
-    if args.provider == "perplexity-lite":
+    if provider == "perplexity-lite":
         output_file = base_dir / f"{base_dir.name}-deep-research-perplexity-lite.md"
         use_template = False
     else:
-        output_file = base_dir / f"{base_dir.name}-deep-research-{args.provider}.md"
+        output_file = base_dir / f"{base_dir.name}-deep-research-{provider}.md"
         use_template = True
 
     # Create directory if it doesn't exist
@@ -379,7 +440,7 @@ def main():
     if effective_timeout is None:
         effective_timeout = (
             DEFAULT_OPENSCIENTIST_TIMEOUT
-            if args.provider == "openscientist"
+            if provider == "openscientist"
             else DEFAULT_TIMEOUT
         )
 
@@ -387,7 +448,7 @@ def main():
     return run_deep_research(
         organism=args.organism,
         gene_id=args.gene_id,
-        provider=args.provider,
+        provider=provider,
         gene_symbol=gene_symbol,
         output_path=output_file,
         uniprot_context=uniprot_context,

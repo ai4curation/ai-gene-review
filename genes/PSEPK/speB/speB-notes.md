@@ -15,3 +15,9 @@
 
 Residual uncertainty: Q88KU3 needs comparative enzyme assays against agmatine,
 arginine, and 4-guanidinobutyrate to close the paralog-specificity gap.
+
+## 2026-08-11 (carboxyspermidine-module curation, retained on merge)
+
+SpeB hydrolyzes agmatine to putrescine in the arginine-derived precursor-supply
+route. It is not itself a committed spermidine-pathway enzyme. The exact core
+process is putrescine biosynthesis from arginine via agmatine.
