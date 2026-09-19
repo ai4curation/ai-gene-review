@@ -376,7 +376,7 @@ negative so the next reviewer knows the check ran.
   are raised as questions.
 - **No proposed new GO term.** Every function I needed already exists:
   `GO:0140313`, `GO:0042308`, `GO:0008157`, `GO:0004864`, `GO:0051018`,
-  `GO:1903306`. All eight candidate ids were checked against QuickGO
+  `GO:1904410`. All eight candidate ids were checked against QuickGO
   `/complete` for `isObsolete` and `secondaryIds` before use; none is obsolete or
   merged.
 
