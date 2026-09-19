@@ -240,7 +240,8 @@ was imported from it.
   and the exchange machinery is intact. Substrate identity is carried in
   `core_functions[].substrates` and in `RO:0002233 has_input` extensions, because GO's MF
   branch cannot carry it.
-- **`GO:0005515` protein binding.** The six IPI rows from binary-interactome screens
+- **`GO:0005515` protein binding.** The seven IPI rows from binary-interactome screens
+  (five distinct partners: PIN1, LASP1, CEP55, PRKG1, GORASP2)
   (PMID:25416956, PMID:26871637, PMID:32296183) are `MARK_AS_OVER_ANNOTATED` — reproducible
   screen hits with no biology attached, not refuted findings, and `protein binding` says
   nothing about function. The one IPI with a mechanism is EPHA4 (PMID:12775584), which is
