@@ -168,6 +168,79 @@ case("duplicate accession in the panel", break_panel_uniqueness, TOOLING_EXIT,
      "duplicate accession(s) in PANEL")
 
 
+def quote_checker_cases() -> int:
+    """Mutation-test verify_quotes.py on a throwaway copy of the review.
+
+    Kept separate from the CASES table because it drives a different script:
+    verify_quotes reads the review YAML from disk, so each case writes a
+    deliberately corrupted copy to a temp file and asserts the checker notices.
+    Case 1 is the negative control -- the unmodified review must pass.
+    """
+    import copy as _copy
+    import tempfile
+
+    import yaml
+
+    import verify_quotes as vq
+
+    doc = yaml.safe_load(vq.REVIEW.read_text(encoding="utf-8"))
+    failures = 0
+
+    def run(mutated, expect_code, expect_text, name):
+        nonlocal failures
+        with tempfile.NamedTemporaryFile(
+            "w", suffix="-ai-review.yaml", delete=False, encoding="utf-8"
+        ) as fh:
+            yaml.safe_dump(mutated, fh, allow_unicode=True, sort_keys=False)
+            tmp = fh.name
+        buf = io.StringIO()
+        try:
+            with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
+                code = vq.main(__import__("pathlib").Path(tmp))
+        except SystemExit as exc:
+            code = int(exc.code or 0)
+        out = buf.getvalue()
+        ok = code == expect_code and expect_text in out
+        print(f"[{'PASS' if ok else 'FAIL'}] {name}  exit={code} (want {expect_code})"
+              f"  message {'found' if expect_text in out else 'NOT FOUND'}: "
+              f"{expect_text!r}")
+        if not ok:
+            failures += 1
+
+    run(doc, 0, "Every quote is a verbatim substring", "quote checker: unmutated review")
+
+    # A PMID quote reworded by one word must fail.
+    m = _copy.deepcopy(doc)
+    m["references"][3]["findings"][0]["supporting_text"] = (
+        "Expression of hWGEF and XWGEF DECREASED the level of active RhoA"
+    )
+    run(m, 1, "quote not found in PMID_18256687.md",
+        "quote checker: reworded PMID quote")
+
+    # A file: quote -- the class CI never checks -- reworded must also fail.
+    m = _copy.deepcopy(doc)
+    m["references"][25]["findings"][0]["supporting_text"] = (
+        "25 of the 25 RhoA-contacting positions are present"
+    )
+    run(m, 1, "quote not found in RESULTS.md",
+        "quote checker: reworded file: quote")
+
+    # A Reactome quote reworded must fail.
+    m = _copy.deepcopy(doc)
+    m["references"][21]["findings"][0]["supporting_text"] = (
+        "Following NGF binding, p75NTR inactivates the RAC GTPase."
+    )
+    run(m, 1, "quote not found in R-HSA-205039.md",
+        "quote checker: reworded Reactome quote")
+
+    # A reference pointing at a file that does not exist must fail.
+    m = _copy.deepcopy(doc)
+    m["references"][25]["id"] = "file:human/ARHGEF19/ARHGEF19-bioinformatics/NOPE.md"
+    run(m, 1, "does not exist", "quote checker: missing source file")
+
+    return failures
+
+
 def main() -> int:
     snap = snapshot()
     width = max(len(n) for n, *_ in CASES)
@@ -191,11 +264,14 @@ def main() -> int:
                     print(f"        {line}")
     restore(snap)
     print()
+    failures += quote_checker_cases()
+    print()
+    total = len(CASES) + 5
     if failures:
-        print(f"{failures}/{len(CASES)} guard(s) did not behave as specified.")
+        print(f"{failures}/{total} guard(s) did not behave as specified.")
         return 1
-    print(f"All {len(CASES)} guards behaved as specified "
-          "(including the negative control, which stayed silent).")
+    print(f"All {total} guards behaved as specified "
+          "(including the two negative controls, which stayed silent).")
     return 0
 
 
