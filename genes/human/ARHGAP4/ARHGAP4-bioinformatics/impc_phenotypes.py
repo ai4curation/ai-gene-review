@@ -58,20 +58,44 @@ def count(core: str, gene: str) -> int:
     return int(r.json()["response"]["numFound"])
 
 
-def significant_terms(gene: str, limit: int = 50) -> list[str]:
-    r = requests.get(
-        SOLR.format(core="genotype-phenotype"),
-        params={
-            "q": f"marker_symbol:{gene}",
-            "rows": limit,
-            "fl": "mp_term_name",
-            "wt": "json",
-        },
-        timeout=120,
-    )
-    r.raise_for_status()
-    docs = r.json()["response"]["docs"]
-    return sorted({d["mp_term_name"] for d in docs if d.get("mp_term_name")})
+def significant_terms(gene: str, page: int = 500) -> list[str]:
+    """Every distinct MP term with a significant association, fully paginated.
+
+    The first version took one page of 500 and returned whatever it held, while the
+    count beside it came from an independent ``numFound``. Those two numbers can
+    disagree without anything looking wrong -- Lepr has 105 associations -- so a
+    silently short list would sit next to a correct count and read as agreement.
+    Every other script here aborts on pagination for the same hazard; this one
+    paginates, and asserts that it saw as many documents as the service claimed."""
+    terms: set[str] = set()
+    start = 0
+    total = None
+    while True:
+        r = requests.get(
+            SOLR.format(core="genotype-phenotype"),
+            params={
+                "q": f"marker_symbol:{gene}",
+                "rows": page,
+                "start": start,
+                "fl": "mp_term_name",
+                "wt": "json",
+            },
+            timeout=120,
+        )
+        r.raise_for_status()
+        resp = r.json()["response"]
+        total = resp["numFound"] if total is None else total
+        docs = resp["docs"]
+        terms.update(d["mp_term_name"] for d in docs if d.get("mp_term_name"))
+        start += len(docs)
+        if not docs or start >= total:
+            break
+    if start != total:
+        raise RuntimeError(
+            f"{gene}: read {start} of {total} genotype-phenotype documents; "
+            "the term list would under-report"
+        )
+    return sorted(terms)
 
 
 def profile(gene: str) -> dict[str, object]:
@@ -83,13 +107,20 @@ def profile(gene: str) -> dict[str, object]:
         verdict = f"TESTED AND CLEAN ({tests} tests, 0 significant)"
     else:
         verdict = f"{sig} significant association(s) across {tests} tests"
+    terms = significant_terms(gene) if sig else []
     return {
         "gene": gene,
         "significant_associations": sig,
         "tests_performed": tests,
         "tested": tests > 0,
         "verdict": verdict,
-        "significant_phenotypes": significant_terms(gene) if sig else [],
+        "significant_phenotypes": terms,
+        "distinct_phenotype_terms": len(terms),
+        # Stated so the two counts are never read as a truncation: one association is
+        # one (allele, zygosity, sex, parameter) result, and several can map to the
+        # same MP term, so distinct terms are legitimately fewer than associations.
+        # The list is fully paginated; significant_terms() raises if it is not.
+        "terms_fewer_than_associations_is_expected": len(terms) <= sig,
     }
 
 
@@ -139,6 +170,30 @@ def self_test() -> int:
         (
             "positive control returns named MP terms",
             "PASS" if lepr["significant_phenotypes"] else "FAIL (no terms)",
+        )
+    )
+    # 2b. Pagination: the term list must be built from every document, not one page.
+    #     Lepr has more associations than a naive single page returned, which is the
+    #     defect this guard exists for. Reading fewer documents than numFound must
+    #     raise rather than quietly shorten the list.
+    n_read_ok = True
+    try:
+        significant_terms("Lepr", page=10)  # force many pages
+    except RuntimeError:
+        n_read_ok = False
+    checks.append(
+        (
+            "term list paginates rather than truncating (Lepr, page=10)",
+            "PASS" if n_read_ok else "FAIL (raised on a legitimate multi-page read)",
+        )
+    )
+    small_page = significant_terms("Lepr", page=10)
+    checks.append(
+        (
+            "paginated and single-call term lists agree",
+            "PASS"
+            if small_page == lepr["significant_phenotypes"]
+            else f"FAIL {len(small_page)} vs {len(lepr['significant_phenotypes'])}",
         )
     )
     # 3. The target must be distinguishable from untested: many tests, zero hits.

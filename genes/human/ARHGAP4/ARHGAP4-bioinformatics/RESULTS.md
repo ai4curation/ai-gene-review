@@ -31,13 +31,17 @@ Ensembl-Compara projections from rat.
 
 **16 of 19 primary papers produced no GO annotation on ARHGAP4 in any species.**
 
-| PMID | rows on ARHGAP4 (any species) |
-|---|---|
-| 8570618 Tribioli 1996 | human: `GO:0005096`, `GO:0007010`, `GO:0007266`, `GO:0005737`, all TAS |
-| 12414125 Foletta 2002 | **rat**: `GO:0005096` **IDA**, `GO:0007399` IEP, `GO:0035023` NAS, `GO:0005874` IDA |
-| 17804252 Vogt 2007 | **rat**: `GO:0010764` IMP, `GO:0030517` IMP, `GO:0030426` IDA |
-| 16417406 Weiner 2006 (screen) | human: `GO:0005515` IPI |
-| the other 16 | none |
+The three that did are the first three rows below. PMID:16417406 is listed for
+completeness but is **not one of the 19** — it is an interactome screen, held in the
+script's separate `screen_papers` set, so the arithmetic is 3 + 16 = 19.
+
+| PMID | in the 19? | rows on ARHGAP4 (any species) |
+|---|---|---|
+| 8570618 Tribioli 1996 | yes | human: `GO:0005096`, `GO:0007010`, `GO:0007266`, `GO:0005737`, all TAS |
+| 12414125 Foletta 2002 | yes | **rat**: `GO:0005096` **IDA**, `GO:0007399` IEP, `GO:0035023` NAS, `GO:0005874` IDA |
+| 17804252 Vogt 2007 | yes | **rat**: `GO:0010764` IMP, `GO:0030517` IMP, `GO:0030426` IDA |
+| the other 16 primary papers | yes | none |
+| 16417406 Weiner 2006 | no — screen | human: `GO:0005515` IPI |
 
 The 16 include every human-genetics paper, the ARHGAP4–SEPT2–SEPT9 complex, the EMT
 screen, and all eight cancer papers. No result set was truncated, so these are zeros and
@@ -259,6 +263,15 @@ self-test requires one of them to still be untested — if the paralogs are ever
 the guard fails loudly rather than quietly losing its comparator. The run aborts if a
 positive control comes back empty, since that would mean the query shape is wrong and no
 zero in the table could be trusted.
+
+Note on the two counts for a positive control: Lepr reports **105 associations** but
+**49 distinct MP terms**, and that gap is real rather than a truncation. One association
+is one (allele, zygosity, sex, parameter) result, and several map to the same MP term.
+The term list is fully paginated and `significant_terms()` raises if it reads fewer
+documents than the service reports, which the self-test exercises by forcing a 10-row
+page size and requiring the result to equal the default-page result. An earlier version
+capped at one 50-row page while the count came from an independent `numFound`, so a
+silently short list sat beside a correct count — caught in review, not by the script.
 
 This does not say ARHGAP4 does nothing. It says the knockout was looked at hard, in a
 standardised pipeline, and nothing measurable fell out — which is what a redundancy
