@@ -166,6 +166,35 @@ Three things follow.
    synapse-assembly inheritance the odd one out rather than part of a consistent
    neuronal package.
 
+## The one REMOVE, and why it took a review to get right
+
+`GO:0005515 protein binding` IPI with NCKAP1L (Hem-1, `P55160`) — UniProt's only `SUBUNIT`
+statement for this gene, from the neutrophil leading-edge complex proteomics
+[PMID:16417406 "A subset of these leading edge complexes are biochemically separable \nfrom the WAVE2 complex and contain a diverse set of potential polarity-regulating \nproteins."].
+
+My first pass marked it `KEEP_AS_NON_CORE`, reasoning that the interaction is real and the
+partner informative even if the term is not. That is not a branch the repo policy offers.
+`.claude/skills/annotation-reviewer/SKILL.md:186-197` gives exactly three: `MODIFY` when
+the paper supports a more informative MF, `UNDECIDED` when the evidence cannot be
+adjudicated, and **otherwise `REMOVE`** — "removal does not mean the reported interaction
+is false". `UNDECIDED` does not apply here, because the interaction is curated with
+experimental evidence and is not in doubt; what is in doubt is whether any informative MF
+term exists, and the branch walk answers that: no.
+
+So the row is `REMOVE`. The useful content — that a hematopoietic RhoGAP sits inside the
+machinery that activates RAC — survives in the review prose, the description and a
+`suggested_questions` entry, which is where it belongs, rather than in an annotation that
+says only "binds something".
+
+**Is there a term to move to?** Answered by walking the branch, not by searching, because
+GO search is token-based and "WAVE complex binding" can never match a term lacking those
+tokens. All **106** descendants of `GO:0044877 protein-containing complex binding` contain
+exactly one actin-machinery term, `GO:0071933 Arp2/3 complex binding`. `GO:0031209 SCAR
+complex` exists but is a cellular component, not something to bind — and in any case the
+paper describes the ARHGAP4-containing complexes as *biochemically separable* from the
+WAVE2 complex proper, so SCAR-complex membership would be wrong on the biology as well as
+unavailable in the ontology.
+
 ## Comparator check — which refuted three of my four candidate MODIFYs
 
 `comparator_terms.py` tests each proposed replacement as a prediction about seven
