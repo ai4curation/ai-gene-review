@@ -1,0 +1,128 @@
+"""Mutation-test the guards in ``analyze_arhgap23.py --self-test``.
+
+A self-test that passes has proved nothing until you know it *can* fail. This script
+breaks each guard in a copy of the analysis script, one at a time, and asserts that the
+self-test catches the break. It also applies a no-op edit as a negative control, which
+must leave the self-test silent -- a self-test that fails on cosmetic changes is a
+different kind of useless.
+
+This is committed, not kept in a scratchpad, because an uncommitted check never re-runs
+and its claims go stale silently. It caught one real hole when it was written: the
+"missing arginine finger" case had been re-implemented inside the self-test instead of
+being driven through ``Protein.__init__``, so deleting the real guard left the self-test
+passing. The fix was to give ``Protein`` an injectable record and test the real path.
+
+Usage:
+    uv run python mutation_test.py
+"""
+
+from __future__ import annotations
+
+import pathlib
+import shutil
+import subprocess
+import sys
+import tempfile
+
+SCRIPT_DIR = pathlib.Path(__file__).resolve().parent
+SRC = SCRIPT_DIR / "analyze_arhgap23.py"
+
+# (description, exact source text to replace, replacement). Each anchor must match
+# exactly once: zero matches would "pass" by changing nothing, two would mutate a row
+# nobody intended.
+MUTATIONS: list[tuple[str, str, str]] = [
+    (
+        "drop the annotated-site requirement from forward_retained",
+        'forward_retained = bool(s_res == "R" and lands_on_site)',
+        'forward_retained = bool(s_res == "R")',
+    ),
+    (
+        "make reciprocal ignore the reverse mapping",
+        '"reciprocal": bool(forward_retained and reverse_ok),',
+        '"reciprocal": bool(forward_retained),',
+    ),
+    (
+        "let an out-of-register interface projection through",
+        "if anchor != subject.finger:",
+        "if False:",
+    ),
+    (
+        "weaken the chain-identity proof to accept anything",
+        "if identity < min_identity:",
+        "if identity < 0.0:",
+    ),
+    (
+        "stop refusing a record with no arginine-finger annotation",
+        '        if not fingers:\n            raise AnalysisError(\n                f"{self.name} carries no',
+        '        if False:\n            raise AnalysisError(\n                f"{self.name} carries no',
+    ),
+    (
+        "accept an arginine finger annotated outside its own domain",
+        "if not (self.domain_start <= self.finger <= self.domain_end):",
+        "if False:",
+    ),
+]
+
+NEGATIVE_CONTROLS: list[tuple[str, str, str]] = [
+    (
+        "a docstring reflow that changes no behaviour",
+        '"""Map 1-based positions of `seq_from` onto 1-based positions of `seq_to`."""',
+        '"""Map 1-based positions of seq_from onto 1-based positions of seq_to."""',
+    ),
+]
+
+
+def _write_mutant(target: pathlib.Path, old: str, new: str) -> None:
+    text = SRC.read_text()
+    n = text.count(old)
+    if n != 1:
+        raise AssertionError(f"anchor matched {n} times, expected exactly 1: {old!r}")
+    target.write_text(text.replace(old, new))
+
+
+def _run_self_test(target: pathlib.Path) -> tuple[int, str]:
+    proc = subprocess.run(
+        [sys.executable, str(target), "--self-test"],
+        cwd=SCRIPT_DIR,
+        capture_output=True,
+        text=True,
+    )
+    combined = (proc.stdout + proc.stderr).strip().splitlines()
+    return proc.returncode, combined[-1] if combined else ""
+
+
+def main() -> int:
+    failures: list[str] = []
+    with tempfile.TemporaryDirectory() as tmp:
+        target = pathlib.Path(tmp) / "analyze_arhgap23.py"
+        for desc, old, new in MUTATIONS:
+            _write_mutant(target, old, new)
+            code, last = _run_self_test(target)
+            if code == 0:
+                failures.append(f"GUARD HOLE: {desc}")
+                print(f"*** GUARD HOLE: {desc} -- self-test still passed")
+            else:
+                print(f"ok, caught: {desc}\n      -> {last[:150]}")
+        for desc, old, new in NEGATIVE_CONTROLS:
+            _write_mutant(target, old, new)
+            code, last = _run_self_test(target)
+            if code != 0:
+                failures.append(f"FALSE POSITIVE: {desc}")
+                print(f"*** FALSE POSITIVE: {desc}\n      -> {last[:150]}")
+            else:
+                print(f"ok, silent: {desc}")
+    print()
+    if failures:
+        print("MUTATION TEST FAILED:")
+        for f in failures:
+            print(" -", f)
+        return 1
+    print(
+        f"MUTATION TEST PASSED: {len(MUTATIONS)} guards all caught, "
+        f"{len(NEGATIVE_CONTROLS)} negative control(s) silent"
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
