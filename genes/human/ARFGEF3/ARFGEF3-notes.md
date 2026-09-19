@@ -247,12 +247,27 @@ analysis; the correct classification is `PROPAGATION_BAD` +
 `PSEUDO_OR_SUBACTIVITY_LOSS`: PAINT placed the activity correctly at an ancestral
 node, and ARFGEF3 is the descendant that lost it.
 
-Reciprocal observation worth sending to PAINT: **MON2** (`SGD:S000005241`) is the
-only donor with **no annotated SEC7 domain** and no `IPR000904`, and is also one of
-the three without an IDA (IGI/IPI/ISS only). MON2 and ARFGEF3 share `IPR015403`
-(Mon2/Sec7/BIG1-like HDS). So the same node may be donating GEF activity to a
-*second* member that does not perform it — the mis-placed-member pattern, with the
-donor and the victim being the same kind of protein.
+Reciprocal observation worth sending to PAINT, **checked rather than conjectured**
+(`reciprocal_donor_check.py`): **MON2** (`SGD:S000005241`) is the only donor with
+**no annotated SEC7 domain** and no `IPR000904`, and is also one of the three
+without an IDA (IGI/IPI/ISS only). MON2 and ARFGEF3 share `IPR015403`
+(Mon2/Sec7/BIG1-like HDS).
+
+The script selects suspects *by measurement* — a protein donor of the term lacking
+the term's own InterPro signature — so MON2 is its output, not its input, and
+exactly one donor qualifies. MON2 **receives** `GO:0005085` by IBA from
+`PANTHER:PTN008950430`, the same node ARFGEF3's row comes from, and its entire
+non-IBA support is one reference, `PMID:12052896`, with no IDA. That paper is itself
+careful — its title calls Ysl2p/Mon2 "homologous to Sec7 domain guanine nucleotide
+exchange factors" and it claims only a "potential function as an Arf guanine
+nucleotide exchange factor".
+
+So the same node **is** donating GEF activity to a *second* member that has never
+been shown to perform it — the mis-placed-member pattern, with the donor and the
+victim being the same kind of protein. (The WITH/FROM-set identity the script also
+reports is largely *entailed* by the shared node, since PAINT emits one
+descendant-evidence list per IBD; it is a consistency check on the lookup rather
+than a second independent finding.)
 
 ### `GO:0016192` — the broad term is the correct LCA
 

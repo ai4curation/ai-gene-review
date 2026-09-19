@@ -111,13 +111,24 @@ def suspect_donors() -> list[dict[str, str]]:
         raise FileNotFoundError(
             f"{tsv} is missing. Run `uv run python resolve_withfrom.py` first.")
     subject_tokens = {_bare(t) for t in subject_iba_withfrom()}
-    out = []
-    for r in csv.DictReader(tsv.open(), delimiter="\t"):
-        if not r["accession"] or _bare(r["token"]) not in subject_tokens:
-            continue
-        if r["has_sec7_interpro"] == "no":
-            out.append(r)
-    return out
+    rows = [r for r in csv.DictReader(tsv.open(), delimiter="\t")
+            if r["accession"] and _bare(r["token"]) in subject_tokens]
+
+    # "Exactly one qualifies" must be a claim over ALL protein donors, not over
+    # the ones that happened to resolve. resolve_withfrom.py leaves
+    # has_sec7_interpro empty for a token it could not resolve, and a bare
+    # `== "no"` test would skip those silently -- undercounting suspects while
+    # still reporting a confident number. Assert presence rather than validating
+    # on match, so a future GOA change that breaks a lookup fails loudly here
+    # instead of quietly shrinking the result.
+    undetermined = [r["token"] for r in rows if r["has_sec7_interpro"] not in {"yes", "no"}]
+    if undetermined:
+        raise RuntimeError(
+            f"{len(undetermined)} protein donor(s) have no InterPro determination "
+            f"({undetermined}); the suspect count would be a floor, not a total. "
+            "Re-run `uv run python resolve_withfrom.py` and check those tokens."
+        )
+    return [r for r in rows if r["has_sec7_interpro"] == "no"]
 
 
 def analyse_donor(r: dict[str, str], subject_tokens: set[str]) -> dict:
@@ -169,6 +180,57 @@ def self_test() -> list[str]:
         chosen = {d["accession"] for d in suspect_donors()}
         if any(r["accession"] in chosen for r in with_sig):
             problems.append("a donor carrying IPR000904 was selected as suspect")
+
+    # 1b. The undetermined-donor guard must FIRE, not be skipped. Blank one
+    #     determination in a copy of the TSV and require a raise. Asserts the
+    #     target row exists before blanking it, so a drifted column name cannot
+    #     turn this into a silent no-op that "passes".
+    import shutil
+    import tempfile
+    tsv_path = HERE / "withfrom_resolved.tsv"
+    lines = tsv_path.read_text().splitlines()
+    hdr = lines[0].split("\t")
+    col = hdr.index("has_sec7_interpro")
+    # The victim must be IN the guard's scope: a protein donor of THIS term's
+    # row. The TSV also holds the GO:0016192 row's donors, and blanking one of
+    # those leaves the guard correctly silent -- which is how the first version
+    # of this test "failed" against a guard that was working. Asserting the row
+    # exists is not enough; it has to be a row the guard would look at.
+    subject_toks = {_bare(t) for t in subject_iba_withfrom()}
+    victim = next((i for i, ln in enumerate(lines[1:], start=1)
+                   if ln.split("\t")[col] in {"yes", "no"}
+                   and ln.split("\t")[hdr.index("accession")]
+                   and _bare(ln.split("\t")[hdr.index("token")]) in subject_toks), None)
+    if victim is None:
+        problems.append("no resolved donor row to blank; guard test is a no-op")
+    else:
+        # BINARY backup/restore, and a BINARY comparison. resolve_withfrom.py
+        # writes through csv.DictWriter, whose default lineterminator is CRLF,
+        # while read_text()/write_text() silently translate to LF -- so a
+        # text-mode round trip rewrites every line ending in a committed file.
+        # The first version of this test did exactly that AND checked its own
+        # restore with read_text(), which normalises newlines on read and so
+        # could not see the damage it had just done. Verify in the same
+        # representation you mutate, or the check is blind by construction.
+        original_bytes = tsv_path.read_bytes()
+        with tempfile.TemporaryDirectory() as td:
+            backup = Path(td) / "orig.tsv"
+            backup.write_bytes(original_bytes)
+            try:
+                parts = lines[victim].split("\t")
+                parts[col] = ""
+                mutated = [lines[0]] + lines[1:victim] + ["\t".join(parts)] + lines[victim + 1:]
+                tsv_path.write_text("\n".join(mutated) + "\n")
+                try:
+                    suspect_donors()
+                    problems.append("undetermined-donor guard did NOT fire on a "
+                                    "blanked determination")
+                except RuntimeError:
+                    pass  # expected
+            finally:
+                tsv_path.write_bytes(backup.read_bytes())
+        if tsv_path.read_bytes() != original_bytes:
+            problems.append("self-test failed to restore withfrom_resolved.tsv byte-for-byte")
 
     # 2. Prefix normalisation must make GOA and QuickGO spellings compare equal,
     #    and must NOT collapse genuinely different ids.

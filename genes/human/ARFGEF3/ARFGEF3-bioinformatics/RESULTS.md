@@ -177,6 +177,10 @@ lacks the term's own InterPro signature. Exactly one qualifies.
 | distinct non-IBA references | **1** (`PMID:12052896`) |
 | holds its own IDA | **no** |
 
+Two of those rows are not independent: the WITH/FROM-set identity is largely
+**entailed** by the shared node, because PAINT emits one descendant-evidence list per
+IBD. It is reported as a consistency check on the lookup, not as a second finding.
+
 So one node donates exchange activity to **two** members that lack a functional Sec7
 catalytic site — ARFGEF3, which has the domain but not the glutamate, and MON2, which
 has neither — and neither has ever had exchange activity measured directly. MON2's own
@@ -186,7 +190,11 @@ function as an Arf guanine nucleotide exchange factor". That is an architectural
 evidential observation about the **node**, not about ARFGEF3.
 
 Controls (`--self-test`, exits 0): a donor that *does* carry the signature is never
-selected as a suspect; the GOA/QuickGO id-prefix normalisation reconciles
+selected as a suspect; the "exactly one qualifies" count is a **closed** claim, because
+the selector raises rather than silently skipping any donor whose InterPro status could
+not be determined, and the self-test blanks an in-scope determination to prove that
+guard fires (backing up and restoring the TSV **in bytes**, since `csv.DictWriter`
+writes CRLF and a text-mode round trip would rewrite every line ending); the GOA/QuickGO id-prefix normalisation reconciles
 `MGI:MGI:1334257` with `MGI:1334257` without collapsing two distinct SGD ids; and the
 set-identity claim is falsifiable — removing one member from the subject's WITH/FROM
 set flips it to `False`, so a `True` is a measurement rather than a default.
