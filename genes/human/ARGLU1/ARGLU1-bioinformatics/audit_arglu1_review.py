@@ -396,7 +396,109 @@ def check_retracted_reference(problems: list[str], doc: dict) -> None:
         problems.append(f"retracted {rid} is used as supporting evidence at: {cited}")
 
 
-def run_checks(text: str, doc: dict, goa_rows: list[dict]) -> list[str]:
+# How many times each artefact-derived value is asserted, per document.
+#
+# Only the SITE COUNT is declared here; the VALUE itself is always read from the
+# committed JSON artefacts, so this table cannot drift the numbers. Its purpose is
+# the failure a presence check cannot see: 111 is stated at six places in the
+# review, so changing one of them leaves 111 present and a presence check passes.
+# A count check fires on a single-site change, in any of the three documents.
+#
+# If you legitimately reword prose and change a site count, update the number here
+# deliberately -- that is the check working, not an obstacle.
+CLAIM_SITES: dict[str, dict[str, int]] = {
+    "node_entities":        {"review": 6, "notes": 2, "RESULTS.md": 6},
+    "node_taxa":            {"review": 2, "notes": 1, "RESULTS.md": 3},
+    "ecad_annotations":     {"review": 4, "notes": 2, "RESULTS.md": 3},
+    "ecad_hda":             {"review": 1, "notes": 1, "RESULTS.md": 1},
+    "bioplex_annotations":  {"review": 2, "notes": 0, "RESULTS.md": 1},
+    "ptmod_annotations":    {"review": 1, "notes": 0, "RESULTS.md": 1},
+    "ptmod_entities":       {"review": 1, "notes": 0, "RESULTS.md": 1},
+    "ecad_sibling_rows":    {"review": 1, "notes": 1, "RESULTS.md": 1},
+    "ecad_sibling_modal":   {"review": 1, "notes": 1, "RESULTS.md": 1},
+    "mito_sibling_rows":    {"review": 1, "notes": 1, "RESULTS.md": 2},
+    "nterm_pct_arg":        {"review": 1, "notes": 1, "RESULTS.md": 1},
+    "nterm_pct_ser":        {"review": 1, "notes": 1, "RESULTS.md": 2},
+}
+
+
+def claim_values() -> dict[str, object]:
+    """Resolve each claim key to its value from the committed JSON artefacts."""
+    node = json.loads(require(BIO_DIR / "results.json").read_text())
+    refscope = json.loads(require(BIO_DIR / "reference_scope.json").read_text())
+    comp = json.loads(require(BIO_DIR / "composition.json").read_text())
+    sibs = json.loads(require(BIO_DIR / "sibling_verdicts.json").read_text())
+    by_ref = {(r["reference"], r["go_id"]): r for r in refscope}
+    ecad = by_ref[("PMID:25468996", "GO:0045296")]
+    nterm = comp["regions"]["N-terminal RNA-binding region (1-74)"]
+    return {
+        "node_entities": node["terms"]["GO:0005739"]["distinct_entities"],
+        "node_taxa": node["terms"]["GO:0005739"]["distinct_taxon_ids"],
+        "ecad_annotations": ecad["annotations"],
+        "ecad_hda": ecad["evidence_codes"]["HDA"],
+        "bioplex_annotations": by_ref[("PMID:33961781", "GO:0005515")]["annotations"],
+        "ptmod_annotations": by_ref[("PMID:39251607", "GO:0005515")]["annotations"],
+        "ptmod_entities": by_ref[("PMID:39251607", "GO:0005515")]["entities"],
+        "ecad_sibling_rows": sibs["GO:0045296|PMID:25468996"]["n_rows"],
+        "ecad_sibling_modal":
+            sibs["GO:0045296|PMID:25468996"]["actions"]["MARK_AS_OVER_ANNOTATED"],
+        "mito_sibling_rows": sibs["GO:0005739|GO_REF:0000033"]["n_rows"],
+        "nterm_pct_arg": nterm["pct_R"],
+        "nterm_pct_ser": nterm["pct_S"],
+    }
+
+
+def check_claim_occurrences(problems: list[str], docs: dict[str, str]) -> None:
+    """Count, per document, how often each artefact-derived value is asserted.
+
+    Catches single-site drift that a presence check cannot, and -- because a
+    declared count of N>0 must actually be found -- makes an unreachable rule
+    impossible to hide. A rule declaring a document it never matches is an error.
+    """
+    values = claim_values()
+    missing_keys = set(CLAIM_SITES) - set(values)
+    if missing_keys:
+        problems.append(f"CLAIM_SITES keys with no resolved value: {sorted(missing_keys)}")
+    for key, per_doc in CLAIM_SITES.items():
+        if key not in values:
+            continue
+        token = str(values[key])
+        # Bound by non-digit/non-dot so 64 does not match inside 640 or 1.64.
+        pattern = r"(?<![\d.])" + re.escape(token) + r"(?![\d.])"
+        for doc_name, expected in per_doc.items():
+            if doc_name not in docs:
+                problems.append(
+                    f"CLAIM_SITES declares document {doc_name!r} for {key}, but that "
+                    "document was not supplied to the check."
+                )
+                continue
+            found = len(re.findall(pattern, docs[doc_name]))
+            if found != expected:
+                problems.append(
+                    f"[{doc_name}] {key}: the value {token} (from the committed "
+                    f"artefacts) is asserted {found} time(s), expected {expected}. "
+                    "Either a site was reworded/deleted, or a number drifted away "
+                    "from the artefact it came from. Check which before adjusting "
+                    "the count."
+                )
+
+
+def companion_docs() -> dict[str, str]:
+    """Prose documents that restate the review's numbers.
+
+    A claim asserted at several sites with no generation relationship between
+    them is this campaign's most common residual defect, so the notes and the
+    results write-up are checked against the same artefacts as the review.
+    """
+    out = {}
+    for name, path in (("notes", GENE_DIR / "ARGLU1-notes.md"),
+                       ("RESULTS.md", BIO_DIR / "RESULTS.md")):
+        out[name] = require(path).read_text()
+    return out
+
+
+def run_checks(text: str, doc: dict, goa_rows: list[dict],
+               extra_docs: dict[str, str] | None = None) -> list[str]:
     problems: list[str] = []
     # Each check appends; none raises. A check that kills the harness is worse than
     # no check, because the harness still prints as though it ran.
@@ -404,7 +506,8 @@ def run_checks(text: str, doc: dict, goa_rows: list[dict]) -> list[str]:
     check_raw_vs_parsed(problems, text, doc)
     check_row_coverage(problems, doc, goa_rows)
     check_propagation_sources(problems, doc, goa_rows)
-    check_numeric_claims(problems, text)
+    check_numeric_claims(problems, text, extra_docs)
+    check_claim_occurrences(problems, {"review": text, **(extra_docs or {})})
     check_retracted_reference(problems, doc)
     return problems
 
@@ -416,7 +519,8 @@ def self_test() -> int:
     doc = yaml.safe_load(text)
     goa_rows = read_goa(GOA)
 
-    baseline = run_checks(text, doc, goa_rows)
+    companions = companion_docs()
+    baseline = run_checks(text, doc, goa_rows, companions)
     if baseline:
         print("SELF-TEST ABORTED: the unmutated review already has problems:")
         for p in baseline:
@@ -425,28 +529,91 @@ def self_test() -> int:
 
     failures = []
 
-    def expect_fire(name, t, d, g):
-        probs = run_checks(t, d, g)
+    def anchored(t: str, anchor: str) -> str:
+        """Assert a mutation target occurs EXACTLY once before it is used.
+
+        Zero matches means the mutation changes nothing and the guard 'passes'
+        vacuously. Two or more means the mutation silently hits whichever comes
+        first, so it stops testing what it was written for. Both have happened in
+        this campaign, so this is a count check, not a presence check.
+        """
+        n = t.count(anchor)
+        assert n == 1, (
+            f"self-test anchor {anchor!r} occurs {n} times, expected exactly 1; "
+            "the mutation target has drifted and this case is no longer testing "
+            "what it was written for."
+        )
+        return anchor
+
+    def expect_fire(name, t, d, g, must_contain: str):
+        """Require the guard under test to fire, and to be the guard that fired.
+
+        `must_contain` is the point. Without it, a mutation that trips some other
+        check reports as a pass, and a guard that passes for the wrong reason is
+        indistinguishable from a guard that works -- which is precisely what a
+        mutation test exists to detect. (This bit the row-coverage case here:
+        dropping an annotation from the parsed doc while leaving the raw text
+        alone tripped the raw-vs-parsed reconciliation instead.)
+        """
+        probs = run_checks(t, d, g, companions)
         if not probs:
             failures.append(f"{name}: guard did NOT fire")
-        else:
-            print(f"  ok  {name}: fired ({probs[0][:90]}...)")
+            return
+        matching = [p for p in probs if must_contain in p]
+        if not matching:
+            failures.append(
+                f"{name}: something fired but not the guard under test. "
+                f"Expected a problem containing {must_contain!r}; got: "
+                + " | ".join(p[:120] for p in probs)
+            )
+            return
+        print(f"  ok  {name}: fired ({matching[0][:90].splitlines()[0]}...)")
+
+    def dump(d: dict) -> str:
+        """Re-serialise a mutated document so raw text and parsed object agree.
+
+        Needed so a structural mutation isolates the structural guard rather than
+        tripping the raw-vs-parsed reconciliation. width is set high so no scalar
+        is re-wrapped, which would otherwise perturb the prose the numeric-claim
+        rules read.
+        """
+        return yaml.safe_dump(d, sort_keys=False, default_flow_style=False,
+                              width=10 ** 9, allow_unicode=True)
+
+    # Sanity: the re-serialised, unmutated document must itself pass every check.
+    # If it does not, `dump` is perturbing the inputs and every mutation below
+    # that uses it would be testing the serialiser rather than the guard.
+    dump_baseline = run_checks(dump(doc), doc, goa_rows, companions)
+    if dump_baseline:
+        print("SELF-TEST ABORTED: re-serialising the unmutated review introduces "
+              "problems, so dump() perturbs the inputs:")
+        for p in dump_baseline:
+            print("  -", p)
+        return 1
 
     # 1. duplicate key. The anchor is the first line of the document, so match it
     #    at the start rather than assuming a preceding newline.
-    anchor = "id: Q9NWB6\n"
+    anchor = anchored(text, "id: Q9NWB6\n")
     assert text.startswith(anchor), (
-        "self-test anchor 'id: Q9NWB6' is no longer the first line; target drifted. "
-        "A mutation whose target has moved would 'prove' the guard fires while "
-        "breaking nothing."
+        "self-test anchor 'id: Q9NWB6' is no longer the first line; target drifted."
     )
-    expect_fire("duplicate-key", anchor + text, doc, goa_rows)
+    expect_fire("duplicate-key", anchor + text, doc, goa_rows,
+                must_contain="duplicate YAML key")
 
-    # 2. dropped annotation row
+    # 2. dropped annotation row. Both text and object are mutated together so the
+    #    raw-vs-parsed guard stays quiet and row coverage is what is under test.
     d2 = copy.deepcopy(doc)
     assert len(d2["existing_annotations"]) > 1
     d2["existing_annotations"] = d2["existing_annotations"][1:]
-    expect_fire("row-coverage", text, d2, goa_rows)
+    expect_fire("row-coverage", dump(d2), d2, goa_rows,
+                must_contain="non-NEW existing_annotations vs")
+
+    # 2b. raw-vs-parsed reconciliation, exercised on its own: drop a row from the
+    #     parsed object only, which is what a duplicate key would do to provenance.
+    d2b = copy.deepcopy(doc)
+    d2b["existing_annotations"] = d2b["existing_annotations"][1:]
+    expect_fire("raw-vs-parsed", text, d2b, goa_rows,
+                must_contain="reference_id count mismatch")
 
     # 3. source_entities drift (delete one entity)
     d3 = copy.deepcopy(doc)
@@ -458,7 +625,8 @@ def self_test() -> int:
             mutated = True
             break
     assert mutated, "self-test could not find a propagation_review to mutate"
-    expect_fire("source-entities-drift", text, d3, goa_rows)
+    expect_fire("source-entities-drift", dump(d3), d3, goa_rows,
+                must_contain="do not match the GOA WITH/FROM field")
 
     # 3b. source_entities deleted entirely -- a guard must not be defeatable by
     #     deleting the thing it guards.
@@ -471,24 +639,83 @@ def self_test() -> int:
             mutated = True
             break
     assert mutated, "self-test could not find a propagation_review to delete"
-    expect_fire("propagation-review-deleted", text, d3b, goa_rows)
+    expect_fire("propagation-review-deleted", dump(d3b), d3b, goa_rows,
+                must_contain="no propagation_review block found")
 
-    # 4. numeric claim drift
-    assert "111 gene products" in text, "self-test anchor '111 gene products' drifted"
-    expect_fire("numeric-claim", text.replace("111 gene products", "99 gene products"),
-                doc, goa_rows)
+    # 4. numeric claim drift. Changing ONE of the three sentences that state 111
+    #    must be caught, which a presence-only check cannot do.
+    a4 = anchored(text, "same\n      111 gene products")
+    expect_fire("numeric-claim", text.replace(a4, "same\n      99 gene products"),
+                doc, goa_rows,
+                must_contain="node reach (entities): prose says 99")
+
+    # 4b. a claim deleted outright, rather than altered, must also be caught.
+    a4b = anchored(text, "64 NCBI taxa")
+    expect_fire("numeric-claim-deleted", text.replace(a4b, "many taxa"),
+                doc, goa_rows,
+                must_contain="node reach (taxa): no sentence")
 
     # 5. retracted reference un-flagged
     d5 = copy.deepcopy(doc)
     hit = [r for r in d5["references"] if r["id"] == "PMID:35082911"]
     assert hit, "self-test could not find the retracted reference"
     hit[0].pop("is_invalid", None)
-    expect_fire("retraction-flag", text, d5, goa_rows)
+    expect_fire("retraction-flag", dump(d5), d5, goa_rows,
+                must_contain="is_invalid is not set true")
+
+    # 5b. the retracted reference cited as supporting evidence.
+    d5b = copy.deepcopy(doc)
+    d5b["existing_annotations"][0]["review"]["supported_by"].append(
+        {"reference_id": "PMID:35082911", "supporting_text": "irrelevant"}
+    )
+    expect_fire("retraction-cited", dump(d5b), d5b, goa_rows,
+                must_contain="used as supporting evidence")
 
     # 6. a PENDING row
     d6 = copy.deepcopy(doc)
     d6["existing_annotations"][0]["review"]["action"] = "PENDING"
-    expect_fire("pending-action", text, d6, goa_rows)
+    expect_fire("pending-action", dump(d6), d6, goa_rows,
+                must_contain="rows left PENDING")
+
+    # 6b-6f. The companion-document arm must be REACHABLE, not merely declared.
+    #        Breaking one site in the notes or in RESULTS.md has to be caught; an
+    #        earlier version of this audit declared those documents and never
+    #        matched anything in them, which reads as coverage while checking
+    #        nothing. Each case asserts its anchor occurs exactly once first.
+    companion_cases = [
+        ("notes", "111 gene products", "99 gene products", "[notes] node_entities"),
+        ("notes", "**272 `GO:0045296`", "**999 `GO:0045296`", "[notes] ecad_annotations"),
+        ("RESULTS.md", "| 272 | **272** |", "| 999 | **272** |",
+         "[RESULTS.md] ecad_annotations"),
+        ("RESULTS.md", "64 taxa", "6400 taxa", "[RESULTS.md] node_taxa"),
+        ("RESULTS.md", "33.8%", "77.7%", "[RESULTS.md] nterm_pct_arg"),
+    ]
+    for doc_name, anchor, replacement, expect in companion_cases:
+        body = companions[doc_name]
+        n = body.count(anchor)
+        assert n == 1, (
+            f"self-test anchor {anchor!r} occurs {n} times in {doc_name}, expected "
+            "exactly 1; the mutation target has drifted."
+        )
+        mutated_companions = dict(companions)
+        mutated_companions[doc_name] = body.replace(anchor, replacement)
+        probs = run_checks(text, doc, goa_rows, mutated_companions)
+        hits = [p for p in probs if expect in p]
+        if hits:
+            print(f"  ok  companion/{doc_name}:{anchor[:24]!r}: fired")
+        else:
+            failures.append(
+                f"companion/{doc_name} {anchor!r}: expected a problem containing "
+                f"{expect!r}; got: " + " | ".join(p[:100] for p in probs)
+            )
+
+    # 7. an invented existing row that GOA does not have (should have been NEW).
+    d7 = copy.deepcopy(doc)
+    fake = copy.deepcopy(d7["existing_annotations"][0])
+    fake["term"] = {"id": "GO:0000001", "label": "mitochondrion inheritance"}
+    d7["existing_annotations"].append(fake)
+    expect_fire("invented-existing-row", dump(d7), d7, goa_rows,
+                must_contain="absent from GOA")
 
     if failures:
         print("\nSELF-TEST FAILED:")
@@ -513,7 +740,7 @@ def main() -> int:
     print(f"existing_annotations     : {len(anns)}  "
           f"({len(anns) - n_new} reviewed GOA rows + {n_new} NEW proposals)")
 
-    problems = run_checks(text, doc, goa_rows)
+    problems = run_checks(text, doc, goa_rows, companion_docs())
     if problems:
         print(f"\n{len(problems)} problem(s):")
         for p in problems:

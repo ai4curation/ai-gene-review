@@ -12,6 +12,7 @@ Findings are written up in [`RESULTS.md`](RESULTS.md).
 | `intact_partner_audit.py` | `intact_partners.json` | yes (IntAct, UniProt) |
 | `composition_and_features.py` | `composition.json` | no (reads `../ARGLU1-uniprot.txt`) |
 | `sibling_row_verdicts.py` | `sibling_verdicts.json` | no (reads `genes/**/ *-ai-review.yaml`) |
+| `audit_arglu1_review.py` | — (exit status) | no (reads the review, the GOA tsv and the JSON artefacts) |
 
 ## Running
 
@@ -22,7 +23,51 @@ uv run python reference_scope_audit.py
 uv run python intact_partner_audit.py
 uv run python composition_and_features.py
 uv run python sibling_row_verdicts.py
+
+# invariant checks over the finished review (exit non-zero on a problem)
+uv run python audit_arglu1_review.py
+uv run python audit_arglu1_review.py --self-test
 ```
+
+## `audit_arglu1_review.py`
+
+Guards the finished review against four classes of defect that no repo validator
+catches: duplicate YAML keys (which delete provenance before any gate runs),
+under-coverage against the GOA tsv (the `fetch-gene` stub collapses rows),
+hand-maintained `source_entities` drifting from the GOA WITH/FROM column, and
+numbers in prose drifting away from the artefacts they were derived from.
+
+The claim check works two ways, because either alone is insufficient:
+
+- **Context-bound regexes** over the review bind each number to the sentence that
+  gives it meaning, so a wrong value is caught even when the right value still
+  appears elsewhere.
+- **Per-document occurrence counts** (`CLAIM_SITES`) catch a single-site change in
+  any of the review, the notes, or `RESULTS.md`. Only the site *count* is declared
+  in the table; the *value* is always read from the committed JSON, so the table
+  cannot drift the numbers it checks.
+
+`--self-test` mutates the real inputs and asserts each guard fires. Three
+properties of it are deliberate and worth preserving if you edit it:
+
+1. **Every mutation asserts its anchor occurs exactly once first.** Zero matches
+   would change nothing and "pass" vacuously; two or more would silently mutate
+   whichever came first, so the case stops testing what it was written for.
+2. **Every case names the guard it expects** (`must_contain`). Without that, a
+   mutation tripping some *other* check reports as a pass — and a guard that
+   passes for the wrong reason is indistinguishable from one that works. This was
+   a real defect here: dropping an annotation from the parsed object while leaving
+   the raw text alone tripped the raw-vs-parsed reconciliation rather than the row
+   coverage check it was written for.
+3. **Structural mutations re-serialise the document** so raw text and parsed
+   object stay consistent, isolating the guard under test. A baseline assertion
+   confirms re-serialising the *unmutated* review still passes every check, so the
+   serialiser cannot be what the mutations are testing.
+
+A passing self-test proves the guards that exist fire. It cannot tell you which
+guard was never written — the companion-document arm was declared and matched
+nothing for a while, which read as coverage while checking nothing, and was found
+by deliberately breaking a number rather than by reading the code.
 
 Only `sibling_row_verdicts.py` needs a third-party import (`pyyaml`, already a
 repo dependency, hence plain `uv run python`); the others use the standard
