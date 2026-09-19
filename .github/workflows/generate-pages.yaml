@@ -70,14 +70,23 @@ jobs:
       - name: Render project pages
         run: just render-projects
 
+      - name: Render ProtNLM prediction evaluations from all review sidecars
+        run: just render-prediction-eval
+
       - name: Validate module YAML files
         run: just validate-modules
 
       - name: Render module pages
         run: just render-modules
 
+      - name: Render cached rule reviews and index
+        run: just render-rule-pages
+
       - name: Deploy browser app (data.js + index.html)
         run: just deploy-browser
+
+      - name: Build shared predictions browser
+        run: just deploy-predictions-browser
 
       # Build the candidate artifact for inspection. Publication remains opt-in
       # and separately gated on completeness and the supported size budget.
@@ -178,13 +187,16 @@ jobs:
       - name: Check for changes
         id: check-changes
         run: |
-          if git diff --quiet \
+          if [ -z "$(git status --porcelain --untracked-files=all -- \
             genes/ \
             app/index.html \
             app/data.js \
             app/schema.js \
+            app/predictions/ \
             pages/ \
-            reports/; then
+            rules/arba/index.html \
+            ":(glob)rules/arba/*/*-review.html" \
+            reports/)" ]; then
             echo "has_changes=false" >> $GITHUB_OUTPUT
           else
             echo "has_changes=true" >> $GITHUB_OUTPUT
@@ -194,7 +206,10 @@ jobs:
               app/index.html \
               app/data.js \
               app/schema.js \
+              app/predictions/ \
               pages/ \
+              rules/arba/index.html \
+              ":(glob)rules/arba/*/*-review.html" \
               reports/
           fi
 
@@ -256,7 +271,10 @@ jobs:
             app/index.html \
             app/data.js \
             app/schema.js \
+            app/predictions/ \
             pages/ \
+            rules/arba/index.html \
+            ":(glob)rules/arba/*/*-review.html" \
             reports/
 
           # SAFETY GUARD: this automated commit must only ever contain
@@ -264,9 +282,10 @@ jobs:
           # staged (e.g. a gene-review YAML, schema, src/, or projects/*.md
           # source file), abort rather than risk clobbering hand-authored
           # content. Allowed: gene-review HTML, everything under pages/, the
-          # three browser-app files, and reports/.
+          # browser-app files and prediction source manifest, reports/, and
+          # rule-review HTML.
           DISALLOWED="$(git diff --cached --name-only \
-            | grep -vE '^(genes/[^[:space:]]+\.html|pages/[^[:space:]]+|app/(index\.html|data\.js|schema\.js)|reports/[^[:space:]]+)$' \
+            | grep -vE '^(genes/[^[:space:]]+\.html|pages/[^[:space:]]+|app/((predictions/)?(index\.html|data\.js|schema\.js)|predictions/source-files\.json)|reports/[^[:space:]]+|rules/arba/index\.html|rules/arba/ARBA[0-9]+/ARBA[0-9]+-review\.html)$' \
             || true)"
           if [ -n "$DISALLOWED" ]; then
             echo "❌ Refusing to commit non-artifact files:"
@@ -486,3 +505,18 @@ jobs:
       - name: Deploy validated Pages artifact
         id: deployment
         uses: actions/deploy-pages@v4
+
+  publication-status:
+    needs: [generate-pages, deploy-pages]
+    if: ${{ always() && !cancelled() && vars.PAGES_ARTIFACT_DEPLOY_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Require successful publication
+        env:
+          DEPLOY_RESULT: ${{ needs.deploy-pages.result }}
+        run: |
+          if [ "$DEPLOY_RESULT" != success ]; then
+            echo "::error title=Site was not published::Deployment result: $DEPLOY_RESULT. Inspect build diagnostics and deployment logs. The previous site remains live."
+            exit 1
+          fi
