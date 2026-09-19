@@ -189,15 +189,31 @@ domain guanine nucleotide exchange factors" and which claims only a "*potential*
 function as an Arf guanine nucleotide exchange factor". That is an architectural and
 evidential observation about the **node**, not about ARFGEF3.
 
-Controls (`--self-test`, exits 0): a donor that *does* carry the signature is never
-selected as a suspect; the "exactly one qualifies" count is a **closed** claim, because
-the selector raises rather than silently skipping any donor whose InterPro status could
-not be determined, and the self-test blanks an in-scope determination to prove that
-guard fires (backing up and restoring the TSV **in bytes**, since `csv.DictWriter`
-writes CRLF and a text-mode round trip would rewrite every line ending); the GOA/QuickGO id-prefix normalisation reconciles
-`MGI:MGI:1334257` with `MGI:1334257` without collapsing two distinct SGD ids; and the
-set-identity claim is falsifiable — removing one member from the subject's WITH/FROM
-set flips it to `False`, so a `True` is a measurement rather than a default.
+**Controls** (`--self-test`, exits 0), each one a separate claim:
+
+- **The selector is data-driven.** A donor that *does* carry the signature is never
+  chosen as a suspect.
+- **The count is closed, not a floor.** `resolve_withfrom.py` emits an unresolvable
+  MOD id with an *empty accession*, so a selector that filtered on accession first
+  would drop it before any InterPro test — undercounting suspects while still printing
+  a confident total. The selector raises on any in-scope token of protein `kind` that
+  failed to resolve, and the self-test clears one accession to prove that guard fires.
+  A second tripwire covers a resolved row losing its determination; it is unreachable
+  against the current producer and is labelled as such, because an unreachable check
+  that reads as coverage is worse than no check.
+- **The guard does not over-fire.** A PANTHER node legitimately has no accession, and
+  an unmodified run must stay silent.
+- **Id normalisation is tested in both directions.** `MGI:MGI:1334257` and
+  `MGI:1334257` must compare equal, and two distinct SGD ids must not collapse — a
+  normalisation tested only in the merging direction is satisfied by a function that
+  returns the empty string.
+- **The set-identity claim is falsifiable.** Removing one member from the subject's
+  WITH/FROM set must flip it to `False`, so a `True` is a measurement rather than a
+  default.
+- **Committed state is never mutated.** Every mutation runs against a copy in a
+  temporary directory, and the committed TSV is compared **in bytes** before and after
+  — `read_text()` normalises newlines while `csv.DictWriter` emits CRLF, so a text
+  comparison cannot see a line-ending rewrite.
 
 ---
 

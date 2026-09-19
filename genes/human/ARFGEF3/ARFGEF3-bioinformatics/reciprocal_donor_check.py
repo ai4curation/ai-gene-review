@@ -100,33 +100,61 @@ def subject_iba_withfrom() -> list[str]:
     return rows[0]["supporting_entities"]
 
 
-def suspect_donors() -> list[dict[str, str]]:
+# Token kinds that are SUPPOSED to resolve to a protein. A PANTHER node or an
+# InterPro signature legitimately has no accession; a `mod-id` or `protein` that
+# has none failed to resolve, and dropping it silently would make the suspect
+# count a floor while it reads as a total.
+PROTEIN_KINDS = {"protein", "mod-id"}
+
+
+def suspect_donors(tsv_path: Path | None = None) -> list[dict[str, str]]:
     """Protein donors of the term that lack the term's InterPro signature.
 
     Selected by measurement. Returns [] when there are none -- which is a finding,
     not a failure, and is what the self-test's negative control checks.
+
+    `tsv_path` exists so the self-test can point at a COPY. A test that mutates
+    the committed file and restores it is one failed restore away from dirtying
+    the working tree; parameterising the input removes that failure class instead
+    of hardening the recovery from it.
     """
-    tsv = HERE / "withfrom_resolved.tsv"
+    tsv = tsv_path or (HERE / "withfrom_resolved.tsv")
     if not tsv.exists():
         raise FileNotFoundError(
             f"{tsv} is missing. Run `uv run python resolve_withfrom.py` first.")
     subject_tokens = {_bare(t) for t in subject_iba_withfrom()}
-    rows = [r for r in csv.DictReader(tsv.open(), delimiter="\t")
-            if r["accession"] and _bare(r["token"]) in subject_tokens]
+    in_scope = [r for r in csv.DictReader(tsv.open(), delimiter="\t")
+                if _bare(r["token"]) in subject_tokens]
 
-    # "Exactly one qualifies" must be a claim over ALL protein donors, not over
-    # the ones that happened to resolve. resolve_withfrom.py leaves
-    # has_sec7_interpro empty for a token it could not resolve, and a bare
-    # `== "no"` test would skip those silently -- undercounting suspects while
-    # still reporting a confident number. Assert presence rather than validating
-    # on match, so a future GOA change that breaks a lookup fails loudly here
-    # instead of quietly shrinking the result.
-    undetermined = [r["token"] for r in rows if r["has_sec7_interpro"] not in {"yes", "no"}]
+    # THE REACHABLE HOLE. resolve_withfrom.py emits an unresolvable MOD id with an
+    # EMPTY accession (kind `mod-id`, protein `UNRESOLVED`), so filtering on
+    # accession first would drop it before any InterPro test could see it --
+    # undercounting suspects while still printing a confident "exactly one".
+    # Checked on `kind` precisely because `kind` is what distinguishes a token
+    # that failed to resolve from a PANTHER node that legitimately has no
+    # accession.
+    unresolved = sorted(r["token"] for r in in_scope
+                        if r["kind"] in PROTEIN_KINDS and not r["accession"])
+    if unresolved:
+        raise RuntimeError(
+            f"{len(unresolved)} donor token(s) did not resolve to a protein "
+            f"({unresolved}); the suspect count would be a floor, not a total. "
+            "Re-run `uv run python resolve_withfrom.py` and check those tokens."
+        )
+
+    rows = [r for r in in_scope if r["accession"]]
+
+    # Defence in depth ONLY, and unreachable against the current producer:
+    # describe_entry() sets has_sec7_interpro unconditionally whenever an
+    # accession exists. Kept as a tripwire against a future producer change, and
+    # labelled as such so it is not mistaken for the guard above -- an
+    # unreachable check that reads as coverage is worse than no check.
+    undetermined = sorted(r["token"] for r in rows
+                          if r["has_sec7_interpro"] not in {"yes", "no"})
     if undetermined:
         raise RuntimeError(
-            f"{len(undetermined)} protein donor(s) have no InterPro determination "
-            f"({undetermined}); the suspect count would be a floor, not a total. "
-            "Re-run `uv run python resolve_withfrom.py` and check those tokens."
+            f"{len(undetermined)} resolved donor(s) carry no InterPro "
+            f"determination ({undetermined}); the producer's contract changed."
         )
     return [r for r in rows if r["has_sec7_interpro"] == "no"]
 
@@ -168,6 +196,8 @@ def analyse_donor(r: dict[str, str], subject_tokens: set[str]) -> dict:
 def self_test() -> list[str]:
     """Break the selection and the comparison on purpose."""
     problems: list[str] = []
+    committed_tsv = HERE / "withfrom_resolved.tsv"
+    committed_bytes = committed_tsv.read_bytes()
 
     # 1. The suspect selector must be driven by the data, not by a hardcoded id.
     tsv = HERE / "withfrom_resolved.tsv"
@@ -181,56 +211,69 @@ def self_test() -> list[str]:
         if any(r["accession"] in chosen for r in with_sig):
             problems.append("a donor carrying IPR000904 was selected as suspect")
 
-    # 1b. The undetermined-donor guard must FIRE, not be skipped. Blank one
-    #     determination in a copy of the TSV and require a raise. Asserts the
-    #     target row exists before blanking it, so a drifted column name cannot
-    #     turn this into a silent no-op that "passes".
-    import shutil
+    # 1b. The REACHABLE guard must fire. Build a copy of the TSV in which one
+    #     in-scope protein-kind row has its accession cleared -- exactly what an
+    #     unresolvable MOD id looks like -- and require a raise. Operates on a
+    #     COPY in a TemporaryDirectory, so the committed file is never touched
+    #     and a failed restore cannot dirty the working tree. Asserts the victim
+    #     is in the guard's scope before mutating, since a row the selector never
+    #     reads would make this a silent no-op that "passes".
     import tempfile
+
     tsv_path = HERE / "withfrom_resolved.tsv"
     lines = tsv_path.read_text().splitlines()
     hdr = lines[0].split("\t")
-    col = hdr.index("has_sec7_interpro")
-    # The victim must be IN the guard's scope: a protein donor of THIS term's
-    # row. The TSV also holds the GO:0016192 row's donors, and blanking one of
-    # those leaves the guard correctly silent -- which is how the first version
-    # of this test "failed" against a guard that was working. Asserting the row
-    # exists is not enough; it has to be a row the guard would look at.
+    acc_col = hdr.index("accession")
+    kind_col = hdr.index("kind")
+    tok_col = hdr.index("token")
+    det_col = hdr.index("has_sec7_interpro")
     subject_toks = {_bare(t) for t in subject_iba_withfrom()}
+
+    def _copy_with(td: str, col: int, value: str, row_i: int) -> Path:
+        copy = Path(td) / "withfrom_resolved.tsv"
+        parts = lines[row_i].split("\t")
+        parts[col] = value
+        copy.write_text("\n".join(
+            [lines[0]] + lines[1:row_i] + ["\t".join(parts)] + lines[row_i + 1:]
+        ) + "\n")
+        return copy
+
     victim = next((i for i, ln in enumerate(lines[1:], start=1)
-                   if ln.split("\t")[col] in {"yes", "no"}
-                   and ln.split("\t")[hdr.index("accession")]
-                   and _bare(ln.split("\t")[hdr.index("token")]) in subject_toks), None)
+                   if ln.split("\t")[acc_col]
+                   and ln.split("\t")[kind_col] in PROTEIN_KINDS
+                   and _bare(ln.split("\t")[tok_col]) in subject_toks), None)
     if victim is None:
-        problems.append("no resolved donor row to blank; guard test is a no-op")
+        problems.append("no in-scope protein-kind row to clear; guard test is a no-op")
     else:
-        # BINARY backup/restore, and a BINARY comparison. resolve_withfrom.py
-        # writes through csv.DictWriter, whose default lineterminator is CRLF,
-        # while read_text()/write_text() silently translate to LF -- so a
-        # text-mode round trip rewrites every line ending in a committed file.
-        # The first version of this test did exactly that AND checked its own
-        # restore with read_text(), which normalises newlines on read and so
-        # could not see the damage it had just done. Verify in the same
-        # representation you mutate, or the check is blind by construction.
-        original_bytes = tsv_path.read_bytes()
         with tempfile.TemporaryDirectory() as td:
-            backup = Path(td) / "orig.tsv"
-            backup.write_bytes(original_bytes)
             try:
-                parts = lines[victim].split("\t")
-                parts[col] = ""
-                mutated = [lines[0]] + lines[1:victim] + ["\t".join(parts)] + lines[victim + 1:]
-                tsv_path.write_text("\n".join(mutated) + "\n")
+                suspect_donors(_copy_with(td, acc_col, "", victim))
+                problems.append("unresolved-donor guard did NOT fire on a cleared "
+                                "accession")
+            except RuntimeError:
+                pass  # expected
+
+        # 1c. The tripwire must also fire when a RESOLVED row loses its
+        #     determination, even though the current producer cannot emit that.
+        if lines[victim].split("\t")[det_col] not in {"yes", "no"}:
+            problems.append("victim row has no determination to blank")
+        else:
+            with tempfile.TemporaryDirectory() as td:
                 try:
-                    suspect_donors()
-                    problems.append("undetermined-donor guard did NOT fire on a "
-                                    "blanked determination")
+                    suspect_donors(_copy_with(td, det_col, "", victim))
+                    problems.append("determination tripwire did NOT fire")
                 except RuntimeError:
                     pass  # expected
-            finally:
-                tsv_path.write_bytes(backup.read_bytes())
-        if tsv_path.read_bytes() != original_bytes:
-            problems.append("self-test failed to restore withfrom_resolved.tsv byte-for-byte")
+
+        # 1e. A PANTHER node legitimately has no accession and must NOT trip the
+        #     unresolved guard -- otherwise the guard would fire on every run.
+        node_i = next((i for i, ln in enumerate(lines[1:], start=1)
+                       if ln.split("\t")[kind_col] == "panther-node"), None)
+        if node_i is not None:
+            try:
+                suspect_donors()
+            except RuntimeError as exc:
+                problems.append(f"guard fires on unmodified input: {exc}")
 
     # 2. Prefix normalisation must make GOA and QuickGO spellings compare equal,
     #    and must NOT collapse genuinely different ids.
@@ -238,6 +281,12 @@ def self_test() -> list[str]:
         problems.append("_bare fails to reconcile GOA/QuickGO MGI spellings")
     if _bare("SGD:S000005241") == _bare("SGD:S000000748"):
         problems.append("_bare collapses two distinct SGD ids")
+
+    # The committed TSV must be byte-identical after every test above. Compared
+    # in BYTES because read_text() normalises newlines while csv.DictWriter emits
+    # CRLF, so a text comparison cannot see a line-ending rewrite.
+    if committed_tsv.read_bytes() != committed_bytes:
+        problems.append("a test mutated the committed withfrom_resolved.tsv")
 
     # 3. The set-identity claim must be falsifiable: perturbing the subject set
     #    by one member must flip it. Asserts the set is non-empty first, so a
