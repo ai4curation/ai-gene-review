@@ -41,11 +41,17 @@ MUTANT = SCRIPT_DIR / ".mutation_test_subject.py"
 # Sharing the real SCRIPT_DIR has a cost, and it is not hypothetical: the mutant's output
 # paths are the committed ones. ``--self-test`` returns before the artifact writes today,
 # but nothing enforces that, and a mutation anchored on the dispatch line would run the
-# mutated analysis to completion and overwrite these two files in place -- and RESULTS.md
-# is the source for five ``file:`` supporting_text quotes in the review. Their bytes are
-# snapshotted and restored, in bytes rather than text so that no newline or encoding
-# normalisation can slip in through the restore itself.
-PROTECTED = (SCRIPT_DIR / "results.json", SCRIPT_DIR / "RESULTS.md")
+# mutated analysis to completion and overwrite files in place -- and RESULTS.md is the
+# source for five ``file:`` supporting_text quotes in the review.
+#
+# The whole directory is snapshotted rather than a hand-listed pair, for three reasons that
+# are all the same reason: a hand-list can drift from the write sites it mirrors; a
+# membership test like ``if p.exists()`` opts out silently for a file the mutant CREATES,
+# which is how a quote source could appear unreported; and an artifact added later would
+# be unprotected by default. Comparing the directory's contents as {name: bytes} makes
+# creation, deletion and modification all visible, and it is bytes rather than text so no
+# newline or encoding normalisation can enter through the restore itself.
+SNAPSHOT_EXCLUDE = {MUTANT.name}
 
 # (description, exact source text to replace, replacement). Each anchor must match
 # exactly once: zero matches would "pass" by changing nothing, two would mutate a row
@@ -147,6 +153,39 @@ NEGATIVE_CONTROLS: list[tuple[str, str, str]] = [
 ]
 
 
+def _snapshot() -> dict[str, bytes]:
+    """Every regular file directly in SCRIPT_DIR, by name, as bytes.
+
+    Directories are skipped, so ``cache/`` and ``.venv/`` are out of scope; the transient
+    mutant is excluded by name. Everything else -- the analysis, this harness, the two
+    checkers, the artifacts, the packaging files -- is covered, which is what makes a file
+    the mutant invents as visible as one it overwrites.
+    """
+    return {
+        p.name: p.read_bytes()
+        for p in sorted(SCRIPT_DIR.iterdir())
+        if p.is_file() and p.name not in SNAPSHOT_EXCLUDE
+    }
+
+
+def _restore(baseline: dict[str, bytes], label: str, failures: list[str]) -> None:
+    """Report and undo any creation, deletion or modification under SCRIPT_DIR."""
+    current = _snapshot()
+    changed = sorted(set(baseline) ^ set(current)) + sorted(
+        n for n in set(baseline) & set(current) if baseline[n] != current[n]
+    )
+    if not changed:
+        return
+    for name in set(current) - set(baseline):
+        (SCRIPT_DIR / name).unlink()
+    for name, data in baseline.items():
+        path = SCRIPT_DIR / name
+        if not path.exists() or path.read_bytes() != data:
+            path.write_bytes(data)
+    failures.append(f"DIRECTORY TOUCHED by {label}: {', '.join(changed)}")
+    print(f"*** DIRECTORY TOUCHED by {label}: {', '.join(changed)} -- restored")
+
+
 def _write_mutant(old: str, new: str) -> None:
     text = SRC.read_text()
     n = text.count(old)
@@ -176,7 +215,7 @@ def _run_self_test() -> tuple[int, str, str]:
 
 def main() -> int:
     failures: list[str] = []
-    snapshot = {p: p.read_bytes() for p in PROTECTED if p.exists()}
+    baseline = _snapshot()
     try:
         # Unpacked directly, not indexed with a length check: an optional fourth element
         # would let a future three-element entry silently revert to deciding on the exit
@@ -184,6 +223,10 @@ def main() -> int:
         for desc, old, new, expect in MUTATIONS:
             _write_mutant(old, new)
             code, full, last = _run_self_test()
+            # Checked after EVERY run, not once at the end: a single trailing comparison
+            # names the file but not the mutation that touched it, and leaves every later
+            # entry running against an already-clobbered tree.
+            _restore(baseline, desc, failures)
             if code == 0:
                 failures.append(f"GUARD HOLE: {desc}")
                 print(f"*** GUARD HOLE: {desc} -- self-test still passed")
@@ -200,6 +243,7 @@ def main() -> int:
         for desc, old, new in NEGATIVE_CONTROLS:
             _write_mutant(old, new)
             code, _full, last = _run_self_test()
+            _restore(baseline, desc, failures)
             if code != 0:
                 failures.append(f"FALSE POSITIVE: {desc}")
                 print(f"*** FALSE POSITIVE: {desc}\n      -> {last[:150]}")
@@ -207,13 +251,9 @@ def main() -> int:
                 print(f"ok, silent: {desc}")
     finally:
         MUTANT.unlink(missing_ok=True)
-        for path, original in snapshot.items():
-            if not path.exists() or path.read_bytes() != original:
-                path.write_bytes(original)
-                # Not silent: a mutant reaching the artifact writes means some mutation
-                # escaped --self-test's early return, which is worth knowing about.
-                failures.append(f"ARTIFACT OVERWRITTEN: {path.name} (restored from snapshot)")
-                print(f"*** ARTIFACT OVERWRITTEN: {path.name} -- restored from snapshot")
+        # Belt and braces: the per-run restores above cover the normal path, and this
+        # catches a directory change made by an exception that escaped the loop.
+        _restore(baseline, "teardown", failures)
     print()
     if failures:
         print("MUTATION TEST FAILED:")
