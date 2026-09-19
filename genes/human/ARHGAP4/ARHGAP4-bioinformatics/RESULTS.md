@@ -1,6 +1,6 @@
 # ARHGAP4 bioinformatics — results
 
-Five rerunnable analyses supporting `genes/human/ARHGAP4/ARHGAP4-ai-review.yaml`. Each
+Six rerunnable analyses supporting `genes/human/ARHGAP4/ARHGAP4-ai-review.yaml`. Each
 derives the repo root rather than hardcoding a worktree path, and each takes
 `--self-test`, which breaks its input or its anchor on purpose and requires every guard
 to fire, with negative controls that must stay silent.
@@ -11,11 +11,13 @@ uv run --with requests python check_gap_terms.py                     # -> gap_te
 uv run --with requests python reference_coverage.py                  # -> reference_coverage.json
 uv run --with requests python resolve_entities.py                    # -> entities.json
 uv run --with requests python comparator_terms.py                    # -> comparator_terms.json
+uv run --with pyyaml python audit_review.py                          # no network
 ```
 
-All five query live services (UniProt, RCSB, QuickGO, OLS4, the GO API, the Alliance),
-so their JSON outputs are committed as the record of what those services returned on the
-run that produced the numbers quoted below.
+The first five query live services (UniProt, RCSB, QuickGO, OLS4, the GO API, the
+Alliance), so their JSON outputs are committed as the record of what those services
+returned on the run that produced the numbers quoted below. `audit_review.py` needs no
+network and checks the review document against itself.
 
 ---
 
@@ -207,6 +209,49 @@ ARHGAP17, ARHGAP21, ARHGAP24, SRGAP2, DLC1) before being acted on.
 
 The query aborts on pagination rather than truncating, because a clipped page turns a
 present term into an absent one; the self-test exercises that on TP53.
+
+## 6. `audit_review.py` — invariants over the review document
+
+Six checks, none of which the repository validator covers. Current state: **23 GOA data
+rows to 23 non-NEW entries**, **38 quotes verified verbatim** under whitespace
+normalisation, all six invariants holding.
+
+1. **Row reconciliation** against the GOA TSV by `(term, evidence, reference, with/from)`
+   multiset. The `fetch-gene` stub is known to collapse distinct `GO:0005515` partner
+   rows into one entry; here it did not, but the correspondence is asserted rather than
+   eyeballed.
+2. **Duplicate YAML keys**, via a `SafeLoader` subclass that raises on a repeat. PyYAML
+   keeps the last occurrence and discards the earlier one silently, so data destroyed by
+   parsing cannot fail any gate that walks the parsed document.
+3. **Quote verbatimness for both `PMID:` and `file:` references.** CI checks only the
+   former, and an agent in this campaign fabricated two `file:` quotes that passed every
+   gate.
+4. **No line of a wrapped scalar ends in a hyphen.** YAML folds a newline into a space,
+   so `A-kinase-\nanchoring` publishes as `A-kinase- anchoring`; both forms are legal, so
+   only rendering shows the damage.
+5. **No row left `PENDING`**, no surviving `TODO`, `status: COMPLETE`.
+6. **Reference completeness** — every `PMID:` cited anywhere resolves to a `references`
+   entry. The repo validator only checks `original_reference_id`.
+
+Check 6 caught a real defect on its first run: `PMID:10425039`, `PMID:18489790`,
+`PMID:22965914` and `PMID:40817404` were named in `review_notes` without being declared,
+and adding them as full entries is what brought in the Schöneberg 16-year follow-up,
+which is now the strongest single piece of evidence in the review.
+
+Its scope is deliberately narrow in one place. It strips **only** the reference `id`
+lines before scanning for citations: scanning the whole `references` block would let a
+deleted entry satisfy the check with its own id, and excluding the block entirely would
+lose PMIDs cited inside another entry's notes — which is exactly where all four of the
+above were.
+
+Two other things went wrong while writing it, both caught by running it rather than by
+reading it. `repo_root()` probed for a `publications/` directory and resolved to
+`genes/human`, because a stray `genes/human/publications/PMID_12345.md` exists in this
+repo from an old cache-warming run; it now requires `pyproject.toml` alongside. And the
+self-test's mutation anchor for check 3 matched **twice**, because the same sentence
+appears under an annotation's `supported_by` and under the reference's `findings` — the
+exactly-once assertion fired instead of silently mutating the wrong row, which is the
+behaviour it exists for.
 
 ---
 

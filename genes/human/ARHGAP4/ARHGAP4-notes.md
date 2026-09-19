@@ -105,12 +105,27 @@ in-vitro assay, and nothing here licenses either "therefore active in human" or
   (MGI:2159577); 17 of 24 physiological systems show no significant impact.
 - **Human.** Contiguous Xq28 deletions removing *AVPR2* plus all or part of *ARHGAP4*
   cause nephrogenic diabetes insipidus attributable to *AVPR2*
-  [PMID:10425039], [PMID:11754100], [PMID:22965914]. The one SCID case with a 34.4 kb
-  deletion is explicitly **not** attributed to ARHGAP4: "Other patients with NDI, but
-  without immunodeficiency, have had deletions that remove all ARHGAP4 except exon 1"
+  [PMID:10425039], [PMID:11754100], [PMID:22965914]. The decisive one is Schöneberg
+  1999: a boy hemizygous for a 21.5 kb deletion removing AVPR2 and most of *C1*/*ARHGAP4*
+  was followed for 16 years with targeted immunologic and hematologic testing — the
+  tissue where the gene is enriched — and nothing beyond the AVPR2 phenotype was found
+  [PMID:10425039 "On the basis of our observations, the\nrhoGAP C1 protein is not essential for normal development in the human."],
+  leading to
+  [PMID:10425039 "Therefore, we postulate that the loss of rhoGAP C1\nfunction is most likely compensated by other members of the GAP family."].
+  The one SCID case with a 34.4 kb deletion is explicitly **not** attributed to ARHGAP4:
   [PMID:16781893 "Other patients with NDI,\nbut without immunodeficiency, have had deletions that remove all ARHGAP4 except\nexon 1"],
   and the authors attribute the SCID to loss of a conserved intergenic regulatory
   element between *ARHGAP4* and *ARD1A*.
+
+**The compensation hypothesis has been tested once, and half-refuted.** Fujimoto 2008
+profiled PBMC from patients lacking about half of *ARHGAP4* and found
+[PMID:18489790 "Gene expression profiling of PBMC lacking ARHGAP4 revealed that\nexpression of RhoGAP family genes was not influenced greatly by the lack of\nARHGAP4."],
+concluding that loss "is not compensated for by other family members". That refutes the
+*transcriptional* version of Schöneberg's hypothesis and leaves protein-level redundancy
+open — which is the version a combinatorial knockout would test, and which nobody has
+done. Both papers are cited in the review's knowledge gap rather than only the one that
+fits. Huang 2012 states the residual position plainly:
+[PMID:22965914 "The clinical features of loss of ARHGAP4 function remain unclear despite several\nreports of different patterns of deletions inactivating different functional\nregions of the protein."].
 
 Two single-family variant reports exist — `T491M` in an intellectual-disability family
 [PMID:26707211] and variants in X-linked early-onset temporal lobe epilepsy
@@ -176,7 +191,7 @@ uv run --with requests python check_gap_terms.py                      # -> gap_t
 uv run --with requests python reference_coverage.py                   # -> reference_coverage.json
 uv run --with requests python resolve_entities.py                     # -> entities.json
 uv run --with requests python comparator_terms.py                     # -> comparator_terms.json
-uv run python audit_review.py --self-test                             # invariants, no network
+uv run --with pyyaml python audit_review.py                           # invariants, no network
 ```
 
 Each script takes `--self-test`, which breaks the document or the anchor on purpose and
@@ -195,4 +210,9 @@ token, `self_evaluation_pairwise: win`, `faith_pct: 100`) and its narrative is a
 as far as it goes, but it returned **11 citations** and missed every human-genetics
 paper (PMID:16781893, PMID:18489790, PMID:10425039, PMID:22965914, PMID:26707211,
 PMID:39060771) and the family-wide RHOGAP kinetics survey (PMID:27481945). Those were
-found by PubMed queries on the symbol and its synonyms, not by the provider.
+found by PubMed queries on the symbol and its synonyms, not by the provider. The pattern
+is the one this campaign has seen before: every missed paper is titled for the *disease*
+(nephrogenic diabetes insipidus, SCID, intellectual disability, epilepsy) or for the
+*family* rather than for ARHGAP4's function, so a function-shaped retrieval never
+surfaces them. Two of them — Schöneberg 1999 and Fujimoto 2008 — turn out to carry the
+single most load-bearing evidence in this review.
