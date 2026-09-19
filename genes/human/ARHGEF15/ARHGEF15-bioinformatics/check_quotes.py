@@ -93,6 +93,40 @@ def iter_review_quotes(doc: dict):
     yield from walk(doc, "$")
 
 
+def folded_hyphen_problems(yaml_text: str) -> list[str]:
+    """A folded block (`>-`) turns a newline into a SPACE.
+
+    So a line inside one that ends in a hyphen publishes `A-kinase- anchoring`. Both forms
+    are legal YAML and validation passes; only rendering shows the damage. This scans the
+    raw text rather than the parsed document, because the parse is exactly what destroys
+    the evidence.
+    """
+    problems = []
+    in_block = False
+    indent = 0
+    for i, line in enumerate(yaml_text.splitlines(), 1):
+        stripped = line.strip()
+        cur_indent = len(line) - len(line.lstrip())
+
+        # A line that OPENS a folded block is a header, not content. Nested blocks are
+        # common (`gap_statement: >-` inside a list under another folded value), and
+        # testing the header as content reports the `>-` marker itself as a trailing
+        # hyphen. Handle opens first, and let a new open replace the current block.
+        if re.search(r":\s*>[-+]?\s*$", line) or re.match(r"^-?\s*>[-+]?\s*$", stripped):
+            in_block = True
+            indent = cur_indent
+            continue
+
+        if not in_block:
+            continue
+        if stripped and cur_indent <= indent:
+            in_block = False
+            continue
+        if stripped.endswith("-"):
+            problems.append(f"line {i}: folded-block line ends in a hyphen: {stripped[-60:]!r}")
+    return problems
+
+
 def notes_items(notes: str) -> tuple[list[tuple[str, str, str]], list[str]]:
     """Attributed quotations, plus complaints about unattributed ones."""
     items = [(ref, quote, "notes.md") for quote, ref in NOTE_ATTRIBUTED.findall(notes)]
@@ -107,8 +141,10 @@ def check(strict_files: bool = True) -> tuple[int, int, list[str]]:
     checked = 0
     skipped = 0
 
-    doc = yaml.safe_load(REVIEW.read_text()) if REVIEW.exists() else {}
+    raw = REVIEW.read_text() if REVIEW.exists() else ""
+    doc = yaml.safe_load(raw) if raw else {}
     items = list(iter_review_quotes(doc))
+    problems.extend(f"review.yaml: {p}" for p in folded_hyphen_problems(raw))
 
     if NOTES.exists():
         note_items, note_problems = notes_items(NOTES.read_text())
@@ -201,6 +237,25 @@ def self_test() -> int:
         "an inverted quote is still rejected after stripping",
         norm("Does activate RAC1 or CDC42") not in norm(read_source(up)),
     )
+
+    # The folded-hyphen guard must fire on a hyphen-broken fold and stay silent otherwise.
+    broken = 'a:\n  b: >-\n    some A-kinase-\n    anchoring text\n'
+    intact = 'a:\n  b: >-\n    some A-kinase-anchoring\n    text\n'
+    expect("folded-block line ending in a hyphen is reported",
+           len(folded_hyphen_problems(broken)) == 1, str(folded_hyphen_problems(broken)))
+    expect("an intact fold is not reported",
+           folded_hyphen_problems(intact) == [], str(folded_hyphen_problems(intact)))
+    expect("a hyphen OUTSIDE any folded block is not reported",
+           folded_hyphen_problems('a: plain-\nb: 1\n') == [])
+    # The guard was narrowed to skip block-opening lines, because a nested `x: >-` header
+    # was being read as content ending in a hyphen. Mutation-test the hole that opened:
+    # a genuinely broken fold NESTED inside another folded block must still be caught.
+    nested_ok = 'a: >-\n  outer text\n  more\nb:\n- c: >-\n    inner A-kinase-anchoring\n    text\n'
+    nested_broken = 'a: >-\n  outer text\n  more\nb:\n- c: >-\n    inner A-kinase-\n    anchoring text\n'
+    expect("a nested block header is no longer reported as content",
+           folded_hyphen_problems(nested_ok) == [], str(folded_hyphen_problems(nested_ok)))
+    expect("a nested block with a real hyphen break IS still reported",
+           len(folded_hyphen_problems(nested_broken)) == 1, str(folded_hyphen_problems(nested_broken)))
 
     print()
     if failures:
