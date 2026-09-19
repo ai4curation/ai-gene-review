@@ -41,6 +41,18 @@ EXPERIMENTAL = {"EXP", "IDA", "IPI", "IMP", "IGI", "IEP",
 
 RNA_SPLICING = "GO:0008380"
 
+# A descendant query over is_a/part_of CANNOT reach regulation terms: GO relates
+# a regulation term to its target by `regulates`, which is not in that closure. An
+# earlier version of this script asked only about GO:0008380 and reported "zero
+# annotations anywhere under RNA splicing" for JMJD6 -- true of the query, false as
+# stated, and JMJD6 in fact holds GO:0048024 by IMP. These roots are queried too so
+# the regulation branch is visible.
+REGULATION_ROOTS = [
+    "GO:0043484",  # regulation of RNA splicing
+    "GO:0048024",  # regulation of mRNA splicing, via spliceosome
+    "GO:0000381",  # regulation of alternative mRNA splicing, via spliceosome
+]
+
 PARTNERS = {
     "P26368": "U2AF2",
     "Q9UHX1": "PUF60",
@@ -63,14 +75,14 @@ def _get(url: str) -> dict:
     raise RuntimeError(f"unreachable: {url}")
 
 
-def annotations(accession: str) -> list[dict]:
+def annotations(accession: str, root: str = RNA_SPLICING) -> list[dict]:
     rows: list[dict] = []
     page = 1
     total: int | None = None
     while True:
         qs = urllib.parse.urlencode({
             "geneProductId": f"UniProtKB:{accession}",
-            "goId": RNA_SPLICING,
+            "goId": root,
             "goUsage": "descendants",
             "goUsageRelationships": "is_a,part_of",
             "limit": 100,
@@ -100,6 +112,20 @@ def main() -> int:
         exp_terms = sorted({r["goId"] for r in rows if r["goEvidence"] in EXPERIMENTAL})
         all_terms = sorted({r["goId"] for r in rows})
         qualifies = bool(rows)
+        # Widen: the regulation branch, which the descendant query above cannot see.
+        reg: dict[str, dict] = {}
+        for root in REGULATION_ROOTS:
+            rrows = annotations(acc, root)
+            if rrows:
+                reg[root] = {
+                    "annotations": len(rrows),
+                    "evidence_codes": dict(Counter(r["goEvidence"] for r in rrows)),
+                    "terms": sorted({r["goId"] for r in rrows}),
+                    "has_experimental": any(r["goEvidence"] in EXPERIMENTAL
+                                            for r in rrows),
+                }
+            time.sleep(0.1)
+
         rec = {
             "symbol": sym,
             "annotations_under_rna_splicing": len(rows),
@@ -107,6 +133,8 @@ def main() -> int:
             "terms_with_experimental_evidence": exp_terms,
             "all_terms": all_terms,
             "qualifies_as_splicing_factor": qualifies,
+            "splicing_regulation_scope": reg,
+            "regulates_splicing_only": (not qualifies) and bool(reg),
         }
         out["partners"][acc] = rec
         verdict = "splicing factor" if qualifies else "NOT a splicing factor"
@@ -117,6 +145,14 @@ def main() -> int:
         print(f"    evidence: {dict(codes) or '{}'}")
         if exp_terms:
             print(f"    experimental terms: {exp_terms}")
+        if reg:
+            for root, r in reg.items():
+                print(f"    regulation branch {root}: {r['annotations']} "
+                      f"{r['evidence_codes']} terms={r['terms']}")
+        if rec["regulates_splicing_only"]:
+            print("    -> REGULATES splicing but is not annotated TO splicing; "
+                  "GO:1990935 is withheld on that distinction, which the term's "
+                  "definition does not itself adjudicate")
         time.sleep(0.2)
 
     here = Path(__file__).resolve().parent

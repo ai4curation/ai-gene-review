@@ -167,15 +167,24 @@ querying GOA for each partner's own annotations under `GO:0008380` RNA splicing:
 |---|---|---|---|---|
 | U2AF2 | `P26368` | 6 | **IDA** (`GO:0000398`), NAS ×2, IC, IBA, IEA | splicing factor — term applies, experimentally grounded |
 | PUF60 | `Q9UHX1` | 2 | IBA ×2 | splicing factor — term applies, but on inferred evidence only |
-| JMJD6 | `Q6NYC1` | **0** | — | **not** a splicing factor — term withheld |
+| JMJD6 | `Q6NYC1` | **0** by `is_a`/`part_of`; **1** once the regulation branch is included | **IMP** to `GO:0048024` | regulator of splicing, not a splicing factor — term withheld |
 | SRPK2 | `P78362` | 4 | **IDA ×2** (`GO:0000245`, `GO:0008380`), IBA, IEA | also a splicing factor, but see below |
 
 Consequences for the review:
 
 - U2AF2 (×3 rows) and PUF60 (×2 rows) → `MODIFY` to `GO:1990935`.
-- JMJD6 (×2 rows) → stays `REMOVE`, now on a measured JMJD6-specific ground: an
-  oxygenase that hydroxylates a splicing factor is not itself one, and the term's
-  definition requires the partner be involved in splicing.
+- JMJD6 (×2 rows) → stays `REMOVE`, on a narrower ground than first stated. The
+  first version of this section said JMJD6 had *zero* annotations under
+  `GO:0008380`. That query used `is_a`/`part_of` descendants only, which
+  **structurally cannot reach regulation terms** — GO relates regulation to its
+  target by `regulates`, not `is_a`. Widening it (`splicing_regulation_scope`
+  block in `splicing_factor_eligibility.json`) shows JMJD6 **does** hold
+  `GO:0048024 regulation of mRNA splicing, via spliceosome` by **IMP**. The
+  surviving distinction is finer: JMJD6 is annotated to the *regulation* of
+  splicing, not to splicing, and it is an oxygenase acting on a splicing factor
+  rather than a component of the machinery. Whether that satisfies "involved in
+  the process of removing sections of the primary RNA transcript" is not settled
+  by the term's definition, so the term is withheld rather than asserted.
 - SRPK2 (×3 rows) → stays `MODIFY` to `GO:0019901` protein kinase binding. SRPK2
   qualifies under *both* terms, but the in vitro **kinase assay** typed by IntAct
   as `phosphorylation` is the better-evidenced relationship, and the kinase term

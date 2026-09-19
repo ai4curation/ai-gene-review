@@ -264,9 +264,29 @@ and the primary papers. Two problems:
   best-characterised activity is nuclear-receptor-specific. `GO:0003713`
   transcription coactivator activity, which GOA already carries, is the correct
   and maximal term. No `proposed_new_terms` entry to re-create it.
-- `GO:0035259` "nuclear glucocorticoid receptor binding" is also **obsolete**;
-  `GO:0016922` nuclear receptor binding absorbed `GO:0035257` and `GO:0035258`
-  and has **no children**, so it is already maximal for "binds GR".
+- **`GO:0035259` "nuclear glucocorticoid receptor binding" is ACTIVE, and an
+  earlier draft of this review wrongly called it obsolete.** `GO:0016922` has
+  **eight** active children, of which `GO:0035259` is one, so it is *not* maximal
+  for "binds GR" and a curator told otherwise would land on a needlessly general
+  term. What does hold is that `GO:0035257` and `GO:0035258` were absorbed into
+  `GO:0016922`.
+
+  The cause is worth recording, because it is the second time in this review that
+  a single source produced a confident wrong answer. **QuickGO is the outlier**:
+
+  | source | `GO:0035259` | children of `GO:0016922` |
+  |---|---|---|
+  | GO API (`api.geneontology.org`) | active, `replaced_by: null` | — |
+  | OLS4 | `is_obsolete=False` | **8** |
+  | repo `cache/ontologies/go.tsv` | label has no "obsolete" prefix, `is_obsolete=False` | — |
+  | **QuickGO** | **`isObsolete=True`**, name prefixed "obsolete" | **0** |
+
+  Worse, I believed I had cross-checked the "no children" claim two ways — but
+  *both* ways were QuickGO (its `/children` endpoint and its text search), so the
+  second check was not independent at all. **Two methods against one service is
+  one check.** QuickGO also silently resolves merges (`GO:0035257`/`GO:0035258`
+  return `GO:0016922`'s record with `isObsolete=False`), which is a different
+  behaviour from OLS4 and makes its obsolescence answers hard to read.
 - There is **no** "regulation of transcription pausing" term. `GO:0160239`
   transcription pausing by RNA polymerase II exists but has no children and no
   regulation-level parent for this purpose; the expressible claim is
@@ -289,7 +309,7 @@ and the primary papers. Two problems:
   |---|---|---|
   | U2AF2 `P26368` | **IDA** to `GO:0000398`, plus NAS/IC/IBA/IEA | splicing factor → `GO:1990935` |
   | PUF60 `Q9UHX1` | 2 × IBA | splicing factor → `GO:1990935` (weaker support, recorded) |
-  | JMJD6 `Q6NYC1` | **zero** | *not* a splicing factor → term withheld, row stays `REMOVE` |
+  | JMJD6 `Q6NYC1` | **zero** by `is_a`/`part_of`, but `GO:0048024` **IMP** once the regulation branch is included | regulator of splicing, not a splicing factor → term withheld, row stays `REMOVE` |
   | SRPK2 `P78362` | 2 × IDA | also a splicing factor, but the in vitro kinase assay makes `GO:0019901` the better-evidenced call |
 
   So five rows became `MODIFY` and the two JMJD6 rows keep `REMOVE` — now on a
