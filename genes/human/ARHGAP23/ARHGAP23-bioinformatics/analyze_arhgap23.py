@@ -1237,7 +1237,7 @@ def self_test() -> int:
     hit = base["forward_mapped_position"]
     assert hit is not None
 
-    # Mutation 1: destroy the arginine the test is looking for.
+    # Case: destroy the arginine the test is looking for.
     anchors += 1
     mut = _Mutable(subject)
     mut.mutate_residue(hit, "A")
@@ -1247,7 +1247,7 @@ def self_test() -> int:
     assert not res["forward_retained"], "R->A at the mapped finger left forward_retained True"
     assert not res["reciprocal"], "R->A at the mapped finger left the test reciprocal"
 
-    # Mutation 2: keep the arginine, remove the subject's own Site annotation.
+    # Case: keep the arginine, remove the subject's own Site annotation.
     anchors += 1
     mut = _Mutable(subject)
     mut.drop_site(hit)
@@ -1257,7 +1257,7 @@ def self_test() -> int:
     assert not res["forward_lands_on_annotated_subject_site"], "dropped Site still reported"
     assert not res["forward_retained"], "retained must require the annotated-site condition"
 
-    # Mutation 3: move the subject's annotated finger, breaking reciprocity only.
+    # Case: move the subject's annotated finger, breaking reciprocity only.
     anchors += 1
     mut = _Mutable(subject)
     mut.move_finger(subject.finger + 3)
@@ -1267,7 +1267,7 @@ def self_test() -> int:
     assert not res["reverse_lands_on_comparator_finger"], "reverse test did not notice the move"
     assert not res["reciprocal"], "reciprocity survived a broken reverse mapping"
 
-    # Mutation 4: an out-of-register projection must be refused, not reported.
+    # Case: an out-of-register projection must be refused, not reported.
     anchors += 1
     mut = _Mutable(subject)
     mut.move_finger(subject.domain_end)
@@ -1278,7 +1278,7 @@ def self_test() -> int:
         "interface projection",
     )
 
-    # Mutation 5: a chain that is not the protein we think it is must be refused.
+    # Case: a chain that is not the protein we think it is must be refused.
     anchors += 1
     applied += 1
     _expect_raises(
@@ -1287,7 +1287,7 @@ def self_test() -> int:
         "chain identity proof",
     )
 
-    # Mutation 6: a missing arginine-finger annotation must stop the analysis. The
+    # Case: a missing arginine-finger annotation must stop the analysis. The
     # perturbed record is driven through the real constructor, not a re-implementation.
     anchors += 1
     applied += 1
@@ -1303,7 +1303,7 @@ def self_test() -> int:
         "missing finger annotation",
     )
 
-    # Mutation 7: an ambiguous Rho-GAP domain must be refused, not silently first-picked.
+    # Case: an ambiguous Rho-GAP domain must be refused, not silently first-picked.
     anchors += 1
     applied += 1
     doubled = json.loads(json.dumps(subject.rec))
@@ -1319,7 +1319,7 @@ def self_test() -> int:
         "ambiguous Rho-GAP domain",
     )
 
-    # Mutation 8: an arginine finger annotated outside its own domain must be refused.
+    # Case: an arginine finger annotated outside its own domain must be refused.
     anchors += 1
     applied += 1
     displaced = json.loads(json.dumps(subject.rec))
@@ -1356,7 +1356,7 @@ def self_test() -> int:
     assert real["comparable"], f"baseline mutant check is not comparable: {real}"
     assert real["residue_matches"], "the published mutant does not name the residue it claims"
 
-    # Mutation 9: a construct of a different length must refuse the comparison outright.
+    # Case: a construct of a different length must refuse the comparison outright.
     anchors += 1
     applied += 1
     wrong_len = json.loads(json.dumps(real_muller))
@@ -1365,7 +1365,7 @@ def self_test() -> int:
     assert not res["comparable"], "a length mismatch did not stop the residue comparison"
     assert "not on the same sequence" in res["reason"], res["reason"]
 
-    # Mutation 10: point the mutant AT the annotated finger; the discriminator must flip.
+    # Case: point the mutant AT the annotated finger; the discriminator must flip.
     anchors += 1
     applied += 1
     on_finger = json.loads(json.dumps(real_muller))
@@ -1389,7 +1389,7 @@ def self_test() -> int:
     # be reported as "caught" while the guard named here quietly rotted. Order is part of
     # what a mutation test is measuring.
 
-    # Mutation 13: a Supplementary Table 2 layout missing the in-vitro block must abort,
+    # Case: a Supplementary Table 2 layout missing the in-vitro block must abort,
     # not report an absent column as empty - which would manufacture the review's negative.
     anchors += 1
     applied += 1
@@ -1448,7 +1448,7 @@ def self_test() -> int:
         "suggested experiment all assert this exact pattern, so the prose is now wrong."
     )
 
-    # Mutation 12: the emptiness test must notice a populated cell.
+    # Case: the emptiness test must notice a populated cell.
     anchors += 1
     applied += 1
     assert not all(
@@ -1456,7 +1456,7 @@ def self_test() -> int:
         for v in dict(lit["groups"]["in vitro"], RhoA="+").values()
     ), "the emptiness test reports a populated block as empty"
 
-    # Mutation 14: the screen block must hold the call vocabulary, not the derived flag
+    # Case: the screen block must hold the call vocabulary, not the derived flag
     # columns. Asserting the vocabulary rather than one known-wrong triple is what makes the
     # first-run rule in _block load-bearing: any collapse onto the numeric flags fails, not
     # just the particular (0, 0, 0) that the naive implementation happened to produce.
@@ -1469,7 +1469,7 @@ def self_test() -> int:
         "being applied"
     )
 
-    # Mutation 11: an ambiguous supplementary row must not be resolved by picking one.
+    # Case: an ambiguous supplementary row must not be resolved by picking one.
     anchors += 1
     applied += 1
     rows = [("GENE",), ("ARHGAP23", 1), ("ARHGAP23", 2)]

@@ -59,7 +59,7 @@ MUTATIONS: list[tuple[str, str, str, str]] = [
         "stop refusing a record with no arginine-finger annotation",
         '        if not fingers:\n            raise AnalysisError(\n                f"{self.name} carries no',
         '        if False:\n            raise AnalysisError(\n                f"{self.name} carries no',
-        'annotated arginine fingers',
+        'missing finger annotation: guard fired with the wrong message',
     ),
     (
         "accept an arginine finger annotated outside its own domain",
@@ -151,15 +151,16 @@ def main() -> int:
     failures: list[str] = []
     with tempfile.TemporaryDirectory() as tmp:
         target = pathlib.Path(tmp) / "analyze_arhgap23.py"
-        for entry in MUTATIONS:
-            desc, old, new = entry[0], entry[1], entry[2]
-            expect = entry[3] if len(entry) > 3 else None
+        # Unpacked directly, not indexed with a length check: an optional fourth element
+        # would let a future three-element entry silently revert to deciding on the exit
+        # code alone, which is the behaviour this harness exists to stop.
+        for desc, old, new, expect in MUTATIONS:
             _write_mutant(target, old, new)
             code, full, last = _run_self_test(target)
             if code == 0:
                 failures.append(f"GUARD HOLE: {desc}")
                 print(f"*** GUARD HOLE: {desc} -- self-test still passed")
-            elif expect is not None and expect not in full:
+            elif expect not in full:
                 # Caught, but by something other than the guard this mutation targets.
                 failures.append(f"WRONG GUARD: {desc}")
                 print(
