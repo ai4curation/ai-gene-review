@@ -91,7 +91,7 @@ The mechanism is occlusion of PHB2's import receptors, not a generic tether:
 
 > [PMID:26052702 "These data indicated that BIG3 may block the KPNAs (KPNA1, KPNA5, and KPNA6) binding region(s) of PHB2, thereby leading to inhibition of KPNAs-mediated PHB2 nuclear translocation in the presence of E2 in breast cancer cells."]
 
-This is `GO:0140313 molecular sequestering activity` almost verbatim — GO defines it
+This is `GO:0140311 protein sequestering activity` almost verbatim — GO defines it
 as "Binding to a specific molecule to prevent it from interacting with other partners
 or to inhibit its localization to the area of the cell or complex where it is active."
 The downstream process is `GO:0042308 negative regulation of protein import into
@@ -116,7 +116,7 @@ activity is two steps downstream.
 Binding is via a canonical PP1C docking motif (RVxF, `1,228-KAVSF-1,232`) and the
 `ΔPP1Cα` deletion abolishes it. E2-driven PKA phosphorylation of BIG3-S305/S1208
 then relieves the inhibition, so PP1Cα dephosphorylates PHB2-S39. So BIG3 is a
-genuine `GO:0008157 protein phosphatase 1 binding` + `GO:0004864 protein phosphatase
+genuine `GO:0008157 protein phosphatase 1 binding` + `GO:0004865 protein serine/threonine phosphatase
 inhibitor activity` + `GO:0051018 protein kinase A binding` protein. **All three are
 human, endogenous-protein experiments, and none is in GOA.**
 
@@ -375,7 +375,7 @@ negative so the next reviewer knows the check ran.
   rests on a single paper in one cell type (osteosarcoma lines; mouse neurons). They
   are raised as questions.
 - **No proposed new GO term.** Every function I needed already exists:
-  `GO:0140313`, `GO:0042308`, `GO:0008157`, `GO:0004864`, `GO:0051018`,
+  `GO:0140311`, `GO:0042308`, `GO:0008157`, `GO:0004865`, `GO:0051018`,
   `GO:1904410`. All eight candidate ids were checked against QuickGO
   `/complete` for `isObsolete` and `secondaryIds` before use; none is obsolete or
   merged.

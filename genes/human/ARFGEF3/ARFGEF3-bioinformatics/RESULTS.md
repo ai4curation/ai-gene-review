@@ -35,6 +35,19 @@ hardcoded column would be a latent bug. The derived column is cross-checked agai
 an independent, alignment-free signal — the `[FY]-x-[LIVM]-P-G-E` Sec7 motif — and
 the run aborts if the two disagree on any known-active donor.
 
+**What the motif cross-check does and does not say.** It is *corroborating*, not
+required, and the distinction matters when reading `sec7_glutamic_finger.tsv`:
+**12 of the 17** active donors match the motif and place its Glu at exactly the
+derived column; **5 match no motif at all** (IQSEC2, PSD, Psd3, SYT1, and the
+*S. pombe* protein `YDYB_SCHPO`); and **0 disagree**. Those five are divergent Sec7
+branches — BRAG/EFA6 in animals, SYT1 and the fission-yeast protein in fungi — that
+retain the catalytic glutamate while departing from the FRLPGE consensus around it,
+and every one of them still carries E at the derived column. So a `motif_hits: 0`
+row is **silent, not contradictory**, and is not counter-evidence to the 17/17
+result. The run aborts only on *disagreement*. These counts are emitted under
+`motif_crosscheck` in `sec7_glutamic_finger.json` so the point does not rest on
+this prose.
+
 ### Result
 
 | class | n | residue at the derived column |

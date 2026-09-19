@@ -465,6 +465,26 @@ def main() -> None:
         "active_donors_with_glutamic_finger": sum(
             1 for r in donor_rows if r["glutamic_finger"] == "yes"),
         "active_donors_total": len(donor_rows),
+        # The motif cross-check is CORROBORATING, not required. It fails the run
+        # only on DISAGREEMENT -- a donor whose motif-derived Glu sits at a
+        # different column than the derived one. A donor with no motif match at
+        # all is silent, not contradictory: the divergent Sec7 branches
+        # (BRAG/EFA6 in animals, SYT1 and the S. pombe protein in fungi) keep the
+        # catalytic Glu while departing from the FRLPGE consensus around it.
+        # Reported explicitly so `motif_hits: 0` rows in the TSV cannot be read
+        # as counter-evidence to the 17/17 result.
+        "motif_crosscheck": {
+            "active_donors_agreeing_with_derived_column": res["motif_agree"],
+            "active_donors_with_no_motif_match": len(res["motif_absent"]),
+            "active_donors_disagreeing": 0,
+            "no_motif_match_labels": sorted(
+                r["label"] for r in res["rows"]
+                if r["known_active_donor"] == "yes" and r["motif_hits"] == 0),
+            "note": ("absence of the motif in a donor is silent, not "
+                     "contradictory; the run aborts only on disagreement, and "
+                     "every donor lacking the motif still carries E at the "
+                     "derived column"),
+        },
         "subject": {k: subject[k] for k in
                     ("accession", "label", "organism", "sec7_domain",
                      "aligned_residue", "protein_position", "glutamic_finger",
