@@ -25,8 +25,9 @@ literatures run in parallel and must not be used to argue each other:
 | disease, vascular and bone (human variants, mouse knock-in) | RhoA/ROCK2 | PMID:36929019 |
 | family-wide specificity screen (human, HEK-based) | **RhoA + and Cdc42 +, Rac1 −** | PMID:32203420, Supplementary Table 2 |
 
-The last row is the single most decision-relevant measurement for this gene and it is
-**absent from GOA**. Müller et al. 2020 screened all 145 human RhoGEFs/RhoGAPs against RhoA,
+The last row is the single most decision-relevant measurement for this gene, it is on the
+**human** protein at full length (Supplementary Table 1 row 56: `Human`, 841 aa, cDNA
+BAA74938.3/AAH36749.1), and it is **absent from GOA**. Müller et al. 2020 screened all 145 human RhoGEFs/RhoGAPs against RhoA,
 Rac1 and Cdc42; Reactome cites this paper for placing ARHGEF15 in both `RHOA GEFs activate
 RHOA` and `CDC42 GEFs activate CDC42`. The paper is paywalled with no PMC record, but its
 supplementary tables are free, which is how the row was read

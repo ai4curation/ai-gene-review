@@ -34,6 +34,13 @@ row number), and maps the columns from the two header rows.
 **ARHGEF15 (row 85, "GEF"): RhoA `+`, Rac1 `−`, Cdc42 `+`.**
 Cited PMIDs on the row: 12775584, 23029280, 21029865, 27145964.
 
+The screen assayed the **human** protein, not a rodent orthologue: Supplementary Table 1
+row 56 records `Species in library = Human`, `size of construct = 841 aa` and cDNA
+`BAA74938.3,AAH36749.1` — the same GenBank entries UniProt lists for O94989, at its full
+length. That makes this a third direct measurement on the human protein, alongside
+PMID:12775584 and PMID:23647072, and it is checked by a guard in
+`muller2020_specificity.py` rather than assumed.
+
 ### Read-controls on the column mapping
 
 The column mapping is not asserted, it is corroborated — by reading GEFs whose specificity
@@ -187,7 +194,7 @@ Hence the conclusion runs in both directions, and neither direction is decisive 
 - **Presence is not activity.** Human ARHGEF15 retains the full triad and the phosphosite,
   which is consistent with an intact exchange site; it is not evidence that the human
   protein is active, and no measurement of human ARHGEF15 exchange activity exists outside
-  the two transfected-cell assays cited in the review.
+  the three assays on the human protein cited in the review.
 - **Absence would not have been inactivity, and presence is not specificity.** The residues
   do not separate RhoA-GEFs from Cdc42-GEFs here, and the one substrate-selectivity switch
   that *is* experimentally established for this protein is not a DH residue at all but the

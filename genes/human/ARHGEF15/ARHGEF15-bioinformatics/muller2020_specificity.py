@@ -157,6 +157,35 @@ def read_gene(ws, blocks, rows, gene: str) -> dict:
     }
 
 
+def construct_identity() -> dict:
+    """Which protein did the screen actually assay?
+
+    Load-bearing: a family-wide screen in HEK cells could have used a mouse cDNA, in which
+    case its result would be another rodent measurement rather than a human one. The answer
+    is in Supplementary Table 1, which records the species and construct length per gene.
+    """
+    wb = openpyxl.load_workbook(download())
+    t1 = next((wb[s] for s in wb.sheetnames if s.strip() == "Supplementary Table 1"), None)
+    if t1 is None:
+        return {}
+    hdr = {str(c.value).strip(): c.column for c in t1[2] if c.value}
+    for r in range(3, t1.max_row + 1):
+        if t1.cell(row=r, column=1).value == TARGET:
+            return {
+                "row": r,
+                "species_in_library": t1.cell(row=r, column=hdr["Species in library"]).value,
+                "construct_length_aa": t1.cell(
+                    row=r, column=hdr["size of construct in library (aa)"]
+                ).value,
+                "cdna_identifier": t1.cell(
+                    row=r,
+                    column=hdr["Unique Identifier: e.g.  RefSeq ID of cDNA used"],
+                ).value,
+                "synonyms": t1.cell(row=r, column=hdr["SYNONYM(S)"]).value,
+            }
+    return {}
+
+
 def interactome_and_localization() -> dict:
     """Two secondary readouts from the same workbook, both bearing on the CC annotations.
 
@@ -210,6 +239,7 @@ def analyse() -> dict:
         "n_genes_in_table": len(rows),
         "target": read_gene(ws, blocks, rows, TARGET),
         "read_controls": {g: read_gene(ws, blocks, rows, g) for g in READ_CONTROLS},
+        "construct": construct_identity(),
         "secondary": interactome_and_localization(),
     }
     res["read_controls_ok"] = {
@@ -273,6 +303,11 @@ def self_test() -> int:
     expect("ARHGEF15 appears exactly once", "error" not in res["target"], str(res["target"].get("error")))
     expect("every ARHGEF15 screen cell is a plain +/- call",
            set(res["target"]["screen"].values()) <= {"+", "-"}, str(res["target"]["screen"]))
+    # The species of the assayed construct decides whether this is a human measurement.
+    expect("the screen assayed the HUMAN protein at its full UniProt length",
+           res["construct"].get("species_in_library") == "Human"
+           and res["construct"].get("construct_length_aa") == 841,
+           str(res["construct"]))
 
     print("mutation tests:")
     # A gene that is genuinely absent must be reported as absent, not silently defaulted.
@@ -330,6 +365,7 @@ def main() -> int:
     print(f"  activity screen: {t['screen']}")
     print(f"  positive for:    {t['screen_positive_for']}")
     print(f"  cited PMIDs:     {t['reference_pmids']}")
+    print(f"  construct:       {res.get('construct')}")
     print(f"  literature blocks (verbatim, 'c' not interpreted): {t['literature_blocks_verbatim']}")
     print("  read-controls:")
     for g, ok in res["read_controls_ok"].items():
