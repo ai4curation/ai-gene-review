@@ -1,0 +1,2094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dacA - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>dacA</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88DM2" target="_blank" class="term-link">
+                        Q88DM2
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "dacA";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88DM2" data-a="DESCRIPTION: DacA/PBP5 is a periplasmic, membrane-associated pe..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>DacA/PBP5 is a periplasmic, membrane-associated peptidase-S11 D,D-carboxypeptidase that removes the terminal D-Ala from peptidoglycan pentapeptide stems. This converts pentapeptides to tetrapeptides and tunes the donor pool available for peptidoglycan crosslinking.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0004180" target="_blank" class="term-link">
+                                    GO:0004180
+                                </a>
+                            </span>
+                            <span class="term-label">carboxypeptidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DM2" data-a="GO:0004180" data-r="GO_REF:0000002" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DacA is a carboxypeptidase with specificity for terminal D-Ala-D-Ala.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0009002 is already present and names the established substrate and serine-dependent chemistry.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0006508" target="_blank" class="term-link">
+                                    GO:0006508
+                                </a>
+                            </span>
+                            <span class="term-label">proteolysis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DM2" data-a="GO:0006508" data-r="GO_REF:0000002" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Peptidoglycan stem trimming is not a generic protein-degradation process.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The substrate is the D-Ala-D-Ala terminus of cell-wall stem peptides, not a protein targeted for proteolysis.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008233" target="_blank" class="term-link">
+                                    GO:0008233
+                                </a>
+                            </span>
+                            <span class="term-label">peptidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000117
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-markasoverannotated">
+                            MARK AS OVER ANNOTATED
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DM2" data-a="GO:0008233" data-r="GO_REF:0000117" data-act="MARK_AS_OVER_ANNOTATED">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> This broad term is true but does not identify the cell-wall substrate.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0009002 is already present and captures the specific D,D-carboxypeptidase activity.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009002" target="_blank" class="term-link">
+                                    GO:0009002
+                                </a>
+                            </span>
+                            <span class="term-label">serine-type D-Ala-D-Ala carboxypeptidase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DM2" data-a="GO:0009002" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> DacA hydrolyzes terminal D-Ala from peptidoglycan pentapeptide stems.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> This is the core molecular function of peptidase-S11 PBP5-family DacA.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009252" target="_blank" class="term-link">
+                                    GO:0009252
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000041
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DM2" data-a="GO:0009252" data-r="GO_REF:0000041" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Stem trimming is a late peptidoglycan maturation step.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> DacA converts pentapeptide stems to tetrapeptides and thereby controls substrate availability for crosslinking.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                    GO:0030288
+                                </a>
+                            </span>
+                            <span class="term-label">outer membrane-bounded periplasmic space</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/dacA/dacA-deep-research-openscientist.md
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DM2" data-a="GO:0030288" data-r="file:PSEPK/dacA/dacA-deep-research-openscientist.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> The exported catalytic domain acts on peptidoglycan in the periplasm.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Signal-peptide and PBP5-family topology support periplasmic localization.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">ISS</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            file:PSEPK/dacA/dacA-deep-research-openscientist.md
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-new">
+                            NEW
+                        </span>
+                        <span class="vote-buttons" data-g="Q88DM2" data-a="GO:0005886" data-r="file:PSEPK/dacA/dacA-deep-research-openscientist.md" data-act="NEW">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> A C-terminal amphipathic anchor associates DacA with the cytoplasmic membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The anchor retains the periplasmic enzyme at the outer face of the bacterial plasma membrane.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>PBP5-family D,D-carboxypeptidase that converts peptidoglycan pentapeptide stems to tetrapeptides and tunes crosslink-donor availability.</h3>
+                <span class="vote-buttons" data-g="Q88DM2" data-a="FUNCTION: PBP5-family D,D-carboxypeptidase that converts pep..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009002" target="_blank" class="term-link">
+                            serine-type D-Ala-D-Ala carboxypeptidase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009252" target="_blank" class="term-link">
+                                peptidoglycan biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0030288" target="_blank" class="term-link">
+                                outer membrane-bounded periplasmic space
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/dacA/dacA-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">Its primary reaction is **hydrolytic removal of the terminal D-alanine from the C-terminal D-Ala-D-Ala of muramyl-pentapeptide stems in peptidoglycan**, converting pentapeptides to tetrapeptides.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000041.md" target="_blank" class="term-link">
+                            GO_REF:0000041
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation based on UniPathway vocabulary mapping</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000117.md" target="_blank" class="term-link">
+                            GO_REF:0000117
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by ARBA machine learning models</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/dacA/dacA-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research report on PSEPK DacA/PBP5 (Q88DM2)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report identifies the PBP5-family terminal D-Ala trimming reaction.</div>
+
+                        <div class="finding-text">"Its primary reaction is **hydrolytic removal of the terminal D-alanine from the C-terminal D-Ala-D-Ala of muramyl-pentapeptide stems in peptidoglycan**, converting pentapeptides to tetrapeptides."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> The relative contribution of DacA and other KT2440 D,D-carboxypeptidases is unknown.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+
+            </p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> Redundant stem-trimming enzymes may mask single-gene phenotypes.</p>
+
+
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(dacA-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88DM2" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: *dacA* / PP_4803 (UniProt Q88DM2)</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-01T00:13:40.045386</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="dacA-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="dacA-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-daca-pp_4803-uniprot-q88dm2">Functional Annotation Report: <em>dacA</em> / PP_4803 (UniProt Q88DM2)</h1>
+<p><strong>Organism:</strong> <em>Pseudomonas putida</em> strain KT2440 (ATCC 47054 / DSM 6125 / NCIMB 11950), taxid 160488<br />
+<strong>Gene:</strong> <em>dacA</em> (ordered locus PP_4803) — EMBL AAN70372.1<br />
+<strong>Protein:</strong> serine-type D-Ala-D-Ala carboxypeptidase, EC 3.4.16.4<br />
+<strong>Family:</strong> Peptidase S11 (Pfam PF00768 + PF07943); penicilloyl-serine transferase / β-lactam-transpeptidase-like fold (InterPro IPR012338, IPR015956, IPR018044, IPR012907, IPR037167)<br />
+<strong>Length:</strong> 386 aa (Sec signal peptide 1–24; mature chain 25–386)</p>
+<hr />
+<h2 id="1-summary-answer-to-the-research-question">1. Summary (answer to the research question)</h2>
+<p><em>dacA</em> (PP_4803) encodes a <strong>low-molecular-weight penicillin-binding protein (LMW-PBP), specifically a serine-type D-alanyl-D-alanine carboxypeptidase (DD-carboxypeptidase; EC 3.4.16.4)</strong> and the <em>P. putida</em> ortholog of <em>Escherichia coli</em> PBP5. Its primary reaction is <strong>hydrolytic removal of the terminal D-alanine from the C-terminal D-Ala-D-Ala of muramyl-pentapeptide stems in peptidoglycan</strong>, converting pentapeptides to tetrapeptides. By depleting the pentapeptide donor substrate used by transpeptidases, it <strong>regulates (limits/tunes) the degree of peptidoglycan cross-linking</strong>, which is required for normal cell shape and for buffering the envelope against β-lactam stress. The enzyme acts <strong>in the periplasm on the peptidoglycan sacculus</strong>, tethered to the outer face of the inner (cytoplasmic) membrane by a C-terminal amphipathic anchor after Sec-dependent export. It functions in the <strong>peptidoglycan biosynthesis / cell-wall maturation pathway</strong>, and — like its <em>Pseudomonas aeruginosa</em> ortholog — its penicilloyl-serine fold additionally supports intrinsic β-lactam resistance.</p>
+<blockquote>
+<p><strong>Note on evidence base:</strong> No experimental study has been published on PP_4803 itself. The functional assignment is high-confidence and rests on (i) unambiguous sequence/domain identity, (ii) conservation of all catalytic motifs, and (iii) an extensive body of experimental work on the orthologous PBP5/DD-carboxypeptidase enzymes of <em>E. coli</em> and <em>P. aeruginosa</em>. Claims are labeled as direct database annotation, bioinformatic inference, or ortholog-based experimental evidence.</p>
+</blockquote>
+<hr />
+<h2 id="2-identity-verification">2. Identity verification</h2>
+<p>The gene symbol, EC number, organism, family, and domain architecture from UniProt are internally consistent and match the peptidase-S11 DD-carboxypeptidase (PBP5) group. This is <strong>not</strong> the ambiguous "dacA" of Firmicutes (the di-adenylate cyclase / c-di-AMP synthase, an unrelated protein); the peptidase-S11 fold, EC 3.4.16.4, and the "dacA/PBP5" nomenclature in Gram-negatives are distinct and correct here.</p>
+<p>Bioinformatic confirmation (this work): the 386-aa sequence contains <strong>all three canonical penicillin-recognizing active-site motifs</strong> of the penicilloyl-serine transferase superfamily:</p>
+<table>
+<thead>
+<tr>
+<th>Motif</th>
+<th>Residues in Q88DM2</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>S</strong>xx<strong>K</strong></td>
+<td>Ser64–Leu–Thr–Lys67</td>
+<td>Catalytic nucleophile (Ser64 forms acyl-enzyme) + general base (Lys67)</td>
+</tr>
+<tr>
+<td><strong>S</strong>x<strong>N</strong></td>
+<td>Ser124–Gly–Asn126</td>
+<td>Active-site cleft / oxyanion &amp; substrate positioning</td>
+</tr>
+<tr>
+<td><strong>K</strong>T<strong>G</strong></td>
+<td>Lys226–Thr–Gly</td>
+<td>D-Ala-D-Ala substrate-binding (β3 strand)</td>
+</tr>
+</tbody>
+</table>
+<p>UniProt independently annotates active sites at Ser64 (acyl-ester intermediate), Lys67 (proton acceptor), position 124, and a binding site at position 226 — in exact agreement. An N-terminal Sec signal peptide (1–24) and a hydrophobic/amphipathic C-terminus (…FFRRMWDSIRLFFYGLFN) complete the classic PBP5 topology.</p>
+<hr />
+<h2 id="3-key-findings-with-evidence">3. Key findings (with evidence)</h2>
+<h3 id="31-primary-reaction-and-mechanism">3.1 Primary reaction and mechanism</h3>
+<ul>
+<li><strong>Reaction:</strong> DD-carboxypeptidase — preferential cleavage of (Ac)₂-L-Lys-D-Ala-|-D-Ala; "removes C-terminal D-alanyl residues from sugar-peptide cell wall precursors" (UniProt catalytic activity / FUNCTION, EC 3.4.16.4). In peptidoglycan terms it removes the terminal D-Ala from the pentapeptide stem (L-Ala–D-Glu–<em>meso</em>-DAP–D-Ala–<strong>D-Ala</strong>), yielding a tetrapeptide.</li>
+<li><strong>Mechanism:</strong> a two-step acyl-enzyme (ping-pong) mechanism via the Ser64 nucleophile — the same chemistry that makes these enzymes covalent targets ("penicillin-binding proteins") of β-lactams.</li>
+<li><strong>Ortholog evidence:</strong> <em>E. coli</em> PBP5 "cleaves the terminal D-alanine from the muramyl pentapeptide in the peptidoglycan layer… In doing so, it varies the substrates for transpeptidation and plays a key role in maintaining cell shape" (Skoog et al., PMID 21674665). In Gram-negatives, DD-CPases generate the majority tetrapeptide muropeptides (Tehrani et al., PMID 40777447).</li>
+</ul>
+<h3 id="32-substrate-specificity">3.2 Substrate specificity</h3>
+<ul>
+<li>Specificity is centered on the <strong>terminal D-Ala-D-Ala</strong> dipeptide: "Beyond the C-terminal d-alanyl-d-alanine moiety, PBP5… has little specificity for other elements of peptidoglycan structure" (Nemmara et al., PMID 27420403).</li>
+<li>It belongs to the membrane-bound <strong>LMMA class</strong> of DD-peptidases, which "catalyze DD-carboxypeptidase and endopeptidase reactions in vivo" and — unlike the soluble R39/R61 enzymes — do not require a free stem-peptide N-terminus, consistent with acting on the polymeric sacculus in situ (Nemmara et al., PMID 22029692).</li>
+</ul>
+<h3 id="33-subcellular-localization-site-of-action">3.3 Subcellular localization / site of action</h3>
+<ul>
+<li><strong>Periplasm, anchored to the outer leaflet of the inner membrane.</strong> The Sec signal peptide exports the protein; the C-terminal amphipathic helix anchors it so the catalytic domain projects into the periplasm where peptidoglycan resides (the "periplasm… contains the peptidoglycan layer"; PMID 40777447).</li>
+<li><em>E. coli</em> PBP5 was characterized "in its native environment, the inner membrane," where it forms homo-oligomers (likely dimers) that position the catalytic domain to reach pentapeptides at varying distances from the membrane (Skoog et al., PMID 21674665). <em>P. aeruginosa</em> PBP5 was solubilized "by deletion of its C-terminal membrane anchor" (Smith et al., PMID 23629710), confirming the same topology in <em>Pseudomonas</em>.</li>
+<li><strong>Direct sequence-based corroboration (this work):</strong> Kyte–Doolittle hydropathy analysis of Q88DM2 shows a hydrophobic N-terminal Sec signal peptide (residues 1–24, mean KD ≈ +1.27) and a C-terminal <strong>amphipathic</strong> segment (residues 367–386, …GGFF<strong>RR</strong>MWDSIRLFFYGLFN) — a basic Arg-Arg doublet (positive-inside) followed by an aromatic/aliphatic run — i.e., a monotopic amphipathic membrane anchor rather than a fully hydrophobic transmembrane helix. This is the diagnostic PBP5 topology and independently rules out a cytoplasmic or polytopic-transporter localization.</li>
+</ul>
+<h3 id="34-biological-process-pathway">3.4 Biological process / pathway</h3>
+<ul>
+<li>Pathway: <strong>cell-wall biogenesis; peptidoglycan biosynthesis / maturation</strong> (UniProt PATHWAY). GO: serine-type D-Ala-D-Ala carboxypeptidase activity (GO:0009002); regulation of cell shape (GO:0008360); cell-wall organization (GO:0071555); peptidoglycan biosynthetic process (GO:0009252).</li>
+<li>Mechanistically, by trimming pentapeptides to tetrapeptides the enzyme <strong>controls the pool of transpeptidation donor substrate</strong>, thereby setting the density/pattern of DD-cross-links. This is a <em>regulatory/maturation</em> role, not a wall-building (synthetic) one.</li>
+</ul>
+<h3 id="35-physiological-role-precise-not-pleiotropic">3.5 Physiological role (precise, not pleiotropic)</h3>
+<ul>
+<li><strong>Cell-shape maintenance</strong> and <strong>intrinsic β-lactam resistance.</strong> In the <em>E. coli</em> ortholog, <em>dacA</em>/PBP5 deletion sensitizes cells 4–8-fold to all β-lactams tested, reversibly (Sarkar et al., PMID 20047819), and the DD-carboxypeptidase catalytic activity is <em>essential</em> for this intrinsic resistance (Sarkar et al., PMID 21719544).</li>
+<li><strong>Functional redundancy:</strong> bacteria encode several DD-CPases that act redundantly for robust cell-shape maintenance across conditions (Peters et al., PMID 27329754); hence <em>dacA</em> is typically individually non-essential, with defects unmasked only when paralogs are also removed.</li>
+</ul>
+<h3 id="36-pseudomonas-specific-evolutionary-context">3.6 <em>Pseudomonas</em>-specific / evolutionary context</h3>
+<ul>
+<li>The closest structurally characterized ortholog, <strong><em>P. aeruginosa</em> PBP5</strong>, is "one of the most abundant PBPs"; "its main function is that of a cell wall dd-carboxypeptidase, [but] it possesses sufficient β-lactamase activity to contribute to… resist… β-lactams," and its 2.05-Å structure "shows features closely resembling those of the class A β-lactamases" (Smith et al., PMID 23629710). This documents (i) the DD-CPase/β-lactamase dual activity likely shared by <em>P. putida</em> DacA and (ii) the evolutionary relationship between DD-carboxypeptidases and class A β-lactamases.</li>
+<li>Ecological relevance in <em>P. putida</em>: this soil bacterium actively edits its peptidoglycan with non-canonical D-amino acids (e.g., via its broad-spectrum racemase acting on plant-derived amino acids such as canavanine; Aliashkevich et al., PMID 33830599). LMW-PBPs including PBP4/PBP5 can process peptidoglycan bearing non-canonical D-amino acids (Miyamoto et al., PMID 32108264), placing DacA within <em>P. putida</em>'s cell-wall chemical-editing physiology.</li>
+</ul>
+<hr />
+<h2 id="4-supported-and-refuted-hypotheses">4. Supported and refuted hypotheses</h2>
+<p><strong>Supported</strong><br />
+- H1: Q88DM2 is a serine DD-carboxypeptidase of peptidase family S11 (PBP5 ortholog) — supported by domain architecture and full catalytic-motif conservation.<br />
+- H2: Its reaction is removal of the terminal D-Ala from muramyl-pentapeptide, regulating cross-linking — supported by UniProt catalytic activity + ortholog data.<br />
+- H3: It localizes to the periplasm/inner-membrane and acts on the sacculus — supported by signal peptide, C-terminal amphipathic anchor, and ortholog membrane studies.<br />
+- H4: It contributes to cell shape and intrinsic β-lactam resistance — supported by ortholog knockouts.</p>
+<p><strong>Refuted / rejected alternatives</strong><br />
+- Not the Firmicute <em>dacA</em> di-adenylate cyclase (c-di-AMP synthase): different fold, EC, and function — ruled out by family/domain identity.<br />
+- Not a wall-<em>synthesizing</em> transpeptidase (HMW-PBP): it is a LMW-PBP carboxypeptidase that <em>limits</em> cross-linking substrate, not a primary polymerizing/cross-linking enzyme.<br />
+- Not a soluble cytoplasmic enzyme: signal peptide + C-terminal membrane anchor place it in the periplasm.</p>
+<hr />
+<h2 id="5-limitations-and-future-directions">5. Limitations and future directions</h2>
+<ul>
+<li><strong>No direct experimental data on PP_4803</strong>; conclusions are inferred from strong orthologs (<em>E. coli</em> PBP5, <em>P. aeruginosa</em> PBP5) and bioinformatics. Direct biochemical kinetics (kcat/Km on pentapeptide and β-lactams), a crystal/cryo-EM or AlphaFold-validated structure, and a <em>P. putida</em> Δ<em>dacA</em> (single and multi-CPase) phenotype would confirm specificity, dual β-lactamase activity, and the precise contribution to morphology.</li>
+<li>The <strong>quantitative relative contribution of DacA vs. other <em>P. putida</em> DD-CPases</strong> (redundancy structure) is unknown.</li>
+<li>Whether DacA preferentially processes <strong>non-canonical D-amino-acid-substituted peptidoglycan</strong> in <em>P. putida</em>'s soil/rhizosphere niche is an open, testable question.</li>
+</ul>
+<hr />
+<h2 id="references-pmids">References (PMIDs)</h2>
+<ul>
+<li>21674665 — Skoog et al. PBP5 homo-oligomer in the <em>E. coli</em> inner membrane; reaction and localization.</li>
+<li>40777447 — Tehrani et al. Gram-negative DD-CPases generate tetrapeptides; periplasmic PG.</li>
+<li>27420403 — Nemmara et al. PBP5 substrate specificity centered on terminal D-Ala-D-Ala.</li>
+<li>22029692 — Nemmara et al. Substrate specificity/classification of LMM DD-peptidases.</li>
+<li>20047819 — Sarkar et al. <em>dacA</em>/PBP5 deletion → β-lactam sensitization.</li>
+<li>21719544 — Sarkar et al. PBP5 DD-CPase activity essential for intrinsic β-lactam resistance.</li>
+<li>27329754 — Peters et al. Redundancy of PG carboxypeptidases for cell-shape robustness.</li>
+<li>23629710 — Smith et al. <em>P. aeruginosa</em> PBP5 structure; DD-CPase + β-lactamase; membrane anchor.</li>
+<li>33830599 — Aliashkevich et al. <em>P. putida</em> PG chemical editing with non-canonical D-amino acids.</li>
+<li>32108264 — Miyamoto et al. LMW-PBPs process PG containing non-canonical D-amino acids.</li>
+</ul>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="dacA-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="dacA-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88DM2
+gene_symbol: dacA
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  DacA/PBP5 is a periplasmic, membrane-associated peptidase-S11
+  D,D-carboxypeptidase that removes the terminal D-Ala from peptidoglycan
+  pentapeptide stems. This converts pentapeptides to tetrapeptides and tunes
+  the donor pool available for peptidoglycan crosslinking.
+existing_annotations:
+- term:
+    id: GO:0004180
+    label: carboxypeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: enables
+  review:
+    summary: DacA is a carboxypeptidase with specificity for terminal D-Ala-D-Ala.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0009002 is already present and names the established substrate and serine-dependent chemistry.
+- term:
+    id: GO:0006508
+    label: proteolysis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: involved_in
+  review:
+    summary: Peptidoglycan stem trimming is not a generic protein-degradation process.
+    action: REMOVE
+    reason: The substrate is the D-Ala-D-Ala terminus of cell-wall stem peptides, not a protein targeted for proteolysis.
+- term:
+    id: GO:0008233
+    label: peptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000117
+  qualifier: enables
+  review:
+    summary: This broad term is true but does not identify the cell-wall substrate.
+    action: MARK_AS_OVER_ANNOTATED
+    reason: GO:0009002 is already present and captures the specific D,D-carboxypeptidase activity.
+- term:
+    id: GO:0009002
+    label: serine-type D-Ala-D-Ala carboxypeptidase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: DacA hydrolyzes terminal D-Ala from peptidoglycan pentapeptide stems.
+    action: ACCEPT
+    reason: This is the core molecular function of peptidase-S11 PBP5-family DacA.
+- term:
+    id: GO:0009252
+    label: peptidoglycan biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000041
+  qualifier: involved_in
+  review:
+    summary: Stem trimming is a late peptidoglycan maturation step.
+    action: ACCEPT
+    reason: DacA converts pentapeptide stems to tetrapeptides and thereby controls substrate availability for crosslinking.
+- term:
+    id: GO:0030288
+    label: outer membrane-bounded periplasmic space
+  evidence_type: ISS
+  original_reference_id: file:PSEPK/dacA/dacA-deep-research-openscientist.md
+  qualifier: located_in
+  review:
+    summary: The exported catalytic domain acts on peptidoglycan in the periplasm.
+    action: NEW
+    reason: Signal-peptide and PBP5-family topology support periplasmic localization.
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: ISS
+  original_reference_id: file:PSEPK/dacA/dacA-deep-research-openscientist.md
+  qualifier: located_in
+  review:
+    summary: A C-terminal amphipathic anchor associates DacA with the cytoplasmic membrane.
+    action: NEW
+    reason: The anchor retains the periplasmic enzyme at the outer face of the bacterial plasma membrane.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000041
+  title: Gene Ontology annotation based on UniPathway vocabulary mapping
+  findings: []
+- id: GO_REF:0000117
+  title: Electronic Gene Ontology annotations created by ARBA machine learning models
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: file:PSEPK/dacA/dacA-deep-research-openscientist.md
+  title: OpenScientist deep research report on PSEPK DacA/PBP5 (Q88DM2)
+  publication_type: DEEP_RESEARCH
+  findings:
+  - statement: The report identifies the PBP5-family terminal D-Ala trimming reaction.
+    supporting_text: Its primary reaction is **hydrolytic removal of the terminal D-alanine from the C-terminal D-Ala-D-Ala of muramyl-pentapeptide stems in peptidoglycan**, converting pentapeptides to tetrapeptides.
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: Used as literature retrieval support; no direct experimental study of PP_4803 was found.
+core_functions:
+- description: &gt;-
+    PBP5-family D,D-carboxypeptidase that converts peptidoglycan pentapeptide
+    stems to tetrapeptides and tunes crosslink-donor availability.
+  molecular_function:
+    id: GO:0009002
+    label: serine-type D-Ala-D-Ala carboxypeptidase activity
+  directly_involved_in:
+  - id: GO:0009252
+    label: peptidoglycan biosynthetic process
+  locations:
+  - id: GO:0030288
+    label: outer membrane-bounded periplasmic space
+  - id: GO:0005886
+    label: plasma membrane
+  supported_by:
+  - reference_id: file:PSEPK/dacA/dacA-deep-research-openscientist.md
+    supporting_text: Its primary reaction is **hydrolytic removal of the terminal D-alanine from the C-terminal D-Ala-D-Ala of muramyl-pentapeptide stems in peptidoglycan**, converting pentapeptides to tetrapeptides.
+knowledge_gaps:
+- gap_statement: The relative contribution of DacA and other KT2440 D,D-carboxypeptidases is unknown.
+  status: OPEN
+  gap_kind: [BIOLOGY]
+  significance: Redundant stem-trimming enzymes may mask single-gene phenotypes.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

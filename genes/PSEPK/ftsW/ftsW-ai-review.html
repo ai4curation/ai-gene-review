@@ -1,0 +1,2380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ftsW - AI Gene Review</title>
+    <style>
+        :root {
+            --color-accept: #22c55e;
+            --color-remove: #ef4444;
+            --color-modify: #f97316;
+            --color-keep-non-core: #3b82f6;
+            --color-undecided: #6b7280;
+            --color-new: #8b5cf6;
+            --color-mark-over: #eab308;
+            --bg-light: #f9fafb;
+            --border-color: #e5e7eb;
+            --text-muted: #6b7280;
+            --text-primary: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: #ffffff;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .gene-info {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .aliases {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .status-initialized {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+        }
+
+        .status-in-progress {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+        }
+
+        .status-draft {
+            background-color: #fce7f3;
+            color: #831843;
+            border: 1px solid #fbcfe8;
+        }
+
+        .status-complete {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .description-card {
+            background-color: var(--bg-light);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .description-card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: #374151;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: #1f2937;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .annotations-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            overflow: hidden;
+        }
+
+        .annotations-table thead {
+            background-color: var(--bg-light);
+        }
+
+        .annotations-table th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .annotations-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .annotations-table tbody tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .action-badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .action-accept {
+            background-color: var(--color-accept);
+            color: white;
+        }
+
+        .action-remove {
+            background-color: var(--color-remove);
+            color: white;
+        }
+
+        .action-modify {
+            background-color: var(--color-modify);
+            color: white;
+        }
+
+        .action-keep_as_non_core {
+            background-color: var(--color-keep-non-core);
+            color: white;
+        }
+
+        .action-undecided {
+            background-color: var(--color-undecided);
+            color: white;
+        }
+
+        .action-new {
+            background-color: var(--color-new);
+            color: white;
+        }
+
+        .action-mark_as_over_annotated {
+            background-color: var(--color-mark-over);
+            color: white;
+        }
+
+        .term-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .term-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .term-label {
+            font-weight: 500;
+        }
+
+        .evidence-code {
+            font-family: monospace;
+            background-color: var(--bg-light);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .not-badge {
+            display: inline-block;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.25rem;
+        }
+
+        .isoform-badge {
+            display: inline-block;
+            background-color: #eff6ff;
+            color: #1e40af;
+            border: 1px solid #bfdbfe;
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+        }
+
+        .core-function-card {
+            background-color: white;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .core-function-card h3 {
+            font-size: 1.125rem;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .core-function-statement {
+            margin-bottom: 1rem;
+            padding: 0.75rem;
+            background-color: var(--bg-light);
+            border-left: 4px solid var(--color-accept);
+            border-radius: 0.25rem;
+        }
+
+        .function-annotations {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .reference-item {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .reference-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reference-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .supported-by {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f3f4f6;
+            border-left: 3px solid #3b82f6;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .supported-by-title {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .support-item {
+            margin-bottom: 0.5rem;
+        }
+
+        .support-ref {
+            font-weight: 500;
+            color: #2563eb;
+        }
+
+        .support-text {
+            color: #6b7280;
+            font-style: italic;
+            margin-left: 1rem;
+        }
+
+        .propagation-review {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: #f8fafc;
+            border-left: 3px solid #64748b;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .propagation-title {
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 0.25rem;
+        }
+
+        .propagation-row {
+            margin-top: 0.25rem;
+        }
+
+        .propagation-source {
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .propagation-source-id {
+            font-family: monospace;
+            font-weight: 600;
+            color: #1d4ed8;
+        }
+
+        .propagation-comment {
+            color: #4b5563;
+            margin-left: 1rem;
+        }
+
+        a.term-link {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        a.term-link:hover {
+            text-decoration: underline;
+        }
+
+        .core-function-terms {
+            margin-top: 1rem;
+        }
+
+        .function-term-group {
+            margin-bottom: 1rem;
+        }
+
+        .function-term-label {
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 0.25rem;
+        }
+
+        .reference-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .findings-list {
+            margin-top: 1rem;
+            padding-left: 1.5rem;
+        }
+
+        .finding-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .finding-statement {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .finding-text {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+
+        .proposed-term {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #fef3c7;
+        }
+
+        .question-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #dbeafe;
+        }
+
+        .experiment-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #f3e8ff;
+        }
+
+        .prediction-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: white;
+        }
+
+        .prediction-card .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .prediction-source {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .assessment-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .assessment-cor { background-color: #dcfce7; color: #166534; }
+        .assessment-cnn { background-color: #dbeafe; color: #1e40af; }
+        .assessment-lsp { background-color: #fef9c3; color: #854d0e; }
+        .assessment-unc { background-color: #f3f4f6; color: #374151; }
+        .assessment-pli { background-color: #fee2e2; color: #991b1b; }
+        .assessment-npi { background-color: #fecaca; color: #7f1d1d; }
+        .assessment-rep { background-color: #fde68a; color: #92400e; }
+
+        .confidence-score {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .error-type-badge {
+            font-size: 0.75rem;
+            padding: 0.125rem 0.5rem;
+            border-radius: 0.25rem;
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca;
+        }
+
+        .isoforms-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1rem;
+        }
+
+        .isoform-card {
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            background-color: white;
+            transition: box-shadow 0.2s;
+        }
+
+        .isoform-card:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .functional-isoform-type {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .type-SPLICE_VARIANT, .type-SPLICE_CLASS {
+            background-color: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+
+        .type-CLEAVAGE_PRODUCT {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .type-MODIFICATION_STATE {
+            background-color: #f3e8ff;
+            color: #6b21a8;
+            border: 1px solid #c4b5fd;
+        }
+
+        .type-CONFORMATIONAL_STATE {
+            background-color: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+
+        .functional-isoform-mappings {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+            font-size: 0.85rem;
+        }
+
+        .functional-isoform-mappings .mapping-type {
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .functional-isoform-go {
+            margin-top: 0.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .go-chip {
+            display: inline-block;
+            padding: 0.15rem 0.4rem;
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-family: monospace;
+        }
+
+        .isoform-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .isoform-name {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #1f2937;
+        }
+
+        .isoform-id {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        .isoform-sequence-note {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+            padding: 0.5rem;
+            background-color: var(--bg-light);
+            border-radius: 0.25rem;
+        }
+
+        .isoform-description {
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .collapsible:after {
+            content: ' ▼';
+            font-size: 0.75rem;
+        }
+
+        .collapsible.collapsed:after {
+            content: ' ►';
+        }
+
+        .collapse-content {
+            transition: max-height 0.3s ease;
+            overflow: hidden;
+        }
+
+        .collapsed + .collapse-content {
+            max-height: 0;
+        }
+
+        .no-data {
+            color: var(--text-muted);
+            font-style: italic;
+            padding: 1rem;
+            text-align: center;
+            background-color: var(--bg-light);
+            border-radius: 0.5rem;
+        }
+
+        /* Styling for markdown section summaries with voting */
+        .markdown-section summary {
+            padding: 0.75rem;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .markdown-section summary:hover {
+            background: #e5e7eb;
+        }
+
+        .markdown-section summary .vote-buttons {
+            margin-left: auto;
+        }
+
+        .deep-research-section {
+            margin-bottom: 1rem;
+            border: 1px solid #c7d2fe;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8faff;
+        }
+
+        .deep-research-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .deep-research-section summary h3 {
+            margin: 0;
+            color: #3730a3;
+            font-size: 1.1rem;
+        }
+
+        .report-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 0.75rem 0 1rem;
+            align-items: center;
+        }
+
+        .report-badge {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #c7d2fe;
+            border-radius: 999px;
+            background: #eef2ff;
+            color: #4338ca;
+            font-size: 0.78rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+        }
+
+        .report-meta-text {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .artifact-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 0.75rem 0 1rem;
+        }
+
+        .artifact-link {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            word-break: break-word;
+        }
+
+        @media print {
+            body {
+                padding: 1rem;
+            }
+
+            .collapsible:after {
+                display: none;
+            }
+
+            .collapsed + .collapse-content {
+                max-height: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .annotations-table {
+                font-size: 0.875rem;
+            }
+
+            .annotations-table th,
+            .annotations-table td {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>ftsW</h1>
+        <div class="gene-info">
+
+            <div class="info-item">
+
+                <span class="info-label">UniProt ID:</span>
+                <span>
+                    <a href="https://www.uniprot.org/uniprotkb/Q88N77" target="_blank" class="term-link">
+                        Q88N77
+                    </a>
+                </span>
+
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Organism:</span>
+                <span>Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950 / KT2440)</span>
+            </div>
+
+
+            <div class="info-item">
+                <span class="info-label">Review Status:</span>
+                <span class="status-badge status-complete">
+                    COMPLETE
+                </span>
+            </div>
+
+
+        </div>
+        <div style="margin-top: 1rem; text-align: center;">
+            <a id="feedback-form-link"
+               href="#"
+               target="_blank"
+               style="display: inline-block; padding: 10px 20px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">
+                📝 Provide Detailed Feedback
+            </a>
+            <script>
+                // Construct the form URL with proper encoding
+                // Extract organism code from the current page path (e.g., /genes/ARATH/APO1/ -> ARATH)
+                const pathParts = window.location.pathname.split('/');
+                const genesIndex = pathParts.indexOf('genes');
+                let organism = '';
+                if (genesIndex !== -1 && pathParts[genesIndex + 1]) {
+                    organism = pathParts[genesIndex + 1].toUpperCase();
+                }
+                const geneSymbol = "ftsW";
+                const speciesGene = organism + ' ' + geneSymbol;
+                const formBaseUrl = 'https://docs.google.com/forms/d/e/1FAIpQLSdTot9L6GVkkZYgLQT0E8ZdAJv8RiN5ZgOVkgWNcKSbYvxxzQ/viewform';
+                const entryId = '1226477767'; // Correct entry ID for Species/Gene field
+                const formUrl = formBaseUrl + '?entry.' + entryId + '=' + encodeURIComponent(speciesGene);
+                const feedbackLink = document.getElementById('feedback-form-link');
+                feedbackLink.href = formUrl;
+                // Add tooltip showing the pre-filled value
+                feedbackLink.title = 'Opens form with pre-filled: ' + speciesGene;
+            </script>
+        </div>
+    </div>
+
+
+    <div class="description-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Gene Description</h2>
+            <span class="vote-buttons" data-g="Q88N77" data-a="DESCRIPTION: FtsW is an integral inner-membrane SEDS-family pep..." data-r="" data-act="DESCRIPTION">
+                <button class="vote-btn" data-v="up" title="Agree with this description">👍</button>
+                <button class="vote-btn" data-v="down" title="Disagree with this description">👎</button>
+            </span>
+        </div>
+        <p>FtsW is an integral inner-membrane SEDS-family peptidoglycan glycosyltransferase that polymerizes lipid II into glycan strands at the division septum. It forms the glycan-polymerizing half of the divisome synthase, paired with the FtsI/PBP3 D,D-transpeptidase.</p>
+    </div>
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Existing Annotations Review</h2>
+        <table class="annotations-table">
+            <thead>
+                <tr>
+                    <th>GO Term</th>
+                    <th>Evidence</th>
+                    <th>Action</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                    GO:0005886
+                                </a>
+                            </span>
+                            <span class="term-label">plasma membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N77" data-a="GO:0005886" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FtsW is a multipass cytoplasmic-membrane SEDS enzyme.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Its membrane-embedded catalytic cavity polymerizes lipid II at the periplasmic face.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008360" target="_blank" class="term-link">
+                                    GO:0008360
+                                </a>
+                            </span>
+                            <span class="term-label">regulation of cell shape</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N77" data-a="GO:0008360" data-r="GO_REF:0000118" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Septal wall synthesis affects daughter-cell morphology but is not FtsW&#39;s direct regulatory role.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The specific core process is FtsZ-dependent cytokinesis through septal peptidoglycan synthesis.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008955" target="_blank" class="term-link">
+                                    GO:0008955
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan glycosyltransferase activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N77" data-a="GO:0008955" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FtsW is the glycan-polymerizing enzyme of the FtsW-FtsI septal synthase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> SEDS-family FtsW proteins polymerize lipid II into peptidoglycan glycan strands.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009252" target="_blank" class="term-link">
+                                    GO:0009252
+                                </a>
+                            </span>
+                            <span class="term-label">peptidoglycan biosynthetic process</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N77" data-a="GO:0009252" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FtsW directly catalyzes septal peptidoglycan synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Its glycosyltransferase reaction builds the glycan backbone at the division site.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015648" target="_blank" class="term-link">
+                                    GO:0015648
+                                </a>
+                            </span>
+                            <span class="term-label">lipid-linked peptidoglycan transporter activity</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000118
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N77" data-a="GO:0015648" data-r="GO_REF:0000118" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Current evidence identifies FtsW as a polymerase rather than the lipid II flippase.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> MurJ performs lipid II translocation; this transfer reflects the superseded SEDS transporter model.
+                        </div>
+
+
+
+
+                        <div class="supported-by">
+                            <div class="supported-by-title">Supporting Evidence:</div>
+
+                            <div class="support-item">
+                                <span class="support-ref">
+
+                                    <a href="https://pubmed.ncbi.nlm.nih.gov/27525505" target="_blank" class="term-link">
+                                        PMID:27525505
+                                    </a>
+
+                                </span>
+
+                                <div class="support-text">SEDS family members have previously been proposed to transport PG precursors (lipid II) across the cytoplasmic membrane, however, recent evidence suggests that they are not required for this process and that MurJ family members likely fulfill this role</div>
+
+                            </div>
+
+                        </div>
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0015836" target="_blank" class="term-link">
+                                    GO:0015836
+                                </a>
+                            </span>
+                            <span class="term-label">lipid-linked peptidoglycan transport</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000108
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-remove">
+                            REMOVE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N77" data-a="GO:0015836" data-r="GO_REF:0000108" data-act="REMOVE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FtsW consumes exported lipid II but is not established as its transporter.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO_REF:0000108 inferred this process from GO:0015648; removing the unsupported transporter activity therefore also removes its logically derived transport-process annotation.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0016020" target="_blank" class="term-link">
+                                    GO:0016020
+                                </a>
+                            </span>
+                            <span class="term-label">membrane</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000002
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N77" data-a="GO:0016020" data-r="GO_REF:0000002" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Membrane localization is correct but less specific than plasma membrane.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0005886 captures the relevant bacterial membrane.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032153" target="_blank" class="term-link">
+                                    GO:0032153
+                                </a>
+                            </span>
+                            <span class="term-label">cell division site</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N77" data-a="GO:0032153" data-r="GO_REF:0000120" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FtsW is recruited to the midcell divisome for septal synthesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> The FtsW-FtsI synthase polymerizes and crosslinks peptidoglycan at the division site.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043093" target="_blank" class="term-link">
+                                    GO:0043093
+                                </a>
+                            </span>
+                            <span class="term-label">FtsZ-dependent cytokinesis</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000104
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-accept">
+                            ACCEPT
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N77" data-a="GO:0043093" data-r="GO_REF:0000104" data-act="ACCEPT">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> FtsW is the septal SEDS polymerase downstream of the FtsZ ring.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> Its activity is spatially and temporally coupled to FtsZ-dependent divisome assembly.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        <div class="term-info">
+
+                            <span class="term-id">
+                                <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0051301" target="_blank" class="term-link">
+                                    GO:0051301
+                                </a>
+                            </span>
+                            <span class="term-label">cell division</span>
+
+                        </div>
+                    </td>
+                    <td>
+                        <span class="evidence-code">IEA</span>
+
+
+
+                        <br>
+                        <span style="font-size: 0.75rem;">
+
+                            GO_REF:0000120
+
+                        </span>
+
+                    </td>
+                    <td>
+                        <span class="action-badge action-keepasnoncore">
+                            KEEP AS NON CORE
+                        </span>
+                        <span class="vote-buttons" data-g="Q88N77" data-a="GO:0051301" data-r="GO_REF:0000120" data-act="KEEP_AS_NON_CORE">
+                            <button class="vote-btn" data-v="up" title="Agree with this decision">👍</button>
+                            <button class="vote-btn" data-v="down" title="Disagree with this decision">👎</button>
+                        </span>
+                    </td>
+                    <td>
+
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Summary:</strong> Cell division is true but less specific than FtsZ-dependent cytokinesis.
+                        </div>
+
+
+                        <div>
+                            <strong>Reason:</strong> GO:0043093 captures the relevant bacterial division process.
+                        </div>
+
+
+
+
+
+                    </td>
+                </tr>
+
+            </tbody>
+        </table>
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title">Core Functions</h2>
+
+        <div class="core-function-card">
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>FtsW-family peptidoglycan glycosyltransferase for septal glycan polymerization.</h3>
+                <span class="vote-buttons" data-g="Q88N77" data-a="FUNCTION: FtsW-family peptidoglycan glycosyltransferase for ..." data-r="" data-act="CORE_FUNCTION">
+                    <button class="vote-btn" data-v="up" title="Agree with this core function">👍</button>
+                    <button class="vote-btn" data-v="down" title="Disagree with this core function">👎</button>
+                </span>
+            </div>
+
+
+            <div class="core-function-terms">
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Molecular Function:</div>
+                    <span class="badge">
+                        <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0008955" target="_blank" class="term-link">
+                            peptidoglycan glycosyltransferase activity
+                        </a>
+                    </span>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Directly Involved In:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0043093" target="_blank" class="term-link">
+                                FtsZ-dependent cytokinesis
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0009252" target="_blank" class="term-link">
+                                peptidoglycan biosynthetic process
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+                <div class="function-term-group">
+                    <div class="function-term-label">Cellular Locations:</div>
+                    <div class="function-annotations">
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0005886" target="_blank" class="term-link">
+                                plasma membrane
+                            </a>
+                        </span>
+
+                        <span class="badge">
+                            <a href="https://www.ebi.ac.uk/QuickGO/term/GO:0032153" target="_blank" class="term-link">
+                                cell division site
+                            </a>
+                        </span>
+
+                    </div>
+                </div>
+
+
+
+
+
+            </div>
+
+
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <strong>Supporting Evidence:</strong>
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <span class="reference-id">
+
+                            file:PSEPK/ftsW/ftsW-deep-research-openscientist.md
+
+                        </span>
+
+                        <div class="finding-text">FtsW is a **peptidoglycan glycosyltransferase (PGT), i.e. a peptidoglycan polymerase**.</div>
+
+                    </li>
+
+                </ul>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <div class="section">
+        <h2 class="section-title collapsible">References</h2>
+        <div class="collapse-content">
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000002.md" target="_blank" class="term-link">
+                            GO_REF:0000002
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Gene Ontology annotation through association of InterPro records with GO terms</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000104.md" target="_blank" class="term-link">
+                            GO_REF:0000104
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Electronic Gene Ontology annotations created by transferring manual GO annotations between related proteins based on shared sequence features</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000108.md" target="_blank" class="term-link">
+                            GO_REF:0000108
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Automatic assignment of GO terms using logical inference, based on on inter-ontology links</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000118.md" target="_blank" class="term-link">
+                            GO_REF:0000118
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">TreeGrafter-generated GO annotations</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://github.com/geneontology/go-site/blob/master/metadata/gorefs/goref-0000120.md" target="_blank" class="term-link">
+                            GO_REF:0000120
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">Combined Automated Annotation using Multiple IEA Methods</div>
+
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/27525505" target="_blank" class="term-link">
+                            PMID:27525505
+                        </a>
+
+                    </span>
+                </div>
+
+                <div class="reference-title">SEDS proteins are a widespread family of bacterial cell wall polymerases.</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">SEDS proteins are peptidoglycan polymerases and are not required for MurJ-mediated lipid II translocation.</div>
+
+                        <div class="finding-text">"SEDS family members have previously been proposed to transport PG precursors (lipid II) across the cytoplasmic membrane, however, recent evidence suggests that they are not required for this process and that MurJ family members likely fulfill this role"</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+            <div class="reference-item">
+                <div class="reference-header">
+                    <span class="reference-id">
+
+                        file:PSEPK/ftsW/ftsW-deep-research-openscientist.md
+
+                    </span>
+                </div>
+
+                <div class="reference-title">OpenScientist deep research report on PSEPK FtsW (Q88N77)</div>
+
+
+                <ul class="findings-list">
+
+                    <li class="finding-item">
+                        <div class="finding-statement">The report identifies FtsW as the SEDS glycan polymerase of the septal divisome synthase.</div>
+
+                        <div class="finding-text">"FtsW is a **peptidoglycan glycosyltransferase (PGT), i.e. a peptidoglycan polymerase**."</div>
+
+                    </li>
+
+                </ul>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+    <div class="section">
+        <h2 class="section-title">Knowledge Gaps</h2>
+        <p style="color: #555; font-size: 0.92rem; margin-top: -0.3rem;">
+            What is <em>not</em> known — curated, literature-grounded statements of the open
+            unknowns (the inverse of core functions).
+        </p>
+
+        <div class="question-card">
+            <p><strong>Gap:</strong> Direct activity, localization, and essentiality measurements for PP_1336 in KT2440 are unavailable.</p>
+            <p style="margin-top: 0.4rem;">
+                <span class="badge">OPEN</span>
+                <span class="badge">BIOLOGY</span>
+
+            </p>
+
+
+            <p style="margin-top: 0.5rem;"><strong>Significance:</strong> The specific assignment is strong by family and orthology but remains experimentally untested in this strain.</p>
+
+
+
+
+        </div>
+
+    </div>
+
+
+
+
+    <!-- Computational Predictions Section -->
+
+
+    <!-- Deep Research Sections -->
+
+    <div class="section">
+        <h2 class="section-title">Deep Research</h2>
+
+        <details class="deep-research-section">
+            <summary style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+                <div style="flex: 1;">
+                    <h3 style="display: inline;">OpenScientist</h3>
+                    <span style="font-size: 0.8rem; color: #666; margin-left: 1rem;">(ftsW-deep-research-openscientist.md)</span>
+                </div>
+                <div class="vote-buttons" data-g="Q88N77" data-a="DEEP_RESEARCH: OpenScientist" data-r="" data-act="DEEP_RESEARCH" style="display: flex; gap: 0.25rem;">
+                    <button class="vote-btn" data-v="up" title="This deep research is helpful">👍</button>
+                    <button class="vote-btn" data-v="down" title="This deep research needs improvement">👎</button>
+                </div>
+            </summary>
+            <div class="markdown-content">
+
+                <div class="report-meta">
+
+                    <span class="report-meta-text">Functional Annotation Report: FtsW (Q88N77) — Probable Peptidoglycan Glycosyltransferase FtsW</span>
+
+
+                    <span class="report-badge">OpenScientist</span>
+
+
+                    <span class="report-badge">openscientist-autonomous</span>
+
+
+
+                    <span class="report-badge">2 artifacts</span>
+
+
+                    <span class="report-meta-text">2026-09-01T00:05:38.006116</span>
+
+
+
+                </div>
+
+
+                <div class="artifact-list">
+
+
+
+                    <div class="artifact-link">
+                        <a href="ftsW-deep-research-openscientist_artifacts/final_report.html" class="term-link">OpenScientist final report</a>
+                        <span>(text/html)</span>
+                    </div>
+
+
+
+
+                    <div class="artifact-link">
+                        <a href="ftsW-deep-research-openscientist_artifacts/final_report.pdf" class="term-link">OpenScientist final report</a>
+                        <span>(application/pdf)</span>
+                    </div>
+
+
+                </div>
+
+                <h1 id="functional-annotation-report-ftsw-q88n77-probable-peptidoglycan-glycosyltransferase-ftsw">Functional Annotation Report: FtsW (Q88N77) — Probable Peptidoglycan Glycosyltransferase FtsW</h1>
+<p><strong>Gene:</strong> <em>ftsW</em> (Ordered locus PP_1336)<br />
+<strong>UniProt:</strong> Q88N77<br />
+<strong>Organism:</strong> <em>Pseudomonas putida</em> KT2440 (strain ATCC 47054 / DSM 6125 / NCIMB 11950)<br />
+<strong>EC:</strong> 2.4.99.28 | <strong>Family:</strong> SEDS family, FtsW subfamily (Pfam PF01098 FTSW_RODA_SPOVE; InterPro IPR013437 FtsW, IPR001182 FtsW/RodA, IPR018365 Cell_cycle_FtsW-rel conserved site)</p>
+<hr />
+<h2 id="1-identity-verification">1. Identity verification</h2>
+<p>The gene symbol <em>ftsW</em>, the UniProt description ("Probable peptidoglycan glycosyltransferase FtsW / Cell division protein FtsW / Cell wall polymerase"), the EC number 2.4.99.28, and the assigned family/domains (SEDS family, FtsW subfamily; FtsW/RodA transmembrane fold PF01098) are fully <strong>self-consistent</strong>. This is the canonical, unambiguous cell-division protein FtsW. The name is conserved across essentially all bacteria and refers to the same protein. The <em>P. putida</em> KT2440 ortholog PP_1336 is annotated by the HAMAP rule MF_00913, i.e. by orthology to biochemically characterized homologues in <em>Escherichia coli</em>, <em>Bacillus subtilis</em>, <em>Staphylococcus aureus</em> and <em>Thermus thermophilus</em>. No conflicting gene with the same symbol was encountered. Direct wet-lab characterization of the <em>P. putida</em> protein itself is limited; the functional narrative below is therefore built on the well-established biology of FtsW/SEDS proteins and inferred for PP_1336 by strong sequence/domain orthology.</p>
+<hr />
+<h2 id="2-primary-molecular-function-what-reaction-is-catalyzed">2. Primary molecular function — what reaction is catalyzed</h2>
+<p>FtsW is a <strong>peptidoglycan glycosyltransferase (PGT), i.e. a peptidoglycan polymerase</strong>. It catalyzes the polymerization of the lipid-linked precursor <strong>Lipid II</strong> (undecaprenyl-pyrophosphoryl-MurNAc(-pentapeptide)-GlcNAc) into linear <strong>glycan strands</strong> — the glycan backbone of the peptidoglycan (murein) sacculus (EC 2.4.99.28).</p>
+<p>Until ~2016, Lipid II polymerization was thought to be the exclusive province of the class A penicillin-binding proteins (aPBPs). Two landmark studies redefined this:</p>
+<ul>
+<li>Meeske et al. (2016) showed genetically and biochemically that SEDS proteins (the family containing RodA and FtsW) "<strong>constitute a family of peptidoglycan polymerases</strong>," representing a second, distinct class of PG polymerase used by most bacteria (PMID 27525505).</li>
+<li>Taguchi et al. (2019) demonstrated that <strong>FtsW itself is a peptidoglycan polymerase</strong> in vitro (PMID 30692671).</li>
+</ul>
+<p><strong>Substrate specificity and mechanism.</strong> The substrate is <strong>Lipid II</strong>. Welsh et al. (2019) showed that SEDS polymerases synthesize peptidoglycan by "<strong>adding new Lipid II monomers to the reducing end of the growing glycan chain</strong>," and that the glycosyl-donor and glycosyl-acceptor positions have distinct lipid requirements (PMID 31386359). The conserved transmembrane cavity that binds Lipid II is catalytically essential; a small-molecule FtsW inhibitor was shown to <strong>compete with Lipid II for binding to FtsW</strong> (Park et al. 2023, PMID 37099323), reinforcing Lipid II as the direct substrate.</p>
+<p><strong>Historical note (correcting an outdated annotation).</strong> FtsW was for many years proposed to be the <strong>Lipid II "flippase"</strong> that translocates the precursor across the inner membrane. That transport role has since been reassigned to <strong>MurJ</strong>, and FtsW's true, primary role is now firmly established as the <strong>glycan-strand polymerase</strong> of the septum (Kumar et al. 2022 review, PMID 35274942). Databases that still list FtsW as a flippase are outdated.</p>
+<hr />
+<h2 id="3-the-functional-partnership-ftsw-works-with-ftsi-pbp3">3. The functional partnership — FtsW works with FtsI (PBP3)</h2>
+<p>FtsW does not act alone. It functions as the polymerase half of a bifunctional <strong>septal peptidoglycan synthase</strong>, paired with its cognate <strong>class B penicillin-binding protein FtsI (PBP3)</strong>, a monofunctional transpeptidase:</p>
+<ul>
+<li><strong>FtsW</strong> polymerizes Lipid II → glycan strands.</li>
+<li><strong>FtsI/PBP3</strong> cross-links adjacent strands via peptide bridges (transpeptidation).</li>
+</ul>
+<p>Crucially, Taguchi et al. (2019) titled their work "<strong>FtsW is a peptidoglycan polymerase that is functional only in complex with its cognate penicillin-binding protein</strong>" (PMID 30692671) — the FtsW–FtsI (FtsWI) complex is an obligate functional unit. This division-dedicated FtsWI pair is the structural/functional analogue of the cell-<strong>elongation</strong> pair RodA–PBP2 (elongasome); FtsW/FtsI build the <strong>septum/division site</strong>, RodA/PBP2 elongate the <strong>lateral wall</strong> (Straume et al. 2021 review, PMID 33709487).</p>
+<hr />
+<h2 id="4-subcellular-localization-where-ftsw-acts">4. Subcellular localization — where FtsW acts</h2>
+<ul>
+<li><strong>Membrane.</strong> FtsW is a <strong>polytopic integral protein of the cytoplasmic (inner) membrane</strong>. The SEDS fold, resolved from the <em>T. thermophilus</em> RodA crystal structure (Sjodt et al. 2018, PMID 29590088), is a "<strong>ten-pass transmembrane fold with large extracellular loops</strong>" and "<strong>a highly conserved cavity in the transmembrane domain</strong>" that is catalytically essential. FtsW shares this architecture (Pfam PF01098).</li>
+<li><strong>Site of catalysis.</strong> Because Lipid II is embedded in the membrane and the glycan product emerges on the periplasmic side, catalysis occurs at the <strong>outer (periplasmic) leaflet of the inner membrane</strong>. Li et al. (2022) mapped the FtsW <strong>active site to conserved extracellular-loop residues clustered around a central cavity</strong>; dominant-negative mutations there "<strong>blocked septal PG synthesis but did not affect FtsW localization to the division site, interaction with its partners nor its substrate lipid II</strong>" (PMID 34986161).</li>
+<li><strong>Cellular position.</strong> FtsW localizes to <strong>midcell / the division septum</strong>, recruited as part of the divisome downstream of the FtsZ ring (den Blaauwen &amp; Luirink 2019, PMID 30808703).</li>
+</ul>
+<hr />
+<h2 id="4b-direct-database-and-orthology-verification-this-study">4b. Direct database and orthology verification (this study)</h2>
+<p>To ensure the annotation is grounded in the actual target record rather than family generalization, the UniProt entry for <strong>Q88N77</strong> was retrieved and analyzed programmatically:</p>
+<ul>
+<li><strong>Sequence/topology:</strong> 404 aa, 44.2 kDa, with <strong>exactly 10 annotated transmembrane helices</strong> — matching the canonical SEDS 10-TM fold (Sjodt et al. 2018).</li>
+<li><strong>Curated function:</strong> the record's own FUNCTION line reads "<strong>Peptidoglycan polymerase that is essential for cell division</strong>"; SUBCELLULAR LOCATION = "<strong>Cell inner membrane</strong>"; SIMILARITY = "<strong>SEDS family, FtsW subfamily</strong>"; keywords include <em>Cell division, Cell shape, Peptidoglycan synthesis, Glycosyltransferase</em>.</li>
+<li><strong>Orthology to characterized FtsW:</strong> a global (Needleman–Wunsch) alignment of <em>P. putida</em> FtsW (Q88N77, 404 aa) against experimentally characterized <strong><em>E. coli</em> FtsW (P0ABG4, 414 aa)</strong> gives <strong>~50% identity over the full length</strong> (202/404; 54.6% over aligned columns) even with conservative unit scoring — far above the ~30% orthology threshold. This quantitatively justifies transferring the <em>E. coli</em>/<em>S. aureus</em> FtsW biochemistry to PP_1336.</li>
+<li><strong>Catalytic-residue conservation:</strong> aligning the two proteins maps the invariant, catalytically implicated SEDS aspartate (<em>E. coli</em> FtsW <strong>D297</strong>) onto <em>P. putida</em> <strong>D276</strong>, and the conserved aromatic <em>E. coli</em> Y159 onto <em>P. putida</em> Y138. Conservation of the invariant active-site aspartate is residue-level evidence that PP_1336 has a functional glycosyltransferase active site (not a degenerate pseudo-enzyme).</li>
+</ul>
+<h2 id="5-pathway-and-biological-process-cell-division-septal-pg-synthesis">5. Pathway and biological process — cell division / septal PG synthesis</h2>
+<p>FtsW is a core, essential component of the <strong>divisome</strong>, the multiprotein machine that carries out bacterial cytokinesis. Its place in the pathway:</p>
+<ol>
+<li>The tubulin-like <strong>FtsZ</strong> polymerizes into the Z-ring at midcell (with FtsA/ZipA), defining the division plane.</li>
+<li>Late divisome proteins are recruited, forming the <strong>FtsBLQ–PBP1b–FtsW–FtsI(PBP3)</strong> complex (den Blaauwen &amp; Luirink 2019, PMID 30808703).</li>
+<li><strong>FtsW+FtsI synthesize septal peptidoglycan</strong>, building the new cell wall that will form the two daughter-cell poles.</li>
+</ol>
+<p><strong>Regulation (spatiotemporal control).</strong> FtsW activity is tightly gated so that wall synthesis is coupled to division:<br />
+- Park, Du &amp; Lutkenhaus (2020) showed "<strong>spatiotemporal regulation of septal PG synthesis is achieved by coupling assembly and activation of the synthetic enzymes (FtsWI) to the Z ring</strong>," with <strong>FtsL essential for activating</strong> FtsWI (PMID 33293384).<br />
+- The <strong>FtsQLB (FtsBLQ)</strong> subcomplex holds the synthase in an OFF state; accumulation of <strong>FtsN</strong> relieves this inhibition and triggers the onset of constriction (den Blaauwen &amp; Luirink 2019, PMID 30808703). Thus FtsN is an activator and FtsQLB a brake on FtsW/FtsI activity.</p>
+<p>This regulatory logic (FtsZ recruitment → FtsQLB restraint → FtsN activation) is broadly conserved among Gram-negative bacteria and is expected to operate in <em>P. putida</em>.</p>
+<p><strong>Dynamic spatial guidance by FtsZ treadmilling.</strong> Beyond static recruitment, FtsW's activity is steered around the division circumference by the treadmilling dynamics of the FtsZ ring. Yang et al. (2017) showed that "<strong>GTPase activity-coupled treadmilling of the bacterial tubulin FtsZ organizes septal cell wall synthesis</strong>" (PMID 28209899), and McCausland et al. (2021) demonstrated that "<strong>treadmilling FtsZ polymers drive the directional movement of sPG-synthesis enzymes via a Brownian ratchet mechanism</strong>," controlling the spatiotemporal distribution of active FtsW/FtsI (PMID 33504807). Thus FtsZ treadmilling determines where and how fast FtsW deposits new glycan strands.</p>
+<hr />
+<h2 id="6-evidence-summary-and-confidence">6. Evidence summary and confidence</h2>
+<table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Type of evidence</th>
+<th>Strength for PP_1336</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PGT/polymerase catalytic activity on Lipid II</td>
+<td>In vitro biochemistry in homologues (PMID 27525505, 30692671, 31386359)</td>
+<td>High (orthology inference)</td>
+</tr>
+<tr>
+<td>Obligate FtsW–FtsI(PBP3) complex</td>
+<td>Biochemistry/genetics (PMID 30692671, 33709487)</td>
+<td>High</td>
+</tr>
+<tr>
+<td>10-TM inner-membrane fold, TM catalytic cavity</td>
+<td>Crystal structure of RodA + FtsW mutagenesis (PMID 29590088, 34986161)</td>
+<td>High (family-level)</td>
+</tr>
+<tr>
+<td>Midcell/septal localization within divisome</td>
+<td>Cell biology/genetics (PMID 30808703, 34986161)</td>
+<td>High</td>
+</tr>
+<tr>
+<td>FtsQLB/FtsN/FtsL regulation</td>
+<td>Genetics/biochemistry (PMID 33293384, 30808703)</td>
+<td>High (Gram-negative)</td>
+</tr>
+<tr>
+<td>Not the Lipid II flippase (MurJ is)</td>
+<td>Review synthesis (PMID 35274942)</td>
+<td>High</td>
+</tr>
+<tr>
+<td>FtsZ-treadmilling directs FtsW movement</td>
+<td>Single-molecule imaging (PMID 28209899, 33504807)</td>
+<td>High (conserved)</td>
+</tr>
+<tr>
+<td>Target record: 404 aa, 10 TM, inner membrane, essential PG polymerase</td>
+<td>UniProt Q88N77 curated record (this study)</td>
+<td>Direct</td>
+</tr>
+<tr>
+<td>~50% identity + conserved catalytic Asp (D276) vs E. coli FtsW</td>
+<td>Sequence alignment (this study)</td>
+<td>Direct (orthology)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="7-limitations-and-future-directions">7. Limitations and future directions</h2>
+<ul>
+<li><strong>No direct experimental data on the <em>P. putida</em> KT2440 protein</strong> were found; all functional assignments are by strong orthology (HAMAP MF_00913) to characterized enzymes in <em>E. coli</em>, <em>B. subtilis</em>, <em>S. aureus</em> and <em>T. thermophilus</em>. This is standard and well-justified given the deep conservation of FtsW, but species-specific features (e.g. exact partner PBP repertoire, regulation) remain to be confirmed in <em>Pseudomonas</em>.</li>
+<li>A <em>P. putida</em>-specific validation would ideally include: (i) confirming essentiality and midcell localization (fluorescent fusion); (ii) identifying the cognate FtsI/PBP3 ortholog and demonstrating the FtsWI complex; (iii) in vitro polymerase assays with <em>P. putida</em> Lipid II.</li>
+<li>FtsW is an <strong>attractive, essentially universal antibiotic target</strong> (essential, membrane-accessible, druggable Lipid II-binding cavity; PMID 37099323), of interest for <em>Pseudomonas</em>.</li>
+</ul>
+<hr />
+<h2 id="8-conclusion">8. Conclusion</h2>
+<p><strong>FtsW (Q88N77, PP_1336)</strong> is the essential <strong>SEDS-family peptidoglycan glycosyltransferase (polymerase)</strong> of the <em>Pseudomonas putida</em> divisome. Located in the cytoplasmic membrane at the division septum, it polymerizes the membrane-anchored precursor <strong>Lipid II</strong> into glycan strands (adding monomers to the reducing end), functioning obligately in complex with the transpeptidase <strong>FtsI/PBP3</strong> to build septal peptidoglycan during cytokinesis. Its activity is spatiotemporally controlled by the divisome via FtsZ-ring recruitment, FtsQLB inhibition and FtsN/FtsL activation. It is <strong>not</strong> a Lipid II flippase (that role belongs to MurJ), correcting an earlier annotation.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="ftsW-deep-research-openscientist_artifacts/final_report.html">OpenScientist final report</a></li>
+<li><a href="ftsW-deep-research-openscientist_artifacts/final_report.pdf">OpenScientist final report</a></li>
+</ul>
+            </div>
+        </details>
+
+    </div>
+
+
+    <!-- Additional Documentation Sections -->
+
+
+    <!-- YAML Preview Section -->
+    <div class="section">
+        <details class="yaml-preview">
+            <summary>
+                <h2 style="display: inline;">📄 View Raw YAML</h2>
+            </summary>
+            <div class="yaml-content">
+                <pre><code>id: Q88N77
+gene_symbol: ftsW
+product_type: PROTEIN
+status: COMPLETE
+taxon:
+  id: NCBITaxon:160488
+  label: Pseudomonas putida (strain ATCC 47054 / DSM 6125 / CFBP 8728 / NCIMB 11950
+    / KT2440)
+description: &gt;-
+  FtsW is an integral inner-membrane SEDS-family peptidoglycan
+  glycosyltransferase that polymerizes lipid II into glycan strands at the
+  division septum. It forms the glycan-polymerizing half of the divisome
+  synthase, paired with the FtsI/PBP3 D,D-transpeptidase.
+existing_annotations:
+- term:
+    id: GO:0005886
+    label: plasma membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: FtsW is a multipass cytoplasmic-membrane SEDS enzyme.
+    action: ACCEPT
+    reason: Its membrane-embedded catalytic cavity polymerizes lipid II at the periplasmic face.
+- term:
+    id: GO:0008360
+    label: regulation of cell shape
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: involved_in
+  review:
+    summary: Septal wall synthesis affects daughter-cell morphology but is not FtsW&#39;s direct regulatory role.
+    action: KEEP_AS_NON_CORE
+    reason: The specific core process is FtsZ-dependent cytokinesis through septal peptidoglycan synthesis.
+- term:
+    id: GO:0008955
+    label: peptidoglycan glycosyltransferase activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: enables
+  review:
+    summary: FtsW is the glycan-polymerizing enzyme of the FtsW-FtsI septal synthase.
+    action: ACCEPT
+    reason: SEDS-family FtsW proteins polymerize lipid II into peptidoglycan glycan strands.
+- term:
+    id: GO:0009252
+    label: peptidoglycan biosynthetic process
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: FtsW directly catalyzes septal peptidoglycan synthesis.
+    action: ACCEPT
+    reason: Its glycosyltransferase reaction builds the glycan backbone at the division site.
+- term:
+    id: GO:0015648
+    label: lipid-linked peptidoglycan transporter activity
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000118
+  qualifier: enables
+  review:
+    summary: Current evidence identifies FtsW as a polymerase rather than the lipid II flippase.
+    action: REMOVE
+    reason: MurJ performs lipid II translocation; this transfer reflects the superseded SEDS transporter model.
+    supported_by:
+    - reference_id: PMID:27525505
+      supporting_text: SEDS family members have previously been proposed to transport PG precursors (lipid II) across the cytoplasmic membrane, however, recent evidence suggests that they are not required for this process and that MurJ family members likely fulfill this role
+- term:
+    id: GO:0015836
+    label: lipid-linked peptidoglycan transport
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000108
+  qualifier: involved_in
+  review:
+    summary: FtsW consumes exported lipid II but is not established as its transporter.
+    action: REMOVE
+    reason: GO_REF:0000108 inferred this process from GO:0015648; removing the unsupported transporter activity therefore also removes its logically derived transport-process annotation.
+- term:
+    id: GO:0016020
+    label: membrane
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000002
+  qualifier: located_in
+  review:
+    summary: Membrane localization is correct but less specific than plasma membrane.
+    action: KEEP_AS_NON_CORE
+    reason: GO:0005886 captures the relevant bacterial membrane.
+- term:
+    id: GO:0032153
+    label: cell division site
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: located_in
+  review:
+    summary: FtsW is recruited to the midcell divisome for septal synthesis.
+    action: ACCEPT
+    reason: The FtsW-FtsI synthase polymerizes and crosslinks peptidoglycan at the division site.
+- term:
+    id: GO:0043093
+    label: FtsZ-dependent cytokinesis
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000104
+  qualifier: involved_in
+  review:
+    summary: FtsW is the septal SEDS polymerase downstream of the FtsZ ring.
+    action: ACCEPT
+    reason: Its activity is spatially and temporally coupled to FtsZ-dependent divisome assembly.
+- term:
+    id: GO:0051301
+    label: cell division
+  evidence_type: IEA
+  original_reference_id: GO_REF:0000120
+  qualifier: involved_in
+  review:
+    summary: Cell division is true but less specific than FtsZ-dependent cytokinesis.
+    action: KEEP_AS_NON_CORE
+    reason: GO:0043093 captures the relevant bacterial division process.
+references:
+- id: GO_REF:0000002
+  title: Gene Ontology annotation through association of InterPro records with GO
+    terms
+  findings: []
+- id: GO_REF:0000104
+  title: Electronic Gene Ontology annotations created by transferring manual GO annotations
+    between related proteins based on shared sequence features
+  findings: []
+- id: GO_REF:0000108
+  title: Automatic assignment of GO terms using logical inference, based on on inter-ontology
+    links
+  findings: []
+- id: GO_REF:0000118
+  title: TreeGrafter-generated GO annotations
+  findings: []
+- id: GO_REF:0000120
+  title: Combined Automated Annotation using Multiple IEA Methods
+  findings: []
+- id: PMID:27525505
+  title: SEDS proteins are a widespread family of bacterial cell wall polymerases.
+  findings:
+  - statement: SEDS proteins are peptidoglycan polymerases and are not required for MurJ-mediated lipid II translocation.
+    supporting_text: SEDS family members have previously been proposed to transport PG precursors (lipid II) across the cytoplasmic membrane, however, recent evidence suggests that they are not required for this process and that MurJ family members likely fulfill this role
+  reference_review:
+    relevance: HIGH
+    correctness: VERIFIED
+    review_notes: The cached full text directly supports the SEDS polymerase assignment and distinction from MurJ-dependent lipid II translocation.
+- id: file:PSEPK/ftsW/ftsW-deep-research-openscientist.md
+  title: OpenScientist deep research report on PSEPK FtsW (Q88N77)
+  publication_type: DEEP_RESEARCH
+  findings:
+  - statement: The report identifies FtsW as the SEDS glycan polymerase of the septal divisome synthase.
+    supporting_text: FtsW is a **peptidoglycan glycosyltransferase (PGT), i.e. a peptidoglycan polymerase**.
+  reference_review:
+    relevance: HIGH
+    correctness: UNVERIFIED
+    review_notes: Used as retrieval support; no direct biochemical characterization of PP_1336 was found.
+core_functions:
+- description: FtsW-family peptidoglycan glycosyltransferase for septal glycan polymerization.
+  molecular_function:
+    id: GO:0008955
+    label: peptidoglycan glycosyltransferase activity
+  directly_involved_in:
+  - id: GO:0043093
+    label: FtsZ-dependent cytokinesis
+  - id: GO:0009252
+    label: peptidoglycan biosynthetic process
+  locations:
+  - id: GO:0005886
+    label: plasma membrane
+  - id: GO:0032153
+    label: cell division site
+  supported_by:
+  - reference_id: file:PSEPK/ftsW/ftsW-deep-research-openscientist.md
+    supporting_text: FtsW is a **peptidoglycan glycosyltransferase (PGT), i.e. a peptidoglycan polymerase**.
+knowledge_gaps:
+- gap_statement: Direct activity, localization, and essentiality measurements for PP_1336 in KT2440 are unavailable.
+  status: OPEN
+  gap_kind: [BIOLOGY]
+  significance: The specific assignment is strong by family and orthology but remains experimentally untested in this strain.
+</code></pre>
+            </div>
+        </details>
+    </div>
+
+    <!-- Pathway Visualization Link -->
+
+
+    <style>
+        /* Markdown Section Styles */
+        .markdown-section {
+            margin-bottom: 1rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .markdown-section summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .markdown-section summary h3 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.1rem;
+        }
+
+        .markdown-section summary:hover h3 {
+            color: #007bff;
+        }
+
+        .markdown-section[open] {
+            background-color: #fff;
+        }
+
+        .markdown-content {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-top: 1px solid #dee2e6;
+        }
+
+        /* Markdown content styling */
+        .markdown-content h1 { font-size: 1.5rem; margin-top: 1.5rem; }
+        .markdown-content h2 { font-size: 1.3rem; margin-top: 1.3rem; }
+        .markdown-content h3 { font-size: 1.1rem; margin-top: 1.1rem; }
+        .markdown-content h4 { font-size: 1rem; margin-top: 1rem; }
+
+        .markdown-content pre {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .markdown-content code {
+            background-color: #f8f9fa;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+        }
+
+        .markdown-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .markdown-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+        }
+
+        .markdown-content table th,
+        .markdown-content table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        .markdown-content table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .markdown-content blockquote {
+            border-left: 4px solid #007bff;
+            padding-left: 1rem;
+            margin-left: 0;
+            color: #666;
+        }
+
+        /* YAML Preview Styles */
+        .yaml-preview {
+            margin-top: 2rem;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 1rem;
+            background-color: #f8f9fa;
+        }
+
+        .yaml-preview summary {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .yaml-preview summary h2 {
+            margin: 0;
+            color: #495057;
+            font-size: 1.3rem;
+        }
+
+        .yaml-preview summary:hover h2 {
+            color: #007bff;
+        }
+
+        .yaml-preview[open] {
+            background-color: #fff;
+        }
+
+        .yaml-content {
+            margin-top: 1rem;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .yaml-content pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .yaml-content code {
+            color: #333;
+            background: none;
+            padding: 0;
+        }
+
+        /* Pathway Link Styles */
+        .pathway-link {
+            margin: 1rem 0;
+        }
+
+        .btn-link {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: #007bff;
+            color: white !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-link:hover {
+            background-color: #0056b3;
+            text-decoration: none;
+        }
+
+        /* Voting buttons */
+        .vote-buttons {
+            display: inline-block;
+            margin-left: 0.5rem;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            opacity: 0.6;
+        }
+
+        .vote-btn:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.voted {
+            opacity: 1;
+            border-color: #28a745;
+            background-color: #d4edda;
+        }
+
+        .vote-btn.voted-down {
+            border-color: #dc3545;
+            background-color: #f8d7da;
+        }
+
+        .vote-btn-small {
+            font-size: 0.7rem;
+            padding: 1px 4px;
+            margin: 0 1px;
+        }
+    </style>
+
+    <script>
+        // Add collapsible functionality
+        document.querySelectorAll('.collapsible').forEach(element => {
+            element.addEventListener('click', function() {
+                this.classList.toggle('collapsed');
+            });
+        });
+
+        // Voting functionality
+        const VOTE_URL = 'https://script.google.com/macros/s/AKfycbwPKH7d3seuPNBtB0ugVjqGeTiByyOGD5vkqB_Ck6K8eOcPQYbJqBOuz6GFgXHKBNWK/exec';
+
+        // Get or create session ID
+        let sessionId = localStorage.getItem('review_session_id');
+        if (!sessionId) {
+            sessionId = 's' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('review_session_id', sessionId);
+        }
+
+        // Show previous votes on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.vote-buttons').forEach(container => {
+                const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+                const previousVote = localStorage.getItem(key);
+                if (previousVote) {
+                    const btn = container.querySelector(`[data-v="${previousVote}"]`);
+                    if (btn) btn.classList.add(previousVote === 'up' ? 'voted' : 'voted-down');
+                }
+            });
+        });
+
+        // Handle vote clicks - Simple image beacon approach
+        document.addEventListener('click', function(e) {
+            if (!e.target.classList.contains('vote-btn')) return;
+
+            // Prevent the click from bubbling to parent elements (like summary)
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = e.target;
+            const container = btn.closest('.vote-buttons');
+            if (!container) return;
+
+            const voteType = btn.dataset.v;
+
+            // Check if already voted (locally)
+            const key = `vote_${container.dataset.g}_${container.dataset.a}_${container.dataset.act}`;
+            const previousVote = localStorage.getItem(key);
+
+            if (previousVote === voteType) {
+                // Same vote - do nothing
+                btn.style.animation = 'shake 0.5s';
+                setTimeout(() => btn.style.animation = '', 500);
+                return;
+            }
+
+            // Build URL
+            const params = new URLSearchParams({
+                gene_id: container.dataset.g,
+                annotation_id: container.dataset.a,
+                ref_id: container.dataset.r || '',
+                action: container.dataset.act,
+                vote: voteType,
+                session_id: sessionId,
+                ua: navigator.userAgent.substring(0, 100)
+            });
+
+            // Clear previous vote styling
+            container.querySelectorAll('.vote-btn').forEach(b => {
+                b.classList.remove('voted', 'voted-down');
+            });
+
+            // Apply new vote styling immediately (optimistic UI)
+            btn.classList.add(voteType === 'up' ? 'voted' : 'voted-down');
+
+            // Store locally
+            localStorage.setItem(key, voteType);
+
+            // Send vote using fetch with no-cors mode (fire and forget)
+            const fullUrl = VOTE_URL + '?' + params;
+            console.log('Sending vote to:', fullUrl);
+
+            // Use fetch in no-cors mode - we won't get a response but the request will be sent
+            fetch(fullUrl, {
+                mode: 'no-cors',
+                method: 'GET'
+            }).then(() => {
+                console.log('Vote request sent (no response due to no-cors mode)');
+            }).catch(err => {
+                console.warn('Vote may not have been recorded, but saved locally:', err);
+
+                // Fallback: try image beacon as well
+                const img = new Image();
+                img.src = fullUrl;
+            });
+        });
+
+        // Optional: Add shake animation for feedback
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
