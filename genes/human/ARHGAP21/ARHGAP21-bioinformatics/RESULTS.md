@@ -158,7 +158,7 @@ checker flagged `retracted_by_pubtype=True` with `RetractionIn: PMID:35078223`.
 
 ## 6. `audit_review.py` — invariants over the review YAML
 
-Current state: **47 GOA data rows → 47 non-NEW entries + 3 NEW = 50**, and **48
+Current state: **47 GOA data rows → 47 non-NEW entries + 4 NEW = 51**, and **50
 `supporting_text` quotes verified verbatim** under whitespace normalisation.
 
 Checks, each covering something the repo validator does not:
@@ -188,3 +188,23 @@ from `PMID:15161933` describing *that* paper's 14-3-3 affinity-column method,
 sitting under summaries about BioPlex AP-MS. Every mechanical check passed. It
 was found by re-reading each `summary` next to its quote, and fixed by quoting
 each row's own paper.
+
+Review round 2 found **four more of the same class**, which is the strongest
+available evidence that this gap is structural rather than a one-off:
+
+- `GO:0032956`'s summary asserted a stress-fibre phenotype that appears nowhere
+  in the cited abstract (it is a UniProt `MISCELLANEOUS` line, and one that
+  spans a `CC` continuation so it cannot be quoted verbatim at all).
+- The same row's `reason` justified its evidence code using the *other* NEW
+  row's two-hybrid partner.
+- `GO:0051684` **maintenance** of Golgi location was quoted with the
+  nocodazole-washout sentence, which is **establishment** evidence.
+- `GO:0005794` IDA was quoted with an introduction sentence ending in reference
+  callouts "(23, 24)" — prior work, not the paper's own observation.
+
+All four passed every gate here: real PMIDs, verbatim strings, correct terms,
+correct actions. Two cheap heuristics came out of it and are worth applying
+before attaching any quote to an experimental row: **a sentence containing
+reference callouts is background, not result**, and **check that the assay in
+the quote is the assay the term names** (re-establishment after dispersal is not
+maintenance).

@@ -149,6 +149,33 @@ This is why these ten rows cannot be upgraded to something informative and are r
 uninformative generic binding rather than modified. Removal does not mean the interactions
 are false — recorded as a second `KnowledgeGap`.
 
+### 5a. Correction (round 2): the PDZ domain is NOT functionally dark
+
+My first draft tagged this gap `dark_aspect: MF_DARK` and called the PDZ "the one module of
+the protein with no assigned cellular role". **That was wrong, and it was refuted by a file
+this same PR adds.** `publications/PMID_41957357.md` (2026, *Cell Death Discovery*, human HCC
+cells) reports
+[PMID:41957357 "Mechanistically, we demonstrated that ARHGAP21 directly binds to FLNA, and the PDZ domain of ARHGAP21 functions as a potential mediator of its binding to the 1-1200 aa fragment of FLNA."].
+
+So the module has a reported cellular ligand — filamin A. Two consequences:
+
+1. The `MF_DARK` tag and the "no assigned role" phrasing are removed. The **ontology** gap
+   survives untouched: finding a ligand does not create a term for the PDZ-domain side.
+2. `GO:0031005 filamin binding` **exists and is partner-specific**, so unlike the ten holdup
+   rows this one interaction *can* be expressed — added as a fourth `NEW` row. Note what that
+   implies about the gap: GO can record ARHGAP21's PDZ interactions only where it happens to
+   have a partner-specific binding term, which is a ligand-by-ligand workaround that does not
+   scale to a 65,000-interaction survey.
+
+The row is scoped to the **binding**, which the paper states outright, not to PDZ-dependence,
+which the paper hedges as a *"potential mediator"*. The HCC metastasis and FLNA-stabilisation
+phenotypes are not proposed as process terms: they are effects of the interaction in a cancer
+context, not a demonstrated normal function.
+
+**Process note worth keeping:** affinage *did* return this paper, and I read it when checking
+retractions — but I used it only for the retraction sweep and never asked what it said about
+the domains. A paper can be in your own commit and still be unread for the claim it refutes.
+
 ## 6. Provenance checks
 
 ### 6a. All seven IBA rows are self-referential — which is correct, not circular
@@ -248,6 +275,7 @@ SUBUNIT. Hence three `NEW` rows in this review:
 - `GO:0034333` **adherens junction assembly** (IMP)
 - `GO:0032956` **regulation of actin cytoskeleton organization** (IMP) — the Dubois
   Arp2/3-and-F-actin finding likewise has no BP term on the gene.
+- `GO:0031005` **filamin binding** (IPI, added round 2) — see §5a.
 
 Affinage's record (`gates_passed: true`) returned 15 citations and **missed both founding
 2005 papers** and Hehnly 2010 — i.e. it missed every paper that actually carries a GOA row,
@@ -272,8 +300,16 @@ result.
   different constructs and readouts.
 - **Whether the RhoA/RhoC activity is context-restricted.** Lazarini's PC3-vs-LNCaP split
   is suggestive but is a single paper with a cell-line comparison, not a mechanism.
-- **The PDZ ligand in cells.** The holdup survey gives affinities for isolated fragments;
-  which PBM ARHGAP21's PDZ engages *in vivo*, and in which compartment, is untested.
+- **The PDZ ligand repertoire in cells.** The holdup survey gives affinities for isolated
+  fragments, and exactly one cellular ligand has been reported for the domain — filamin A,
+  in HCC cells, with the domain mapping hedged as a *"potential mediator"* (§5a). Which of
+  the ten holdup partners the PDZ actually engages *in vivo*, and in which compartment,
+  remains untested.
+- **The direction of the F-actin effect.** UniProt records that depletion causes
+  *accumulation* of F-actin stress fibres, while antisense knockdown in neonatal mouse islets
+  *reduces* F-actin [PMID:25744409 "F-actin was reduced in AS-islets, as judged by lower phalloidin intensity."].
+  These may simply be different cell types, but nothing reconciles them, which is one reason
+  the proposed BP term is the sign-agnostic `GO:0032956` rather than a directional one.
 - **The cell system of the α-catenin knockdowns.** `PMID:16184169` and `PMID:23235160` are
   both abstract-only in the cache, neither abstract names a cell line, and `PMID:16184169`
   is absent from PMC and Europe PMC full text with no text-mined annotations. An
@@ -286,6 +322,29 @@ result.
   `IBA:GO_Central` but is absent from the GOA TSV, which instead carries `GO:0051683` and
   `GO:0051684`. Not acted on — it is a cross-reference snapshot difference, not an
   annotation this review can change.
+
+## 8a. Round-2 evidence-attachment corrections
+
+Six review items, all of the same class: the *term* and the *action* were right in every
+case, and the **quote attached to them was not**. Recorded because the class is invisible to
+every mechanical gate in this repo — CI checks that a `supporting_text` is a verbatim
+substring of its source, never that it supports the sentence it sits under.
+
+| row | what was wrong | fix |
+|---|---|---|
+| `GO:0032956` | summary asserted "depletion produces cell spreading and accumulation of F-actin stress fibres" | The string appears **nowhere** in `PMID:15793564`'s cached abstract (grep-verified). It is UniProt's `MISCELLANEOUS` line — which spans a `CC` continuation (lines 274–275) and therefore **cannot be quoted verbatim on one physical line**. Clause removed, not re-sourced. |
+| `GO:0032956` | `reason` justified IMP by "the two-hybrid partner is human alpha-catenin" | Copy-paste from the adherens-junction row; α-catenin belongs to `PMID:16184169`, not to this row's `PMID:15793564`. My own round-1 bug — the species caveat I wrote to *improve* honesty was pasted onto a row it did not describe. Replaced with a row-appropriate caveat. |
+| `GO:0051684` maintenance | quoted the nocodazole-washout sentence | That assay measures **re-establishment** after dispersal, i.e. `GO:0051683`. The maintenance evidence is the steady-state observation, and the cached full text has it [PMID:20525016 "Golgi membranes were partially dispersed in cells when ARHGAP21 levels were reduced by RNA interference but not in control cells (Figures 1A and S1B)."]. |
+| `GO:0005794` IDA | quoted an **introduction** sentence ending "(23, 24)" | A sentence citing reference callouts restates prior work; it is not the paper's own observation and so cannot support an IDA. Replaced with the figure result [PMID:20525016 "The GFP-tagged ARHGAP21 fragment was localized to the Golgi apparatus as expected (Figure 1B)."]. |
+| PDZ `KnowledgeGap` | tagged `MF_DARK`, "no assigned cellular role" | Refuted by `PMID:41957357`, added by this same PR (§5a). |
+| `references` | four named PMIDs had no entry | Added, plus an invariant in the fix script asserting **every** `PMID:` string in the document resolves to a reference. |
+
+Two things worth carrying forward. First, **"cites a reference callout" is a cheap, reliable
+tell that a sentence is background rather than result** — worth grepping for before attaching
+any quote to an IDA/IMP row. Second, the reviewer's list was not perfect and was checked
+rather than applied: it missed `PMID:36477203` (named in the review, no reference entry), and
+two of the PMIDs it listed as "omitted" were not actually named in the document until this
+round added them. Every item was verified against the cached files before being acted on.
 
 ## 9. Scripts
 
