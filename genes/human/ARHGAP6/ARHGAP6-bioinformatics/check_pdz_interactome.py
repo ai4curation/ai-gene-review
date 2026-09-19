@@ -3,12 +3,12 @@
 # requires-python = ">=3.11"
 # dependencies = []
 # ///
-"""Are ARHGAP6's 22 `protein binding` IPI rows 22 findings, or one?
+"""Are ARHGAP6's `protein binding` IPI rows many findings, or one?
 
 Motivation
 ----------
-Half of ARHGAP6's GOA rows -- 22 of 44 -- are `GO:0005515 protein binding` (IPI),
-all from a single reference. Reviewing them as 22 independent interactions would
+Half of ARHGAP6's GOA rows are `GO:0005515 protein binding` (IPI),
+all from a single reference. Reviewing them as that many independent interactions would
 overstate what is known; reviewing them as one would need to be *shown*, not
 asserted. The testable version of "one" is: every partner is a PDZ-domain protein,
 and ARHGAP6's C-terminus is a PDZ-binding motif -- i.e. the 22 rows report one
@@ -78,15 +78,29 @@ def _get(url: str):
         return json.load(fh)
 
 
-def partners_from_goa(goa_path: Path) -> list[str]:
-    """Accessions in the WITH/FROM column of the GO:0005515 rows of the GOA TSV."""
+def partners_from_goa(goa_path: Path) -> tuple[list[str], int, int]:
+    """Parse the GOA TSV.
+
+    Returns (unique partner accessions, number of GO:0005515 rows, total rows).
+
+    The two counts are returned separately from the accession list on purpose. They
+    count *rows*; the accession list counts distinct partners, and the two are only
+    equal while every binding row names exactly one partner. An earlier version of
+    this script passed the accession count around under the name ``n_goa_rows`` and
+    hardcoded the denominator, so the headline "22 of 44" was right by coincidence
+    and would have gone silently stale the moment GOA changed.
+    """
     if not goa_path.exists():
         raise SystemExit(f"FAIL: GOA file not found at {goa_path}")
     accs: list[str] = []
+    n_binding_rows = 0
+    n_total_rows = 0
     with goa_path.open() as fh:
         for row in csv.DictReader(fh, delimiter="\t"):
+            n_total_rows += 1
             if row.get("GO TERM") != BINDING_TERM:
                 continue
+            n_binding_rows += 1
             for token in (row.get("WITH/FROM") or "").split("|"):
                 token = token.strip()
                 if token.startswith("UniProtKB:"):
@@ -96,7 +110,7 @@ def partners_from_goa(goa_path: Path) -> list[str]:
             f"FAIL: no {BINDING_TERM} WITH/FROM accessions parsed from {goa_path}. "
             "The parse is broken or the column names changed; refusing to report."
         )
-    return sorted(set(accs))
+    return sorted(set(accs)), n_binding_rows, n_total_rows
 
 
 def pdz_profile(acc: str) -> tuple[str, int, bool, str]:
@@ -171,16 +185,22 @@ def self_test() -> int:
     return 0
 
 
-def render(rows: list[tuple[str, str, int, bool, str]], target_cterm: str, n_goa_rows: int) -> str:
+def render(
+    rows: list[tuple[str, str, int, bool, str]],
+    target_cterm: str,
+    n_binding_rows: int,
+    n_total_rows: int,
+) -> str:
     today = date.today().isoformat()
     with_pdz = [r for r in rows if r[2] > 0 or r[3]]
     out: list[str] = []
     A = out.append
-    A(f"# {TARGET_SYMBOL} bioinformatics: are the 22 `protein binding` rows 22 findings or one?")
+    A(f"# {TARGET_SYMBOL} bioinformatics: are the `protein binding` rows many findings or one?")
     A("")
     A("## Question")
     A("")
-    A(f"Half of {TARGET_SYMBOL}'s GOA rows ({n_goa_rows} of 44) are `{BINDING_TERM} protein binding`")
+    A(f"**{n_binding_rows} of {TARGET_SYMBOL}'s {n_total_rows} GOA rows** (both counted from the")
+    A(f"TSV, neither hardcoded) are `{BINDING_TERM} protein binding`")
     A("(IPI) from a single reference. Treating them as that many independent findings")
     A("would overstate the evidence. The testable alternative -- that they report **one**")
     A("binding determinant -- predicts that every partner is a PDZ-domain protein and")
@@ -210,7 +230,8 @@ def render(rows: list[tuple[str, str, int, bool, str]], target_cterm: str, n_goa
       f"class I motif by the rule above: **{'yes' if is_class_one(target_cterm) else 'no'}** "
       f"(position -2 = `{target_cterm[-3]}`, position 0 = `{target_cterm[-1]}`).")
     A("")
-    A(f"Partners parsed from the GOA file: **{len(rows)}**. "
+    A(f"Distinct partners parsed from the GOA file: **{len(rows)}** "
+      f"(from {n_binding_rows} binding rows). "
       f"Carrying at least one PDZ domain: **{len(with_pdz)}**.")
     A("")
     A("| partner | acc | PDZ `Domain` features | InterPro IPR001478 |")
@@ -263,8 +284,7 @@ def main() -> int:
         return self_test()
 
     goa_path = Path(__file__).resolve().parent.parent / f"{TARGET_SYMBOL}-goa.tsv"
-    accs = partners_from_goa(goa_path)
-    n_goa_rows = len(accs)
+    accs, n_binding_rows, n_total_rows = partners_from_goa(goa_path)
 
     try:
         # Detector controls, asserted every run.
@@ -291,7 +311,7 @@ def main() -> int:
         return 2
 
     rows.sort(key=lambda r: (r[0] or "zzz"))
-    md = render(rows, target_cterm, n_goa_rows)
+    md = render(rows, target_cterm, n_binding_rows, n_total_rows)
     if args.stdout:
         print(md)
     else:

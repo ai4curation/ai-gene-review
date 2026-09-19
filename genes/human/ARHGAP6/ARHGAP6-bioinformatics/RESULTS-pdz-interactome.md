@@ -1,8 +1,9 @@
-# ARHGAP6 bioinformatics: are the 22 `protein binding` rows 22 findings or one?
+# ARHGAP6 bioinformatics: are the `protein binding` rows many findings or one?
 
 ## Question
 
-Half of ARHGAP6's GOA rows (22 of 44) are `GO:0005515 protein binding`
+**22 of ARHGAP6's 44 GOA rows** (both counted from the
+TSV, neither hardcoded) are `GO:0005515 protein binding`
 (IPI) from a single reference. Treating them as that many independent findings
 would overstate the evidence. The testable alternative -- that they report **one**
 binding determinant -- predicts that every partner is a PDZ-domain protein and
@@ -30,7 +31,7 @@ uv run check_pdz_interactome.py --self-test
 
 **ARHGAP6 (O43182) C-terminus: `...LPETLV`** -- class I motif by the rule above: **yes** (position -2 = `T`, position 0 = `V`).
 
-Partners parsed from the GOA file: **22**. Carrying at least one PDZ domain: **22**.
+Distinct partners parsed from the GOA file: **22** (from 22 binding rows). Carrying at least one PDZ domain: **22**.
 
 | partner | acc | PDZ `Domain` features | InterPro IPR001478 |
 |---|---|---|---|

@@ -195,15 +195,30 @@ are scaffolds rather than substrates. All 22 → `KEEP_AS_NON_CORE`.
 
 ## 7. What was deliberately NOT proposed
 
-The HERG/IKr result (PMID:19038263) is well controlled — overexpression plus shRNA
-knockdown of endogenous ARHGAP6 in an atrial myocyte line, with surface-biotinylation
-quantification — and is mechanistically the most interesting GAP-independent output.
+**The HERG/IKr result (PMID:19038263).** Well controlled — overexpression plus shRNA
+knockdown of endogenous ARHGAP6 in an atrial myocyte line, with cell-surface
+quantification — and mechanistically the most interesting GAP-independent output.
 It is **not** proposed as a `NEW` annotation: it is one paper from one lab, largely in
 heterologous systems, and the effect is routed through PLC rather than exerted
 directly on the channel, which makes it an indirect effect of the kind the repository
-guidance asks us not to annotate. It is recorded as a reference finding, described in
-the PLC core function, and raised as a `suggested_questions` / `suggested_experiments`
-item instead.
+guidance asks us not to annotate. It is recorded as four `findings` entries on
+`references[PMID:19038263]` (not merely asserted in prose — the entries are in the
+YAML), described in the PLC core function, and raised as a `suggested_questions` /
+`suggested_experiments` item instead.
+
+**The cancer-phenotype literature.** Four further papers were cached while working on
+this gene and none yields an annotation. Each now carries a `reference_review` saying
+so, rather than sitting in `publications/` unexplained:
+
+| PMID | Why no annotation |
+|---|---|
+| 30816546 | Lung-cancer cell-line migration/invasion and phospho-STAT3, under manipulated expression. Several steps downstream of the GAP activity. |
+| 33116826 | Apoptosis, glycolysis and cisplatin sensitivity attributed to STAT3. Same objection. |
+| 38287795 | Ferroptosis via RhoA–ROCK1–p38 MAPK. Consistent with ARHGAP6 being a RhoA GAP, which is worth noting, but three signalling steps removed and measured only under manipulated expression. |
+| 12673365 | A methods paper (E. coli expression and His-tag purification). Makes no functional claim at all. |
+
+These are the bulk of affinage's dated-findings table, so the decision to exclude them
+is where most of affinage's content ends up — recorded rather than silently dropped.
 
 ## 8. Other decisions worth recording
 
