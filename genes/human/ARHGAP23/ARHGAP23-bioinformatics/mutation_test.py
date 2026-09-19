@@ -15,6 +15,7 @@ passing. The fix was to give ``Protein`` an injectable record and test the real 
 
 Usage:
     uv run python mutation_test.py
+    uv run python mutation_test.py --self-check   # exercise the protection layer itself
 """
 
 from __future__ import annotations
@@ -156,10 +157,19 @@ NEGATIVE_CONTROLS: list[tuple[str, str, str]] = [
 def _snapshot() -> dict[str, bytes]:
     """Every regular file directly in SCRIPT_DIR, by name, as bytes.
 
-    Directories are skipped, so ``cache/`` and ``.venv/`` are out of scope; the transient
-    mutant is excluded by name. Everything else -- the analysis, this harness, the two
-    checkers, the artifacts, the packaging files -- is covered, which is what makes a file
-    the mutant invents as visible as one it overwrites.
+    Directories are skipped, so ``cache/`` and ``.venv/`` are out of scope, and it is worth
+    saying why that is safe rather than merely stating it. ``cache/`` is the one directory
+    a mutant demonstrably writes into (``_fetch``), but its entries are sticky -- ``_fetch``
+    returns the existing bytes for any non-empty cached file and never rewrites one -- so a
+    mutant can only ADD entries, and only for a URL it constructs. No mutation in this file
+    anchors on a URL template or a cache key, ``cache/`` is gitignored so an added entry
+    leaves the tree clean, and the real run that regenerates RESULTS.md reads that same
+    cache. The exposure is therefore latent, not live; a future mutation that does touch a
+    URL should extend the snapshot to walk ``cache/`` rather than rely on this paragraph.
+
+    The transient mutant is excluded by name. Everything else -- the analysis, this harness,
+    the two checkers, the artifacts, the packaging files -- is covered, which is what makes
+    a file the mutant invents as visible as one it overwrites.
     """
     return {
         p.name: p.read_bytes()
@@ -168,15 +178,26 @@ def _snapshot() -> dict[str, bytes]:
     }
 
 
-def _restore(baseline: dict[str, bytes], label: str, failures: list[str]) -> None:
-    """Report and undo any creation, deletion or modification under SCRIPT_DIR."""
+def _restore(baseline: dict[str, bytes], label: str, failures: list[str]) -> list[str]:
+    """Report and undo any creation, deletion or modification under SCRIPT_DIR.
+
+    The report tags each name with what happened to it. Flattening the three into one list
+    reads as "these files changed", which is wrong in the case that matters most: a created
+    name has since been *deleted* by this function, and a reader cannot tell that from a
+    bare filename.
+    """
     current = _snapshot()
-    changed = sorted(set(baseline) ^ set(current)) + sorted(
-        n for n in set(baseline) & set(current) if baseline[n] != current[n]
+    created = sorted(set(current) - set(baseline))
+    deleted = sorted(set(baseline) - set(current))
+    modified = sorted(n for n in set(baseline) & set(current) if baseline[n] != current[n])
+    changed = (
+        [f"created {n}" for n in created]
+        + [f"deleted {n}" for n in deleted]
+        + [f"modified {n}" for n in modified]
     )
     if not changed:
-        return
-    for name in set(current) - set(baseline):
+        return []
+    for name in created:
         (SCRIPT_DIR / name).unlink()
     for name, data in baseline.items():
         path = SCRIPT_DIR / name
@@ -184,6 +205,7 @@ def _restore(baseline: dict[str, bytes], label: str, failures: list[str]) -> Non
             path.write_bytes(data)
     failures.append(f"DIRECTORY TOUCHED by {label}: {', '.join(changed)}")
     print(f"*** DIRECTORY TOUCHED by {label}: {', '.join(changed)} -- restored")
+    return changed
 
 
 def _write_mutant(old: str, new: str) -> None:
@@ -213,7 +235,55 @@ def _run_self_test() -> tuple[int, str, str]:
     return proc.returncode, combined, lines[-1] if lines else ""
 
 
+def self_check() -> int:
+    """Exercise the protection layer's own failure path.
+
+    In a passing run none of ``_restore``'s reporting or repairing branches execute, so the
+    only evidence they work would otherwise be an uncommitted mutant run once by hand -
+    which is precisely the "a check that does not re-run goes stale silently" argument this
+    file makes about everything else. This mode creates a file, modifies an existing one,
+    and requires ``_restore`` to name both with the right verbs and put the directory back
+    byte-for-byte.
+    """
+    baseline = _snapshot()
+    victim = next(n for n in ("RESULTS.md", "results.json") if n in baseline)
+    invented = ".self_check_invented.md"
+    try:
+        (SCRIPT_DIR / victim).write_bytes(b"CLOBBERED BY --self-check")
+        (SCRIPT_DIR / invented).write_bytes(b"a file the harness invented")
+        failures: list[str] = []
+        changed = _restore(baseline, "--self-check", failures)
+
+        assert f"modified {victim}" in changed, f"a modified file was not reported: {changed}"
+        assert f"created {invented}" in changed, f"a created file was not reported: {changed}"
+        assert failures, "a directory change was repaired but not counted as a failure"
+        assert not (SCRIPT_DIR / invented).exists(), "the created file was not removed"
+        after = _snapshot()
+        assert after == baseline, (
+            "the directory was not restored byte-for-byte: "
+            f"{sorted(set(after) ^ set(baseline)) or 'contents differ'}"
+        )
+
+        # Negative control: with nothing changed, _restore must be silent and report nothing.
+        quiet: list[str] = []
+        assert _restore(baseline, "--self-check idle", quiet) == []
+        assert not quiet, f"_restore reported a change on an untouched directory: {quiet}"
+    finally:
+        (SCRIPT_DIR / invented).unlink(missing_ok=True)
+        for name, data in baseline.items():
+            path = SCRIPT_DIR / name
+            if not path.exists() or path.read_bytes() != data:
+                path.write_bytes(data)
+    print(
+        "self-check OK: creation and modification are both reported with the right verb, "
+        "repaired byte-for-byte, and an untouched directory is silent"
+    )
+    return 0
+
+
 def main() -> int:
+    if "--self-check" in sys.argv[1:]:
+        return self_check()
     failures: list[str] = []
     baseline = _snapshot()
     try:
