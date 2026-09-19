@@ -342,3 +342,36 @@ events:
     expectation; self-test 19 mutations across 23 anchors (4 baselines);
     check_file_quotes.py clean on 18 quotes; just validate human ARHGAP23 green with zero
     warnings.
+- type: EDIT
+  outcome: changed
+  summary: Protect the committed artifacts from the mutant that now shares their directory
+  details: |
+    Eighth re-review, approved, two harness points. The first is the cost of the previous
+    fix and was worth taking: moving the mutant beside the original made the mutant's
+    output paths the committed ones, so "--self-test returns before the artifact writes"
+    became a load-bearing invariant that nothing enforced. A future mutation anchored on
+    the dispatch line would run the mutated analysis to completion and overwrite
+    results.json and RESULTS.md in place - and RESULTS.md is the source for five file:
+    supporting_text quotes in the review, so the blast radius reaches the curation.
+
+    Both files' bytes are now snapshotted before the loop and restored in the finally that
+    already existed, in BYTES rather than text so no newline or encoding normalisation can
+    enter through the restore itself. A restore that was actually needed is reported as
+    ARTIFACT OVERWRITTEN and counted as a failure, since a mutant reaching the artifact
+    writes means a mutation escaped the early return.
+
+    The restore path was then verified rather than assumed, and the first attempt at
+    verifying it taught something: a mutant that merely runs the full analysis regenerates
+    both files with IDENTICAL bytes, because the analysis is deterministic against a warm
+    cache - so the snapshot correctly stayed silent and proved nothing. Re-run with a
+    mutant that clobbers RESULTS.md outright, the harness reports ARTIFACT OVERWRITTEN and
+    both files come back byte-identical by sha256.
+
+    Second point, both stale counts fixed: the comment said "the 14 runs" where there are
+    now 15, and the module docstring still had "a negative control" singular where there
+    are two. The docstring also now states the named-guard requirement, which it did not.
+
+    Mutation test 13 guards all caught with 2 negative controls silent under both the
+    default TMPDIR and TMPDIR=/tmp; self-test 19 mutations across 23 anchors (4 baselines);
+    check_file_quotes.py clean on 18 quotes; just validate human ARHGAP23 green with zero
+    warnings. No curation surface touched.

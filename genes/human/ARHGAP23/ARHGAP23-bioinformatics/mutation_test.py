@@ -2,9 +2,10 @@
 
 A self-test that passes has proved nothing until you know it *can* fail. This script
 breaks each guard in a copy of the analysis script, one at a time, and asserts that the
-self-test catches the break. It also applies a no-op edit as a negative control, which
-must leave the self-test silent -- a self-test that fails on cosmetic changes is a
-different kind of useless.
+self-test catches the break, **by its own named guard** rather than by whatever happens to
+fail first. It also applies no-op edits as negative controls, which must leave the
+self-test silent -- a self-test that fails on cosmetic changes is a different kind of
+useless.
 
 This is committed, not kept in a scratchpad, because an uncommitted check never re-runs
 and its claims go stale silently. It caught one real hole when it was written: the
@@ -33,9 +34,18 @@ SRC = SCRIPT_DIR / "analyze_arhgap23.py"
 # mutation: before the expected-message check existed this printed "13 guards all caught"
 # off nothing but import errors, and after it every entry reports WRONG GUARD. Beside the
 # original, ``SCRIPT_DIR``, ``CACHE_DIR`` and ``REPO`` resolve identically to the real
-# script's, and the 14 runs share one warm cache instead of re-downloading UniProt, the
+# script's, and the runs share one warm cache instead of re-downloading UniProt, the
 # 1TX4 mmCIF and the Müller workbook each time.
 MUTANT = SCRIPT_DIR / ".mutation_test_subject.py"
+
+# Sharing the real SCRIPT_DIR has a cost, and it is not hypothetical: the mutant's output
+# paths are the committed ones. ``--self-test`` returns before the artifact writes today,
+# but nothing enforces that, and a mutation anchored on the dispatch line would run the
+# mutated analysis to completion and overwrite these two files in place -- and RESULTS.md
+# is the source for five ``file:`` supporting_text quotes in the review. Their bytes are
+# snapshotted and restored, in bytes rather than text so that no newline or encoding
+# normalisation can slip in through the restore itself.
+PROTECTED = (SCRIPT_DIR / "results.json", SCRIPT_DIR / "RESULTS.md")
 
 # (description, exact source text to replace, replacement). Each anchor must match
 # exactly once: zero matches would "pass" by changing nothing, two would mutate a row
@@ -166,6 +176,7 @@ def _run_self_test() -> tuple[int, str, str]:
 
 def main() -> int:
     failures: list[str] = []
+    snapshot = {p: p.read_bytes() for p in PROTECTED if p.exists()}
     try:
         # Unpacked directly, not indexed with a length check: an optional fourth element
         # would let a future three-element entry silently revert to deciding on the exit
@@ -196,6 +207,13 @@ def main() -> int:
                 print(f"ok, silent: {desc}")
     finally:
         MUTANT.unlink(missing_ok=True)
+        for path, original in snapshot.items():
+            if not path.exists() or path.read_bytes() != original:
+                path.write_bytes(original)
+                # Not silent: a mutant reaching the artifact writes means some mutation
+                # escaped --self-test's early return, which is worth knowing about.
+                failures.append(f"ARTIFACT OVERWRITTEN: {path.name} (restored from snapshot)")
+                print(f"*** ARTIFACT OVERWRITTEN: {path.name} -- restored from snapshot")
     print()
     if failures:
         print("MUTATION TEST FAILED:")
