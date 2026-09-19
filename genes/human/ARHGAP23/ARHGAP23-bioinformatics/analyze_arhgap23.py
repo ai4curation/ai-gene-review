@@ -983,8 +983,13 @@ def muller_specificity() -> dict[str, Any]:
     def _empty(cells: dict[str, Any]) -> bool:
         return all(v is None or str(v).strip() == "" for v in cells.values())
 
+    # Emptiness is computed for EVERY required group, not just the two the argument turns
+    # on. The review's prose asserts a pattern across three of them - in vitro empty, in
+    # vivo and reference filled - and an assertion wider than the computation is how the
+    # previous two rounds of this analysis went wrong.
     literature = {
         "groups": groups,
+        "empty_by_group": {g: _empty(groups[g]) for g in LITERATURE_GROUPS_REQUIRED},
         "in_vitro_empty": _empty(groups["in vitro"]),
         "in_vivo_empty": _empty(groups["in vivo"]),
         # The screen's own three specificity columns are the first such run in the row.
@@ -1386,13 +1391,18 @@ def self_test() -> int:
     baselines += 1
     lit = muller_specificity()["literature_and_screen_calls"]
     assert set(lit["screen_calls"]) == {"RhoA", "Rac1", "Cdc42"}, lit["screen_calls"]
-    assert lit["in_vitro_empty"], (
-        "the 'no in-vitro assay' claim no longer holds against Supplementary Table 2; the "
-        "review's knowledge gap and suggested experiment both depend on it"
-    )
-    assert not lit["in_vivo_empty"], (
-        "the in-vivo columns are also empty, so 'in vitro is empty' carries no information - "
-        "the parse is probably reading the wrong columns"
+    # The pattern asserted in the review's prose, checked as a whole rather than in the
+    # two places that happened to be convenient. ARHGAP23-ai-review.yaml says Supplementary
+    # Table 2 "leaves its 'in vitro' literature columns empty ... while filling the 'in vivo'
+    # and 'reference' columns", so all three are checked, not two.
+    anchors += 1
+    baselines += 1
+    expected_empty = {"in vitro": True, "in vivo": False, "reference": False}
+    observed = {g: lit["empty_by_group"][g] for g in expected_empty}
+    assert observed == expected_empty, (
+        f"Supplementary Table 2 emptiness is {observed}, not {expected_empty}. The review's "
+        "reference_review on PMID:27481945, its ONTOLOGY-adjacent knowledge gap and one "
+        "suggested experiment all assert this exact pattern, so the prose is now wrong."
     )
 
     # Mutation 12: the emptiness test must notice a populated cell.
@@ -1785,11 +1795,12 @@ def render_markdown(res: dict[str, Any]) -> str:
         )
     L.append("")
     L.append(
-        "This parse finds the **\"in vitro\" row "
-        + ("empty for all three GTPases" if lit["in_vitro_empty"] else "POPULATED")
-        + "**, and the **\"in vivo\" row "
-        + ("also empty" if lit["in_vivo_empty"] else "populated")
-        + "**. The contrast is the point: an empty in-vitro row means nothing if every row is "
+        "This parse finds "
+        + ", ".join(
+            f"the **\"{g}\" row {'empty' if lit['empty_by_group'][g] else 'populated'}**"
+            for g in LITERATURE_GROUPS_REQUIRED
+        )
+        + ". The contrast is the point: an empty in-vitro row means nothing if every row is "
         "empty. This is the machine-checkable form of the review's statement that no "
         "purified-protein GAP assay exists for ARHGAP23, and it is checked here rather than "
         "asserted because it is otherwise the one load-bearing claim in the review that nothing "

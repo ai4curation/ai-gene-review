@@ -82,6 +82,11 @@ MUTATIONS: list[tuple[str, str, str]] = [
         "    for needed in LITERATURE_GROUPS_REQUIRED:\n        if False:",
     ),
     (
+        "compute emptiness for fewer groups than the review's prose asserts",
+        '        "empty_by_group": {g: _empty(groups[g]) for g in LITERATURE_GROUPS_REQUIRED},',
+        '        "empty_by_group": {"in vitro": _empty(groups["in vitro"])},',
+    ),
+    (
         "render a literature group the presence guard does not require",
         'LITERATURE_GROUPS_REQUIRED = ("integrated", "in vitro", "in vivo", "reference")',
         'LITERATURE_GROUPS_REQUIRED = ("in vitro", "in vivo")',
