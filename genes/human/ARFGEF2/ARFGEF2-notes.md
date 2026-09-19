@@ -251,6 +251,23 @@ canonical entries of the expected length — no TrEMBL or ORFeome substitutions)
 information", not "the interaction is false" — each interaction is stated in the
 `reason` and, where it supports one, in a replacement term.
 
+## MON2 has the family's DCB and HUS modules but not the catalytic domain
+
+The `GO:0005085` IBA node's heterogeneity is the reason the general term is the
+LCA, and one donor makes that concrete. Measured against UniProt rather than
+asserted:
+
+| protein | SEC7 `Domain` feature | Pfam |
+|---|---|---|
+| `P11075` yeast SEC7 | `824..1010` | PF20252, PF16213, **PF01369**, PF09324, PF12783 |
+| `Q9Y6D5` human ARFGEF2 | `654..785` | PF20252, PF16213, **PF01369**, PF09324, PF12783 |
+| `P48563` yeast MON2 | **none** | PF16213, PF16206, PF12783 — **no PF01369** |
+
+MON2 keeps DCB (PF16213) and HUS (PF12783) and lacks the catalytic Sec7 domain.
+It nevertheless holds `GO:0005085` itself, by ISS + IGI + IPI from
+`PMID:12052896` (SGD) — which is an observation about MON2's own record, not an
+argument about ARFGEF2, and is recorded that way.
+
 ## Things I checked that came back negative
 
 - **Retraction / erratum check.** None of the PMIDs relied on here carries a
@@ -266,5 +283,19 @@ information", not "the interaction is false" — each interaction is stated in t
   frontmatter reports `faith_pct: 100.0` and `self_evaluation_pairwise: win`,
   which are precision signals and say nothing about recall.
 - **Complex-projection check** on the synapse block: negative (2 entities).
+- **A species-misdirection hypothesis that did NOT confirm.** `PMID:11809827`
+  (Zhao, Lasell & Melançon 2002) is the second rat reference behind the
+  `GO:0005802` transfer. It annotates exactly 2 entities, both rat, and **zero**
+  on either human protein — which looked like it might be a human experiment
+  annotated to rat and then projected back. It is not: the paper's cell systems
+  are **NRK (normal rat kidney)** and BHK. The rat annotations are
+  species-correct and the missing human row is a coverage gap, not a
+  misattribution.
+- **PANTHER placement check: negative, no mis-clustering.** In the cached
+  `PTHR10663` family, each human large ArfGEF has its own subfamily named for
+  itself — ARFGEF2 `SF124`, ARFGEF1 `SF137`, ARFGEF3 `SF344`, GBF1 `SF388`. No
+  paralog-named subfamily sweeps this gene in and no architecturally unrelated
+  member occupies its node; the IBA rows' breadth comes from the family-level
+  node `PTN008950430`, which is the correct place for it.
 - **Partner-accession check**: negative (no TrEMBL/partial-clone substitutions).
 - **Dead-accession check**: negative (all 45 WITH/FROM tokens resolved, 0 dead).

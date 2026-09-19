@@ -74,6 +74,20 @@ PUBS = ROOT / "publications"
 
 N_NEW_ROWS = 2  # rows this review adds beyond GOA; stated, not inferred.
 
+# The PR description publishes this histogram, and the PR body is outside any
+# lint's scan surface. Pinning it here means a later edit that changes an action
+# fails the lint instead of silently contradicting the published description.
+# The first draft of that table was wrong on three of six rows and was caught
+# only by recomputing it.
+EXPECTED_ACTIONS = {
+    "ACCEPT": 27,
+    "KEEP_AS_NON_CORE": 25,
+    "REMOVE": 10,
+    "MARK_AS_OVER_ANNOTATED": 3,
+    "MODIFY": 1,
+    "NEW": 2,
+}
+
 # Claims this review considered and withdrew. Each entry matches the SHAPE of the
 # error (a bounded regex over whitespace-normalised text), not a literal sentence:
 # a hand-enumerated list of sentences never terminates, because the next wording
@@ -303,6 +317,14 @@ def check_coverage(doc, goa_rows, problems: list[str]) -> None:
     if pending:
         problems.append(f"{len(pending)} rows still PENDING: {pending}")
 
+    from collections import Counter
+    got = Counter((a.get("review") or {}).get("action") for a in ann)
+    if dict(got) != EXPECTED_ACTIONS:
+        problems.append(
+            f"action histogram drift: published description says {EXPECTED_ACTIONS}, file has "
+            f"{dict(got)}. Update both, or neither."
+        )
+
 
 def check_numbers(audit: dict, texts: dict[str, str], problems: list[str]) -> int:
     """Numbers asserted in prose must still match the computed audit."""
@@ -503,6 +525,14 @@ def self_test(raw_review: str, texts: dict[str, str], audit: dict, goa_rows) -> 
     mutated_audit["cilium_census"]["per_accession"][exo]["cilium_terms"] = []
     cases.append(("EXOC7 counterweight lost", raw_review, texts, mutated_audit, goa_rows,
                   "EXOC7 ciliary-basal-body result"))
+
+    # 7d. an action flipped - histogram drifts away from the published description
+    mutated = copy.deepcopy(doc)
+    tgt = next(a for a in mutated["existing_annotations"]
+               if a["review"]["action"] == "KEEP_AS_NON_CORE")
+    tgt["review"]["action"] = "ACCEPT"
+    cases.append(("action histogram drift", yaml.dump(mutated, sort_keys=False, allow_unicode=True),
+                  texts, audit, goa_rows, "action histogram drift"))
 
     # 8. a retracted phrasing reappearing
     mutated_texts = dict(texts)
