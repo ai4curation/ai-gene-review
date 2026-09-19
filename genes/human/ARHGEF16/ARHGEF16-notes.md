@@ -257,9 +257,11 @@ interactions, which are both the de-repressor and the downstream effector.
 
 ## 9. The interactome rows
 
-Fifty of the 77 GOA rows are `GO:0005515 protein binding` IPI, and they are not
-fifty biological partnerships. They partition almost entirely into three
-mechanistic classes, all explained by two short motifs:
+Fifty-seven of the 77 GOA rows are `GO:0005515 protein binding` IPI, and they are
+not fifty-seven biological partnerships. Two short motifs explain 49 of them: the
+review retypes 42 to `GO:0030165 PDZ domain binding` and 7 to `GO:0071889 14-3-3
+protein binding`, leaving 8 one-off screen hits kept as non-core. The three
+classes are:
 
 - **PDZ-domain screens** — [PMID:36115835] (quantitative fragmentomics, 37 rows),
   [PMID:30126976], [PMID:32203420], [PMID:32296183]. Partners are DLG1-5, MAGI1-3,
