@@ -34,44 +34,98 @@ uv run python audit_arglu1_review.py --self-test
 
 ## `verify_authored_terms.py` — two services, not two endpoints
 
-Checks every GO id the review **authors** (`core_functions`,
-`proposed_replacement_terms`, and the `term.id` of every `action: NEW` row)
-against **QuickGO and OLS4 independently**, and fails on obsolescence or on a
-disagreement between them. Ids that came from GOA are deliberately not checked —
-per `CLAUDE.md` those are machine-supplied and not the reviewer's to second-guess.
+Checks every GO id the review **authors** against **QuickGO and OLS4
+independently**. Ids that came from GOA are deliberately not checked — per
+`CLAUDE.md` those are machine-supplied and not the reviewer's to second-guess —
+and their count is printed so the exclusion is visible rather than silent.
 
-This exists because a single service was a confident outlier twice in this PR's
+It exists because a single service was a confident outlier twice in this PR's
 history. QuickGO reported `GO:0035259` obsolete and `GO:0016922` childless; the GO
 API, OLS4 and the repository's own `cache/ontologies/go.tsv` all disagreed, and
 QuickGO was wrong on both. The compounding error was that the "two checks" behind
 the claim were QuickGO's `/children` endpoint and QuickGO's text search —
 **two methods against one service is one check.**
 
-Also worth knowing: QuickGO silently resolves merges. `GO:0035257`/`GO:0035258`
-return `GO:0016922`'s record with `isObsolete=False`, where OLS4 reports them
-obsolete-replaced-by. So a QuickGO "not obsolete" can mean either "current" or
-"merged into something else", and the two cannot be told apart from that response.
+### What it fails on, and what it only reports
+
+| scope | treatment |
+|---|---|
+| `core_functions`, `proposed_replacement_terms`, `term.id` of `action: NEW` rows | **FAIL** on obsolescence per either service, non-resolution, or a declared `label` matching neither service |
+| any `GO:\d{7}` appearing **only in free text** | **report** status + service disagreement as advisory |
+
+**The prose arm deliberately does not adjudicate, and that is a retraction of an
+earlier claim here.** The `GO:0035259` defect lived in `suggested_questions`
+prose, so a structured-slot-only guard would not have caught it and an earlier
+version of this README said this script "guards the class". It does not, quite.
+
+Attributing an English status phrase to a particular id by proximity was
+implemented and then withdrawn, because it produced false positives in both
+directions **on this very document**:
+
+- *"a bare `GO:0005515` row **is replaced by** a more informative term"* reads as
+  an obsolescence claim about `GO:0019901`, which appears two clauses later;
+- *"`GO:0035257` and `GO:0035258` were **absorbed into** `GO:0016922`"* reads as
+  one about `GO:0016922`, which is active.
+
+A guard that cries wolf on correct content gets switched off, which is worse than
+not having it. So prose ids get their true status surfaced for a human to check
+against the sentence, and the summary line states the structured count and the
+prose count separately rather than implying one number covers both.
+
+Also worth knowing, and the reason the two services are not interchangeable:
+**QuickGO silently resolves merges.** `GO:0035257`/`GO:0035258` return
+`GO:0016922`'s record with `isObsolete=False`, where OLS4 reports them
+obsolete-replaced-by. So a QuickGO "not obsolete" can mean either *current* or
+*merged into something else*, and the response cannot distinguish them.
 
 ## `verify_quotes.py` — where the repo's quote gate is weakest
 
-Checks all 61 `supporting_text` values against their cached publications using the
-repo validator's own normalisation (case, whitespace, punctuation, Greek letters
-spelled out), so it neither invents failures the validator would not see nor hides
-ones it would.
+Checks all **83** `supporting_text` values against their cached publications via
+`build_supporting_text_validator()` — the repo's own helper, configured from
+`conf/reference_validator_config.yaml` — so it uses the same matcher, the same
+`literal_bracket_patterns` and the same `skip_prefixes` as the gate rather than an
+approximation of them.
 
 It is not redundant with `just validate`. For a reference whose cache is
-**abstract-only**, `src/ai_gene_review/validation/validator.py` downgrades a
-non-matching quote from ERROR to **WARNING** (the
-`declared_unavailable or cache_has_full_text is False` branch). **Six** of this
-review's references are abstract-only — `PMID:21454576`, `PMID:22365833`,
-`PMID:22923044`, `PMID:23602568`, `PMID:36533631`, `PMID:42641889` — so a
-paraphrase against any of them would not fail the build. One of them,
-`PMID:22923044`, carries the quote the whole mitochondrion finding rests on.
+**abstract-only**, `validation/validator.py:156` downgrades a non-matching quote
+from ERROR to **WARNING**. **Six** of this review's references are abstract-only —
+`PMID:21454576`, `PMID:22365833`, `PMID:22923044`, `PMID:23602568`,
+`PMID:36533631`, `PMID:42641889`, covering 25 quote instances — so a paraphrase
+against any of them would not fail the build. One of them, `PMID:22923044`,
+carries the quote the whole mitochondrion finding rests on.
 
-`--self-test` corrupts a quote against a full-text source *and* against an
-abstract-only source and asserts both are detected. The abstract-only case is
-tested separately on purpose: it is the case the repo gate weakens on, so it is
-the one whose silent failure would matter most.
+### The inversion this script was rewritten to fix
+
+The first version collected a quote only when the **same dict** carried both
+`reference_id` and `supporting_text`. But `references[].findings[]` entries carry
+`statement` + `supporting_text`, with the identifier on the **parent**
+`references[].id`. So it silently skipped all 22 findings quotes:
+
+| path | quotes | gated by |
+|---|---|---|
+| `review.supported_by`, `core_functions[].supported_by`, `knowledge_gaps[].provenance` | 61 | external CLI — **strict** |
+| `references[].findings[]` | 22 | `validator.py` — **ERROR→WARNING when abstract-only** |
+
+It covered the 61 the strict gate already handles and missed every one of the 22
+gated by the weak branch it cited as its reason for existing — 8 of those on
+abstract-only sources. It reported *"quotes found: 61"*, which read as complete
+coverage at 73%.
+
+Two structural fixes, both of which a future shape change must survive:
+
+1. the collector **inherits the parent `references[].id`** when walking into
+   `findings`, and records which shape each quote came from; and
+2. the collected count is **asserted equal to the number of `supporting_text:`
+   keys in the raw file**, so a collector that cannot see part of the document
+   fails loudly instead of under-reporting. Fix the walk, never the assertion.
+
+`--self-test` corrupts a quote on the **findings path against an abstract-only
+source** (the case the old version structurally could not reach *and* the only
+path the downgrade covers), a quote on the `supported_by` path against a
+full-text source, and asserts the coverage invariant fires on a crippled
+document. Each case requires the problem to name **that path and that gate**, not
+merely to be non-empty — a mutation that trips some other check is not evidence
+the guard under test works.
 
 ## `audit_arglu1_review.py`
 
