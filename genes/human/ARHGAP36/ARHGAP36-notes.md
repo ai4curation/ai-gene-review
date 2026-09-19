@@ -82,9 +82,45 @@ the cache:
 Reference `[25]` in that PLoS One sentence resolves (from the journal's own bibliography
 at journals.plos.org, DOI 10.1371/journal.pone.0251684) to **Müller et al. 2020 Nat Cell
 Biol 22:498–511, PMID:32203420** — a systems-level screen of RhoGEF/RhoGAP regulatory
-proteins. That is the primary negative functional result. Its cached record is
-abstract-only, so the claim is anchored on the PLoS One sentence above rather than quoted
-from it.
+proteins. That is the primary negative functional result.
+
+### Reading Müller 2020 first-hand, despite the paywall
+
+The article is **not open access** (Europe PMC: no PMC id, `isOpenAccess: N`,
+`inEPMC: N`), so the cached record is abstract-only and nothing from it can be used as
+`supporting_text`. But the **supplementary workbook is freely downloadable** from
+Springer. `ARHGAP36-bioinformatics/scan_muller_supplementary.py` fetches it and reads the
+row, so the review's central functional claim is first-hand and re-derivable rather than
+a chain of citations.
+
+**Supplementary Table 2**, "RhoGEF/RhoGAP specificities identified in this study and in
+the literature", activity-screen columns:
+
+| gene | RhoA | Rac1 | Cdc42 | |
+|---|---|---|---|---|
+| **ARHGAP36** | **−** | **−** | **−** | query |
+| ARHGAP35 | + | + | − | control |
+| ARHGAP1 | + | − | + | control |
+| ARHGAP17 | − | − | − | control |
+
+**Supplementary Table 1**, the cDNA library: ARHGAP36's entry records
+`GEF or GAP (or GAP-like)` = **"GAP-like (arginine finger missing)"** — the authors' own
+domain call, an independent expert judgment — and `Comments` = **"human isoform2"**,
+517 aa, species Human. That rules out the obvious objection that an inactive splice
+variant was screened: isoform 2 is the functionally active one in every Hedgehog assay.
+
+**How much is a negative worth here? Counted, not assumed.** 15 of the 65 scorable GAP
+rows are negative for all three GTPases (23%), and **ARHGAP17/RICH1, a characterised
+Cdc42 GAP, is one of them** — so the screen has false negatives and a single negative
+call is not a refutation on its own. This is stated in the review rather than hidden.
+
+What makes ARHGAP36's negative count is that it agrees with an independent measurement.
+Of the six reviewed human PROSITE-`PS50238` proteins whose annotated arginine-finger
+position does not hold an arginine (derived in `results.json`, not restated) and that
+appear in the screen — ARAP2, ARHGAP36, DEPDC1B, FAM13B, INPP5B, OCRL — **four are
+all-negative**: ARHGAP36, DEPDC1B, INPP5B, OCRL. Against a 23% base rate that is a clear
+enrichment. Two of the six are *not* all-negative, which is the same decoupling lesson
+the ARHGAP11B review drew, and the reason the review does not rest on the residue alone.
 
 Reference `[24]` is Scheffzek/Ahmadian/Wittinghofer 1998 on the arginine-finger mechanism;
 `[28]` is **Amin et al. 2016 JBC, PMID:27481945**, a systematic survey of all 66 human

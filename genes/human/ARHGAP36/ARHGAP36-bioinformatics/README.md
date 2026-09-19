@@ -33,7 +33,45 @@ a missing input is a hard error naming the fix, never a silently dropped section
 | `analyze_arhgap36.py` | the structural analysis, plus `--self-test` |
 | `RESULTS.md` | generated report |
 | `results.json` | generated machine-readable output |
+| `scan_muller_supplementary.py` | reads ARHGAP36's row out of PMID:32203420's supplementary tables, plus `--self-test` |
+| `muller2020_arhgap36.json` | generated output of that scan |
 | `check_review.py` | checks on the review YAML itself, plus `--self-test` |
+
+## `scan_muller_supplementary.py`
+
+```
+uv run --no-project --with "openpyxl>=3.1" python scan_muller_supplementary.py
+uv run --no-project --with "openpyxl>=3.1" python scan_muller_supplementary.py --self-test
+```
+
+PMID:32203420 (Müller et al. 2020, Nat Cell Biol) is the primary source of the negative
+functional result on this gene, and it is **not open access** — Europe PMC returns no PMC
+id and `isOpenAccess: N` — so the repository's cached record is abstract-only and the
+review cannot quote it as `supporting_text`. Its **supplementary workbook is freely
+downloadable**, so this script fetches it and reads the row, turning a second-hand
+citation into a number anyone can re-derive.
+
+What it finds: in Supplementary Table 2's activity-screen columns **ARHGAP36 is negative
+for RhoA, Rac1 and Cdc42**, with ARHGAP35 (RhoA+, Rac1+) and ARHGAP1 (RhoA+, Cdc42+)
+positive in the same run. Supplementary Table 1 records the screened construct as **human
+isoform 2, 517 aa**, which rules out the objection that an inactive splice variant was
+tested, and carries the authors' own domain call verbatim: **"GAP-like (arginine finger
+missing)"**.
+
+It then does the thing that keeps the result honest. **15 of the 65 scorable GAP rows are
+negative for all three GTPases (23%), and ARHGAP17/RICH1 — a characterised Cdc42 GAP — is
+one of them.** The screen has false negatives, so one negative call is not a refutation.
+What makes this one count is agreement with an independent measurement: of the six
+arginine-finger-less PROSITE-RhoGAP proteins that appear in the screen, **four are
+all-negative, ARHGAP36 among them**. That set is not written here — it is read from
+`results.json`, the output of `analyze_arhgap36.py`, and the gene symbols are resolved
+through UniProt rather than guessed.
+
+Column positions are derived from the header, never hardcoded. `--self-test` asserts 9
+propositions, including four mutations that must each be refused — a blanked call cell
+(which must not silently read as negative), an all-negative control set, an all-positive
+control set, and a renamed header — and one negative control: editing an unrelated gene's
+row must leave the query's calls untouched.
 
 ## `check_review.py`
 
