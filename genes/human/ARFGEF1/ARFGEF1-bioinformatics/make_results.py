@@ -192,6 +192,22 @@ def build() -> str:
     A(" ".join(sec_ids))
     A("```")
     A("")
+    gef_narrow = [s for s in (gef.get("narrow_synonyms") or [])
+                  if "guanyl-nucleotide exchange factor activity" in s]
+    if not gef_narrow:
+        raise SystemExit(
+            "GO:0005085 has no narrow GEF synonyms in term_status.json; regenerate "
+            "it with check_terms.py (the synonym list is what identifies which "
+            "substrate-specific activities were absorbed)"
+        )
+    A("The merged ids themselves now resolve to the parent, so their old labels are")
+    A("gone from the current ontology. What survives is the synonym list: GO:0005085")
+    A(f"carries {len(gef_narrow)} narrow synonyms naming substrate-specific exchange")
+    A("activities, which is the retrievable evidence of what was absorbed:")
+    A("")
+    for s in gef_narrow:
+        A(f"- {s}")
+    A("")
     A(f"Its only children are {len(gef_children)}, neither of them a substrate-specific activity:")
     A("")
     for c in gef_children:
@@ -260,7 +276,9 @@ def build() -> str:
     A(f"{len(trunc)} references are too large to enumerate from one page "
       f"({', '.join(trunc)}); their entity")
     A("counts are reported as unavailable rather than derived from a partial page. All")
-    A("three are proteome-scale interaction maps contributing only `GO:0005515`.")
+    A("three are proteome-scale interaction maps, and every row they contribute **to")
+    A("ARFGEF1** is `GO:0005515` — what they contribute to the rest of GOA was not")
+    A("enumerated and is not claimed here.")
     A("")
 
     A("## 6. Literature coverage")

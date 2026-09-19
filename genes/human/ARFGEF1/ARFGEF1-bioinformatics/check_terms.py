@@ -92,6 +92,14 @@ def main() -> None:
             "secondaryIds": rec.get("secondaryIds"),
             "definition": (rec.get("definition") or {}).get("text"),
             "comment": rec.get("comment"),
+            # Narrow synonyms are where a merged child's label survives. They are
+            # the only retrievable evidence of WHICH substrate-specific activities
+            # were absorbed: the merged ids themselves resolve to the parent and
+            # their old labels are gone from the current ontology.
+            "narrow_synonyms": sorted(
+                s["name"] for s in (rec.get("synonyms") or [])
+                if s.get("type") == "narrow"
+            ),
         }
         print(f"{t}\t{rec.get('name')}\taspect={rec.get('aspect')}\t"
               f"obsolete={rec.get('isObsolete')}\treplacements={rec.get('replacements')}\t"

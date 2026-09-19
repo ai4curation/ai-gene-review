@@ -46,6 +46,22 @@ substrate-specific is_a children. The merged ids are:
 GO:0005086 GO:0005087 GO:0005088 GO:0005089 GO:0005090 GO:0008321 GO:0008433 GO:0016219 GO:0016220 GO:0017034 GO:0017112 GO:0017132 GO:0019839 GO:0030676
 ```
 
+The merged ids themselves now resolve to the parent, so their old labels are
+gone from the current ontology. What survives is the synonym list: GO:0005085
+carries 10 narrow synonyms naming substrate-specific exchange
+activities, which is the retrievable evidence of what was absorbed:
+
+- ARF guanyl-nucleotide exchange factor activity
+- Rab guanyl-nucleotide exchange factor activity
+- Rac guanyl-nucleotide exchange factor activity
+- Ral guanyl-nucleotide exchange factor activity
+- Ran guanyl-nucleotide exchange factor activity
+- Rap guanyl-nucleotide exchange factor activity
+- Ras guanyl-nucleotide exchange factor activity
+- Rho guanyl-nucleotide exchange factor activity
+- Sar guanyl-nucleotide exchange factor activity
+- cAMP-dependent guanyl-nucleotide exchange factor activity
+
 Its only children are 2, neither of them a substrate-specific activity:
 
 - `GO:1905098` (negatively_regulates) — negative regulation of guanyl-nucleotide exchange factor activity
@@ -115,7 +131,9 @@ pattern of a complex-level phenotype distributed to every subunit.
 
 3 references are too large to enumerate from one page (PMID:33961781, PMID:35271311, PMID:40205054); their entity
 counts are reported as unavailable rather than derived from a partial page. All
-three are proteome-scale interaction maps contributing only `GO:0005515`.
+three are proteome-scale interaction maps, and every row they contribute **to
+ARFGEF1** is `GO:0005515` — what they contribute to the rest of GOA was not
+enumerated and is not claimed here.
 
 ## 6. Literature coverage
 
