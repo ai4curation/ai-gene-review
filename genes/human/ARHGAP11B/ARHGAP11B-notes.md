@@ -255,7 +255,12 @@ most useful thing a curator could act on from this review after the Reactome con
 
 ## Checks run, including the ones that came back negative
 
-- **Row reconciliation:** 17 GOA rows, 17 seeded entries. No collapse. (Negative result.)
+- **Row reconciliation:** 17 GOA rows, 17 seeded entries, no collapse — a negative result,
+  since the `fetch-gene` stub is known to merge `GO:0005515` partner rows and same-term rows
+  from different assigners on other genes. Enforced by
+  `ARHGAP11B-bioinformatics/check_review_counts.py` rather than counted by eye, which also
+  rejects duplicate YAML keys (PyYAML keeps the last and discards the earlier one silently,
+  so data can vanish before any parsed-document check runs).
 - **Retraction / erratum / expression-of-concern:** checked per-PMID against each cited
   article's own PubMed `CommentsCorrections`/`RefType`, not by a publication-type search
   (which cannot see Publisher Corrections). Result recorded per reference below.
@@ -315,10 +320,22 @@ supporting_text at all, nothing verifiable was lost — but the `⚠ No annotati
 available deep research files` warning that `just validate` emits is a direct result of this
 and should not be read as the affinage record having been ignored.
 
-## Open items I could not resolve
+## Open items and limits on what could be verified
 
-- **PMID:32554627** (marmoset, Science 2020) would not fetch (`Failed to fetch PMID
-  32554627`). It is cited by UniProt and by affinage but is not in GOA, so nothing in the
-  review depends on it; it is named in the notes only as part of the systems table.
 - **PMID:31883789 and PMID:25721503 are abstract-only.** Their IDA rows are accepted on the
-  curators' authority. I did not attempt to overrule any of them.
+  curators' authority; I did not attempt to overrule any of them. Where the abstract is less
+  specific than the term it supports — it says "mitochondria", the term says "mitochondrial
+  matrix" — the row says so explicitly and defers to the curator's reading of the full text
+  rather than letting a quote appear to carry more than it does.
+- **PMID:36098218's full text is cached locally from PMC, but the reference validator
+  resolves it to abstract-only** (it tries the publisher copy, which returns HTTP 403). All
+  quotes from it are therefore taken from the abstract. This cost a round: the first draft
+  quoted the full-text wording and failed validation.
+- **PMID:32554627** (marmoset, Science 2020) failed to fetch on the first attempt and
+  succeeded on a retry; it is now cached (abstract-only) and cited with a verified quote. It
+  supports no GOA row, so nothing in the review turns on it. Noted because a transient fetch
+  failure is easy to mistake for an unavailable paper.
+- **`GO:0141110 transporter inhibitor activity`** may be the better molecular function for
+  the ANT interaction than the `GO:0044325` proposed here, but deciding that needs the full
+  text of PMID:31883789 — "inhibits the mPTP" and "inhibits ANT-mediated transport" are
+  different claims. Left as a question rather than resolved.
