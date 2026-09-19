@@ -14,11 +14,17 @@ script is built to demonstrate that rather than to confirm a prior:
 Analysis 1 -- where the paralogy actually ends.
   ARHGAP11B and ARHGAP11A are colinear from Met1, so identity is measured by direct
   positional comparison and the colinearity is *proved* first, by asserting that a
-  global alignment of the two N-terminal regions opens no gaps. A divergence point is
-  then derived from the observed windowed-identity distribution -- the threshold is
-  placed inside the largest observed gap in that distribution, and the script fails
-  loudly if the distribution is not cleanly bimodal. No divergence position is taken
-  from the literature or hardcoded.
+  global alignment of the two N-terminal regions opens no gaps. The boundary is then the
+  single changepoint that maximises the between-segment sum of squares of the per-residue
+  identity vector, with its significance established by permuting that vector. **No
+  identity cutoff is chosen anywhere**, and the script raises rather than reporting the
+  argmax of noise if any permutation matches the observed statistic. No divergence
+  position is taken from the literature or hardcoded.
+
+  (An earlier version did place a threshold inside the largest gap of a windowed-identity
+  distribution. That was abandoned because the windows straddling the boundary take every
+  intermediate value, so the distribution is never cleanly bimodal and the check could not
+  fire.)
 
 Analysis 2 -- the arginine finger, tested reciprocally.
   Each control's own UniProt-annotated arginine finger is aligned onto ARHGAP11B, and
@@ -31,10 +37,12 @@ Analysis 2 -- the arginine finger, tested reciprocally.
 
 Analysis 3 -- does the arginine-finger test discriminate anything in this family?
   Every human reviewed protein carrying the PROSITE RhoGAP profile is fetched and asked
-  whether it has an annotated arginine finger and whether that position holds an
-  arginine. A test that returns "retained" for essentially the whole family carries
-  almost no information about any individual member, which is a measurable property of
-  the test, not an opinion about it.
+  whether it has an annotated arginine finger and whether that position holds an arginine.
+  Then -- because a count of FLAGGED proteins is not a count of confirmed pseudo-enzymes --
+  each flagged entry is asked what UniProt itself concluded about its catalytic status, and
+  on what evidence code. The result is that residue identity and curated activity are
+  decoupled in both directions in this family, which is a measurable property of the test
+  rather than an opinion about it.
 
 Analysis 4 -- what is actually lost, measured on a structure.
   The GAP:GTPase interface is computed from PDB 1TX4 (p50RhoGAP:RhoA:GDP:AlF4, 1.65 A),
@@ -68,6 +76,7 @@ import json
 import sys
 import urllib.error
 import urllib.request
+from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -452,7 +461,64 @@ def fetch_rhogap_family() -> tuple[list[dict[str, Any]], int]:
     return results, total
 
 
-def census_arginine_fingers(entries: list[dict[str, Any]]) -> dict[str, Any]:
+# Phrases that can only be about the PROTEIN's own catalytic status. An earlier version of
+# this check used the bare word "inactive", which matched ARHGAP36's FUNCTION line
+# "converting them to an inactive GDP-bound state" -- the GTPase's state, not the protein's
+# -- and scored a protein UniProt calls ACTIVE as confirmed inactive. Any substring test on
+# a controlled vocabulary needs an anchor.
+INACTIVE_PHRASES = (
+    "lacks the catalytic arginine",
+    "is catalytically inactive",
+    "catalytically inactive",
+    "does not have gtpase activator",
+    "no gap activity",
+    "lacks gap activity",
+)
+ACTIVE_PHRASES = ("gtpase activator", "gap activity")
+EXPERIMENTAL_ECO = "ECO:0000269"
+
+
+def catalytic_status(rec: dict[str, Any]) -> dict[str, Any]:
+    """What does UniProt itself say about this protein's GAP activity, and on what evidence?
+
+    Residue identity is one thing; what a curator has concluded is another. Reporting them
+    separately is the point -- if they disagree, that disagreement is the finding.
+    """
+    items = []
+    for c in rec.get("comments", []):
+        if c.get("commentType") not in {"FUNCTION", "CAUTION", "DOMAIN"}:
+            continue
+        for t in c.get("texts", []):
+            ecos = sorted({e.get("evidenceCode", "") for e in (t.get("evidences") or [])})
+            items.append({"type": c["commentType"], "text": t.get("value", ""), "eco": ecos})
+
+    inact = [i for i in items if any(k in i["text"].lower() for k in INACTIVE_PHRASES)]
+    act = [
+        i
+        for i in items
+        if any(k in i["text"].lower() for k in ACTIVE_PHRASES)
+        and not any(k in i["text"].lower() for k in INACTIVE_PHRASES)
+    ]
+    if inact:
+        verdict = "UNIPROT_SAYS_INACTIVE"
+        chosen = inact[0]
+    elif act:
+        verdict = "UNIPROT_ASSERTS_ACTIVITY"
+        chosen = act[0]
+    else:
+        return {"verdict": "UNIPROT_SILENT", "statement": None, "eco": [], "experimental": False}
+    return {
+        "verdict": verdict,
+        "statement": chosen["text"][:400],
+        "comment_type": chosen["type"],
+        "eco": chosen["eco"],
+        "experimental": EXPERIMENTAL_ECO in chosen["eco"],
+    }
+
+
+def census_arginine_fingers(
+    entries: list[dict[str, Any]], fetch_status: bool = True
+) -> dict[str, Any]:
     with_finger, without_finger = [], []
     finger_is_r, finger_not_r = [], []
     for rec in entries:
@@ -472,12 +538,27 @@ def census_arginine_fingers(entries: list[dict[str, Any]]) -> dict[str, Any]:
             finger_is_r.append(row)
         else:
             finger_not_r.append(row)
+    # For everything the residue screen FLAGS, ask what UniProt concluded independently.
+    # A count of flagged proteins is not a count of confirmed pseudo-enzymes.
+    status_counts: Counter[str] = Counter()
+    n_experimental = 0
+    if fetch_status:
+        for row in finger_not_r:
+            rec = fetch_uniprot(row["accession"])
+            st = catalytic_status(rec)
+            row["uniprot_catalytic_status"] = st
+            status_counts[st["verdict"]] += 1
+            if st["verdict"] == "UNIPROT_SAYS_INACTIVE" and st["experimental"]:
+                n_experimental += 1
+
     return {
         "n_entries": len(entries),
         "n_with_annotated_arginine_finger": len(with_finger),
         "n_without_annotated_arginine_finger": len(without_finger),
         "n_finger_position_is_arginine": len(finger_is_r),
         "n_finger_position_not_arginine": len(finger_not_r),
+        "flagged_uniprot_status_counts": dict(status_counts),
+        "n_flagged_confirmed_inactive_experimentally": n_experimental,
         "finger_not_arginine": finger_not_r,
         "without_annotated_arginine_finger": without_finger,
     }
@@ -961,9 +1042,54 @@ def self_test() -> int:
             ],
         },
     ]
-    got = census_arginine_fingers(fake)
+    got = census_arginine_fingers(fake, fetch_status=False)
     if got["n_finger_position_not_arginine"] != 1 or got["n_finger_position_is_arginine"] != 1:
         failures.append(f"T4: census cannot discriminate a lost arginine finger: {got}")
+
+    # ---- T4b: the catalytic-status reader must not be fooled by "inactive GDP-bound state".
+    # This is a real bug this script had: the bare keyword "inactive" matched ARHGAP36's
+    # FUNCTION line, which describes the GTPASE's state, and scored a protein UniProt calls
+    # ACTIVE as confirmed inactive. Regression-tested with the exact sentence.
+    decoy = {
+        "comments": [
+            {
+                "commentType": "FUNCTION",
+                "texts": [
+                    {
+                        "value": (
+                            "GTPase activator for the Rho-type GTPases by converting them "
+                            "to an inactive GDP-bound state"
+                        ),
+                        "evidences": [{"evidenceCode": "ECO:0000250"}],
+                    }
+                ],
+            }
+        ]
+    }
+    got_decoy = catalytic_status(decoy)
+    if got_decoy["verdict"] != "UNIPROT_ASSERTS_ACTIVITY":
+        failures.append(
+            "T4b: 'inactive GDP-bound state' was read as the protein being inactive; "
+            f"got {got_decoy['verdict']}"
+        )
+    truly_inactive = {
+        "comments": [
+            {
+                "commentType": "DOMAIN",
+                "texts": [
+                    {
+                        "value": "the Rho-GAP domain lacks the catalytic arginine and is catalytically inactive",
+                        "evidences": [{"evidenceCode": "ECO:0000269"}],
+                    }
+                ],
+            }
+        ]
+    }
+    got_inact = catalytic_status(truly_inactive)
+    if got_inact["verdict"] != "UNIPROT_SAYS_INACTIVE" or not got_inact["experimental"]:
+        failures.append(f"T4b: a genuine inactivity statement was missed: {got_inact}")
+    if catalytic_status({"comments": []})["verdict"] != "UNIPROT_SILENT":
+        failures.append("T4b: an empty record was not reported as silent")
 
     # ---- T5: a dead/empty UniProt record must be a hard error, not a silent zero.
     try:
@@ -1012,7 +1138,7 @@ def self_test() -> int:
     for line in failures:
         print("SELF-TEST FAIL:", line)
     if not failures:
-        print("SELF-TEST: all 6 checks fired as intended")
+        print("SELF-TEST: all 7 checks fired as intended")
     return 1 if failures else 0
 
 
@@ -1140,21 +1266,44 @@ def render_markdown(res: dict[str, Any]) -> str:
                 "any other, so it could not have predicted ARHGAP11B's inactivity."
             )
         else:
-            rows = ", ".join(
-                f"`{r['entry_name']}` ({'/'.join(r['residues'])})"
-                for r in census["finger_not_arginine"]
+            a(
+                f"The screen flags {census['n_finger_position_not_arginine']} of "
+                f"{census['n_entries']}. **ARHGAP11B is not among them.** But a count of flagged "
+                "proteins is not a count of confirmed pseudo-enzymes, so each flagged entry is "
+                "asked what UniProt itself concluded, and on what evidence:"
             )
-            a(f"Members whose annotated finger position is **not** an arginine: {rows}.")
+            a("")
+            a("| entry | residue | UniProt verdict | evidence |")
+            a("|---|---|---|---|")
+            for r in census["finger_not_arginine"]:
+                st = r.get("uniprot_catalytic_status", {})
+                eco = ", ".join(st.get("eco") or []) or "-"
+                a(
+                    f"| `{r['entry_name']}` | {'/'.join(r['residues'])} | "
+                    f"{st.get('verdict', '?')} | {eco} |"
+                )
             a("")
             a(
-                f"So the test is not vacuous — it does flag "
-                f"{census['n_finger_position_not_arginine']} of {census['n_entries']} reviewed "
-                "human RhoGAP-profile proteins as having lost the catalytic arginine. "
-                "**ARHGAP11B is not one of them.** It is a false negative of a test that "
-                "otherwise works: a protein with two independent experimental `NOT enables "
-                "GO:0005096` annotations that nonetheless passes the catalytic-residue screen. "
-                "A curation pipeline that gates a GAP-activity term on arginine-finger "
-                "presence would therefore keep the term on this protein."
+                f"Only **{census['n_flagged_confirmed_inactive_experimentally']}** of the flagged "
+                "entries carries an *experimentally* supported (`ECO:0000269`) UniProt statement "
+                "that the domain is catalytically inactive for want of the arginine."
+            )
+            a("")
+            a(
+                "The sharper result is that **residue identity and curated activity are decoupled "
+                "in both directions within this family**. ARHGAP11B keeps the arginine and is "
+                "experimentally GAP-dead. `RHG36_HUMAN` (ARHGAP36) has a threonine at its own "
+                "annotated arginine-finger position and UniProt nonetheless asserts GTPase "
+                "activator activity for it — by similarity, `ECO:0000250`, which is the weakest "
+                "thing UniProt says. That is the same class of defect as the one this review "
+                "corrects, pointing the other way."
+            )
+            a("")
+            a(
+                "So the catalytic-residue screen could not have predicted ARHGAP11B's inactivity, "
+                "and would not have been decisive even where it fires. A curation pipeline that "
+                "gates a GAP-activity term on arginine-finger presence keeps the term on this "
+                "protein."
             )
         a("")
 

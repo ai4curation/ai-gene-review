@@ -84,6 +84,18 @@ are described here because the guard is only meaningful if you know what it is f
   domain-to-domain global projection that cannot truncate, and accepts it only if it
   agrees with the local one at every position both cover. The honest answer is **2 of
   24**, not 0 of 25.
+- **A substring test with no anchor.** The catalytic-status reader used the bare keyword
+  `inactive`, which matched ARHGAP36's FUNCTION line *"converting them to an inactive
+  GDP-bound state"* — the GTPase's state, not the protein's — and scored a protein UniProt
+  calls **active** as confirmed inactive. That single false positive was the difference
+  between "the arginine screen works" and the true finding, which is that residue identity
+  and curated activity are decoupled in **both** directions in this family. Regression-tested
+  with the exact sentence.
+- **An identity-cutoff guard that could never fire.** Analysis 1 first placed a threshold
+  inside the largest gap of a windowed-identity distribution. Windows straddling the
+  boundary take every intermediate value, so the distribution is never cleanly bimodal and
+  the run aborted. Replaced with a changepoint plus permutation test, which chooses no
+  cutoff at all.
 
 `--self-test` breaks six things on purpose and requires each check to notice: removing
 the arginine finger, restoring the paralog C-terminus, swapping the structure's chain

@@ -53,9 +53,22 @@ All **66 reviewed (Swiss-Prot) human proteins** carrying the PROSITE RhoGAP prof
 | annotated finger position holds R | 60 |
 | annotated finger position does not hold R | 6 |
 
-Members whose annotated finger position is **not** an arginine: `OCRL_HUMAN` (Q), `I5P2_HUMAN` (Q), `ARAP2_HUMAN` (Q), `FA13B_HUMAN` (Q), `RHG36_HUMAN` (T), `DEP1B_HUMAN` (I).
+The screen flags 6 of 66. **ARHGAP11B is not among them.** But a count of flagged proteins is not a count of confirmed pseudo-enzymes, so each flagged entry is asked what UniProt itself concluded, and on what evidence:
 
-So the test is not vacuous — it does flag 6 of 66 reviewed human RhoGAP-profile proteins as having lost the catalytic arginine. **ARHGAP11B is not one of them.** It is a false negative of a test that otherwise works: a protein with two independent experimental `NOT enables GO:0005096` annotations that nonetheless passes the catalytic-residue screen. A curation pipeline that gates a GAP-activity term on arginine-finger presence would therefore keep the term on this protein.
+| entry | residue | UniProt verdict | evidence |
+|---|---|---|---|
+| `OCRL_HUMAN` | Q | UNIPROT_SAYS_INACTIVE | ECO:0000269 |
+| `I5P2_HUMAN` | Q | UNIPROT_SAYS_INACTIVE | ECO:0000250 |
+| `ARAP2_HUMAN` | Q | UNIPROT_SILENT | - |
+| `FA13B_HUMAN` | Q | UNIPROT_SILENT | - |
+| `RHG36_HUMAN` | T | UNIPROT_ASSERTS_ACTIVITY | ECO:0000250 |
+| `DEP1B_HUMAN` | I | UNIPROT_SILENT | - |
+
+Only **1** of the flagged entries carries an *experimentally* supported (`ECO:0000269`) UniProt statement that the domain is catalytically inactive for want of the arginine.
+
+The sharper result is that **residue identity and curated activity are decoupled in both directions within this family**. ARHGAP11B keeps the arginine and is experimentally GAP-dead. `RHG36_HUMAN` (ARHGAP36) has a threonine at its own annotated arginine-finger position and UniProt nonetheless asserts GTPase activator activity for it — by similarity, `ECO:0000250`, which is the weakest thing UniProt says. That is the same class of defect as the one this review corrects, pointing the other way.
+
+So the catalytic-residue screen could not have predicted ARHGAP11B's inactivity, and would not have been decisive even where it fires. A curation pipeline that gates a GAP-activity term on arginine-finger presence keeps the term on this protein.
 
 ## 4. What the truncation actually removes
 

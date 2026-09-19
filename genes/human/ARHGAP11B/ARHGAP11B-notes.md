@@ -137,11 +137,38 @@ usual "a catalytic term with no catalytic residues is `PSEUDOENZYME_OVERANNOTATI
 argument **does not apply to this gene**, and reaching for it would have produced a
 correct action supported by a false reason.
 
-The test is not vacuous — of 66 reviewed (Swiss-Prot) human proteins carrying the PROSITE
-RhoGAP profile PS50238, **6 do have a non-arginine at their annotated finger position**
-(OCRL and INPP5B/I5P2 and ARAP2 and FAM13B with Q, ARHGAP36 with T, DEPDC1B with I). The
-test works; ARHGAP11B is simply a **false negative** of it. A pipeline that gated a GAP
-term on arginine-finger presence would keep the term here.
+Of 66 reviewed (Swiss-Prot) human proteins carrying the PROSITE RhoGAP profile PS50238,
+**6 have a non-arginine at their annotated finger position** (OCRL, INPP5B/I5P2, ARAP2,
+FAM13B with Q; ARHGAP36 with T; DEPDC1B with I).
+
+My first framing of this was "the test works, ARHGAP11B is a false negative of it". Asking
+what UniProt independently concluded about those 6 refuted that:
+
+| entry | residue | UniProt verdict | evidence |
+|---|---|---|---|
+| OCRL | Q | inactive, "lacks the catalytic arginine" | **ECO:0000269** (experimental) |
+| INPP5B | Q | same statement | ECO:0000250 (by similarity) |
+| ARAP2 | Q | silent | — |
+| FAM13B | Q | silent | — |
+| **ARHGAP36** | **T** | **asserts GTPase activator activity** | ECO:0000250 |
+| DEPDC1B | I | silent | — |
+
+Only **one** of the six has experimental backing for inactivity. And **ARHGAP36 is the
+reciprocal of this gene**: it lacks the arginine and UniProt calls it an active GAP anyway,
+by similarity. So residue identity and curated activity are **decoupled in both directions**
+within this family — which is a stronger and more useful statement than "the test works",
+and it is why the residue could not have predicted ARHGAP11B's inactivity. Raised as a
+`suggested_question` against ARHGAP36.
+
+Two bugs on the way to that table, both worth recording:
+- I first probed the six using accessions **from memory**. `Q9NYS0` is NKIRAS1, not FAM13B;
+  the real accession is `Q9NYF5`, which the census had right because it came from live
+  UniProt. The measured data was correct and my recollection was not.
+- The inactivity test used the bare keyword `inactive`, which matched ARHGAP36's
+  *"converting them to an **inactive** GDP-bound state"* — the GTPase's state, not the
+  protein's — and scored a protein UniProt calls **active** as confirmed inactive. Fixed by
+  requiring a phrase that can only be about the protein, and regression-tested with that
+  exact sentence (`--self-test` T4b).
 
 **What the truncation removes instead.** Projecting the GAP:GTPase interface from PDB 1TX4
 (p50RhoGAP:RhoA:GDP:AlF4, 1.65 Å) onto ARHGAP11A, **2 of 24 mapped interface positions**
