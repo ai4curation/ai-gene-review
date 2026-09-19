@@ -174,6 +174,22 @@ Checks, each covering something the repo validator does not:
 3. **Quote verbatimness** for both `PMID:` and `file:` references. CI checks only
    the former.
 4. **No row left `PENDING`**, no surviving `TODO`, `status: COMPLETE`.
+5. **Reference completeness** — every `PMID:` cited in the document resolves to a
+   `references` entry. The repo validator only checks `original_reference_id`,
+   so a PMID named in a `reason`, a `review_notes`, a `knowledge_gap` or the
+   `description` can otherwise dangle. Added in round 3, after rounds 1–2 had
+   *asserted this invariant in prose* while it was enforced only by a throwaway
+   script outside the repo.
+
+   Writing it went wrong twice, both caught by the self-test, not by reading:
+   the first version scanned the `references` block too, so deleting an entry
+   deleted the only occurrence of its PMID and the guard stayed silent
+   (**a check partly satisfied by its own subject reports success**); excluding
+   the whole block then over-corrected, losing `PMID:36477203`, which is cited
+   only inside `PMID:36115835`'s `review_notes` — the exact case the check
+   existed for. The working scope strips only the reference `id` fields. The
+   cited-PMID count read 24 → 22 → **23** across the three scopes, and the
+   middle figure looked perfectly reasonable.
 
 `--self-test` mutates an in-memory copy for each check and requires the check to
 fire; every mutation asserts its anchor exists first, so a drifted anchor is an

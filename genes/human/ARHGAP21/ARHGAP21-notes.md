@@ -337,7 +337,7 @@ substring of its source, never that it supports the sentence it sits under.
 | `GO:0051684` maintenance | quoted the nocodazole-washout sentence | That assay measures **re-establishment** after dispersal, i.e. `GO:0051683`. The maintenance evidence is the steady-state observation, and the cached full text has it [PMID:20525016 "Golgi membranes were partially dispersed in cells when ARHGAP21 levels were reduced by RNA interference but not in control cells (Figures 1A and S1B)."]. |
 | `GO:0005794` IDA | quoted an **introduction** sentence ending "(23, 24)" | A sentence citing reference callouts restates prior work; it is not the paper's own observation and so cannot support an IDA. Replaced with the figure result [PMID:20525016 "The GFP-tagged ARHGAP21 fragment was localized to the Golgi apparatus as expected (Figure 1B)."]. |
 | PDZ `KnowledgeGap` | tagged `MF_DARK`, "no assigned cellular role" | Refuted by `PMID:41957357`, added by this same PR (§5a). |
-| `references` | four named PMIDs had no entry | Added, plus an invariant in the fix script asserting **every** `PMID:` string in the document resolves to a reference. |
+| `references` | four named PMIDs had no entry | Added. An invariant asserting **every** cited `PMID:` resolves to a reference is enforced by `audit_review.py` (added round 3 — see §8b). |
 
 Two things worth carrying forward. First, **"cites a reference callout" is a cheap, reliable
 tell that a sentence is background rather than result** — worth grepping for before attaching
@@ -345,6 +345,46 @@ any quote to an IDA/IMP row. Second, the reviewer's list was not perfect and was
 rather than applied: it missed `PMID:36477203` (named in the review, no reference entry), and
 two of the PMIDs it listed as "omitted" were not actually named in the document until this
 round added them. Every item was verified against the cached files before being acted on.
+
+## 8b. Round 3: I asserted a guard existed, in prose, while it lived outside the repo
+
+Round 2 wrote, in **two** places (§8a's table and the history record), that the fix script
+"now asserts that every PMID string appearing anywhere in the document resolves to a
+reference entry, **so this cannot silently regress**."
+
+That was false. The assertion was in `fix6_arhgap21.py`, a **one-shot scratchpad script that
+is not committed and never runs again**. Nothing in the repository enforced it. The invariant
+happened to hold, by hand, on that one day.
+
+This is the review's own thesis turned on its author: a true-sounding claim attached to the
+wrong object. And it is the sharper variant, because the claim was *about a guard* — the
+exact thing this gene's analysis is otherwise careful about. `audit_review.py`'s own docstring
+already warned about it: *"a passing self-test proves the guards that exist work; it cannot
+tell you which guard was never written."*
+
+**Fixed by writing the guard rather than softening the sentence**, since the invariant is
+worth having: `check_references` is now the fifth check in the committed
+`audit_review.py`, with a `--self-test` mutation.
+
+### Writing it went wrong twice, both caught by the self-test
+
+1. **The detector's scope included the lookup table it validates against.** The first version
+   scanned `yaml.dump(doc)` whole — *including* `references`. So deleting a reference entry
+   removed the only occurrence of its PMID, `named` shrank in step with `ref_ids`, and the
+   guard stayed silent. The self-test reported `dropping reference PMID:12056806 was not
+   detected`. A check that is partly satisfied by its own subject is worse than no check.
+2. **The obvious correction over-corrected.** Excluding the whole `references` block fixed the
+   self-satisfaction but lost a real case: `PMID:36477203`, the Gogl erratum, is cited only
+   inside `PMID:36115835`'s `review_notes`. Under that scope it stopped counting as cited, so
+   dropping its entry would not have fired — and that is precisely the citation the round-1
+   reviewer had missed.
+
+The working scope strips **exactly the `id` fields** of references and keeps everything else,
+which was verified directly rather than assumed: deleting `PMID:36477203`'s entry now
+produces `PMID:36477203 is cited in the document but has no references entry`.
+
+Cited-PMID count moved 24 → 22 → **23** across those three scopes. The middle number was the
+over-correction, and it looked perfectly reasonable.
 
 ## 9. Scripts
 

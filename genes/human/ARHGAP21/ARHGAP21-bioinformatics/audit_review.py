@@ -20,6 +20,15 @@ validator:
 
 4. **No row left PENDING**, and no `TODO` placeholder survives.
 
+5. **Reference completeness.**  Every `PMID:` string appearing anywhere in the
+   document must resolve to an entry in `references`.  The repo validator only
+   checks `original_reference_id`, so a PMID named in a `reason`, a
+   `review_notes`, a `knowledge_gap` or the `description` can go unreferenced.
+   Added in review round 3: rounds 1-2 had asserted this invariant in prose
+   ("cannot silently regress") while it was enforced only by a throwaway script
+   outside the repo -- the review's own failure mode, a claim attached to the
+   wrong thing.
+
 Self-test: `--self-test` mutates an in-memory copy for each check and asserts
 the check fires.  A passing self-test proves the guards that exist work; it
 cannot tell you which guard was never written.
@@ -31,6 +40,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import re
 import sys
 import unicodedata
 from pathlib import Path
@@ -190,6 +200,43 @@ def check_quotes(doc: dict, problems: list[str]) -> int:
     return checked
 
 
+def cited_pmids(doc: dict) -> set[str]:
+    """PMIDs cited anywhere in the document, excluding references' own `id`s.
+
+    Scope matters twice here, in opposite directions:
+
+    - Including a reference's own `id` makes the check partly satisfy itself:
+      deleting the entry deletes the only occurrence of its PMID, so `named`
+      shrinks in step with `ref_ids` and the guard stays silent.  My first
+      version had that bug and the self-test caught it.
+    - Excluding the whole `references` block over-corrects: a PMID cited inside
+      another reference's `review_notes` (e.g. an erratum named in the notes of
+      the paper it corrects) is a real citation that must resolve, and dropping
+      the block from scope loses it.
+
+    So strip exactly the `id` fields and keep everything else.
+    """
+    body = copy.deepcopy(doc)
+    for ref in body.get("references") or []:
+        ref.pop("id", None)
+    return set(re.findall(r"PMID:\d+", yaml.dump(body)))
+
+
+def check_references(doc: dict, problems: list[str]) -> int:
+    """Every PMID cited in the document's content must have a references entry.
+
+    Scans the SERIALISED document rather than a hand-listed set of fields: a
+    guard whose input is enumerated by hand checks its input, not the document,
+    and goes stale the moment a PMID is cited somewhere new.  Returns the number
+    of distinct cited PMIDs so the caller can report it.
+    """
+    named = cited_pmids(doc)
+    ref_ids = {r.get("id") for r in doc.get("references") or []}
+    for pmid in sorted(named - ref_ids):
+        problems.append(f"{pmid} is cited in the document but has no references entry")
+    return len(named)
+
+
 def check_duplicate_keys(problems: list[str]) -> None:
     try:
         yaml.load(REVIEW.read_text(), Loader=StrictLoader)
@@ -197,19 +244,24 @@ def check_duplicate_keys(problems: list[str]) -> None:
         problems.append(f"strict YAML load failed: {exc}")
 
 
-def run(doc: dict) -> tuple[list[str], int]:
+def run(doc: dict) -> tuple[list[str], int, int]:
     problems: list[str] = []
     check_rows(doc, problems)
     check_pending(doc, problems)
     n = check_quotes(doc, problems)
-    return problems, n
+    n_pmids = check_references(doc, problems)
+    return problems, n, n_pmids
 
 
 def self_test(doc: dict) -> int:
     """Break each invariant and require the matching check to fire.
 
     Every mutation asserts its target is present first: a mutation whose anchor
-    has drifted 'proves' the guard fires when nothing was broken.
+    has drifted 'proves' the guard fires when nothing was broken. Text anchors
+    additionally assert they match EXACTLY once -- an anchor matching twice
+    mutates whichever occurrence comes first and stops testing what it was
+    written for, and both that and a zero-match anchor look identical to a
+    green self-test.
     """
     failures = 0
 
@@ -275,11 +327,35 @@ def self_test(doc: dict) -> int:
         print("SELF-TEST FAIL: non-COMPLETE status was not detected")
         failures += 1
 
-    # 5. duplicate YAML key (raw-text level)
+    # 5. a PMID named in the document with no references entry.
+    #    Mutated by DELETING a reference rather than by adding a citation: a
+    #    guard that only fires on newly-added text would pass when an existing
+    #    reference is dropped, which is the likelier regression.
+    d = copy.deepcopy(doc)
+    cited = cited_pmids(d)
+    victim = next((r for r in d["references"] if r.get("id") in cited), None)
+    assert victim is not None, (
+        "mutation 5: no reference whose PMID is cited in content -- the mutation "
+        "must target a genuinely cited PMID, or it proves nothing"
+    )
+    d["references"] = [r for r in d["references"] if r is not victim]
+    p = []
+    check_references(d, p)
+    if not any(victim["id"] in x for x in p):
+        print(f"SELF-TEST FAIL: dropping reference {victim['id']} was not detected")
+        failures += 1
+
+    # 6. duplicate YAML key (raw-text level)
     raw = REVIEW.read_text()
-    anchor = "existing_annotations:"
-    assert anchor in raw, "mutation 5 anchor missing"
-    dup = raw.replace(anchor, anchor + "\n- {}\nexisting_annotations:", 1)
+    anchor = "\nexisting_annotations:\n"
+    # Require EXACTLY one match. An anchor matching twice silently mutates
+    # whichever occurrence comes first, so the mutation stops testing what it
+    # was written for; an anchor matching zero times "passes" by changing
+    # nothing. Both failure modes look identical to a green self-test.
+    assert raw.count(anchor) == 1, (
+        f"mutation 6 anchor matches {raw.count(anchor)} times, expected exactly 1"
+    )
+    dup = raw.replace(anchor, anchor + "- {}\nexisting_annotations:\n", 1)
     assert dup != raw, "mutation 5 changed nothing"
     try:
         yaml.load(dup, Loader=StrictLoader)
@@ -301,7 +377,7 @@ def main() -> int:
     check_duplicate_keys(problems)
     doc = yaml.safe_load(REVIEW.read_text())
 
-    p2, n_quotes = run(doc)
+    p2, n_quotes, n_pmids = run(doc)
     problems.extend(p2)
 
     n_goa = len(goa_keys())
@@ -314,6 +390,7 @@ def main() -> int:
     print(f"GOA data rows          : {n_goa}")
     print(f"existing_annotations   : {n_entries}  (= {n_entries - n_new} GOA + {n_new} NEW)")
     print(f"supporting_text quotes : {n_quotes} checked verbatim")
+    print(f"PMIDs named in document: {n_pmids} (all must have a references entry)")
 
     rc = 0
     if args.self_test:
