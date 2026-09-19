@@ -473,3 +473,27 @@ The affinage record's contributions are real and are credited above — it suppl
 PMID set that led to `PMID:21903576`, `PMID:25188285` and `PMID:19055733` — and its two
 defects (missing `PMID:9000000`, citing a retracted paper unflagged) are recorded rather
 than papered over.
+
+## Post-merge correction: two defects the merge skipped past
+
+PR #3007 was merged with eleven unresolved review threads still open. `main` requires
+conversation resolution, so the merge only went through with `--admin`; two of those threads
+held real defects, both introduced by the round-5 reflow that was supposed to be cosmetic.
+
+**1. A folded scalar turned a hyphenated word into two words.** `description` is `>-`, so a
+newline folds to a **space**. The 95-column rewrap split `A-kinase-anchoring` across lines
+11-12, and the rendered text became `A-kinase- anchoring` — reaching the published page via
+`just render`. The source looked fine; only the fold changed the meaning. Re-wrapped with
+`textwrap.fill(..., break_on_hyphens=False)`, and the block now has no line ending in `-`.
+
+**2. The tet system was described backwards.** The clause said "Tetracycline-induced
+expression of SSeCKS", but `PMID:9744295` is tet-**off**: "The induction of SSeCKS (**removal
+of tet**) caused significant cell flattening and the elaboration of an SSeCKS-associated
+cortical cytoskeletal matrix resistant to Triton X-100 extraction." I had quoted that exact
+sentence in the round-5 history record and still wrote the inducer as the thing that turns
+expression on. Now: "Tet-regulated induction of SSeCKS, on removal of tetracycline".
+
+Both are the same lesson in different clothes: **a cosmetic edit is still an edit.** The
+reflow was justified as whitespace-only, so neither the validator (which parses YAML, where
+both forms are legal) nor my own reading caught a change to the rendered prose. Nothing in
+the repo checks that a folded scalar renders the way its source looks.
