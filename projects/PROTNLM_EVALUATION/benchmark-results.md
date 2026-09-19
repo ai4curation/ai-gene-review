@@ -22,6 +22,30 @@ Each row counted here is one emitted GO term. Narrative functions, protein names
 | REP | 0 |
 | **Total** | **288** |
 
+## Reviewed records with no GO predictions
+
+The 162 prediction-review YAML files include 17 records with zero emitted GO predictions and 145 records with GO assessments. Completed `predictions: []` records with a summary evaluation document reviewed output absence; a missing review file is not counted as zero output. Their descriptions record the available evidence for potential missed functions. No VDCL category or confidence score is assigned to an absent prediction, and these records do not enter the emitted GO-claim denominator. Zero output alone does not establish a biological false negative or a recall estimate.
+
+| Gene | Accession | Summary evaluation |
+|---|---|---|
+| ARAHY/A0A444Z7V7 | A0A444Z7V7 | [Prediction review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/ARAHY/A0A444Z7V7/A0A444Z7V7-protnlm-predictions-review.yaml) |
+| BALMU/A0A8B8WEG2 | A0A8B8WEG2 | [Prediction review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/BALMU/A0A8B8WEG2/A0A8B8WEG2-protnlm-predictions-review.yaml) |
+| BORPE/Q7VZI5 | Q7VZI5 | [Prediction review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/BORPE/Q7VZI5/Q7VZI5-protnlm-predictions-review.yaml) |
+| CHRVO/Q7NUH2 | Q7NUH2 | [Prediction review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/CHRVO/Q7NUH2/Q7NUH2-protnlm-predictions-review.yaml) |
+| CUCME/A0A1S3BTE3 | A0A1S3BTE3 | [Prediction review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/CUCME/A0A1S3BTE3/A0A1S3BTE3-protnlm-predictions-review.yaml) |
+| DROME/CG32706 | Q8IRM9 | [Prediction review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/DROME/CG32706/CG32706-protnlm-predictions-review.yaml) |
+| DROME/CG5565 | Q9VQ04 | [Prediction review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/DROME/CG5565/CG5565-protnlm-predictions-review.yaml) |
+| DROME/CG5611 | Q9VB17 | [Prediction review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/DROME/CG5611/CG5611-protnlm-predictions-review.yaml) |
+| DROME/Dic4 | Q9VVS1 | [Prediction review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/DROME/Dic4/Dic4-protnlm-predictions-review.yaml) |
+| DROME/Gfat1 | A8Y5A1 | [Prediction review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/DROME/Gfat1/Gfat1-protnlm-predictions-review.yaml) |
+| DROME/Lcp3 | A0A0B4KEF3 | [Prediction review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/DROME/Lcp3/Lcp3-protnlm-predictions-review.yaml) |
+| DROME/awd | A0A0B4LHX6 | [Prediction review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/DROME/awd/awd-protnlm-predictions-review.yaml) |
+| DROME/ftz-f1 | M9NFK2 | [Prediction review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/DROME/ftz-f1/ftz-f1-protnlm-predictions-review.yaml) |
+| JUGRE/A0A2I4G8T1 | A0A2I4G8T1 | [Prediction review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/JUGRE/A0A2I4G8T1/A0A2I4G8T1-protnlm-predictions-review.yaml) |
+| MAIZE/A0A804UIX9 | A0A804UIX9 | [Prediction review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/MAIZE/A0A804UIX9/A0A804UIX9-protnlm-predictions-review.yaml) |
+| XENTR/A0A8J1IYX6 | A0A8J1IYX6 | [Prediction review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/XENTR/A0A8J1IYX6/A0A8J1IYX6-protnlm-predictions-review.yaml) |
+| XENTR/F6WPT1 | F6WPT1 | [Prediction review](https://github.com/ai4curation/ai-gene-review/blob/main/genes/XENTR/F6WPT1/F6WPT1-protnlm-predictions-review.yaml) |
+
 ## Narrative function reviews
 
 **57 gene/accession review records** assess emitted FUNCTION text. A record may contain multiple paragraphs and multiple claim categories. Each category below counts records with at least one such judgment, once per record; categories overlap and must not be summed or pooled with GO counts. These are neither atomic-claim counts nor one verdict per whole paragraph. Name and localization assessments remain in the gene notes and are outside both denominators.
@@ -105,19 +129,21 @@ SUPPORTED records contain an explicitly supported claim whose review does not as
 
 The cohort rows retain overlapping selections, including six fly targets selected twice. Paired reference records provide evidence and contribute no extra prediction assessments. Use the deduplicated totals above for the combined corpus.
 
-| Cohort | Records | GO claims | Narrative review records |
-|---|---:|---:|---:|
-| ARGO50 | 50 | 77 | 0 |
-| HORSE40 | 40 | 89 | 17 |
-| HORSE40_HUMAN_PAIR | 40 | 0 | 0 |
-| FLY41 | 41 | 50 | 13 |
-| FLY_LOCATION_KEYWORD | 29 | 0 | 0 |
-| FLY_NEXT20 | 20 | 0 | 0 |
-| POMBE20 | 20 | 32 | 10 |
-| POMBE_REMAINING8 | 8 | 0 | 0 |
-| NEUROSPORA20 | 20 | 21 | 3 |
-| MOD_EVOLUTION20 | 20 | 19 | 14 |
+| Cohort | Records | Records with GO assessments | Reviewed zero GO output | GO claims | Narrative review records |
+|---|---:|---:|---:|---:|---:|
+| ARGO50 | 50 | 41 | 9 | 77 | 0 |
+| HORSE40 | 40 | 27 | 0 | 89 | 17 |
+| HORSE40_HUMAN_PAIR | 40 | 0 | 0 | 0 | 0 |
+| FLY41 | 41 | 33 | 8 | 50 | 13 |
+| FLY_LOCATION_KEYWORD | 29 | 0 | 0 | 0 | 0 |
+| FLY_NEXT20 | 20 | 0 | 0 | 0 | 0 |
+| POMBE20 | 20 | 18 | 0 | 32 | 10 |
+| POMBE_REMAINING8 | 8 | 0 | 0 | 0 | 0 |
+| NEUROSPORA20 | 20 | 16 | 0 | 21 | 3 |
+| MOD_EVOLUTION20 | 20 | 10 | 0 | 19 | 14 |
 
 ## Source metadata
+
+In the JSON summary, `prediction_review_files` counts all review YAML files, including explicit empty records. `go_review_files` is retained as a legacy alias for that same total; `records_with_go_assessments` counts only records with emitted GO claims.
 
 `source_method: ProtNLM2` names the model. `source_version` identifies the release, XML artifact or dated API snapshot. API retrieval timestamps are observation times, not model training dates. The pilot, exploratory XML and later API snapshots remain distinct; frozen responses and source references retain their original provenance.

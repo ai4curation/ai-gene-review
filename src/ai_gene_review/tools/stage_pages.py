@@ -26,10 +26,13 @@ from ai_gene_review.tools.pages_dependencies import TEXT_ASSETS, DependencyResol
 from ai_gene_review.publication_links import rewrite_publication_links, restore_scientific_html_notation
 
 
-PAGES_SIZE_BUDGET_BYTES = 1_000_000_000
-PAGES_ARCHIVE_BUDGET_BYTES = 1_073_741_824
+# Temporary policy: permit unsupported >1 GB deployments, below the absolute
+# 10 GB Pages artifact cutoff. Do not confuse this with supported hosting capacity.
+PAGES_SIZE_BUDGET_BYTES = 9_999_999_999
+PAGES_ARCHIVE_BUDGET_BYTES = 9_999_999_999
 MIB = 1024 * 1024
 BROWSER_FILES = ("index.html", "data.js", "schema.js")
+PREDICTION_BROWSER_FILES = (*BROWSER_FILES, "source-files.json")
 
 
 @dataclass(frozen=True)
@@ -107,6 +110,35 @@ def _copy_file(source: Path, destination: Path) -> None:
 def _require_file(path: Path) -> None:
     if not path.is_file():
         raise FileNotFoundError(f"Required Pages input is missing: {path}")
+
+
+def _stage_prediction_browser(repo_root: Path, output_dir: Path) -> None:
+    """Include the predictions app and public files linked from its dynamic rows."""
+    relative = Path("app/predictions")
+    if not (repo_root / relative).is_dir():
+        return
+    for filename in PREDICTION_BROWSER_FILES:
+        source = repo_root / relative / filename
+        _require_file(source)
+        _copy_file(source, output_dir / relative / filename)
+    sources = json.loads((repo_root / relative / "source-files.json").read_text())
+    if not isinstance(sources, list) or not all(isinstance(path, str) for path in sources):
+        raise ValueError("Invalid prediction browser source manifest")
+    for name in sources:
+        path = Path(name)
+        source = repo_root / path
+        resolved = source.resolve()
+        if (
+            not path.parts or path.is_absolute()
+            or any(part.startswith(".") for part in path.parts)
+            or path.parts[0] == "_site"
+            or not resolved.is_relative_to(repo_root)
+            or any(part.startswith(".") for part in resolved.relative_to(repo_root).parts)
+            or resolved.is_relative_to(repo_root / "_site")
+        ):
+            raise ValueError(f"Invalid prediction browser source: {name}")
+        _require_file(source)
+        _copy_file(source, output_dir / path)
 
 
 def _safe_clean_output(repo_root: Path, output_dir: Path) -> None:
@@ -305,6 +337,8 @@ def stage_pages(repo_root: Path, output_dir: Path) -> SiteManifest:
         _require_file(source)
         _copy_file(source, output_dir / "app" / browser_file)
 
+    _stage_prediction_browser(repo_root, output_dir)
+
     audit = _stage_linked_files(repo_root, output_dir)
     linked_sources = audit.excluded_sources
     broken_links = audit.missing_paths
@@ -410,7 +444,7 @@ def main() -> None:
         print(
             f"::warning title=Pages size budget exceeded::"
             f"Staged site is {size_mib:,.1f} MiB; warning threshold is "
-            f"{manifest.size_budget_bytes:,} bytes. Reduce it before switching Pages to Actions."
+            f"{manifest.size_budget_bytes:,} bytes. The absolute deployment ceiling is exceeded."
         )
     if manifest.archive_bytes > manifest.archive_size_budget_bytes:
         print(
