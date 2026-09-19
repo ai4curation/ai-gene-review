@@ -144,6 +144,45 @@ def hardcoded_denominator_defects(src: str) -> list[str]:
     return found
 
 
+# "second messenger" is included because the offending sentence said exactly that
+# rather than naming IP3 or DAG, and a pattern that only matched the names would
+# have missed it -- which is how it survived two rounds of fixes.
+SECOND_MESSENGER = re.compile(r"\bIP3\b|\bIP\(3\)|\bDAG\b|second messenger", re.I)
+ELEVATION = re.compile(r"\brise|\bfold\b|-fold|elevat|increas", re.I)
+ATTRIBUTION = re.compile(r"hypertensiv|mononuclear", re.I)
+# Keys whose text is quoted verbatim from a source and is therefore not ours to
+# reword. The paper's own sentence legitimately reports the numbers without naming
+# the cohort in that clause.
+VERBATIM_KEYS = {"supporting_text", "supporting_text_fulltext"}
+
+
+def _authored_strings(node, key=None):
+    """Yield (key, text) for every authored string, skipping verbatim quotes."""
+    if isinstance(node, dict):
+        for k, v in node.items():
+            if k in VERBATIM_KEYS:
+                continue
+            yield from _authored_strings(v, k)
+    elif isinstance(node, list):
+        for v in node:
+            yield from _authored_strings(v, key)
+    elif isinstance(node, str):
+        yield key, node
+
+
+def second_messenger_attribution_defects(review: dict) -> list[str]:
+    """Authored text claiming a second messenger rose, without saying where."""
+    out = []
+    for key, text in _authored_strings(review):
+        if SECOND_MESSENGER.search(text) and ELEVATION.search(text):
+            if not ATTRIBUTION.search(text):
+                out.append(
+                    f"{key}: says a second messenger rose without attributing it to the "
+                    f"hypertensive-cohort observation: {text[:110]!r}"
+                )
+    return out
+
+
 def audit(review: dict, notes: str, pdz_src: str,
           extra_expected: set[str] | None = None) -> list[str]:
     """Return a list of problems. Empty means the document is self-consistent."""
@@ -221,7 +260,19 @@ def audit(review: dict, notes: str, pdz_src: str,
     # 5. the PDZ script's denominator.
     bad.extend(f"check_pdz_interactome.py: {d}" for d in hardcoded_denominator_defects(pdz_src))
 
-    # 6. The notes quote this script's own summary line as "expected output today".
+    # 6. The IP3/DAG attribution, everywhere it appears.
+    #
+    # PMID:18434237 reports two different things: PLC activity rising ~6-fold in
+    # transfected cells (a manipulation), and raised ARHGAP6 found alongside raised
+    # PLC activity, IP3 (1.6x) and DAG (2.3x) in mononuclear cells from hypertensive
+    # subjects (a correlation). Conflating them overstates the evidence, and it took
+    # three review rounds to root out because the same sentence had been written into
+    # four separate fields and each fix reached only the copies then visible. So the
+    # invariant is enforced across the whole document rather than field by field:
+    # any authored text that says a second messenger ROSE must also say where.
+    bad.extend(second_messenger_attribution_defects(review))
+
+    # 7. The notes quote this script's own summary line as "expected output today".
     # That is itself a counted claim, so it has to be checked or it silently rots -
     # which is the failure mode this whole script exists for, and it would be absurd
     # to reproduce it here.
@@ -298,6 +349,27 @@ def self_test(review: dict, notes: str, pdz_src: str) -> int:
     m["core_functions"][1]["molecular_function"] = {"id": "GO:0005096", "label": "GTPase activator activity"}
     expect_caught("MF asserted on the actin core function", m, notes, pdz_src,
                   "asserts a molecular function")
+
+    # Mutation 5a: reinstate the exact sentence that survived three review rounds.
+    m = copy.deepcopy(review)
+    for a in m["existing_annotations"]:
+        if a["term"]["id"] == "GO:0141214":
+            a["review"]["summary"] = (
+                "Cellular PLC output, and the second messengers downstream of it, "
+                "rise several-fold with ARHGAP6."
+            )
+    expect_caught("unattributed second-messenger rise", m, notes, pdz_src,
+                  "without attributing it")
+    # ...and the guard must not fire on the paper's own verbatim sentence, which
+    # reports the numbers without naming the cohort in the same clause.
+    verbatim = {"supporting_text": (
+        "Enhanced expression of ARHGAP6 was associated with an elevated level of PLC "
+        "activity and increased levels of IP(3) (1.6-fold) and DAG (2.3-fold)."
+    )}
+    if second_messenger_attribution_defects(verbatim):
+        failures.append("guard fires on a verbatim supporting_text quote it must not touch")
+    else:
+        print("  ok   second-messenger guard exempts verbatim supporting_text")
 
     # Mutation 5b: the notes quote this script's summary line as expected output.
     # If that line goes stale, this script must say so rather than print a number
