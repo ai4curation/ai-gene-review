@@ -44,9 +44,27 @@ def references() -> list[str]:
 
 def main() -> None:
     out = []
+    detail = []
     for ref in references():
         data = quickgo_annotations(reference=ref, limit="200")
         rows = data.get("results", [])
+        if not data["_truncated"]:
+            for r in rows:
+                wf = []
+                for grp in (r.get("withFrom") or []):
+                    for x in grp.get("connectedXrefs", []):
+                        wf.append(f"{x['db']}:{x['id']}")
+                detail.append({
+                    "reference": ref,
+                    "gene_product": r["geneProductId"],
+                    "symbol": r.get("symbol", ""),
+                    "taxon": r.get("taxonId", ""),
+                    "go_id": r["goId"],
+                    "qualifier": r.get("qualifier", ""),
+                    "evidence": r["goEvidence"],
+                    "with_from": "|".join(wf),
+                    "assigned_by": r.get("assignedBy", ""),
+                })
         n_hits = data.get("numberOfHits", 0)
         truncated = data["_truncated"]
         if truncated:
@@ -81,6 +99,13 @@ def main() -> None:
         w = csv.DictWriter(fh, delimiter="\t", fieldnames=fields)
         w.writeheader()
         w.writerows(out)
+
+    with (HERE / "reference_annotations.tsv").open("w", newline="") as fh:
+        w = csv.DictWriter(fh, delimiter="\t", fieldnames=list(detail[0]))
+        w.writeheader()
+        w.writerows(detail)
+    print(f"\nwrote {len(detail)} per-annotation rows for the "
+          f"{len({d['reference'] for d in detail})} references small enough to enumerate")
 
     big = [r["reference"] for r in out if r["truncated"] == "True"]
     print(f"\nreferences too large to count entities from one page: {big}")

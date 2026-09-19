@@ -100,7 +100,11 @@ def main() -> None:
     kids = {}
     for p in CHILD_PARENTS:
         cs = children_of(p)
-        kids[p] = [{"id": c["id"], "relation": c.get("relation")} for c in cs]
+        kids[p] = [
+            {"id": c["id"], "relation": c.get("relation"),
+             "name": quickgo_term(c["id"]).get("name")}
+            for c in cs
+        ]
         print(f"children of {p} ({quickgo_term(p).get('name')}): {len(cs)}")
         for c in cs:
             print(f"    {c['id']}\t{c.get('relation')}\t{quickgo_term(c['id']).get('name')}")
